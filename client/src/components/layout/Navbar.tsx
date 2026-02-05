@@ -67,7 +67,7 @@ export default function Navbar() {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl"
+      className="fixed top-6 left-0 right-0 mx-auto z-50 w-[95%] max-w-7xl"
     >
       <div className="glass-strong rounded-2xl border border-white/10 shadow-2xl shadow-black/50 backdrop-blur-2xl">
         <div className="px-8 py-4">
