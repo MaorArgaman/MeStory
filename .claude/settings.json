@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(if not exist \"C:\\\\Users\\\\maora\\\\.claude\\\\plans\" mkdir \"C:\\\\Users\\\\maora\\\\.claude\\\\plans\")"
+    ]
+  }
+}
