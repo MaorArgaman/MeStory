@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import {
   register,
@@ -16,6 +16,22 @@ import {
   loginValidation,
 } from '../middleware/validators';
 import { generateToken } from '../utils/jwt';
+import { isGoogleOAuthEnabled } from '../config/passport';
+
+/**
+ * Middleware to check if Google OAuth is configured
+ * Returns error if not available (e.g., missing env vars in Vercel)
+ */
+const checkGoogleOAuth = (_req: Request, res: Response, next: NextFunction) => {
+  if (!isGoogleOAuthEnabled()) {
+    return res.status(503).json({
+      success: false,
+      error: 'Google OAuth is not configured. Please use email/password login.',
+      code: 'GOOGLE_OAUTH_NOT_CONFIGURED',
+    });
+  }
+  next();
+};
 
 const router = Router();
 
@@ -72,15 +88,25 @@ router.post(
  * Section 14.2: Google OAuth Routes
  */
 
+// GET /api/auth/google/status - Check if Google OAuth is available
+router.get('/google/status', (_req: Request, res: Response) => {
+  res.json({
+    success: true,
+    enabled: isGoogleOAuthEnabled(),
+  });
+});
+
 // GET /api/auth/google - Initiate Google OAuth flow
 router.get(
   '/google',
+  checkGoogleOAuth,
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
 // GET /api/auth/google/callback - Handle Google OAuth callback
 router.get(
   '/google/callback',
+  checkGoogleOAuth,
   passport.authenticate('google', {
     failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:5173'}/login?error=oauth_failed`,
     session: false

@@ -2,6 +2,14 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { User, UserRole } from '../models/User';
 
+// Track if Google OAuth is configured
+let googleOAuthEnabled = false;
+
+/**
+ * Check if Google OAuth is configured and available
+ */
+export const isGoogleOAuthEnabled = () => googleOAuthEnabled;
+
 /**
  * Configure Passport Google OAuth Strategy
  * Section 3.2: User Profile Features - Connected Accounts
@@ -94,5 +102,6 @@ export const configurePassport = () => {
   });
 
   console.log('✅ Google OAuth strategy configured');
+  googleOAuthEnabled = true;
   return true;
 };
