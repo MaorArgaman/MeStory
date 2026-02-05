@@ -642,12 +642,13 @@ export default function MarketplacePage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="glass rounded-lg px-4 py-2 text-sm border border-white/10 focus:outline-none focus:ring-2 focus:ring-magic-gold text-white bg-white/5"
+              className="rounded-lg px-4 py-2 text-sm border border-white/10 focus:outline-none focus:ring-2 focus:ring-magic-gold text-white cursor-pointer"
+              style={{ backgroundColor: '#1a1a2e' }}
             >
-              <option value="createdAt">Newest First</option>
-              <option value="popularity">Most Popular</option>
-              <option value="quality">Highest Rated</option>
-              <option value="price">Price: Low to High</option>
+              <option value="createdAt" style={{ backgroundColor: '#1a1a2e', color: 'white' }}>Newest First</option>
+              <option value="popularity" style={{ backgroundColor: '#1a1a2e', color: 'white' }}>Most Popular</option>
+              <option value="quality" style={{ backgroundColor: '#1a1a2e', color: 'white' }}>Highest Rated</option>
+              <option value="price" style={{ backgroundColor: '#1a1a2e', color: 'white' }}>Price: Low to High</option>
             </select>
           </div>
         </div>
