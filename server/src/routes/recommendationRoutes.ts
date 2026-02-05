@@ -16,7 +16,7 @@ import {
   getContentSimilar,
   getReadingProgressDetails,
 } from '../controllers/recommendationController';
-import { authenticate, optionalAuth } from '../middleware/authMiddleware';
+import { authenticate, optionalAuth } from '../middleware/auth';
 
 const router = Router();
 

@@ -55,6 +55,40 @@ export const authenticate = async (
 };
 
 /**
+ * Optional authentication middleware
+ * Similar to authenticate, but doesn't require authentication
+ * If token is provided and valid, attaches user to request
+ * If no token or invalid token, continues without user
+ */
+export const optionalAuth = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      const decoded = verifyToken(token);
+      req.user = {
+        id: decoded.id,
+        email: decoded.email,
+        role: decoded.role,
+      };
+    }
+    // Continue regardless of authentication status
+    next();
+  } catch {
+    // Invalid token - continue without user
+    next();
+  }
+};
+
+// Alias for backward compatibility
+export const auth = authenticate;
+
+/**
  * Role-based authorization middleware
  * Restricts access to specific user roles
  */

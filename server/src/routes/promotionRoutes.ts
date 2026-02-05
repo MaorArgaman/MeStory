@@ -8,7 +8,7 @@ import {
   getTopInGenre,
   getPromotionSummary,
 } from '../controllers/promotionController';
-import { optionalAuth } from '../middleware/authMiddleware';
+import { optionalAuth } from '../middleware/auth';
 
 const router = Router();
 
