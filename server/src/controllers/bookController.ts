@@ -2,7 +2,8 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import fs from 'fs/promises';
 import path from 'path';
-import PDFParser from 'pdf-parse';
+// pdf-parse is temporarily disabled for Vercel serverless compatibility (DOMMatrix not defined)
+// import PDFParser from 'pdf-parse';
 import mammoth from 'mammoth';
 import { Book } from '../models/Book';
 import { User } from '../models/User';
@@ -1277,10 +1278,14 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
     try {
       // Extract text based on file type
       if (fileExtension === '.pdf') {
-        // Extract text from PDF
-        const dataBuffer = await fs.readFile(filePath);
-        const pdfData = await PDFParser(dataBuffer);
-        extractedText = pdfData.text;
+        // PDF parsing is temporarily disabled for serverless compatibility
+        // Clean up file
+        await fs.unlink(filePath);
+        res.status(400).json({
+          success: false,
+          error: 'PDF upload is temporarily unavailable. Please upload DOCX or TXT files instead.',
+        });
+        return;
       } else if (fileExtension === '.docx' || fileExtension === '.doc') {
         // Extract text from DOCX
         const result = await mammoth.extractRawText({ path: filePath });
@@ -1293,7 +1298,7 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
         await fs.unlink(filePath);
         res.status(400).json({
           success: false,
-          error: 'Unsupported file type. Please upload PDF, DOCX, or TXT files.',
+          error: 'Unsupported file type. Please upload DOCX or TXT files.',
         });
         return;
       }
