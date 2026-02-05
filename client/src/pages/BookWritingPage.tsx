@@ -16,7 +16,7 @@ import {
   PenTool,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
+import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
@@ -443,28 +443,6 @@ export default function BookWritingPage() {
 
                 {/* Rich Text Editor with AI Floating Toolbar */}
                 <div className="editor-panel flex-1 overflow-y-auto relative">
-                  {editor && (
-                    <BubbleMenu
-                      editor={editor}
-                      tippyOptions={{
-                        duration: 100,
-                        placement: 'top',
-                        zIndex: 50,
-                      }}
-                      shouldShow={({ editor, from, to }) => {
-                        // Show only when text is selected (not empty selection)
-                        // and not in code block
-                        return from !== to && !editor.isActive('codeBlock');
-                      }}
-                    >
-                      <AIFloatingToolbar
-                        editor={editor}
-                        onEnhance={handleEnhance}
-                        isLoading={enhancing}
-                        loadingAction={loadingAction}
-                      />
-                    </BubbleMenu>
-                  )}
                   <EditorContent editor={editor} />
                 </div>
               </>
