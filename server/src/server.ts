@@ -38,10 +38,38 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// CORS configuration for multiple origins (localhost + Vercel domains)
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  process.env.CLIENT_URL,
+].filter(Boolean) as string[];
+
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    // Check if origin matches Vercel preview/production domains
+    if (origin.endsWith('.vercel.app') || origin.endsWith('.vercel.sh')) {
+      return callback(null, true);
+    }
+
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.warn(`CORS request from origin: ${origin}`);
+    // Allow all origins in development, be stricter in production if needed
+    callback(null, true);
+  },
   credentials: true,
 }));
 app.use(morgan('dev'));
@@ -101,8 +129,13 @@ app.use('/api/templates', templateRoutes);
 app.use(notFoundHandler); // 404 handler
 app.use(errorHandler); // Global error handler
 
-// Start server function
-const startServer = async () => {
+// Track initialization state for serverless
+let isInitialized = false;
+
+// Initialize function for serverless cold starts
+const initializeApp = async () => {
+  if (isInitialized) return;
+
   try {
     // Connect to MongoDB
     await connectDatabase();
@@ -117,6 +150,18 @@ const startServer = async () => {
     await initializeDefaultTemplates();
     console.log('✅ Book templates initialized');
 
+    isInitialized = true;
+  } catch (error) {
+    console.error('❌ Failed to initialize app:', error);
+    throw error;
+  }
+};
+
+// Start server function (for local development)
+const startServer = async () => {
+  try {
+    await initializeApp();
+
     // Start Express server
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
@@ -129,8 +174,18 @@ const startServer = async () => {
   }
 };
 
-// Start the server
-startServer();
+// Check if running in Vercel serverless environment
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
 
+if (isVercel) {
+  // For Vercel: Initialize on first request, don't call app.listen()
+  console.log('🌐 Running in Vercel serverless mode');
+  initializeApp().catch(console.error);
+} else {
+  // For local development or traditional hosting: Start the server
+  startServer();
+}
+
+// Export the Express app for Vercel serverless handler
 export default app;
 
