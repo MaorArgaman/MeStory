@@ -1,4 +1,8 @@
 {
+  "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitAny": false,
+    "ignoreDeprecations": "5.0",
   "compilerOptions": {
     "composite": true,
     "skipLibCheck": true,
@@ -7,4 +11,5 @@
     "allowSyntheticDefaultImports": true
   },
   "include": ["vite.config.ts"]
+  
 }
