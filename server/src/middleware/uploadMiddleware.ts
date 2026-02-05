@@ -3,18 +3,36 @@ import path from 'path';
 import fs from 'fs';
 import { Request, Response, NextFunction } from 'express';
 
-// Get upload directory from env or use default
-const uploadDir = process.env.UPLOAD_DIR || './uploads';
+// Check if running in Vercel serverless environment
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
 
-// Ensure upload directory exists
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-  console.log(`📁 Created upload directory: ${uploadDir}`);
+// Get upload directory - use /tmp for Vercel (only writable location in serverless)
+const uploadDir = isVercel
+  ? '/tmp/uploads'
+  : (process.env.UPLOAD_DIR || './uploads');
+
+// Ensure upload directory exists (wrapped in try-catch for serverless compatibility)
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log(`📁 Created upload directory: ${uploadDir}`);
+  }
+} catch (error) {
+  console.warn(`⚠️ Could not create upload directory: ${uploadDir}`, error);
+  // In serverless, directory creation might fail on module load but succeed at runtime
 }
 
 // Configure storage
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
+    // Ensure directory exists at upload time (handles serverless cold starts)
+    try {
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+    } catch (err) {
+      console.warn('Could not ensure upload directory exists:', err);
+    }
     cb(null, uploadDir);
   },
   filename: (_req, file, cb) => {
