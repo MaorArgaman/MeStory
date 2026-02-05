@@ -705,7 +705,7 @@ export const purchaseBook = async (req: AuthRequest, res: Response): Promise<voi
     ).catch((err) => console.error('Failed to send purchase notification:', err));
 
     // Send purchase confirmation email to buyer (async)
-    const author = await User.findById(book.author).select('name email');
+    // Note: 'author' is already fetched above for earnings update
     sendBookPurchaseEmail(
       user!.email,
       user!.name,
