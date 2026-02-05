@@ -18,7 +18,10 @@
       "Bash(node check-env.js:*)",
       "Bash(curl:*)",
       "Bash(taskkill:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
