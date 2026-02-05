@@ -1,10 +1,20 @@
 import OpenAI from 'openai';
 import fs from 'fs';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy-initialize OpenAI client (only when API key is available)
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY is not configured');
+  }
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openaiClient;
+}
 
 /**
  * Transcribe audio file to text using OpenAI Whisper
@@ -26,6 +36,7 @@ export async function transcribeAudio(
     const audioFile = fs.createReadStream(filePath);
 
     // Call Whisper API
+    const openai = getOpenAIClient();
     const transcription = await openai.audio.transcriptions.create({
       file: audioFile,
       model: 'whisper-1',
