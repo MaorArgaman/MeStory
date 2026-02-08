@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+// mongoose kept for potential future use
 import { Book } from '../models/Book';
 import { User } from '../models/User';
 import { UserActivity } from '../models/UserActivity';
@@ -577,8 +577,9 @@ export async function calculateUserLTV(userId: string): Promise<UserLTV | null> 
   }
 
   // Calculate subscription value (simplified)
-  const subscriptionValue = user.subscription?.plan === 'PREMIUM' ? 99 :
-    user.subscription?.plan === 'STANDARD' ? 49 : 0;
+  const tier = user.subscription?.tier;
+  const subscriptionValue = tier === 'premium' ? 99 :
+    tier === 'standard' ? 49 : 0;
 
   // Days since registration
   const daysSinceRegistration = Math.max(1, Math.floor(
@@ -624,7 +625,7 @@ export async function getAverageLTVBySegment(): Promise<{
     const ltv = await calculateUserLTV(user._id.toString());
     if (ltv) {
       ltvData.push(ltv.projectedLTV);
-      byPlan[user.subscription?.plan || 'FREE'].push(ltv.projectedLTV);
+      byPlan[user.subscription?.tier?.toUpperCase() || 'FREE'].push(ltv.projectedLTV);
       byEngagement[ltv.userSegment].push(ltv.projectedLTV);
     }
   }
@@ -877,7 +878,8 @@ export async function getRevenueAnalytics(
 ): Promise<RevenueAnalytics> {
   const periodDays = period === 'day' ? 1 : period === 'week' ? 7 : 30;
   const startDate = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
-  const previousStart = new Date(Date.now() - periodDays * 2 * 24 * 60 * 60 * 1000);
+  // previousStart kept for future period comparison feature
+  const _previousStart = new Date(Date.now() - periodDays * 2 * 24 * 60 * 60 * 1000);
 
   // Book sales revenue
   const bookRevenue = await Book.aggregate([
@@ -1163,9 +1165,9 @@ export async function getMostEngagedUsers(limit: number = 20): Promise<EngagedUs
 
   const users: EngagedUser[] = engagementStats.map((stat) => {
     const interactionMap = new Map(stat.interactions.map((i: any) => [i.type, i.count]));
-    const likes = (interactionMap.get('like') || 0);
-    const shares = (interactionMap.get('share') || 0);
-    const comments = (interactionMap.get('comment') || 0) + (interactionMap.get('review') || 0);
+    const likes = Number(interactionMap.get('like') || 0);
+    const shares = Number(interactionMap.get('share') || 0);
+    const comments = Number(interactionMap.get('comment') || 0) + Number(interactionMap.get('review') || 0);
     const conversations = conversationsByUser.get(stat._id.toString()) || 0;
     const messages = messagesByUser.get(stat._id.toString()) || 0;
 
@@ -1297,16 +1299,16 @@ export async function getSocialEngagementTrends(days: number = 30): Promise<any[
 
   return trends.map((t) => {
     const metricsMap = new Map(t.metrics.map((m: any) => [m.type, m.count]));
+    const likes = Number(metricsMap.get('like') || 0);
+    const shares = Number(metricsMap.get('share') || 0);
+    const commentCount = Number(metricsMap.get('comment') || 0);
+    const reviewCount = Number(metricsMap.get('review') || 0);
     return {
       date: t._id,
-      likes: metricsMap.get('like') || 0,
-      shares: metricsMap.get('share') || 0,
-      comments: (metricsMap.get('comment') || 0) + (metricsMap.get('review') || 0),
-      total:
-        (metricsMap.get('like') || 0) +
-        (metricsMap.get('share') || 0) +
-        (metricsMap.get('comment') || 0) +
-        (metricsMap.get('review') || 0),
+      likes,
+      shares,
+      comments: commentCount + reviewCount,
+      total: likes + shares + commentCount + reviewCount,
     };
   });
 }

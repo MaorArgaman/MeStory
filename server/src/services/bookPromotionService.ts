@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
 import { Book, IBook } from '../models/Book';
 import { UserActivity } from '../models/UserActivity';
-import { User } from '../models/User';
+// User import kept for potential future use
+// import { User } from '../models/User';
 
 /**
  * Book Promotion Service
@@ -290,7 +291,7 @@ export async function getFeaturedBooks(limit: number = 10): Promise<PromotedBook
     const { score, badges } = await calculatePromotionScore(book as unknown as IBook);
     const reasons: string[] = [];
 
-    if (book.qualityScore?.overallScore >= 85) {
+    if (book.qualityScore?.overallScore && book.qualityScore.overallScore >= 85) {
       reasons.push('Exceptional writing quality');
     }
     if (badges.includes('TOP_AUTHOR')) {
@@ -396,7 +397,7 @@ export async function getQualityNewReleases(
     );
 
     const reasons: string[] = [`Published ${daysSince} day${daysSince === 1 ? '' : 's'} ago`];
-    if (book.qualityScore?.overallScore >= 75) {
+    if (book.qualityScore?.overallScore && book.qualityScore.overallScore >= 75) {
       reasons.push('High quality score');
     }
 

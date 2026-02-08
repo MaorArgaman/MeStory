@@ -151,7 +151,7 @@ export const getTopInGenre = async (req: AuthRequest, res: Response): Promise<vo
  * Get promotion summary for admin
  * GET /api/promotions/summary
  */
-export const getPromotionSummary = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getPromotionSummary = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const summary = await bookPromotionService.getPromotionSummary();
 

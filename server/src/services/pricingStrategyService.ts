@@ -1,6 +1,8 @@
-import Book from '../models/Book';
-import User from '../models/User';
-import Transaction from '../models/Transaction';
+import { Book } from '../models/Book';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { User } from '../models/User';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Transaction } from '../models/Transaction';
 
 interface AuthorStats {
   totalBooks: number;
@@ -34,7 +36,7 @@ async function getAuthorStats(authorId: string): Promise<AuthorStats> {
   // Get all books by author
   const books = await Book.find({ author: authorId });
   const publishedBooks = books.filter(
-    (b) => b.publishingStatus?.status === 'published'
+    (b: any) => b.publishingStatus?.status === 'published'
   );
 
   // Calculate total sales and revenue
@@ -88,11 +90,11 @@ async function analyzeMarket(genre: string): Promise<MarketAnalysis> {
 
   // Calculate price statistics
   const prices = genreBooks
-    .filter((b) => !b.publishingStatus?.isFree && b.publishingStatus?.price)
-    .map((b) => b.publishingStatus?.price || 0);
+    .filter((b: any) => !b.publishingStatus?.isFree && b.publishingStatus?.price)
+    .map((b: any) => b.publishingStatus?.price || 0);
 
   const avgPrice = prices.length > 0
-    ? prices.reduce((a, b) => a + b, 0) / prices.length
+    ? prices.reduce((a: number, b: number) => a + b, 0) / prices.length
     : 25;
 
   const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
@@ -250,7 +252,9 @@ export async function generatePricingStrategy(
       totalBooks: authorStats.totalBooks,
       publishedBooks: authorStats.publishedBooks,
       totalSales: authorStats.totalSales,
+      totalRevenue: authorStats.totalRevenue,
       averageRating: Math.round(authorStats.averageRating * 10) / 10,
+      averageQualityScore: Math.round(authorStats.averageQualityScore * 10) / 10,
     },
     marketAnalysis,
     strategyTips: strategyTips.slice(0, 4), // Limit to 4 tips

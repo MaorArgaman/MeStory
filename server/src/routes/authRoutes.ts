@@ -22,13 +22,14 @@ import { isGoogleOAuthEnabled } from '../config/passport';
  * Middleware to check if Google OAuth is configured
  * Returns error if not available (e.g., missing env vars in Vercel)
  */
-const checkGoogleOAuth = (_req: Request, res: Response, next: NextFunction) => {
+const checkGoogleOAuth = (_req: Request, res: Response, next: NextFunction): void => {
   if (!isGoogleOAuthEnabled()) {
-    return res.status(503).json({
+    res.status(503).json({
       success: false,
       error: 'Google OAuth is not configured. Please use email/password login.',
       code: 'GOOGLE_OAUTH_NOT_CONFIGURED',
     });
+    return;
   }
   next();
 };

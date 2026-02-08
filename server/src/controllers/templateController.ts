@@ -34,17 +34,18 @@ export async function getAllTemplates(req: Request, res: Response) {
 }
 
 // Get template by ID
-export async function getTemplateById(req: Request, res: Response) {
+export async function getTemplateById(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
 
     const template = await templateService.getTemplateById(id);
 
     if (!template) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Template not found',
       });
+      return;
     }
 
     res.json({
@@ -61,15 +62,16 @@ export async function getTemplateById(req: Request, res: Response) {
 }
 
 // Get templates by category
-export async function getTemplatesByCategory(req: Request, res: Response) {
+export async function getTemplatesByCategory(req: Request, res: Response): Promise<void> {
   try {
     const { category } = req.params;
 
     if (!isValidCategory(category)) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Invalid category',
       });
+      return;
     }
 
     const templates = await templateService.getTemplatesByCategory(category as TemplateCategory);
@@ -89,7 +91,7 @@ export async function getTemplatesByCategory(req: Request, res: Response) {
 }
 
 // Get system templates
-export async function getSystemTemplates(req: Request, res: Response) {
+export async function getSystemTemplates(_req: Request, res: Response): Promise<void> {
   try {
     const templates = await templateService.getSystemTemplates();
 
@@ -108,15 +110,16 @@ export async function getSystemTemplates(req: Request, res: Response) {
 }
 
 // Get user's custom templates
-export async function getUserTemplates(req: Request, res: Response) {
+export async function getUserTemplates(req: Request, res: Response): Promise<void> {
   try {
     const userId = (req as any).user?.id;
 
     if (!userId) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Authentication required',
       });
+      return;
     }
 
     const templates = await templateService.getUserTemplates(userId);
@@ -136,25 +139,27 @@ export async function getUserTemplates(req: Request, res: Response) {
 }
 
 // Create a new template
-export async function createTemplate(req: Request, res: Response) {
+export async function createTemplate(req: Request, res: Response): Promise<void> {
   try {
     const userId = (req as any).user?.id;
 
     if (!userId) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Authentication required',
       });
+      return;
     }
 
     const templateData = req.body;
 
     // Validate required fields
     if (!templateData.name || !templateData.nameHe || !templateData.category) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Missing required fields: name, nameHe, category',
       });
+      return;
     }
 
     const template = await templateService.createTemplate(templateData, userId);
@@ -173,7 +178,7 @@ export async function createTemplate(req: Request, res: Response) {
 }
 
 // Update a template
-export async function updateTemplate(req: Request, res: Response) {
+export async function updateTemplate(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
     const userId = (req as any).user?.id;
@@ -182,10 +187,11 @@ export async function updateTemplate(req: Request, res: Response) {
     const template = await templateService.updateTemplate(id, updates, userId);
 
     if (!template) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Template not found',
       });
+      return;
     }
 
     res.json({
@@ -202,7 +208,7 @@ export async function updateTemplate(req: Request, res: Response) {
 }
 
 // Delete a template
-export async function deleteTemplate(req: Request, res: Response) {
+export async function deleteTemplate(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
     const userId = (req as any).user?.id;
@@ -210,10 +216,11 @@ export async function deleteTemplate(req: Request, res: Response) {
     const deleted = await templateService.deleteTemplate(id, userId);
 
     if (!deleted) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Template not found',
       });
+      return;
     }
 
     res.json({
@@ -230,26 +237,28 @@ export async function deleteTemplate(req: Request, res: Response) {
 }
 
 // Clone a template
-export async function cloneTemplate(req: Request, res: Response) {
+export async function cloneTemplate(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
     const userId = (req as any).user?.id;
     const { name } = req.body;
 
     if (!userId) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Authentication required',
       });
+      return;
     }
 
     const template = await templateService.cloneTemplate(id, userId, name);
 
     if (!template) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Template not found',
       });
+      return;
     }
 
     res.status(201).json({
@@ -266,33 +275,36 @@ export async function cloneTemplate(req: Request, res: Response) {
 }
 
 // Apply template to a book
-export async function applyTemplateToBook(req: Request, res: Response) {
+export async function applyTemplateToBook(req: Request, res: Response): Promise<void> {
   try {
     const { bookId } = req.params;
     const { templateId } = req.body;
     const userId = (req as any).user?.id;
 
     if (!userId) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Authentication required',
       });
+      return;
     }
 
     if (!templateId) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Template ID is required',
       });
+      return;
     }
 
     const book = await templateService.applyTemplateToBook(bookId, templateId, userId);
 
     if (!book) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Book or template not found',
       });
+      return;
     }
 
     res.json({
@@ -309,24 +321,26 @@ export async function applyTemplateToBook(req: Request, res: Response) {
 }
 
 // Save book as template
-export async function saveBookAsTemplate(req: Request, res: Response) {
+export async function saveBookAsTemplate(req: Request, res: Response): Promise<void> {
   try {
     const { bookId } = req.params;
     const { name, nameHe, category } = req.body;
     const userId = (req as any).user?.id;
 
     if (!userId) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Authentication required',
       });
+      return;
     }
 
     if (!name || !nameHe) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Template name (name, nameHe) is required',
       });
+      return;
     }
 
     const template = await templateService.saveBookAsTemplate(
@@ -338,10 +352,11 @@ export async function saveBookAsTemplate(req: Request, res: Response) {
     );
 
     if (!template) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Book not found',
       });
+      return;
     }
 
     res.status(201).json({
@@ -358,15 +373,16 @@ export async function saveBookAsTemplate(req: Request, res: Response) {
 }
 
 // Get template recommendations
-export async function getTemplateRecommendations(req: Request, res: Response) {
+export async function getTemplateRecommendations(req: Request, res: Response): Promise<void> {
   try {
     const { genre, targetAudience, writingGoal } = req.query;
 
     if (!genre) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Genre is required',
       });
+      return;
     }
 
     const templates = await templateService.getTemplateRecommendations(
@@ -390,15 +406,16 @@ export async function getTemplateRecommendations(req: Request, res: Response) {
 }
 
 // Search templates
-export async function searchTemplates(req: Request, res: Response) {
+export async function searchTemplates(req: Request, res: Response): Promise<void> {
   try {
     const { q, category, limit } = req.query;
 
     if (!q) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Search query (q) is required',
       });
+      return;
     }
 
     const templates = await templateService.searchTemplates(q as string, {

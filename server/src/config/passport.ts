@@ -59,7 +59,7 @@ export const configurePassport = () => {
               await user.save();
             }
 
-            return done(null, user);
+            return done(null, user as any);
           }
 
           // User doesn't exist - create new user
@@ -77,7 +77,7 @@ export const configurePassport = () => {
           await user.save();
 
           console.log(`✅ New user created via Google OAuth: ${email}`);
-          return done(null, user);
+          return done(null, user as any);
         } catch (error) {
           console.error('Google OAuth error:', error);
           return done(error as Error, undefined);
@@ -95,7 +95,7 @@ export const configurePassport = () => {
   passport.deserializeUser(async (id: string, done) => {
     try {
       const user = await User.findById(id);
-      done(null, user);
+      done(null, user as any);
     } catch (error) {
       done(error, null);
     }

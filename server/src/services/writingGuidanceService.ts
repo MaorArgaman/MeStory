@@ -67,7 +67,7 @@ export async function checkGuidance(
     storyContext = `
 אלמנטים מבוססים של הסיפור (מראיון המחבר):
 ${voiceInterview.theme?.mainTheme ? `נושא מרכזי: ${voiceInterview.theme.mainTheme}` : ''}
-${voiceInterview.theme?.tone ? `טון: ${voiceInterview.tone}` : ''}
+${(voiceInterview as any).tone ? `טון: ${(voiceInterview as any).tone}` : ''}
 ${voiceInterview.plot?.conflict ? `קונפליקט מרכזי: ${voiceInterview.plot.conflict}` : ''}
 ${voiceInterview.characters && voiceInterview.characters.length > 0 ? `דמויות ראשיות: ${voiceInterview.characters.map((c: any) => c.name).join(', ')}` : ''}
 ${voiceInterview.writingGuidelines && voiceInterview.writingGuidelines.length > 0 ? `הנחיות כתיבה:\n${voiceInterview.writingGuidelines.map((g: string) => `- ${g}`).join('\n')}` : ''}

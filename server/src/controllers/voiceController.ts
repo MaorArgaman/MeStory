@@ -15,7 +15,6 @@ import {
   getInterviewProgress,
   canCompleteEarly,
   InterviewState,
-  InterviewSummary,
 } from '../services/aiInterviewService';
 
 // In-memory interview state storage (use Redis in production)

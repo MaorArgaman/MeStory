@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { Book, IBook } from '../models/Book';
-import { UserActivity, IUserActivity } from '../models/UserActivity';
-import { User } from '../models/User';
+import { UserActivity } from '../models/UserActivity';
+// User kept for potential future use
 
 /**
  * ML-Enhanced Recommendation Service
@@ -402,7 +402,7 @@ export function applyDiversityPenalty(
  * Inject exploration recommendations for serendipity
  */
 export async function getExplorationRecommendations(
-  userId: string,
+  _userId: string,
   userFeatures: MLFeatureVector,
   count: number = 3
 ): Promise<IBook[]> {

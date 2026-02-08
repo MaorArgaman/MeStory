@@ -427,7 +427,7 @@ export async function saveBookAsTemplate(
 export async function getTemplateRecommendations(
   genre: string,
   targetAudience?: string,
-  writingGoal?: string
+  _writingGoal?: string
 ): Promise<IBookTemplate[]> {
   // Map genre to template categories
   const categoryMap: Record<string, TemplateCategory[]> = {

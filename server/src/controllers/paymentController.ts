@@ -247,15 +247,16 @@ export const captureOrder = async (req: AuthRequest, res: Response): Promise<voi
       const isUpgrade = previousPlan === UserRole.FREE ||
         (previousPlan === UserRole.STANDARD && transaction.plan === 'premium');
 
+      const userId = (req as any).user?.id || user._id.toString();
       notifyPaymentReceived(
-        req.user!.id,
+        userId,
         transaction.amount,
         'USD',
         transaction.orderId,
         `שדרוג לחבילת ${planLabel}`
       ).catch((err) => console.error('Failed to send payment notification:', err));
 
-      notifySubscriptionChange(req.user!.id, planLabel, isUpgrade).catch((err) =>
+      notifySubscriptionChange(userId, planLabel, isUpgrade).catch((err) =>
         console.error('Failed to send subscription notification:', err)
       );
 

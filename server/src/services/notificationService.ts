@@ -51,7 +51,7 @@ export async function createBatchNotifications(
     data: n.data,
   }));
 
-  return await Notification.insertMany(docs);
+  return await Notification.insertMany(docs) as unknown as INotification[];
 }
 
 // ==================== SPECIFIC NOTIFICATION TYPES ====================
@@ -406,7 +406,7 @@ export async function getUserNotifications(
     }),
   ]);
 
-  return { notifications: notifications as INotification[], total, unreadCount };
+  return { notifications: notifications as unknown as INotification[], total, unreadCount };
 }
 
 /**

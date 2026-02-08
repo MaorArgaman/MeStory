@@ -280,7 +280,7 @@ export const checkWritingGuidance = async (req: Request, res: Response): Promise
  */
 export const calculateScoreChange = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { bookId, chapterIndex, previousText, newText } = req.body;
+    const { bookId: _bookId, chapterIndex: _chapterIndex, previousText, newText } = req.body;
 
     // Validation
     if (!previousText || !newText) {

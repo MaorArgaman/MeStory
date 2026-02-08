@@ -5,7 +5,7 @@
 
 import { Router } from 'express';
 import * as templateController from '../controllers/templateController';
-import { auth, optionalAuth } from '../middleware/auth';
+import { auth } from '../middleware/auth';
 
 const router = Router();
 

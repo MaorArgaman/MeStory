@@ -1,6 +1,6 @@
 import PDFDocument from 'pdfkit';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, PageBreak, ImageRun, AlignmentType } from 'docx';
-import Book from '../models/Book';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, PageBreak, AlignmentType } from 'docx';
+import { Book } from '../models/Book';
 import path from 'path';
 import fs from 'fs';
 import https from 'https';
@@ -50,7 +50,7 @@ function stripHtml(html: string): string {
 /**
  * Download image from URL and return as buffer
  */
-async function downloadImage(url: string): Promise<Buffer | null> {
+async function _downloadImage(url: string): Promise<Buffer | null> {
   return new Promise((resolve) => {
     try {
       const protocol = url.startsWith('https') ? https : http;
@@ -306,7 +306,8 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
     statistics: book.statistics || { wordCount: 0, chapterCount: 0 },
   };
 
-  const sections: any[] = [];
+  // Sections array (unused but kept for future extensibility)
+  const _sections: any[] = [];
 
   // === TITLE PAGE ===
   const titlePage: Paragraph[] = [
