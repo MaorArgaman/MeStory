@@ -182,6 +182,7 @@ app.get('/health', (_req, res) => {
     status: 'ok',
     message: 'MeStory API is running',
     initialized: isInitialized,
+    initError: initializationError?.message || null,
   });
 });
 
