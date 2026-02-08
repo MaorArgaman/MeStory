@@ -3,12 +3,25 @@
  * AI-powered tension level analysis throughout the book
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { IBook } from '../models/Book';
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+// Lazy-initialize Gemini AI client (only when API key is available)
+let genAIClient: GoogleGenerativeAI | null = null;
+let modelInstance: GenerativeModel | null = null;
+
+function getGeminiModel(): GenerativeModel {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not configured');
+  }
+  if (!genAIClient) {
+    genAIClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  }
+  if (!modelInstance) {
+    modelInstance = genAIClient.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+  }
+  return modelInstance;
+}
 
 // Types
 export interface TensionMoment {
@@ -108,7 +121,7 @@ ${chapterPrompts.slice(0, 8000)}
 - irregular: תבנית לא עקבית`;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await getGeminiModel().generateContent(prompt);
     const response = result.response.text();
     const jsonMatch = response.match(/\{[\s\S]*\}/);
 

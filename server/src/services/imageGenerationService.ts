@@ -1,12 +1,25 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import axios from 'axios';
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 
-// Initialize Gemini AI for prompt generation
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+// Lazy-initialize Gemini AI client (only when API key is available)
+let genAIClient: GoogleGenerativeAI | null = null;
+let modelInstance: GenerativeModel | null = null;
+
+function getGeminiModel(): GenerativeModel {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not configured');
+  }
+  if (!genAIClient) {
+    genAIClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  }
+  if (!modelInstance) {
+    modelInstance = genAIClient.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+  }
+  return modelInstance;
+}
 
 export interface ImageGenerationRequest {
   prompt: string;
@@ -67,7 +80,7 @@ Keep the enhanced prompt under 300 characters for optimal AI image generation.
 
 Respond ONLY with the enhanced prompt text, nothing else.`;
 
-    const result = await model.generateContent(aiPrompt);
+    const result = await getGeminiModel().generateContent(aiPrompt);
     const response = result.response;
     return response.text().trim();
   } catch (error) {
@@ -359,7 +372,7 @@ Describe the scene in 2-3 sentences, focusing on:
 
 Respond with ONLY the scene description, no other text.`;
 
-    const result = await model.generateContent(analysisPrompt);
+    const result = await getGeminiModel().generateContent(analysisPrompt);
     const sceneDescription = result.response.text().trim();
 
     // Generate the illustration

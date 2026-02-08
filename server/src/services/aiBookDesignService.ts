@@ -1,12 +1,25 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import axios from 'axios';
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+// Lazy-initialize Gemini AI client (only when API key is available)
+let genAIClient: GoogleGenerativeAI | null = null;
+let modelInstance: GenerativeModel | null = null;
+
+function getGeminiModel(): GenerativeModel {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not configured');
+  }
+  if (!genAIClient) {
+    genAIClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  }
+  if (!modelInstance) {
+    modelInstance = genAIClient.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+  }
+  return modelInstance;
+}
 
 // ============================================
 // TYPE DEFINITIONS
@@ -207,7 +220,7 @@ Respond with ONLY valid JSON in this exact format:
 }`;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await getGeminiModel().generateContent(prompt);
     const responseText = result.response.text();
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
@@ -306,7 +319,7 @@ Values for pageNumberPosition: "bottom-center" | "bottom-outer" | "top-outer" | 
 Values for headerStyle: "none" | "book-title" | "chapter-title" | "author-name"`;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await getGeminiModel().generateContent(prompt);
     const responseText = result.response.text();
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
@@ -374,7 +387,7 @@ Respond with ONLY valid JSON array:
 If no illustrations are needed for this chapter, return empty array: []`;
 
     try {
-      const result = await model.generateContent(prompt);
+      const result = await getGeminiModel().generateContent(prompt);
       const responseText = result.response.text();
       const jsonMatch = responseText.match(/\[[\s\S]*\]/);
 
@@ -487,7 +500,7 @@ Respond with ONLY valid JSON:
 }`;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await getGeminiModel().generateContent(prompt);
     const responseText = result.response.text();
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
@@ -644,7 +657,7 @@ Cover concept: ${cover.reasoning}
 Describe the overall aesthetic in 2 sentences.`;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await getGeminiModel().generateContent(prompt);
     return result.response.text().trim();
   } catch {
     return `Professional ${input.genre} design with ${typography.bodyFont} typography and ${cover.front.colorPalette.length > 0 ? 'rich color palette' : 'classic styling'}.`;

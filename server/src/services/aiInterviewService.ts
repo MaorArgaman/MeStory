@@ -4,11 +4,24 @@
  * Uses Gemini AI for adaptive questioning and summary generation
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+// Lazy-initialize Gemini AI client (only when API key is available)
+let genAIClient: GoogleGenerativeAI | null = null;
+let modelInstance: GenerativeModel | null = null;
+
+function getGeminiModel(): GenerativeModel {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not configured');
+  }
+  if (!genAIClient) {
+    genAIClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  }
+  if (!modelInstance) {
+    modelInstance = genAIClient.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+  }
+  return modelInstance;
+}
 
 // Interview topics
 export type InterviewTopic = 'theme' | 'characters' | 'plot' | 'setting';
@@ -134,7 +147,7 @@ export async function getFirstQuestion(state: InterviewState): Promise<string> {
 
 תחזיר רק את השאלה, ללא הסברים.`;
 
-  const result = await model.generateContent(prompt);
+  const result = await getGeminiModel().generateContent(prompt);
   return result.response.text().trim();
 }
 
@@ -187,7 +200,7 @@ ${relevantResponses ? `שיחה קודמת בנושא:\n${relevantResponses}` : 
 }`;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await getGeminiModel().generateContent(prompt);
     const text = result.response.text().trim();
 
     // Extract JSON from response
@@ -298,7 +311,7 @@ export async function analyzeResponse(
   "extractedInfo": "סיכום קצר של המידע החדש שהתקבל"
 }`;
 
-    const result = await model.generateContent(prompt);
+    const result = await getGeminiModel().generateContent(prompt);
     const text = result.response.text().trim();
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -475,7 +488,7 @@ ${responsesByTopic.setting.join('\n\n')}
 - הנחיות הכתיבה צריכות להיות ספציפיות ושימושיות`;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await getGeminiModel().generateContent(prompt);
     const text = result.response.text().trim();
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);

@@ -1,10 +1,21 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+// Lazy-initialize Gemini AI client (only when API key is available)
+let genAIClient: GoogleGenerativeAI | null = null;
+let modelInstance: GenerativeModel | null = null;
 
-// Use Gemini 2.0 Flash for fast responses (Section 15.1)
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+function getGeminiModel(): GenerativeModel {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not configured');
+  }
+  if (!genAIClient) {
+    genAIClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  }
+  if (!modelInstance) {
+    modelInstance = genAIClient.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+  }
+  return modelInstance;
+}
 
 // Types for AI responses
 export interface WritingSuggestion {
@@ -123,7 +134,7 @@ ${context?.storyContext?.voiceInterview ? '- Align with the story background fro
 Respond ONLY with a JSON array of 3 strings, nothing else:
 ["option1", "option2", "option3"]`;
 
-    const result = await model.generateContent(prompt);
+    const result = await getGeminiModel().generateContent(prompt);
     const response = result.response;
     const text = response.text();
 
@@ -205,7 +216,7 @@ Respond ONLY with valid JSON in this exact format:
   "suggestions": ["<suggestion 1>", "<suggestion 2>", "<suggestion 3>"]
 }`;
 
-    const result = await model.generateContent(prompt);
+    const result = await getGeminiModel().generateContent(prompt);
     const response = result.response;
     const responseText = response.text();
 
@@ -305,7 +316,7 @@ export async function enhanceText(
         break;
     }
 
-    const result = await model.generateContent(prompt);
+    const result = await getGeminiModel().generateContent(prompt);
     const response = result.response;
     return response.text().trim();
   } catch (error: any) {
@@ -341,7 +352,7 @@ Requirements:
 
 Format: Return only the titles, one per line, numbered 1-${count}.`;
 
-    const result = await model.generateContent(prompt);
+    const result = await getGeminiModel().generateContent(prompt);
     const response = result.response;
     const text = response.text().trim();
 
@@ -408,7 +419,7 @@ TARGET AUDIENCE: Readers browsing the marketplace who need a reason to click "Re
 
 Respond with ONLY the synopsis text, no titles, no explanations, no formatting markers.`;
 
-    const result = await model.generateContent(prompt);
+    const result = await getGeminiModel().generateContent(prompt);
     const response = result.response;
     const synopsis = response.text().trim();
 
@@ -473,7 +484,7 @@ Provide colors as hex codes. Respond ONLY with valid JSON in this exact format:
   "suggestion": "Brief explanation of the color choice (1-2 sentences)"
 }`;
 
-    const result = await model.generateContent(prompt);
+    const result = await getGeminiModel().generateContent(prompt);
     const response = result.response;
     const text = response.text().trim();
 
@@ -542,7 +553,7 @@ Respond ONLY with valid JSON in this exact format:
   "suggestion": "Brief explanation of the design concept (2-3 sentences)"
 }`;
 
-    const result = await model.generateContent(prompt);
+    const result = await getGeminiModel().generateContent(prompt);
     const response = result.response;
     const text = response.text().trim();
 
