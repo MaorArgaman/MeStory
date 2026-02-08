@@ -878,8 +878,6 @@ export async function getRevenueAnalytics(
 ): Promise<RevenueAnalytics> {
   const periodDays = period === 'day' ? 1 : period === 'week' ? 7 : 30;
   const startDate = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
-  // previousStart kept for future period comparison feature
-  const _previousStart = new Date(Date.now() - periodDays * 2 * 24 * 60 * 60 * 1000);
 
   // Book sales revenue
   const bookRevenue = await Book.aggregate([

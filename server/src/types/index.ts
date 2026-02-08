@@ -15,8 +15,9 @@ export interface SubscriptionPlan {
 }
 
 // Authenticated request with user
-// Note: user property is defined in types/express.d.ts for Passport compatibility
-export interface AuthRequest extends Request {
+// Note: This extends Request but uses a more flexible user type
+// that allows partial data from JWT tokens
+export interface AuthRequest extends Omit<Request, 'user'> {
   user?: {
     id: string;
     email: string;

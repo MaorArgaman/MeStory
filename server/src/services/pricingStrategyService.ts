@@ -1,8 +1,4 @@
 import { Book } from '../models/Book';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { User } from '../models/User';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Transaction } from '../models/Transaction';
 
 interface AuthorStats {
   totalBooks: number;

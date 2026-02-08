@@ -252,7 +252,7 @@ export const captureOrder = async (req: AuthRequest, res: Response): Promise<voi
         userId,
         transaction.amount,
         'USD',
-        transaction.orderId,
+        transaction.orderId || transaction._id.toString(),
         `שדרוג לחבילת ${planLabel}`
       ).catch((err) => console.error('Failed to send payment notification:', err));
 
@@ -291,7 +291,7 @@ export const captureOrder = async (req: AuthRequest, res: Response): Promise<voi
       sendPayPalReceiptEmail(
         user.email,
         user.name,
-        transaction.orderId,
+        transaction.orderId || transaction._id.toString(),
         `שדרוג לחבילת ${planLabel}`,
         transaction.amount,
         'USD'

@@ -3,8 +3,6 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel, PageBreak, Alignmen
 import { Book } from '../models/Book';
 import path from 'path';
 import fs from 'fs';
-import https from 'https';
-import http from 'http';
 
 interface ChapterData {
   title: string;
@@ -48,29 +46,6 @@ function stripHtml(html: string): string {
 }
 
 /**
- * Download image from URL and return as buffer
- */
-async function _downloadImage(url: string): Promise<Buffer | null> {
-  return new Promise((resolve) => {
-    try {
-      const protocol = url.startsWith('https') ? https : http;
-      protocol.get(url, (response) => {
-        if (response.statusCode === 200) {
-          const chunks: Buffer[] = [];
-          response.on('data', (chunk) => chunks.push(chunk));
-          response.on('end', () => resolve(Buffer.concat(chunks)));
-          response.on('error', () => resolve(null));
-        } else {
-          resolve(null);
-        }
-      }).on('error', () => resolve(null));
-    } catch {
-      resolve(null);
-    }
-  });
-}
-
-/**
  * Convert hex color to RGB
  */
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
@@ -103,10 +78,11 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       content: stripHtml(ch.content || ''),
       wordCount: ch.wordCount || 0,
     })),
-    coverDesign: book.coverDesign || {
-      coverColor: '#1a1a2e',
-      textColor: '#ffffff',
-      fontFamily: 'Helvetica',
+    coverDesign: {
+      coverColor: book.coverDesign?.front?.backgroundColor || '#1a1a2e',
+      textColor: book.coverDesign?.front?.title?.color || '#ffffff',
+      fontFamily: book.coverDesign?.front?.title?.font || 'Helvetica',
+      imageUrl: book.coverDesign?.front?.imageUrl,
     },
     statistics: book.statistics || { wordCount: 0, chapterCount: 0 },
   };
@@ -298,16 +274,15 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
       content: stripHtml(ch.content || ''),
       wordCount: ch.wordCount || 0,
     })),
-    coverDesign: book.coverDesign || {
-      coverColor: '#1a1a2e',
-      textColor: '#ffffff',
-      fontFamily: 'Calibri',
+    coverDesign: {
+      coverColor: book.coverDesign?.front?.backgroundColor || '#1a1a2e',
+      textColor: book.coverDesign?.front?.title?.color || '#ffffff',
+      fontFamily: book.coverDesign?.front?.title?.font || 'Calibri',
+      imageUrl: book.coverDesign?.front?.imageUrl,
     },
     statistics: book.statistics || { wordCount: 0, chapterCount: 0 },
   };
 
-  // Sections array (unused but kept for future extensibility)
-  const _sections: any[] = [];
 
   // === TITLE PAGE ===
   const titlePage: Paragraph[] = [
