@@ -41,6 +41,11 @@ const PORT = process.env.PORT || 5001;
 // Check if running in Vercel serverless environment
 const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
 
+// Trust proxy for Vercel (required for express-rate-limit behind reverse proxy)
+if (isVercel) {
+  app.set('trust proxy', 1);
+}
+
 // ============================================
 // Serverless Initialization (must be early)
 // ============================================
