@@ -1,5 +1,5 @@
 // MeStory Server
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -38,14 +38,83 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// CORS configuration for multiple origins (localhost + Vercel domains)
+// Check if running in Vercel serverless environment
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+
+// ============================================
+// Serverless Initialization (must be early)
+// ============================================
+let isInitialized = false;
+let initializationPromise: Promise<void> | null = null;
+let initializationError: Error | null = null;
+
+const initializeApp = async () => {
+  if (isInitialized) return;
+  if (initializationError) throw initializationError;
+
+  try {
+    // Connect to MongoDB
+    await connectDatabase();
+
+    // Configure Passport strategies
+    const passportConfigured = configurePassport();
+    if (passportConfigured) {
+      console.log('✅ Google OAuth configured successfully');
+    }
+
+    // Initialize default book templates
+    await initializeDefaultTemplates();
+    console.log('✅ Book templates initialized');
+
+    isInitialized = true;
+    console.log('✅ Server initialization complete');
+  } catch (error) {
+    console.error('❌ Failed to initialize app:', error);
+    initializationError = error as Error;
+    throw error;
+  }
+};
+
+// Middleware to ensure initialization is complete before handling API requests
+const ensureInitialized = async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!isInitialized) {
+      if (!initializationPromise) {
+        initializationPromise = initializeApp();
+      }
+      await initializationPromise;
+    }
+    next();
+  } catch (error) {
+    console.error('Initialization failed:', error);
+    res.status(503).json({
+      success: false,
+      error: 'Server is starting up. Please try again in a moment.',
+    });
+  }
+};
+
+// Start initialization in background for Vercel
+if (isVercel) {
+  console.log('🌐 Running in Vercel serverless mode');
+  initializationPromise = initializeApp().catch((err) => {
+    console.error('Initialization error:', err);
+    initializationError = err;
+  });
+}
+
+// ============================================
+// CORS Configuration
+// ============================================
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   process.env.CLIENT_URL,
 ].filter(Boolean) as string[];
 
-// Middleware
+// ============================================
+// Standard Middleware
+// ============================================
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
@@ -100,13 +169,26 @@ app.use(passport.session());
 const uploadDir = process.env.UPLOAD_DIR || './uploads';
 app.use('/uploads', express.static(path.resolve(uploadDir)));
 
-// Health check route
+// ============================================
+// Health Check (no init required)
+// ============================================
 app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'ok', message: 'MeStory API is running' });
+  res.status(200).json({
+    status: 'ok',
+    message: 'MeStory API is running',
+    initialized: isInitialized,
+  });
 });
 
-// Apply rate limiting to all API routes (Section 17.2: 100 req/min)
+// ============================================
+// API Routes (require initialization)
+// ============================================
+
+// Apply rate limiting to all API routes
 app.use('/api', apiLimiter);
+
+// IMPORTANT: Apply initialization check BEFORE routes
+app.use('/api', ensureInitialized);
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -125,44 +207,19 @@ app.use('/api/voice', voiceRoutes);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/templates', templateRoutes);
 
-// Error handling middleware (must be last)
-app.use(notFoundHandler); // 404 handler
-app.use(errorHandler); // Global error handler
+// ============================================
+// Error Handling (must be last)
+// ============================================
+app.use(notFoundHandler);
+app.use(errorHandler);
 
-// Track initialization state for serverless
-let isInitialized = false;
-
-// Initialize function for serverless cold starts
-const initializeApp = async () => {
-  if (isInitialized) return;
-
-  try {
-    // Connect to MongoDB
-    await connectDatabase();
-
-    // Configure Passport strategies
-    const passportConfigured = configurePassport();
-    if (passportConfigured) {
-      console.log('✅ Google OAuth configured successfully');
-    }
-
-    // Initialize default book templates
-    await initializeDefaultTemplates();
-    console.log('✅ Book templates initialized');
-
-    isInitialized = true;
-  } catch (error) {
-    console.error('❌ Failed to initialize app:', error);
-    throw error;
-  }
-};
-
-// Start server function (for local development)
+// ============================================
+// Local Development Server
+// ============================================
 const startServer = async () => {
   try {
     await initializeApp();
 
-    // Start Express server
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -174,18 +231,10 @@ const startServer = async () => {
   }
 };
 
-// Check if running in Vercel serverless environment
-const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
-
-if (isVercel) {
-  // For Vercel: Initialize on first request, don't call app.listen()
-  console.log('🌐 Running in Vercel serverless mode');
-  initializeApp().catch(console.error);
-} else {
-  // For local development or traditional hosting: Start the server
+// Start server for local development (not Vercel)
+if (!isVercel) {
   startServer();
 }
 
 // Export the Express app for Vercel serverless handler
 export default app;
-
