@@ -37,51 +37,88 @@ interface PageImage {
   rotation: number;
 }
 
-// AI Design interfaces
+// AI Design interfaces - matches server's TypographyDesign structure
 interface TypographyDesign {
-  titleFont: { family: string; size: number; weight: string; color: string };
-  bodyFont: { family: string; size: number; weight: string; color: string; lineHeight: number };
-  chapterTitleFont: { family: string; size: number; weight: string; color: string };
-  headerFont: { family: string; size: number; weight: string; color: string };
+  bodyFont: string;
+  headingFont: string;
+  titleFont: string;
+  fontSize: number;
+  lineHeight: number;
+  chapterTitleSize: number;
+  pageNumberSize: number;
+  colors: {
+    text: string;
+    heading: string;
+    accent: string;
+  };
+  reasoning: string;
 }
 
 interface PageLayoutDesign {
   margins: { top: number; bottom: number; inner: number; outer: number };
-  pageNumbers: { position: 'bottom-center' | 'bottom-outside' | 'top-outside' | 'none'; startFrom: number };
-  chapterStart: 'right' | 'any' | 'new-spread';
-  lineSpacing: number;
-  paragraphSpacing: number;
-  firstLineIndent: number;
+  chapterStartStyle: 'same-page' | 'new-page' | 'new-page-centered';
+  pageNumberPosition: 'bottom-center' | 'bottom-outer' | 'top-outer' | 'none';
+  headerStyle: 'none' | 'book-title' | 'chapter-title' | 'author-name';
   dropCaps: boolean;
+  ornaments: boolean;
+  reasoning: string;
 }
 
 interface CoverDesign {
-  frontCover: {
-    background: { type: 'solid' | 'gradient' | 'image'; value: string; imageUrl?: string };
-    titlePosition: { x: number; y: number; align: 'center' | 'left' | 'right' };
-    authorPosition: { x: number; y: number; align: 'center' | 'left' | 'right' };
-    decorativeElements: string[];
+  front: {
+    imagePrompt: string;
+    imageUrl?: string;
+    title: {
+      text: string;
+      font: string;
+      size: number;
+      color: string;
+      position: 'top' | 'center' | 'bottom';
+      alignment: 'left' | 'center' | 'right';
+    };
+    author: {
+      text: string;
+      font: string;
+      size: number;
+      color: string;
+      position: 'top' | 'bottom';
+    };
+    colorPalette: string[];
   };
-  backCover: {
-    background: { type: 'solid' | 'gradient' | 'blurred-front'; value: string };
-    synopsisStyle: { maxWords: number; fontSize: number; lineHeight: number };
-    authorBioPosition: 'bottom' | 'none';
-    barcodePosition: { x: number; y: number };
+  back: {
+    imagePrompt: string;
+    imageUrl?: string;
+    synopsis: {
+      text: string;
+      font: string;
+      size: number;
+      color: string;
+    };
+    author: {
+      text: string;
+      font: string;
+      size: number;
+      color: string;
+    };
+    backgroundColor: string;
   };
   spine: {
-    background: string;
-    titleOrientation: 'vertical-up' | 'vertical-down' | 'horizontal';
-    includeAuthor: boolean;
+    title: string;
+    author: string;
+    font: string;
+    color: string;
+    backgroundColor: string;
   };
+  reasoning: string;
 }
 
 interface ImagePlacementSuggestion {
   chapterIndex: number;
-  position: 'after-paragraph' | 'full-page' | 'half-page' | 'chapter-header';
-  paragraphIndex?: number;
+  position: 'chapter-start' | 'mid-chapter' | 'chapter-end';
+  textContext: string;
   suggestedPrompt: string;
-  rationale: string;
-  priority: 'high' | 'medium' | 'low';
+  importance: 'high' | 'medium' | 'low';
+  reasoning: string;
 }
 
 interface CompleteBookDesign {
@@ -608,9 +645,9 @@ export default function BookLayoutPage() {
         if (selectedDesignElements.typography || selectedDesignElements.layout) {
           const newSettings = { ...settings };
           if (selectedDesignElements.typography) {
-            newSettings.fontFamily = aiDesign.typography.bodyFont.family;
-            newSettings.fontSize = aiDesign.typography.bodyFont.size;
-            newSettings.lineHeight = aiDesign.typography.bodyFont.lineHeight;
+            newSettings.fontFamily = aiDesign.typography.bodyFont;
+            newSettings.fontSize = aiDesign.typography.fontSize;
+            newSettings.lineHeight = aiDesign.typography.lineHeight;
           }
           if (selectedDesignElements.layout) {
             newSettings.margins = {
@@ -629,9 +666,9 @@ export default function BookLayoutPage() {
             ...book,
             coverDesign: {
               ...book.coverDesign,
-              coverColor: aiDesign.cover.frontCover.background.value,
-              textColor: aiDesign.typography.titleFont.color,
-              fontFamily: aiDesign.typography.titleFont.family,
+              coverColor: aiDesign.cover.front.colorPalette?.[0] || '#1a1a2e',
+              textColor: aiDesign.typography.colors.heading,
+              fontFamily: aiDesign.typography.titleFont,
               imageUrl: coverImageUrl,
             },
           });
@@ -1350,18 +1387,17 @@ export default function BookLayoutPage() {
                             <div
                               className="p-4 bg-white rounded-lg mb-3"
                               style={{
-                                fontFamily: aiDesign.typography.titleFont.family,
-                                fontSize: `${Math.min(aiDesign.typography.titleFont.size, 32)}px`,
-                                fontWeight: aiDesign.typography.titleFont.weight,
-                                color: aiDesign.typography.titleFont.color,
+                                fontFamily: aiDesign.typography.titleFont,
+                                fontSize: '28px',
+                                fontWeight: 'bold',
+                                color: aiDesign.typography.colors.heading,
                               }}
                             >
                               {book?.title || 'Book Title'}
                             </div>
                             <div className="text-xs text-gray-400 space-y-1">
-                              <p>Family: {aiDesign.typography.titleFont.family}</p>
-                              <p>Size: {aiDesign.typography.titleFont.size}px</p>
-                              <p>Weight: {aiDesign.typography.titleFont.weight}</p>
+                              <p>Family: {aiDesign.typography.titleFont}</p>
+                              <p>Color: {aiDesign.typography.colors.heading}</p>
                             </div>
                           </div>
 
@@ -1370,19 +1406,19 @@ export default function BookLayoutPage() {
                             <div
                               className="p-4 bg-white rounded-lg mb-3"
                               style={{
-                                fontFamily: aiDesign.typography.bodyFont.family,
-                                fontSize: `${aiDesign.typography.bodyFont.size}px`,
-                                fontWeight: aiDesign.typography.bodyFont.weight,
-                                color: aiDesign.typography.bodyFont.color,
-                                lineHeight: aiDesign.typography.bodyFont.lineHeight,
+                                fontFamily: aiDesign.typography.bodyFont,
+                                fontSize: `${aiDesign.typography.fontSize}px`,
+                                fontWeight: 'normal',
+                                color: aiDesign.typography.colors.text,
+                                lineHeight: aiDesign.typography.lineHeight,
                               }}
                             >
                               This is sample text demonstrating the body font selected for the book. The font was carefully chosen to match the genre and mood.
                             </div>
                             <div className="text-xs text-gray-400 space-y-1">
-                              <p>Family: {aiDesign.typography.bodyFont.family}</p>
-                              <p>Size: {aiDesign.typography.bodyFont.size}px</p>
-                              <p>Line Height: {aiDesign.typography.bodyFont.lineHeight}</p>
+                              <p>Family: {aiDesign.typography.bodyFont}</p>
+                              <p>Size: {aiDesign.typography.fontSize}px</p>
+                              <p>Line Height: {aiDesign.typography.lineHeight}</p>
                             </div>
                           </div>
 
@@ -1391,17 +1427,17 @@ export default function BookLayoutPage() {
                             <div
                               className="p-4 bg-white rounded-lg mb-3"
                               style={{
-                                fontFamily: aiDesign.typography.chapterTitleFont.family,
-                                fontSize: `${Math.min(aiDesign.typography.chapterTitleFont.size, 24)}px`,
-                                fontWeight: aiDesign.typography.chapterTitleFont.weight,
-                                color: aiDesign.typography.chapterTitleFont.color,
+                                fontFamily: aiDesign.typography.headingFont,
+                                fontSize: `${Math.min(aiDesign.typography.chapterTitleSize, 24)}px`,
+                                fontWeight: 'bold',
+                                color: aiDesign.typography.colors.heading,
                               }}
                             >
                               Chapter One
                             </div>
                             <div className="text-xs text-gray-400 space-y-1">
-                              <p>Family: {aiDesign.typography.chapterTitleFont.family}</p>
-                              <p>Size: {aiDesign.typography.chapterTitleFont.size}px</p>
+                              <p>Family: {aiDesign.typography.headingFont}</p>
+                              <p>Size: {aiDesign.typography.chapterTitleSize}px</p>
                             </div>
                           </div>
 
@@ -1410,17 +1446,17 @@ export default function BookLayoutPage() {
                             <div
                               className="p-4 bg-white rounded-lg mb-3"
                               style={{
-                                fontFamily: aiDesign.typography.headerFont.family,
-                                fontSize: `${Math.min(aiDesign.typography.headerFont.size, 20)}px`,
-                                fontWeight: aiDesign.typography.headerFont.weight,
-                                color: aiDesign.typography.headerFont.color,
+                                fontFamily: aiDesign.typography.headingFont,
+                                fontSize: '18px',
+                                fontWeight: '600',
+                                color: aiDesign.typography.colors.heading,
                               }}
                             >
                               Subheading
                             </div>
                             <div className="text-xs text-gray-400 space-y-1">
-                              <p>Family: {aiDesign.typography.headerFont.family}</p>
-                              <p>Size: {aiDesign.typography.headerFont.size}px</p>
+                              <p>Family: {aiDesign.typography.headingFont}</p>
+                              <p>Color: {aiDesign.typography.colors.heading}</p>
                             </div>
                           </div>
                         </div>
@@ -1460,33 +1496,33 @@ export default function BookLayoutPage() {
                               <div className="flex items-center justify-between">
                                 <span className="text-sm text-gray-300">Page Numbers</span>
                                 <span className="text-sm text-white">{
-                                  aiDesign.layout.pageNumbers.position === 'bottom-center' ? 'Bottom Center' :
-                                  aiDesign.layout.pageNumbers.position === 'bottom-outside' ? 'Bottom Outside' :
-                                  aiDesign.layout.pageNumbers.position === 'top-outside' ? 'Top Outside' : 'None'
+                                  aiDesign.layout.pageNumberPosition === 'bottom-center' ? 'Bottom Center' :
+                                  aiDesign.layout.pageNumberPosition === 'bottom-outer' ? 'Bottom Outer' :
+                                  aiDesign.layout.pageNumberPosition === 'top-outer' ? 'Top Outer' : 'None'
                                 }</span>
                               </div>
                               <div className="flex items-center justify-between">
                                 <span className="text-sm text-gray-300">Chapter Start</span>
                                 <span className="text-sm text-white">{
-                                  aiDesign.layout.chapterStart === 'right' ? 'Right Page' :
-                                  aiDesign.layout.chapterStart === 'any' ? 'Any Page' : 'New Spread'
+                                  aiDesign.layout.chapterStartStyle === 'new-page' ? 'New Page' :
+                                  aiDesign.layout.chapterStartStyle === 'new-page-centered' ? 'New Page (Centered)' : 'Same Page'
                                 }</span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-300">Line Spacing</span>
-                                <span className="text-sm text-white">{aiDesign.layout.lineSpacing}</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-300">Paragraph Spacing</span>
-                                <span className="text-sm text-white">{aiDesign.layout.paragraphSpacing}px</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-300">First Line Indent</span>
-                                <span className="text-sm text-white">{aiDesign.layout.firstLineIndent}px</span>
+                                <span className="text-sm text-gray-300">Header Style</span>
+                                <span className="text-sm text-white">{
+                                  aiDesign.layout.headerStyle === 'book-title' ? 'Book Title' :
+                                  aiDesign.layout.headerStyle === 'chapter-title' ? 'Chapter Title' :
+                                  aiDesign.layout.headerStyle === 'author-name' ? 'Author Name' : 'None'
+                                }</span>
                               </div>
                               <div className="flex items-center justify-between">
                                 <span className="text-sm text-gray-300">Drop Caps</span>
                                 <span className="text-sm text-white">{aiDesign.layout.dropCaps ? 'Yes' : 'No'}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-300">Ornaments</span>
+                                <span className="text-sm text-white">{aiDesign.layout.ornaments ? 'Yes' : 'No'}</span>
                               </div>
                             </div>
                           </div>
@@ -1504,9 +1540,7 @@ export default function BookLayoutPage() {
                             <div
                               className="aspect-[2/3] rounded-lg relative overflow-hidden flex flex-col items-center justify-center"
                               style={{
-                                background: aiDesign.cover.frontCover.background.type === 'gradient'
-                                  ? aiDesign.cover.frontCover.background.value
-                                  : aiDesign.cover.frontCover.background.value,
+                                background: aiDesign.cover.front.colorPalette?.[0] || '#1a1a2e',
                               }}
                             >
                               {coverImageUrl && (
@@ -1520,8 +1554,8 @@ export default function BookLayoutPage() {
                                 <h3
                                   className="font-bold mb-2 drop-shadow-lg"
                                   style={{
-                                    fontFamily: aiDesign.typography.titleFont.family,
-                                    color: aiDesign.typography.titleFont.color,
+                                    fontFamily: aiDesign.typography.titleFont,
+                                    color: aiDesign.cover.front.title.color,
                                     fontSize: '18px',
                                   }}
                                 >
@@ -1530,8 +1564,8 @@ export default function BookLayoutPage() {
                                 <p
                                   className="drop-shadow-lg"
                                   style={{
-                                    fontFamily: aiDesign.typography.bodyFont.family,
-                                    color: aiDesign.typography.titleFont.color,
+                                    fontFamily: aiDesign.typography.bodyFont,
+                                    color: aiDesign.cover.front.author.color,
                                     fontSize: '12px',
                                   }}
                                 >
@@ -1568,21 +1602,21 @@ export default function BookLayoutPage() {
                             <h4 className="text-sm font-semibold text-gray-400 mb-3">Spine</h4>
                             <div
                               className="w-12 mx-auto aspect-[1/6] rounded flex items-center justify-center"
-                              style={{ background: aiDesign.cover.spine.background }}
+                              style={{ background: aiDesign.cover.spine.backgroundColor }}
                             >
                               <span
                                 className="transform -rotate-90 whitespace-nowrap text-xs font-medium"
                                 style={{
-                                  fontFamily: aiDesign.typography.titleFont.family,
-                                  color: aiDesign.typography.titleFont.color,
+                                  fontFamily: aiDesign.cover.spine.font,
+                                  color: aiDesign.cover.spine.color,
                                 }}
                               >
                                 {book?.title}
                               </span>
                             </div>
                             <div className="mt-3 text-xs text-gray-400 text-center">
-                              <p>Direction: {aiDesign.cover.spine.titleOrientation === 'vertical-up' ? 'Up' : 'Down'}</p>
-                              <p>Include Author: {aiDesign.cover.spine.includeAuthor ? 'Yes' : 'No'}</p>
+                              <p>Font: {aiDesign.cover.spine.font}</p>
+                              <p>Author: {aiDesign.cover.spine.author || book?.author?.name}</p>
                             </div>
                           </div>
 
@@ -1592,28 +1626,28 @@ export default function BookLayoutPage() {
                             <div
                               className="aspect-[2/3] rounded-lg relative overflow-hidden flex flex-col p-4"
                               style={{
-                                background: aiDesign.cover.backCover.background.type === 'blurred-front' && coverImageUrl
+                                background: coverImageUrl
                                   ? `url(${coverImageUrl})`
-                                  : aiDesign.cover.backCover.background.value,
+                                  : aiDesign.cover.back.backgroundColor,
                                 backgroundSize: 'cover',
                                 backgroundPosition: 'center',
                               }}
                             >
-                              {aiDesign.cover.backCover.background.type === 'blurred-front' && coverImageUrl && (
+                              {coverImageUrl && (
                                 <div className="absolute inset-0 backdrop-blur-md bg-black/40" />
                               )}
                               <div className="relative z-10 flex-1 flex flex-col">
                                 <p
                                   className="text-xs leading-relaxed flex-1 overflow-hidden"
                                   style={{
-                                    fontFamily: aiDesign.typography.bodyFont.family,
-                                    color: '#ffffff',
+                                    fontFamily: aiDesign.cover.back.synopsis.font,
+                                    color: aiDesign.cover.back.synopsis.color,
                                   }}
                                 >
                                   {(book?.synopsis || book?.description || '').slice(0, 200)}...
                                 </p>
                                 <div className="mt-auto pt-4 border-t border-white/20">
-                                  <p className="text-xs text-white/80">{book?.author?.name}</p>
+                                  <p className="text-xs" style={{ color: aiDesign.cover.back.author.color }}>{book?.author?.name}</p>
                                 </div>
                               </div>
                             </div>
@@ -1646,24 +1680,23 @@ export default function BookLayoutPage() {
                                   <div>
                                     <div className="flex items-center gap-2 mb-1">
                                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                        suggestion.priority === 'high' ? 'bg-red-500/20 text-red-400' :
-                                        suggestion.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                                        suggestion.importance === 'high' ? 'bg-red-500/20 text-red-400' :
+                                        suggestion.importance === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
                                         'bg-blue-500/20 text-blue-400'
                                       }`}>
-                                        {suggestion.priority === 'high' ? 'High Priority' :
-                                         suggestion.priority === 'medium' ? 'Medium Priority' : 'Low Priority'}
+                                        {suggestion.importance === 'high' ? 'High Priority' :
+                                         suggestion.importance === 'medium' ? 'Medium Priority' : 'Low Priority'}
                                       </span>
                                       <span className="text-xs text-gray-500">
                                         Chapter {suggestion.chapterIndex + 1}
                                         {book?.chapters[suggestion.chapterIndex]?.title && ` - ${book.chapters[suggestion.chapterIndex].title}`}
                                       </span>
                                     </div>
-                                    <p className="text-sm text-white">{suggestion.rationale}</p>
+                                    <p className="text-sm text-white">{suggestion.reasoning}</p>
                                   </div>
                                   <span className="text-xs text-gray-400 whitespace-nowrap">
-                                    {suggestion.position === 'full-page' ? 'Full Page' :
-                                     suggestion.position === 'half-page' ? 'Half Page' :
-                                     suggestion.position === 'chapter-header' ? 'Chapter Header' : 'After Paragraph'}
+                                    {suggestion.position === 'chapter-start' ? 'Chapter Start' :
+                                     suggestion.position === 'mid-chapter' ? 'Mid Chapter' : 'Chapter End'}
                                   </span>
                                 </div>
                                 <div className="bg-black/30 rounded-lg p-3 mb-3">
@@ -1682,9 +1715,9 @@ export default function BookLayoutPage() {
                                           id: `img-${Date.now()}`,
                                           url: imageUrl,
                                           x: 10,
-                                          y: suggestion.position === 'chapter-header' ? 10 : 50,
-                                          width: suggestion.position === 'full-page' ? 80 : 40,
-                                          height: suggestion.position === 'full-page' ? 60 : 30,
+                                          y: suggestion.position === 'chapter-start' ? 10 : 50,
+                                          width: 40,
+                                          height: 30,
                                           rotation: 0,
                                         };
                                         const updatedPages = [...pages];
