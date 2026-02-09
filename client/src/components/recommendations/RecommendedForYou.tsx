@@ -38,7 +38,7 @@ interface RecommendedForYouProps {
 export default function RecommendedForYou({
   limit = 8,
   showReasons = true,
-  title = 'מומלץ עבורך',
+  title = 'Recommended For You',
 }: RecommendedForYouProps) {
   const [recommendations, setRecommendations] = useState<RecommendationWithReason[]>([]);
   const [loading, setLoading] = useState(true);
@@ -121,7 +121,7 @@ export default function RecommendedForYou({
           to="/marketplace"
           className="flex items-center gap-1 text-amber-400 hover:text-amber-300 transition-colors text-sm"
         >
-          הצג הכל
+          View All
           <ChevronRight className="w-4 h-4" />
         </Link>
       </div>

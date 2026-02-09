@@ -59,7 +59,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
   const [sharing, setSharing] = useState(false);
 
   const shareUrl = `${window.location.origin}/reader/${bookId}`;
-  const shareText = `קראתי את "${bookTitle}" מאת ${authorName} ואני ממליץ/ה בחום! 📚`;
+  const shareText = `I read "${bookTitle}" by ${authorName} and highly recommend it! 📚`;
 
   const trackShare = async (platform: string) => {
     try {
@@ -74,10 +74,10 @@ const ShareModal: React.FC<ShareModalProps> = ({
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       await trackShare('copy');
-      toast.success('הקישור הועתק!');
+      toast.success('Link copied!');
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      toast.error('שגיאה בהעתקת הקישור');
+      toast.error('Failed to copy link');
     }
   };
 
@@ -91,11 +91,11 @@ const ShareModal: React.FC<ShareModalProps> = ({
           url: shareUrl,
         });
         await trackShare('native');
-        toast.success('תודה ששיתפת!');
+        toast.success('Thanks for sharing!');
       } catch (error) {
         // User cancelled or error
         if ((error as Error).name !== 'AbortError') {
-          toast.error('שגיאה בשיתוף');
+          toast.error('Failed to share');
         }
       } finally {
         setSharing(false);
@@ -148,7 +148,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
               <Share2 className="w-5 h-5 text-purple-400" />
-              שתף את הספר
+              Share Book
             </h3>
             <button
               onClick={onClose}
@@ -159,9 +159,9 @@ const ShareModal: React.FC<ShareModalProps> = ({
           </div>
 
           {/* Book info */}
-          <div className="mb-6 p-4 bg-white/5 rounded-xl" dir="rtl">
+          <div className="mb-6 p-4 bg-white/5 rounded-xl">
             <h4 className="font-semibold text-white truncate">{bookTitle}</h4>
-            <p className="text-sm text-gray-400">מאת {authorName}</p>
+            <p className="text-sm text-gray-400">by {authorName}</p>
           </div>
 
           {/* Social buttons */}
@@ -244,7 +244,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
               ) : (
                 <>
                   <Share2 className="w-5 h-5" />
-                  שתף עוד...
+                  More sharing options...
                 </>
               )}
             </button>

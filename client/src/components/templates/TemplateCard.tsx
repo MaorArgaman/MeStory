@@ -86,7 +86,7 @@ export default function TemplateCard({
         <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/40 backdrop-blur-sm">
           <span className="text-xs text-white flex items-center gap-1">
             <span>{categoryInfo?.icon}</span>
-            <span>{template.nameHe}</span>
+            <span>{template.name}</span>
           </span>
         </div>
 
@@ -120,18 +120,18 @@ export default function TemplateCard({
             opacity-0 hover:opacity-100 group-hover:opacity-100"
         >
           <Eye className="w-3.5 h-3.5" />
-          <span>תצוגה מקדימה</span>
+          <span>Preview</span>
         </motion.button>
       </div>
 
       {/* Template Info */}
-      <div className={`${compact ? 'p-2' : 'p-3'} bg-white/5`} dir="rtl">
+      <div className={`${compact ? 'p-2' : 'p-3'} bg-white/5`}>
         <h3 className={`font-medium text-white ${compact ? 'text-xs' : 'text-sm'} mb-1 truncate`}>
-          {template.nameHe}
+          {template.name}
         </h3>
         {!compact && (
           <p className="text-xs text-gray-400 line-clamp-2 h-8">
-            {template.descriptionHe || template.description}
+            {template.description}
           </p>
         )}
 
@@ -140,7 +140,7 @@ export default function TemplateCard({
           <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/10">
             <div className="flex items-center gap-1 text-gray-500">
               <Users className="w-3 h-3" />
-              <span className="text-xs">{template.usageCount || 0} שימושים</span>
+              <span className="text-xs">{template.usageCount || 0} uses</span>
             </div>
 
             {/* Tags Preview */}

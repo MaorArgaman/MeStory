@@ -43,9 +43,9 @@ export default function TemplatePreviewModal({
     : [template.thumbnail];
 
   const tabs = [
-    { key: 'overview', label: 'סקירה', icon: BookOpen },
-    { key: 'typography', label: 'טיפוגרפיה', icon: Type },
-    { key: 'layout', label: 'עיצוב', icon: Layout },
+    { key: 'overview', label: 'Overview', icon: BookOpen },
+    { key: 'typography', label: 'Typography', icon: Type },
+    { key: 'layout', label: 'Layout', icon: Layout },
     { key: 'ai', label: 'AI', icon: Sparkles },
   ];
 
@@ -74,20 +74,19 @@ export default function TemplatePreviewModal({
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full max-w-4xl max-h-[85vh] bg-gray-900 rounded-2xl
               border border-white/10 shadow-2xl overflow-hidden"
-            dir="rtl"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/10">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{categoryInfo?.icon}</span>
                 <div>
-                  <h2 className="text-xl font-bold text-white">{template.nameHe}</h2>
-                  <p className="text-sm text-gray-400">{categoryInfo?.nameHe}</p>
+                  <h2 className="text-xl font-bold text-white">{template.name}</h2>
+                  <p className="text-sm text-gray-400">{categoryInfo?.name}</p>
                 </div>
                 {template.isSystem && (
                   <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400">
                     <Star className="w-3 h-3" />
-                    <span className="text-xs">תבנית מערכת</span>
+                    <span className="text-xs">System Template</span>
                   </div>
                 )}
               </div>
@@ -194,16 +193,16 @@ export default function TemplatePreviewModal({
                   {/* Details */}
                   <div className="space-y-6">
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-2">תיאור</h3>
+                      <h3 className="text-lg font-semibold text-white mb-2">Description</h3>
                       <p className="text-gray-300 leading-relaxed">
-                        {template.descriptionHe || template.description}
+                        {template.description}
                       </p>
                     </div>
 
                     {/* Tags */}
                     {template.tags && template.tags.length > 0 && (
                       <div>
-                        <h4 className="text-sm font-medium text-gray-400 mb-2">תגיות</h4>
+                        <h4 className="text-sm font-medium text-gray-400 mb-2">Tags</h4>
                         <div className="flex flex-wrap gap-2">
                           {template.tags.map((tag, idx) => (
                             <span
@@ -220,21 +219,21 @@ export default function TemplatePreviewModal({
                     {/* Quick Info */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="p-3 rounded-lg bg-white/5">
-                        <p className="text-xs text-gray-400 mb-1">גודל עמוד</p>
+                        <p className="text-xs text-gray-400 mb-1">Page Size</p>
                         <p className="text-white font-medium">{template.defaults.pageSize}</p>
                       </div>
                       <div className="p-3 rounded-lg bg-white/5">
-                        <p className="text-xs text-gray-400 mb-1">עמודות</p>
+                        <p className="text-xs text-gray-400 mb-1">Columns</p>
                         <p className="text-white font-medium">{template.defaults.pageLayout.columns}</p>
                       </div>
                       <div className="p-3 rounded-lg bg-white/5">
-                        <p className="text-xs text-gray-400 mb-1">כיוון</p>
+                        <p className="text-xs text-gray-400 mb-1">Direction</p>
                         <p className="text-white font-medium">
-                          {template.defaults.pageLayout.isRTL ? 'ימין לשמאל' : 'שמאל לימין'}
+                          {template.defaults.pageLayout.isRTL ? 'Right to Left' : 'Left to Right'}
                         </p>
                       </div>
                       <div className="p-3 rounded-lg bg-white/5">
-                        <p className="text-xs text-gray-400 mb-1">שימושים</p>
+                        <p className="text-xs text-gray-400 mb-1">Uses</p>
                         <p className="text-white font-medium">{template.usageCount || 0}</p>
                       </div>
                     </div>
@@ -248,7 +247,7 @@ export default function TemplatePreviewModal({
                   <div className="grid grid-cols-2 gap-6">
                     {/* Body Font */}
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                      <h4 className="text-sm font-medium text-gray-400 mb-3">גופן גוף הטקסט</h4>
+                      <h4 className="text-sm font-medium text-gray-400 mb-3">Body Font</h4>
                       <p
                         className="text-2xl text-white mb-2"
                         style={{ fontFamily: template.defaults.pageLayout.typography.bodyFont }}
@@ -256,14 +255,14 @@ export default function TemplatePreviewModal({
                         {template.defaults.pageLayout.typography.bodyFont}
                       </p>
                       <p className="text-sm text-gray-400">
-                        גודל: {template.defaults.pageLayout.typography.bodyFontSize}pt •
-                        גובה שורה: {template.defaults.pageLayout.typography.lineHeight}
+                        Size: {template.defaults.pageLayout.typography.bodyFontSize}pt •
+                        Line Height: {template.defaults.pageLayout.typography.lineHeight}
                       </p>
                     </div>
 
                     {/* Heading Font */}
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                      <h4 className="text-sm font-medium text-gray-400 mb-3">גופן כותרות</h4>
+                      <h4 className="text-sm font-medium text-gray-400 mb-3">Heading Font</h4>
                       <p
                         className="text-2xl text-white mb-2"
                         style={{ fontFamily: template.defaults.pageLayout.typography.headingFont }}
@@ -271,35 +270,35 @@ export default function TemplatePreviewModal({
                         {template.defaults.pageLayout.typography.headingFont}
                       </p>
                       <p className="text-sm text-gray-400">
-                        גודל: {template.defaults.pageLayout.typography.headingFontSize}pt
+                        Size: {template.defaults.pageLayout.typography.headingFontSize}pt
                       </p>
                     </div>
                   </div>
 
                   {/* Color Preview */}
                   <div>
-                    <h4 className="text-sm font-medium text-gray-400 mb-3">צבעים</h4>
+                    <h4 className="text-sm font-medium text-gray-400 mb-3">Colors</h4>
                     <div className="flex gap-4">
                       <div className="flex items-center gap-2">
                         <div
                           className="w-8 h-8 rounded-lg border border-white/20"
                           style={{ backgroundColor: template.defaults.pageLayout.typography.textColor }}
                         />
-                        <span className="text-sm text-gray-300">צבע טקסט</span>
+                        <span className="text-sm text-gray-300">Text Color</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div
                           className="w-8 h-8 rounded-lg border border-white/20"
                           style={{ backgroundColor: template.defaults.pageLayout.typography.headingColor }}
                         />
-                        <span className="text-sm text-gray-300">צבע כותרות</span>
+                        <span className="text-sm text-gray-300">Heading Color</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div
                           className="w-8 h-8 rounded-lg border border-white/20"
                           style={{ backgroundColor: template.defaults.pageLayout.background.color || '#ffffff' }}
                         />
-                        <span className="text-sm text-gray-300">צבע רקע</span>
+                        <span className="text-sm text-gray-300">Background Color</span>
                       </div>
                     </div>
                   </div>
@@ -313,7 +312,7 @@ export default function TemplatePreviewModal({
                         color: template.defaults.pageLayout.typography.headingColor,
                       }}
                     >
-                      כותרת לדוגמה
+                      Sample Heading
                     </h3>
                     <p
                       style={{
@@ -323,8 +322,8 @@ export default function TemplatePreviewModal({
                         color: template.defaults.pageLayout.typography.textColor,
                       }}
                     >
-                      זהו טקסט לדוגמה שמדגים כיצד ייראה הטקסט בספר שלך עם התבנית הזו.
-                      הגופנים, הגדלים והצבעים נבחרו בקפידה כדי ליצור חווית קריאה נעימה ומקצועית.
+                      This is sample text demonstrating how the text will look in your book with this template.
+                      The fonts, sizes, and colors were carefully chosen to create a pleasant and professional reading experience.
                     </p>
                   </div>
                 </div>
@@ -335,14 +334,14 @@ export default function TemplatePreviewModal({
                 <div className="space-y-6">
                   {/* Margins */}
                   <div>
-                    <h4 className="text-sm font-medium text-gray-400 mb-3">שוליים</h4>
+                    <h4 className="text-sm font-medium text-gray-400 mb-3">Margins</h4>
                     <div className="grid grid-cols-4 gap-4">
                       {Object.entries(template.defaults.pageLayout.margins).map(([side, value]) => (
                         <div key={side} className="p-3 rounded-lg bg-white/5 text-center">
                           <p className="text-xs text-gray-400 mb-1">
-                            {side === 'top' ? 'עליון' :
-                             side === 'bottom' ? 'תחתון' :
-                             side === 'left' ? 'שמאל' : 'ימין'}
+                            {side === 'top' ? 'Top' :
+                             side === 'bottom' ? 'Bottom' :
+                             side === 'left' ? 'Left' : 'Right'}
                           </p>
                           <p className="text-white font-medium">{value}mm</p>
                         </div>
@@ -353,24 +352,24 @@ export default function TemplatePreviewModal({
                   {/* Header/Footer */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                      <h4 className="text-sm font-medium text-white mb-2">כותרת עליונה</h4>
+                      <h4 className="text-sm font-medium text-white mb-2">Header</h4>
                       <p className="text-sm text-gray-400">
-                        {template.defaults.pageLayout.header.enabled ? 'מופעל' : 'מושבת'}
+                        {template.defaults.pageLayout.header.enabled ? 'Enabled' : 'Disabled'}
                       </p>
                       {template.defaults.pageLayout.header.enabled && (
                         <p className="text-xs text-gray-500 mt-1">
-                          גובה: {template.defaults.pageLayout.header.height}px
+                          Height: {template.defaults.pageLayout.header.height}px
                         </p>
                       )}
                     </div>
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                      <h4 className="text-sm font-medium text-white mb-2">כותרת תחתונה</h4>
+                      <h4 className="text-sm font-medium text-white mb-2">Footer</h4>
                       <p className="text-sm text-gray-400">
-                        {template.defaults.pageLayout.footer.enabled ? 'מופעל' : 'מושבת'}
+                        {template.defaults.pageLayout.footer.enabled ? 'Enabled' : 'Disabled'}
                       </p>
                       {template.defaults.pageLayout.footer.enabled && (
                         <p className="text-xs text-gray-500 mt-1">
-                          גובה: {template.defaults.pageLayout.footer.height}px
+                          Height: {template.defaults.pageLayout.footer.height}px
                         </p>
                       )}
                     </div>
@@ -378,11 +377,11 @@ export default function TemplatePreviewModal({
 
                   {/* Page Number */}
                   <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                    <h4 className="text-sm font-medium text-white mb-2">מספרי עמודים</h4>
+                    <h4 className="text-sm font-medium text-white mb-2">Page Numbers</h4>
                     <p className="text-sm text-gray-400">
                       {template.defaults.pageLayout.showPageNumber
-                        ? `מוצג ב${template.defaults.pageLayout.pageNumberPosition.includes('top') ? 'חלק העליון' : 'חלק התחתון'}`
-                        : 'מוסתר'}
+                        ? `Shown at ${template.defaults.pageLayout.pageNumberPosition.includes('top') ? 'the top' : 'the bottom'}`
+                        : 'Hidden'}
                     </p>
                   </div>
                 </div>
@@ -393,7 +392,7 @@ export default function TemplatePreviewModal({
                 <div className="space-y-6">
                   {/* Suggested Fonts */}
                   <div>
-                    <h4 className="text-sm font-medium text-gray-400 mb-3">גופנים מומלצים</h4>
+                    <h4 className="text-sm font-medium text-gray-400 mb-3">Suggested Fonts</h4>
                     <div className="flex flex-wrap gap-2">
                       {template.aiSettings.suggestedFonts.map((font, idx) => (
                         <span
@@ -410,7 +409,7 @@ export default function TemplatePreviewModal({
                   {/* Color Palettes */}
                   {template.aiSettings.suggestedColorPalettes.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-400 mb-3">פלטות צבעים מומלצות</h4>
+                      <h4 className="text-sm font-medium text-gray-400 mb-3">Suggested Color Palettes</h4>
                       <div className="space-y-3">
                         {template.aiSettings.suggestedColorPalettes.map((palette, idx) => (
                           <div key={idx} className="flex gap-2">
@@ -431,7 +430,7 @@ export default function TemplatePreviewModal({
                   {/* Style Guidelines */}
                   {template.aiSettings.styleGuidelines && (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-400 mb-3">הנחיות סגנון</h4>
+                      <h4 className="text-sm font-medium text-gray-400 mb-3">Style Guidelines</h4>
                       <p className="text-gray-300 text-sm leading-relaxed p-4 rounded-lg bg-white/5">
                         {template.aiSettings.styleGuidelines}
                       </p>
@@ -441,7 +440,7 @@ export default function TemplatePreviewModal({
                   {/* Image Placement Rules */}
                   {template.aiSettings.imagePlacementRules && (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-400 mb-3">כללי מיקום תמונות</h4>
+                      <h4 className="text-sm font-medium text-gray-400 mb-3">Image Placement Rules</h4>
                       <p className="text-gray-300 text-sm leading-relaxed p-4 rounded-lg bg-white/5">
                         {template.aiSettings.imagePlacementRules}
                       </p>
@@ -457,7 +456,7 @@ export default function TemplatePreviewModal({
                 onClick={onClose}
                 className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
               >
-                ביטול
+                Cancel
               </button>
               <button
                 onClick={handleSelect}
@@ -467,7 +466,7 @@ export default function TemplatePreviewModal({
                   transition-all shadow-lg shadow-yellow-500/25"
               >
                 <Check className="w-4 h-4" />
-                <span>בחר תבנית זו</span>
+                <span>Select this template</span>
               </button>
             </div>
           </motion.div>

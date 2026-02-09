@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Sparkles, BookOpen, User, LogOut, ChevronDown, Crown, MessageCircle, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import logoIcon from '../../assets/images/logo-icon.png';
 import { getUnreadCount as getMessagesUnreadCount } from '../../services/messagingApi';
 import { getUnreadCount as getNotificationsUnreadCount } from '../../services/notificationApi';
 import ConversationsList from '../messaging/ConversationsList';
@@ -67,7 +66,7 @@ export default function Navbar() {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="fixed top-6 left-0 right-0 mx-auto z-50 w-[95%] max-w-7xl"
+      className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl"
     >
       <div className="glass-strong rounded-2xl border border-white/10 shadow-2xl shadow-black/50 backdrop-blur-2xl">
         <div className="px-8 py-4">
@@ -76,15 +75,11 @@ export default function Navbar() {
             <Link to="/dashboard" className="flex items-center gap-3 group">
               <motion.div
                 whileHover={{ scale: 1.1, rotate: 5 }}
-                className="relative"
+                className="w-12 h-12 rounded-xl bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold"
               >
-                <img
-                  src={logoIcon}
-                  alt="MeStory Logo"
-                  className="h-10 w-10 object-contain drop-shadow-[0_0_15px_rgba(255,215,0,0.6)]"
-                />
+                <Sparkles className="w-7 h-7 text-deep-space" />
               </motion.div>
-              <span className="text-3xl font-bold gradient-gold" style={{ fontFamily: "'Cinzel', serif" }}>
+              <span className="text-3xl font-display font-bold gradient-gold">
                 MeStory
               </span>
             </Link>
@@ -121,7 +116,7 @@ export default function Navbar() {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowNotifications(true)}
                 className="relative p-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300"
-                title="התראות"
+                title="Notifications"
               >
                 <Bell className="w-5 h-5" />
                 {notificationsUnreadCount > 0 && (
@@ -137,7 +132,7 @@ export default function Navbar() {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowMessages(true)}
                 className="relative p-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300"
-                title="הודעות"
+                title="Messages"
               >
                 <MessageCircle className="w-5 h-5" />
                 {messagesUnreadCount > 0 && (

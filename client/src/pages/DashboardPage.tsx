@@ -437,13 +437,13 @@ export default function DashboardPage() {
       {/* Continue Reading & Writing Sections */}
       <div className="max-w-7xl mx-auto mb-12">
         {/* Continue Reading */}
-        <ContinueReading limit={4} title="המשך לקרוא" />
+        <ContinueReading limit={4} title="Continue Reading" />
 
         {/* Continue Writing */}
-        <ContinueWriting limit={4} title="המשך לכתוב" />
+        <ContinueWriting limit={4} title="Continue Writing" />
 
         {/* Recommended Based on Your Reading */}
-        <RecommendedForYou limit={4} title="מומלץ עבורך" showReasons={false} />
+        <RecommendedForYou limit={4} title="Recommended For You" showReasons={false} />
       </div>
 
       {/* Your Library Section */}

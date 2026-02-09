@@ -255,7 +255,7 @@ export default function BookWritingPage() {
         // For continue action, insert directly after selection
         editor.chain().focus().setTextSelection(to).insertContent(' ' + result.enhancedText).run();
         setSaved(false);
-        toast.success('המשך נוסף בהצלחה!');
+        toast.success('Continuation added successfully!');
       } else {
         // For other actions, show preview
         setPreviewData({
@@ -268,7 +268,7 @@ export default function BookWritingPage() {
       }
     } catch (error) {
       console.error('Enhancement failed:', error);
-      toast.error('שגיאה בשיפור הטקסט');
+      toast.error('Error improving text');
     } finally {
       setEnhancing(false);
       setLoadingAction(null);
@@ -290,7 +290,7 @@ export default function BookWritingPage() {
 
     setSaved(false);
     setPreviewData({ isOpen: false, originalText: '', result: null, selectionFrom: 0, selectionTo: 0 });
-    toast.success('הטקסט עודכן בהצלחה!');
+    toast.success('Text updated successfully!');
   };
 
   const handleCancelEnhancement = () => {
@@ -460,7 +460,7 @@ export default function BookWritingPage() {
         {/* Right Panel - AI & Analysis */}
         <div className="w-80 glass-strong border-l border-white/10 flex flex-col overflow-hidden">
           {/* Tab Navigation */}
-          <div className="flex border-b border-white/10 p-2 gap-1" dir="rtl">
+          <div className="flex border-b border-white/10 p-2 gap-1">
             <button
               onClick={() => setActiveTab('copilot')}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
@@ -470,7 +470,7 @@ export default function BookWritingPage() {
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              AI עוזר
+              AI Assistant
             </button>
             <button
               onClick={() => setActiveTab('plot')}
@@ -481,7 +481,7 @@ export default function BookWritingPage() {
               }`}
             >
               <Target className="w-3.5 h-3.5" />
-              עלילה
+              Plot
             </button>
             <button
               onClick={() => setActiveTab('analysis')}
@@ -492,7 +492,7 @@ export default function BookWritingPage() {
               }`}
             >
               <PenTool className="w-3.5 h-3.5" />
-              ניתוח
+              Analysis
             </button>
           </div>
 

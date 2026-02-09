@@ -60,13 +60,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.setItem('user', JSON.stringify(user));
         setUser(user);
 
+        // Only track verification status, don't show modal on login
+        // Modal is only shown during registration
         if (requiresVerification) {
           setNeedsVerification(true);
-          setShowVerificationModal(true);
-          toast.success('Please verify your email to continue.');
-        } else {
-          toast.success('Welcome back!');
         }
+        toast.success('Welcome back!');
       }
     } catch (error: any) {
       console.error('Login error:', error);

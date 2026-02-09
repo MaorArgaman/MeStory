@@ -26,42 +26,42 @@ const typeConfig = {
     color: 'text-yellow-400',
     bgColor: 'bg-yellow-500/10',
     borderColor: 'border-yellow-500/30',
-    label: 'סטייה מהנושא',
+    label: 'Topic Deviation',
   },
   structure: {
     icon: Info,
     color: 'text-blue-400',
     bgColor: 'bg-blue-500/10',
     borderColor: 'border-blue-500/30',
-    label: 'מבנה',
+    label: 'Structure',
   },
   tension: {
     icon: Sparkles,
     color: 'text-orange-400',
     bgColor: 'bg-orange-500/10',
     borderColor: 'border-orange-500/30',
-    label: 'מתח',
+    label: 'Tension',
   },
   character: {
     icon: Info,
     color: 'text-purple-400',
     bgColor: 'bg-purple-500/10',
     borderColor: 'border-purple-500/30',
-    label: 'דמות',
+    label: 'Character',
   },
   pacing: {
     icon: Info,
     color: 'text-cyan-400',
     bgColor: 'bg-cyan-500/10',
     borderColor: 'border-cyan-500/30',
-    label: 'קצב',
+    label: 'Pacing',
   },
   theme: {
     icon: Lightbulb,
     color: 'text-indigo-400',
     bgColor: 'bg-indigo-500/10',
     borderColor: 'border-indigo-500/30',
-    label: 'נושא',
+    label: 'Theme',
   },
 };
 
@@ -100,7 +100,6 @@ export default function WritingGuidanceAlert({
           ${config.bgColor} ${config.borderColor}
           border rounded-xl p-4 shadow-lg backdrop-blur-sm
         `}
-        dir="rtl"
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
@@ -158,7 +157,7 @@ export default function WritingGuidanceAlert({
                 </div>
                 {suggestion.insertable && (
                   <p className="text-xs text-gray-500 mt-1 truncate">
-                    להוספה: "{suggestion.insertable.slice(0, 50)}..."
+                    Insert: "{suggestion.insertable.slice(0, 50)}..."
                   </p>
                 )}
               </button>

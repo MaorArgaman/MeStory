@@ -131,20 +131,20 @@ export default function TemplateGallery({
   };
 
   return (
-    <div className={`space-y-${compact ? '4' : '6'}`} dir="rtl">
+    <div className={`space-y-${compact ? '4' : '6'}`}>
       {/* Header & Filters */}
       <div className="space-y-4">
         {/* Search & View Toggle */}
         <div className="flex items-center gap-4">
           {/* Search */}
           <div className="flex-1 relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="חפש תבניות..."
+              placeholder="Search templates..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full pr-10 pl-4 ${compact ? 'py-2' : 'py-2.5'} rounded-xl bg-white/5 border border-white/10
+              className={`w-full pl-10 pr-4 ${compact ? 'py-2' : 'py-2.5'} rounded-xl bg-white/5 border border-white/10
                 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/50
                 transition-colors`}
             />
@@ -193,7 +193,7 @@ export default function TemplateGallery({
                 : 'bg-white/5 text-gray-300 hover:bg-white/10'
             }`}
           >
-            הכל
+            All
           </button>
           {TEMPLATE_CATEGORIES.map((cat) => (
             <button
@@ -206,7 +206,7 @@ export default function TemplateGallery({
               }`}
             >
               <span>{cat.icon}</span>
-              <span>{cat.nameHe}</span>
+              <span>{cat.name}</span>
             </button>
           ))}
         </div>
@@ -225,7 +225,7 @@ export default function TemplateGallery({
           <AlertCircle className="w-5 h-5" />
           <span>{error}</span>
           <button onClick={fetchTemplates} className="underline hover:no-underline">
-            נסה שוב
+            Try again
           </button>
         </div>
       )}
@@ -235,9 +235,9 @@ export default function TemplateGallery({
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-yellow-400" />
-            <h3 className="text-lg font-semibold text-white">מומלצות עבורך</h3>
+            <h3 className="text-lg font-semibold text-white">Recommended for you</h3>
             <span className="text-sm text-gray-400">
-              (בהתאם לז'אנר: {genre})
+              (Based on genre: {genre})
             </span>
           </div>
           <div className={`grid gap-${compact ? '3' : '4'} ${
@@ -273,7 +273,7 @@ export default function TemplateGallery({
               className="text-center py-12 text-gray-400"
             >
               <Filter className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>לא נמצאו תבניות התואמות לחיפוש</p>
+              <p>No templates found matching your search</p>
               <button
                 onClick={() => {
                   setSearchQuery('');
@@ -281,7 +281,7 @@ export default function TemplateGallery({
                 }}
                 className="mt-2 text-yellow-400 hover:underline"
               >
-                נקה סינון
+                Clear filter
               </button>
             </motion.div>
           ) : selectedCategory === 'all' && !searchQuery ? (
@@ -297,7 +297,7 @@ export default function TemplateGallery({
                   <div key={category} className={`space-y-${compact ? '2' : '4'}`}>
                     <h3 className={`${compact ? 'text-base' : 'text-lg'} font-semibold text-white flex items-center gap-2`}>
                       <span>{categoryInfo?.icon}</span>
-                      <span>{categoryInfo?.nameHe || category}</span>
+                      <span>{categoryInfo?.name || category}</span>
                       <span className="text-sm text-gray-500 font-normal">
                         ({categoryTemplates.length})
                       </span>

@@ -20,10 +20,10 @@ export default function ColumnLayoutSelector({
   onColumnGapChange,
 }: ColumnLayoutSelectorProps) {
   const columnOptions: { value: ColumnLayoutType; label: string; description: string }[] = [
-    { value: 1, label: 'עמודה אחת', description: 'פריסה קלאסית' },
-    { value: 2, label: 'שתי עמודות', description: 'עיתון / מגזין' },
-    { value: 3, label: 'שלוש עמודות', description: 'תוכן צפוף' },
-    { value: 4, label: 'ארבע עמודות', description: 'טבלאי' },
+    { value: 1, label: 'One Column', description: 'Classic layout' },
+    { value: 2, label: 'Two Columns', description: 'Newspaper / Magazine' },
+    { value: 3, label: 'Three Columns', description: 'Dense content' },
+    { value: 4, label: 'Four Columns', description: 'Tabular' },
   ];
 
   // Visual representation of columns
@@ -39,10 +39,10 @@ export default function ColumnLayoutSelector({
   );
 
   return (
-    <div className="space-y-4" dir="rtl">
+    <div className="space-y-4">
       {/* Column Count Selection */}
       <div>
-        <label className="block text-sm text-gray-400 mb-3">מספר עמודות</label>
+        <label className="block text-sm text-gray-400 mb-3">Number of Columns</label>
         <div className="grid grid-cols-4 gap-2">
           {columnOptions.map((option) => (
             <motion.button
@@ -69,7 +69,7 @@ export default function ColumnLayoutSelector({
       {value > 1 && onColumnGapChange && (
         <div>
           <label className="block text-sm text-gray-400 mb-2">
-            רווח בין עמודות: {columnGap}mm
+            Column Gap: {columnGap}mm
           </label>
           <input
             type="range"
@@ -80,8 +80,8 @@ export default function ColumnLayoutSelector({
             className="w-full accent-yellow-500"
           />
           <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>צפוף (2mm)</span>
-            <span>מרווח (30mm)</span>
+            <span>Dense (2mm)</span>
+            <span>Spacious (30mm)</span>
           </div>
         </div>
       )}
@@ -92,15 +92,15 @@ export default function ColumnLayoutSelector({
           {columnOptions.find(o => o.value === value)?.label}:
         </strong>{' '}
         {columnOptions.find(o => o.value === value)?.description}
-        {value === 1 && ' - מתאים לרוב סוגי הספרים, קריאה נוחה.'}
-        {value === 2 && ' - מתאים לספרי עיון, מילונים, אנציקלופדיות.'}
-        {value === 3 && ' - מתאים לעיתונים, קטלוגים, ניוזלטרים.'}
-        {value === 4 && ' - מתאים לטבלאות, רשימות, נתונים מספריים.'}
+        {value === 1 && ' - Suitable for most book types, comfortable reading.'}
+        {value === 2 && ' - Suitable for reference books, dictionaries, encyclopedias.'}
+        {value === 3 && ' - Suitable for newspapers, catalogs, newsletters.'}
+        {value === 4 && ' - Suitable for tables, lists, numerical data.'}
       </div>
 
       {/* Quick Presets */}
       <div>
-        <label className="block text-sm text-gray-400 mb-2">פריסות מוכנות</label>
+        <label className="block text-sm text-gray-400 mb-2">Ready Layouts</label>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => {
@@ -110,7 +110,7 @@ export default function ColumnLayoutSelector({
             className="px-3 py-1.5 text-xs rounded-full bg-white/5 text-gray-300
               hover:bg-white/10 transition-colors"
           >
-            ספר קלאסי
+            Classic Book
           </button>
           <button
             onClick={() => {
@@ -120,7 +120,7 @@ export default function ColumnLayoutSelector({
             className="px-3 py-1.5 text-xs rounded-full bg-white/5 text-gray-300
               hover:bg-white/10 transition-colors"
           >
-            מגזין
+            Magazine
           </button>
           <button
             onClick={() => {
@@ -130,7 +130,7 @@ export default function ColumnLayoutSelector({
             className="px-3 py-1.5 text-xs rounded-full bg-white/5 text-gray-300
               hover:bg-white/10 transition-colors"
           >
-            עיתון
+            Newspaper
           </button>
           <button
             onClick={() => {
@@ -140,7 +140,7 @@ export default function ColumnLayoutSelector({
             className="px-3 py-1.5 text-xs rounded-full bg-white/5 text-gray-300
               hover:bg-white/10 transition-colors"
           >
-            קטלוג
+            Catalog
           </button>
         </div>
       </div>

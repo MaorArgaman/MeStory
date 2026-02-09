@@ -17,12 +17,12 @@ interface HeaderFooterEditorProps {
 
 // Dynamic fields that can be used in headers/footers
 const dynamicFields = [
-  { key: '{pageNumber}', label: 'מספר עמוד', example: '1' },
-  { key: '{totalPages}', label: 'סה"כ עמודים', example: '250' },
-  { key: '{title}', label: 'כותרת הספר', example: 'שם הספר' },
-  { key: '{chapter}', label: 'שם הפרק', example: 'פרק ראשון' },
-  { key: '{author}', label: 'שם המחבר', example: 'ישראל ישראלי' },
-  { key: '{date}', label: 'תאריך', example: '01/01/2024' },
+  { key: '{pageNumber}', label: 'Page Number', example: '1' },
+  { key: '{totalPages}', label: 'Total Pages', example: '250' },
+  { key: '{title}', label: 'Book Title', example: 'Book Name' },
+  { key: '{chapter}', label: 'Chapter Name', example: 'Chapter One' },
+  { key: '{author}', label: 'Author Name', example: 'John Doe' },
+  { key: '{date}', label: 'Date', example: '01/01/2024' },
 ];
 
 export default function HeaderFooterEditor({
@@ -84,7 +84,7 @@ export default function HeaderFooterEditor({
               {/* Content Fields */}
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">ימין</label>
+                  <label className="block text-xs text-gray-500 mb-1">Right</label>
                   <input
                     type="text"
                     value={config.content.right || ''}
@@ -100,7 +100,7 @@ export default function HeaderFooterEditor({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">מרכז</label>
+                  <label className="block text-xs text-gray-500 mb-1">Center</label>
                   <input
                     type="text"
                     value={config.content.center || ''}
@@ -116,7 +116,7 @@ export default function HeaderFooterEditor({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">שמאל</label>
+                  <label className="block text-xs text-gray-500 mb-1">Left</label>
                   <input
                     type="text"
                     value={config.content.left || ''}
@@ -138,7 +138,7 @@ export default function HeaderFooterEditor({
                 {/* Font Size */}
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">
-                    גודל: {config.style.fontSize}pt
+                    Size: {config.style.fontSize}pt
                   </label>
                   <input
                     type="range"
@@ -157,7 +157,7 @@ export default function HeaderFooterEditor({
 
                 {/* Font Family */}
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">גופן</label>
+                  <label className="block text-xs text-gray-500 mb-1">Font</label>
                   <select
                     value={config.style.fontFamily}
                     onChange={(e) =>
@@ -180,7 +180,7 @@ export default function HeaderFooterEditor({
               {/* Colors */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">צבע טקסט</label>
+                  <label className="block text-xs text-gray-500 mb-1">Text Color</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
@@ -207,7 +207,7 @@ export default function HeaderFooterEditor({
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">צבע רקע</label>
+                  <label className="block text-xs text-gray-500 mb-1">Background Color</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
@@ -229,7 +229,7 @@ export default function HeaderFooterEditor({
                           style: { ...config.style, backgroundColor: e.target.value },
                         })
                       }
-                      placeholder="ללא"
+                      placeholder="None"
                       className="flex-1 p-2 text-xs rounded-lg bg-white/5 border border-white/10 text-white"
                     />
                   </div>
@@ -250,7 +250,7 @@ export default function HeaderFooterEditor({
                     }
                     className="w-4 h-4 rounded border-white/20 bg-white/5 text-yellow-500"
                   />
-                  קו תחתון
+                  Bottom Border
                 </label>
                 <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
                   <input
@@ -264,7 +264,7 @@ export default function HeaderFooterEditor({
                     }
                     className="w-4 h-4 rounded border-white/20 bg-white/5 text-yellow-500"
                   />
-                  קו עליון
+                  Top Border
                 </label>
               </div>
 
@@ -282,7 +282,7 @@ export default function HeaderFooterEditor({
                     }
                     className="w-4 h-4 rounded border-white/20 bg-white/5 text-yellow-500"
                   />
-                  עמוד ראשון
+                  First Page
                 </label>
                 <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
                   <input
@@ -296,7 +296,7 @@ export default function HeaderFooterEditor({
                     }
                     className="w-4 h-4 rounded border-white/20 bg-white/5 text-yellow-500"
                   />
-                  עמודים אי-זוגיים
+                  Odd Pages
                 </label>
                 <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
                   <input
@@ -310,14 +310,14 @@ export default function HeaderFooterEditor({
                     }
                     className="w-4 h-4 rounded border-white/20 bg-white/5 text-yellow-500"
                   />
-                  עמודים זוגיים
+                  Even Pages
                 </label>
               </div>
 
               {/* Height */}
               <div>
                 <label className="block text-xs text-gray-500 mb-1">
-                  גובה: {config.height}mm
+                  Height: {config.height}mm
                 </label>
                 <input
                   type="range"
@@ -341,7 +341,7 @@ export default function HeaderFooterEditor({
   };
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div className="space-y-6">
       {/* Dynamic Fields Help */}
       <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
         <button
@@ -349,7 +349,7 @@ export default function HeaderFooterEditor({
           className="flex items-center gap-2 text-sm text-blue-300 w-full"
         >
           <Info className="w-4 h-4" />
-          <span>שדות דינמיים זמינים</span>
+          <span>Available Dynamic Fields</span>
           {showFieldsHelp ? (
             <ChevronUp className="w-4 h-4 mr-auto" />
           ) : (
@@ -377,7 +377,7 @@ export default function HeaderFooterEditor({
                 ))}
               </div>
               <p className="mt-2 text-xs text-gray-500">
-                הוסף שדות אלו לתוכן הכותרת והם יוחלפו אוטומטית.
+                Add these fields to the header content and they will be replaced automatically.
               </p>
             </motion.div>
           )}
@@ -387,7 +387,7 @@ export default function HeaderFooterEditor({
       {/* Header Editor */}
       <div className="p-4 rounded-lg bg-white/5">
         <SectionEditor
-          title="כותרת עליונה (Header)"
+          title="Header"
           config={header}
           onChange={onHeaderChange}
         />
@@ -396,7 +396,7 @@ export default function HeaderFooterEditor({
       {/* Footer Editor */}
       <div className="p-4 rounded-lg bg-white/5">
         <SectionEditor
-          title="כותרת תחתונה (Footer)"
+          title="Footer"
           config={footer}
           onChange={onFooterChange}
         />
@@ -404,7 +404,7 @@ export default function HeaderFooterEditor({
 
       {/* Quick Presets */}
       <div>
-        <label className="block text-sm text-gray-400 mb-2">תבניות מהירות</label>
+        <label className="block text-sm text-gray-400 mb-2">Quick Presets</label>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => {
@@ -422,7 +422,7 @@ export default function HeaderFooterEditor({
             className="px-3 py-1.5 text-xs rounded-full bg-white/5 text-gray-300
               hover:bg-white/10 transition-colors"
           >
-            ספר קלאסי
+            Classic Book
           </button>
           <button
             onClick={() => {
@@ -440,7 +440,7 @@ export default function HeaderFooterEditor({
             className="px-3 py-1.5 text-xs rounded-full bg-white/5 text-gray-300
               hover:bg-white/10 transition-colors"
           >
-            אקדמי
+            Academic
           </button>
           <button
             onClick={() => {
@@ -454,7 +454,7 @@ export default function HeaderFooterEditor({
             className="px-3 py-1.5 text-xs rounded-full bg-white/5 text-gray-300
               hover:bg-white/10 transition-colors"
           >
-            מינימלי
+            Minimal
           </button>
           <button
             onClick={() => {
@@ -464,7 +464,7 @@ export default function HeaderFooterEditor({
             className="px-3 py-1.5 text-xs rounded-full bg-white/5 text-gray-300
               hover:bg-white/10 transition-colors"
           >
-            ללא כותרות
+            No Headers
           </button>
         </div>
       </div>

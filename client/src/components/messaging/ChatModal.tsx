@@ -167,20 +167,20 @@ const ChatModal: React.FC<ChatModalProps> = ({
     );
 
     if (diffDays === 0) {
-      return date.toLocaleTimeString('he-IL', {
+      return date.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
       });
     } else if (diffDays === 1) {
-      return 'אתמול ' + date.toLocaleTimeString('he-IL', {
+      return 'Yesterday ' + date.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
       });
     } else if (diffDays < 7) {
-      return date.toLocaleDateString('he-IL', { weekday: 'short' }) + ' ' +
-        date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleDateString('en-US', { weekday: 'short' }) + ' ' +
+        date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     } else {
-      return date.toLocaleDateString('he-IL', {
+      return date.toLocaleDateString('en-US', {
         day: 'numeric',
         month: 'short',
       });
@@ -230,7 +230,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
                 <h3 className="font-semibold text-white">{authorName}</h3>
                 {bookTitle && (
                   <p className="text-xs text-gray-400 truncate max-w-[200px]">
-                    בנושא: {bookTitle}
+                    About: {bookTitle}
                   </p>
                 )}
               </div>
@@ -260,10 +260,10 @@ const ChatModal: React.FC<ChatModalProps> = ({
                   <MessageCircle className="w-8 h-8 text-purple-400" />
                 </div>
                 <h4 className="text-lg font-medium text-white mb-2">
-                  התחל שיחה עם {authorName}
+                  Start a conversation with {authorName}
                 </h4>
                 <p className="text-gray-400 text-sm max-w-[250px]">
-                  שלח הודעה ראשונה למחבר/ת כדי להתחיל שיחה
+                  Send the first message to start a conversation
                 </p>
               </div>
             ) : (
@@ -318,10 +318,9 @@ const ChatModal: React.FC<ChatModalProps> = ({
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="כתוב הודעה..."
+                placeholder="Write a message..."
                 className="flex-1 bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
                 disabled={loading || sending}
-                dir="rtl"
               />
 
               <button

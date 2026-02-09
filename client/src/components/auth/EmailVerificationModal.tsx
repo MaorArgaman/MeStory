@@ -153,9 +153,9 @@ export default function EmailVerificationModal({
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-magic-gold/30 to-yellow-500/20 flex items-center justify-center">
                 <Mail className="w-8 h-8 text-magic-gold" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">אימות כתובת המייל</h2>
+              <h2 className="text-2xl font-bold text-white mb-2">Verify Your Email</h2>
               <p className="text-gray-400 text-sm">
-                שלחנו קוד אימות ל-<span className="text-magic-gold">{email}</span>
+                We sent a verification code to <span className="text-magic-gold">{email}</span>
               </p>
             </div>
           </div>
@@ -165,7 +165,7 @@ export default function EmailVerificationModal({
             {/* Code Input */}
             <div className="mb-6">
               <label className="block text-gray-300 text-sm mb-3 text-center">
-                הזן את הקוד בן 6 הספרות
+                Enter the 6-digit code
               </label>
               <div className="flex justify-center gap-2" dir="ltr" onPaste={handlePaste}>
                 {code.map((digit, index) => (
@@ -214,19 +214,19 @@ export default function EmailVerificationModal({
               {isVerifying ? (
                 <>
                   <RefreshCw className="w-5 h-5 animate-spin" />
-                  <span>מאמת...</span>
+                  <span>Verifying...</span>
                 </>
               ) : (
                 <>
                   <CheckCircle className="w-5 h-5" />
-                  <span>אמת את המייל</span>
+                  <span>Verify Email</span>
                 </>
               )}
             </button>
 
             {/* Resend Link */}
             <div className="mt-4 text-center">
-              <p className="text-gray-400 text-sm mb-2">לא קיבלת את הקוד?</p>
+              <p className="text-gray-400 text-sm mb-2">Didn't receive the code?</p>
               <button
                 onClick={handleResend}
                 disabled={isResending || countdown > 0}
@@ -235,14 +235,14 @@ export default function EmailVerificationModal({
                 {isResending ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>שולח...</span>
+                    <span>Sending...</span>
                   </>
                 ) : countdown > 0 ? (
-                  <span>שלח שוב בעוד {countdown} שניות</span>
+                  <span>Resend in {countdown} seconds</span>
                 ) : (
                   <>
                     <RefreshCw className="w-4 h-4" />
-                    <span>שלח קוד חדש</span>
+                    <span>Send New Code</span>
                   </>
                 )}
               </button>
@@ -251,7 +251,7 @@ export default function EmailVerificationModal({
             {/* Info Box */}
             <div className="mt-6 p-4 rounded-lg bg-white/5 border border-white/10">
               <p className="text-gray-400 text-xs text-center leading-relaxed">
-                הקוד תקף ל-15 דקות. אם לא קיבלת את המייל, בדוק את תיקיית הספאם או לחץ על "שלח קוד חדש".
+                The code is valid for 15 minutes. If you didn't receive the email, check your spam folder or click "Send New Code".
               </p>
             </div>
           </div>

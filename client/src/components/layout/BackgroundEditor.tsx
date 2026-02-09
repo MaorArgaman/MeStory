@@ -20,10 +20,10 @@ export default function BackgroundEditor({
   const [activeTab, setActiveTab] = useState<BackgroundType>(value.type);
 
   const backgroundTypes: { type: BackgroundType; label: string }[] = [
-    { type: 'solid', label: 'צבע אחיד' },
-    { type: 'gradient', label: 'גרדיאנט' },
-    { type: 'pattern', label: 'דוגמה' },
-    { type: 'image', label: 'תמונה' },
+    { type: 'solid', label: 'Solid' },
+    { type: 'gradient', label: 'Gradient' },
+    { type: 'pattern', label: 'Pattern' },
+    { type: 'image', label: 'Image' },
   ];
 
   // Preview component
@@ -86,8 +86,8 @@ export default function BackgroundEditor({
           {/* Sample text overlay */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center p-4 bg-black/20 rounded">
-              <p className="text-sm font-medium">טקסט לדוגמה</p>
-              <p className="text-xs opacity-75">Sample Text</p>
+              <p className="text-sm font-medium">Sample Text</p>
+              <p className="text-xs opacity-75">Preview</p>
             </div>
           </div>
         </div>
@@ -99,7 +99,7 @@ export default function BackgroundEditor({
   const SolidEditor = () => (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm text-gray-400 mb-2">בחר צבע</label>
+        <label className="block text-sm text-gray-400 mb-2">Select Color</label>
         <div className="flex items-center gap-3">
           <input
             type="color"
@@ -119,7 +119,7 @@ export default function BackgroundEditor({
 
       {/* Color Presets */}
       <div>
-        <label className="block text-sm text-gray-400 mb-2">צבעים מומלצים</label>
+        <label className="block text-sm text-gray-400 mb-2">Recommended Colors</label>
         <div className="flex flex-wrap gap-2">
           {[
             '#ffffff', '#fffef0', '#faf3e0', '#f5f5f5',
@@ -184,7 +184,7 @@ export default function BackgroundEditor({
       <div className="space-y-4">
         {/* Gradient Type */}
         <div>
-          <label className="block text-sm text-gray-400 mb-2">סוג גרדיאנט</label>
+          <label className="block text-sm text-gray-400 mb-2">Gradient Type</label>
           <div className="flex gap-2">
             <button
               onClick={() => updateGradient({ type: 'linear' })}
@@ -194,7 +194,7 @@ export default function BackgroundEditor({
                   : 'bg-white/5 text-gray-300 border border-white/10'
               }`}
             >
-              לינארי
+              Linear
             </button>
             <button
               onClick={() => updateGradient({ type: 'radial' })}
@@ -204,7 +204,7 @@ export default function BackgroundEditor({
                   : 'bg-white/5 text-gray-300 border border-white/10'
               }`}
             >
-              רדיאלי
+              Radial
             </button>
           </div>
         </div>
@@ -213,7 +213,7 @@ export default function BackgroundEditor({
         {gradient.type === 'linear' && (
           <div>
             <label className="block text-sm text-gray-400 mb-2">
-              זווית: {gradient.angle}°
+              Angle: {gradient.angle}°
             </label>
             <input
               type="range"
@@ -229,7 +229,7 @@ export default function BackgroundEditor({
         {/* Color Stops */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm text-gray-400">נקודות צבע</label>
+            <label className="text-sm text-gray-400">Color Stops</label>
             <button
               onClick={addColorStop}
               className="p-1 rounded hover:bg-white/10 text-yellow-400"
@@ -272,7 +272,7 @@ export default function BackgroundEditor({
 
         {/* Gradient Presets */}
         <div>
-          <label className="block text-sm text-gray-400 mb-2">פריסטים</label>
+          <label className="block text-sm text-gray-400 mb-2">Presets</label>
           <div className="grid grid-cols-4 gap-2">
             {[
               { colors: [{ color: '#ffffff', position: 0 }, { color: '#f0f0f0', position: 100 }] },
@@ -317,7 +317,7 @@ export default function BackgroundEditor({
       <div className="space-y-4">
         {/* Base Color */}
         <div>
-          <label className="block text-sm text-gray-400 mb-2">צבע בסיס</label>
+          <label className="block text-sm text-gray-400 mb-2">Base Color</label>
           <div className="flex items-center gap-2">
             <input
               type="color"
@@ -336,7 +336,7 @@ export default function BackgroundEditor({
 
         {/* Pattern Type */}
         <div>
-          <label className="block text-sm text-gray-400 mb-2">סוג דוגמה</label>
+          <label className="block text-sm text-gray-400 mb-2">Pattern Type</label>
           <div className="grid grid-cols-3 gap-2">
             {(['dots', 'lines', 'grid'] as const).map((type) => (
               <button
@@ -348,9 +348,9 @@ export default function BackgroundEditor({
                     : 'bg-white/5 text-gray-300 border border-white/10'
                 }`}
               >
-                {type === 'dots' && 'נקודות'}
-                {type === 'lines' && 'קווים'}
-                {type === 'grid' && 'רשת'}
+                {type === 'dots' && 'Dots'}
+                {type === 'lines' && 'Lines'}
+                {type === 'grid' && 'Grid'}
               </button>
             ))}
           </div>
@@ -358,7 +358,7 @@ export default function BackgroundEditor({
 
         {/* Pattern Color */}
         <div>
-          <label className="block text-sm text-gray-400 mb-2">צבע דוגמה</label>
+          <label className="block text-sm text-gray-400 mb-2">Pattern Color</label>
           <div className="flex items-center gap-2">
             <input
               type="color"
@@ -378,7 +378,7 @@ export default function BackgroundEditor({
         {/* Opacity */}
         <div>
           <label className="block text-sm text-gray-400 mb-2">
-            שקיפות: {Math.round(pattern.opacity * 100)}%
+            Opacity: {Math.round(pattern.opacity * 100)}%
           </label>
           <input
             type="range"
@@ -414,13 +414,13 @@ export default function BackgroundEditor({
       <div className="space-y-4">
         {/* Image URL / Upload */}
         <div>
-          <label className="block text-sm text-gray-400 mb-2">תמונת רקע</label>
+          <label className="block text-sm text-gray-400 mb-2">Background Image</label>
           <div className="flex gap-2">
             <input
               type="text"
               value={image.url}
               onChange={(e) => updateImage({ url: e.target.value })}
-              placeholder="URL של התמונה..."
+              placeholder="Image URL..."
               className="flex-1 p-2.5 rounded-lg bg-white/5 border border-white/10
                 text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500/50"
             />
@@ -449,7 +449,7 @@ export default function BackgroundEditor({
 
         {/* Position */}
         <div>
-          <label className="block text-sm text-gray-400 mb-2">מיקום</label>
+          <label className="block text-sm text-gray-400 mb-2">Position</label>
           <div className="grid grid-cols-3 gap-2">
             {(['cover', 'contain', 'tile'] as const).map((pos) => (
               <button
@@ -461,9 +461,9 @@ export default function BackgroundEditor({
                     : 'bg-white/5 text-gray-300 border border-white/10'
                 }`}
               >
-                {pos === 'cover' && 'מכסה'}
-                {pos === 'contain' && 'מותאם'}
-                {pos === 'tile' && 'חוזר'}
+                {pos === 'cover' && 'Cover'}
+                {pos === 'contain' && 'Contain'}
+                {pos === 'tile' && 'Tile'}
               </button>
             ))}
           </div>
@@ -472,7 +472,7 @@ export default function BackgroundEditor({
         {/* Opacity */}
         <div>
           <label className="block text-sm text-gray-400 mb-2">
-            שקיפות: {Math.round(image.opacity * 100)}%
+            Opacity: {Math.round(image.opacity * 100)}%
           </label>
           <input
             type="range"
@@ -487,7 +487,7 @@ export default function BackgroundEditor({
 
         {/* Sample Images */}
         <div>
-          <label className="block text-sm text-gray-400 mb-2">תמונות לדוגמה</label>
+          <label className="block text-sm text-gray-400 mb-2">Sample Images</label>
           <div className="grid grid-cols-4 gap-2">
             {[
               'https://images.unsplash.com/photo-1557683316-973673baf926?w=200',
@@ -510,7 +510,7 @@ export default function BackgroundEditor({
   };
 
   return (
-    <div className="space-y-4" dir="rtl">
+    <div className="space-y-4">
       {/* Preview */}
       <BackgroundPreview />
 

@@ -33,7 +33,7 @@ interface ContinueWritingProps {
 
 export default function ContinueWriting({
   limit = 4,
-  title = 'המשך כתיבה',
+  title = 'Continue Writing',
   showIfEmpty = false,
 }: ContinueWritingProps) {
   const [drafts, setDrafts] = useState<WritingProgress[]>([]);
@@ -86,16 +86,16 @@ export default function ContinueWriting({
     const now = new Date();
     const diffMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
-    if (diffMinutes < 60) return `לפני ${diffMinutes} דקות`;
+    if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
 
     const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `לפני ${diffHours} שעות`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
 
     const diffDays = Math.floor(diffHours / 24);
-    if (diffDays === 1) return 'אתמול';
-    if (diffDays < 7) return `לפני ${diffDays} ימים`;
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
 
-    return date.toLocaleDateString('he-IL');
+    return date.toLocaleDateString('en-US');
   };
 
   const formatWordCount = (count: number) => {
@@ -140,7 +140,7 @@ export default function ContinueWriting({
             to="/dashboard"
             className="flex items-center gap-1 text-amber-400 hover:text-amber-300 transition-colors text-sm"
           >
-            הצג הכל
+            View All
             <ChevronRight className="w-4 h-4" />
           </Link>
         )}
@@ -149,12 +149,12 @@ export default function ContinueWriting({
       {drafts.length === 0 ? (
         <GlassCard hover={false} className="text-center py-8">
           <PenLine className="w-12 h-12 text-white/30 mx-auto mb-3" />
-          <p className="text-white/60">אין טיוטות פעילות</p>
+          <p className="text-white/60">No active drafts</p>
           <Link
             to="/dashboard"
             className="text-amber-400 hover:text-amber-300 text-sm mt-2 inline-block"
           >
-            התחל ספר חדש
+            Start a new book
           </Link>
         </GlassCard>
       ) : (
@@ -190,7 +190,7 @@ export default function ContinueWriting({
 
                     {/* Draft Badge */}
                     <div className="absolute top-2 left-2 bg-amber-500/90 text-black text-xs font-bold px-2 py-0.5 rounded">
-                      טיוטה
+                      Draft
                     </div>
                   </div>
 
@@ -205,7 +205,7 @@ export default function ContinueWriting({
                     <div className="flex items-center justify-between mt-2 text-xs text-white/40">
                       <div className="flex items-center gap-1">
                         <FileText className="w-3 h-3" />
-                        <span>{formatWordCount(item.wordCount)} מילים</span>
+                        <span>{formatWordCount(item.wordCount)} words</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
@@ -215,7 +215,7 @@ export default function ContinueWriting({
 
                     {/* Continue Button */}
                     <button className="w-full mt-3 py-2 bg-amber-600/50 hover:bg-amber-600 rounded-lg text-white text-sm font-medium transition-colors">
-                      המשך לכתוב
+                      Continue Writing
                     </button>
                   </div>
                 </GlassCard>

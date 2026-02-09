@@ -115,9 +115,9 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       );
       setUnreadCount(0);
       onUnreadCountChange?.(0);
-      toast.success('כל ההתראות סומנו כנקראו');
+      toast.success('All notifications marked as read');
     } catch (error) {
-      toast.error('שגיאה בסימון ההתראות');
+      toast.error('Failed to mark notifications');
     } finally {
       setMarkingAllRead(false);
     }
@@ -133,7 +133,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
         onUnreadCountChange?.(Math.max(0, unreadCount - 1));
       }
     } catch (error) {
-      toast.error('שגיאה במחיקת ההתראה');
+      toast.error('Failed to delete notification');
     }
   };
 
@@ -147,7 +147,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
         onUnreadCountChange?.(Math.max(0, unreadCount - 1));
       }
     } catch (error) {
-      toast.error('שגיאה בארכיון ההתראה');
+      toast.error('Failed to archive notification');
     }
   };
 
@@ -202,20 +202,20 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffMins < 1) return 'עכשיו';
-    if (diffMins < 60) return `לפני ${diffMins} דקות`;
-    if (diffHours < 24) return `לפני ${diffHours} שעות`;
-    if (diffDays < 7) return `לפני ${diffDays} ימים`;
-    return date.toLocaleDateString('he-IL', { day: 'numeric', month: 'short' });
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
   };
 
   const filterOptions: { value: NotificationType | 'all'; label: string; icon: React.ReactNode }[] = [
-    { value: 'all', label: 'הכל', icon: <Bell className="w-4 h-4" /> },
-    { value: 'like', label: 'לייקים', icon: <Heart className="w-4 h-4" /> },
-    { value: 'comment', label: 'תגובות', icon: <MessageCircle className="w-4 h-4" /> },
-    { value: 'share', label: 'שיתופים', icon: <Share2 className="w-4 h-4" /> },
-    { value: 'purchase', label: 'רכישות', icon: <CreditCard className="w-4 h-4" /> },
-    { value: 'payment', label: 'תשלומים', icon: <CreditCard className="w-4 h-4" /> },
+    { value: 'all', label: 'All', icon: <Bell className="w-4 h-4" /> },
+    { value: 'like', label: 'Likes', icon: <Heart className="w-4 h-4" /> },
+    { value: 'comment', label: 'Comments', icon: <MessageCircle className="w-4 h-4" /> },
+    { value: 'share', label: 'Shares', icon: <Share2 className="w-4 h-4" /> },
+    { value: 'purchase', label: 'Purchases', icon: <CreditCard className="w-4 h-4" /> },
+    { value: 'payment', label: 'Payments', icon: <CreditCard className="w-4 h-4" /> },
   ];
 
   if (!isOpen) return null;
@@ -247,7 +247,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     </span>
                   )}
                 </div>
-                <h2 className="text-xl font-bold text-white">התראות</h2>
+                <h2 className="text-xl font-bold text-white">Notifications</h2>
               </div>
 
               <div className="flex items-center gap-2">
@@ -256,7 +256,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     onClick={handleMarkAllAsRead}
                     disabled={markingAllRead}
                     className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                    title="סמן הכל כנקרא"
+                    title="Mark all as read"
                   >
                     {markingAllRead ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -303,7 +303,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 }`}
               >
                 <Filter className="w-4 h-4" />
-                לא נקראו בלבד
+                Unread only
               </button>
             </div>
           </div>
@@ -319,11 +319,11 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center mb-4">
                   <Bell className="w-8 h-8 text-purple-400" />
                 </div>
-                <h4 className="text-lg font-medium text-white mb-2">אין התראות</h4>
+                <h4 className="text-lg font-medium text-white mb-2">No notifications</h4>
                 <p className="text-gray-400 text-sm">
                   {showUnreadOnly
-                    ? 'אין התראות שלא נקראו'
-                    : 'ההתראות שלך יופיעו כאן'}
+                    ? 'No unread notifications'
+                    : 'Your notifications will appear here'}
                 </p>
               </div>
             ) : (
@@ -390,7 +390,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                               handleMarkAsRead(notification);
                             }}
                             className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-colors"
-                            title="סמן כנקרא"
+                            title="Mark as read"
                           >
                             <Check className="w-4 h-4" />
                           </button>
@@ -401,7 +401,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                             handleArchive(notification._id);
                           }}
                           className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-colors"
-                          title="העבר לארכיון"
+                          title="Archive"
                         >
                           <Archive className="w-4 h-4" />
                         </button>
@@ -411,7 +411,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                             handleDelete(notification._id);
                           }}
                           className="p-1.5 rounded-lg hover:bg-red-500/20 text-gray-500 hover:text-red-400 transition-colors"
-                          title="מחק"
+                          title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -431,7 +431,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                       {loading ? (
                         <Loader2 className="w-4 h-4 animate-spin mx-auto" />
                       ) : (
-                        'טען עוד'
+                        'Load more'
                       )}
                     </button>
                   </div>

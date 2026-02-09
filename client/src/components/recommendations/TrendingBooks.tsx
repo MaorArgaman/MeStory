@@ -36,7 +36,7 @@ interface TrendingBooksProps {
 
 export default function TrendingBooks({
   limit = 6,
-  title = 'טרנדינג עכשיו',
+  title = 'Trending Now',
 }: TrendingBooksProps) {
   const [books, setBooks] = useState<PromotedBook[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,7 +120,7 @@ export default function TrendingBooks({
           to="/marketplace?sort=trending"
           className="flex items-center gap-1 text-orange-400 hover:text-orange-300 transition-colors text-sm"
         >
-          הצג הכל
+          View All
           <ChevronRight className="w-4 h-4" />
         </Link>
       </div>

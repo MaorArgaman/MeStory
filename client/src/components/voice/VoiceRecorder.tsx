@@ -79,7 +79,7 @@ export default function VoiceRecorder({
       <div className={`flex flex-col items-center gap-4 ${className}`}>
         <div className="flex items-center gap-2 text-red-400 bg-red-500/10 px-4 py-3 rounded-xl border border-red-500/30">
           <AlertCircle className="w-5 h-5" />
-          <span>{error || 'הדפדפן לא תומך בהקלטת קול'}</span>
+          <span>{error || 'Voice recording is not supported by your browser'}</span>
         </div>
 
         {showTextInput && onTextSubmit && (
@@ -87,17 +87,16 @@ export default function VoiceRecorder({
             <textarea
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
-              placeholder="הקלד את התשובה שלך כאן..."
+              placeholder="Type your answer here..."
               className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-magic-gold/50 resize-none"
               rows={3}
-              dir="rtl"
             />
             <button
               onClick={handleTextSubmit}
               disabled={!textInput.trim()}
               className="mt-2 w-full py-2 px-4 rounded-xl bg-magic-gold text-deep-space font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-yellow-500 transition-colors"
             >
-              שלח תשובה
+              Send answer
             </button>
           </div>
         )}
@@ -116,7 +115,7 @@ export default function VoiceRecorder({
         >
           <Loader2 className="w-8 h-8 text-magic-gold" />
         </motion.div>
-        <span className="text-gray-300">מעבד את ההקלטה...</span>
+        <span className="text-gray-300">Processing recording...</span>
       </div>
     );
   }
@@ -170,7 +169,7 @@ export default function VoiceRecorder({
               </motion.button>
             </div>
 
-            <p className="text-gray-400 text-sm">לחץ על שלח כשסיימת</p>
+            <p className="text-gray-400 text-sm">Press send when done</p>
           </motion.div>
         ) : (
           <motion.div
@@ -197,26 +196,25 @@ export default function VoiceRecorder({
               <Mic className="w-8 h-8 relative z-10" />
             </motion.button>
 
-            <p className="text-gray-300 text-sm">לחץ להקלטה</p>
+            <p className="text-gray-300 text-sm">Press to record</p>
 
             {/* Optional text input toggle */}
             {showTextInput && onTextSubmit && (
               <div className="w-full mt-4">
-                <div className="text-center text-gray-500 text-sm mb-3">או הקלד תשובה</div>
+                <div className="text-center text-gray-500 text-sm mb-3">or type your answer</div>
                 <textarea
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
-                  placeholder="הקלד את התשובה שלך כאן..."
+                  placeholder="Type your answer here..."
                   className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-magic-gold/50 resize-none"
                   rows={3}
-                  dir="rtl"
                 />
                 <button
                   onClick={handleTextSubmit}
                   disabled={!textInput.trim()}
                   className="mt-2 w-full py-2 px-4 rounded-xl bg-white/10 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 transition-colors border border-white/20"
                 >
-                  שלח תשובה בטקסט
+                  Send text answer
                 </button>
               </div>
             )}

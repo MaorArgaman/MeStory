@@ -77,7 +77,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
 
   const handleSelectTemplate = (template: BookTemplate) => {
     setSelectedTemplate(template);
-    toast.success(`תבנית "${template.nameHe}" נבחרה!`);
+    toast.success(`Template "${template.name}" selected!`);
   };
 
   const handleGenerateTitles = async () => {
@@ -145,10 +145,10 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
         if (selectedTemplate) {
           try {
             await applyTemplateToBook(bookId, selectedTemplate._id);
-            toast.success('הספר נוצר והתבנית הופעלה בהצלחה!');
+            toast.success('Book created and template applied successfully!');
           } catch (templateError) {
             console.error('Failed to apply template:', templateError);
-            toast.success('הספר נוצר! (אך הפעלת התבנית נכשלה)');
+            toast.success('Book created! (but template application failed)');
           }
         } else {
           toast.success('Book created successfully!');
@@ -568,9 +568,9 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
               >
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-display font-bold text-white mb-2">
-                    📐 בחר תבנית
+                    📐 Choose a Template
                   </h3>
-                  <p className="text-gray-400">בחר תבנית מוכנה או התחל מתבנית מותאמת אישית</p>
+                  <p className="text-gray-400">Choose a ready template or start with a custom template</p>
                 </div>
 
                 {/* Template Gallery */}
@@ -592,7 +592,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     <div className="flex items-center gap-3">
                       <Layout className="w-5 h-5 text-magic-gold" />
                       <span className="text-white">
-                        תבנית נבחרה: <span className="font-semibold text-magic-gold">{selectedTemplate.nameHe}</span>
+                        Template selected: <span className="font-semibold text-magic-gold">{selectedTemplate.name}</span>
                       </span>
                     </div>
                   </motion.div>
@@ -600,7 +600,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
 
                 {/* Summary */}
                 <div className="glass rounded-xl p-6 space-y-2">
-                  <p className="text-sm text-gray-400 mb-3">סיכום</p>
+                  <p className="text-sm text-gray-400 mb-3">Summary</p>
                   <div className="flex items-center gap-2">
                     <Target className="w-4 h-4 text-magic-gold" />
                     <span className="text-white">
@@ -623,7 +623,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     <div className="flex items-center gap-2">
                       <Layout className="w-4 h-4 text-magic-gold" />
                       <span className="text-gray-300">
-                        תבנית: {selectedTemplate.nameHe}
+                        Template: {selectedTemplate.name}
                       </span>
                     </div>
                   )}
@@ -648,12 +648,12 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     {creating ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        יוצר...
+                        Creating...
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-5 h-5" />
-                        צור את הספר שלי
+                        Create My Book
                       </>
                     )}
                   </GlowingButton>

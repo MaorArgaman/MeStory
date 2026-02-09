@@ -59,11 +59,11 @@ export default function PageLayoutEditor({
   });
 
   const tabs: { id: EditorTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'columns', label: 'עמודות', icon: <Columns className="w-4 h-4" /> },
-    { id: 'split', label: 'פיצול עמוד', icon: <SplitSquareVertical className="w-4 h-4" /> },
-    { id: 'typography', label: 'טיפוגרפיה', icon: <Type className="w-4 h-4" /> },
-    { id: 'background', label: 'רקע', icon: <Palette className="w-4 h-4" /> },
-    { id: 'header-footer', label: 'כותרות', icon: <Settings className="w-4 h-4" /> },
+    { id: 'columns', label: 'Columns', icon: <Columns className="w-4 h-4" /> },
+    { id: 'split', label: 'Page Split', icon: <SplitSquareVertical className="w-4 h-4" /> },
+    { id: 'typography', label: 'Typography', icon: <Type className="w-4 h-4" /> },
+    { id: 'background', label: 'Background', icon: <Palette className="w-4 h-4" /> },
+    { id: 'header-footer', label: 'Headers', icon: <Settings className="w-4 h-4" /> },
   ];
 
   const toggleSection = (section: string) => {
@@ -146,7 +146,7 @@ export default function PageLayoutEditor({
       <div className="flex items-center justify-between p-4 border-b border-white/10">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
           <Settings className="w-5 h-5 text-yellow-400" />
-          עורך עיצוב עמוד
+          Page Layout Editor
         </h2>
         <div className="flex items-center gap-2">
           <button
@@ -154,7 +154,7 @@ export default function PageLayoutEditor({
             className={`p-2 rounded-lg transition-colors ${
               showPreview ? 'bg-yellow-500/20 text-yellow-400' : 'bg-white/5 text-gray-400'
             }`}
-            title="תצוגה מקדימה"
+            title="Preview"
           >
             <Eye className="w-4 h-4" />
           </button>
@@ -163,7 +163,7 @@ export default function PageLayoutEditor({
               onClick={onReset}
               className="p-2 rounded-lg bg-white/5 text-gray-400 hover:bg-white/10
                 hover:text-white transition-colors"
-              title="איפוס"
+              title="Reset"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
@@ -175,7 +175,7 @@ export default function PageLayoutEditor({
                 hover:bg-yellow-400 transition-colors flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
-              שמור
+              Save
             </button>
           )}
         </div>
@@ -187,10 +187,10 @@ export default function PageLayoutEditor({
           {/* Columns Section */}
           <div className="space-y-3">
             <SectionHeader
-              title="עמודות"
+              title="Columns"
               icon={<Columns className="w-4 h-4" />}
               section="columns"
-              badge={`${layout.columns} עמודות`}
+              badge={`${layout.columns} columns`}
             />
             <AnimatePresence>
               {expandedSections.columns && (
@@ -216,7 +216,7 @@ export default function PageLayoutEditor({
           {/* Split Section */}
           <div className="space-y-3">
             <SectionHeader
-              title="פיצול עמוד"
+              title="Page Split"
               icon={<SplitSquareVertical className="w-4 h-4" />}
               section="split"
               badge={layout.splitType !== 'none' ? layout.splitType : undefined}
@@ -244,7 +244,7 @@ export default function PageLayoutEditor({
           {/* Typography Section */}
           <div className="space-y-3">
             <SectionHeader
-              title="טיפוגרפיה"
+              title="Typography"
               icon={<Type className="w-4 h-4" />}
               section="typography"
             />
@@ -259,7 +259,7 @@ export default function PageLayoutEditor({
                   <div className="p-4 rounded-lg bg-white/5 space-y-4">
                     {/* Body Font */}
                     <div>
-                      <label className="block text-sm text-gray-400 mb-2">גופן גוף הטקסט</label>
+                      <label className="block text-sm text-gray-400 mb-2">Body Font</label>
                       <select
                         value={layout.typography.bodyFont}
                         onChange={(e) => handleTypographyChange({
@@ -281,7 +281,7 @@ export default function PageLayoutEditor({
                     {/* Body Font Size */}
                     <div>
                       <label className="block text-sm text-gray-400 mb-2">
-                        גודל גופן: {layout.typography.bodyFontSize}px
+                        Font Size: {layout.typography.bodyFontSize}px
                       </label>
                       <input
                         type="range"
@@ -299,7 +299,7 @@ export default function PageLayoutEditor({
                     {/* Line Height */}
                     <div>
                       <label className="block text-sm text-gray-400 mb-2">
-                        גובה שורה: {layout.typography.lineHeight}
+                        Line Height: {layout.typography.lineHeight}
                       </label>
                       <input
                         type="range"
@@ -317,7 +317,7 @@ export default function PageLayoutEditor({
 
                     {/* Text Color */}
                     <div>
-                      <label className="block text-sm text-gray-400 mb-2">צבע טקסט</label>
+                      <label className="block text-sm text-gray-400 mb-2">Text Color</label>
                       <div className="flex items-center gap-2">
                         <input
                           type="color"
@@ -343,7 +343,7 @@ export default function PageLayoutEditor({
 
                     {/* Heading Font */}
                     <div>
-                      <label className="block text-sm text-gray-400 mb-2">גופן כותרות</label>
+                      <label className="block text-sm text-gray-400 mb-2">Heading Font</label>
                       <select
                         value={layout.typography.headingFont}
                         onChange={(e) => handleTypographyChange({
@@ -365,7 +365,7 @@ export default function PageLayoutEditor({
                     {/* Heading Font Size */}
                     <div>
                       <label className="block text-sm text-gray-400 mb-2">
-                        גודל כותרות: {layout.typography.headingFontSize}px
+                        Heading Size: {layout.typography.headingFontSize}px
                       </label>
                       <input
                         type="range"
@@ -382,7 +382,7 @@ export default function PageLayoutEditor({
 
                     {/* Heading Color */}
                     <div>
-                      <label className="block text-sm text-gray-400 mb-2">צבע כותרות</label>
+                      <label className="block text-sm text-gray-400 mb-2">Heading Color</label>
                       <div className="flex items-center gap-2">
                         <input
                           type="color"
@@ -414,7 +414,7 @@ export default function PageLayoutEditor({
           {/* Background Section */}
           <div className="space-y-3">
             <SectionHeader
-              title="רקע"
+              title="Background"
               icon={<Palette className="w-4 h-4" />}
               section="background"
               badge={layout.background.type}
@@ -441,7 +441,7 @@ export default function PageLayoutEditor({
           {/* Header & Footer Section */}
           <div className="space-y-3">
             <SectionHeader
-              title="כותרת עליונה ותחתונה"
+              title="Header & Footer"
               icon={<Settings className="w-4 h-4" />}
               section="headerFooter"
             />
@@ -469,7 +469,7 @@ export default function PageLayoutEditor({
           {/* Margins Section */}
           <div className="space-y-3">
             <SectionHeader
-              title="שוליים"
+              title="Margins"
               icon={<Settings className="w-4 h-4" />}
               section="margins"
             />
@@ -485,7 +485,7 @@ export default function PageLayoutEditor({
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm text-gray-400 mb-2">
-                          עליון: {layout.margins.top}mm
+                          Top: {layout.margins.top}mm
                         </label>
                         <input
                           type="range"
@@ -501,7 +501,7 @@ export default function PageLayoutEditor({
                       </div>
                       <div>
                         <label className="block text-sm text-gray-400 mb-2">
-                          תחתון: {layout.margins.bottom}mm
+                          Bottom: {layout.margins.bottom}mm
                         </label>
                         <input
                           type="range"
@@ -517,7 +517,7 @@ export default function PageLayoutEditor({
                       </div>
                       <div>
                         <label className="block text-sm text-gray-400 mb-2">
-                          {isRTL ? 'ימין' : 'שמאל'}: {layout.margins.right}mm
+                          {isRTL ? 'Right' : 'Left'}: {layout.margins.right}mm
                         </label>
                         <input
                           type="range"
@@ -533,7 +533,7 @@ export default function PageLayoutEditor({
                       </div>
                       <div>
                         <label className="block text-sm text-gray-400 mb-2">
-                          {isRTL ? 'שמאל' : 'ימין'}: {layout.margins.left}mm
+                          {isRTL ? 'Left' : 'Right'}: {layout.margins.left}mm
                         </label>
                         <input
                           type="range"
@@ -558,7 +558,7 @@ export default function PageLayoutEditor({
         {/* Preview Panel */}
         {showPreview && (
           <div className="w-80 border-r border-white/10 p-4 overflow-y-auto">
-            <h3 className="text-sm font-medium text-gray-400 mb-4">תצוגה מקדימה</h3>
+            <h3 className="text-sm font-medium text-gray-400 mb-4">Preview</h3>
             <PagePreview layout={layout} isRTL={isRTL} />
           </div>
         )}
@@ -681,7 +681,7 @@ function PagePreview({
             fontFamily: layout.header.style.fontFamily,
           }}
         >
-          {layout.header.content.center || 'כותרת עליונה'}
+          {layout.header.content.center || 'Header'}
         </div>
       )}
 

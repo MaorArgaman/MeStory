@@ -21,10 +21,10 @@ export default function PageSplitSelector({
   const [ratio, setRatio] = useState(splitRatio[0] || 50);
 
   const splitOptions: { value: PageSplitType; label: string; description: string }[] = [
-    { value: 'none', label: 'ללא פיצול', description: 'עמוד שלם' },
-    { value: 'horizontal', label: 'אופקי', description: 'למעלה / למטה' },
-    { value: 'vertical', label: 'אנכי', description: 'שמאל / ימין' },
-    { value: 'quadrant', label: 'רביעיות', description: '4 חלקים' },
+    { value: 'none', label: 'No Split', description: 'Full page' },
+    { value: 'horizontal', label: 'Horizontal', description: 'Top / Bottom' },
+    { value: 'vertical', label: 'Vertical', description: 'Left / Right' },
+    { value: 'quadrant', label: 'Quadrant', description: '4 parts' },
   ];
 
   // Visual representation of split types
@@ -80,10 +80,10 @@ export default function PageSplitSelector({
   };
 
   return (
-    <div className="space-y-4" dir="rtl">
+    <div className="space-y-4">
       {/* Split Type Selection */}
       <div>
-        <label className="block text-sm text-gray-400 mb-3">סוג פיצול</label>
+        <label className="block text-sm text-gray-400 mb-3">Split Type</label>
         <div className="grid grid-cols-4 gap-2">
           {splitOptions.map((option) => (
             <motion.button
@@ -110,7 +110,7 @@ export default function PageSplitSelector({
       {(value === 'horizontal' || value === 'vertical') && (
         <div>
           <label className="block text-sm text-gray-400 mb-2">
-            יחס פיצול: {ratio}% / {100 - ratio}%
+            Split Ratio: {ratio}% / {100 - ratio}%
           </label>
           <input
             type="range"
@@ -131,7 +131,7 @@ export default function PageSplitSelector({
                 [value === 'horizontal' ? 'height' : 'width']: `${ratio}%`,
               }}
             >
-              {value === 'horizontal' ? 'עליון' : 'ימין'}
+              {value === 'horizontal' ? 'Top' : 'Right'}
             </div>
             <div
               className="bg-purple-500/40 flex items-center justify-center text-xs text-white"
@@ -139,7 +139,7 @@ export default function PageSplitSelector({
                 [value === 'horizontal' ? 'height' : 'width']: `${100 - ratio}%`,
               }}
             >
-              {value === 'horizontal' ? 'תחתון' : 'שמאל'}
+              {value === 'horizontal' ? 'Bottom' : 'Left'}
             </div>
           </div>
 
@@ -182,17 +182,17 @@ export default function PageSplitSelector({
         <strong className="text-yellow-400">
           {splitOptions.find(o => o.value === value)?.label}:
         </strong>{' '}
-        {value === 'none' && 'העמוד ישמש כיחידה אחת שלמה. מתאים לרוב סוגי התוכן.'}
-        {value === 'horizontal' && 'העמוד יחולק לחלק עליון ותחתון. מתאים לתמונה + טקסט או שני סוגי תוכן שונים.'}
-        {value === 'vertical' && 'העמוד יחולק לחלק ימני ושמאלי. מתאים לטקסט דו-לשוני או השוואה.'}
-        {value === 'quadrant' && 'העמוד יחולק לארבעה חלקים שווים. מתאים לגלריות תמונות או ארגון תוכן מורכב.'}
+        {value === 'none' && 'The page will be used as a single whole unit. Suitable for most content types.'}
+        {value === 'horizontal' && 'The page will be split into top and bottom sections. Suitable for image + text or two different content types.'}
+        {value === 'vertical' && 'The page will be split into left and right sections. Suitable for bilingual text or comparisons.'}
+        {value === 'quadrant' && 'The page will be split into four equal parts. Suitable for image galleries or complex content organization.'}
       </div>
 
       {/* Usage Tips */}
       {value !== 'none' && (
         <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-sm text-blue-300">
-          <strong>טיפ:</strong> כל חלק יכול להכיל עמודות נפרדות ועיצוב עצמאי.
-          ניתן לגרור בלוקי תוכן בין החלקים.
+          <strong>Tip:</strong> Each section can contain separate columns and independent styling.
+          You can drag content blocks between sections.
         </div>
       )}
     </div>

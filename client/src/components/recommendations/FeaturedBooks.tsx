@@ -37,7 +37,7 @@ interface FeaturedBooksProps {
 
 export default function FeaturedBooks({
   limit = 4,
-  title = 'בחירת העורכים',
+  title = "Editor's Choice",
 }: FeaturedBooksProps) {
   const [books, setBooks] = useState<PromotedBook[]>([]);
   const [loading, setLoading] = useState(true);
@@ -121,7 +121,7 @@ export default function FeaturedBooks({
           to="/marketplace?filter=featured"
           className="flex items-center gap-1 text-amber-400 hover:text-amber-300 transition-colors text-sm"
         >
-          הצג הכל
+          View All
           <ChevronRight className="w-4 h-4" />
         </Link>
       </div>
@@ -144,7 +144,7 @@ export default function FeaturedBooks({
                 <div className="absolute top-3 right-3 z-10">
                   <div className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
                     <Crown className="w-3 h-3" />
-                    נבחר
+                    Featured
                   </div>
                 </div>
 
@@ -190,7 +190,7 @@ export default function FeaturedBooks({
                     {item.book.title}
                   </h3>
                   <p className="text-sm text-white/60 mt-1">
-                    מאת {item.book.author.name}
+                    by {item.book.author.name}
                   </p>
 
                   {/* Description */}
@@ -216,11 +216,11 @@ export default function FeaturedBooks({
                   <div className="flex items-center justify-between mt-4">
                     <span className="text-lg font-bold text-white">
                       {item.book.publishingStatus?.isFree || item.book.publishingStatus?.price === 0
-                        ? 'חינם'
-                        : `₪${item.book.publishingStatus?.price}`}
+                        ? 'Free'
+                        : `$${item.book.publishingStatus?.price}`}
                     </span>
                     <button className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 rounded-lg text-black font-bold text-sm transition-all">
-                      לצפייה
+                      View
                     </button>
                   </div>
                 </div>
