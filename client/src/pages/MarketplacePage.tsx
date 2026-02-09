@@ -692,7 +692,7 @@ export default function MarketplacePage() {
               >
                 <GlassCard
                   hover={true}
-                  glow={book.qualityScore?.overallScore >= 90 ? 'gold' : 'cosmic'}
+                  glow={(book.qualityScore?.overallScore ?? 0) >= 90 ? 'gold' : 'cosmic'}
                   className="h-full flex flex-col relative overflow-visible"
                 >
                   {/* Masterpiece Badge */}

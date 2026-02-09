@@ -217,15 +217,15 @@ export function formatDuration(seconds: number): string {
 }
 
 /**
- * Get topic display name in Hebrew
+ * Get topic display name
  */
 export function getTopicDisplayName(topic: string): string {
   const topicNames: Record<string, string> = {
-    theme: 'נושא הספר',
-    characters: 'דמויות',
-    plot: 'עלילה',
-    setting: 'סביבה',
-    summary: 'סיכום',
+    theme: 'Book Theme',
+    characters: 'Characters',
+    plot: 'Plot',
+    setting: 'Setting',
+    summary: 'Summary',
   };
   return topicNames[topic] || topic;
 }

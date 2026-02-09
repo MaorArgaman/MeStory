@@ -35,7 +35,7 @@ interface UseTTSOptions {
 
 export function useTTS(options: UseTTSOptions = {}): UseTTSResult {
   const {
-    language = 'he-IL',
+    language = 'en-US',
     rate: initialRate = 1.0,
     pitch: initialPitch = 1.0,
     volume = 1.0,
@@ -64,7 +64,7 @@ export function useTTS(options: UseTTSOptions = {}): UseTTSResult {
     setIsSupported(supported);
 
     if (!supported) {
-      setError('הדפדפן שלך לא תומך בהקראת טקסט');
+      setError('Your browser does not support text-to-speech');
       return;
     }
 
@@ -122,7 +122,7 @@ export function useTTS(options: UseTTSOptions = {}): UseTTSResult {
     (text: string): Promise<void> => {
       return new Promise((resolve, reject) => {
         if (!isSupported) {
-          const errorMsg = 'הדפדפן לא תומך בהקראת טקסט';
+          const errorMsg = 'Browser does not support text-to-speech';
           setError(errorMsg);
           if (onError) onError(errorMsg);
           reject(new Error(errorMsg));
@@ -183,7 +183,7 @@ export function useTTS(options: UseTTSOptions = {}): UseTTSResult {
             return;
           }
 
-          const errorMsg = `שגיאה בהקראה: ${event.error}`;
+          const errorMsg = `Speech error: ${event.error}`;
           setError(errorMsg);
           if (onError) onError(errorMsg);
           reject(new Error(errorMsg));

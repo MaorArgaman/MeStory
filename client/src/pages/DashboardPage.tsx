@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
-import { Plus, Loader2, BookOpen, Edit, Palette, Download, Rocket, MessageSquare, Upload, Sparkles, FileText, Mic, PenTool, X, Volume2 } from 'lucide-react';
+import { Plus, Loader2, BookOpen, Edit, Palette, Download, Rocket, MessageSquare, Upload, Sparkles, FileText, Mic, PenTool, X, Volume2, Feather, MessageCircle, FileUp, AudioLines } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import CreateBookWizard from '../components/dashboard/CreateBookWizard';
@@ -15,10 +15,6 @@ import {
   RecommendedForYou,
 } from '../components/recommendations';
 import emptyDashboard from '../assets/images/empty-dashboard.png';
-import dashboardIconScratch from '../assets/images/dashboard-icon-scratch.png';
-import dashboardIconInterview from '../assets/images/dashboard-icon-interview.png';
-import dashboardIconImport from '../assets/images/dashboard-icon-import.png';
-import dashboardIconVoice from '../assets/images/dashboard-icon-voice.png';
 
 interface BookItem {
   id: string;
@@ -307,11 +303,9 @@ export default function DashboardPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-cyan-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
             <div className="relative z-10">
-              <img
-                src={dashboardIconScratch}
-                alt="Start from Scratch"
-                className="w-16 h-16 mb-4 mx-auto object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] group-hover:scale-110 transition-transform duration-300"
-              />
+              <div className="w-16 h-16 mb-4 mx-auto rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 group-hover:shadow-blue-500/50 transition-all duration-300">
+                <Feather className="w-8 h-8 text-white" />
+              </div>
               <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: "'Cinzel', serif" }}>
                 Start from Scratch
               </h3>
@@ -334,11 +328,9 @@ export default function DashboardPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-magic-gold/20 to-yellow-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
             <div className="relative z-10">
-              <img
-                src={dashboardIconInterview}
-                alt="Voice Interview"
-                className="w-16 h-16 mb-4 mx-auto object-contain drop-shadow-[0_0_10px_rgba(234,179,8,0.5)] group-hover:scale-110 transition-transform duration-300"
-              />
+              <div className="w-16 h-16 mb-4 mx-auto rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:scale-110 group-hover:shadow-amber-500/50 transition-all duration-300">
+                <Mic className="w-8 h-8 text-white" />
+              </div>
               <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: "'Cinzel', serif" }}>
                 Voice Interview
               </h3>
@@ -361,11 +353,9 @@ export default function DashboardPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
             <div className="relative z-10">
-              <img
-                src={dashboardIconInterview}
-                alt="Text Interview"
-                className="w-16 h-16 mb-4 mx-auto object-contain drop-shadow-[0_0_10px_rgba(99,102,241,0.5)] group-hover:scale-110 transition-transform duration-300"
-              />
+              <div className="w-16 h-16 mb-4 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:scale-110 group-hover:shadow-indigo-500/50 transition-all duration-300">
+                <MessageCircle className="w-8 h-8 text-white" />
+              </div>
               <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: "'Cinzel', serif" }}>
                 Text Interview
               </h3>
@@ -388,11 +378,9 @@ export default function DashboardPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
             <div className="relative z-10">
-              <img
-                src={dashboardIconImport}
-                alt="Import Manuscript"
-                className="w-16 h-16 mb-4 mx-auto object-contain drop-shadow-[0_0_10px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform duration-300"
-              />
+              <div className="w-16 h-16 mb-4 mx-auto rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30 group-hover:scale-110 group-hover:shadow-purple-500/50 transition-all duration-300">
+                <FileUp className="w-8 h-8 text-white" />
+              </div>
               <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: "'Cinzel', serif" }}>
                 Import Manuscript
               </h3>
@@ -415,11 +403,9 @@ export default function DashboardPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/20 to-teal-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
             <div className="relative z-10">
-              <img
-                src={dashboardIconVoice}
-                alt="Voice to Text"
-                className="w-16 h-16 mb-4 mx-auto object-contain drop-shadow-[0_0_10px_rgba(16,185,129,0.5)] group-hover:scale-110 transition-transform duration-300"
-              />
+              <div className="w-16 h-16 mb-4 mx-auto rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-110 group-hover:shadow-emerald-500/50 transition-all duration-300">
+                <AudioLines className="w-8 h-8 text-white" />
+              </div>
               <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: "'Cinzel', serif" }}>
                 Voice to Text
               </h3>

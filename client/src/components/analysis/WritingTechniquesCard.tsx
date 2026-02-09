@@ -25,12 +25,12 @@ interface WritingTechniquesCardProps {
 }
 
 const techniqueLabels: Record<string, { name: string; icon: string }> = {
-  tensionCreation: { name: 'יצירת מתח', icon: '⚡' },
-  problemResolution: { name: 'פתרון בעיות', icon: '🎯' },
-  characterDevelopment: { name: 'פיתוח דמויות', icon: '👤' },
-  motifsThemes: { name: 'מוטיבים ונושאים', icon: '🔄' },
-  dialogueQuality: { name: 'איכות דיאלוג', icon: '💬' },
-  pacing: { name: 'קצב', icon: '⏱️' },
+  tensionCreation: { name: 'Tension Creation', icon: '⚡' },
+  problemResolution: { name: 'Problem Resolution', icon: '🎯' },
+  characterDevelopment: { name: 'Character Development', icon: '👤' },
+  motifsThemes: { name: 'Motifs & Themes', icon: '🔄' },
+  dialogueQuality: { name: 'Dialogue Quality', icon: '💬' },
+  pacing: { name: 'Pacing', icon: '⏱️' },
 };
 
 export default function WritingTechniquesCard({
@@ -53,7 +53,7 @@ export default function WritingTechniquesCard({
       setAnalysis(result);
     } catch (err) {
       console.error('Failed to analyze techniques:', err);
-      setError('שגיאה בניתוח טכניקות כתיבה');
+      setError('Error analyzing writing techniques');
     } finally {
       setLoading(false);
     }
@@ -85,28 +85,28 @@ export default function WritingTechniquesCard({
 
   const getTrendLabel = (trend: string) => {
     switch (trend) {
-      case 'improving': return 'משתפר';
-      case 'declining': return 'ירידה';
-      default: return 'יציב';
+      case 'improving': return 'Improving';
+      case 'declining': return 'Declining';
+      default: return 'Stable';
     }
   };
 
   if (chapterCount === 0) {
     return (
-      <div className="text-center py-8 text-gray-500 text-sm" dir="rtl">
+      <div className="text-center py-8 text-gray-500 text-sm">
         <PenTool className="w-8 h-8 mx-auto mb-2 opacity-50" />
-        <p>כתוב לפחות פרק אחד כדי לנתח טכניקות כתיבה</p>
+        <p>Write at least one chapter to analyze writing techniques</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4" dir="rtl">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
           <PenTool className="w-4 h-4 text-purple-400" />
-          טכניקות כתיבה
+          Writing Techniques
         </h3>
         <button
           onClick={fetchAnalysis}
@@ -138,7 +138,7 @@ export default function WritingTechniquesCard({
           {/* Overall Score */}
           <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-300">ציון כולל</span>
+              <span className="text-sm text-gray-300">Overall Score</span>
               <span className={`text-2xl font-bold ${
                 analysis.overallScore >= 80 ? 'text-green-400' :
                 analysis.overallScore >= 60 ? 'text-blue-400' :
@@ -160,7 +160,7 @@ export default function WritingTechniquesCard({
 
           {/* Techniques List */}
           <div className="space-y-2">
-            {Object.entries(analysis.techniques).map(([key, technique]) => {
+            {(Object.entries(analysis.techniques) as [string, TechniqueScore][]).map(([key, technique]) => {
               const label = techniqueLabels[key];
               if (!label) return null;
 
@@ -223,7 +223,7 @@ export default function WritingTechniquesCard({
                           {/* Examples */}
                           {technique.examples.length > 0 && (
                             <div>
-                              <p className="text-xs text-gray-400 mb-2">דוגמאות מהטקסט:</p>
+                              <p className="text-xs text-gray-400 mb-2">Examples from text:</p>
                               <div className="space-y-2">
                                 {technique.examples.slice(0, 2).map((ex, idx) => (
                                   <div
@@ -235,7 +235,7 @@ export default function WritingTechniquesCard({
                                     }`}
                                   >
                                     <p className="text-gray-300 italic">"{ex.excerpt}"</p>
-                                    <p className="text-gray-500 mt-1">פרק {ex.chapterIndex + 1} - {ex.analysis}</p>
+                                    <p className="text-gray-500 mt-1">Chapter {ex.chapterIndex + 1} - {ex.analysis}</p>
                                   </div>
                                 ))}
                               </div>
@@ -245,7 +245,7 @@ export default function WritingTechniquesCard({
                           {/* Suggestions */}
                           {technique.suggestions.length > 0 && (
                             <div>
-                              <p className="text-xs text-gray-400 mb-1">הצעות לשיפור:</p>
+                              <p className="text-xs text-gray-400 mb-1">Improvement suggestions:</p>
                               <ul className="text-xs text-gray-300 space-y-0.5">
                                 {technique.suggestions.map((sug, idx) => (
                                   <li key={idx} className="flex items-start gap-1">
@@ -268,7 +268,7 @@ export default function WritingTechniquesCard({
           {/* General Improvements */}
           {analysis.improvements.length > 0 && (
             <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
-              <p className="text-xs font-medium text-purple-300 mb-2">הצעות כלליות:</p>
+              <p className="text-xs font-medium text-purple-300 mb-2">General Suggestions:</p>
               <ul className="text-xs text-gray-300 space-y-1">
                 {analysis.improvements.map((imp, idx) => (
                   <li key={idx} className="flex items-start gap-1">

@@ -211,7 +211,7 @@ export default function ReaderPage() {
   // Start narration
   const startNarration = () => {
     if (!window.speechSynthesis || sentences.length === 0) {
-      toast.error('הקראה אינה נתמכת בדפדפן זה');
+      toast.error('Narration is not supported in this browser');
       return;
     }
 
@@ -234,14 +234,14 @@ export default function ReaderPage() {
 
       // Auto-advance to next chapter if available
       if (book && currentChapterIndex < book.chapters.length - 1) {
-        toast.success('סיום פרק. ממשיך לפרק הבא...');
+        toast.success('Chapter finished. Moving to next chapter...');
         setTimeout(() => {
           nextChapter();
           // Will auto-start narration on next chapter
           setTimeout(() => startNarration(), 1000);
         }, 1500);
       } else {
-        toast.success('סיום הקראה');
+        toast.success('Narration finished');
       }
       return;
     }
@@ -269,7 +269,7 @@ export default function ReaderPage() {
     utterance.onerror = (event) => {
       console.error('Speech error:', event);
       if (event.error !== 'interrupted') {
-        toast.error('שגיאה בהקראה');
+        toast.error('Narration error');
         stopNarration();
       }
     };
@@ -514,11 +514,11 @@ export default function ReaderPage() {
           background: 'rgba(0, 0, 0, 0.3)',
           border: `1px solid ${currentTheme.accent}`,
         }}
-        title={`שוחח עם ${book.author.name}`}
+        title={`Chat with ${book.author.name}`}
       >
         <MessageCircle className="w-6 h-6" style={{ color: currentTheme.accent }} />
         <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs bg-black/80 text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-          צ'אט עם המחבר/ת
+          Chat with Author
         </span>
       </motion.button>
 
@@ -533,11 +533,11 @@ export default function ReaderPage() {
           background: 'rgba(0, 0, 0, 0.3)',
           border: `1px solid ${currentTheme.accent}`,
         }}
-        title="שתף את הספר"
+        title="Share this book"
       >
         <Share2 className="w-6 h-6" style={{ color: currentTheme.accent }} />
         <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs bg-black/80 text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-          שתף
+          Share
         </span>
       </motion.button>
 
@@ -649,7 +649,7 @@ export default function ReaderPage() {
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <Mic2 className="w-5 h-5 text-magic-gold" />
-                  <h3 className="font-display font-semibold text-white">הקראה</h3>
+                  <h3 className="font-display font-semibold text-white">Narration</h3>
                 </div>
                 {!isNarrating ? (
                   <button
@@ -657,7 +657,7 @@ export default function ReaderPage() {
                     className="w-full px-4 py-3 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium flex items-center justify-center gap-2 hover:from-green-500 hover:to-emerald-500 transition-all"
                   >
                     <Volume2 className="w-5 h-5" />
-                    התחל הקראה
+                    Start Narration
                   </button>
                 ) : (
                   <div className="space-y-2">
@@ -668,7 +668,7 @@ export default function ReaderPage() {
                           className="flex-1 px-3 py-2 rounded-lg bg-green-600 text-white flex items-center justify-center gap-1"
                         >
                           <Play className="w-4 h-4" />
-                          המשך
+                          Resume
                         </button>
                       ) : (
                         <button
@@ -676,7 +676,7 @@ export default function ReaderPage() {
                           className="flex-1 px-3 py-2 rounded-lg bg-yellow-600 text-white flex items-center justify-center gap-1"
                         >
                           <Pause className="w-4 h-4" />
-                          השהה
+                          Pause
                         </button>
                       )}
                       <button
@@ -687,7 +687,7 @@ export default function ReaderPage() {
                       </button>
                     </div>
                     <div className="text-xs text-gray-400 text-center">
-                      {currentSentenceIndex + 1} / {sentences.length} משפטים
+                      {currentSentenceIndex + 1} / {sentences.length} sentences
                     </div>
                   </div>
                 )}
@@ -760,7 +760,7 @@ export default function ReaderPage() {
 
               {/* Speed control */}
               <div className="flex items-center justify-center gap-3">
-                <span className="text-xs text-gray-400">מהירות:</span>
+                <span className="text-xs text-gray-400">Speed:</span>
                 <div className="flex gap-1">
                   {[0.5, 0.75, 1.0, 1.25, 1.5, 2.0].map((speed) => (
                     <button
@@ -781,7 +781,7 @@ export default function ReaderPage() {
               {/* Voice selection */}
               {availableVoices.length > 0 && (
                 <div className="mt-3 flex items-center justify-center gap-2">
-                  <span className="text-xs text-gray-400">קול:</span>
+                  <span className="text-xs text-gray-400">Voice:</span>
                   <select
                     value={selectedVoice}
                     onChange={(e) => setSelectedVoice(e.target.value)}
@@ -799,7 +799,7 @@ export default function ReaderPage() {
               {/* Current sentence indicator */}
               <div className="mt-3 text-center">
                 <span className="text-xs text-gray-400">
-                  משפט {currentSentenceIndex + 1} מתוך {sentences.length}
+                  Sentence {currentSentenceIndex + 1} of {sentences.length}
                 </span>
               </div>
             </GlassCard>

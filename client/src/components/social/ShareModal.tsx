@@ -233,7 +233,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
           </div>
 
           {/* Native share button (if supported) */}
-          {navigator.share && (
+          {typeof navigator.share === 'function' && (
             <button
               onClick={handleNativeShare}
               disabled={sharing}

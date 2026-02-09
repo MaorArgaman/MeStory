@@ -27,26 +27,26 @@ const actions: ActionButton[] = [
   {
     action: 'improve',
     icon: <Sparkles className="w-4 h-4" />,
-    label: 'שפר',
-    description: 'שפר ביטוי ובהירות',
+    label: 'Improve',
+    description: 'Enhance expression and clarity',
   },
   {
     action: 'expand',
     icon: <Plus className="w-4 h-4" />,
-    label: 'הרחב',
-    description: 'הוסף פרטים ותיאורים',
+    label: 'Expand',
+    description: 'Add details and descriptions',
   },
   {
     action: 'shorten',
     icon: <Minus className="w-4 h-4" />,
-    label: 'קצר',
-    description: 'קצר תוך שמירה על משמעות',
+    label: 'Shorten',
+    description: 'Condense while preserving meaning',
   },
   {
     action: 'continue',
     icon: <PlayCircle className="w-4 h-4" />,
-    label: 'המשך',
-    description: 'המשך כתיבה מכאן',
+    label: 'Continue',
+    description: 'Continue writing from here',
   },
 ];
 
@@ -77,7 +77,6 @@ export default function AIFloatingToolbar({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       className="flex items-center gap-1 p-1.5 rounded-xl bg-deep-space/95 backdrop-blur-md border border-white/20 shadow-xl shadow-black/20"
-      dir="rtl"
     >
       {/* AI Badge */}
       <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-500/20 border border-indigo-500/30 mr-1">
@@ -162,10 +161,10 @@ export function AIEnhancePreview({
   if (!isOpen) return null;
 
   const actionLabels: Record<EnhanceAction, string> = {
-    improve: 'שיפור',
-    expand: 'הרחבה',
-    shorten: 'קיצור',
-    continue: 'המשך',
+    improve: 'Improvement',
+    expand: 'Expansion',
+    shorten: 'Shortening',
+    continue: 'Continuation',
   };
 
   return (
@@ -183,7 +182,6 @@ export function AIEnhancePreview({
           exit={{ scale: 0.95, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
           className="w-full max-w-2xl bg-deep-space/95 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl overflow-hidden"
-          dir="rtl"
         >
           {/* Header */}
           <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
@@ -193,7 +191,7 @@ export function AIEnhancePreview({
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white">
-                  תצוגה מקדימה - {actionLabels[action]}
+                  Preview - {actionLabels[action]}
                 </h3>
                 <p className="text-sm text-gray-400">{explanation}</p>
               </div>
@@ -211,7 +209,7 @@ export function AIEnhancePreview({
             {/* Original Text */}
             <div>
               <label className="text-sm font-medium text-gray-400 mb-2 block">
-                טקסט מקורי
+                Original Text
               </label>
               <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-gray-300 text-sm leading-relaxed">
                 {originalText}
@@ -228,7 +226,7 @@ export function AIEnhancePreview({
             {/* Enhanced Text */}
             <div>
               <label className="text-sm font-medium text-gray-400 mb-2 block">
-                טקסט משופר
+                Enhanced Text
               </label>
               <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-white text-sm leading-relaxed">
                 {enhancedText}
@@ -242,7 +240,7 @@ export function AIEnhancePreview({
               onClick={onCancel}
               className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 transition-colors"
             >
-              ביטול
+              Cancel
             </button>
             <button
               onClick={onApply}
@@ -254,7 +252,7 @@ export function AIEnhancePreview({
               ) : (
                 <Check className="w-4 h-4" />
               )}
-              החל שינויים
+              Apply Changes
             </button>
           </div>
         </motion.div>

@@ -174,7 +174,7 @@ export default function LoginPage() {
 
             {/* Google Sign-In Button */}
             <a
-              href={`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/google`}
+              href={`${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '')}/api/auth/google`}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white hover:bg-gray-100 text-gray-900 font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">

@@ -78,8 +78,8 @@ export async function notifyBookLike(
     recipientId: authorId,
     senderId: likerId,
     type: 'like',
-    title: 'לייק חדש על הספר שלך! ❤️',
-    message: `${liker.name} אהב/ה את הספר "${book.title}"`,
+    title: 'New like on your book!',
+    message: `${liker.name} liked your book "${book.title}"`,
     data: {
       bookId: new mongoose.Types.ObjectId(bookId),
       bookTitle: book.title,
@@ -106,14 +106,14 @@ export async function notifyBookComment(
 
   if (!commenter || !book) return null;
 
-  const ratingText = rating ? ` (${rating} כוכבים)` : '';
+  const ratingText = rating ? ` (${rating} stars)` : '';
 
   return createNotification({
     recipientId: authorId,
     senderId: commenterId,
     type: 'comment',
-    title: 'תגובה חדשה על הספר שלך! 💬',
-    message: `${commenter.name} כתב/ה תגובה על "${book.title}"${ratingText}`,
+    title: 'New comment on your book!',
+    message: `${commenter.name} commented on "${book.title}"${ratingText}`,
     data: {
       bookId: new mongoose.Types.ObjectId(bookId),
       bookTitle: book.title,
@@ -140,14 +140,14 @@ export async function notifyBookShare(
 
   if (!sharer || !book) return null;
 
-  const platformText = platform ? ` ב-${platform}` : '';
+  const platformText = platform ? ` on ${platform}` : '';
 
   return createNotification({
     recipientId: authorId,
     senderId: sharerId,
     type: 'share',
-    title: 'הספר שלך שותף! 🔗',
-    message: `${sharer.name} שיתף/ה את הספר "${book.title}"${platformText}`,
+    title: 'Your book was shared!',
+    message: `${sharer.name} shared your book "${book.title}"${platformText}`,
     data: {
       bookId: new mongoose.Types.ObjectId(bookId),
       bookTitle: book.title,
@@ -179,8 +179,8 @@ export async function notifyBookPurchase(
     recipientId: authorId,
     senderId: buyerId,
     type: 'purchase',
-    title: 'מכירה חדשה! 🎉',
-    message: `${buyer.name} רכש/ה את הספר "${book.title}" תמורת ${amount} ${currency}`,
+    title: 'New sale!',
+    message: `${buyer.name} purchased your book "${book.title}" for ${amount} ${currency}`,
     data: {
       bookId: new mongoose.Types.ObjectId(bookId),
       bookTitle: book.title,
@@ -204,13 +204,13 @@ export async function notifyNewMessage(
   const sender = await User.findById(senderId).select('name');
   if (!sender) return null;
 
-  const bookContext = bookTitle ? ` (בנוגע ל"${bookTitle}")` : '';
+  const bookContext = bookTitle ? ` (about "${bookTitle}")` : '';
 
   return createNotification({
     recipientId,
     senderId,
     type: 'new_message',
-    title: `הודעה חדשה מ-${sender.name}`,
+    title: `New message from ${sender.name}`,
     message: `${messagePreview.substring(0, 100)}${messagePreview.length > 100 ? '...' : ''}${bookContext}`,
     data: {
       conversationId: new mongoose.Types.ObjectId(conversationId),
@@ -233,8 +233,8 @@ export async function notifyPaymentReceived(
   return createNotification({
     recipientId: userId,
     type: 'payment',
-    title: 'תשלום התקבל בהצלחה! ✅',
-    message: `התקבל תשלום בסך ${amount} ${currency} - ${description}`,
+    title: 'Payment received!',
+    message: `Payment of ${amount} ${currency} received - ${description}`,
     data: {
       paymentId,
       amount,
@@ -253,12 +253,12 @@ export async function notifySubscriptionChange(
   isUpgrade: boolean
 ): Promise<INotification> {
   const title = isUpgrade
-    ? `שודרגת לחבילת ${newPlan}! 🚀`
-    : `החבילה שלך עודכנה ל-${newPlan}`;
+    ? `Upgraded to ${newPlan}!`
+    : `Your plan changed to ${newPlan}`;
 
   const message = isUpgrade
-    ? `מזל טוב! עכשיו יש לך גישה לכל התכונות המתקדמות של חבילת ${newPlan}`
-    : `החבילה שלך עודכנה בהצלחה לחבילת ${newPlan}`;
+    ? `Congratulations! You now have access to all advanced features of the ${newPlan} plan`
+    : `Your plan has been successfully updated to ${newPlan}`;
 
   return createNotification({
     recipientId: userId,
@@ -283,8 +283,8 @@ export async function notifyBookPublished(
   return createNotification({
     recipientId: authorId,
     type: 'book_published',
-    title: 'הספר שלך פורסם! 📚',
-    message: `הספר "${bookTitle}" פורסם בהצלחה ועכשיו זמין לקריאה`,
+    title: 'Your book is published!',
+    message: `Your book "${bookTitle}" has been published and is now available for reading`,
     data: {
       bookId: new mongoose.Types.ObjectId(bookId),
       bookTitle,
@@ -327,17 +327,17 @@ export async function notifyBookPromotion(
   promotionType: string
 ): Promise<INotification> {
   const typeText = {
-    FEATURED: 'נבחר להיות ספר מומלץ',
-    TRENDING: 'עולה במגמות',
-    RISING_STAR: 'זוהה ככוכב עולה',
-    EDITOR_PICK: 'נבחר על ידי העורכים',
-  }[promotionType] || 'קודם';
+    FEATURED: 'is now featured',
+    TRENDING: 'is trending',
+    RISING_STAR: 'is a rising star',
+    EDITOR_PICK: 'was selected as editor\'s pick',
+  }[promotionType] || 'promoted';
 
   return createNotification({
     recipientId: authorId,
     type: 'promotion',
-    title: `הספר שלך ${typeText}! 🌟`,
-    message: `הספר "${bookTitle}" ${typeText} ויקבל חשיפה נוספת`,
+    title: `Your book ${typeText}!`,
+    message: `Your book "${bookTitle}" ${typeText} and will receive additional exposure`,
     data: {
       bookId: new mongoose.Types.ObjectId(bookId),
       bookTitle,

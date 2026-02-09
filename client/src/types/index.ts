@@ -3,6 +3,7 @@ export type UserRole = 'free' | 'standard' | 'premium' | 'admin';
 
 export interface User {
   id: string;
+  _id?: string; // Alias for MongoDB compatibility
   name: string;
   email: string;
   role: UserRole;

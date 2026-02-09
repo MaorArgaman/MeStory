@@ -25,9 +25,9 @@ interface PlotStructurePanelProps {
 }
 
 const actLabels = {
-  act1: { name: 'התחלה', color: 'from-blue-500 to-cyan-500', bgColor: 'bg-blue-500/20', borderColor: 'border-blue-500/30' },
-  act2: { name: 'אמצע', color: 'from-purple-500 to-pink-500', bgColor: 'bg-purple-500/20', borderColor: 'border-purple-500/30' },
-  act3: { name: 'סוף', color: 'from-orange-500 to-red-500', bgColor: 'bg-orange-500/20', borderColor: 'border-orange-500/30' },
+  act1: { name: 'Beginning', color: 'from-blue-500 to-cyan-500', bgColor: 'bg-blue-500/20', borderColor: 'border-blue-500/30' },
+  act2: { name: 'Middle', color: 'from-purple-500 to-pink-500', bgColor: 'bg-purple-500/20', borderColor: 'border-purple-500/30' },
+  act3: { name: 'End', color: 'from-orange-500 to-red-500', bgColor: 'bg-orange-500/20', borderColor: 'border-orange-500/30' },
 };
 
 export default function PlotStructurePanel({
@@ -51,7 +51,7 @@ export default function PlotStructurePanel({
       setAnalysis(result);
     } catch (err) {
       console.error('Failed to analyze plot:', err);
-      setError('שגיאה בניתוח מבנה העלילה');
+      setError('Error analyzing plot structure');
     } finally {
       setLoading(false);
     }
@@ -65,10 +65,10 @@ export default function PlotStructurePanel({
 
   const getBalanceLabel = (balance: string) => {
     switch (balance) {
-      case 'balanced': return 'מאוזן';
-      case 'front-heavy': return 'כבד בהתחלה';
-      case 'back-heavy': return 'כבד בסוף';
-      case 'middle-heavy': return 'כבד באמצע';
+      case 'balanced': return 'Balanced';
+      case 'front-heavy': return 'Front-heavy';
+      case 'back-heavy': return 'Back-heavy';
+      case 'middle-heavy': return 'Middle-heavy';
       default: return balance;
     }
   };
@@ -79,20 +79,20 @@ export default function PlotStructurePanel({
 
   if (chapterCount === 0) {
     return (
-      <div className="text-center py-8 text-gray-500 text-sm" dir="rtl">
+      <div className="text-center py-8 text-gray-500 text-sm">
         <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-50" />
-        <p>כתוב לפחות פרק אחד כדי לנתח את מבנה העלילה</p>
+        <p>Write at least one chapter to analyze plot structure</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4" dir="rtl">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
           <Target className="w-4 h-4 text-indigo-400" />
-          מבנה שלושת המערכות
+          Three-Act Structure
         </h3>
         <button
           onClick={fetchAnalysis}
@@ -154,7 +154,7 @@ export default function PlotStructurePanel({
 
           {/* Balance Indicator */}
           <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
-            <span className="text-sm text-gray-400">איזון מבנה:</span>
+            <span className="text-sm text-gray-400">Structure Balance:</span>
             <span className={`text-sm font-medium ${getBalanceColor(analysis.balance)}`}>
               {getBalanceLabel(analysis.balance)}
               {analysis.balance === 'balanced' && (
@@ -190,7 +190,7 @@ export default function PlotStructurePanel({
 
                       {/* Chapters */}
                       <div className="mb-3">
-                        <p className="text-xs text-gray-400 mb-1">פרקים:</p>
+                        <p className="text-xs text-gray-400 mb-1">Chapters:</p>
                         <div className="flex flex-wrap gap-1">
                           {act.chapters.map((chapIdx) => (
                             <button
@@ -207,7 +207,7 @@ export default function PlotStructurePanel({
                       {/* Completeness */}
                       <div className="mb-3">
                         <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="text-gray-400">שלמות:</span>
+                          <span className="text-gray-400">Completeness:</span>
                           <span className="text-white">{act.completeness}%</span>
                         </div>
                         <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -222,7 +222,7 @@ export default function PlotStructurePanel({
                       {/* Elements */}
                       {act.elements.length > 0 && (
                         <div className="mb-3">
-                          <p className="text-xs text-gray-400 mb-1">אלמנטים שנמצאו:</p>
+                          <p className="text-xs text-gray-400 mb-1">Elements found:</p>
                           <ul className="text-xs text-gray-300 space-y-0.5">
                             {act.elements.map((el, idx) => (
                               <li key={idx} className="flex items-center gap-1">
@@ -237,7 +237,7 @@ export default function PlotStructurePanel({
                       {/* Suggestions */}
                       {act.suggestions.length > 0 && (
                         <div>
-                          <p className="text-xs text-gray-400 mb-1">הצעות לשיפור:</p>
+                          <p className="text-xs text-gray-400 mb-1">Improvement suggestions:</p>
                           <ul className="text-xs text-gray-300 space-y-0.5">
                             {act.suggestions.map((sug, idx) => (
                               <li key={idx} className="flex items-start gap-1">
@@ -258,20 +258,20 @@ export default function PlotStructurePanel({
           {/* Click hint */}
           {!expandedAct && (
             <p className="text-xs text-gray-500 text-center">
-              לחץ על מערכה לפרטים נוספים
+              Click on an act for more details
             </p>
           )}
 
           {/* Plot Points */}
           {(analysis.plotPoints.incitingIncident || analysis.plotPoints.midpoint || analysis.plotPoints.climax) && (
             <div className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-2">
-              <p className="text-xs font-medium text-gray-300 mb-2">נקודות עלילה:</p>
+              <p className="text-xs font-medium text-gray-300 mb-2">Plot Points:</p>
 
               {analysis.plotPoints.incitingIncident && (
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 flex-shrink-0" />
                   <div>
-                    <p className="text-xs text-gray-400">אירוע מעורר (פרק {analysis.plotPoints.incitingIncident.chapter + 1})</p>
+                    <p className="text-xs text-gray-400">Inciting Incident (Chapter {analysis.plotPoints.incitingIncident.chapter + 1})</p>
                     <p className="text-xs text-gray-300">{analysis.plotPoints.incitingIncident.description}</p>
                   </div>
                 </div>
@@ -281,7 +281,7 @@ export default function PlotStructurePanel({
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 rounded-full bg-purple-400 mt-1.5 flex-shrink-0" />
                   <div>
-                    <p className="text-xs text-gray-400">נקודת אמצע (פרק {analysis.plotPoints.midpoint.chapter + 1})</p>
+                    <p className="text-xs text-gray-400">Midpoint (Chapter {analysis.plotPoints.midpoint.chapter + 1})</p>
                     <p className="text-xs text-gray-300">{analysis.plotPoints.midpoint.description}</p>
                   </div>
                 </div>
@@ -291,7 +291,7 @@ export default function PlotStructurePanel({
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 rounded-full bg-orange-400 mt-1.5 flex-shrink-0" />
                   <div>
-                    <p className="text-xs text-gray-400">שיא (פרק {analysis.plotPoints.climax.chapter + 1})</p>
+                    <p className="text-xs text-gray-400">Climax (Chapter {analysis.plotPoints.climax.chapter + 1})</p>
                     <p className="text-xs text-gray-300">{analysis.plotPoints.climax.description}</p>
                   </div>
                 </div>
@@ -302,7 +302,7 @@ export default function PlotStructurePanel({
           {/* General Suggestions */}
           {analysis.suggestions.length > 0 && (
             <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/30">
-              <p className="text-xs font-medium text-indigo-300 mb-2">הצעות כלליות:</p>
+              <p className="text-xs font-medium text-indigo-300 mb-2">General Suggestions:</p>
               <ul className="text-xs text-gray-300 space-y-1">
                 {analysis.suggestions.map((sug, idx) => (
                   <li key={idx} className="flex items-start gap-1">

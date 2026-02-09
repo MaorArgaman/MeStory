@@ -50,13 +50,13 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}): UseVoic
   useEffect(() => {
     const supported = !!(
       navigator.mediaDevices &&
-      navigator.mediaDevices.getUserMedia &&
+      typeof navigator.mediaDevices.getUserMedia === 'function' &&
       typeof MediaRecorder !== 'undefined'
     );
     setIsSupported(supported);
 
     if (!supported) {
-      setError('הדפדפן שלך לא תומך בהקלטת קול');
+      setError('Your browser does not support voice recording');
     }
   }, []);
 
@@ -165,7 +165,7 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}): UseVoic
 
       // Handle errors
       mediaRecorder.onerror = (event: any) => {
-        const errorMsg = event.error?.message || 'שגיאה בהקלטה';
+        const errorMsg = event.error?.message || 'Recording error';
         setError(errorMsg);
         if (onError) {
           onError(errorMsg);
@@ -178,14 +178,14 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}): UseVoic
       setIsPaused(false);
       startTimer();
     } catch (err: any) {
-      let errorMsg = 'שגיאה בגישה למיקרופון';
+      let errorMsg = 'Error accessing microphone';
 
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        errorMsg = 'יש לאשר גישה למיקרופון כדי להקליט';
+        errorMsg = 'Please allow microphone access to record';
       } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        errorMsg = 'לא נמצא מיקרופון. וודא שמיקרופון מחובר למחשב';
+        errorMsg = 'No microphone found. Make sure a microphone is connected';
       } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-        errorMsg = 'המיקרופון בשימוש על ידי תוכנה אחרת';
+        errorMsg = 'Microphone is being used by another application';
       }
 
       setError(errorMsg);
@@ -204,7 +204,7 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}): UseVoic
         const originalOnStop = mediaRecorderRef.current.onstop;
 
         mediaRecorderRef.current.onstop = (event) => {
-          if (originalOnStop) {
+          if (originalOnStop && mediaRecorderRef.current) {
             originalOnStop.call(mediaRecorderRef.current, event);
           }
 

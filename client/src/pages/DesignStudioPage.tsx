@@ -216,7 +216,12 @@ export default function DesignStudioPage() {
       });
 
       if (response.data.success) {
-        setImageUrl(`http://localhost:5001${response.data.data.imageUrl}`);
+        // Use relative URL or construct from API base URL
+        const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
+        const imageUrlPath = response.data.data.imageUrl;
+        // If imageUrl is already absolute (starts with http), use it directly
+        // Otherwise, construct the full URL
+        setImageUrl(imageUrlPath.startsWith('http') ? imageUrlPath : `${baseUrl}${imageUrlPath}`);
         toast.success('Image uploaded successfully!', { id: 'upload' });
       }
     } catch (error: any) {
@@ -328,7 +333,7 @@ export default function DesignStudioPage() {
       setPricingStrategy({
         recommendedPrice: 0,
         recommendFree: true,
-        reasoning: 'זה הספר הראשון שלך! מומלץ להתחיל בחינם כדי לבנות קהל קוראים ולקבל ביקורות ראשונות.',
+        reasoning: 'This is your first book! We recommend starting free to build a reader base and get your first reviews.',
         authorStats: {
           totalBooks: 1,
           publishedBooks: 0,
@@ -341,9 +346,9 @@ export default function DesignStudioPage() {
           demandLevel: 'medium',
         },
         strategyTips: [
-          'ספר ראשון בחינם עוזר לבנות בסיס קוראים נאמן',
-          'אסוף ביקורות חיוביות לפני שתעבור לספרים בתשלום',
-          'שקול להציע את הספר הראשון בחינם לתקופה מוגבלת',
+          'A free first book helps build a loyal reader base',
+          'Collect positive reviews before moving to paid books',
+          'Consider offering your first book for free for a limited time',
         ],
       });
       setIsFree(true);
@@ -359,7 +364,7 @@ export default function DesignStudioPage() {
 
     // Check if book has quality score
     if (!book.qualityScore || book.qualityScore.overallScore < 70) {
-      toast.error('נדרש ציון איכות של 70 לפחות לפרסום. הרץ ניתוח איכות בעורך.');
+      toast.error('A quality score of at least 70 is required for publishing. Run quality analysis in the editor.');
       return;
     }
 
@@ -408,13 +413,13 @@ export default function DesignStudioPage() {
           });
         }, 400);
 
-        toast.success('הספר פורסם בהצלחה!');
+        toast.success('Book published successfully!');
         setShowPublishModal(false);
         navigate('/marketplace');
       }
     } catch (error: any) {
       console.error('Failed to publish book:', error);
-      toast.error(error.response?.data?.error || 'שגיאה בפרסום הספר');
+      toast.error(error.response?.data?.error || 'Error publishing book');
     } finally {
       setPublishing(false);
     }
@@ -429,7 +434,7 @@ export default function DesignStudioPage() {
       // First save the design
       await saveDesign();
 
-      toast.loading(`יוצר קובץ ${exportFormat.toUpperCase()}...`, { id: 'export' });
+      toast.loading(`Creating ${exportFormat.toUpperCase()} file...`, { id: 'export' });
 
       const response = await api.get(`/books/${bookId}/export/${exportFormat}`, {
         responseType: 'blob',
@@ -448,11 +453,11 @@ export default function DesignStudioPage() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      toast.success(`הקובץ הורד בהצלחה!`, { id: 'export' });
+      toast.success(`File downloaded successfully!`, { id: 'export' });
       setShowExportModal(false);
     } catch (error: any) {
       console.error('Failed to export book:', error);
-      toast.error(error.response?.data?.error || 'שגיאה בייצוא הספר', { id: 'export' });
+      toast.error(error.response?.data?.error || 'Error exporting book', { id: 'export' });
     } finally {
       setExporting(false);
     }
@@ -503,12 +508,12 @@ export default function DesignStudioPage() {
               {saving ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  שומר...
+                  Saving...
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  שמור עיצוב
+                  Save Design
                 </>
               )}
             </button>
@@ -519,7 +524,7 @@ export default function DesignStudioPage() {
               className="btn-secondary flex items-center gap-2"
             >
               <LayoutGrid className="w-4 h-4" />
-              עיצוב עמודים
+              Page Design
             </button>
 
             {/* Export Button */}
@@ -528,7 +533,7 @@ export default function DesignStudioPage() {
               className="btn-secondary flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
-              ייצוא לקובץ
+              Export to File
             </button>
 
             {/* Publish Button */}
@@ -537,7 +542,7 @@ export default function DesignStudioPage() {
               className="btn-gold flex items-center gap-2 shadow-glow-gold"
             >
               <Rocket className="w-4 h-4" />
-              פרסום בחנות
+              Publish to Store
             </button>
           </div>
         </div>
@@ -775,7 +780,7 @@ export default function DesignStudioPage() {
           {/* Info overlay */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center">
             <p className="text-sm text-gray-400">
-              תצוגה מקדימה בזמן אמת • שינויים מתעדכנים אוטומטית
+              Real-time preview - Changes update automatically
             </p>
           </div>
         </div>
@@ -805,7 +810,7 @@ export default function DesignStudioPage() {
                     <Rocket className="w-6 h-6 text-deep-space" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold gradient-gold">פרסום בחנות</h2>
+                    <h2 className="text-2xl font-bold gradient-gold">Publish to Store</h2>
                     <p className="text-gray-400 text-sm">{book.title}</p>
                   </div>
                 </div>
@@ -820,7 +825,7 @@ export default function DesignStudioPage() {
               {loadingStrategy ? (
                 <div className="text-center py-12">
                   <Loader2 className="w-12 h-12 animate-spin text-magic-gold mx-auto mb-4" />
-                  <p className="text-gray-300">מנתח אסטרטגיית תמחור...</p>
+                  <p className="text-gray-300">Analyzing pricing strategy...</p>
                 </div>
               ) : pricingStrategy ? (
                 <div className="space-y-6">
@@ -829,7 +834,7 @@ export default function DesignStudioPage() {
                     <div className="flex items-start gap-3">
                       <Sparkles className="w-6 h-6 text-magic-gold flex-shrink-0 mt-1" />
                       <div>
-                        <h3 className="font-bold text-white mb-1">המלצת AI</h3>
+                        <h3 className="font-bold text-white mb-1">AI Recommendation</h3>
                         <p className="text-gray-300 text-sm">{pricingStrategy.reasoning}</p>
                       </div>
                     </div>
@@ -840,28 +845,28 @@ export default function DesignStudioPage() {
                     <div className="glass rounded-lg p-3 text-center">
                       <BookOpen className="w-5 h-5 text-magic-gold mx-auto mb-1" />
                       <p className="text-2xl font-bold text-white">{pricingStrategy.authorStats.publishedBooks}</p>
-                      <p className="text-xs text-gray-400">ספרים שפורסמו</p>
+                      <p className="text-xs text-gray-400">Published Books</p>
                     </div>
                     <div className="glass rounded-lg p-3 text-center">
                       <DollarSign className="w-5 h-5 text-green-400 mx-auto mb-1" />
                       <p className="text-2xl font-bold text-white">{pricingStrategy.authorStats.totalSales}</p>
-                      <p className="text-xs text-gray-400">מכירות</p>
+                      <p className="text-xs text-gray-400">Sales</p>
                     </div>
                     <div className="glass rounded-lg p-3 text-center">
                       <TrendingUp className="w-5 h-5 text-purple-400 mx-auto mb-1" />
-                      <p className="text-2xl font-bold text-white">₪{pricingStrategy.marketAnalysis.genreAveragePrice}</p>
-                      <p className="text-xs text-gray-400">מחיר ממוצע בז'אנר</p>
+                      <p className="text-2xl font-bold text-white">${pricingStrategy.marketAnalysis.genreAveragePrice}</p>
+                      <p className="text-xs text-gray-400">Genre Average Price</p>
                     </div>
                     <div className="glass rounded-lg p-3 text-center">
                       <Sparkles className="w-5 h-5 text-yellow-400 mx-auto mb-1" />
                       <p className="text-2xl font-bold text-white capitalize">{pricingStrategy.marketAnalysis.demandLevel}</p>
-                      <p className="text-xs text-gray-400">רמת ביקוש</p>
+                      <p className="text-xs text-gray-400">Demand Level</p>
                     </div>
                   </div>
 
                   {/* Pricing Selection */}
                   <div>
-                    <h3 className="font-semibold text-white mb-3">בחר תמחור</h3>
+                    <h3 className="font-semibold text-white mb-3">Select Pricing</h3>
                     <div className="flex gap-3 mb-4">
                       <button
                         onClick={() => {
@@ -874,9 +879,9 @@ export default function DesignStudioPage() {
                             : 'border-gray-700 text-gray-400 hover:border-gray-600'
                         }`}
                       >
-                        <span className="text-lg font-bold">חינם</span>
+                        <span className="text-lg font-bold">Free</span>
                         {pricingStrategy.recommendFree && (
-                          <span className="block text-xs text-magic-gold mt-1">מומלץ ע"י AI</span>
+                          <span className="block text-xs text-magic-gold mt-1">Recommended by AI</span>
                         )}
                       </button>
                       <button
@@ -890,9 +895,9 @@ export default function DesignStudioPage() {
                             : 'border-gray-700 text-gray-400 hover:border-gray-600'
                         }`}
                       >
-                        <span className="text-lg font-bold">בתשלום</span>
+                        <span className="text-lg font-bold">Paid</span>
                         {!pricingStrategy.recommendFree && (
-                          <span className="block text-xs text-magic-gold mt-1">מומלץ ע"י AI</span>
+                          <span className="block text-xs text-magic-gold mt-1">Recommended by AI</span>
                         )}
                       </button>
                     </div>
@@ -900,7 +905,7 @@ export default function DesignStudioPage() {
                     {!isFree && (
                       <div className="space-y-3">
                         <div className="relative">
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">₪</span>
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span>
                           <input
                             type="number"
                             min="5"
@@ -923,12 +928,12 @@ export default function DesignStudioPage() {
                                   : 'bg-white/5 text-gray-400 hover:bg-white/10'
                               }`}
                             >
-                              ₪{price}
+                              ${price}
                             </button>
                           ))}
                         </div>
                         <p className="text-xs text-gray-400">
-                          טווח מחירים בז'אנר: ₪{pricingStrategy.marketAnalysis.competitorPriceRange.min} - ₪{pricingStrategy.marketAnalysis.competitorPriceRange.max}
+                          Genre price range: ${pricingStrategy.marketAnalysis.competitorPriceRange.min} - ${pricingStrategy.marketAnalysis.competitorPriceRange.max}
                         </p>
                       </div>
                     )}
@@ -936,7 +941,7 @@ export default function DesignStudioPage() {
 
                   {/* Strategy Tips */}
                   <div>
-                    <h3 className="font-semibold text-white mb-3">טיפים לאסטרטגיה</h3>
+                    <h3 className="font-semibold text-white mb-3">Strategy Tips</h3>
                     <div className="space-y-2">
                       {pricingStrategy.strategyTips.map((tip, index) => (
                         <div key={index} className="flex items-start gap-2 text-sm text-gray-300">
@@ -952,9 +957,9 @@ export default function DesignStudioPage() {
                     <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
                       <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-red-300 font-medium">ציון איכות נמוך</p>
+                        <p className="text-red-300 font-medium">Low Quality Score</p>
                         <p className="text-sm text-red-400/80">
-                          נדרש ציון איכות של 70 לפחות לפרסום. הרץ ניתוח איכות בעורך.
+                          A quality score of at least 70 is required for publishing. Run quality analysis in the editor.
                         </p>
                       </div>
                     </div>
@@ -969,12 +974,12 @@ export default function DesignStudioPage() {
                     {publishing ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        מפרסם...
+                        Publishing...
                       </>
                     ) : (
                       <>
                         <Rocket className="w-5 h-5" />
-                        פרסם את הספר {isFree ? 'בחינם' : `ב-₪${selectedPrice}`}
+                        Publish Book {isFree ? 'for Free' : `for $${selectedPrice}`}
                       </>
                     )}
                   </button>
@@ -1009,7 +1014,7 @@ export default function DesignStudioPage() {
                     <Download className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-white">ייצוא לקובץ</h2>
+                    <h2 className="text-2xl font-bold text-white">Export to File</h2>
                     <p className="text-gray-400 text-sm">{book.title}</p>
                   </div>
                 </div>
@@ -1023,7 +1028,7 @@ export default function DesignStudioPage() {
 
               {/* Format Selection */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-white">בחר פורמט</h3>
+                <h3 className="font-semibold text-white">Select Format</h3>
 
                 <button
                   onClick={() => setExportFormat('pdf')}
@@ -1042,7 +1047,7 @@ export default function DesignStudioPage() {
                     <div className="flex-1">
                       <p className="font-bold text-white">PDF</p>
                       <p className="text-sm text-gray-400">
-                        מושלם לדפוס ולשיתוף דיגיטלי. שומר על כל העיצוב והתמונות.
+                        Perfect for printing and digital sharing. Preserves all design and images.
                       </p>
                     </div>
                     {exportFormat === 'pdf' && (
@@ -1068,7 +1073,7 @@ export default function DesignStudioPage() {
                     <div className="flex-1">
                       <p className="font-bold text-white">Word (DOCX)</p>
                       <p className="text-sm text-gray-400">
-                        ניתן לעריכה נוספת. מתאים לעורכים ובתי הוצאה לאור.
+                        Editable format. Suitable for editors and publishers.
                       </p>
                     </div>
                     {exportFormat === 'docx' && (
@@ -1079,27 +1084,27 @@ export default function DesignStudioPage() {
 
                 {/* Export includes */}
                 <div className="p-4 bg-white/5 rounded-xl">
-                  <h4 className="font-semibold text-white mb-3">הקובץ יכלול:</h4>
+                  <h4 className="font-semibold text-white mb-3">The file will include:</h4>
                   <div className="space-y-2 text-sm text-gray-300">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-green-400" />
-                      <span>כריכה מעוצבת (קדמית ואחורית)</span>
+                      <span>Designed cover (front and back)</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-green-400" />
-                      <span>כל הפרקים והתוכן</span>
+                      <span>All chapters and content</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-green-400" />
-                      <span>עיצוב, פונטים ותמונות</span>
+                      <span>Design, fonts, and images</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-green-400" />
-                      <span>תקציר בגב הספר</span>
+                      <span>Synopsis on back cover</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-green-400" />
-                      <span>איכות מותאמת לדפוס</span>
+                      <span>Print-ready quality</span>
                     </div>
                   </div>
                 </div>
@@ -1113,12 +1118,12 @@ export default function DesignStudioPage() {
                   {exporting ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      יוצר קובץ...
+                      Creating file...
                     </>
                   ) : (
                     <>
                       <Download className="w-5 h-5" />
-                      הורד {exportFormat.toUpperCase()}
+                      Download {exportFormat.toUpperCase()}
                     </>
                   )}
                 </button>

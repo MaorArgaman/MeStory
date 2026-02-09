@@ -35,11 +35,11 @@ interface TensionArcChartProps {
 }
 
 const arcLabels: Record<string, string> = {
-  classic: 'קלאסי',
-  episodic: 'אפיזודי',
-  building: 'בונה',
-  flat: 'שטוח',
-  irregular: 'לא סדיר',
+  classic: 'Classic',
+  episodic: 'Episodic',
+  building: 'Building',
+  flat: 'Flat',
+  irregular: 'Irregular',
 };
 
 const typeColors: Record<string, string> = {
@@ -71,7 +71,7 @@ export default function TensionArcChart({
       setAnalysis(result);
     } catch (err) {
       console.error('Failed to analyze tension:', err);
-      setError('שגיאה בניתוח רמות המתח');
+      setError('Error analyzing tension levels');
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ export default function TensionArcChart({
 
   // Prepare chart data
   const chartData = analysis?.chapters.map((ch) => ({
-    name: `פרק ${ch.chapterIndex + 1}`,
+    name: `Chapter ${ch.chapterIndex + 1}`,
     shortName: `${ch.chapterIndex + 1}`,
     tension: ch.tensionLevel,
     type: ch.type,
@@ -99,15 +99,15 @@ export default function TensionArcChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-gray-800 border border-white/20 rounded-lg p-3 shadow-xl" dir="rtl">
+        <div className="bg-gray-800 border border-white/20 rounded-lg p-3 shadow-xl">
           <p className="text-white font-medium text-sm">{data.title}</p>
-          <p className="text-gray-400 text-xs">פרק {data.chapterIndex + 1}</p>
+          <p className="text-gray-400 text-xs">Chapter {data.chapterIndex + 1}</p>
           <div className="mt-2 flex items-center gap-2">
             <div
               className="w-3 h-3 rounded-full"
               style={{ backgroundColor: data.color }}
             />
-            <span className="text-white text-sm">מתח: {data.tension}</span>
+            <span className="text-white text-sm">Tension: {data.tension}</span>
           </div>
         </div>
       );
@@ -124,20 +124,20 @@ export default function TensionArcChart({
 
   if (chapterCount === 0) {
     return (
-      <div className="text-center py-8 text-gray-500 text-sm" dir="rtl">
+      <div className="text-center py-8 text-gray-500 text-sm">
         <Zap className="w-8 h-8 mx-auto mb-2 opacity-50" />
-        <p>כתוב לפחות פרק אחד כדי לראות את עקומת המתח</p>
+        <p>Write at least one chapter to see the tension arc</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4" dir="rtl">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-orange-400" />
-          עקומת מתח
+          Tension Arc
         </h3>
         <button
           onClick={fetchAnalysis}
@@ -168,7 +168,7 @@ export default function TensionArcChart({
         <div className="space-y-4">
           {/* Arc Type Badge */}
           <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10">
-            <span className="text-xs text-gray-400">סוג עקומה:</span>
+            <span className="text-xs text-gray-400">Arc Type:</span>
             <span className="text-xs font-medium text-orange-400">
               {arcLabels[analysis.overallArc] || analysis.overallArc}
             </span>
@@ -256,11 +256,11 @@ export default function TensionArcChart({
                   style={{ backgroundColor: color }}
                 />
                 <span className="text-xs text-gray-400">
-                  {type === 'rising' && 'עולה'}
-                  {type === 'falling' && 'יורד'}
-                  {type === 'peak' && 'שיא'}
-                  {type === 'valley' && 'שפל'}
-                  {type === 'stable' && 'יציב'}
+                  {type === 'rising' && 'Rising'}
+                  {type === 'falling' && 'Falling'}
+                  {type === 'peak' && 'Peak'}
+                  {type === 'valley' && 'Valley'}
+                  {type === 'stable' && 'Stable'}
                 </span>
               </div>
             ))}
@@ -268,13 +268,13 @@ export default function TensionArcChart({
 
           {/* Click hint */}
           <p className="text-xs text-gray-500 text-center">
-            לחץ על נקודה לניווט לפרק
+            Click on a point to navigate to chapter
           </p>
 
           {/* Suggestions */}
           {analysis.suggestions.length > 0 && (
             <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/30">
-              <p className="text-xs font-medium text-orange-300 mb-2">הצעות לשיפור:</p>
+              <p className="text-xs font-medium text-orange-300 mb-2">Improvement Suggestions:</p>
               <ul className="text-xs text-gray-300 space-y-1">
                 {analysis.suggestions.map((sug, idx) => (
                   <li key={idx} className="flex items-start gap-1">

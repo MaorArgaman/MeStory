@@ -208,7 +208,7 @@ export default function AIAvatar({
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 1, repeat: Infinity }}
         >
-          חושב...
+          Thinking...
         </motion.div>
       )}
     </div>

@@ -245,7 +245,7 @@ export default function BookLayoutPage() {
       }
     } catch (error) {
       console.error('Failed to load book:', error);
-      toast.error('שגיאה בטעינת הספר');
+      toast.error('Error loading book');
       navigate('/dashboard');
     } finally {
       setLoading(false);
@@ -281,7 +281,7 @@ export default function BookLayoutPage() {
       newPages.push({
         id: `page-toc`,
         type: 'toc',
-        content: `<h2 class="toc-header">${bookIsRTL ? 'תוכן העניינים' : 'Table of Contents'}</h2>${tocContent}`,
+        content: `<h2 class="toc-header">Table of Contents</h2>${tocContent}`,
         images: [],
       });
 
@@ -334,13 +334,13 @@ export default function BookLayoutPage() {
       if (response.data.success) {
         setLastSaved(new Date());
         if (!isAutoSave) {
-          toast.success('העימוד נשמר בהצלחה!');
+          toast.success('Layout saved successfully!');
         }
       }
     } catch (error) {
       console.error('Failed to save layout:', error);
       if (!isAutoSave) {
-        toast.error('שגיאה בשמירת העימוד');
+        toast.error('Error saving layout');
       }
     } finally {
       setSaving(false);
@@ -353,17 +353,17 @@ export default function BookLayoutPage() {
     if (!file || selectedPageIndex === null) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('יש לבחור קובץ תמונה');
+      toast.error('Please select an image file');
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('גודל התמונה חייב להיות עד 10MB');
+      toast.error('Image size must be up to 10MB');
       return;
     }
 
     try {
-      toast.loading('מעלה תמונה...', { id: 'upload-image' });
+      toast.loading('Uploading image...', { id: 'upload-image' });
 
       const formData = new FormData();
       formData.append('image', file);
@@ -388,12 +388,12 @@ export default function BookLayoutPage() {
         updatedPages[selectedPageIndex].images.push(newImage);
         setPages(updatedPages);
 
-        toast.success('התמונה הועלתה בהצלחה!', { id: 'upload-image' });
+        toast.success('Image uploaded successfully!', { id: 'upload-image' });
         setShowImageModal(false);
       }
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error(error.response?.data?.error || 'שגיאה בהעלאת התמונה', { id: 'upload-image' });
+      toast.error(error.response?.data?.error || 'Error uploading image', { id: 'upload-image' });
     }
   };
 
@@ -403,7 +403,7 @@ export default function BookLayoutPage() {
 
     setGeneratingImage(true);
     try {
-      toast.loading('יוצר תמונה עם AI...', { id: 'generate-image' });
+      toast.loading('Generating image with AI...', { id: 'generate-image' });
 
       const response = await api.post('/ai/generate-image', {
         prompt: imagePrompt,
@@ -426,13 +426,13 @@ export default function BookLayoutPage() {
         updatedPages[selectedPageIndex].images.push(newImage);
         setPages(updatedPages);
 
-        toast.success('התמונה נוצרה בהצלחה!', { id: 'generate-image' });
+        toast.success('Image generated successfully!', { id: 'generate-image' });
         setShowImageModal(false);
         setImagePrompt('');
       }
     } catch (error: any) {
       console.error('Generate image error:', error);
-      toast.error(error.response?.data?.error || 'שגיאה ביצירת התמונה', { id: 'generate-image' });
+      toast.error(error.response?.data?.error || 'Error generating image', { id: 'generate-image' });
     } finally {
       setGeneratingImage(false);
     }
@@ -470,7 +470,7 @@ export default function BookLayoutPage() {
     const updatedPages = [...pages];
     updatedPages.splice(afterIndex + 1, 0, newPage);
     setPages(updatedPages);
-    toast.success('עמוד ריק נוסף');
+    toast.success('Blank page added');
   };
 
   // Remove page
@@ -478,9 +478,9 @@ export default function BookLayoutPage() {
     if (pages[index].type === 'blank') {
       const updatedPages = pages.filter((_, i) => i !== index);
       setPages(updatedPages);
-      toast.success('העמוד הוסר');
+      toast.success('Page removed');
     } else {
-      toast.error('ניתן להסיר רק עמודים ריקים');
+      toast.error('Only blank pages can be removed');
     }
   };
 
@@ -490,13 +490,13 @@ export default function BookLayoutPage() {
     if (hasToc) {
       setPages(pages.filter(p => p.type !== 'toc'));
       setSettings({ ...settings, includeToc: false });
-      toast.success('תוכן העניינים הוסר');
+      toast.success('Table of Contents removed');
     } else {
       if (book) {
         generatePagesFromChapters(book);
       }
       setSettings({ ...settings, includeToc: true });
-      toast.success('תוכן העניינים נוסף');
+      toast.success('Table of Contents added');
     }
   };
 
@@ -543,17 +543,17 @@ export default function BookLayoutPage() {
     setCoverImageUrl(null);
 
     try {
-      toast.loading('מייצר עיצוב AI מלא...', { id: 'ai-design' });
+      toast.loading('Generating complete AI design...', { id: 'ai-design' });
 
       const response = await api.post(`/ai/design-book/${bookId}`);
 
       if (response.data.success) {
         setAiDesign(response.data.data.design);
-        toast.success('העיצוב נוצר בהצלחה!', { id: 'ai-design' });
+        toast.success('Design generated successfully!', { id: 'ai-design' });
       }
     } catch (error: any) {
       console.error('AI Design error:', error);
-      toast.error(error.response?.data?.error || 'שגיאה ביצירת העיצוב', { id: 'ai-design' });
+      toast.error(error.response?.data?.error || 'Error generating design', { id: 'ai-design' });
     } finally {
       setGeneratingDesign(false);
     }
@@ -566,7 +566,7 @@ export default function BookLayoutPage() {
     setGeneratingCoverImage(true);
 
     try {
-      toast.loading('מייצר תמונת כריכה...', { id: 'cover-image' });
+      toast.loading('Generating cover image...', { id: 'cover-image' });
 
       const response = await api.post('/ai/generate-cover', {
         synopsis: book.synopsis || book.description || '',
@@ -576,11 +576,11 @@ export default function BookLayoutPage() {
 
       if (response.data.success) {
         setCoverImageUrl(response.data.data.imageUrl);
-        toast.success('תמונת הכריכה נוצרה בהצלחה!', { id: 'cover-image' });
+        toast.success('Cover image generated successfully!', { id: 'cover-image' });
       }
     } catch (error: any) {
       console.error('Cover image error:', error);
-      toast.error(error.response?.data?.error || 'שגיאה ביצירת תמונת הכריכה', { id: 'cover-image' });
+      toast.error(error.response?.data?.error || 'Error generating cover image', { id: 'cover-image' });
     } finally {
       setGeneratingCoverImage(false);
     }
@@ -593,7 +593,7 @@ export default function BookLayoutPage() {
     setSaving(true);
 
     try {
-      toast.loading('מחיל עיצוב...', { id: 'apply-design' });
+      toast.loading('Applying design...', { id: 'apply-design' });
 
       const response = await api.post(`/ai/apply-design/${bookId}`, {
         design: aiDesign,
@@ -637,7 +637,7 @@ export default function BookLayoutPage() {
           });
         }
 
-        toast.success('העיצוב הוחל בהצלחה!', { id: 'apply-design' });
+        toast.success('Design applied successfully!', { id: 'apply-design' });
         setShowAIDesignModal(false);
 
         // Reload book to get updated data
@@ -645,7 +645,7 @@ export default function BookLayoutPage() {
       }
     } catch (error: any) {
       console.error('Apply design error:', error);
-      toast.error(error.response?.data?.error || 'שגיאה בהחלת העיצוב', { id: 'apply-design' });
+      toast.error(error.response?.data?.error || 'Error applying design', { id: 'apply-design' });
     } finally {
       setSaving(false);
     }
@@ -656,7 +656,7 @@ export default function BookLayoutPage() {
     if (!book) return;
 
     try {
-      toast.loading('מייצר תמונה...', { id: `img-${suggestion.chapterIndex}` });
+      toast.loading('Generating image...', { id: `img-${suggestion.chapterIndex}` });
 
       const response = await api.post('/ai/generate-contextual-image', {
         bookId,
@@ -665,13 +665,13 @@ export default function BookLayoutPage() {
       });
 
       if (response.data.success) {
-        toast.success('התמונה נוצרה בהצלחה!', { id: `img-${suggestion.chapterIndex}` });
+        toast.success('Image generated successfully!', { id: `img-${suggestion.chapterIndex}` });
         // The image URL can be used to add to a page
         return response.data.data.imageUrl;
       }
     } catch (error: any) {
       console.error('Contextual image error:', error);
-      toast.error(error.response?.data?.error || 'שגיאה ביצירת התמונה', { id: `img-${suggestion.chapterIndex}` });
+      toast.error(error.response?.data?.error || 'Error generating image', { id: `img-${suggestion.chapterIndex}` });
     }
     return null;
   };
@@ -724,12 +724,12 @@ export default function BookLayoutPage() {
               className="btn-ghost flex items-center gap-2"
             >
               <ArrowLeft className="w-5 h-5" />
-              חזרה לעורך
+              Back to Editor
             </button>
             <div className="h-6 w-px bg-gray-700" />
             <h1 className="text-xl font-semibold text-white">{book.title}</h1>
             <span className="px-2 py-1 rounded bg-magic-gold/20 text-magic-gold text-xs font-medium">
-              {isBookRTL ? 'עברית (RTL)' : 'English (LTR)'}
+              {isBookRTL ? 'Hebrew (RTL)' : 'English (LTR)'}
             </span>
           </div>
 
@@ -739,12 +739,12 @@ export default function BookLayoutPage() {
               {saving ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>שומר...</span>
+                  <span>Saving...</span>
                 </>
               ) : lastSaved ? (
                 <>
                   <CheckCircle2 className="w-4 h-4 text-green-400" />
-                  <span>נשמר {lastSaved.toLocaleTimeString('he-IL')}</span>
+                  <span>Saved {lastSaved.toLocaleTimeString('en-US')}</span>
                 </>
               ) : null}
             </div>
@@ -760,7 +760,7 @@ export default function BookLayoutPage() {
               className="btn-gold flex items-center gap-2"
             >
               <Wand2 className="w-4 h-4" />
-              עיצוב AI מלא
+              Complete AI Design
             </button>
 
             {/* Settings Button */}
@@ -778,7 +778,7 @@ export default function BookLayoutPage() {
               className="btn-primary flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
-              שמור עימוד
+              Save Layout
             </button>
           </div>
         </div>
@@ -788,7 +788,7 @@ export default function BookLayoutPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar - Page Thumbnails */}
         <div className="w-48 glass-strong border-r border-white/10 p-4 overflow-y-auto">
-          <h3 className="text-sm font-semibold text-gray-300 mb-4">עמודים</h3>
+          <h3 className="text-sm font-semibold text-gray-300 mb-4">Pages</h3>
           <div className="space-y-2">
             {/* Cover */}
             <button
@@ -800,7 +800,7 @@ export default function BookLayoutPage() {
               }`}
             >
               <div className="flex items-center justify-center h-full text-xs text-gray-400">
-                כריכה
+                Cover
               </div>
             </button>
 
@@ -829,7 +829,7 @@ export default function BookLayoutPage() {
               className="w-full btn-secondary text-sm flex items-center justify-center gap-2"
             >
               <List className="w-4 h-4" />
-              {settings.includeToc ? 'הסר תוכן עניינים' : 'הוסף תוכן עניינים'}
+              {settings.includeToc ? 'Remove Table of Contents' : 'Add Table of Contents'}
             </button>
           </div>
         </div>
@@ -846,7 +846,7 @@ export default function BookLayoutPage() {
               <ChevronRight className="w-6 h-6" />
             </button>
             <span className="text-gray-400">
-              {currentSpread === 0 ? 'כריכה' : `עמודים ${(currentSpread - 1) * 2 + 1}-${(currentSpread - 1) * 2 + 2}`}
+              {currentSpread === 0 ? 'Cover' : `Pages ${(currentSpread - 1) * 2 + 1}-${(currentSpread - 1) * 2 + 2}`}
             </span>
             <button
               onClick={isBookRTL ? goToPrevSpread : goToNextSpread}
@@ -898,7 +898,7 @@ export default function BookLayoutPage() {
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-300 text-sm">
-                  {currentSpread === 0 ? '' : 'עמוד ריק'}
+                  {currentSpread === 0 ? '' : 'Blank page'}
                 </div>
               )}
             </div>
@@ -944,7 +944,7 @@ export default function BookLayoutPage() {
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-300 text-sm">
-                  עמוד ריק
+                  Blank page
                 </div>
               )}
             </div>
@@ -960,14 +960,14 @@ export default function BookLayoutPage() {
                 className="btn-secondary text-sm flex items-center gap-2"
               >
                 <ImageIcon className="w-4 h-4" />
-                הוסף תמונה
+                Add Image
               </button>
               <button
                 onClick={() => addBlankPage(selectedPageIndex)}
                 className="btn-secondary text-sm flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
-                הוסף עמוד ריק
+                Add Blank Page
               </button>
               {pages[selectedPageIndex]?.type === 'blank' && (
                 <button
@@ -975,7 +975,7 @@ export default function BookLayoutPage() {
                   className="btn-secondary text-sm flex items-center gap-2 text-red-400"
                 >
                   <Trash2 className="w-4 h-4" />
-                  הסר עמוד
+                  Remove Page
                 </button>
               )}
             </div>
@@ -983,7 +983,7 @@ export default function BookLayoutPage() {
 
           {/* Keyboard shortcuts hint */}
           <div className="mt-4 text-xs text-gray-500">
-            Ctrl+Enter = הוסף עמוד | Ctrl+S = שמור | חיצים = ניווט
+            Ctrl+Enter = Add page | Ctrl+S = Save | Arrows = Navigate
           </div>
         </div>
 
@@ -997,11 +997,11 @@ export default function BookLayoutPage() {
               className="glass-strong border-l border-white/10 overflow-hidden"
             >
               <div className="p-6 w-80">
-                <h3 className="text-lg font-semibold text-white mb-6">הגדרות עימוד</h3>
+                <h3 className="text-lg font-semibold text-white mb-6">Layout Settings</h3>
 
                 {/* Font Size */}
                 <div className="mb-4">
-                  <label className="block text-sm text-gray-300 mb-2">גודל גופן</label>
+                  <label className="block text-sm text-gray-300 mb-2">Font Size</label>
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setSettings({ ...settings, fontSize: Math.max(10, settings.fontSize - 1) })}
@@ -1021,7 +1021,7 @@ export default function BookLayoutPage() {
 
                 {/* Line Height */}
                 <div className="mb-4">
-                  <label className="block text-sm text-gray-300 mb-2">גובה שורה</label>
+                  <label className="block text-sm text-gray-300 mb-2">Line Height</label>
                   <input
                     type="range"
                     min="1.2"
@@ -1036,7 +1036,7 @@ export default function BookLayoutPage() {
 
                 {/* Font Family */}
                 <div className="mb-4">
-                  <label className="block text-sm text-gray-300 mb-2">גופן</label>
+                  <label className="block text-sm text-gray-300 mb-2">Font</label>
                   <select
                     value={settings.fontFamily}
                     onChange={(e) => setSettings({ ...settings, fontFamily: e.target.value })}
@@ -1053,10 +1053,10 @@ export default function BookLayoutPage() {
 
                 {/* Margins */}
                 <div className="mb-4">
-                  <label className="block text-sm text-gray-300 mb-2">שוליים</label>
+                  <label className="block text-sm text-gray-300 mb-2">Margins</label>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-xs text-gray-400">עליון</label>
+                      <label className="text-xs text-gray-400">Top</label>
                       <input
                         type="number"
                         value={settings.margins.top}
@@ -1068,7 +1068,7 @@ export default function BookLayoutPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400">תחתון</label>
+                      <label className="text-xs text-gray-400">Bottom</label>
                       <input
                         type="number"
                         value={settings.margins.bottom}
@@ -1080,7 +1080,7 @@ export default function BookLayoutPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400">שמאל</label>
+                      <label className="text-xs text-gray-400">Left</label>
                       <input
                         type="number"
                         value={settings.margins.left}
@@ -1092,7 +1092,7 @@ export default function BookLayoutPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400">ימין</label>
+                      <label className="text-xs text-gray-400">Right</label>
                       <input
                         type="number"
                         value={settings.margins.right}
@@ -1115,7 +1115,7 @@ export default function BookLayoutPage() {
                       onChange={(e) => setSettings({ ...settings, showPageNumbers: e.target.checked })}
                       className="w-4 h-4 rounded border-gray-600 bg-white/10"
                     />
-                    <span className="text-sm text-gray-300">הצג מספרי עמודים</span>
+                    <span className="text-sm text-gray-300">Show page numbers</span>
                   </label>
 
                   <label className="flex items-center gap-3 cursor-pointer">
@@ -1128,7 +1128,7 @@ export default function BookLayoutPage() {
                       }}
                       className="w-4 h-4 rounded border-gray-600 bg-white/10"
                     />
-                    <span className="text-sm text-gray-300">כלול תוכן עניינים</span>
+                    <span className="text-sm text-gray-300">Include Table of Contents</span>
                   </label>
 
                   <label className="flex items-center gap-3 cursor-pointer">
@@ -1141,7 +1141,7 @@ export default function BookLayoutPage() {
                       }}
                       className="w-4 h-4 rounded border-gray-600 bg-white/10"
                     />
-                    <span className="text-sm text-gray-300">כלול עמוד אחורי עם תקציר</span>
+                    <span className="text-sm text-gray-300">Include back cover with summary</span>
                   </label>
 
                   <label className="flex items-center gap-3 cursor-pointer">
@@ -1151,7 +1151,7 @@ export default function BookLayoutPage() {
                       onChange={(e) => setAutoSaveEnabled(e.target.checked)}
                       className="w-4 h-4 rounded border-gray-600 bg-white/10"
                     />
-                    <span className="text-sm text-gray-300">שמירה אוטומטית</span>
+                    <span className="text-sm text-gray-300">Auto-save</span>
                   </label>
                 </div>
               </div>
@@ -1178,7 +1178,7 @@ export default function BookLayoutPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-white">הוסף תמונה</h2>
+                <h2 className="text-xl font-bold text-white">Add Image</h2>
                 <button
                   onClick={() => setShowImageModal(false)}
                   className="btn-ghost p-2"
@@ -1189,11 +1189,11 @@ export default function BookLayoutPage() {
 
               {/* Upload Option */}
               <div className="mb-6">
-                <h3 className="text-sm font-semibold text-gray-300 mb-3">העלה תמונה</h3>
+                <h3 className="text-sm font-semibold text-gray-300 mb-3">Upload Image</h3>
                 <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer hover:border-magic-gold transition">
                   <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                  <span className="text-sm text-gray-400">לחץ להעלאת תמונה</span>
-                  <span className="text-xs text-gray-500">PNG, JPG עד 10MB</span>
+                  <span className="text-sm text-gray-400">Click to upload image</span>
+                  <span className="text-xs text-gray-500">PNG, JPG up to 10MB</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -1208,19 +1208,18 @@ export default function BookLayoutPage() {
                   <div className="w-full border-t border-gray-700" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="px-4 bg-deep-space text-gray-400 text-sm">או</span>
+                  <span className="px-4 bg-deep-space text-gray-400 text-sm">or</span>
                 </div>
               </div>
 
               {/* AI Generation Option */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-300 mb-3">צור תמונה עם AI</h3>
+                <h3 className="text-sm font-semibold text-gray-300 mb-3">Generate Image with AI</h3>
                 <textarea
                   value={imagePrompt}
                   onChange={(e) => setImagePrompt(e.target.value)}
-                  placeholder="תאר את התמונה שברצונך ליצור..."
+                  placeholder="Describe the image you want to create..."
                   className="input w-full h-24 resize-none mb-3"
-                  dir="rtl"
                 />
                 <button
                   onClick={handleGenerateImage}
@@ -1230,12 +1229,12 @@ export default function BookLayoutPage() {
                   {generatingImage ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      יוצר...
+                      Generating...
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5" />
-                      צור תמונה
+                      Generate Image
                     </>
                   )}
                 </button>
@@ -1269,8 +1268,8 @@ export default function BookLayoutPage() {
                     <Wand2 className="w-6 h-6 text-magic-gold" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">עיצוב AI מלא</h2>
-                    <p className="text-sm text-gray-400">עיצוב אוטומטי של טיפוגרפיה, פריסה וכריכה</p>
+                    <h2 className="text-xl font-bold text-white">Complete AI Design</h2>
+                    <p className="text-sm text-gray-400">Automatic design of typography, layout and cover</p>
                   </div>
                 </div>
                 <button
@@ -1289,9 +1288,9 @@ export default function BookLayoutPage() {
                     <div className="absolute inset-0 rounded-full border-4 border-magic-gold border-t-transparent animate-spin" />
                     <Wand2 className="absolute inset-0 m-auto w-10 h-10 text-magic-gold animate-pulse" />
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">מייצר עיצוב מותאם אישית...</h3>
+                  <h3 className="text-lg font-semibold text-white mb-2">Generating custom design...</h3>
                   <p className="text-sm text-gray-400 text-center max-w-md">
-                    הבינה המלאכותית מנתחת את הספר שלך ויוצרת עיצוב מקצועי הכולל טיפוגרפיה, פריסת עמודים, כריכה והמלצות לתמונות
+                    AI is analyzing your book and creating a professional design including typography, page layout, cover and image recommendations
                   </p>
                 </div>
               )}
@@ -1302,10 +1301,10 @@ export default function BookLayoutPage() {
                   {/* Tabs */}
                   <div className="flex border-b border-white/10">
                     {[
-                      { id: 'typography', label: 'טיפוגרפיה', icon: Type },
-                      { id: 'layout', label: 'פריסה', icon: LayoutTemplate },
-                      { id: 'cover', label: 'כריכה', icon: BookOpenCheck },
-                      { id: 'images', label: 'תמונות', icon: ImageIcon },
+                      { id: 'typography', label: 'Typography', icon: Type },
+                      { id: 'layout', label: 'Layout', icon: LayoutTemplate },
+                      { id: 'cover', label: 'Cover', icon: BookOpenCheck },
+                      { id: 'images', label: 'Images', icon: ImageIcon },
                     ].map((tab) => (
                       <button
                         key={tab.id}
@@ -1340,14 +1339,14 @@ export default function BookLayoutPage() {
                     {aiDesignTab === 'typography' && (
                       <div className="space-y-6">
                         <div className="bg-white/5 rounded-xl p-6">
-                          <h3 className="text-lg font-semibold text-white mb-4">סגנון כללי</h3>
+                          <h3 className="text-lg font-semibold text-white mb-4">Overall Style</h3>
                           <p className="text-gray-300">{aiDesign.overallStyle}</p>
                           <p className="text-sm text-gray-400 mt-2">{aiDesign.moodDescription}</p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-6">
                           <div className="bg-white/5 rounded-xl p-6">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-3">גופן כותרת</h4>
+                            <h4 className="text-sm font-semibold text-gray-400 mb-3">Title Font</h4>
                             <div
                               className="p-4 bg-white rounded-lg mb-3"
                               style={{
@@ -1357,17 +1356,17 @@ export default function BookLayoutPage() {
                                 color: aiDesign.typography.titleFont.color,
                               }}
                             >
-                              {book?.title || 'כותרת הספר'}
+                              {book?.title || 'Book Title'}
                             </div>
                             <div className="text-xs text-gray-400 space-y-1">
-                              <p>משפחה: {aiDesign.typography.titleFont.family}</p>
-                              <p>גודל: {aiDesign.typography.titleFont.size}px</p>
-                              <p>משקל: {aiDesign.typography.titleFont.weight}</p>
+                              <p>Family: {aiDesign.typography.titleFont.family}</p>
+                              <p>Size: {aiDesign.typography.titleFont.size}px</p>
+                              <p>Weight: {aiDesign.typography.titleFont.weight}</p>
                             </div>
                           </div>
 
                           <div className="bg-white/5 rounded-xl p-6">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-3">גופן גוף הטקסט</h4>
+                            <h4 className="text-sm font-semibold text-gray-400 mb-3">Body Text Font</h4>
                             <div
                               className="p-4 bg-white rounded-lg mb-3"
                               style={{
@@ -1378,19 +1377,17 @@ export default function BookLayoutPage() {
                                 lineHeight: aiDesign.typography.bodyFont.lineHeight,
                               }}
                             >
-                              {isBookRTL
-                                ? 'זהו טקסט לדוגמה שמדגים את הגופן של גוף הטקסט בספר. הגופן נבחר בקפידה כדי להתאים לז׳אנר ולאווירה של הספר.'
-                                : 'This is sample text demonstrating the body font selected for the book. The font was carefully chosen to match the genre and mood.'}
+                              This is sample text demonstrating the body font selected for the book. The font was carefully chosen to match the genre and mood.
                             </div>
                             <div className="text-xs text-gray-400 space-y-1">
-                              <p>משפחה: {aiDesign.typography.bodyFont.family}</p>
-                              <p>גודל: {aiDesign.typography.bodyFont.size}px</p>
-                              <p>גובה שורה: {aiDesign.typography.bodyFont.lineHeight}</p>
+                              <p>Family: {aiDesign.typography.bodyFont.family}</p>
+                              <p>Size: {aiDesign.typography.bodyFont.size}px</p>
+                              <p>Line Height: {aiDesign.typography.bodyFont.lineHeight}</p>
                             </div>
                           </div>
 
                           <div className="bg-white/5 rounded-xl p-6">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-3">גופן כותרת פרק</h4>
+                            <h4 className="text-sm font-semibold text-gray-400 mb-3">Chapter Title Font</h4>
                             <div
                               className="p-4 bg-white rounded-lg mb-3"
                               style={{
@@ -1400,16 +1397,16 @@ export default function BookLayoutPage() {
                                 color: aiDesign.typography.chapterTitleFont.color,
                               }}
                             >
-                              {isBookRTL ? 'פרק ראשון' : 'Chapter One'}
+                              Chapter One
                             </div>
                             <div className="text-xs text-gray-400 space-y-1">
-                              <p>משפחה: {aiDesign.typography.chapterTitleFont.family}</p>
-                              <p>גודל: {aiDesign.typography.chapterTitleFont.size}px</p>
+                              <p>Family: {aiDesign.typography.chapterTitleFont.family}</p>
+                              <p>Size: {aiDesign.typography.chapterTitleFont.size}px</p>
                             </div>
                           </div>
 
                           <div className="bg-white/5 rounded-xl p-6">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-3">גופן כותרות משנה</h4>
+                            <h4 className="text-sm font-semibold text-gray-400 mb-3">Subheading Font</h4>
                             <div
                               className="p-4 bg-white rounded-lg mb-3"
                               style={{
@@ -1419,11 +1416,11 @@ export default function BookLayoutPage() {
                                 color: aiDesign.typography.headerFont.color,
                               }}
                             >
-                              {isBookRTL ? 'כותרת משנה' : 'Subheading'}
+                              Subheading
                             </div>
                             <div className="text-xs text-gray-400 space-y-1">
-                              <p>משפחה: {aiDesign.typography.headerFont.family}</p>
-                              <p>גודל: {aiDesign.typography.headerFont.size}px</p>
+                              <p>Family: {aiDesign.typography.headerFont.family}</p>
+                              <p>Size: {aiDesign.typography.headerFont.size}px</p>
                             </div>
                           </div>
                         </div>
@@ -1435,7 +1432,7 @@ export default function BookLayoutPage() {
                       <div className="space-y-6">
                         <div className="grid grid-cols-2 gap-6">
                           <div className="bg-white/5 rounded-xl p-6">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-4">שוליים</h4>
+                            <h4 className="text-sm font-semibold text-gray-400 mb-4">Margins</h4>
                             <div className="relative bg-white rounded-lg aspect-[3/4] max-w-[200px] mx-auto">
                               <div
                                 className="absolute bg-gray-200 rounded"
@@ -1447,49 +1444,49 @@ export default function BookLayoutPage() {
                                 }}
                               >
                                 <div className="absolute inset-2 flex items-center justify-center text-xs text-gray-500">
-                                  אזור תוכן
+                                  Content Area
                                 </div>
                               </div>
                             </div>
                             <div className="mt-4 text-xs text-gray-400 space-y-1 text-center">
-                              <p>עליון: {aiDesign.layout.margins.top}px | תחתון: {aiDesign.layout.margins.bottom}px</p>
-                              <p>פנימי: {aiDesign.layout.margins.inner}px | חיצוני: {aiDesign.layout.margins.outer}px</p>
+                              <p>Top: {aiDesign.layout.margins.top}px | Bottom: {aiDesign.layout.margins.bottom}px</p>
+                              <p>Inner: {aiDesign.layout.margins.inner}px | Outer: {aiDesign.layout.margins.outer}px</p>
                             </div>
                           </div>
 
                           <div className="bg-white/5 rounded-xl p-6">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-4">הגדרות נוספות</h4>
+                            <h4 className="text-sm font-semibold text-gray-400 mb-4">Additional Settings</h4>
                             <div className="space-y-4">
                               <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-300">מספרי עמודים</span>
+                                <span className="text-sm text-gray-300">Page Numbers</span>
                                 <span className="text-sm text-white">{
-                                  aiDesign.layout.pageNumbers.position === 'bottom-center' ? 'מרכז תחתון' :
-                                  aiDesign.layout.pageNumbers.position === 'bottom-outside' ? 'חיצוני תחתון' :
-                                  aiDesign.layout.pageNumbers.position === 'top-outside' ? 'חיצוני עליון' : 'ללא'
+                                  aiDesign.layout.pageNumbers.position === 'bottom-center' ? 'Bottom Center' :
+                                  aiDesign.layout.pageNumbers.position === 'bottom-outside' ? 'Bottom Outside' :
+                                  aiDesign.layout.pageNumbers.position === 'top-outside' ? 'Top Outside' : 'None'
                                 }</span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-300">התחלת פרק</span>
+                                <span className="text-sm text-gray-300">Chapter Start</span>
                                 <span className="text-sm text-white">{
-                                  aiDesign.layout.chapterStart === 'right' ? 'עמוד ימני' :
-                                  aiDesign.layout.chapterStart === 'any' ? 'כל עמוד' : 'פריסה חדשה'
+                                  aiDesign.layout.chapterStart === 'right' ? 'Right Page' :
+                                  aiDesign.layout.chapterStart === 'any' ? 'Any Page' : 'New Spread'
                                 }</span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-300">ריווח שורות</span>
+                                <span className="text-sm text-gray-300">Line Spacing</span>
                                 <span className="text-sm text-white">{aiDesign.layout.lineSpacing}</span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-300">ריווח פסקאות</span>
+                                <span className="text-sm text-gray-300">Paragraph Spacing</span>
                                 <span className="text-sm text-white">{aiDesign.layout.paragraphSpacing}px</span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-300">הזחת שורה ראשונה</span>
+                                <span className="text-sm text-gray-300">First Line Indent</span>
                                 <span className="text-sm text-white">{aiDesign.layout.firstLineIndent}px</span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-300">אות פתיחה מעוצבת</span>
-                                <span className="text-sm text-white">{aiDesign.layout.dropCaps ? 'כן' : 'לא'}</span>
+                                <span className="text-sm text-gray-300">Drop Caps</span>
+                                <span className="text-sm text-white">{aiDesign.layout.dropCaps ? 'Yes' : 'No'}</span>
                               </div>
                             </div>
                           </div>
@@ -1503,7 +1500,7 @@ export default function BookLayoutPage() {
                         <div className="grid grid-cols-3 gap-6">
                           {/* Front Cover */}
                           <div className="bg-white/5 rounded-xl p-4">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-3">כריכה קדמית</h4>
+                            <h4 className="text-sm font-semibold text-gray-400 mb-3">Front Cover</h4>
                             <div
                               className="aspect-[2/3] rounded-lg relative overflow-hidden flex flex-col items-center justify-center"
                               style={{
@@ -1550,17 +1547,17 @@ export default function BookLayoutPage() {
                               {generatingCoverImage ? (
                                 <>
                                   <Loader2 className="w-4 h-4 animate-spin" />
-                                  מייצר...
+                                  Generating...
                                 </>
                               ) : coverImageUrl ? (
                                 <>
                                   <RefreshCw className="w-4 h-4" />
-                                  צור תמונה חדשה
+                                  Generate New Image
                                 </>
                               ) : (
                                 <>
                                   <Sparkles className="w-4 h-4" />
-                                  צור תמונת כריכה
+                                  Generate Cover Image
                                 </>
                               )}
                             </button>
@@ -1568,7 +1565,7 @@ export default function BookLayoutPage() {
 
                           {/* Spine */}
                           <div className="bg-white/5 rounded-xl p-4">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-3">שדרה</h4>
+                            <h4 className="text-sm font-semibold text-gray-400 mb-3">Spine</h4>
                             <div
                               className="w-12 mx-auto aspect-[1/6] rounded flex items-center justify-center"
                               style={{ background: aiDesign.cover.spine.background }}
@@ -1584,14 +1581,14 @@ export default function BookLayoutPage() {
                               </span>
                             </div>
                             <div className="mt-3 text-xs text-gray-400 text-center">
-                              <p>כיוון: {aiDesign.cover.spine.titleOrientation === 'vertical-up' ? 'למעלה' : 'למטה'}</p>
-                              <p>כולל מחבר: {aiDesign.cover.spine.includeAuthor ? 'כן' : 'לא'}</p>
+                              <p>Direction: {aiDesign.cover.spine.titleOrientation === 'vertical-up' ? 'Up' : 'Down'}</p>
+                              <p>Include Author: {aiDesign.cover.spine.includeAuthor ? 'Yes' : 'No'}</p>
                             </div>
                           </div>
 
                           {/* Back Cover */}
                           <div className="bg-white/5 rounded-xl p-4">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-3">כריכה אחורית</h4>
+                            <h4 className="text-sm font-semibold text-gray-400 mb-3">Back Cover</h4>
                             <div
                               className="aspect-[2/3] rounded-lg relative overflow-hidden flex flex-col p-4"
                               style={{
@@ -1629,14 +1626,14 @@ export default function BookLayoutPage() {
                     {aiDesignTab === 'images' && (
                       <div className="space-y-4">
                         <div className="bg-white/5 rounded-xl p-4">
-                          <h4 className="text-sm font-semibold text-gray-400 mb-2">המלצות למיקום תמונות</h4>
-                          <p className="text-xs text-gray-500">הבינה המלאכותית מצאה מיקומים מומלצים להוספת תמונות בספר</p>
+                          <h4 className="text-sm font-semibold text-gray-400 mb-2">Image Placement Recommendations</h4>
+                          <p className="text-xs text-gray-500">AI found recommended locations for adding images to the book</p>
                         </div>
 
                         {aiDesign.imagePlacements.length === 0 ? (
                           <div className="text-center py-12 text-gray-400">
                             <ImageIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                            <p>לא נמצאו המלצות למיקום תמונות</p>
+                            <p>No image placement recommendations found</p>
                           </div>
                         ) : (
                           <div className="space-y-3">
@@ -1653,20 +1650,20 @@ export default function BookLayoutPage() {
                                         suggestion.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
                                         'bg-blue-500/20 text-blue-400'
                                       }`}>
-                                        {suggestion.priority === 'high' ? 'עדיפות גבוהה' :
-                                         suggestion.priority === 'medium' ? 'עדיפות בינונית' : 'עדיפות נמוכה'}
+                                        {suggestion.priority === 'high' ? 'High Priority' :
+                                         suggestion.priority === 'medium' ? 'Medium Priority' : 'Low Priority'}
                                       </span>
                                       <span className="text-xs text-gray-500">
-                                        פרק {suggestion.chapterIndex + 1}
+                                        Chapter {suggestion.chapterIndex + 1}
                                         {book?.chapters[suggestion.chapterIndex]?.title && ` - ${book.chapters[suggestion.chapterIndex].title}`}
                                       </span>
                                     </div>
                                     <p className="text-sm text-white">{suggestion.rationale}</p>
                                   </div>
                                   <span className="text-xs text-gray-400 whitespace-nowrap">
-                                    {suggestion.position === 'full-page' ? 'עמוד מלא' :
-                                     suggestion.position === 'half-page' ? 'חצי עמוד' :
-                                     suggestion.position === 'chapter-header' ? 'כותרת פרק' : 'אחרי פסקה'}
+                                    {suggestion.position === 'full-page' ? 'Full Page' :
+                                     suggestion.position === 'half-page' ? 'Half Page' :
+                                     suggestion.position === 'chapter-header' ? 'Chapter Header' : 'After Paragraph'}
                                   </span>
                                 </div>
                                 <div className="bg-black/30 rounded-lg p-3 mb-3">
@@ -1699,7 +1696,7 @@ export default function BookLayoutPage() {
                                   className="btn-secondary text-sm flex items-center gap-2"
                                 >
                                   <Sparkles className="w-4 h-4" />
-                                  צור והוסף תמונה
+                                  Generate and Add Image
                                 </button>
                               </div>
                             ))}
@@ -1717,7 +1714,7 @@ export default function BookLayoutPage() {
                       className="btn-secondary flex items-center gap-2"
                     >
                       <RefreshCw className="w-4 h-4" />
-                      צור עיצוב חדש
+                      Generate New Design
                     </button>
 
                     <div className="flex items-center gap-3">
@@ -1725,7 +1722,7 @@ export default function BookLayoutPage() {
                         onClick={() => setShowAIDesignModal(false)}
                         className="btn-ghost"
                       >
-                        ביטול
+                        Cancel
                       </button>
                       <button
                         onClick={applyAIDesign}
@@ -1735,12 +1732,12 @@ export default function BookLayoutPage() {
                         {saving ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            מחיל...
+                            Applying...
                           </>
                         ) : (
                           <>
                             <Check className="w-4 h-4" />
-                            החל עיצוב נבחר
+                            Apply Selected Design
                           </>
                         )}
                       </button>
@@ -1753,16 +1750,16 @@ export default function BookLayoutPage() {
               {!generatingDesign && !aiDesign && (
                 <div className="flex-1 flex flex-col items-center justify-center p-12">
                   <Wand2 className="w-16 h-16 text-gray-600 mb-4" />
-                  <h3 className="text-lg font-semibold text-white mb-2">לא נוצר עיצוב עדיין</h3>
+                  <h3 className="text-lg font-semibold text-white mb-2">No design generated yet</h3>
                   <p className="text-sm text-gray-400 text-center mb-6">
-                    לחץ על הכפתור למטה כדי ליצור עיצוב מותאם אישית לספר שלך
+                    Click the button below to create a custom design for your book
                   </p>
                   <button
                     onClick={generateAIDesign}
                     className="btn-gold flex items-center gap-2"
                   >
                     <Sparkles className="w-5 h-5" />
-                    צור עיצוב AI
+                    Generate AI Design
                   </button>
                 </div>
               )}
@@ -1918,7 +1915,7 @@ function PageRenderer({
       {/* Page type indicator */}
       {page.type === 'blank' && (
         <div className="absolute inset-0 flex items-center justify-center text-gray-300 text-sm">
-          עמוד ריק
+          Blank page
         </div>
       )}
     </div>

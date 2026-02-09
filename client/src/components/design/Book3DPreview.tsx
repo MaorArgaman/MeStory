@@ -296,7 +296,7 @@ export default function Book3DPreview({
             className="btn-secondary px-4 py-2 flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            {isRTL ? 'הבא' : 'Previous'}
+            Previous
           </motion.button>
 
           <div className="glass rounded-lg px-4 py-2 text-sm text-gray-300">
@@ -310,7 +310,7 @@ export default function Book3DPreview({
             disabled={currentPage === pages.length - 1 || isPageTurning}
             className="btn-secondary px-4 py-2 flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {isRTL ? 'הקודם' : 'Next'}
+            Next
             {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </motion.button>
         </div>

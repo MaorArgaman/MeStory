@@ -67,7 +67,7 @@ export default function VoiceInterviewWizard({
 
   // TTS hook
   const { speak, stop: stopTTS, isSpeaking, isSupported: ttsSupported } = useTTS({
-    language: 'he-IL',
+    language: 'en-US',
     onEnd: () => setAvatarState('listening'),
   });
 
@@ -116,7 +116,7 @@ export default function VoiceInterviewWizard({
       // Speak the first question
       await speakQuestion(result.firstQuestion);
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'שגיאה בהתחלת הראיון');
+      toast.error(error.response?.data?.error || 'Error starting the interview');
     } finally {
       setIsProcessing(false);
     }
@@ -148,7 +148,7 @@ export default function VoiceInterviewWizard({
         await speakQuestion(result.nextQuestion);
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'שגיאה בעיבוד התשובה');
+      toast.error(error.response?.data?.error || 'Error processing your response');
       setAvatarState('listening');
     } finally {
       setIsProcessing(false);
@@ -172,7 +172,7 @@ export default function VoiceInterviewWizard({
       setStep('summary');
       setAvatarState('idle');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'שגיאה בסיום הראיון');
+      toast.error(error.response?.data?.error || 'Error completing the interview');
     } finally {
       setIsProcessing(false);
     }
@@ -201,11 +201,10 @@ export default function VoiceInterviewWizard({
     >
       <AIAvatar state="idle" size="lg" className="mb-8" />
 
-      <h2 className="text-2xl font-bold text-white mb-4">ראיון קולי עם AI</h2>
+      <h2 className="text-2xl font-bold text-white mb-4">AI Voice Interview</h2>
 
       <p className="text-gray-300 mb-6 max-w-md">
-        אני אשאל אותך שאלות על הספר שאתה רוצה לכתוב. ענה בקול או בטקסט, ובסוף נקבל סיכום מקיף
-        שיעזור לך בכתיבה.
+        I'll ask you questions about the book you want to write. Answer by voice or text, and at the end we'll get a comprehensive summary to help you with your writing.
       </p>
 
       {/* Mic permission status */}
@@ -213,17 +212,17 @@ export default function VoiceInterviewWizard({
         {micPermissionGranted === null ? (
           <div className="flex items-center gap-2 text-gray-400">
             <RefreshCw className="w-4 h-4 animate-spin" />
-            <span>בודק הרשאות מיקרופון...</span>
+            <span>Checking microphone permissions...</span>
           </div>
         ) : micPermissionGranted ? (
           <div className="flex items-center gap-2 text-green-400">
             <Mic className="w-4 h-4" />
-            <span>מיקרופון זמין</span>
+            <span>Microphone available</span>
           </div>
         ) : (
           <div className="flex items-center gap-2 text-yellow-400">
             <MicOff className="w-4 h-4" />
-            <span>לא ניתן לגשת למיקרופון - ניתן להקליד תשובות</span>
+            <span>Cannot access microphone - you can type responses</span>
           </div>
         )}
       </div>
@@ -239,7 +238,7 @@ export default function VoiceInterviewWizard({
           }`}
         >
           {isTTSEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-          <span>{isTTSEnabled ? 'הקראה מופעלת' : 'הקראה כבויה'}</span>
+          <span>{isTTSEnabled ? 'Voice enabled' : 'Voice disabled'}</span>
         </button>
       </div>
 
@@ -265,12 +264,12 @@ export default function VoiceInterviewWizard({
         {isProcessing ? (
           <>
             <RefreshCw className="w-5 h-5 animate-spin" />
-            <span>מתחיל...</span>
+            <span>Starting...</span>
           </>
         ) : (
           <>
             <Mic className="w-5 h-5" />
-            <span>התחל ראיון</span>
+            <span>Start Interview</span>
           </>
         )}
       </button>
@@ -288,7 +287,7 @@ export default function VoiceInterviewWizard({
       {/* Progress bar */}
       <div className="w-full max-w-md mb-6">
         <div className="flex items-center justify-between text-sm text-gray-400 mb-2">
-          <span>התקדמות</span>
+          <span>Progress</span>
           <span>{progress}%</span>
         </div>
         <div className="h-2 bg-white/10 rounded-full overflow-hidden">
@@ -340,7 +339,7 @@ export default function VoiceInterviewWizard({
           className="text-magic-gold hover:text-yellow-400 text-sm flex items-center gap-1"
         >
           <CheckCircle className="w-4 h-4" />
-          <span>סיים ראיון מוקדם</span>
+          <span>Complete Interview Early</span>
         </button>
       )}
     </motion.div>
@@ -355,13 +354,13 @@ export default function VoiceInterviewWizard({
       className="w-full max-w-2xl"
     >
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-white">סיכום הראיון</h2>
+        <h2 className="text-2xl font-bold text-white">Interview Summary</h2>
         <button
           onClick={() => setStep('editing')}
           className="flex items-center gap-2 text-magic-gold hover:text-yellow-400 transition-colors"
         >
           <Edit3 className="w-4 h-4" />
-          <span>עריכה</span>
+          <span>Edit</span>
         </button>
       </div>
 
@@ -382,7 +381,7 @@ export default function VoiceInterviewWizard({
                 ))}
               </div>
             )}
-            <p className="text-gray-400 text-sm mt-2">טון: {editingSummary.theme.tone}</p>
+            <p className="text-gray-400 text-sm mt-2">Tone: {editingSummary.theme.tone}</p>
           </div>
 
           {/* Characters */}
@@ -396,12 +395,12 @@ export default function VoiceInterviewWizard({
                   <span className="text-white font-medium">{char.name}</span>
                   <span className="text-xs bg-magic-gold/20 text-magic-gold px-2 py-0.5 rounded">
                     {char.role === 'protagonist'
-                      ? 'ראשית'
+                      ? 'Protagonist'
                       : char.role === 'antagonist'
-                      ? 'אנטגוניסט'
+                      ? 'Antagonist'
                       : char.role === 'supporting'
-                      ? 'משנית'
-                      : 'משנית'}
+                      ? 'Supporting'
+                      : 'Supporting'}
                   </span>
                 </div>
                 <p className="text-gray-300 text-sm">{char.description}</p>
@@ -416,15 +415,15 @@ export default function VoiceInterviewWizard({
             </h3>
             <div className="space-y-2 text-sm">
               <p>
-                <span className="text-gray-400">רעיון: </span>
+                <span className="text-gray-400">Premise: </span>
                 <span className="text-white">{editingSummary.plot.premise}</span>
               </p>
               <p>
-                <span className="text-gray-400">קונפליקט: </span>
+                <span className="text-gray-400">Conflict: </span>
                 <span className="text-white">{editingSummary.plot.conflict}</span>
               </p>
               <p>
-                <span className="text-gray-400">מה על כף המאזניים: </span>
+                <span className="text-gray-400">Stakes: </span>
                 <span className="text-white">{editingSummary.plot.stakes}</span>
               </p>
             </div>
@@ -444,7 +443,7 @@ export default function VoiceInterviewWizard({
           {/* Writing guidelines */}
           {editingSummary.writingGuidelines.length > 0 && (
             <div className="bg-magic-gold/10 rounded-xl p-4 border border-magic-gold/30">
-              <h3 className="text-magic-gold font-medium mb-2">הנחיות לכתיבה</h3>
+              <h3 className="text-magic-gold font-medium mb-2">Writing Guidelines</h3>
               <ul className="space-y-1">
                 {editingSummary.writingGuidelines.map((guide, i) => (
                   <li key={i} className="text-gray-300 text-sm flex items-start gap-2">
@@ -464,14 +463,14 @@ export default function VoiceInterviewWizard({
           onClick={handleCancel}
           className="flex-1 py-3 px-4 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 transition-colors border border-white/20"
         >
-          ביטול
+          Cancel
         </button>
         <button
           onClick={handleSaveAndComplete}
           className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space font-bold hover:from-yellow-500 hover:to-magic-gold transition-all flex items-center justify-center gap-2"
         >
           <Save className="w-5 h-5" />
-          <span>שמור והמשך</span>
+          <span>Save & Continue</span>
         </button>
       </div>
     </motion.div>
@@ -489,14 +488,14 @@ export default function VoiceInterviewWizard({
         <button onClick={() => setStep('summary')} className="text-gray-400 hover:text-white">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h2 className="text-2xl font-bold text-white">עריכת סיכום</h2>
+        <h2 className="text-2xl font-bold text-white">Edit Summary</h2>
       </div>
 
       {editingSummary && (
         <div className="space-y-6">
           {/* Theme editing */}
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <label className="block text-magic-gold font-medium mb-2">נושא מרכזי</label>
+            <label className="block text-magic-gold font-medium mb-2">Main Theme</label>
             <textarea
               value={editingSummary.theme.mainTheme}
               onChange={(e) =>
@@ -507,13 +506,12 @@ export default function VoiceInterviewWizard({
               }
               className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-white resize-none focus:outline-none focus:ring-2 focus:ring-magic-gold/50"
               rows={2}
-              dir="rtl"
             />
           </div>
 
           {/* Conflict editing */}
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <label className="block text-magic-gold font-medium mb-2">קונפליקט</label>
+            <label className="block text-magic-gold font-medium mb-2">Conflict</label>
             <textarea
               value={editingSummary.plot.conflict}
               onChange={(e) =>
@@ -524,13 +522,12 @@ export default function VoiceInterviewWizard({
               }
               className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-white resize-none focus:outline-none focus:ring-2 focus:ring-magic-gold/50"
               rows={2}
-              dir="rtl"
             />
           </div>
 
           {/* Setting editing */}
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <label className="block text-magic-gold font-medium mb-2">עולם הסיפור</label>
+            <label className="block text-magic-gold font-medium mb-2">Story World</label>
             <textarea
               value={editingSummary.setting.world}
               onChange={(e) =>
@@ -541,7 +538,6 @@ export default function VoiceInterviewWizard({
               }
               className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-white resize-none focus:outline-none focus:ring-2 focus:ring-magic-gold/50"
               rows={2}
-              dir="rtl"
             />
           </div>
         </div>
@@ -552,14 +548,14 @@ export default function VoiceInterviewWizard({
           onClick={() => setStep('summary')}
           className="flex-1 py-3 px-4 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 transition-colors border border-white/20"
         >
-          חזור לסיכום
+          Back to Summary
         </button>
         <button
           onClick={handleSaveAndComplete}
           className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space font-bold hover:from-yellow-500 hover:to-magic-gold transition-all flex items-center justify-center gap-2"
         >
           <Save className="w-5 h-5" />
-          <span>שמור והמשך</span>
+          <span>Save & Continue</span>
         </button>
       </div>
     </motion.div>
@@ -572,7 +568,6 @@ export default function VoiceInterviewWizard({
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-gradient-to-br from-deep-space to-slate-900 border border-white/10 shadow-2xl p-6"
-        dir="rtl"
       >
         {/* Close button */}
         <button
