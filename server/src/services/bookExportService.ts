@@ -68,6 +68,31 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
     throw new Error('Book not found');
   }
 
+  // Handle both flat structure (from Design Studio) and nested structure (from model)
+  const coverDesignData = book.coverDesign as any;
+  const getCoverColor = () => {
+    // Flat structure from Design Studio
+    if (coverDesignData?.coverColor) return coverDesignData.coverColor;
+    // Nested structure from model
+    if (coverDesignData?.front?.backgroundColor) return coverDesignData.front.backgroundColor;
+    return '#1a1a2e';
+  };
+  const getTextColor = () => {
+    if (coverDesignData?.textColor) return coverDesignData.textColor;
+    if (coverDesignData?.front?.title?.color) return coverDesignData.front.title.color;
+    return '#ffffff';
+  };
+  const getFontFamily = () => {
+    if (coverDesignData?.fontFamily) return coverDesignData.fontFamily;
+    if (coverDesignData?.front?.title?.font) return coverDesignData.front.title.font;
+    return 'Helvetica';
+  };
+  const getImageUrl = () => {
+    if (coverDesignData?.imageUrl) return coverDesignData.imageUrl;
+    if (coverDesignData?.front?.imageUrl) return coverDesignData.front.imageUrl;
+    return undefined;
+  };
+
   const bookData: BookExportData = {
     title: book.title,
     authorName: (book.author as any)?.name || 'Unknown Author',
@@ -79,10 +104,10 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       wordCount: ch.wordCount || 0,
     })),
     coverDesign: {
-      coverColor: book.coverDesign?.front?.backgroundColor || '#1a1a2e',
-      textColor: book.coverDesign?.front?.title?.color || '#ffffff',
-      fontFamily: book.coverDesign?.front?.title?.font || 'Helvetica',
-      imageUrl: book.coverDesign?.front?.imageUrl,
+      coverColor: getCoverColor(),
+      textColor: getTextColor(),
+      fontFamily: getFontFamily(),
+      imageUrl: getImageUrl(),
     },
     statistics: book.statistics || { wordCount: 0, chapterCount: 0 },
   };
@@ -264,6 +289,29 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
     throw new Error('Book not found');
   }
 
+  // Handle both flat structure (from Design Studio) and nested structure (from model)
+  const coverDesignData = book.coverDesign as any;
+  const getCoverColor = () => {
+    if (coverDesignData?.coverColor) return coverDesignData.coverColor;
+    if (coverDesignData?.front?.backgroundColor) return coverDesignData.front.backgroundColor;
+    return '#1a1a2e';
+  };
+  const getTextColor = () => {
+    if (coverDesignData?.textColor) return coverDesignData.textColor;
+    if (coverDesignData?.front?.title?.color) return coverDesignData.front.title.color;
+    return '#ffffff';
+  };
+  const getFontFamily = () => {
+    if (coverDesignData?.fontFamily) return coverDesignData.fontFamily;
+    if (coverDesignData?.front?.title?.font) return coverDesignData.front.title.font;
+    return 'Calibri';
+  };
+  const getImageUrl = () => {
+    if (coverDesignData?.imageUrl) return coverDesignData.imageUrl;
+    if (coverDesignData?.front?.imageUrl) return coverDesignData.front.imageUrl;
+    return undefined;
+  };
+
   const bookData: BookExportData = {
     title: book.title,
     authorName: (book.author as any)?.name || 'Unknown Author',
@@ -275,10 +323,10 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
       wordCount: ch.wordCount || 0,
     })),
     coverDesign: {
-      coverColor: book.coverDesign?.front?.backgroundColor || '#1a1a2e',
-      textColor: book.coverDesign?.front?.title?.color || '#ffffff',
-      fontFamily: book.coverDesign?.front?.title?.font || 'Calibri',
-      imageUrl: book.coverDesign?.front?.imageUrl,
+      coverColor: getCoverColor(),
+      textColor: getTextColor(),
+      fontFamily: getFontFamily(),
+      imageUrl: getImageUrl(),
     },
     statistics: book.statistics || { wordCount: 0, chapterCount: 0 },
   };
