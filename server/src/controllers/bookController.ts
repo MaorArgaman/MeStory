@@ -101,11 +101,26 @@ export const createBook = async (req: AuthRequest, res: Response): Promise<void>
         },
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create book error:', error);
+
+    // Provide more helpful error messages for debugging
+    let errorMessage = 'Failed to create book';
+
+    if (error.name === 'ValidationError') {
+      // Mongoose validation error
+      const validationErrors = Object.values(error.errors).map((err: any) => err.message);
+      errorMessage = `Validation failed: ${validationErrors.join(', ')}`;
+    } else if (error.code === 11000) {
+      // Duplicate key error
+      errorMessage = 'A book with this title already exists';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
     res.status(500).json({
       success: false,
-      error: 'Failed to create book',
+      error: errorMessage,
     });
   }
 };

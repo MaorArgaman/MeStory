@@ -322,7 +322,7 @@ const ChapterSchema = new Schema<IChapter>(
     },
     content: {
       type: String,
-      required: true,
+      default: '', // Allow empty content for draft chapters
     },
     order: {
       type: Number,

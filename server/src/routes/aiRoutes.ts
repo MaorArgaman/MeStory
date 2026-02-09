@@ -13,6 +13,13 @@ import {
   getImageSuggestions,
   generateContextualImage,
 } from '../controllers/aiBookDesignController';
+import {
+  startInterview,
+  sendMessage,
+  getInterviewState,
+  completeInterview,
+  cancelInterview,
+} from '../controllers/chatInterviewController';
 import { authenticate } from '../middleware/auth';
 import rateLimit from 'express-rate-limit';
 
@@ -218,5 +225,50 @@ router.post('/suggest-images/:bookId', getImageSuggestions as any);
  * }
  */
 router.post('/generate-contextual-image', generateContextualImage as any);
+
+// ============================================
+// AI CHAT INTERVIEW ROUTES
+// ============================================
+
+/**
+ * POST /api/ai/interview/start
+ * Start a new AI-driven chat interview
+ *
+ * Body:
+ * {
+ *   genre?: string
+ *   targetAudience?: string
+ * }
+ */
+router.post('/interview/start', startInterview as any);
+
+/**
+ * POST /api/ai/interview/:id/message
+ * Send a message and get AI response
+ *
+ * Body:
+ * {
+ *   message: string
+ * }
+ */
+router.post('/interview/:id/message', sendMessage as any);
+
+/**
+ * GET /api/ai/interview/:id/state
+ * Get current interview state
+ */
+router.get('/interview/:id/state', getInterviewState as any);
+
+/**
+ * POST /api/ai/interview/:id/complete
+ * Complete interview and get summary
+ */
+router.post('/interview/:id/complete', completeInterview as any);
+
+/**
+ * DELETE /api/ai/interview/:id
+ * Cancel/delete interview
+ */
+router.delete('/interview/:id', cancelInterview as any);
 
 export default router;
