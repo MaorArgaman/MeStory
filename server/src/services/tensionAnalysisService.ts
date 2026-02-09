@@ -18,7 +18,7 @@ function getGeminiModel(): GenerativeModel {
     genAIClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   }
   if (!modelInstance) {
-    modelInstance = genAIClient.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    modelInstance = genAIClient.getGenerativeModel({ model: 'gemini-2.0-flash' });
   }
   return modelInstance;
 }
