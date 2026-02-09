@@ -15,6 +15,11 @@ import {
   RecommendedForYou,
 } from '../components/recommendations';
 import emptyDashboard from '../assets/images/empty-dashboard.png';
+// Dashboard branded images
+import dashboardIconScratch from '../assets/images/dashboard-icon-scratch.png';
+import dashboardIconInterview from '../assets/images/dashboard-icon-interview.png';
+import dashboardIconVoice from '../assets/images/dashboard-icon-voice.png';
+import dashboardIconImport from '../assets/images/dashboard-icon-import.png';
 
 interface BookItem {
   id: string;
@@ -292,131 +297,131 @@ export default function DashboardPage() {
           <p className="text-xl text-gray-400">Choose how you want to bring your story to life</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Card 1: Start from Scratch */}
           <motion.button
             onClick={() => setShowQuickCreateModal(true)}
-            whileHover={{ scale: 1.03, y: -5 }}
+            whileHover={{ scale: 1.02, y: -8 }}
             whileTap={{ scale: 0.98 }}
-            className="glass-gold rounded-2xl p-8 text-center group cursor-pointer relative overflow-hidden h-full"
+            className="glass rounded-2xl overflow-hidden group cursor-pointer relative h-[340px] border border-white/10 hover:border-cyan-500/50 transition-all duration-500"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-cyan-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            {/* Background Image */}
+            <div className="absolute inset-0">
+              <img
+                src={dashboardIconScratch}
+                alt="Start from Scratch"
+                className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
+            </div>
 
-            <div className="relative z-10">
-              <div className="w-16 h-16 mb-4 mx-auto rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 group-hover:shadow-blue-500/50 transition-all duration-300">
-                <Feather className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: "'Cinzel', serif" }}>
+            <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
+              <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
                 Start from Scratch
               </h3>
-              <p className="text-gray-300 text-sm leading-relaxed mb-4">
-                Create a blank book and dive straight into writing. Perfect for when inspiration strikes.
+              <p className="text-gray-300 text-sm leading-relaxed mb-3">
+                Create a blank book and dive straight into writing your masterpiece.
               </p>
-              <div className="text-xs text-cyan-300 font-medium">
-                Quick Start • Immediate
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/20 border border-cyan-500/30">
+                <Feather className="w-4 h-4 text-cyan-400" />
+                <span className="text-xs text-cyan-300 font-medium">Quick Start</span>
               </div>
             </div>
           </motion.button>
 
-          {/* Card 2: AI Voice Interview */}
-          <motion.button
-            onClick={() => setShowVoiceInterviewWizard(true)}
-            whileHover={{ scale: 1.03, y: -5 }}
-            whileTap={{ scale: 0.98 }}
-            className="glass-gold rounded-2xl p-8 text-center group cursor-pointer relative overflow-hidden h-full"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-magic-gold/20 to-yellow-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-            <div className="relative z-10">
-              <div className="w-16 h-16 mb-4 mx-auto rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:scale-110 group-hover:shadow-amber-500/50 transition-all duration-300">
-                <Mic className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: "'Cinzel', serif" }}>
-                Voice Interview
-              </h3>
-              <p className="text-gray-300 text-sm leading-relaxed mb-4">
-                Talk to AI about your story. AI asks questions, you answer by voice.
-              </p>
-              <div className="text-xs text-magic-gold font-medium">
-                Interactive • Voice AI
-              </div>
-            </div>
-          </motion.button>
-
-          {/* Card 3: AI Text Interview */}
+          {/* Card 2: Deep Dive Interview */}
           <motion.button
             onClick={() => setShowInterviewModal(true)}
-            whileHover={{ scale: 1.03, y: -5 }}
+            whileHover={{ scale: 1.02, y: -8 }}
             whileTap={{ scale: 0.98 }}
-            className="glass-gold rounded-2xl p-8 text-center group cursor-pointer relative overflow-hidden h-full"
+            className="glass rounded-2xl overflow-hidden group cursor-pointer relative h-[340px] border border-white/10 hover:border-indigo-500/50 transition-all duration-500"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            {/* Background Image */}
+            <div className="absolute inset-0">
+              <img
+                src={dashboardIconInterview}
+                alt="Deep Dive Interview"
+                className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
+            </div>
 
-            <div className="relative z-10">
-              <div className="w-16 h-16 mb-4 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:scale-110 group-hover:shadow-indigo-500/50 transition-all duration-300">
-                <MessageCircle className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: "'Cinzel', serif" }}>
-                Text Interview
+            <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
+              <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
+                Deep Dive Interview
               </h3>
-              <p className="text-gray-300 text-sm leading-relaxed mb-4">
-                Answer 8 questions to build your story's foundation with AI guidance.
+              <p className="text-gray-300 text-sm leading-relaxed mb-3">
+                AI-guided chat to build your story's foundation across 8 key elements.
               </p>
-              <div className="text-xs text-indigo-300 font-medium">
-                Guided • 15-20 minutes
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-500/30">
+                <MessageCircle className="w-4 h-4 text-indigo-400" />
+                <span className="text-xs text-indigo-300 font-medium">AI Chat Interview</span>
               </div>
             </div>
           </motion.button>
 
-          {/* Card 3: Import Manuscript */}
-          <motion.button
-            onClick={() => setShowUploadModal(true)}
-            whileHover={{ scale: 1.03, y: -5 }}
-            whileTap={{ scale: 0.98 }}
-            className="glass-gold rounded-2xl p-8 text-center group cursor-pointer relative overflow-hidden h-full"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-            <div className="relative z-10">
-              <div className="w-16 h-16 mb-4 mx-auto rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30 group-hover:scale-110 group-hover:shadow-purple-500/50 transition-all duration-300">
-                <FileUp className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: "'Cinzel', serif" }}>
-                Import Manuscript
-              </h3>
-              <p className="text-gray-300 text-sm leading-relaxed mb-4">
-                Upload an existing manuscript and we'll extract the text for editing.
-              </p>
-              <div className="text-xs text-purple-300 font-medium">
-                PDF, DOCX, TXT • Max 50MB
-              </div>
-            </div>
-          </motion.button>
-
-          {/* Card 4: Voice to Text */}
+          {/* Card 3: Voice Dictation */}
           <motion.button
             onClick={() => setShowVoiceModal(true)}
-            whileHover={{ scale: 1.03, y: -5 }}
+            whileHover={{ scale: 1.02, y: -8 }}
             whileTap={{ scale: 0.98 }}
-            className="glass-gold rounded-2xl p-8 text-center group cursor-pointer relative overflow-hidden h-full"
+            className="glass rounded-2xl overflow-hidden group cursor-pointer relative h-[340px] border border-white/10 hover:border-magic-gold/50 transition-all duration-500"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/20 to-teal-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            {/* Background Image */}
+            <div className="absolute inset-0">
+              <img
+                src={dashboardIconVoice}
+                alt="Voice Dictation"
+                className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
+            </div>
 
-            <div className="relative z-10">
-              <div className="w-16 h-16 mb-4 mx-auto rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-110 group-hover:shadow-emerald-500/50 transition-all duration-300">
-                <AudioLines className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: "'Cinzel', serif" }}>
-                Voice to Text
+            <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
+              <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
+                Voice Dictation
               </h3>
-              <p className="text-gray-300 text-sm leading-relaxed mb-4">
-                Upload audio and let AI transcribe it into written text automatically.
+              <p className="text-gray-300 text-sm leading-relaxed mb-3">
+                Speak your story and let AI transcribe it into text automatically.
               </p>
-              <div className="text-xs text-emerald-300 font-medium">
-                AI Transcription • Multi-Language
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-magic-gold/20 border border-magic-gold/30">
+                <Mic className="w-4 h-4 text-magic-gold" />
+                <span className="text-xs text-magic-gold font-medium">Voice to Text</span>
               </div>
             </div>
           </motion.button>
+
+          {/* Card 4: Import Manuscript */}
+          <motion.button
+            onClick={() => setShowUploadModal(true)}
+            whileHover={{ scale: 1.02, y: -8 }}
+            whileTap={{ scale: 0.98 }}
+            className="glass rounded-2xl overflow-hidden group cursor-pointer relative h-[340px] border border-white/10 hover:border-purple-500/50 transition-all duration-500"
+          >
+            {/* Background Image */}
+            <div className="absolute inset-0">
+              <img
+                src={dashboardIconImport}
+                alt="Import Manuscript"
+                className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
+            </div>
+
+            <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
+              <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
+                Import Manuscript
+              </h3>
+              <p className="text-gray-300 text-sm leading-relaxed mb-3">
+                Upload your existing manuscript in PDF, DOCX, or TXT format.
+              </p>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/20 border border-purple-500/30">
+                <FileUp className="w-4 h-4 text-purple-400" />
+                <span className="text-xs text-purple-300 font-medium">Max 50MB</span>
+              </div>
+            </div>
+          </motion.button>
+
         </div>
       </div>
 

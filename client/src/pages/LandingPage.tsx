@@ -3,19 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
   BookOpen,
-  Sparkles,
   Palette,
   TrendingUp,
   Zap,
   Globe,
-  Award,
   ArrowRight,
   Users,
   Star,
-  Feather,
 } from 'lucide-react';
 import { GlassCard, GlowingButton } from '../components/ui';
 import heroBg from '../assets/images/hero-bg.jpg';
+import logoIcon from '../assets/images/logo-icon.png';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -79,15 +77,17 @@ export default function LandingPage() {
         <div className="glass-strong rounded-2xl border border-white/10 shadow-2xl shadow-black/50 backdrop-blur-2xl">
           <div className="px-8 py-4 flex items-center justify-between">
             {/* Logo */}
-            <div className="flex items-center gap-3">
-              <motion.div
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                className="w-12 h-12 rounded-xl bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold"
-              >
-                <Sparkles className="w-7 h-7 text-deep-space" />
-              </motion.div>
-              <span className="text-3xl font-display font-bold gradient-gold">MeStory</span>
-            </div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="flex items-center cursor-pointer"
+              onClick={() => navigate('/')}
+            >
+              <img
+                src={logoIcon}
+                alt="MeStory"
+                className="h-12 w-auto object-contain drop-shadow-lg"
+              />
+            </motion.div>
 
             {/* CTA Buttons */}
             <div className="flex items-center gap-4">

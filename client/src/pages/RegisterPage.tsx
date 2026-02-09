@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Sparkles, Mail, Lock, User, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import logoIcon from '../assets/images/logo-icon.png';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -61,9 +62,13 @@ export default function RegisterPage() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 mb-4 glow"
+            className="inline-block mb-4"
           >
-            <Sparkles className="w-8 h-8 text-white" />
+            <img
+              src={logoIcon}
+              alt="MeStory"
+              className="h-20 w-auto object-contain drop-shadow-lg"
+            />
           </motion.div>
           <h1 className="text-4xl font-bold gradient-text mb-2">MeStory</h1>
           <p className="text-gray-400">Start your writing journey</p>

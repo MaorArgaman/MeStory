@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Sparkles, BookOpen, User, LogOut, ChevronDown, Crown, MessageCircle, Bell } from 'lucide-react';
+import { BookOpen, User, LogOut, ChevronDown, Crown, MessageCircle, Bell, Store } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getUnreadCount as getMessagesUnreadCount } from '../../services/messagingApi';
 import { getUnreadCount as getNotificationsUnreadCount } from '../../services/notificationApi';
 import ConversationsList from '../messaging/ConversationsList';
 import NotificationCenter from '../notifications/NotificationCenter';
+import logoIcon from '../../assets/images/logo-icon.png';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -74,14 +75,15 @@ export default function Navbar() {
             {/* Logo */}
             <Link to="/dashboard" className="flex items-center gap-3 group">
               <motion.div
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                className="w-12 h-12 rounded-xl bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold"
+                whileHover={{ scale: 1.05 }}
+                className="h-12 flex items-center"
               >
-                <Sparkles className="w-7 h-7 text-deep-space" />
+                <img
+                  src={logoIcon}
+                  alt="MeStory"
+                  className="h-12 w-auto object-contain drop-shadow-lg"
+                />
               </motion.div>
-              <span className="text-3xl font-display font-bold gradient-gold">
-                MeStory
-              </span>
             </Link>
 
             {/* Navigation Links */}
@@ -106,7 +108,7 @@ export default function Navbar() {
                     : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Sparkles className="w-5 h-5" />
+                <Store className="w-5 h-5" />
                 <span className="font-semibold">Marketplace</span>
               </Link>
 
