@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Users,
   Star,
+  Feather,
 } from 'lucide-react';
 import { GlassCard, GlowingButton } from '../components/ui';
 import heroBg from '../assets/images/hero-bg.jpg';
