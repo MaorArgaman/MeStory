@@ -1,7 +1,10 @@
 import axios, { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+// In production (same domain), use relative /api path
+// In development, use localhost
+const API_URL = import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD ? '/api' : 'http://localhost:5001/api');
 
 // Create axios instance with default config
 export const api = axios.create({
