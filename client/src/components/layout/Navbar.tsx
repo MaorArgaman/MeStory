@@ -76,13 +76,16 @@ export default function Navbar() {
             <Link to="/dashboard" className="flex items-center gap-3 group">
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="h-12 flex items-center"
+                className="h-12 flex items-center gap-3"
               >
                 <img
                   src={logoIcon}
                   alt="MeStory"
                   className="h-12 w-auto object-contain drop-shadow-lg"
                 />
+                <span className="text-2xl font-bold gradient-gold hidden sm:block" style={{ fontFamily: "'Cinzel', serif" }}>
+                  MeStory
+                </span>
               </motion.div>
             </Link>
 
