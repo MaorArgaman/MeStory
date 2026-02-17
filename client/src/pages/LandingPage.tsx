@@ -12,6 +12,7 @@ import {
   Star,
   Feather,
   Award,
+  Sparkles,
 } from 'lucide-react';
 import { GlassCard, GlowingButton } from '../components/ui';
 import heroBg from '../assets/images/hero-bg.jpg';
