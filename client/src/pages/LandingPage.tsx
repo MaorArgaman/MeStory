@@ -82,7 +82,7 @@ export default function LandingPage() {
             {/* Logo */}
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="flex items-center cursor-pointer"
+              className="flex items-center gap-3 cursor-pointer"
               onClick={() => navigate('/')}
             >
               <img
@@ -90,6 +90,9 @@ export default function LandingPage() {
                 alt="MeStory"
                 className="h-12 w-auto object-contain drop-shadow-lg"
               />
+              <span className="text-2xl font-bold gradient-gold" style={{ fontFamily: "'Cinzel', serif" }}>
+                MeStory
+              </span>
             </motion.div>
 
             {/* CTA Buttons */}
