@@ -24,10 +24,15 @@ import {
   Menu,
   Settings,
   Eye,
+  Layout,
+  Wand2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import confetti from 'canvas-confetti';
 import Book3DPreview from '../components/design/Book3DPreview';
+import TemplateGallery from '../components/design/TemplateGallery';
+import { BookTemplate, bookTemplates } from '../data/bookTemplates';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface CoverDesign {
   coverColor: string;
@@ -103,6 +108,7 @@ const COLOR_PRESETS = [
 export default function DesignStudioPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
+  const { language } = useLanguage();
   const [book, setBook] = useState<BookData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -112,6 +118,11 @@ export default function DesignStudioPage() {
   const [textColor, setTextColor] = useState('#ffffff');
   const [fontFamily, setFontFamily] = useState(FONT_OPTIONS[0].value);
   const [imageUrl, setImageUrl] = useState<string>('');
+  const [currentTemplateId, setCurrentTemplateId] = useState<string | undefined>();
+
+  // Template gallery state
+  const [showTemplateGallery, setShowTemplateGallery] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   // Publish modal state
   const [showPublishModal, setShowPublishModal] = useState(false);
@@ -201,6 +212,65 @@ export default function DesignStudioPage() {
   const applyPreset = (preset: typeof COLOR_PRESETS[0]) => {
     setCoverColor(preset.cover);
     setTextColor(preset.text);
+  };
+
+  // Handle template selection
+  const handleTemplateSelect = (template: BookTemplate) => {
+    // Apply template cover styles
+    setCoverColor(template.coverStyle.backgroundColor || template.previewGradient.split(',')[0].replace('linear-gradient(135deg, ', '').trim());
+    setTextColor(template.coverStyle.titleColor);
+    setFontFamily(`"${template.fonts.title}", serif`);
+    setCurrentTemplateId(template.id);
+    setShowTemplateGallery(false);
+    toast.success(
+      language === 'he'
+        ? `תבנית "${template.nameHe}" הוחלה!`
+        : `Template "${template.name}" applied!`
+    );
+  };
+
+  // Handle AI design generation
+  const handleAIDesign = async () => {
+    if (!book) return;
+
+    setIsGeneratingAI(true);
+    try {
+      const response = await api.post('/ai/design/complete', {
+        bookId,
+        bookTitle: book.title,
+        bookGenre: book.genre || 'fiction',
+        bookSynopsis: book.synopsis || book.description,
+        language,
+      });
+
+      if (response.data.success) {
+        const { templateId, coverImageUrl } = response.data.data;
+        const template = bookTemplates.find(t => t.id === templateId);
+
+        if (template) {
+          handleTemplateSelect(template);
+        }
+
+        if (coverImageUrl) {
+          setImageUrl(coverImageUrl);
+        }
+
+        toast.success(
+          language === 'he'
+            ? 'עיצוב AI הוחל בהצלחה!'
+            : 'AI Design applied successfully!'
+        );
+      }
+    } catch (error) {
+      console.error('AI Design failed:', error);
+      toast.error(
+        language === 'he'
+          ? 'יצירת עיצוב AI נכשלה'
+          : 'Failed to generate AI design'
+      );
+    } finally {
+      setIsGeneratingAI(false);
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -687,11 +757,56 @@ export default function DesignStudioPage() {
               </div>
             </div>
 
+            {/* Design Templates & AI */}
+            <div>
+              <h2 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                <Layout className="w-4 h-4" />
+                {language === 'he' ? 'תבניות עיצוב' : 'DESIGN TEMPLATES'}
+              </h2>
+              <div className="space-y-2">
+                {/* Template Gallery Button */}
+                <button
+                  onClick={() => setShowTemplateGallery(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 hover:from-indigo-600/30 hover:to-purple-600/30 border border-indigo-500/30 hover:border-indigo-500/50 rounded-xl text-white font-medium transition-all"
+                >
+                  <Layout className="w-4 h-4" />
+                  {language === 'he' ? 'בחר תבנית' : 'Choose Template'}
+                </button>
+
+                {/* AI Design Button */}
+                <button
+                  onClick={handleAIDesign}
+                  disabled={isGeneratingAI}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isGeneratingAI ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      {language === 'he' ? 'יוצר עיצוב...' : 'Generating...'}
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4" />
+                      {language === 'he' ? 'עיצוב AI אוטומטי' : 'AI Auto Design'}
+                    </>
+                  )}
+                </button>
+
+                {/* Current Template Indicator */}
+                {currentTemplateId && (
+                  <div className="text-xs text-center text-indigo-400 mt-1">
+                    {language === 'he' ? 'תבנית נוכחית: ' : 'Current: '}
+                    {bookTemplates.find(t => t.id === currentTemplateId)?.[language === 'he' ? 'nameHe' : 'name']}
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Color Presets */}
             <div>
               <h2 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
                 <Palette className="w-4 h-4" />
-                COLOR PRESETS
+                {language === 'he' ? 'ערכות צבע' : 'COLOR PRESETS'}
               </h2>
               <div className="grid grid-cols-3 gap-2">
                 {COLOR_PRESETS.map((preset) => (
@@ -1240,6 +1355,14 @@ export default function DesignStudioPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Template Gallery Modal */}
+      <TemplateGallery
+        isOpen={showTemplateGallery}
+        onClose={() => setShowTemplateGallery(false)}
+        onSelect={handleTemplateSelect}
+        currentTemplateId={currentTemplateId}
+      />
     </div>
   );
 }
