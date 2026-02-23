@@ -9,7 +9,7 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import passport from 'passport';
-import { connectDatabase } from './config/database';
+import { connectDatabase, getDatabaseStatus } from './config/database';
 import { apiLimiter } from './middleware/rateLimiter';
 import { configurePassport } from './config/passport';
 import { errorHandler, notFoundHandler } from './middleware/errorMiddleware';
@@ -179,11 +179,20 @@ app.use('/uploads', express.static(path.resolve(uploadDir)));
 // Health Check (no init required)
 // ============================================
 app.get('/health', (_req, res) => {
+  const dbStatus = getDatabaseStatus();
   res.status(200).json({
     status: 'ok',
     message: 'MeStory API is running',
     initialized: isInitialized,
     initError: initializationError?.message || null,
+    database: dbStatus,
+    env: {
+      hasMongoUri: !!process.env.MONGODB_URI,
+      hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
+      hasGoogleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+      nodeEnv: process.env.NODE_ENV,
+      isVercel: process.env.VERCEL === '1' || process.env.VERCEL === 'true',
+    }
   });
 });
 
