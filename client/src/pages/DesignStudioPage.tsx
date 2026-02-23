@@ -35,10 +35,28 @@ import { BookTemplate, bookTemplates } from '../data/bookTemplates';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface CoverDesign {
-  coverColor: string;
-  textColor: string;
-  fontFamily: string;
+  coverColor?: string;
+  textColor?: string;
+  fontFamily?: string;
   imageUrl?: string;
+  front?: {
+    type?: string;
+    imageUrl?: string;
+    backgroundColor?: string;
+    gradientColors?: string[];
+    title?: {
+      text: string;
+      font: string;
+      size: number;
+      color: string;
+    };
+    authorName?: {
+      text: string;
+      font: string;
+      size: number;
+      color: string;
+    };
+  };
 }
 
 interface PricingStrategy {
@@ -157,13 +175,15 @@ export default function DesignStudioPage() {
 
         // Load existing design if available
         if (bookData.coverDesign) {
-          setCoverColor(bookData.coverDesign.coverColor || '#1a1a2e');
-          setTextColor(bookData.coverDesign.textColor || '#ffffff');
-          setFontFamily(bookData.coverDesign.fontFamily || FONT_OPTIONS[0].value);
+          // Support both old format (flat) and new format (with front object)
+          const coverDesign = bookData.coverDesign;
+          setCoverColor(coverDesign.front?.backgroundColor || coverDesign.coverColor || '#1a1a2e');
+          setTextColor(coverDesign.front?.title?.color || coverDesign.textColor || '#ffffff');
+          setFontFamily(coverDesign.front?.title?.font || coverDesign.fontFamily || FONT_OPTIONS[0].value);
 
-          // Handle image URL - convert relative paths to full URLs
-          let existingImageUrl = bookData.coverDesign.imageUrl || '';
-          if (existingImageUrl && !existingImageUrl.startsWith('http')) {
+          // Handle image URL - check both new format (front.imageUrl) and old format (imageUrl)
+          let existingImageUrl = coverDesign.front?.imageUrl || coverDesign.imageUrl || '';
+          if (existingImageUrl && !existingImageUrl.startsWith('http') && !existingImageUrl.startsWith('data:')) {
             const apiUrl = import.meta.env.VITE_API_URL ||
               (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
             const serverBaseUrl = apiUrl.replace('/api', '');

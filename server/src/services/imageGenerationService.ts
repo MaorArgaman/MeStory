@@ -205,9 +205,16 @@ async function generateWithPollinations(prompt: string, aspectRatio?: string): P
       height = 512;
   }
 
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${Date.now()}`;
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${Date.now()}&nologo=true`;
 
-  // Download the image and save it locally
+  // Check if running on Vercel - if so, return direct URL (no local storage in serverless)
+  const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+  if (isVercel) {
+    console.log('🌐 Running on Vercel - returning direct Pollinations URL');
+    return imageUrl;
+  }
+
+  // Download the image and save it locally for non-Vercel environments
   try {
     const response = await axios.get(imageUrl, {
       responseType: 'arraybuffer',
@@ -295,8 +302,16 @@ async function generateWithStabilityAI(prompt: string, request: ImageGenerationR
   );
 
   if (response.data.artifacts && response.data.artifacts.length > 0) {
-    // Save the base64 image
     const imageData = response.data.artifacts[0].base64;
+
+    // Check if running on Vercel - if so, return as data URL (no local storage)
+    const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+    if (isVercel) {
+      console.log('🌐 Running on Vercel - returning base64 data URL for Stability AI image');
+      return `data:image/png;base64,${imageData}`;
+    }
+
+    // Save the base64 image locally for non-Vercel environments
     const uploadDir = process.env.UPLOAD_DIR || './uploads';
     const filename = `ai-generated-${crypto.randomUUID()}.png`;
     const filePath = path.join(uploadDir, filename);
@@ -438,6 +453,13 @@ async function generateWithPollinationsEnhanced(prompt: string, aspectRatio?: st
 
   // Use Pollinations with higher quality settings
   const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${Date.now()}&nologo=true&enhance=true`;
+
+  // Check if running on Vercel - if so, return direct URL (no local storage in serverless)
+  const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+  if (isVercel) {
+    console.log('🌐 Running on Vercel - returning direct enhanced Pollinations URL');
+    return imageUrl;
+  }
 
   try {
     const response = await axios.get(imageUrl, {

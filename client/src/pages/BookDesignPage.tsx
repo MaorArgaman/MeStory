@@ -42,6 +42,35 @@ interface BookData {
     textColor?: string;
     fontFamily?: string;
     imageUrl?: string;
+    front?: {
+      type?: string;
+      imageUrl?: string;
+      backgroundColor?: string;
+      gradientColors?: string[];
+      title?: {
+        text: string;
+        font: string;
+        size: number;
+        color: string;
+        position?: { x: number; y: number };
+      };
+      authorName?: {
+        text: string;
+        font: string;
+        size: number;
+        color: string;
+      };
+    };
+    back?: {
+      imageUrl?: string;
+      backgroundColor?: string;
+      synopsis?: string;
+    };
+    spine?: {
+      backgroundColor?: string;
+      title?: string;
+      author?: string;
+    };
   };
   pageLayout?: any;
   aiDesignState?: AIDesignState;
@@ -473,10 +502,10 @@ export default function BookDesignPage() {
                 <Book3DPreview
                   title={book.title}
                   author={book.author?.name || 'Author'}
-                  coverColor={book.coverDesign?.coverColor || '#1a1a2e'}
-                  textColor={book.coverDesign?.textColor || '#ffffff'}
-                  fontFamily={book.coverDesign?.fontFamily || 'Georgia'}
-                  imageUrl={book.coverDesign?.imageUrl}
+                  coverColor={book.coverDesign?.front?.backgroundColor || book.coverDesign?.coverColor || '#1a1a2e'}
+                  textColor={book.coverDesign?.front?.title?.color || book.coverDesign?.textColor || '#ffffff'}
+                  fontFamily={book.coverDesign?.front?.title?.font || book.coverDesign?.fontFamily || 'Georgia'}
+                  imageUrl={book.coverDesign?.front?.imageUrl || book.coverDesign?.imageUrl}
                   language={book.language}
                 />
               </div>
