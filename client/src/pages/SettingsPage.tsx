@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage, Language } from '../contexts/LanguageContext';
 import {
   User,
   DollarSign,
@@ -18,6 +19,7 @@ import {
   Lock,
   Smartphone,
   AlertTriangle,
+  Globe,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -48,8 +50,10 @@ interface EarningsData {
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth();
+  const { language, setLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [loading, setLoading] = useState(false);
+  const [languageLoading, setLanguageLoading] = useState(false);
 
   // Profile state
   const [name, setName] = useState(user?.name || '');
@@ -189,6 +193,19 @@ export default function SettingsPage() {
     toast.success('Notification preferences updated');
   };
 
+  const handleLanguageChange = async (newLanguage: Language) => {
+    try {
+      setLanguageLoading(true);
+      await setLanguage(newLanguage);
+      toast.success(newLanguage === 'he' ? 'השפה שונתה לעברית' : 'Language changed to English');
+    } catch (error) {
+      console.error('Failed to change language:', error);
+      toast.error('Failed to change language');
+    } finally {
+      setLanguageLoading(false);
+    }
+  };
+
   const tabs = [
     { id: 'profile' as Tab, label: 'Profile', icon: User },
     { id: 'security' as Tab, label: 'Security', icon: Shield },
@@ -302,6 +319,57 @@ export default function SettingsPage() {
                         className="input"
                         placeholder="https://..."
                       />
+                    </div>
+
+                    {/* Language Selection */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                        <Globe className="w-4 h-4" />
+                        System Language
+                      </label>
+                      <div className="flex gap-4">
+                        <button
+                          onClick={() => handleLanguageChange('en')}
+                          disabled={languageLoading}
+                          className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border transition-all ${
+                            language === 'en'
+                              ? 'bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border-indigo-500/50 text-white'
+                              : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          {languageLoading && language !== 'en' ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <>
+                              <span className="text-2xl">🇺🇸</span>
+                              <span className="font-medium">English</span>
+                              {language === 'en' && <Check className="w-5 h-5 text-green-400" />}
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleLanguageChange('he')}
+                          disabled={languageLoading}
+                          className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border transition-all ${
+                            language === 'he'
+                              ? 'bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border-indigo-500/50 text-white'
+                              : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          {languageLoading && language !== 'he' ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <>
+                              <span className="text-2xl">🇮🇱</span>
+                              <span className="font-medium">עברית</span>
+                              {language === 'he' && <Check className="w-5 h-5 text-green-400" />}
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        This will change the language of the entire application including AI responses
+                      </p>
                     </div>
 
                     {/* Save Button */}

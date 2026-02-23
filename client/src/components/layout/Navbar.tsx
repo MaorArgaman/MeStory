@@ -3,13 +3,12 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { BookOpen, User, LogOut, ChevronDown, Crown, MessageCircle, Bell, Store } from 'lucide-react';
+import { BookOpen, User, LogOut, ChevronDown, Crown, MessageCircle, Bell, Store, Library } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getUnreadCount as getMessagesUnreadCount } from '../../services/messagingApi';
 import { getUnreadCount as getNotificationsUnreadCount } from '../../services/notificationApi';
 import ConversationsList from '../messaging/ConversationsList';
 import NotificationCenter from '../notifications/NotificationCenter';
-import LanguageSwitcher from '../LanguageSwitcher';
 import logoIcon from '../../assets/images/logo-icon.png';
 
 export default function Navbar() {
@@ -120,8 +119,17 @@ export default function Navbar() {
                 <span className="font-semibold">{t('nav.marketplace')}</span>
               </Link>
 
-              {/* Language Switcher */}
-              <LanguageSwitcher showIcon={false} />
+              <Link
+                to="/library"
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-300 ${
+                  isActive('/library')
+                    ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30 shadow-glow-gold'
+                    : 'text-gray-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Library className="w-5 h-5" />
+                <span className="font-semibold">{t('nav.library', 'My Library')}</span>
+              </Link>
 
               {/* Notifications Button */}
               <motion.button

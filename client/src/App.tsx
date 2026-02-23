@@ -31,6 +31,9 @@ import BookDetailsPage from './pages/BookDetailsPage';
 import AuthorProfilePage from './pages/AuthorProfilePage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCheck from './components/AdminCheck';
+import LibraryPage from './pages/LibraryPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
 
 function AppContent() {
   const { loading } = useAuth();
@@ -180,6 +183,36 @@ function AppContent() {
           element={
             <Layout>
               <AuthorProfilePage />
+            </Layout>
+          }
+        />
+
+        {/* Library Route */}
+        <Route
+          path="/library"
+          element={
+            <RequireAuth>
+              <Layout>
+                <LibraryPage />
+              </Layout>
+            </RequireAuth>
+          }
+        />
+
+        {/* Legal Pages */}
+        <Route
+          path="/privacy"
+          element={
+            <Layout>
+              <PrivacyPolicyPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/terms"
+          element={
+            <Layout>
+              <TermsOfServicePage />
             </Layout>
           }
         />

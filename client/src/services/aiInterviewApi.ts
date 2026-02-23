@@ -51,11 +51,13 @@ export interface InterviewSummary {
 // Start a new interview
 export async function startInterview(
   genre?: string,
-  targetAudience?: string
+  targetAudience?: string,
+  language: 'en' | 'he' = 'en'
 ): Promise<{ state: InterviewState; firstMessage: ChatMessage }> {
   const response = await api.post('/ai/interview/start', {
     genre,
     targetAudience,
+    language,
   });
   return response.data.data;
 }
@@ -96,17 +98,37 @@ export async function cancelInterview(interviewId: string): Promise<void> {
   await api.delete(`/ai/interview/${interviewId}`);
 }
 
-// Topic display names (Hebrew)
-export const TOPIC_NAMES: Record<InterviewTopic, string> = {
-  theme: 'נושא ורעיון מרכזי',
-  characters: 'דמויות ראשיות',
-  conflict: 'קונפליקט מרכזי',
-  climax: 'שיא מתוכנן',
-  resolution: 'סיום ופתרון',
-  setting: 'סביבה ועולם',
-  keyPoints: 'נקודות מפתח בעלילה',
-  narrativeArc: 'קשת נרטיבית וטון',
+// Topic display names - bilingual
+export const TOPIC_NAMES_BY_LANG: Record<'en' | 'he', Record<InterviewTopic, string>> = {
+  en: {
+    theme: 'Theme & Central Idea',
+    characters: 'Main Characters',
+    conflict: 'Central Conflict',
+    climax: 'Planned Climax',
+    resolution: 'Resolution',
+    setting: 'Setting & World',
+    keyPoints: 'Key Plot Points',
+    narrativeArc: 'Narrative Arc & Tone',
+  },
+  he: {
+    theme: 'נושא ורעיון מרכזי',
+    characters: 'דמויות ראשיות',
+    conflict: 'קונפליקט מרכזי',
+    climax: 'שיא מתוכנן',
+    resolution: 'סיום ופתרון',
+    setting: 'סביבה ועולם',
+    keyPoints: 'נקודות מפתח בעלילה',
+    narrativeArc: 'קשת נרטיבית וטון',
+  },
 };
+
+// Default topic names (for backward compatibility)
+export const TOPIC_NAMES: Record<InterviewTopic, string> = TOPIC_NAMES_BY_LANG.en;
+
+// Get topic names for a specific language
+export function getTopicNames(language: 'en' | 'he'): Record<InterviewTopic, string> {
+  return TOPIC_NAMES_BY_LANG[language];
+}
 
 // Topic order for progress display
 export const TOPIC_ORDER: InterviewTopic[] = [

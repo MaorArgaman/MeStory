@@ -25,10 +25,11 @@ import {
   ChatMessage,
   InterviewState,
   InterviewSummary,
-  TOPIC_NAMES,
+  getTopicNames,
   TOPIC_ORDER,
 } from '../../services/aiInterviewApi';
 import { transcribeAudio } from '../../services/voiceService';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface AIInterviewChatProps {
   onClose: () => void;
@@ -43,6 +44,10 @@ export default function AIInterviewChat({
   genre,
   targetAudience,
 }: AIInterviewChatProps) {
+  // Language
+  const { language, isRTL } = useLanguage();
+  const topicNames = getTopicNames(language);
+
   // State
   const [interviewState, setInterviewState] = useState<InterviewState | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -74,7 +79,7 @@ export default function AIInterviewChat({
     setAvatarState('thinking');
 
     try {
-      const { state, firstMessage } = await startInterview(genre, targetAudience);
+      const { state, firstMessage } = await startInterview(genre, targetAudience, language);
       setInterviewState(state);
       setMessages([firstMessage]);
       setAvatarState('speaking');
@@ -253,7 +258,7 @@ export default function AIInterviewChat({
             <div>
               <h2 className="text-lg font-bold text-white">Deep Dive Interview</h2>
               <div className="flex items-center gap-2 text-sm text-gray-400">
-                <span>{TOPIC_NAMES[interviewState?.currentTopic || 'theme']}</span>
+                <span>{topicNames[interviewState?.currentTopic || 'theme']}</span>
                 <span className="text-gray-600">|</span>
                 <span>{getCurrentTopicIndex() + 1}/8</span>
               </div>
@@ -350,10 +355,10 @@ export default function AIInterviewChat({
                     <div className="flex items-center gap-2 mb-1 text-xs text-gray-400">
                       <span className="font-medium text-magic-gold">AI Interviewer</span>
                       <ChevronRight className="w-3 h-3" />
-                      <span>{TOPIC_NAMES[message.topic]}</span>
+                      <span>{topicNames[message.topic]}</span>
                     </div>
                   )}
-                  <p className="text-sm whitespace-pre-wrap break-words leading-relaxed" dir="rtl">
+                  <p className="text-sm whitespace-pre-wrap break-words leading-relaxed" dir={isRTL ? 'rtl' : 'ltr'}>
                     {message.content}
                   </p>
                 </div>
@@ -429,8 +434,8 @@ export default function AIInterviewChat({
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Type your answer..."
-                  dir="rtl"
+                  placeholder={language === 'he' ? 'הקלד את תשובתך...' : 'Type your answer...'}
+                  dir={isRTL ? 'rtl' : 'ltr'}
                   className="flex-1 bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
                   disabled={isSending}
                 />

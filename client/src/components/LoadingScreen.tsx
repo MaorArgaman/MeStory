@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Loader2, BookOpen } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import logoIcon from '../assets/images/logo-icon.png';
 
 /**
  * Loading Screen Component
@@ -17,8 +18,12 @@ export default function LoadingScreen() {
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <div className="w-24 h-24 mx-auto bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/50">
-            <BookOpen className="w-12 h-12 text-white" />
+          <div className="w-28 h-28 mx-auto rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/50">
+            <img
+              src={logoIcon}
+              alt="MeStory"
+              className="w-full h-full object-contain drop-shadow-2xl"
+            />
           </div>
         </motion.div>
 

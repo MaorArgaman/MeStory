@@ -30,6 +30,7 @@ import notificationRoutes from './routes/notificationRoutes';
 import voiceRoutes from './routes/voiceRoutes';
 import analysisRoutes from './routes/analysisRoutes';
 import templateRoutes from './routes/templateRoutes';
+import bookPurchaseRoutes from './routes/bookPurchaseRoutes';
 import { initializeDefaultTemplates } from './services/templateService';
 
 // Load environment variables
@@ -212,6 +213,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/voice', voiceRoutes);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/templates', templateRoutes);
+app.use('/api/book-purchases', bookPurchaseRoutes);
 
 // ============================================
 // Error Handling (must be last)

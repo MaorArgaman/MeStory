@@ -474,22 +474,22 @@ export default function LandingPage() {
               <h3 className="font-display font-semibold text-white mb-4">Legal</h3>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <a href="#" className="hover:text-magic-gold transition-colors">
+                  <a href="/terms" className="hover:text-magic-gold transition-colors">
                     Terms of Service
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-magic-gold transition-colors">
+                  <a href="/privacy" className="hover:text-magic-gold transition-colors">
                     Privacy Policy
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-magic-gold transition-colors">
-                    Cookie Policy
+                  <a href="/library" className="hover:text-magic-gold transition-colors">
+                    My Library
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-magic-gold transition-colors">
+                  <a href="mailto:support@mestory.com" className="hover:text-magic-gold transition-colors">
                     Contact Us
                   </a>
                 </li>
