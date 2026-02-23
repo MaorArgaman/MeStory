@@ -75,10 +75,10 @@ export default function LandingPage() {
       <motion.nav
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="fixed top-3 sm:top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl"
+        className="fixed top-0 left-0 right-0 z-50 w-full"
       >
-        <div className="glass-strong rounded-xl sm:rounded-2xl border border-white/10 shadow-2xl shadow-black/50 backdrop-blur-2xl">
-          <div className="px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between">
+        <div className="glass-strong border-b border-white/10 shadow-lg shadow-black/30 backdrop-blur-2xl">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between">
             {/* Logo */}
             <motion.div
               whileHover={{ scale: 1.05 }}
@@ -111,13 +111,12 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-        <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-magic-gold/10 blur-3xl -z-10 opacity-50" />
       </motion.nav>
 
       {/* Hero Section */}
       <motion.section
         style={{ opacity: heroOpacity, scale: heroScale }}
-        className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 pt-24 sm:pt-32"
+        className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 pt-20"
       >
         {/* Background Image */}
         <div
