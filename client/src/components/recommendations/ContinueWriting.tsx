@@ -167,7 +167,7 @@ export default function ContinueWriting({
               transition={{ delay: index * 0.1 }}
               className="min-w-[200px] flex-shrink-0"
             >
-              <Link to={`/write/${item.book._id}`}>
+              <Link to={`/editor/${item.book._id}`}>
                 <GlassCard hover glow="gold" className="p-0 overflow-hidden">
                   {/* Cover */}
                   <div

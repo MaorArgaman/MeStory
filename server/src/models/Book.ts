@@ -584,10 +584,8 @@ const CoverDesignSchema = new Schema<ICoverDesign>(
         font: String,
         size: Number,
         color: String,
-        position: {
-          x: Number,
-          y: Number,
-        },
+        position: Schema.Types.Mixed, // Can be string ('top', 'center', 'bottom') or {x, y}
+        alignment: String,
       },
       subtitle: {
         text: String,
@@ -610,10 +608,7 @@ const CoverDesignSchema = new Schema<ICoverDesign>(
       authorPhoto: String,
       barcodeArea: {
         isbn: String,
-        position: {
-          x: Number,
-          y: Number,
-        },
+        position: Schema.Types.Mixed, // Can be string or {x, y}
       },
     },
     spine: {

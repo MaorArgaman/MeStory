@@ -14,6 +14,100 @@
     "upgrade": "Upgrade Plan",
     "memorial": "Personal Stories"
   },
+  "library": {
+    "title": "My Library",
+    "subtitle": "All your books in one place - reading, writing and earnings",
+    "tabs": {
+      "purchased": "Purchased Books",
+      "my_books": "My Books",
+      "earnings": "My Earnings"
+    },
+    "empty": {
+      "purchased_title": "No purchased books yet",
+      "purchased_subtitle": "Discover amazing books in our store",
+      "my_books_title": "No books written yet",
+      "my_books_subtitle": "Start writing your first book",
+      "discover_books": "Discover Books",
+      "start_writing": "Start Writing"
+    },
+    "book": {
+      "continue_reading": "Continue Reading",
+      "continue_writing": "Continue Writing",
+      "continue_editing": "Continue Editing",
+      "details": "Details",
+      "view_in_store": "View in Store",
+      "read_now": "Read Now",
+      "you_are_author": "You are the author",
+      "published": "Published",
+      "draft": "Draft",
+      "not_read": "Not read yet",
+      "revenue": "Revenue"
+    },
+    "earnings": {
+      "total": "Total Earnings",
+      "pending": "Pending Withdrawal",
+      "withdrawn": "Withdrawn So Far",
+      "connect_paypal": "Connect PayPal",
+      "paypal_connected": "PayPal account connected",
+      "min_threshold": "Minimum withdrawal threshold",
+      "withdraw_to_paypal": "Withdraw to PayPal",
+      "processing": "Processing...",
+      "need_minimum": "Minimum required for withdrawal",
+      "connect_paypal_desc": "Connect your PayPal account to receive payments for your book sales.",
+      "you_get_50": "You get 50% of every sale!",
+      "connect": "Connect PayPal",
+      "connecting": "Connecting...",
+      "recent_sales": "Recent Sales",
+      "no_sales_yet": "No sales yet",
+      "publish_to_earn": "Publish a book to start earning!",
+      "revenue_split": "Revenue Split",
+      "to_you": "To You (Author)",
+      "to_platform": "To Platform",
+      "paypal_receipts": "PayPal issues automatic receipts for every transaction"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "tabs": {
+      "purchases": "Purchases",
+      "shares": "Shares",
+      "comments": "Comments",
+      "likes": "Likes",
+      "all": "All",
+      "unread_only": "Unread only",
+      "payments": "Payments"
+    },
+    "empty": "No notifications",
+    "empty_subtitle": "Your notifications will appear here",
+    "no_unread": "No unread notifications",
+    "actions": {
+      "mark_all_read": "Mark all as read",
+      "mark_as_read": "Mark as read",
+      "archive": "Archive",
+      "delete": "Delete",
+      "load_more": "Load more"
+    },
+    "messages": {
+      "marked_all_read": "All notifications marked as read",
+      "mark_failed": "Failed to mark notifications",
+      "delete_failed": "Failed to delete notification",
+      "archive_failed": "Failed to archive notification"
+    },
+    "time": {
+      "just_now": "Just now",
+      "minutes_ago": "{{count}}m ago",
+      "hours_ago": "{{count}}h ago",
+      "days_ago": "{{count}}d ago"
+    }
+  },
+  "messages": {
+    "loading_failed": "Failed to load library",
+    "paypal_enter_email": "Please enter your PayPal email",
+    "paypal_connected_success": "PayPal account connected successfully!",
+    "paypal_connect_failed": "Failed to connect PayPal",
+    "payout_success": "Payment sent successfully!",
+    "payout_failed": "Failed to request payment"
+  },
   "buttons": {
     "save": "Save",
     "cancel": "Cancel",
@@ -71,5 +165,117 @@
     "terms": "Terms of Service",
     "privacy": "Privacy Policy",
     "contact": "Contact Us"
+  },
+  "dashboard": {
+    "title": "Creation Hub",
+    "welcome": "Welcome back, {{name}}! You have {{credits}} credits remaining.",
+    "hero": {
+      "title": "Begin Your Next Masterpiece",
+      "subtitle": "Choose how you want to bring your story to life"
+    },
+    "cards": {
+      "scratch": {
+        "title": "Start from Scratch",
+        "description": "Create a blank book and dive straight into writing your masterpiece.",
+        "badge": "Quick Start"
+      },
+      "interview": {
+        "title": "Deep Dive Interview",
+        "description": "AI-guided chat to build your story's foundation across 8 key elements.",
+        "badge": "AI Chat Interview"
+      },
+      "voice": {
+        "title": "Voice Dictation",
+        "description": "Speak your story and let AI transcribe it into text automatically.",
+        "badge": "Voice to Text"
+      },
+      "import": {
+        "title": "Import Manuscript",
+        "description": "Upload your existing manuscript in PDF, DOCX, or TXT format.",
+        "badge": "Max 50MB"
+      }
+    },
+    "sections": {
+      "continue_reading": "Continue Reading",
+      "continue_writing": "Continue Writing",
+      "recommended": "Recommended For You",
+      "your_library": "Your Library",
+      "your_library_subtitle": "Your ongoing projects and completed works"
+    },
+    "empty": {
+      "title": "Your Masterpiece Awaits",
+      "subtitle": "Begin your storytelling journey today. Every great story starts with a single word.",
+      "create_first": "Create Your First Book"
+    },
+    "book_card": {
+      "create_new": "Create New Book",
+      "start_writing": "Start writing your story",
+      "words": "words",
+      "chapters": "chapters",
+      "write": "Write",
+      "design": "Design",
+      "export": "Export",
+      "publish": "Publish"
+    },
+    "modals": {
+      "upload": {
+        "title": "Upload Manuscript",
+        "description": "Upload your existing manuscript and we'll extract the text for you to continue editing.",
+        "button": "Choose File",
+        "processing": "Processing...",
+        "formats": "Supported formats: PDF, DOCX, TXT • Max size: 50MB"
+      },
+      "quick_create": {
+        "title": "Start from Scratch",
+        "description": "Create a blank book with just a title and genre. Perfect for when you're ready to dive straight into writing.",
+        "book_title": "Book Title *",
+        "book_title_placeholder": "Enter your book title",
+        "genre": "Genre",
+        "button": "Create & Start Writing",
+        "creating": "Creating..."
+      },
+      "voice": {
+        "title": "Voice to Text",
+        "description": "Upload an audio file of your story and we'll transcribe it into text using AI. Supports English, Hebrew, and many other languages.",
+        "button": "Choose Audio File",
+        "transcribing": "Transcribing...",
+        "formats": "Supported formats:",
+        "formats_list": "MP3, WAV, M4A, MP4, MPEG, MPGA, WEBM",
+        "max_size": "Max size: 25MB"
+      }
+    },
+    "genres": {
+      "fiction": "Fiction",
+      "fantasy": "Fantasy",
+      "science_fiction": "Science Fiction",
+      "mystery": "Mystery",
+      "thriller": "Thriller",
+      "romance": "Romance",
+      "horror": "Horror",
+      "adventure": "Adventure",
+      "historical_fiction": "Historical Fiction",
+      "non_fiction": "Non-Fiction",
+      "biography": "Biography",
+      "self_help": "Self-Help",
+      "other": "Other"
+    },
+    "messages": {
+      "generating_pdf": "Generating PDF...",
+      "export_success": "File exported successfully!",
+      "export_failed": "Export failed",
+      "upload_success": "Manuscript uploaded successfully!",
+      "upload_failed": "Failed to upload manuscript",
+      "book_created": "Book created! Start writing...",
+      "create_failed": "Failed to create book",
+      "audio_transcribed": "Audio transcribed successfully!",
+      "audio_failed": "Failed to transcribe audio",
+      "transcribing_audio": "Transcribing audio with AI...",
+      "book_with_interview": "Book created with interview context!",
+      "enter_title": "Please enter a book title",
+      "invalid_file_type": "Please upload a PDF, DOCX, or TXT file",
+      "file_too_large": "File size must be less than 50MB",
+      "invalid_audio_type": "Please upload a valid audio file (MP3, WAV, M4A)",
+      "audio_too_large": "Audio file size must be less than 25MB"
+    }
   }
 }

@@ -14,6 +14,100 @@
     "upgrade": "שדרוג מנוי",
     "memorial": "סיפורים אישיים"
   },
+  "library": {
+    "title": "הספרייה שלי",
+    "subtitle": "כל הספרים שלך במקום אחד - קריאה, כתיבה והכנסות",
+    "tabs": {
+      "purchased": "ספרים שרכשתי",
+      "my_books": "הספרים שלי",
+      "earnings": "הרווחים שלי"
+    },
+    "empty": {
+      "purchased_title": "עדיין לא רכשת ספרים",
+      "purchased_subtitle": "גלה ספרים מדהימים בחנות שלנו",
+      "my_books_title": "עדיין לא כתבת ספרים",
+      "my_books_subtitle": "התחל לכתוב את הספר הראשון שלך",
+      "discover_books": "גלה ספרים",
+      "start_writing": "התחל לכתוב"
+    },
+    "book": {
+      "continue_reading": "המשך קריאה",
+      "continue_writing": "המשך כתיבה",
+      "continue_editing": "המשך עריכה",
+      "details": "פרטים",
+      "view_in_store": "צפייה בחנות",
+      "read_now": "קרא עכשיו",
+      "you_are_author": "אתה המחבר",
+      "published": "מפורסם",
+      "draft": "טיוטה",
+      "not_read": "לא נקרא",
+      "revenue": "הכנסות"
+    },
+    "earnings": {
+      "total": "סה\"כ הכנסות",
+      "pending": "ממתין למשיכה",
+      "withdrawn": "נמשך עד כה",
+      "connect_paypal": "חיבור PayPal",
+      "paypal_connected": "חשבון PayPal מחובר",
+      "min_threshold": "סף משיכה מינימלי",
+      "withdraw_to_paypal": "משוך לPayPal",
+      "processing": "מעבד...",
+      "need_minimum": "נדרש מינימום למשיכה",
+      "connect_paypal_desc": "חבר את חשבון ה-PayPal שלך כדי לקבל תשלומים על מכירות הספרים שלך.",
+      "you_get_50": "אתה מקבל 50% מכל מכירה!",
+      "connect": "חבר PayPal",
+      "connecting": "מחבר...",
+      "recent_sales": "מכירות אחרונות",
+      "no_sales_yet": "אין מכירות עדיין",
+      "publish_to_earn": "פרסם ספר כדי להתחיל להרוויח!",
+      "revenue_split": "חלוקת הכנסות",
+      "to_you": "לך (המחבר)",
+      "to_platform": "לפלטפורמה",
+      "paypal_receipts": "PayPal מנפיק קבלות אוטומטית לכל עסקה"
+    }
+  },
+  "notifications": {
+    "title": "התראות",
+    "tabs": {
+      "purchases": "רכישות",
+      "shares": "שיתופים",
+      "comments": "תגובות",
+      "likes": "לייקים",
+      "all": "הכל",
+      "unread_only": "לא נקראו בלבד",
+      "payments": "תשלומים"
+    },
+    "empty": "אין התראות",
+    "empty_subtitle": "ההתראות שלך יופיעו כאן",
+    "no_unread": "אין התראות שלא נקראו",
+    "actions": {
+      "mark_all_read": "סמן הכל כנקרא",
+      "mark_as_read": "סמן כנקרא",
+      "archive": "העבר לארכיון",
+      "delete": "מחיקה",
+      "load_more": "טען עוד"
+    },
+    "messages": {
+      "marked_all_read": "כל ההתראות סומנו כנקראו",
+      "mark_failed": "נכשל בסימון ההתראות",
+      "delete_failed": "נכשל במחיקת ההתראה",
+      "archive_failed": "נכשל בהעברה לארכיון"
+    },
+    "time": {
+      "just_now": "עכשיו",
+      "minutes_ago": "לפני {{count}} דקות",
+      "hours_ago": "לפני {{count}} שעות",
+      "days_ago": "לפני {{count}} ימים"
+    }
+  },
+  "messages": {
+    "loading_failed": "נכשל בטעינת הספרייה",
+    "paypal_enter_email": "נא להזין כתובת אימייל של PayPal",
+    "paypal_connected_success": "חשבון PayPal חובר בהצלחה!",
+    "paypal_connect_failed": "נכשל בחיבור PayPal",
+    "payout_success": "תשלום נשלח בהצלחה!",
+    "payout_failed": "נכשל בבקשת התשלום"
+  },
   "buttons": {
     "save": "שמירה",
     "cancel": "ביטול",
@@ -71,5 +165,117 @@
     "terms": "תנאי שימוש",
     "privacy": "מדיניות פרטיות",
     "contact": "צור קשר"
+  },
+  "dashboard": {
+    "title": "מרכז היצירה",
+    "welcome": "ברוך הבא, {{name}}! יש לך {{credits}} קרדיטים.",
+    "hero": {
+      "title": "התחל את יצירת המופת הבאה שלך",
+      "subtitle": "בחר איך אתה רוצה להפיח חיים בסיפור שלך"
+    },
+    "cards": {
+      "scratch": {
+        "title": "התחל מאפס",
+        "description": "צור ספר ריק וצלול ישר לכתיבת יצירת המופת שלך.",
+        "badge": "התחלה מהירה"
+      },
+      "interview": {
+        "title": "ראיון מעמיק",
+        "description": "צ'אט מונחה AI לבניית יסודות הסיפור שלך ב-8 מרכיבים מרכזיים.",
+        "badge": "ראיון AI"
+      },
+      "voice": {
+        "title": "הקלטה קולית",
+        "description": "ספר את הסיפור שלך וה-AI יתמלל אותו לטקסט אוטומטית.",
+        "badge": "קול לטקסט"
+      },
+      "import": {
+        "title": "ייבוא כתב יד",
+        "description": "העלה את כתב היד הקיים שלך בפורמט PDF, DOCX או TXT.",
+        "badge": "עד 50MB"
+      }
+    },
+    "sections": {
+      "continue_reading": "המשך קריאה",
+      "continue_writing": "המשך כתיבה",
+      "recommended": "מומלץ עבורך",
+      "your_library": "הספרייה שלך",
+      "your_library_subtitle": "הפרויקטים המתמשכים והעבודות שהושלמו"
+    },
+    "empty": {
+      "title": "יצירת המופת שלך מחכה",
+      "subtitle": "התחל את מסע הסיפור שלך היום. כל סיפור גדול מתחיל במילה אחת.",
+      "create_first": "צור את הספר הראשון שלך"
+    },
+    "book_card": {
+      "create_new": "צור ספר חדש",
+      "start_writing": "התחל לכתוב את הסיפור שלך",
+      "words": "מילים",
+      "chapters": "פרקים",
+      "write": "כתיבה",
+      "design": "עיצוב",
+      "export": "ייצוא",
+      "publish": "פרסום"
+    },
+    "modals": {
+      "upload": {
+        "title": "העלאת כתב יד",
+        "description": "העלה את כתב היד הקיים שלך ואנחנו נחלץ את הטקסט כדי שתוכל להמשיך לערוך.",
+        "button": "בחר קובץ",
+        "processing": "מעבד...",
+        "formats": "פורמטים נתמכים: PDF, DOCX, TXT • גודל מקסימלי: 50MB"
+      },
+      "quick_create": {
+        "title": "התחל מאפס",
+        "description": "צור ספר ריק עם כותרת וז'אנר בלבד. מושלם כשאתה מוכן לצלול ישר לכתיבה.",
+        "book_title": "שם הספר *",
+        "book_title_placeholder": "הזן את שם הספר",
+        "genre": "ז'אנר",
+        "button": "צור והתחל לכתוב",
+        "creating": "יוצר..."
+      },
+      "voice": {
+        "title": "קול לטקסט",
+        "description": "העלה קובץ אודיו של הסיפור שלך ואנחנו נתמלל אותו לטקסט באמצעות AI. תומך באנגלית, עברית ושפות רבות אחרות.",
+        "button": "בחר קובץ אודיו",
+        "transcribing": "מתמלל...",
+        "formats": "פורמטים נתמכים:",
+        "formats_list": "MP3, WAV, M4A, MP4, MPEG, MPGA, WEBM",
+        "max_size": "גודל מקסימלי: 25MB"
+      }
+    },
+    "genres": {
+      "fiction": "בדיון",
+      "fantasy": "פנטזיה",
+      "science_fiction": "מדע בדיוני",
+      "mystery": "מסתורין",
+      "thriller": "מותחן",
+      "romance": "רומנטיקה",
+      "horror": "אימה",
+      "adventure": "הרפתקאות",
+      "historical_fiction": "בדיון היסטורי",
+      "non_fiction": "עיון",
+      "biography": "ביוגרפיה",
+      "self_help": "עזרה עצמית",
+      "other": "אחר"
+    },
+    "messages": {
+      "generating_pdf": "מייצר PDF...",
+      "export_success": "הקובץ יוצא בהצלחה!",
+      "export_failed": "הייצוא נכשל",
+      "upload_success": "כתב היד הועלה בהצלחה!",
+      "upload_failed": "העלאת כתב היד נכשלה",
+      "book_created": "הספר נוצר! התחל לכתוב...",
+      "create_failed": "יצירת הספר נכשלה",
+      "audio_transcribed": "האודיו תומלל בהצלחה!",
+      "audio_failed": "תמלול האודיו נכשל",
+      "transcribing_audio": "מתמלל אודיו עם AI...",
+      "book_with_interview": "הספר נוצר עם הקשר הראיון!",
+      "enter_title": "אנא הזן שם לספר",
+      "invalid_file_type": "אנא העלה קובץ PDF, DOCX או TXT",
+      "file_too_large": "גודל הקובץ חייב להיות פחות מ-50MB",
+      "invalid_audio_type": "אנא העלה קובץ אודיו תקין (MP3, WAV, M4A)",
+      "audio_too_large": "גודל קובץ האודיו חייב להיות פחות מ-25MB"
+    }
   }
 }

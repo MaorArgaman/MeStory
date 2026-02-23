@@ -142,7 +142,16 @@ export default function DesignStudioPage() {
           setCoverColor(bookData.coverDesign.coverColor || '#1a1a2e');
           setTextColor(bookData.coverDesign.textColor || '#ffffff');
           setFontFamily(bookData.coverDesign.fontFamily || FONT_OPTIONS[0].value);
-          setImageUrl(bookData.coverDesign.imageUrl || '');
+
+          // Handle image URL - convert relative paths to full URLs
+          let existingImageUrl = bookData.coverDesign.imageUrl || '';
+          if (existingImageUrl && !existingImageUrl.startsWith('http')) {
+            const apiUrl = import.meta.env.VITE_API_URL ||
+              (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
+            const serverBaseUrl = apiUrl.replace('/api', '');
+            existingImageUrl = `${serverBaseUrl}${existingImageUrl}`;
+          }
+          setImageUrl(existingImageUrl);
         }
       }
     } catch (error) {
@@ -216,12 +225,16 @@ export default function DesignStudioPage() {
       });
 
       if (response.data.success) {
-        // Use relative URL or construct from API base URL
-        const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
+        // Construct the full URL from the API base URL
+        // Remove /api from the API URL to get the server base URL
+        const apiUrl = import.meta.env.VITE_API_URL ||
+          (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
+        const serverBaseUrl = apiUrl.replace('/api', '');
         const imageUrlPath = response.data.data.imageUrl;
         // If imageUrl is already absolute (starts with http), use it directly
-        // Otherwise, construct the full URL
-        setImageUrl(imageUrlPath.startsWith('http') ? imageUrlPath : `${baseUrl}${imageUrlPath}`);
+        // Otherwise, construct the full URL with the server base
+        const fullImageUrl = imageUrlPath.startsWith('http') ? imageUrlPath : `${serverBaseUrl}${imageUrlPath}`;
+        setImageUrl(fullImageUrl);
         toast.success('Image uploaded successfully!', { id: 'upload' });
       }
     } catch (error: any) {

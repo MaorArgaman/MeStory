@@ -262,6 +262,57 @@ export default function SettingsPage() {
                   <h2 className="text-2xl font-bold mb-6">Profile Information</h2>
 
                   <div className="space-y-6">
+                    {/* Language Selection - First for visibility */}
+                    <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-600/10 to-purple-600/10 border border-indigo-500/30">
+                      <label className="block text-sm font-medium mb-3 flex items-center gap-2">
+                        <Globe className="w-4 h-4 text-indigo-400" />
+                        System Language
+                      </label>
+                      <div className="flex gap-4">
+                        <button
+                          onClick={() => handleLanguageChange('en')}
+                          disabled={languageLoading}
+                          className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border transition-all ${
+                            language === 'en'
+                              ? 'bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border-indigo-500/50 text-white'
+                              : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          {languageLoading && language !== 'en' ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <>
+                              <span className="text-2xl">🇺🇸</span>
+                              <span className="font-medium">English</span>
+                              {language === 'en' && <Check className="w-5 h-5 text-green-400" />}
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleLanguageChange('he')}
+                          disabled={languageLoading}
+                          className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border transition-all ${
+                            language === 'he'
+                              ? 'bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border-indigo-500/50 text-white'
+                              : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          {languageLoading && language !== 'he' ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <>
+                              <span className="text-2xl">🇮🇱</span>
+                              <span className="font-medium">עברית</span>
+                              {language === 'he' && <Check className="w-5 h-5 text-green-400" />}
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        This will change the language of the entire application including AI responses
+                      </p>
+                    </div>
+
                     {/* Name */}
                     <div>
                       <label className="block text-sm font-medium mb-2 flex items-center gap-2">
@@ -319,57 +370,6 @@ export default function SettingsPage() {
                         className="input"
                         placeholder="https://..."
                       />
-                    </div>
-
-                    {/* Language Selection */}
-                    <div>
-                      <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                        <Globe className="w-4 h-4" />
-                        System Language
-                      </label>
-                      <div className="flex gap-4">
-                        <button
-                          onClick={() => handleLanguageChange('en')}
-                          disabled={languageLoading}
-                          className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border transition-all ${
-                            language === 'en'
-                              ? 'bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border-indigo-500/50 text-white'
-                              : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
-                          }`}
-                        >
-                          {languageLoading && language !== 'en' ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                          ) : (
-                            <>
-                              <span className="text-2xl">🇺🇸</span>
-                              <span className="font-medium">English</span>
-                              {language === 'en' && <Check className="w-5 h-5 text-green-400" />}
-                            </>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleLanguageChange('he')}
-                          disabled={languageLoading}
-                          className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border transition-all ${
-                            language === 'he'
-                              ? 'bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border-indigo-500/50 text-white'
-                              : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
-                          }`}
-                        >
-                          {languageLoading && language !== 'he' ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                          ) : (
-                            <>
-                              <span className="text-2xl">🇮🇱</span>
-                              <span className="font-medium">עברית</span>
-                              {language === 'he' && <Check className="w-5 h-5 text-green-400" />}
-                            </>
-                          )}
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        This will change the language of the entire application including AI responses
-                      </p>
                     </div>
 
                     {/* Save Button */}

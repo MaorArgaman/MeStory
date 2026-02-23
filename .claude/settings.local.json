@@ -24,7 +24,8 @@
       "Bash(git push:*)",
       "Bash(vercel --prod:*)",
       "Bash(vercel env ls:*)",
-      "WebFetch(domain:client-livid-tau.vercel.app)"
+      "WebFetch(domain:client-livid-tau.vercel.app)",
+      "Bash(powershell -Command:*)"
     ]
   }
 }

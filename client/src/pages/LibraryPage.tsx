@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import {
   BookOpen,
@@ -87,6 +88,7 @@ type TabType = 'purchased' | 'my-books' | 'earnings';
 
 export default function LibraryPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
   const [activeTab, setActiveTab] = useState<TabType>('purchased');
   const [purchasedBooks, setPurchasedBooks] = useState<BookItem[]>([]);
   const [ownBooks, setOwnBooks] = useState<BookItem[]>([]);
@@ -113,7 +115,7 @@ export default function LibraryPage() {
       }
     } catch (error) {
       console.error('Failed to load library:', error);
-      toast.error('נכשל בטעינת הספרייה');
+      toast.error(t('messages.loading_failed'));
     } finally {
       setLoading(false);
     }
@@ -132,7 +134,7 @@ export default function LibraryPage() {
 
   const handleConnectPayPal = async () => {
     if (!paypalEmail) {
-      toast.error('נא להזין כתובת אימייל של PayPal');
+      toast.error(t('messages.paypal_enter_email'));
       return;
     }
 
@@ -143,12 +145,12 @@ export default function LibraryPage() {
       });
 
       if (response.data.success) {
-        toast.success('חשבון PayPal חובר בהצלחה!');
+        toast.success(t('messages.paypal_connected_success'));
         loadEarnings();
         setPaypalEmail('');
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'נכשל בחיבור PayPal');
+      toast.error(error.response?.data?.error || t('messages.paypal_connect_failed'));
     } finally {
       setConnectingPayPal(false);
     }
@@ -160,11 +162,11 @@ export default function LibraryPage() {
       const response = await api.post('/book-purchases/request-payout');
 
       if (response.data.success) {
-        toast.success(`תשלום של $${response.data.data.amount?.toFixed(2)} נשלח בהצלחה!`);
+        toast.success(`${t('messages.payout_success')} $${response.data.data.amount?.toFixed(2)}`);
         loadEarnings();
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'נכשל בבקשת התשלום');
+      toast.error(error.response?.data?.error || t('messages.payout_failed'));
     } finally {
       setRequestingPayout(false);
     }
@@ -214,19 +216,19 @@ export default function LibraryPage() {
   const tabs = [
     {
       id: 'purchased' as TabType,
-      label: 'ספרים שרכשתי',
+      label: t('library.tabs.purchased'),
       icon: ShoppingBag,
       count: purchasedBooks.length,
     },
     {
       id: 'my-books' as TabType,
-      label: 'הספרים שלי',
+      label: t('library.tabs.my_books'),
       icon: PenTool,
       count: ownBooks.length,
     },
     {
       id: 'earnings' as TabType,
-      label: 'הרווחים שלי',
+      label: t('library.tabs.earnings'),
       icon: Wallet,
       count: null,
     },
@@ -267,7 +269,7 @@ export default function LibraryPage() {
                   : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40'
               }`}
             >
-              {book.publishingStatus.status === 'published' ? 'מפורסם' : 'טיוטה'}
+              {book.publishingStatus.status === 'published' ? t('library.book.published') : t('library.book.draft')}
             </div>
           </div>
         )}
@@ -321,7 +323,7 @@ export default function LibraryPage() {
                         onClick={() => navigate(`/reader/${book._id}`)}
                       >
                         <BookOpen className="w-5 h-5" />
-                        המשך קריאה
+                        {t('library.book.continue_reading')}
                       </GlowingButton>
                       <GlowingButton
                         variant="primary"
@@ -329,7 +331,7 @@ export default function LibraryPage() {
                         onClick={() => navigate(`/book/${book._id}`)}
                       >
                         <Eye className="w-4 h-4" />
-                        פרטים
+                        {t('library.book.details')}
                       </GlowingButton>
                     </>
                   ) : (
@@ -340,7 +342,7 @@ export default function LibraryPage() {
                         onClick={() => navigate(`/book/${book._id}/write`)}
                       >
                         <PenTool className="w-5 h-5" />
-                        המשך כתיבה
+                        {t('library.book.continue_writing')}
                       </GlowingButton>
                       {book.publishingStatus.status === 'published' && (
                         <GlowingButton
@@ -349,7 +351,7 @@ export default function LibraryPage() {
                           onClick={() => navigate(`/book/${book._id}`)}
                         >
                           <Eye className="w-4 h-4" />
-                          צפייה בחנות
+                          {t('library.book.view_in_store')}
                         </GlowingButton>
                       )}
                     </>
@@ -365,7 +367,7 @@ export default function LibraryPage() {
           {/* Author */}
           <div className="flex items-center justify-end gap-2 text-sm text-gray-400 mb-2">
             <span className="truncate">
-              {type === 'purchased' ? book.author?.name : 'אתה המחבר'}
+              {type === 'purchased' ? book.author?.name : t('library.book.you_are_author')}
             </span>
             <User className="w-4 h-4" />
           </div>
@@ -392,7 +394,7 @@ export default function LibraryPage() {
               <>
                 <span className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  {book.lastRead ? formatDate(book.lastRead) : 'לא נקרא'}
+                  {book.lastRead ? formatDate(book.lastRead) : t('library.book.not_read')}
                 </span>
                 {book.readingProgress !== undefined && (
                   <span className="flex items-center gap-1 text-magic-gold">
@@ -409,11 +411,11 @@ export default function LibraryPage() {
             {type === 'own' && book.publishingStatus.status === 'published' ? (
               <>
                 <span className="text-sm text-gray-400">
-                  הכנסות: ${(book.statistics.revenue || 0).toFixed(2)}
+                  {t('library.book.revenue')}: ${(book.statistics.revenue || 0).toFixed(2)}
                 </span>
                 {book.publishingStatus.isFree ? (
                   <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-xs">
-                    חינם
+                    {t('user.free')}
                   </span>
                 ) : (
                   <span className="text-magic-gold font-bold">
@@ -430,7 +432,7 @@ export default function LibraryPage() {
                   onClick={() => navigate(`/reader/${book._id}`)}
                 >
                   <BookOpen className="w-4 h-4" />
-                  קרא עכשיו
+                  {t('library.book.read_now')}
                 </GlowingButton>
               </div>
             ) : (
@@ -441,7 +443,7 @@ export default function LibraryPage() {
                 onClick={() => navigate(`/book/${book._id}/write`)}
               >
                 <PenTool className="w-4 h-4" />
-                המשך עריכה
+                {t('library.book.continue_editing')}
               </GlowingButton>
             )}
           </div>
@@ -461,7 +463,7 @@ export default function LibraryPage() {
           <h3 className="text-2xl font-bold text-white mb-1">
             ${earnings?.totalEarned?.toFixed(2) || '0.00'}
           </h3>
-          <p className="text-gray-400 text-sm">סה"כ הכנסות</p>
+          <p className="text-gray-400 text-sm">{t('library.earnings.total')}</p>
         </GlassCard>
 
         <GlassCard className="text-center p-6">
@@ -471,7 +473,7 @@ export default function LibraryPage() {
           <h3 className="text-2xl font-bold text-white mb-1">
             ${earnings?.pendingPayout?.toFixed(2) || '0.00'}
           </h3>
-          <p className="text-gray-400 text-sm">ממתין למשיכה</p>
+          <p className="text-gray-400 text-sm">{t('library.earnings.pending')}</p>
         </GlassCard>
 
         <GlassCard className="text-center p-6">
@@ -481,24 +483,24 @@ export default function LibraryPage() {
           <h3 className="text-2xl font-bold text-white mb-1">
             ${earnings?.withdrawn?.toFixed(2) || '0.00'}
           </h3>
-          <p className="text-gray-400 text-sm">נמשך עד כה</p>
+          <p className="text-gray-400 text-sm">{t('library.earnings.withdrawn')}</p>
         </GlassCard>
       </div>
 
       {/* PayPal Connection */}
       <GlassCard className="p-6">
         <h3 className="text-xl font-bold text-white mb-4 text-right flex items-center justify-end gap-2">
-          <span>חיבור PayPal</span>
+          <span>{t('library.earnings.connect_paypal')}</span>
           <CreditCard className="w-5 h-5 text-magic-gold" />
         </h3>
 
         {earnings?.hasPayPalConnected ? (
           <div className="text-right">
             <p className="text-green-400 mb-2">
-              ✓ חשבון PayPal מחובר: {earnings.paypalEmail}
+              ✓ {t('library.earnings.paypal_connected')}: {earnings.paypalEmail}
             </p>
             <p className="text-gray-400 text-sm">
-              סף משיכה מינימלי: ${earnings?.payoutThreshold}
+              {t('library.earnings.min_threshold')}: ${earnings?.payoutThreshold}
             </p>
 
             {earnings.canRequestPayout ? (
@@ -512,29 +514,29 @@ export default function LibraryPage() {
                   {requestingPayout ? (
                     <span className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      מעבד...
+                      {t('library.earnings.processing')}
                     </span>
                   ) : (
                     <>
                       <Wallet className="w-5 h-5" />
-                      משוך ${earnings.pendingPayout?.toFixed(2)} לPayPal
+                      {t('library.earnings.withdraw_to_paypal')} ${earnings.pendingPayout?.toFixed(2)}
                     </>
                   )}
                 </GlowingButton>
               </div>
             ) : (
               <p className="text-yellow-400 mt-4 text-sm">
-                נדרש מינימום ${earnings?.payoutThreshold} למשיכה
+                {t('library.earnings.need_minimum')} ${earnings?.payoutThreshold}
               </p>
             )}
           </div>
         ) : (
           <div className="space-y-4 text-right">
             <p className="text-gray-400">
-              חבר את חשבון ה-PayPal שלך כדי לקבל תשלומים על מכירות הספרים שלך.
+              {t('library.earnings.connect_paypal_desc')}
               <br />
               <span className="text-magic-gold">
-                אתה מקבל 50% מכל מכירה!
+                {t('library.earnings.you_get_50')}
               </span>
             </p>
 
@@ -552,7 +554,7 @@ export default function LibraryPage() {
                 onClick={handleConnectPayPal}
                 disabled={connectingPayPal}
               >
-                {connectingPayPal ? 'מחבר...' : 'חבר PayPal'}
+                {connectingPayPal ? t('library.earnings.connecting') : t('library.earnings.connect')}
               </GlowingButton>
             </div>
           </div>
@@ -562,7 +564,7 @@ export default function LibraryPage() {
       {/* Recent Sales */}
       <GlassCard className="p-6">
         <h3 className="text-xl font-bold text-white mb-4 text-right flex items-center justify-end gap-2">
-          <span>מכירות אחרונות</span>
+          <span>{t('library.earnings.recent_sales')}</span>
           <TrendingUp className="w-5 h-5 text-green-400" />
         </h3>
 
@@ -579,7 +581,7 @@ export default function LibraryPage() {
                 <div className="text-right">
                   <p className="text-white font-medium">{sale.bookTitle}</p>
                   <p className="text-gray-400 text-sm">
-                    {new Date(sale.date).toLocaleDateString('he-IL')}
+                    {new Date(sale.date).toLocaleDateString()}
                   </p>
                 </div>
               </div>
@@ -588,32 +590,32 @@ export default function LibraryPage() {
         ) : (
           <div className="text-center py-8">
             <ShoppingBag className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400">אין מכירות עדיין</p>
-            <p className="text-gray-500 text-sm">פרסם ספר כדי להתחיל להרוויח!</p>
+            <p className="text-gray-400">{t('library.earnings.no_sales_yet')}</p>
+            <p className="text-gray-500 text-sm">{t('library.earnings.publish_to_earn')}</p>
           </div>
         )}
       </GlassCard>
 
       {/* Revenue Split Info */}
       <GlassCard className="p-6">
-        <h3 className="text-xl font-bold text-white mb-4 text-right">חלוקת הכנסות</h3>
+        <h3 className="text-xl font-bold text-white mb-4 text-right">{t('library.earnings.revenue_split')}</h3>
         <div className="flex items-center justify-center gap-8">
           <div className="text-center">
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center mb-2">
               <span className="text-2xl font-bold text-white">50%</span>
             </div>
-            <p className="text-white font-medium">לך (המחבר)</p>
+            <p className="text-white font-medium">{t('library.earnings.to_you')}</p>
           </div>
           <div className="text-4xl text-gray-600">+</div>
           <div className="text-center">
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cosmic-purple to-purple-600 flex items-center justify-center mb-2">
               <span className="text-2xl font-bold text-white">50%</span>
             </div>
-            <p className="text-white font-medium">לפלטפורמה</p>
+            <p className="text-white font-medium">{t('library.earnings.to_platform')}</p>
           </div>
         </div>
         <p className="text-center text-gray-400 text-sm mt-4">
-          PayPal מנפיק קבלות אוטומטית לכל עסקה
+          {t('library.earnings.paypal_receipts')}
         </p>
       </GlassCard>
     </div>
@@ -639,11 +641,11 @@ export default function LibraryPage() {
           >
             <Library className="w-10 h-10 text-magic-gold" />
             <h1 className="text-5xl font-display font-bold gradient-gold">
-              הספרייה שלי
+              {t('library.title')}
             </h1>
           </motion.div>
           <p className="text-xl text-gray-400">
-            כל הספרים שלך במקום אחד - קריאה, כתיבה והכנסות
+            {t('library.subtitle')}
           </p>
         </div>
       </div>
@@ -718,13 +720,13 @@ export default function LibraryPage() {
                 </div>
                 <h3 className="text-2xl font-display font-semibold text-gray-400 mb-3">
                   {activeTab === 'purchased'
-                    ? 'עדיין לא רכשת ספרים'
-                    : 'עדיין לא כתבת ספרים'}
+                    ? t('library.empty.purchased_title')
+                    : t('library.empty.my_books_title')}
                 </h3>
                 <p className="text-gray-500 text-lg mb-6">
                   {activeTab === 'purchased'
-                    ? 'גלה ספרים מדהימים בחנות שלנו'
-                    : 'התחל לכתוב את הספר הראשון שלך'}
+                    ? t('library.empty.purchased_subtitle')
+                    : t('library.empty.my_books_subtitle')}
                 </p>
                 <GlowingButton
                   variant="gold"
@@ -736,12 +738,12 @@ export default function LibraryPage() {
                   {activeTab === 'purchased' ? (
                     <>
                       <Sparkles className="w-5 h-5" />
-                      גלה ספרים
+                      {t('library.empty.discover_books')}
                     </>
                   ) : (
                     <>
                       <PenTool className="w-5 h-5" />
-                      התחל לכתוב
+                      {t('library.empty.start_writing')}
                     </>
                   )}
                 </GlowingButton>

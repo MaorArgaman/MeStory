@@ -261,7 +261,7 @@ export default function MarketplacePage() {
           transition={{ delay: 0.4 }}
           className="mb-12"
         >
-          <div className="flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide">
+          <div className="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-hide">
             {CATEGORIES.map((category, index) => (
               <motion.button
                 key={category}
@@ -269,57 +269,43 @@ export default function MarketplacePage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 + index * 0.05 }}
-                className={`
-                  relative px-6 py-3 rounded-xl font-medium whitespace-nowrap
-                  transition-all duration-300 group
-                  ${
-                    selectedCategory === category
-                      ? 'text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }
-                `}
+                className="relative px-5 py-2.5 rounded-full font-medium whitespace-nowrap"
               >
-                {/* Glowing background for active tab */}
+                {/* Sliding pill background for active tab */}
                 {selectedCategory === category && (
                   <motion.div
-                    layoutId="activeCategory"
-                    className="absolute inset-0 bg-gradient-to-r from-magic-gold via-cosmic-purple to-magic-gold rounded-xl"
-                    style={{ backgroundSize: '200% 100%' }}
-                    animate={{
-                      backgroundPosition: ['0% 0%', '100% 0%', '0% 0%'],
-                    }}
+                    layoutId="activeCategoryIndicator"
+                    className="absolute inset-0 bg-gradient-to-r from-purple-600/90 to-amber-500/90 rounded-full shadow-[0_0_20px_rgba(255,215,0,0.4)]"
+                    style={{ zIndex: 0 }}
                     transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: 'linear',
+                      type: 'spring',
+                      stiffness: 380,
+                      damping: 30,
                     }}
                   />
                 )}
 
-                {/* Hover glow effect */}
+                {/* Hover glow effect for inactive tabs */}
                 {selectedCategory !== category && (
-                  <div className="absolute inset-0 bg-white/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                )}
-
-                {/* Tab text */}
-                <span className="relative z-10 font-semibold">{category}</span>
-
-                {/* Shimmer effect */}
-                {selectedCategory === category && (
                   <motion.div
-                    className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none"
-                    initial={{ x: '-100%' }}
-                    animate={{ x: '200%' }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: 'linear',
-                      repeatDelay: 1,
-                    }}
-                  >
-                    <div className="h-full w-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                  </motion.div>
+                    className="absolute inset-0 rounded-full bg-white/0 hover:bg-white/10 transition-colors duration-200"
+                    style={{ zIndex: 0 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  />
                 )}
+
+                {/* Tab text - always on top */}
+                <span
+                  className={`relative font-semibold transition-colors duration-200 ${
+                    selectedCategory === category
+                      ? 'text-white drop-shadow-md'
+                      : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                  style={{ zIndex: 10 }}
+                >
+                  {category}
+                </span>
               </motion.button>
             ))}
           </div>

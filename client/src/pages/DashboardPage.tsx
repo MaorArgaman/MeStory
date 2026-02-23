@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { api } from '../services/api';
@@ -53,6 +54,7 @@ export default function DashboardPage() {
   const [transcribing, setTranscribing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation('common');
   const { user } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
@@ -90,7 +92,7 @@ export default function DashboardPage() {
   const exportBook = async (bookId: string, bookTitle: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      toast('מייצר PDF...');
+      toast(t('dashboard.messages.generating_pdf'));
       const response = await api.get(`/books/${bookId}/export/pdf`, {
         responseType: 'blob',
       });
@@ -105,10 +107,10 @@ export default function DashboardPage() {
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      toast.success('הקובץ יוצא בהצלחה!');
+      toast.success(t('dashboard.messages.export_success'));
     } catch (error) {
       console.error('Failed to export book:', error);
-      toast.error('הייצוא נכשל');
+      toast.error(t('dashboard.messages.export_failed'));
     }
   };
 
@@ -120,13 +122,13 @@ export default function DashboardPage() {
     const allowedTypes = ['.pdf', '.docx', '.txt', '.doc'];
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
     if (!allowedTypes.includes(fileExtension)) {
-      toast.error('Please upload a PDF, DOCX, or TXT file');
+      toast.error(t('dashboard.messages.invalid_file_type'));
       return;
     }
 
     // Validate file size (50MB max)
     if (file.size > 50 * 1024 * 1024) {
-      toast.error('File size must be less than 50MB');
+      toast.error(t('dashboard.messages.file_too_large'));
       return;
     }
 
@@ -144,13 +146,13 @@ export default function DashboardPage() {
       });
 
       if (response.data.success) {
-        toast.success('Manuscript uploaded successfully!');
+        toast.success(t('dashboard.messages.upload_success'));
         setShowUploadModal(false);
         navigate(`/editor/${response.data.data.book.id}`);
       }
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error(error.response?.data?.error || 'Failed to upload manuscript');
+      toast.error(error.response?.data?.error || t('dashboard.messages.upload_failed'));
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -161,7 +163,7 @@ export default function DashboardPage() {
 
   const handleQuickCreate = async () => {
     if (!quickTitle.trim()) {
-      toast.error('Please enter a book title');
+      toast.error(t('dashboard.messages.enter_title'));
       return;
     }
 
@@ -181,14 +183,14 @@ export default function DashboardPage() {
       });
 
       if (response.data.success) {
-        toast.success('Book created! Start writing...');
+        toast.success(t('dashboard.messages.book_created'));
         setShowQuickCreateModal(false);
         setQuickTitle('');
         navigate(`/editor/${response.data.data.id}`);
       }
     } catch (error: any) {
       console.error('Quick create error:', error);
-      toast.error(error.response?.data?.error || 'Failed to create book');
+      toast.error(error.response?.data?.error || t('dashboard.messages.create_failed'));
     } finally {
       setCreating(false);
     }
@@ -202,13 +204,13 @@ export default function DashboardPage() {
     const allowedTypes = ['.mp3', '.wav', '.m4a', '.mp4', '.mpeg', '.mpga', '.webm'];
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
     if (!allowedTypes.includes(fileExtension)) {
-      toast.error('Please upload a valid audio file (MP3, WAV, M4A)');
+      toast.error(t('dashboard.messages.invalid_audio_type'));
       return;
     }
 
     // Validate file size (25MB max)
     if (file.size > 25 * 1024 * 1024) {
-      toast.error('Audio file size must be less than 25MB');
+      toast.error(t('dashboard.messages.audio_too_large'));
       return;
     }
 
@@ -216,7 +218,7 @@ export default function DashboardPage() {
     setShowVoiceModal(false);
 
     try {
-      toast.loading('Transcribing audio with AI...', { id: 'audio-transcribe' });
+      toast.loading(t('dashboard.messages.transcribing_audio'), { id: 'audio-transcribe' });
 
       const formData = new FormData();
       formData.append('audio', file);
@@ -230,12 +232,12 @@ export default function DashboardPage() {
       });
 
       if (response.data.success) {
-        toast.success('Audio transcribed successfully!', { id: 'audio-transcribe' });
+        toast.success(t('dashboard.messages.audio_transcribed'), { id: 'audio-transcribe' });
         navigate(`/editor/${response.data.data.book.id}`);
       }
     } catch (error: any) {
       console.error('Audio upload error:', error);
-      toast.error(error.response?.data?.error || 'Failed to transcribe audio', { id: 'audio-transcribe' });
+      toast.error(error.response?.data?.error || t('dashboard.messages.audio_failed'), { id: 'audio-transcribe' });
     } finally {
       setTranscribing(false);
       if (audioInputRef.current) {
@@ -271,36 +273,36 @@ export default function DashboardPage() {
         // Save interview to the book
         await saveInterviewToBook(bookId, undefined, summary, responses, duration);
 
-        toast.success('Book created with interview context!');
+        toast.success(t('dashboard.messages.book_with_interview'));
         setShowVoiceInterviewWizard(false);
         navigate(`/editor/${bookId}`);
       }
     } catch (error: any) {
       console.error('Voice interview completion error:', error);
-      toast.error(error.response?.data?.error || 'Failed to create book');
+      toast.error(error.response?.data?.error || t('dashboard.messages.create_failed'));
     }
   };
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="max-w-7xl mx-auto mb-8">
-        <h1 className="text-3xl font-bold gradient-text mb-2">Creation Hub</h1>
-        <p className="text-gray-400">
-          Welcome back, {user?.name}! You have {user?.credits} credits remaining.
+      <div className="max-w-7xl mx-auto mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-1 sm:mb-2">{t('dashboard.title')}</h1>
+        <p className="text-sm sm:text-base text-gray-400">
+          {t('dashboard.welcome', { name: user?.name, credits: user?.credits })}
         </p>
       </div>
 
       {/* Hero Section - Begin Your Next Masterpiece */}
-      <div className="max-w-7xl mx-auto mb-16">
-        <div className="text-center mb-10">
-          <h2 className="text-5xl font-bold gradient-gold mb-3" style={{ fontFamily: "'Cinzel', serif" }}>
-            Begin Your Next Masterpiece
+      <div className="max-w-7xl mx-auto mb-8 sm:mb-12 lg:mb-16">
+        <div className="text-center mb-6 sm:mb-8 lg:mb-10">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold gradient-gold mb-2 sm:mb-3" style={{ fontFamily: "'Cinzel', serif" }}>
+            {t('dashboard.hero.title')}
           </h2>
-          <p className="text-xl text-gray-400">Choose how you want to bring your story to life</p>
+          <p className="text-sm sm:text-base lg:text-xl text-gray-400 px-2">{t('dashboard.hero.subtitle')}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           {/* Card 1: Start from Scratch */}
           <motion.button
             onClick={() => setShowQuickCreateModal(true)}
@@ -320,14 +322,14 @@ export default function DashboardPage() {
 
             <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
               <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
-                Start from Scratch
+                {t('dashboard.cards.scratch.title')}
               </h3>
               <p className="text-gray-300 text-sm leading-relaxed mb-3">
-                Create a blank book and dive straight into writing your masterpiece.
+                {t('dashboard.cards.scratch.description')}
               </p>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/20 border border-cyan-500/30">
                 <Feather className="w-4 h-4 text-cyan-400" />
-                <span className="text-xs text-cyan-300 font-medium">Quick Start</span>
+                <span className="text-xs text-cyan-300 font-medium">{t('dashboard.cards.scratch.badge')}</span>
               </div>
             </div>
           </motion.button>
@@ -351,14 +353,14 @@ export default function DashboardPage() {
 
             <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
               <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
-                Deep Dive Interview
+                {t('dashboard.cards.interview.title')}
               </h3>
               <p className="text-gray-300 text-sm leading-relaxed mb-3">
-                AI-guided chat to build your story's foundation across 8 key elements.
+                {t('dashboard.cards.interview.description')}
               </p>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-500/30">
                 <MessageCircle className="w-4 h-4 text-indigo-400" />
-                <span className="text-xs text-indigo-300 font-medium">AI Chat Interview</span>
+                <span className="text-xs text-indigo-300 font-medium">{t('dashboard.cards.interview.badge')}</span>
               </div>
             </div>
           </motion.button>
@@ -382,14 +384,14 @@ export default function DashboardPage() {
 
             <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
               <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
-                Voice Dictation
+                {t('dashboard.cards.voice.title')}
               </h3>
               <p className="text-gray-300 text-sm leading-relaxed mb-3">
-                Speak your story and let AI transcribe it into text automatically.
+                {t('dashboard.cards.voice.description')}
               </p>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-magic-gold/20 border border-magic-gold/30">
                 <Mic className="w-4 h-4 text-magic-gold" />
-                <span className="text-xs text-magic-gold font-medium">Voice to Text</span>
+                <span className="text-xs text-magic-gold font-medium">{t('dashboard.cards.voice.badge')}</span>
               </div>
             </div>
           </motion.button>
@@ -413,14 +415,14 @@ export default function DashboardPage() {
 
             <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
               <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
-                Import Manuscript
+                {t('dashboard.cards.import.title')}
               </h3>
               <p className="text-gray-300 text-sm leading-relaxed mb-3">
-                Upload your existing manuscript in PDF, DOCX, or TXT format.
+                {t('dashboard.cards.import.description')}
               </p>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/20 border border-purple-500/30">
                 <FileUp className="w-4 h-4 text-purple-400" />
-                <span className="text-xs text-purple-300 font-medium">Max 50MB</span>
+                <span className="text-xs text-purple-300 font-medium">{t('dashboard.cards.import.badge')}</span>
               </div>
             </div>
           </motion.button>
@@ -438,22 +440,22 @@ export default function DashboardPage() {
       {/* Continue Reading & Writing Sections */}
       <div className="max-w-7xl mx-auto mb-12">
         {/* Continue Reading */}
-        <ContinueReading limit={4} title="Continue Reading" />
+        <ContinueReading limit={4} title={t('dashboard.sections.continue_reading')} />
 
         {/* Continue Writing */}
-        <ContinueWriting limit={4} title="Continue Writing" />
+        <ContinueWriting limit={4} title={t('dashboard.sections.continue_writing')} />
 
         {/* Recommended Based on Your Reading */}
-        <RecommendedForYou limit={4} title="Recommended For You" showReasons={false} />
+        <RecommendedForYou limit={4} title={t('dashboard.sections.recommended')} showReasons={false} />
       </div>
 
       {/* Your Library Section */}
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h2 className="text-3xl font-bold gradient-gold mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
-            Your Library
+            {t('dashboard.sections.your_library')}
           </h2>
-          <p className="text-gray-400">Your ongoing projects and completed works</p>
+          <p className="text-gray-400">{t('dashboard.sections.your_library_subtitle')}</p>
         </div>
 
         {loading ? (
@@ -480,10 +482,10 @@ export default function DashboardPage() {
               className="text-4xl font-bold gradient-gold mb-4 text-center"
               style={{ fontFamily: "'Cinzel', serif" }}
             >
-              Your Masterpiece Awaits
+              {t('dashboard.empty.title')}
             </h2>
             <p className="text-gray-400 text-lg mb-8 text-center max-w-md">
-              Begin your storytelling journey today. Every great story starts with a single word.
+              {t('dashboard.empty.subtitle')}
             </p>
             <motion.button
               onClick={openWizard}
@@ -492,7 +494,7 @@ export default function DashboardPage() {
               className="btn-primary px-8 py-4 text-lg font-semibold flex items-center gap-3 shadow-glow-gold"
             >
               <Plus className="w-6 h-6" />
-              Create Your First Book
+              {t('dashboard.empty.create_first')}
             </motion.button>
           </motion.div>
         ) : (
@@ -508,8 +510,8 @@ export default function DashboardPage() {
                 <Plus className="w-8 h-8 text-white" />
               </div>
               <div>
-                <p className="text-lg font-semibold text-white">Create New Book</p>
-                <p className="text-sm text-gray-400">Start writing your story</p>
+                <p className="text-lg font-semibold text-white">{t('dashboard.book_card.create_new')}</p>
+                <p className="text-sm text-gray-400">{t('dashboard.book_card.start_writing')}</p>
               </div>
             </motion.button>
 
@@ -533,8 +535,8 @@ export default function DashboardPage() {
                 <div className="flex-1" />
 
                 <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
-                  <span>{book.statistics.wordCount.toLocaleString()} words</span>
-                  <span>{book.statistics.chapterCount} chapters</span>
+                  <span>{book.statistics.wordCount.toLocaleString()} {t('dashboard.book_card.words')}</span>
+                  <span>{book.statistics.chapterCount} {t('dashboard.book_card.chapters')}</span>
                 </div>
 
                 <div className="mb-4">
@@ -552,36 +554,36 @@ export default function DashboardPage() {
                   <button
                     onClick={() => navigate(`/editor/${book.id}`)}
                     className="btn-secondary text-xs py-2 flex items-center justify-center gap-1"
-                    title="Continue Writing"
+                    title={t('dashboard.sections.continue_writing')}
                   >
                     <Edit className="w-3 h-3" />
-                    Write
+                    {t('dashboard.book_card.write')}
                   </button>
                   <button
                     onClick={() => navigate(`/design/${book.id}`)}
                     className="btn-secondary text-xs py-2 flex items-center justify-center gap-1"
-                    title="Design Cover"
+                    title={t('dashboard.book_card.design')}
                   >
                     <Palette className="w-3 h-3" />
-                    Design
+                    {t('dashboard.book_card.design')}
                   </button>
                   {book.publishingStatus.status === 'published' ? (
                     <button
                       onClick={(e) => exportBook(book.id, book.title, e)}
                       className="btn-primary text-xs py-2 flex items-center justify-center gap-1"
-                      title="Export PDF"
+                      title={t('dashboard.book_card.export')}
                     >
                       <Download className="w-3 h-3" />
-                      Export
+                      {t('dashboard.book_card.export')}
                     </button>
                   ) : (
                     <button
                       onClick={() => navigate(`/publish/${book.id}`)}
                       className="btn-primary text-xs py-2 flex items-center justify-center gap-1"
-                      title="Publish Book"
+                      title={t('dashboard.book_card.publish')}
                     >
                       <Rocket className="w-3 h-3" />
-                      Publish
+                      {t('dashboard.book_card.publish')}
                     </button>
                   )}
                 </div>
@@ -646,10 +648,10 @@ export default function DashboardPage() {
                   <Upload className="w-10 h-10 text-white" />
                 </div>
                 <h2 className="text-3xl font-bold gradient-gold mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
-                  Upload Manuscript
+                  {t('dashboard.modals.upload.title')}
                 </h2>
                 <p className="text-gray-300 mb-6 leading-relaxed">
-                  Upload your existing manuscript and we'll extract the text for you to continue editing.
+                  {t('dashboard.modals.upload.description')}
                 </p>
 
                 {/* Hidden File Input */}
@@ -671,12 +673,12 @@ export default function DashboardPage() {
                   {uploading ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Processing...
+                      {t('dashboard.modals.upload.processing')}
                     </>
                   ) : (
                     <>
                       <Upload className="w-5 h-5" />
-                      Choose File
+                      {t('dashboard.modals.upload.button')}
                     </>
                   )}
                 </button>
@@ -686,12 +688,12 @@ export default function DashboardPage() {
                     onClick={() => setShowUploadModal(false)}
                     className="btn-ghost w-full"
                   >
-                    Cancel
+                    {t('buttons.cancel')}
                   </button>
                 )}
 
                 <p className="text-xs text-gray-500 mt-4">
-                  Supported formats: PDF, DOCX, TXT • Max size: 50MB
+                  {t('dashboard.modals.upload.formats')}
                 </p>
               </div>
             </motion.div>
@@ -750,22 +752,22 @@ export default function DashboardPage() {
                     <select
                       value={quickGenre}
                       onChange={(e) => setQuickGenre(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                       disabled={creating}
                     >
-                      <option value="Fiction">Fiction</option>
-                      <option value="Fantasy">Fantasy</option>
-                      <option value="Science Fiction">Science Fiction</option>
-                      <option value="Mystery">Mystery</option>
-                      <option value="Thriller">Thriller</option>
-                      <option value="Romance">Romance</option>
-                      <option value="Horror">Horror</option>
-                      <option value="Adventure">Adventure</option>
-                      <option value="Historical Fiction">Historical Fiction</option>
-                      <option value="Non-Fiction">Non-Fiction</option>
-                      <option value="Biography">Biography</option>
-                      <option value="Self-Help">Self-Help</option>
-                      <option value="Other">Other</option>
+                      <option value="Fiction" className="bg-gray-800 text-white">Fiction</option>
+                      <option value="Fantasy" className="bg-gray-800 text-white">Fantasy</option>
+                      <option value="Science Fiction" className="bg-gray-800 text-white">Science Fiction</option>
+                      <option value="Mystery" className="bg-gray-800 text-white">Mystery</option>
+                      <option value="Thriller" className="bg-gray-800 text-white">Thriller</option>
+                      <option value="Romance" className="bg-gray-800 text-white">Romance</option>
+                      <option value="Horror" className="bg-gray-800 text-white">Horror</option>
+                      <option value="Adventure" className="bg-gray-800 text-white">Adventure</option>
+                      <option value="Historical Fiction" className="bg-gray-800 text-white">Historical Fiction</option>
+                      <option value="Non-Fiction" className="bg-gray-800 text-white">Non-Fiction</option>
+                      <option value="Biography" className="bg-gray-800 text-white">Biography</option>
+                      <option value="Self-Help" className="bg-gray-800 text-white">Self-Help</option>
+                      <option value="Other" className="bg-gray-800 text-white">Other</option>
                     </select>
                   </div>
                 </div>

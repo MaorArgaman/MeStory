@@ -76,8 +76,8 @@ export default function Navbar() {
       <div className="glass-strong rounded-2xl border border-white/10 shadow-2xl shadow-black/50 backdrop-blur-2xl">
         <div className="px-8 py-4">
           <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link to="/dashboard" className="flex items-center gap-3 group">
+            {/* Logo - Left Side */}
+            <Link to="/dashboard" className="flex items-center gap-3 group flex-shrink-0">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 className="h-12 flex items-center gap-3"
@@ -93,8 +93,8 @@ export default function Navbar() {
               </motion.div>
             </Link>
 
-            {/* Navigation Links */}
-            <div className="flex items-center gap-4">
+            {/* Navigation Links - Centered */}
+            <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
               <Link
                 to="/dashboard"
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-300 ${
@@ -130,7 +130,10 @@ export default function Navbar() {
                 <Library className="w-5 h-5" />
                 <span className="font-semibold">{t('nav.library', 'My Library')}</span>
               </Link>
+            </div>
 
+            {/* Right Side - Notifications, Messages, User */}
+            <div className="flex items-center gap-3 flex-shrink-0">
               {/* Notifications Button */}
               <motion.button
                 whileHover={{ scale: 1.05 }}

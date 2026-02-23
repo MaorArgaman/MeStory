@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   X,
   Bell,
@@ -47,6 +48,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
   onClose,
   onUnreadCountChange,
 }) => {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
@@ -115,9 +117,9 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       );
       setUnreadCount(0);
       onUnreadCountChange?.(0);
-      toast.success('All notifications marked as read');
+      toast.success(t('notifications.messages.marked_all_read'));
     } catch (error) {
-      toast.error('Failed to mark notifications');
+      toast.error(t('notifications.messages.mark_failed'));
     } finally {
       setMarkingAllRead(false);
     }
@@ -133,7 +135,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
         onUnreadCountChange?.(Math.max(0, unreadCount - 1));
       }
     } catch (error) {
-      toast.error('Failed to delete notification');
+      toast.error(t('notifications.messages.delete_failed'));
     }
   };
 
@@ -147,7 +149,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
         onUnreadCountChange?.(Math.max(0, unreadCount - 1));
       }
     } catch (error) {
-      toast.error('Failed to archive notification');
+      toast.error(t('notifications.messages.archive_failed'));
     }
   };
 
@@ -202,20 +204,20 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+    if (diffMins < 1) return t('notifications.time.just_now');
+    if (diffMins < 60) return t('notifications.time.minutes_ago', { count: diffMins });
+    if (diffHours < 24) return t('notifications.time.hours_ago', { count: diffHours });
+    if (diffDays < 7) return t('notifications.time.days_ago', { count: diffDays });
+    return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
   };
 
   const filterOptions: { value: NotificationType | 'all'; label: string; icon: React.ReactNode }[] = [
-    { value: 'all', label: 'All', icon: <Bell className="w-4 h-4" /> },
-    { value: 'like', label: 'Likes', icon: <Heart className="w-4 h-4" /> },
-    { value: 'comment', label: 'Comments', icon: <MessageCircle className="w-4 h-4" /> },
-    { value: 'share', label: 'Shares', icon: <Share2 className="w-4 h-4" /> },
-    { value: 'purchase', label: 'Purchases', icon: <CreditCard className="w-4 h-4" /> },
-    { value: 'payment', label: 'Payments', icon: <CreditCard className="w-4 h-4" /> },
+    { value: 'all', label: t('notifications.tabs.all'), icon: <Bell className="w-4 h-4" /> },
+    { value: 'like', label: t('notifications.tabs.likes'), icon: <Heart className="w-4 h-4" /> },
+    { value: 'comment', label: t('notifications.tabs.comments'), icon: <MessageCircle className="w-4 h-4" /> },
+    { value: 'share', label: t('notifications.tabs.shares'), icon: <Share2 className="w-4 h-4" /> },
+    { value: 'purchase', label: t('notifications.tabs.purchases'), icon: <CreditCard className="w-4 h-4" /> },
+    { value: 'payment', label: t('notifications.tabs.payments'), icon: <CreditCard className="w-4 h-4" /> },
   ];
 
   if (!isOpen) return null;
@@ -247,7 +249,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     </span>
                   )}
                 </div>
-                <h2 className="text-xl font-bold text-white">Notifications</h2>
+                <h2 className="text-xl font-bold text-white">{t('notifications.title')}</h2>
               </div>
 
               <div className="flex items-center gap-2">
@@ -256,7 +258,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     onClick={handleMarkAllAsRead}
                     disabled={markingAllRead}
                     className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                    title="Mark all as read"
+                    title={t('notifications.actions.mark_all_read')}
                   >
                     {markingAllRead ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -303,7 +305,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 }`}
               >
                 <Filter className="w-4 h-4" />
-                Unread only
+                {t('notifications.tabs.unread_only')}
               </button>
             </div>
           </div>
@@ -319,11 +321,11 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center mb-4">
                   <Bell className="w-8 h-8 text-purple-400" />
                 </div>
-                <h4 className="text-lg font-medium text-white mb-2">No notifications</h4>
+                <h4 className="text-lg font-medium text-white mb-2">{t('notifications.empty')}</h4>
                 <p className="text-gray-400 text-sm">
                   {showUnreadOnly
-                    ? 'No unread notifications'
-                    : 'Your notifications will appear here'}
+                    ? t('notifications.no_unread')
+                    : t('notifications.empty_subtitle')}
                 </p>
               </div>
             ) : (
@@ -390,7 +392,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                               handleMarkAsRead(notification);
                             }}
                             className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-colors"
-                            title="Mark as read"
+                            title={t('notifications.actions.mark_as_read')}
                           >
                             <Check className="w-4 h-4" />
                           </button>
@@ -401,7 +403,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                             handleArchive(notification._id);
                           }}
                           className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-colors"
-                          title="Archive"
+                          title={t('notifications.actions.archive')}
                         >
                           <Archive className="w-4 h-4" />
                         </button>
@@ -411,7 +413,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                             handleDelete(notification._id);
                           }}
                           className="p-1.5 rounded-lg hover:bg-red-500/20 text-gray-500 hover:text-red-400 transition-colors"
-                          title="Delete"
+                          title={t('notifications.actions.delete')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -431,7 +433,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                       {loading ? (
                         <Loader2 className="w-4 h-4 animate-spin mx-auto" />
                       ) : (
-                        'Load more'
+                        t('notifications.actions.load_more')
                       )}
                     </button>
                   </div>
