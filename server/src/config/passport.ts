@@ -19,10 +19,17 @@ export const configurePassport = () => {
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const callbackURL = process.env.GOOGLE_CALLBACK_URL || 'http://localhost:5001/api/auth/google/callback';
 
+  // Debug logging for OAuth configuration
+  console.log('🔍 Google OAuth configuration check:');
+  console.log(`   - GOOGLE_CLIENT_ID: ${clientId ? `${clientId.substring(0, 20)}...` : 'NOT SET'}`);
+  console.log(`   - GOOGLE_CLIENT_SECRET: ${clientSecret ? '***SET***' : 'NOT SET'}`);
+  console.log(`   - GOOGLE_CALLBACK_URL: ${callbackURL}`);
+
   // Check if Google OAuth is configured
   if (!clientId || !clientSecret || clientId === 'your-google-client-id') {
     console.warn('⚠️  Google OAuth not configured - skipping Google login strategy');
     console.warn('   Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env to enable');
+    console.warn(`   Current values: clientId=${clientId ? 'exists' : 'missing'}, clientSecret=${clientSecret ? 'exists' : 'missing'}`);
     return false;
   }
 

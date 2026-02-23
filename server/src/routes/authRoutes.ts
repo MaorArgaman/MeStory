@@ -91,9 +91,20 @@ router.post(
 
 // GET /api/auth/google/status - Check if Google OAuth is available
 router.get('/google/status', (_req: Request, res: Response) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const callbackUrl = process.env.GOOGLE_CALLBACK_URL;
+
   res.json({
     success: true,
     enabled: isGoogleOAuthEnabled(),
+    debug: {
+      hasClientId: !!clientId && clientId !== 'your-google-client-id',
+      hasClientSecret: !!clientSecret,
+      hasCallbackUrl: !!callbackUrl,
+      callbackUrl: callbackUrl || 'using default',
+      clientIdPrefix: clientId ? clientId.substring(0, 15) + '...' : 'NOT SET',
+    }
   });
 });
 
