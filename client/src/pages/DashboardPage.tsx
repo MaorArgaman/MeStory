@@ -67,10 +67,14 @@ export default function DashboardPage() {
     try {
       const response = await api.get('/books');
       if (response.data.success) {
-        setBooks(response.data.data.books);
+        setBooks(response.data.data.books || []);
+      } else {
+        console.error('Failed to load books:', response.data.error);
+        toast.error(t('dashboard.messages.load_failed', 'Failed to load books'));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load books:', error);
+      toast.error(error.response?.data?.error || t('dashboard.messages.load_failed', 'Failed to load books'));
     } finally {
       setLoading(false);
     }

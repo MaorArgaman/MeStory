@@ -277,7 +277,8 @@
       "invalid_file_type": "אנא העלה קובץ PDF, DOCX או TXT",
       "file_too_large": "גודל הקובץ חייב להיות פחות מ-50MB",
       "invalid_audio_type": "אנא העלה קובץ אודיו תקין (MP3, WAV, M4A)",
-      "audio_too_large": "גודל קובץ האודיו חייב להיות פחות מ-25MB"
+      "audio_too_large": "גודל קובץ האודיו חייב להיות פחות מ-25MB",
+      "load_failed": "טעינת הספרים נכשלה"
     }
   },
   "marketplace": {

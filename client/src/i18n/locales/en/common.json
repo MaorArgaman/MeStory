@@ -277,7 +277,8 @@
       "invalid_file_type": "Please upload a PDF, DOCX, or TXT file",
       "file_too_large": "File size must be less than 50MB",
       "invalid_audio_type": "Please upload a valid audio file (MP3, WAV, M4A)",
-      "audio_too_large": "Audio file size must be less than 25MB"
+      "audio_too_large": "Audio file size must be less than 25MB",
+      "load_failed": "Failed to load books"
     }
   },
   "marketplace": {
@@ -342,6 +343,334 @@
     },
     "messages": {
       "load_failed": "Failed to load marketplace books"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Write your story with AI",
+      "email": "Email",
+      "email_placeholder": "you@example.com",
+      "password": "Password",
+      "password_placeholder": "••••••••",
+      "submit": "Sign In",
+      "submitting": "Signing in...",
+      "or": "OR",
+      "google": "Continue with Google",
+      "no_account": "Don't have an account?",
+      "create_account": "Create one",
+      "terms": "By continuing, you agree to MeStory's Terms of Service and Privacy Policy",
+      "side_title": "Your Story",
+      "side_subtitle": "Awaits",
+      "side_description": "Join thousands of authors crafting their masterpieces with the power of AI."
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Start your writing journey",
+      "name": "Full Name",
+      "name_placeholder": "John Doe",
+      "email": "Email",
+      "email_placeholder": "you@example.com",
+      "password": "Password",
+      "password_placeholder": "••••••••",
+      "password_help": "Must be 8+ characters with uppercase, lowercase, and numbers",
+      "confirm_password": "Confirm Password",
+      "submit": "Create Account",
+      "submitting": "Creating account...",
+      "or": "OR",
+      "google": "Continue with Google",
+      "have_account": "Already have an account?",
+      "sign_in": "Sign in",
+      "terms": "By continuing, you agree to MeStory's Terms of Service and Privacy Policy"
+    },
+    "errors": {
+      "password_length": "Password must be at least 8 characters long",
+      "password_complexity": "Password must contain uppercase, lowercase, and numbers",
+      "passwords_mismatch": "Passwords do not match"
+    }
+  },
+  "landing": {
+    "hero": {
+      "title": "Unleash Your Inner Author",
+      "subtitle": "Write, design, and publish professional books with AI assistance. Join thousands of authors earning from their stories on the world's most magical publishing platform.",
+      "cta_primary": "Start Writing for Free",
+      "cta_secondary": "Explore Books"
+    },
+    "trust": {
+      "no_credit_card": "No Credit Card Required",
+      "free_credits": "100 Free AI Credits",
+      "authors_trust": "50,000+ Authors Trust Us"
+    },
+    "features": {
+      "title": "Everything You Need to Succeed",
+      "subtitle": "From your first word to your first sale, MeStory provides professional-grade tools that make book publishing accessible to everyone.",
+      "ai_copilot": {
+        "title": "AI Co-Pilot",
+        "description": "Never face writer's block again. Our Gemini-powered AI assists you with plot development, character creation, and real-time writing suggestions."
+      },
+      "cover_studio": {
+        "title": "3D Cover Studio",
+        "description": "Transform your manuscript into a professional book with AI-generated covers, customizable layouts, and print-ready export capabilities."
+      },
+      "marketplace": {
+        "title": "Global Marketplace",
+        "description": "Publish and sell your books to readers worldwide. Set your own price, earn 50% revenue share, and build your author brand with our social features."
+      },
+      "learn_more": "Learn More"
+    },
+    "stats": {
+      "active_authors": "Active Authors",
+      "books_published": "Books Published",
+      "average_rating": "Average Rating",
+      "author_earnings": "Author Earnings"
+    },
+    "community": {
+      "title": "Join a Thriving Community",
+      "subtitle": "Writers from around the world are already creating, publishing, and earning with MeStory."
+    },
+    "cta": {
+      "title": "Ready to Write Your Story?",
+      "subtitle": "Start writing today with 100 free AI credits. No credit card required.",
+      "button": "Create Your Free Account"
+    },
+    "footer": {
+      "description": "The world's most magical AI-powered book writing and publishing platform. Democratizing storytelling for everyone.",
+      "platform": "Platform",
+      "features": "Features",
+      "pricing": "Pricing",
+      "marketplace": "Marketplace",
+      "api": "API",
+      "legal": "Legal",
+      "copyright": "© 2026 MeStory. All rights reserved. Powered by Google Gemini 2.5 Flash."
+    },
+    "ticker": {
+      "books_today": "books published today",
+      "authors_earned": "Authors earned",
+      "this_week": "this week",
+      "reviews_today": "5-star reviews today"
+    }
+  },
+  "editor": {
+    "placeholder": "Start writing your story...",
+    "chapter_default": "Chapter {{number}}",
+    "sidebar": {
+      "chapters": "CHAPTERS",
+      "no_chapters": "No chapters yet",
+      "add_first": "Add First Chapter",
+      "chapter_title": "Chapter Title"
+    },
+    "toolbar": {
+      "back": "Back",
+      "design_cover": "Design Cover",
+      "page_layout": "Page Layout",
+      "save": "Save"
+    },
+    "empty": {
+      "select_chapter": "Select or create a chapter to start writing"
+    },
+    "tabs": {
+      "ai_analysis": "AI & Analysis",
+      "ai_assistant": "AI Assistant",
+      "ai": "AI",
+      "plot": "Plot",
+      "analysis": "Analysis",
+      "stats": "Stats"
+    },
+    "ai": {
+      "select_chapter": "Select a chapter to use AI assistance"
+    },
+    "statistics": {
+      "title": "STATISTICS",
+      "words": "Words",
+      "chapters": "Chapters",
+      "current_chapter": "Current Chapter",
+      "words_unit": "words"
+    }
+  },
+  "book_details": {
+    "loading": "Loading book details...",
+    "written_by": "Written by",
+    "views": "views",
+    "words": "words",
+    "synopsis": "Synopsis",
+    "read_now": "Read Now",
+    "buy_for": "Buy for ${{price}}",
+    "reviews": {
+      "title": "Write a Review",
+      "your_review": "Your Review",
+      "rating": "Rating",
+      "comment": "Comment",
+      "comment_placeholder": "Share your thoughts about this book...",
+      "characters": "characters",
+      "submit": "Submit Review",
+      "submitting": "Submitting...",
+      "cancel": "Cancel",
+      "empty": "No reviews yet. Be the first to review this book!"
+    },
+    "messages": {
+      "load_failed": "Failed to load book details",
+      "login_to_like": "Please login to like books",
+      "like_failed": "Failed to like book",
+      "login_to_review": "Please login to review books",
+      "select_rating": "Please select a rating",
+      "write_comment": "Please write a comment",
+      "review_success": "Review submitted successfully",
+      "review_failed": "Failed to submit review",
+      "purchase_processing": "Processing purchase...",
+      "purchase_success": "Purchase successful! Redirecting to reader...",
+      "purchase_failed": "Failed to purchase book. Please try again."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account and preferences",
+    "tabs": {
+      "profile": "Profile",
+      "security": "Security",
+      "earnings": "Earnings",
+      "billing": "Billing",
+      "notifications": "Notifications"
+    },
+    "profile": {
+      "title": "Profile Information",
+      "language": "System Language",
+      "language_help": "This will change the language of the entire application including AI responses",
+      "name": "Full Name",
+      "name_placeholder": "Your name",
+      "email": "Email Address",
+      "email_help": "Email cannot be changed",
+      "bio": "Bio",
+      "bio_placeholder": "Tell readers about yourself...",
+      "avatar": "Avatar URL",
+      "avatar_placeholder": "https://...",
+      "save": "Save Changes"
+    },
+    "security": {
+      "password_title": "Change Password",
+      "password_subtitle": "Update your password to keep your account secure",
+      "current_password": "Current Password",
+      "current_password_placeholder": "Enter your current password",
+      "new_password": "New Password",
+      "new_password_placeholder": "Enter new password (min 6 characters)",
+      "confirm_password": "Confirm New Password",
+      "confirm_password_placeholder": "Confirm your new password",
+      "update_password": "Update Password",
+      "sessions_title": "Active Sessions",
+      "sessions_subtitle": "Manage devices that are logged into your account",
+      "current": "Current",
+      "last_active": "Last active: {{time}}",
+      "revoke": "Revoke",
+      "security_warning": "If you see any sessions you don't recognize, revoke them immediately and change your password."
+    },
+    "earnings_tab": {
+      "title": "Earnings Dashboard",
+      "refresh": "Refresh",
+      "total_earnings": "Total Earnings",
+      "available": "Available",
+      "total_sales": "Total Sales",
+      "revenue_trend": "Revenue Trend",
+      "top_books": "Top Earning Books",
+      "sales_format": "{{sales}} sales • ${{amount}}",
+      "withdraw_title": "Withdraw Funds",
+      "withdraw_placeholder": "Amount (min $10)",
+      "withdraw_button": "Withdraw",
+      "withdraw_help": "Funds will be sent to your connected PayPal account within 3-5 business days",
+      "no_data": "No earnings data available"
+    },
+    "billing": {
+      "title": "Subscription & Billing",
+      "plan": "Plan",
+      "unlimited": "Unlimited",
+      "change_plan": "Change Plan",
+      "status": "Status",
+      "active": "Active",
+      "billing_cycle": "Billing Cycle",
+      "monthly": "Monthly",
+      "next_billing": "Next Billing Date"
+    },
+    "notifications_tab": {
+      "title": "Notification Preferences",
+      "subtitle": "Choose what updates you want to receive",
+      "email_title": "Email Notifications",
+      "new_review": "New Review",
+      "new_review_desc": "Get notified when someone reviews your book",
+      "new_follower": "New Follower",
+      "new_follower_desc": "Get notified when someone follows you",
+      "new_sale": "New Sale",
+      "new_sale_desc": "Get notified when your book is purchased",
+      "system_updates": "System Updates",
+      "system_updates_desc": "Get notified about platform updates and announcements",
+      "weekly_digest": "Weekly Digest",
+      "weekly_digest_desc": "Receive a weekly summary of your activity and stats"
+    },
+    "messages": {
+      "min_withdrawal": "Minimum withdrawal amount is $10",
+      "withdrawal_success": "Withdrawal request submitted successfully",
+      "fill_all_fields": "Please fill in all password fields",
+      "passwords_mismatch": "New passwords do not match",
+      "password_min_length": "Password must be at least 6 characters",
+      "password_success": "Password changed successfully",
+      "password_failed": "Failed to change password",
+      "language_changed": "Language changed to {{language}}",
+      "language_failed": "Failed to change language"
+    }
+  },
+  "publishing": {
+    "title": "Publish Your Book",
+    "steps": {
+      "quality": "Quality Check",
+      "pricing": "Pricing & Strategy",
+      "launch": "Ready to Launch!"
+    },
+    "quality": {
+      "score_label": "/ 100",
+      "ready": "Ready to Publish!",
+      "ready_desc": "Your book meets the quality standards required for publication.",
+      "low_score": "Quality Score Too Low",
+      "low_score_desc": "Your book needs a quality score of at least 70 to publish. Consider improving your content using the AI writing assistant.",
+      "no_score": "No Quality Score Yet",
+      "no_score_desc": "Run the AI quality analysis in the editor to get your quality score."
+    },
+    "pricing": {
+      "title": "Pricing",
+      "free": "Free",
+      "paid": "Paid",
+      "price_help": "Recommended: $2.99 - $9.99",
+      "audience": "Target Audience",
+      "audience_placeholder": "e.g., Young adults who love fantasy adventures",
+      "description": "Marketing Description",
+      "description_placeholder": "A captivating description that will attract readers...",
+      "categories": "Categories (select up to 3)",
+      "tags": "Tags (comma-separated)",
+      "tags_placeholder": "magic, dragons, coming-of-age"
+    },
+    "summary": {
+      "title": "Publishing Summary",
+      "quality_score": "Quality Score:",
+      "price": "Price:",
+      "categories": "Categories:",
+      "selected": "selected",
+      "audience": "Target Audience:",
+      "not_specified": "Not specified",
+      "info": "Once published, your book will be visible in the marketplace for readers to discover and purchase. You can unpublish it at any time from your dashboard."
+    },
+    "buttons": {
+      "back": "Back",
+      "back_dashboard": "Back to Dashboard",
+      "continue": "Continue",
+      "publish": "Publish Book",
+      "publishing": "Publishing..."
+    },
+    "success": {
+      "title": "Congratulations!",
+      "message": "Your book \"{{title}}\" is now live in the marketplace!",
+      "view_marketplace": "View in Marketplace",
+      "back_dashboard": "Back to Dashboard"
+    },
+    "messages": {
+      "load_failed": "Failed to load book",
+      "publish_success": "Book published successfully!",
+      "publish_failed": "Failed to publish book"
     }
   }
 }

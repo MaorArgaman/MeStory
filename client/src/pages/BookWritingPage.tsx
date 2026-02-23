@@ -158,13 +158,14 @@ export default function BookWritingPage() {
   // Auto-save every 30 seconds (Section 5.1)
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!saved && content) {
+      // Prevent concurrent saves and only save if there are changes
+      if (!saved && content && !saving) {
         saveBook();
       }
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [saved, content]);
+  }, [saved, content, saving]);
 
   const loadBook = async () => {
     try {
@@ -201,7 +202,7 @@ export default function BookWritingPage() {
   };
 
   const saveBook = async () => {
-    if (!book || !editor) return;
+    if (!book || !editor || saving) return;
 
     setSaving(true);
     try {
