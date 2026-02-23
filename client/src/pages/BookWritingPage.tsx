@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import {
@@ -16,13 +16,10 @@ import {
   PenTool,
   Menu,
   X,
-  ChevronLeft,
-  ChevronRight,
-  PanelLeftClose,
-  PanelRightClose,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useEditor, EditorContent } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
@@ -588,6 +585,29 @@ export default function BookWritingPage() {
 
                 {/* Rich Text Editor with AI Floating Toolbar */}
                 <div className="editor-panel flex-1 overflow-y-auto relative text-sm sm:text-base">
+                  {editor && (
+                    <BubbleMenu
+                      editor={editor}
+                      tippyOptions={{
+                        duration: 100,
+                        placement: 'top',
+                        appendTo: () => document.body,
+                      }}
+                      shouldShow={({ editor, state }) => {
+                        const { from, to } = state.selection;
+                        const text = state.doc.textBetween(from, to, ' ');
+                        // Show toolbar only when text is selected (min 5 chars)
+                        return text.trim().length >= 5;
+                      }}
+                    >
+                      <AIFloatingToolbar
+                        editor={editor}
+                        onEnhance={handleEnhance}
+                        isLoading={enhancing}
+                        loadingAction={loadingAction}
+                      />
+                    </BubbleMenu>
+                  )}
                   <EditorContent editor={editor} />
                 </div>
               </>
