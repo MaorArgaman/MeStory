@@ -81,11 +81,11 @@ export default function Navbar() {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="fixed top-3 sm:top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl"
+      className="fixed top-0 left-0 right-0 z-50 w-full"
       ref={mobileMenuRef}
     >
-      <div className="glass-strong rounded-xl sm:rounded-2xl border border-white/10 shadow-2xl shadow-black/50 backdrop-blur-2xl">
-        <div className="px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+      <div className="glass-strong border-b border-white/10 shadow-lg shadow-black/30 backdrop-blur-2xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             {/* Logo - Left Side */}
             <Link to="/dashboard" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0">
@@ -105,7 +105,7 @@ export default function Navbar() {
             </Link>
 
             {/* Navigation Links - Centered (Hidden on mobile) */}
-            <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2">
               <Link
                 to="/dashboard"
                 className={`flex items-center gap-2 px-4 xl:px-5 py-2 xl:py-2.5 rounded-xl transition-all duration-300 ${
@@ -292,7 +292,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0, height: 'auto' }}
             exit={{ opacity: 0, y: -10, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="lg:hidden mt-2 glass-strong rounded-xl border border-white/10 shadow-xl overflow-hidden"
+            className="lg:hidden glass-strong border-b border-white/10 shadow-lg overflow-hidden"
           >
             <div className="p-3 space-y-1">
               <Link
@@ -368,9 +368,6 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Ambient Glow Effect */}
-      <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-magic-gold/10 blur-3xl -z-10 opacity-50" />
 
       {/* Messages Modal */}
       <ConversationsList

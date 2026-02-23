@@ -404,5 +404,333 @@
     "messages": {
       "load_failed": "נכשל בטעינת ספרי החנות"
     }
+  },
+  "auth": {
+    "login": {
+      "title": "ברוך הבא",
+      "subtitle": "כתוב את הסיפור שלך עם AI",
+      "email": "אימייל",
+      "email_placeholder": "you@example.com",
+      "password": "סיסמה",
+      "password_placeholder": "••••••••",
+      "submit": "התחברות",
+      "submitting": "מתחבר...",
+      "or": "או",
+      "google": "המשך עם Google",
+      "no_account": "אין לך חשבון?",
+      "create_account": "צור חשבון",
+      "terms": "בהמשך, אתה מסכים לתנאי השימוש ומדיניות הפרטיות של MeStory",
+      "side_title": "הסיפור שלך",
+      "side_subtitle": "מחכה",
+      "side_description": "הצטרף לאלפי סופרים שיוצרים את יצירות המופת שלהם בעזרת AI."
+    },
+    "register": {
+      "title": "יצירת חשבון",
+      "subtitle": "התחל את מסע הכתיבה שלך",
+      "name": "שם מלא",
+      "name_placeholder": "ישראל ישראלי",
+      "email": "אימייל",
+      "email_placeholder": "you@example.com",
+      "password": "סיסמה",
+      "password_placeholder": "••••••••",
+      "password_help": "לפחות 8 תווים עם אותיות גדולות, קטנות ומספרים",
+      "confirm_password": "אימות סיסמה",
+      "submit": "צור חשבון",
+      "submitting": "יוצר חשבון...",
+      "or": "או",
+      "google": "המשך עם Google",
+      "have_account": "יש לך כבר חשבון?",
+      "sign_in": "התחבר",
+      "terms": "בהמשך, אתה מסכים לתנאי השימוש ומדיניות הפרטיות של MeStory"
+    },
+    "errors": {
+      "password_length": "הסיסמה חייבת להכיל לפחות 8 תווים",
+      "password_complexity": "הסיסמה חייבת להכיל אותיות גדולות, קטנות ומספרים",
+      "passwords_mismatch": "הסיסמאות לא תואמות"
+    }
+  },
+  "landing": {
+    "hero": {
+      "title": "שחרר את הסופר שבך",
+      "subtitle": "כתוב, עצב ופרסם ספרים מקצועיים בעזרת AI. הצטרף לאלפי סופרים שמרוויחים מהסיפורים שלהם בפלטפורמת הפרסום הקסומה בעולם.",
+      "cta_primary": "התחל לכתוב בחינם",
+      "cta_secondary": "גלה ספרים"
+    },
+    "trust": {
+      "no_credit_card": "ללא כרטיס אשראי",
+      "free_credits": "100 קרדיטים חינם",
+      "authors_trust": "50,000+ סופרים סומכים עלינו"
+    },
+    "features": {
+      "title": "כל מה שאתה צריך להצליח",
+      "subtitle": "מהמילה הראשונה ועד המכירה הראשונה, MeStory מספקת כלים מקצועיים שהופכים פרסום ספרים לנגיש לכולם.",
+      "ai_copilot": {
+        "title": "עוזר AI",
+        "description": "לעולם לא תתמודד עם בלוק סופרים שוב. ה-AI שלנו מסייע לך בפיתוח עלילה, יצירת דמויות והצעות כתיבה בזמן אמת."
+      },
+      "cover_studio": {
+        "title": "סטודיו עטיפות 3D",
+        "description": "הפוך את כתב היד שלך לספר מקצועי עם עטיפות שנוצרו על ידי AI, פריסות הניתנות להתאמה אישית ויכולות ייצוא להדפסה."
+      },
+      "marketplace": {
+        "title": "שוק גלובלי",
+        "description": "פרסם ומכור את הספרים שלך לקוראים ברחבי העולם. קבע את המחיר שלך, הרוויח 50% מחלוקת ההכנסות ובנה את המותג שלך."
+      },
+      "learn_more": "למידע נוסף"
+    },
+    "stats": {
+      "active_authors": "סופרים פעילים",
+      "books_published": "ספרים פורסמו",
+      "average_rating": "דירוג ממוצע",
+      "author_earnings": "הכנסות סופרים"
+    },
+    "community": {
+      "title": "הצטרף לקהילה פורחת",
+      "subtitle": "כותבים מכל העולם כבר יוצרים, מפרסמים ומרוויחים עם MeStory."
+    },
+    "cta": {
+      "title": "מוכן לכתוב את הסיפור שלך?",
+      "subtitle": "התחל לכתוב היום עם 100 קרדיטים חינם. ללא צורך בכרטיס אשראי.",
+      "button": "צור את החשבון החינמי שלך"
+    },
+    "footer": {
+      "description": "פלטפורמת הכתיבה והפרסום הקסומה ביותר בעולם. מנגישים את הסיפור לכולם.",
+      "platform": "פלטפורמה",
+      "features": "תכונות",
+      "pricing": "תמחור",
+      "marketplace": "חנות",
+      "api": "API",
+      "legal": "משפטי",
+      "copyright": "© 2026 MeStory. כל הזכויות שמורות. מופעל על ידי Google Gemini 2.5 Flash."
+    },
+    "ticker": {
+      "books_today": "ספרים פורסמו היום",
+      "authors_earned": "סופרים הרוויחו",
+      "this_week": "השבוע",
+      "reviews_today": "ביקורות 5 כוכבים היום"
+    }
+  },
+  "editor": {
+    "placeholder": "התחל לכתוב את הסיפור שלך...",
+    "chapter_default": "פרק {{number}}",
+    "sidebar": {
+      "chapters": "פרקים",
+      "no_chapters": "אין פרקים עדיין",
+      "add_first": "הוסף פרק ראשון",
+      "chapter_title": "כותרת הפרק"
+    },
+    "toolbar": {
+      "back": "חזרה",
+      "design_cover": "עיצוב עטיפה",
+      "page_layout": "פריסת עמוד",
+      "save": "שמירה"
+    },
+    "empty": {
+      "select_chapter": "בחר או צור פרק כדי להתחיל לכתוב"
+    },
+    "tabs": {
+      "ai_analysis": "AI וניתוח",
+      "ai_assistant": "עוזר AI",
+      "ai": "AI",
+      "plot": "עלילה",
+      "analysis": "ניתוח",
+      "stats": "סטטיסטיקות"
+    },
+    "ai": {
+      "select_chapter": "בחר פרק כדי להשתמש בעזרת AI"
+    },
+    "statistics": {
+      "title": "סטטיסטיקות",
+      "words": "מילים",
+      "chapters": "פרקים",
+      "current_chapter": "פרק נוכחי",
+      "words_unit": "מילים"
+    }
+  },
+  "book_details": {
+    "loading": "טוען פרטי ספר...",
+    "written_by": "נכתב על ידי",
+    "views": "צפיות",
+    "words": "מילים",
+    "synopsis": "תקציר",
+    "read_now": "קרא עכשיו",
+    "buy_for": "קנה ב-${{price}}",
+    "reviews": {
+      "title": "כתוב ביקורת",
+      "your_review": "הביקורת שלך",
+      "rating": "דירוג",
+      "comment": "תגובה",
+      "comment_placeholder": "שתף את המחשבות שלך על הספר...",
+      "characters": "תווים",
+      "submit": "שלח ביקורת",
+      "submitting": "שולח...",
+      "cancel": "ביטול",
+      "empty": "אין ביקורות עדיין. היה הראשון לכתוב ביקורת!"
+    },
+    "messages": {
+      "load_failed": "נכשל בטעינת פרטי הספר",
+      "login_to_like": "התחבר כדי לאהוב ספרים",
+      "like_failed": "נכשל באהבת הספר",
+      "login_to_review": "התחבר כדי לכתוב ביקורת",
+      "select_rating": "אנא בחר דירוג",
+      "write_comment": "אנא כתוב תגובה",
+      "review_success": "הביקורת נשלחה בהצלחה",
+      "review_failed": "נכשל בשליחת הביקורת",
+      "purchase_processing": "מעבד רכישה...",
+      "purchase_success": "הרכישה הצליחה! מעביר לקורא...",
+      "purchase_failed": "נכשל ברכישת הספר. אנא נסה שוב."
+    }
+  },
+  "settings": {
+    "title": "הגדרות",
+    "subtitle": "נהל את החשבון וההעדפות שלך",
+    "tabs": {
+      "profile": "פרופיל",
+      "security": "אבטחה",
+      "earnings": "הכנסות",
+      "billing": "חיוב",
+      "notifications": "התראות"
+    },
+    "profile": {
+      "title": "פרטי פרופיל",
+      "language": "שפת המערכת",
+      "language_help": "זה ישנה את שפת כל האפליקציה כולל תגובות AI",
+      "name": "שם מלא",
+      "name_placeholder": "השם שלך",
+      "email": "כתובת אימייל",
+      "email_help": "לא ניתן לשנות את האימייל",
+      "bio": "אודות",
+      "bio_placeholder": "ספר לקוראים על עצמך...",
+      "avatar": "כתובת תמונה",
+      "avatar_placeholder": "https://...",
+      "save": "שמור שינויים"
+    },
+    "security": {
+      "password_title": "שינוי סיסמה",
+      "password_subtitle": "עדכן את הסיסמה שלך כדי לשמור על אבטחת החשבון",
+      "current_password": "סיסמה נוכחית",
+      "current_password_placeholder": "הזן את הסיסמה הנוכחית שלך",
+      "new_password": "סיסמה חדשה",
+      "new_password_placeholder": "הזן סיסמה חדשה (מינימום 6 תווים)",
+      "confirm_password": "אימות סיסמה חדשה",
+      "confirm_password_placeholder": "אמת את הסיסמה החדשה",
+      "update_password": "עדכן סיסמה",
+      "sessions_title": "התחברויות פעילות",
+      "sessions_subtitle": "נהל את המכשירים שמחוברים לחשבון שלך",
+      "current": "נוכחי",
+      "last_active": "פעילות אחרונה: {{time}}",
+      "revoke": "בטל",
+      "security_warning": "אם אתה רואה התחברויות שאתה לא מזהה, בטל אותן מיד ושנה את הסיסמה."
+    },
+    "earnings_tab": {
+      "title": "לוח הכנסות",
+      "refresh": "רענון",
+      "total_earnings": "סה\"כ הכנסות",
+      "available": "זמין",
+      "total_sales": "סה\"כ מכירות",
+      "revenue_trend": "מגמת הכנסות",
+      "top_books": "ספרים מרוויחים",
+      "sales_format": "{{sales}} מכירות • ${{amount}}",
+      "withdraw_title": "משיכת כספים",
+      "withdraw_placeholder": "סכום (מינימום $10)",
+      "withdraw_button": "משיכה",
+      "withdraw_help": "הכספים יישלחו לחשבון ה-PayPal המחובר שלך תוך 3-5 ימי עסקים",
+      "no_data": "אין נתוני הכנסות זמינים"
+    },
+    "billing": {
+      "title": "מנוי וחיוב",
+      "plan": "תוכנית",
+      "unlimited": "ללא הגבלה",
+      "change_plan": "שנה תוכנית",
+      "status": "סטטוס",
+      "active": "פעיל",
+      "billing_cycle": "מחזור חיוב",
+      "monthly": "חודשי",
+      "next_billing": "תאריך חיוב הבא"
+    },
+    "notifications_tab": {
+      "title": "העדפות התראות",
+      "subtitle": "בחר אילו עדכונים אתה רוצה לקבל",
+      "email_title": "התראות אימייל",
+      "new_review": "ביקורת חדשה",
+      "new_review_desc": "קבל התראה כשמישהו כותב ביקורת על הספר שלך",
+      "new_follower": "עוקב חדש",
+      "new_follower_desc": "קבל התראה כשמישהו עוקב אחריך",
+      "new_sale": "מכירה חדשה",
+      "new_sale_desc": "קבל התראה כשהספר שלך נרכש",
+      "system_updates": "עדכוני מערכת",
+      "system_updates_desc": "קבל התראות על עדכוני פלטפורמה והודעות",
+      "weekly_digest": "סיכום שבועי",
+      "weekly_digest_desc": "קבל סיכום שבועי של הפעילות והסטטיסטיקות שלך"
+    },
+    "messages": {
+      "min_withdrawal": "סכום משיכה מינימלי הוא $10",
+      "withdrawal_success": "בקשת המשיכה הוגשה בהצלחה",
+      "fill_all_fields": "אנא מלא את כל שדות הסיסמה",
+      "passwords_mismatch": "הסיסמאות החדשות לא תואמות",
+      "password_min_length": "הסיסמה חייבת להכיל לפחות 6 תווים",
+      "password_success": "הסיסמה שונתה בהצלחה",
+      "password_failed": "נכשל בשינוי הסיסמה",
+      "language_changed": "השפה שונתה ל{{language}}",
+      "language_failed": "נכשל בשינוי השפה"
+    }
+  },
+  "publishing": {
+    "title": "פרסם את הספר שלך",
+    "steps": {
+      "quality": "בדיקת איכות",
+      "pricing": "תמחור ואסטרטגיה",
+      "launch": "מוכן להשקה!"
+    },
+    "quality": {
+      "score_label": "/ 100",
+      "ready": "מוכן לפרסום!",
+      "ready_desc": "הספר שלך עומד בתקני האיכות הנדרשים לפרסום.",
+      "low_score": "ציון איכות נמוך מדי",
+      "low_score_desc": "הספר שלך צריך ציון איכות של לפחות 70 כדי לפרסם. שקול לשפר את התוכן באמצעות עוזר הכתיבה AI.",
+      "no_score": "אין עדיין ציון איכות",
+      "no_score_desc": "הפעל את ניתוח האיכות AI בעורך כדי לקבל את ציון האיכות שלך."
+    },
+    "pricing": {
+      "title": "תמחור",
+      "free": "חינם",
+      "paid": "בתשלום",
+      "price_help": "מומלץ: $2.99 - $9.99",
+      "audience": "קהל יעד",
+      "audience_placeholder": "למשל, צעירים שאוהבים הרפתקאות פנטזיה",
+      "description": "תיאור שיווקי",
+      "description_placeholder": "תיאור מרתק שימשוך קוראים...",
+      "categories": "קטגוריות (בחר עד 3)",
+      "tags": "תגיות (מופרדות בפסיקים)",
+      "tags_placeholder": "קסם, דרקונים, התבגרות"
+    },
+    "summary": {
+      "title": "סיכום פרסום",
+      "quality_score": "ציון איכות:",
+      "price": "מחיר:",
+      "categories": "קטגוריות:",
+      "selected": "נבחרו",
+      "audience": "קהל יעד:",
+      "not_specified": "לא צוין",
+      "info": "לאחר הפרסום, הספר שלך יהיה גלוי בחנות לקוראים לגלות ולרכוש. תוכל להסיר את הפרסום בכל עת מלוח הבקרה."
+    },
+    "buttons": {
+      "back": "חזרה",
+      "back_dashboard": "חזרה ללוח הבקרה",
+      "continue": "המשך",
+      "publish": "פרסם ספר",
+      "publishing": "מפרסם..."
+    },
+    "success": {
+      "title": "מזל טוב!",
+      "message": "הספר שלך \"{{title}}\" זמין עכשיו בחנות!",
+      "view_marketplace": "צפה בחנות",
+      "back_dashboard": "חזרה ללוח הבקרה"
+    },
+    "messages": {
+      "load_failed": "נכשל בטעינת הספר",
+      "publish_success": "הספר פורסם בהצלחה!",
+      "publish_failed": "נכשל בפרסום הספר"
+    }
   }
 }
