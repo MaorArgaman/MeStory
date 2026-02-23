@@ -877,6 +877,25 @@ export const exportBookPDF = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
+    // Validate book has content before exporting
+    if (!book.chapters || book.chapters.length === 0) {
+      res.status(400).json({
+        success: false,
+        error: 'Cannot export a book without chapters. Please add content to your book first.',
+      });
+      return;
+    }
+
+    // Check if at least one chapter has content
+    const hasContent = book.chapters.some((ch: any) => ch.content && ch.content.trim().length > 0);
+    if (!hasContent) {
+      res.status(400).json({
+        success: false,
+        error: 'Cannot export a book without content. Please add some text to your chapters first.',
+      });
+      return;
+    }
+
     // Generate PDF using the new comprehensive export service
     const pdfBuffer = await exportBook(id, 'pdf');
 
@@ -888,11 +907,22 @@ export const exportBookPDF = async (req: AuthRequest, res: Response): Promise<vo
 
     // Send the PDF buffer
     res.send(pdfBuffer);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Export book error:', error);
+
+    // Provide more specific error messages
+    let errorMessage = 'Failed to export book';
+    if (error.message?.includes('not found')) {
+      errorMessage = 'Book not found or has been deleted';
+    } else if (error.message?.includes('font')) {
+      errorMessage = 'Font loading error. Please try again.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
     res.status(500).json({
       success: false,
-      error: 'Failed to export book',
+      error: errorMessage,
     });
   }
 };
@@ -1680,6 +1710,25 @@ export const exportBookToFormat = async (req: AuthRequest, res: Response): Promi
       res.status(403).json({
         success: false,
         error: 'You do not have permission to export this book',
+      });
+      return;
+    }
+
+    // Validate book has content before exporting
+    if (!book.chapters || book.chapters.length === 0) {
+      res.status(400).json({
+        success: false,
+        error: 'Cannot export a book without chapters. Please add content to your book first.',
+      });
+      return;
+    }
+
+    // Check if at least one chapter has content
+    const hasContent = book.chapters.some((ch: any) => ch.content && ch.content.trim().length > 0);
+    if (!hasContent) {
+      res.status(400).json({
+        success: false,
+        error: 'Cannot export a book without content. Please add some text to your chapters first.',
       });
       return;
     }

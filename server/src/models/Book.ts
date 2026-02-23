@@ -157,7 +157,7 @@ export interface IPageLayout {
   columns?: 1 | 2 | 3 | 4;
   paragraphIndent?: number;
   paragraphSpacing?: number;
-  pageNumberPosition?: 'top-left' | 'top-right' | 'bottom-center' | 'bottom-outside' | 'none';
+  pageNumberPosition?: 'top-left' | 'top-right' | 'top-outer' | 'bottom-center' | 'bottom-outside' | 'bottom-outer' | 'none';
   templateId?: string;
 }
 
@@ -799,7 +799,7 @@ const PageLayoutSchema = new Schema<IPageLayout>(
     },
     pageNumberPosition: {
       type: String,
-      enum: ['top-left', 'top-right', 'bottom-center', 'bottom-outside', 'none'],
+      enum: ['top-left', 'top-right', 'top-outer', 'bottom-center', 'bottom-outside', 'bottom-outer', 'none'],
       default: 'bottom-center',
     },
     templateId: {
