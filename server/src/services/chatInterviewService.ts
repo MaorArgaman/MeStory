@@ -134,6 +134,7 @@ export interface ChatInterviewState {
   startedAt: Date;
   genre?: string;
   targetAudience?: string;
+  language: InterviewLanguage;
 }
 
 // Interview summary
@@ -148,66 +149,112 @@ export interface ChatInterviewSummary {
   narrativeArc: string;
 }
 
-// In-memory storage for interview states (use Redis in production)
-const interviewStates = new Map<string, ChatInterviewState>();
+// Supported languages
+export type InterviewLanguage = 'en' | 'he';
 
-/**
- * Create a new interview
- */
-export function createInterview(
-  genre?: string,
-  targetAudience?: string
-): ChatInterviewState {
-  const id = crypto.randomUUID();
+// Bilingual prompts
+const PROMPTS = {
+  en: {
+    firstMessage: (genre: string) => `You are a friendly and professional AI interviewer helping authors develop their story${genre ? ` in the ${genre} genre` : ''}.
 
-  const state: ChatInterviewState = {
-    id,
-    currentTopic: 'theme',
-    questionsAsked: 0,
-    questionsPerTopic: {
-      theme: 0,
-      characters: 0,
-      conflict: 0,
-      climax: 0,
-      resolution: 0,
-      setting: 0,
-      keyPoints: 0,
-      narrativeArc: 0,
+This is the beginning of the interview. Create a short and warm opening message that greets the author and asks a first question about the theme and central idea of the story.
+
+Requirements:
+- 2-3 sentences only
+- In English
+- Friendly and encouraging tone
+- End with an open question about the main theme
+
+Return only the message, no explanations.`,
+    fallbackFirst: "Hello! I'm excited to help you develop your story. Let's start - tell me about the central idea or theme of the book you want to write?",
+    processMessage: (conversationContext: string, topicName: string, topicTransition: boolean, userMessage: string, isComplete: boolean) => `You are a professional AI interviewer helping authors develop their story.
+
+Conversation so far:
+${conversationContext}
+
+Current topic: ${topicName}
+${topicTransition ? '(We moved to a new topic!)' : ''}
+Author's last response: ${userMessage}
+
+${
+  isComplete
+    ? 'The interview is complete. Create a short closing message thanking the author and mentioning they can continue to create their book.'
+    : `Create one focused question about ${topicName}.
+
+Guidelines:
+- If the answer was too short, gently ask for more details
+- If needed, briefly respond to the answer before the question
+- Short and clear question (up to 25 words)
+- In English
+- Encouraging detailed response`
+}
+
+Return only the message, no explanations.`,
+    fallbackComplete: "Thank you so much for the interview! I have enough information to help you start writing. Good luck!",
+    summaryPrompt: (messagesByTopic: Record<ChatInterviewTopic, string[]>) => `Analyze the author's responses and create a structured summary for each topic.
+
+## Theme and Central Idea:
+${messagesByTopic.theme.join('\n') || 'Not specified'}
+
+## Characters:
+${messagesByTopic.characters.join('\n') || 'Not specified'}
+
+## Conflict:
+${messagesByTopic.conflict.join('\n') || 'Not specified'}
+
+## Climax:
+${messagesByTopic.climax.join('\n') || 'Not specified'}
+
+## Resolution:
+${messagesByTopic.resolution.join('\n') || 'Not specified'}
+
+## Setting:
+${messagesByTopic.setting.join('\n') || 'Not specified'}
+
+## Key Points:
+${messagesByTopic.keyPoints.join('\n') || 'Not specified'}
+
+## Narrative Arc:
+${messagesByTopic.narrativeArc.join('\n') || 'Not specified'}
+
+Create JSON in the following format with a short summary (2-3 sentences) for each topic:
+{
+  "theme": "Summary of theme and central idea",
+  "characters": "Summary of characters",
+  "conflict": "Summary of conflict",
+  "climax": "Summary of climax",
+  "resolution": "Summary of resolution",
+  "setting": "Summary of setting",
+  "keyPoints": "Summary of key points",
+  "narrativeArc": "Summary of narrative arc and tone"
+}
+
+All in English. If information is missing, write "Not specified".`,
+    notSpecified: 'Not specified',
+    transitions: {
+      theme_characters: 'Excellent! Now let\'s talk about the characters in your story.',
+      characters_conflict: 'Great! Now let\'s focus on the central conflict.',
+      conflict_climax: 'Perfect! Let\'s talk about the climax of the story.',
+      climax_resolution: 'Wonderful! How does the story end?',
+      resolution_setting: 'Interesting! Now tell me about the world where the story takes place.',
+      setting_keyPoints: 'Great! Let\'s talk about the key events in the plot.',
+      keyPoints_narrativeArc: 'Perfect! Finally, let\'s discuss the tone and structure of the story.',
+      default: 'Let\'s move to the next topic.',
     },
-    messages: [],
-    isComplete: false,
-    startedAt: new Date(),
-    genre,
-    targetAudience,
-  };
-
-  interviewStates.set(id, state);
-  return state;
-}
-
-/**
- * Get interview state by ID
- */
-export function getInterview(id: string): ChatInterviewState | undefined {
-  return interviewStates.get(id);
-}
-
-/**
- * Delete interview
- */
-export function deleteInterview(id: string): void {
-  interviewStates.delete(id);
-}
-
-/**
- * Generate the first AI message
- */
-export async function generateFirstMessage(
-  state: ChatInterviewState
-): Promise<ChatMessage> {
-  const genreContext = state.genre ? `לספר בז'אנר ${state.genre}` : '';
-
-  const prompt = `אתה מראיין AI ידידותי ומקצועי שעוזר למחברים לפתח את הסיפור שלהם ${genreContext}.
+    fallbackQuestions: {
+      theme: ['What is the central idea of your story?', 'What message do you want to convey?'],
+      characters: ['Tell me about the main character', 'What motivates your hero?'],
+      conflict: ['What is the main problem the character needs to face?', 'What prevents the character from getting what they want?'],
+      climax: ['What will be the decisive moment in the story?', 'How do you see the climax?'],
+      resolution: ['How does the story end?', 'What does the character learn in the end?'],
+      setting: ['Where and when does the story take place?', 'Describe the world of the story'],
+      keyPoints: ['What are the important events in the plot?', 'What key moments are in the story?'],
+      narrativeArc: ['What is the tone of the story - light, dramatic, funny?', 'How do you see the pacing of the story?'],
+    },
+    roleLabels: { ai: 'Interviewer', user: 'Author' },
+  },
+  he: {
+    firstMessage: (genre: string) => `אתה מראיין AI ידידותי ומקצועי שעוזר למחברים לפתח את הסיפור שלהם ${genre ? `לספר בז'אנר ${genre}` : ''}.
 
 זו תחילת הראיון. צור הודעת פתיחה קצרה וחמה שמברכת את המחבר ושואלת שאלה ראשונה על הנושא והרעיון המרכזי של הסיפור.
 
@@ -217,114 +264,21 @@ export async function generateFirstMessage(
 - טון ידידותי ומעודד
 - סיים בשאלה פתוחה על הנושא המרכזי
 
-תחזיר רק את ההודעה, ללא הסברים.`;
-
-  try {
-    const result = await getGeminiModel().generateContent(prompt);
-    const content = result.response.text().trim();
-
-    const message: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'ai',
-      content,
-      topic: 'theme',
-      timestamp: new Date(),
-    };
-
-    state.messages.push(message);
-    state.questionsPerTopic.theme++;
-    interviewStates.set(state.id, state);
-
-    return message;
-  } catch (error) {
-    console.error('Error generating first message:', error);
-
-    // Fallback message
-    const message: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'ai',
-      content:
-        'שלום! אני שמח לעזור לך לפתח את הסיפור שלך. בוא נתחיל - ספר לי על הרעיון המרכזי או הנושא של הספר שאתה רוצה לכתוב?',
-      topic: 'theme',
-      timestamp: new Date(),
-    };
-
-    state.messages.push(message);
-    state.questionsPerTopic.theme++;
-    interviewStates.set(state.id, state);
-
-    return message;
-  }
-}
-
-/**
- * Process user message and generate AI response
- */
-export async function processUserMessage(
-  state: ChatInterviewState,
-  userMessage: string
-): Promise<{
-  state: ChatInterviewState;
-  aiMessage: ChatMessage;
-  topicTransition?: string;
-}> {
-  // Add user message
-  const userMsg: ChatMessage = {
-    id: crypto.randomUUID(),
-    role: 'user',
-    content: userMessage,
-    topic: state.currentTopic,
-    timestamp: new Date(),
-  };
-  state.messages.push(userMsg);
-  state.questionsAsked++;
-
-  // Build conversation context
-  const conversationContext = state.messages
-    .slice(-10) // Last 10 messages for context
-    .map((m) => `${m.role === 'ai' ? 'מראיין' : 'מחבר'}: ${m.content}`)
-    .join('\n');
-
-  // Get topic info
-  const topicConfig = TOPIC_CONFIG[state.currentTopic];
-  const topicQuestions = state.questionsPerTopic[state.currentTopic];
-  const minReached = topicQuestions >= topicConfig.minQuestions;
-  const maxReached = topicQuestions >= topicConfig.maxQuestions;
-
-  // Check if should move to next topic
-  const shouldMoveToNext = maxReached || (minReached && shouldTransition(userMessage));
-
-  let nextTopic = state.currentTopic;
-  let topicTransition: string | undefined;
-
-  if (shouldMoveToNext) {
-    const currentIndex = TOPIC_ORDER.indexOf(state.currentTopic);
-    const nextIndex = currentIndex + 1;
-
-    if (nextIndex < TOPIC_ORDER.length) {
-      nextTopic = TOPIC_ORDER[nextIndex];
-      topicTransition = getTopicTransitionMessage(state.currentTopic, nextTopic);
-      state.currentTopic = nextTopic;
-    } else {
-      // Interview complete
-      state.isComplete = true;
-    }
-  }
-
-  // Generate AI response
-  const prompt = `אתה מראיין AI מקצועי שעוזר למחברים לפתח את הסיפור שלהם.
+תחזיר רק את ההודעה, ללא הסברים.`,
+    fallbackFirst: 'שלום! אני שמח לעזור לך לפתח את הסיפור שלך. בוא נתחיל - ספר לי על הרעיון המרכזי או הנושא של הספר שאתה רוצה לכתוב?',
+    processMessage: (conversationContext: string, topicName: string, topicTransition: boolean, userMessage: string, isComplete: boolean) => `אתה מראיין AI מקצועי שעוזר למחברים לפתח את הסיפור שלהם.
 
 שיחה עד כה:
 ${conversationContext}
 
-נושא נוכחי: ${TOPIC_CONFIG[nextTopic].hebrewName}
+נושא נוכחי: ${topicName}
 ${topicTransition ? `(עברנו לנושא חדש!)` : ''}
 תשובת המחבר האחרונה: ${userMessage}
 
 ${
-  state.isComplete
+  isComplete
     ? 'הראיון הסתיים. צור הודעת סיום קצרה שמודה למחבר ומציינת שאפשר להמשיך ליצור את הספר.'
-    : `צור שאלה אחת ממוקדת על ${TOPIC_CONFIG[nextTopic].hebrewName}.
+    : `צור שאלה אחת ממוקדת על ${topicName}.
 
 הנחיות:
 - אם התשובה הייתה קצרה מדי, בקש הרחבה בעדינות
@@ -334,151 +288,9 @@ ${
 - מעודדת תשובה מפורטת`
 }
 
-תחזיר רק את ההודעה, ללא הסברים.`;
-
-  try {
-    const result = await getGeminiModel().generateContent(prompt);
-    const content = result.response.text().trim();
-
-    const aiMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'ai',
-      content: topicTransition ? `${topicTransition}\n\n${content}` : content,
-      topic: nextTopic,
-      timestamp: new Date(),
-    };
-
-    state.messages.push(aiMessage);
-    if (!state.isComplete) {
-      state.questionsPerTopic[nextTopic]++;
-    }
-    interviewStates.set(state.id, state);
-
-    return { state, aiMessage, topicTransition };
-  } catch (error) {
-    console.error('Error generating AI response:', error);
-
-    // Fallback response
-    const fallbackContent = state.isComplete
-      ? 'תודה רבה על הראיון! יש לי מספיק מידע כדי לעזור לך להתחיל לכתוב. בהצלחה!'
-      : getFallbackQuestion(nextTopic);
-
-    const aiMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'ai',
-      content: topicTransition ? `${topicTransition}\n\n${fallbackContent}` : fallbackContent,
-      topic: nextTopic,
-      timestamp: new Date(),
-    };
-
-    state.messages.push(aiMessage);
-    if (!state.isComplete) {
-      state.questionsPerTopic[nextTopic]++;
-    }
-    interviewStates.set(state.id, state);
-
-    return { state, aiMessage, topicTransition };
-  }
-}
-
-/**
- * Check if response indicates we should transition to next topic
- */
-function shouldTransition(response: string): boolean {
-  // Simple heuristic: if response is comprehensive (50+ words), likely ready to move on
-  const wordCount = response.trim().split(/\s+/).length;
-  return wordCount >= 50;
-}
-
-/**
- * Get topic transition message
- */
-function getTopicTransitionMessage(
-  from: ChatInterviewTopic,
-  to: ChatInterviewTopic
-): string {
-  const transitions: Record<string, string> = {
-    theme_characters: 'מצוין! עכשיו בוא נדבר על הדמויות בסיפור שלך.',
-    characters_conflict: 'נהדר! עכשיו נתמקד בקונפליקט המרכזי.',
-    conflict_climax: 'יופי! בוא נדבר על השיא של הסיפור.',
-    climax_resolution: 'מעולה! איך הסיפור מסתיים?',
-    resolution_setting: 'מעניין! עכשיו ספר לי על העולם שבו מתרחש הסיפור.',
-    setting_keyPoints: 'נהדר! בוא נדבר על אירועי המפתח בעלילה.',
-    keyPoints_narrativeArc: 'יופי! לסיום, נדבר על הטון והמבנה של הסיפור.',
-  };
-
-  const key = `${from}_${to}`;
-  return transitions[key] || 'בוא נעבור לנושא הבא.';
-}
-
-/**
- * Get fallback question for topic
- */
-function getFallbackQuestion(topic: ChatInterviewTopic): string {
-  const questions: Record<ChatInterviewTopic, string[]> = {
-    theme: [
-      'מה הרעיון המרכזי של הסיפור שלך?',
-      'איזה מסר אתה רוצה להעביר?',
-    ],
-    characters: [
-      'ספר לי על הדמות הראשית',
-      'מה מניע את הגיבור שלך?',
-    ],
-    conflict: [
-      'מה הבעיה המרכזית שהדמות צריכה להתמודד איתה?',
-      'מה מפריע לדמות להשיג את מה שהיא רוצה?',
-    ],
-    climax: [
-      'מה יהיה הרגע המכריע בסיפור?',
-      'איך אתה רואה את השיא?',
-    ],
-    resolution: [
-      'איך הסיפור מסתיים?',
-      'מה הדמות לומדת בסוף?',
-    ],
-    setting: [
-      'איפה ומתי מתרחש הסיפור?',
-      'תאר את העולם של הסיפור',
-    ],
-    keyPoints: [
-      'מה האירועים החשובים בעלילה?',
-      'אילו רגעים מפתח יש בסיפור?',
-    ],
-    narrativeArc: [
-      'מה הטון של הסיפור - קליל, דרמטי, מצחיק?',
-      'איך אתה רואה את קצב הסיפור?',
-    ],
-  };
-
-  const topicQuestions = questions[topic];
-  return topicQuestions[Math.floor(Math.random() * topicQuestions.length)];
-}
-
-/**
- * Generate interview summary
- */
-export async function generateSummary(
-  state: ChatInterviewState
-): Promise<ChatInterviewSummary> {
-  // Extract messages by topic
-  const messagesByTopic: Record<ChatInterviewTopic, string[]> = {
-    theme: [],
-    characters: [],
-    conflict: [],
-    climax: [],
-    resolution: [],
-    setting: [],
-    keyPoints: [],
-    narrativeArc: [],
-  };
-
-  state.messages.forEach((m) => {
-    if (m.role === 'user') {
-      messagesByTopic[m.topic].push(m.content);
-    }
-  });
-
-  const prompt = `נתח את תשובות המחבר וצור סיכום מובנה לכל נושא.
+תחזיר רק את ההודעה, ללא הסברים.`,
+    fallbackComplete: 'תודה רבה על הראיון! יש לי מספיק מידע כדי לעזור לך להתחיל לכתוב. בהצלחה!',
+    summaryPrompt: (messagesByTopic: Record<ChatInterviewTopic, string[]>) => `נתח את תשובות המחבר וצור סיכום מובנה לכל נושא.
 
 ## נושא ורעיון מרכזי:
 ${messagesByTopic.theme.join('\n') || 'לא צוין'}
@@ -516,7 +328,306 @@ ${messagesByTopic.narrativeArc.join('\n') || 'לא צוין'}
   "narrativeArc": "סיכום הקשת הנרטיבית והטון"
 }
 
-הכל בעברית. אם מידע חסר, כתוב "לא צוין".`;
+הכל בעברית. אם מידע חסר, כתוב "לא צוין".`,
+    notSpecified: 'לא צוין',
+    transitions: {
+      theme_characters: 'מצוין! עכשיו בוא נדבר על הדמויות בסיפור שלך.',
+      characters_conflict: 'נהדר! עכשיו נתמקד בקונפליקט המרכזי.',
+      conflict_climax: 'יופי! בוא נדבר על השיא של הסיפור.',
+      climax_resolution: 'מעולה! איך הסיפור מסתיים?',
+      resolution_setting: 'מעניין! עכשיו ספר לי על העולם שבו מתרחש הסיפור.',
+      setting_keyPoints: 'נהדר! בוא נדבר על אירועי המפתח בעלילה.',
+      keyPoints_narrativeArc: 'יופי! לסיום, נדבר על הטון והמבנה של הסיפור.',
+      default: 'בוא נעבור לנושא הבא.',
+    },
+    fallbackQuestions: {
+      theme: ['מה הרעיון המרכזי של הסיפור שלך?', 'איזה מסר אתה רוצה להעביר?'],
+      characters: ['ספר לי על הדמות הראשית', 'מה מניע את הגיבור שלך?'],
+      conflict: ['מה הבעיה המרכזית שהדמות צריכה להתמודד איתה?', 'מה מפריע לדמות להשיג את מה שהיא רוצה?'],
+      climax: ['מה יהיה הרגע המכריע בסיפור?', 'איך אתה רואה את השיא?'],
+      resolution: ['איך הסיפור מסתיים?', 'מה הדמות לומדת בסוף?'],
+      setting: ['איפה ומתי מתרחש הסיפור?', 'תאר את העולם של הסיפור'],
+      keyPoints: ['מה האירועים החשובים בעלילה?', 'אילו רגעים מפתח יש בסיפור?'],
+      narrativeArc: ['מה הטון של הסיפור - קליל, דרמטי, מצחיק?', 'איך אתה רואה את קצב הסיפור?'],
+    },
+    roleLabels: { ai: 'מראיין', user: 'מחבר' },
+  },
+};
+
+// In-memory storage for interview states (use Redis in production)
+const interviewStates = new Map<string, ChatInterviewState>();
+
+/**
+ * Create a new interview
+ */
+export function createInterview(
+  genre?: string,
+  targetAudience?: string,
+  language: InterviewLanguage = 'he'
+): ChatInterviewState {
+  const id = crypto.randomUUID();
+
+  const state: ChatInterviewState = {
+    id,
+    currentTopic: 'theme',
+    questionsAsked: 0,
+    questionsPerTopic: {
+      theme: 0,
+      characters: 0,
+      conflict: 0,
+      climax: 0,
+      resolution: 0,
+      setting: 0,
+      keyPoints: 0,
+      narrativeArc: 0,
+    },
+    messages: [],
+    isComplete: false,
+    startedAt: new Date(),
+    genre,
+    targetAudience,
+    language,
+  };
+
+  interviewStates.set(id, state);
+  return state;
+}
+
+/**
+ * Get interview state by ID
+ */
+export function getInterview(id: string): ChatInterviewState | undefined {
+  return interviewStates.get(id);
+}
+
+/**
+ * Delete interview
+ */
+export function deleteInterview(id: string): void {
+  interviewStates.delete(id);
+}
+
+/**
+ * Generate the first AI message
+ */
+export async function generateFirstMessage(
+  state: ChatInterviewState
+): Promise<ChatMessage> {
+  const lang = state.language || 'he';
+  const prompts = PROMPTS[lang];
+  const prompt = prompts.firstMessage(state.genre || '');
+
+  try {
+    const result = await getGeminiModel().generateContent(prompt);
+    const content = result.response.text().trim();
+
+    const message: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'ai',
+      content,
+      topic: 'theme',
+      timestamp: new Date(),
+    };
+
+    state.messages.push(message);
+    state.questionsPerTopic.theme++;
+    interviewStates.set(state.id, state);
+
+    return message;
+  } catch (error) {
+    console.error('Error generating first message:', error);
+
+    // Fallback message
+    const message: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'ai',
+      content: prompts.fallbackFirst,
+      topic: 'theme',
+      timestamp: new Date(),
+    };
+
+    state.messages.push(message);
+    state.questionsPerTopic.theme++;
+    interviewStates.set(state.id, state);
+
+    return message;
+  }
+}
+
+/**
+ * Process user message and generate AI response
+ */
+export async function processUserMessage(
+  state: ChatInterviewState,
+  userMessage: string
+): Promise<{
+  state: ChatInterviewState;
+  aiMessage: ChatMessage;
+  topicTransition?: string;
+}> {
+  const lang = state.language || 'he';
+  const prompts = PROMPTS[lang];
+  const roleLabels = prompts.roleLabels;
+
+  // Add user message
+  const userMsg: ChatMessage = {
+    id: crypto.randomUUID(),
+    role: 'user',
+    content: userMessage,
+    topic: state.currentTopic,
+    timestamp: new Date(),
+  };
+  state.messages.push(userMsg);
+  state.questionsAsked++;
+
+  // Build conversation context
+  const conversationContext = state.messages
+    .slice(-10) // Last 10 messages for context
+    .map((m) => `${m.role === 'ai' ? roleLabels.ai : roleLabels.user}: ${m.content}`)
+    .join('\n');
+
+  // Get topic info
+  const topicConfig = TOPIC_CONFIG[state.currentTopic];
+  const topicQuestions = state.questionsPerTopic[state.currentTopic];
+  const minReached = topicQuestions >= topicConfig.minQuestions;
+  const maxReached = topicQuestions >= topicConfig.maxQuestions;
+
+  // Check if should move to next topic
+  const shouldMoveToNext = maxReached || (minReached && shouldTransition(userMessage));
+
+  let nextTopic = state.currentTopic;
+  let topicTransition: string | undefined;
+
+  if (shouldMoveToNext) {
+    const currentIndex = TOPIC_ORDER.indexOf(state.currentTopic);
+    const nextIndex = currentIndex + 1;
+
+    if (nextIndex < TOPIC_ORDER.length) {
+      nextTopic = TOPIC_ORDER[nextIndex];
+      topicTransition = getTopicTransitionMessage(state.currentTopic, nextTopic, lang);
+      state.currentTopic = nextTopic;
+    } else {
+      // Interview complete
+      state.isComplete = true;
+    }
+  }
+
+  // Get topic name in the appropriate language
+  const topicName = lang === 'he' ? TOPIC_CONFIG[nextTopic].hebrewName : TOPIC_CONFIG[nextTopic].englishName;
+
+  // Generate AI response
+  const prompt = prompts.processMessage(
+    conversationContext,
+    topicName,
+    !!topicTransition,
+    userMessage,
+    state.isComplete
+  );
+
+  try {
+    const result = await getGeminiModel().generateContent(prompt);
+    const content = result.response.text().trim();
+
+    const aiMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'ai',
+      content: topicTransition ? `${topicTransition}\n\n${content}` : content,
+      topic: nextTopic,
+      timestamp: new Date(),
+    };
+
+    state.messages.push(aiMessage);
+    if (!state.isComplete) {
+      state.questionsPerTopic[nextTopic]++;
+    }
+    interviewStates.set(state.id, state);
+
+    return { state, aiMessage, topicTransition };
+  } catch (error) {
+    console.error('Error generating AI response:', error);
+
+    // Fallback response
+    const fallbackContent = state.isComplete
+      ? prompts.fallbackComplete
+      : getFallbackQuestion(nextTopic, lang);
+
+    const aiMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'ai',
+      content: topicTransition ? `${topicTransition}\n\n${fallbackContent}` : fallbackContent,
+      topic: nextTopic,
+      timestamp: new Date(),
+    };
+
+    state.messages.push(aiMessage);
+    if (!state.isComplete) {
+      state.questionsPerTopic[nextTopic]++;
+    }
+    interviewStates.set(state.id, state);
+
+    return { state, aiMessage, topicTransition };
+  }
+}
+
+/**
+ * Check if response indicates we should transition to next topic
+ */
+function shouldTransition(response: string): boolean {
+  // Simple heuristic: if response is comprehensive (50+ words), likely ready to move on
+  const wordCount = response.trim().split(/\s+/).length;
+  return wordCount >= 50;
+}
+
+/**
+ * Get topic transition message
+ */
+function getTopicTransitionMessage(
+  from: ChatInterviewTopic,
+  to: ChatInterviewTopic,
+  lang: InterviewLanguage = 'he'
+): string {
+  const transitions = PROMPTS[lang].transitions;
+  const key = `${from}_${to}` as keyof typeof transitions;
+  return transitions[key] || transitions.default;
+}
+
+/**
+ * Get fallback question for topic
+ */
+function getFallbackQuestion(topic: ChatInterviewTopic, lang: InterviewLanguage = 'he'): string {
+  const questions = PROMPTS[lang].fallbackQuestions[topic];
+  return questions[Math.floor(Math.random() * questions.length)];
+}
+
+/**
+ * Generate interview summary
+ */
+export async function generateSummary(
+  state: ChatInterviewState
+): Promise<ChatInterviewSummary> {
+  const lang = state.language || 'he';
+  const prompts = PROMPTS[lang];
+  const notSpecified = prompts.notSpecified;
+
+  // Extract messages by topic
+  const messagesByTopic: Record<ChatInterviewTopic, string[]> = {
+    theme: [],
+    characters: [],
+    conflict: [],
+    climax: [],
+    resolution: [],
+    setting: [],
+    keyPoints: [],
+    narrativeArc: [],
+  };
+
+  state.messages.forEach((m) => {
+    if (m.role === 'user') {
+      messagesByTopic[m.topic].push(m.content);
+    }
+  });
+
+  const prompt = prompts.summaryPrompt(messagesByTopic);
 
   try {
     const result = await getGeminiModel().generateContent(prompt);
@@ -532,14 +643,14 @@ ${messagesByTopic.narrativeArc.join('\n') || 'לא צוין'}
 
   // Fallback summary
   return {
-    theme: messagesByTopic.theme.join(' ') || 'לא צוין',
-    characters: messagesByTopic.characters.join(' ') || 'לא צוין',
-    conflict: messagesByTopic.conflict.join(' ') || 'לא צוין',
-    climax: messagesByTopic.climax.join(' ') || 'לא צוין',
-    resolution: messagesByTopic.resolution.join(' ') || 'לא צוין',
-    setting: messagesByTopic.setting.join(' ') || 'לא צוין',
-    keyPoints: messagesByTopic.keyPoints.join(' ') || 'לא צוין',
-    narrativeArc: messagesByTopic.narrativeArc.join(' ') || 'לא צוין',
+    theme: messagesByTopic.theme.join(' ') || notSpecified,
+    characters: messagesByTopic.characters.join(' ') || notSpecified,
+    conflict: messagesByTopic.conflict.join(' ') || notSpecified,
+    climax: messagesByTopic.climax.join(' ') || notSpecified,
+    resolution: messagesByTopic.resolution.join(' ') || notSpecified,
+    setting: messagesByTopic.setting.join(' ') || notSpecified,
+    keyPoints: messagesByTopic.keyPoints.join(' ') || notSpecified,
+    narrativeArc: messagesByTopic.narrativeArc.join(' ') || notSpecified,
   };
 }
 

@@ -1,0 +1,88 @@
+{
+  "title": "Settings",
+  "tabs": {
+    "profile": "Profile",
+    "account": "Account",
+    "notifications": "Notifications",
+    "security": "Security",
+    "billing": "Billing",
+    "language": "Language"
+  },
+  "profile": {
+    "title": "Profile Settings",
+    "subtitle": "Manage your public profile information",
+    "name": "Display Name",
+    "name_placeholder": "Your display name",
+    "bio": "Bio",
+    "bio_placeholder": "Tell readers about yourself...",
+    "avatar": "Profile Picture",
+    "avatar_change": "Change Picture",
+    "avatar_remove": "Remove",
+    "header_image": "Header Image",
+    "save": "Save Profile",
+    "success": "Profile updated successfully!",
+    "error": "Failed to update profile"
+  },
+  "account": {
+    "title": "Account Settings",
+    "subtitle": "Manage your account details",
+    "email": "Email Address",
+    "email_verified": "Verified",
+    "email_unverified": "Not Verified",
+    "verify_email": "Verify Email",
+    "delete_account": "Delete Account",
+    "delete_warning": "This action cannot be undone. All your data will be permanently deleted."
+  },
+  "notifications": {
+    "title": "Notification Preferences",
+    "subtitle": "Choose what notifications you receive",
+    "writing": "Writing Reminders",
+    "writing_desc": "Get reminders to continue writing",
+    "publishing": "Publishing Updates",
+    "publishing_desc": "Updates about your published books",
+    "sales": "Sales Notifications",
+    "sales_desc": "Get notified when someone buys your book",
+    "social": "Social Activity",
+    "social_desc": "Likes, comments, and new followers",
+    "system": "System Updates",
+    "system_desc": "Important system announcements",
+    "email_digest": "Email Digest",
+    "email_digest_desc": "Weekly summary of your activity"
+  },
+  "security": {
+    "title": "Security Settings",
+    "subtitle": "Keep your account secure",
+    "change_password": "Change Password",
+    "current_password": "Current Password",
+    "new_password": "New Password",
+    "confirm_password": "Confirm New Password",
+    "update_password": "Update Password",
+    "password_success": "Password updated successfully!",
+    "sessions": "Active Sessions",
+    "sessions_desc": "Manage your logged-in devices",
+    "logout_all": "Logout All Devices"
+  },
+  "billing": {
+    "title": "Billing & Subscription",
+    "subtitle": "Manage your subscription and payment methods",
+    "current_plan": "Current Plan",
+    "upgrade": "Upgrade",
+    "downgrade": "Downgrade",
+    "cancel": "Cancel Subscription",
+    "payment_method": "Payment Method",
+    "add_payment": "Add Payment Method",
+    "billing_history": "Billing History",
+    "next_billing": "Next billing date"
+  },
+  "language": {
+    "title": "Language & Region",
+    "subtitle": "Choose your preferred language and regional settings",
+    "interface_language": "Interface Language",
+    "interface_desc": "The language used for the application interface",
+    "book_language": "Default Book Language",
+    "book_desc": "Default language for new books",
+    "direction_preview": "Text Direction Preview",
+    "ltr": "Left to Right (English)",
+    "rtl": "Right to Left (Hebrew)"
+  }
+}

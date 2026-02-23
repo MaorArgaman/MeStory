@@ -1,0 +1,66 @@
+{
+  "title": "Creation Hub",
+  "welcome": "Welcome back, {{name}}! You have {{credits}} credits remaining.",
+  "begin_masterpiece": "Begin Your Next Masterpiece",
+  "choose_method": "Choose how you want to bring your story to life",
+  "creation_methods": {
+    "scratch": {
+      "title": "Start from Scratch",
+      "description": "Create a blank book and dive straight into writing your masterpiece.",
+      "button": "Quick Start"
+    },
+    "interview": {
+      "title": "Deep Dive Interview",
+      "description": "AI-guided chat to build your story's foundation across 8 key elements.",
+      "button": "AI Chat Interview"
+    },
+    "voice": {
+      "title": "Voice Dictation",
+      "description": "Speak your story and let AI transcribe it into text automatically.",
+      "button": "Voice to Text"
+    },
+    "import": {
+      "title": "Import Manuscript",
+      "description": "Upload your existing manuscript in PDF, DOCX, or TXT format.",
+      "button": "Max 50MB"
+    }
+  },
+  "my_books": {
+    "title": "My Books",
+    "empty": "You haven't created any books yet",
+    "empty_subtitle": "Start your first book using one of the creation methods above",
+    "view_all": "View All",
+    "filter": {
+      "all": "All",
+      "drafts": "Drafts",
+      "published": "Published"
+    },
+    "sort": {
+      "recent": "Most Recent",
+      "title": "Title",
+      "progress": "Progress"
+    }
+  },
+  "book_card": {
+    "chapters": "{{count}} chapters",
+    "words": "{{count}} words",
+    "last_edited": "Last edited {{date}}",
+    "continue_writing": "Continue Writing",
+    "edit": "Edit",
+    "delete": "Delete",
+    "publish": "Publish",
+    "view": "View"
+  },
+  "stats": {
+    "total_books": "Total Books",
+    "total_words": "Total Words",
+    "published": "Published",
+    "earnings": "Earnings"
+  },
+  "quick_actions": {
+    "title": "Quick Actions",
+    "new_book": "New Book",
+    "continue_writing": "Continue Writing",
+    "view_marketplace": "View Marketplace"
+  }
+}

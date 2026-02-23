@@ -1,16 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { BookOpen, User, LogOut, ChevronDown, Crown, MessageCircle, Bell, Store } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getUnreadCount as getMessagesUnreadCount } from '../../services/messagingApi';
 import { getUnreadCount as getNotificationsUnreadCount } from '../../services/notificationApi';
 import ConversationsList from '../messaging/ConversationsList';
 import NotificationCenter from '../notifications/NotificationCenter';
+import LanguageSwitcher from '../LanguageSwitcher';
 import logoIcon from '../../assets/images/logo-icon.png';
 
 export default function Navbar() {
+  const { t } = useTranslation('common');
   const { user, logout } = useAuth();
+  const { isRTL } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -100,7 +105,7 @@ export default function Navbar() {
                 }`}
               >
                 <BookOpen className="w-5 h-5" />
-                <span className="font-semibold">My Books</span>
+                <span className="font-semibold">{t('nav.my_books')}</span>
               </Link>
 
               <Link
@@ -112,8 +117,11 @@ export default function Navbar() {
                 }`}
               >
                 <Store className="w-5 h-5" />
-                <span className="font-semibold">Marketplace</span>
+                <span className="font-semibold">{t('nav.marketplace')}</span>
               </Link>
+
+              {/* Language Switcher */}
+              <LanguageSwitcher showIcon={false} />
 
               {/* Notifications Button */}
               <motion.button
@@ -121,7 +129,7 @@ export default function Navbar() {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowNotifications(true)}
                 className="relative p-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300"
-                title="Notifications"
+                title={t('nav.notifications')}
               >
                 <Bell className="w-5 h-5" />
                 {notificationsUnreadCount > 0 && (
@@ -137,7 +145,7 @@ export default function Navbar() {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowMessages(true)}
                 className="relative p-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300"
-                title="Messages"
+                title={t('nav.messages')}
               >
                 <MessageCircle className="w-5 h-5" />
                 {messagesUnreadCount > 0 && (
@@ -187,9 +195,9 @@ export default function Navbar() {
                     >
                       {/* User Info */}
                       <div className="px-5 py-4 border-b border-white/10 bg-gradient-to-br from-white/5 to-transparent">
-                        <p className="text-xs text-gray-400 mb-1">Signed in as</p>
+                        <p className="text-xs text-gray-400 mb-1">{t('user.signed_in_as')}</p>
                         <p className="text-white font-semibold truncate mb-3">{user?.email}</p>
-                        <div className="flex items-center gap-2">
+                        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <div
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
                               user?.role === 'premium'
@@ -199,11 +207,11 @@ export default function Navbar() {
                                 : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
                             }`}
                           >
-                            {user?.role === 'premium' && <Crown className="w-3 h-3 inline mr-1" />}
-                            {user?.role?.toUpperCase()}
+                            {user?.role === 'premium' && <Crown className={`w-3 h-3 inline ${isRTL ? 'ml-1' : 'mr-1'}`} />}
+                            {t(`user.${user?.role || 'free'}`)}
                           </div>
                           <div className="text-xs text-gray-300 font-medium">
-                            <span className="text-magic-gold font-bold">{user?.credits}</span> credits
+                            <span className="text-magic-gold font-bold">{user?.credits}</span> {t('user.credits')}
                           </div>
                         </div>
                       </div>
@@ -213,27 +221,27 @@ export default function Navbar() {
                         <Link
                           to="/subscription"
                           onClick={() => setShowUserMenu(false)}
-                          className="flex items-center gap-3 px-5 py-3 text-gray-300 hover:text-magic-gold hover:bg-magic-gold/10 transition-all duration-300"
+                          className={`flex items-center gap-3 px-5 py-3 text-gray-300 hover:text-magic-gold hover:bg-magic-gold/10 transition-all duration-300 ${isRTL ? 'flex-row-reverse' : ''}`}
                         >
                           <Crown className="w-4 h-4" />
-                          <span className="font-medium">Upgrade Plan</span>
+                          <span className="font-medium">{t('nav.upgrade')}</span>
                         </Link>
 
                         <Link
                           to="/settings"
                           onClick={() => setShowUserMenu(false)}
-                          className="flex items-center gap-3 px-5 py-3 text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300"
+                          className={`flex items-center gap-3 px-5 py-3 text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300 ${isRTL ? 'flex-row-reverse' : ''}`}
                         >
                           <User className="w-4 h-4" />
-                          <span className="font-medium">Settings</span>
+                          <span className="font-medium">{t('nav.settings')}</span>
                         </Link>
 
                         <button
                           onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-5 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300"
+                          className={`w-full flex items-center gap-3 px-5 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300 ${isRTL ? 'flex-row-reverse' : ''}`}
                         >
                           <LogOut className="w-4 h-4" />
-                          <span className="font-medium">Logout</span>
+                          <span className="font-medium">{t('nav.logout')}</span>
                         </button>
                       </div>
                     </motion.div>

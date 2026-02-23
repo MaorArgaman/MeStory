@@ -1,0 +1,69 @@
+{
+  "title": "Personal Stories",
+  "subtitle": "Preserving memories, honoring lives",
+  "description": "A dedicated space to document and share personal stories of significance - from Holocaust memories to the events of October 7th.",
+  "categories": {
+    "holocaust": {
+      "title": "Holocaust Memories",
+      "description": "Document and preserve stories from the Holocaust era",
+      "subtitle": "Preserving history for future generations"
+    },
+    "october7": {
+      "title": "October 7th Stories",
+      "description": "Share experiences and stories from October 7th, 2023",
+      "subtitle": "Documenting our collective memory"
+    }
+  },
+  "subcategories": {
+    "hostages": {
+      "title": "Hostages",
+      "description": "Stories of those who were taken hostage"
+    },
+    "hostage_families": {
+      "title": "Hostage Families",
+      "description": "Stories from families of hostages"
+    },
+    "evacuees": {
+      "title": "Evacuees",
+      "description": "Stories of those who were displaced"
+    },
+    "soldiers": {
+      "title": "Soldiers",
+      "description": "Stories from soldiers and first responders"
+    },
+    "bereaved": {
+      "title": "Bereaved Families",
+      "description": "Stories from families who lost loved ones"
+    }
+  },
+  "create": {
+    "title": "Share Your Story",
+    "subtitle": "Your story matters. Share it with the world.",
+    "category_select": "Choose a Category",
+    "subcategory_select": "Choose a Subcategory",
+    "story_title": "Story Title",
+    "story_title_placeholder": "Give your story a title",
+    "start_writing": "Start Writing",
+    "guidelines": {
+      "title": "Writing Guidelines",
+      "respect": "Write with respect and dignity",
+      "truth": "Share truthful accounts",
+      "privacy": "Respect the privacy of others",
+      "support": "This is a safe space for sharing"
+    }
+  },
+  "stories": {
+    "recent": "Recent Stories",
+    "featured": "Featured Stories",
+    "read_more": "Read More",
+    "share": "Share Story",
+    "empty": "No stories yet in this category",
+    "empty_subtitle": "Be the first to share a story"
+  },
+  "support": {
+    "title": "Need Support?",
+    "description": "Writing about traumatic experiences can be difficult. Support resources are available.",
+    "resources": "Support Resources",
+    "hotline": "Crisis Hotline"
+  }
+}

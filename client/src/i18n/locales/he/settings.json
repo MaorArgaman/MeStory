@@ -1,0 +1,88 @@
+{
+  "title": "הגדרות",
+  "tabs": {
+    "profile": "פרופיל",
+    "account": "חשבון",
+    "notifications": "התראות",
+    "security": "אבטחה",
+    "billing": "חיובים",
+    "language": "שפה"
+  },
+  "profile": {
+    "title": "הגדרות פרופיל",
+    "subtitle": "נהל את פרטי הפרופיל הציבורי שלך",
+    "name": "שם תצוגה",
+    "name_placeholder": "שם התצוגה שלך",
+    "bio": "ביוגרפיה",
+    "bio_placeholder": "ספר לקוראים על עצמך...",
+    "avatar": "תמונת פרופיל",
+    "avatar_change": "החלף תמונה",
+    "avatar_remove": "הסר",
+    "header_image": "תמונת כותרת",
+    "save": "שמור פרופיל",
+    "success": "הפרופיל עודכן בהצלחה!",
+    "error": "נכשל בעדכון הפרופיל"
+  },
+  "account": {
+    "title": "הגדרות חשבון",
+    "subtitle": "נהל את פרטי החשבון שלך",
+    "email": "כתובת אימייל",
+    "email_verified": "מאומת",
+    "email_unverified": "לא מאומת",
+    "verify_email": "אמת אימייל",
+    "delete_account": "מחק חשבון",
+    "delete_warning": "פעולה זו לא ניתנת לביטול. כל הנתונים שלך יימחקו לצמיתות."
+  },
+  "notifications": {
+    "title": "העדפות התראות",
+    "subtitle": "בחר אילו התראות לקבל",
+    "writing": "תזכורות כתיבה",
+    "writing_desc": "קבל תזכורות להמשיך לכתוב",
+    "publishing": "עדכוני פרסום",
+    "publishing_desc": "עדכונים על הספרים שפרסמת",
+    "sales": "התראות מכירות",
+    "sales_desc": "קבל התראה כשמישהו קונה את הספר שלך",
+    "social": "פעילות חברתית",
+    "social_desc": "לייקים, תגובות ועוקבים חדשים",
+    "system": "עדכוני מערכת",
+    "system_desc": "הודעות חשובות מהמערכת",
+    "email_digest": "סיכום אימייל",
+    "email_digest_desc": "סיכום שבועי של הפעילות שלך"
+  },
+  "security": {
+    "title": "הגדרות אבטחה",
+    "subtitle": "שמור על החשבון שלך מאובטח",
+    "change_password": "שנה סיסמה",
+    "current_password": "סיסמה נוכחית",
+    "new_password": "סיסמה חדשה",
+    "confirm_password": "אימות סיסמה חדשה",
+    "update_password": "עדכן סיסמה",
+    "password_success": "הסיסמה עודכנה בהצלחה!",
+    "sessions": "חיבורים פעילים",
+    "sessions_desc": "נהל את המכשירים המחוברים שלך",
+    "logout_all": "התנתק מכל המכשירים"
+  },
+  "billing": {
+    "title": "חיובים ומנוי",
+    "subtitle": "נהל את המנוי ואמצעי התשלום שלך",
+    "current_plan": "מנוי נוכחי",
+    "upgrade": "שדרוג",
+    "downgrade": "הורדת דרגה",
+    "cancel": "ביטול מנוי",
+    "payment_method": "אמצעי תשלום",
+    "add_payment": "הוסף אמצעי תשלום",
+    "billing_history": "היסטוריית חיובים",
+    "next_billing": "תאריך חיוב הבא"
+  },
+  "language": {
+    "title": "שפה ואזור",
+    "subtitle": "בחר את השפה והגדרות האזור המועדפות עליך",
+    "interface_language": "שפת ממשק",
+    "interface_desc": "השפה בה מוצג ממשק האפליקציה",
+    "book_language": "שפת ספר ברירת מחדל",
+    "book_desc": "שפת ברירת מחדל לספרים חדשים",
+    "direction_preview": "תצוגת כיוון טקסט",
+    "ltr": "משמאל לימין (אנגלית)",
+    "rtl": "מימין לשמאל (עברית)"
+  }
+}

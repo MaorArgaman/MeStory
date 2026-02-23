@@ -344,3 +344,120 @@ export function getCategoryInfo(category: TemplateCategory): TemplateCategoryInf
 export function getCategoryNameHe(category: TemplateCategory): string {
   return getCategoryInfo(category)?.nameHe || category;
 }
+
+// ============================================
+// AI DESIGN TYPES
+// ============================================
+
+// AI Design Status
+export type AIDesignStatus = 'idle' | 'analyzing' | 'generating-design' | 'generating-images' | 'completed' | 'error';
+
+// AI Design Progress
+export interface AIDesignProgress {
+  currentStep: number;
+  totalSteps: number;
+  stepName: string;
+}
+
+// AI Typography Design
+export interface AITypographyDesign {
+  bodyFont: string;
+  headingFont: string;
+  titleFont: string;
+  fontSize: number;
+  lineHeight: number;
+  chapterTitleSize: number;
+  colors: {
+    text: string;
+    heading: string;
+    accent: string;
+    background: string;
+  };
+  formatting?: {
+    headingBold: boolean;
+    headingItalic: boolean;
+    firstParagraphDropCap: boolean;
+  };
+}
+
+// AI Layout Design
+export interface AILayoutDesign {
+  columns: number;
+  columnGap: number;
+  margins: { top: number; bottom: number; inner: number; outer: number };
+  paragraphSpacing: number;
+  textAlign: 'right' | 'left' | 'justify' | 'center';
+  pageNumbers?: {
+    show: boolean;
+    position: string;
+    startFrom: number;
+    style: string;
+  };
+  headers?: {
+    show: boolean;
+    content: string;
+    position: string;
+  };
+}
+
+// AI Cover Design
+export interface AICoverDesign {
+  front?: {
+    backgroundColor: string;
+    gradientColors?: string[];
+    imagePrompt: string;
+    generatedImageUrl?: string;
+    title: { position: string; fontSize: number; color: string };
+    author: { position: string; fontSize: number; color: string };
+  };
+  back?: {
+    backgroundColor: string;
+    imagePrompt?: string;
+    generatedImageUrl?: string;
+  };
+  spine?: {
+    backgroundColor: string;
+    textColor: string;
+  };
+}
+
+// AI Image Placement
+export interface AIImagePlacement {
+  chapterIndex: number;
+  pagePosition: string;
+  imagePosition: string;
+  imageSize: string;
+  prompt: string;
+  generatedImageUrl?: string;
+  caption?: string;
+}
+
+// AI Complete Design
+export interface AICompleteDesign {
+  typography: AITypographyDesign;
+  layout: AILayoutDesign;
+  covers: AICoverDesign;
+  imagePlacements: AIImagePlacement[];
+  reasoning?: string;
+  moodDescription?: string;
+}
+
+// AI Design State (mirrors backend)
+export interface AIDesignState {
+  status: AIDesignStatus;
+  startedAt?: string;
+  completedAt?: string;
+  error?: string;
+  progress?: AIDesignProgress;
+  design?: AICompleteDesign;
+}
+
+// Design Path Options
+export type DesignPath = 'ai' | 'template' | 'custom';
+
+// Template Selection Info
+export interface TemplateSelectionInfo {
+  path: DesignPath;
+  templateId?: string;
+  templateCategory?: TemplateCategory;
+}

@@ -1,0 +1,74 @@
+{
+  "app_name": "MeStory",
+  "tagline": "שחרר את הסופר שבך",
+  "nav": {
+    "my_books": "הספרים שלי",
+    "marketplace": "חנות",
+    "notifications": "התראות",
+    "messages": "הודעות",
+    "settings": "הגדרות",
+    "logout": "התנתקות",
+    "login": "התחברות",
+    "register": "הרשמה",
+    "upgrade": "שדרוג מנוי",
+    "memorial": "סיפורים אישיים"
+  },
+  "buttons": {
+    "save": "שמירה",
+    "cancel": "ביטול",
+    "delete": "מחיקה",
+    "edit": "עריכה",
+    "create": "יצירה",
+    "submit": "שליחה",
+    "continue": "המשך",
+    "back": "חזרה",
+    "next": "הבא",
+    "close": "סגירה",
+    "confirm": "אישור",
+    "loading": "טוען...",
+    "retry": "נסה שוב",
+    "view": "צפייה",
+    "download": "הורדה",
+    "share": "שיתוף",
+    "copy": "העתקה",
+    "search": "חיפוש"
+  },
+  "status": {
+    "loading": "טוען...",
+    "saving": "שומר...",
+    "saved": "נשמר",
+    "error": "שגיאה",
+    "success": "הצלחה",
+    "pending": "ממתין",
+    "active": "פעיל",
+    "inactive": "לא פעיל",
+    "published": "פורסם",
+    "draft": "טיוטה"
+  },
+  "errors": {
+    "generic": "משהו השתבש. אנא נסה שוב.",
+    "network": "שגיאת רשת. אנא בדוק את החיבור שלך.",
+    "not_found": "לא נמצא",
+    "unauthorized": "אנא התחבר כדי להמשיך",
+    "forbidden": "אין לך הרשאה לגשת לזה"
+  },
+  "user": {
+    "signed_in_as": "מחובר בתור",
+    "credits": "קרדיטים",
+    "premium": "פרימיום",
+    "standard": "רגיל",
+    "free": "חינם"
+  },
+  "language": {
+    "select": "שפה",
+    "english": "אנגלית",
+    "hebrew": "עברית"
+  },
+  "footer": {
+    "copyright": "כל הזכויות שמורות",
+    "powered_by": "מופעל על ידי Google Gemini 2.5 Flash",
+    "terms": "תנאי שימוש",
+    "privacy": "מדיניות פרטיות",
+    "contact": "צור קשר"
+  }
+}

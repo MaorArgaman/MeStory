@@ -113,12 +113,12 @@ export default function BookWritingPage() {
     },
   });
 
-  // Update editor content when chapter changes
+  // Update editor content when chapter changes or content is first loaded
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
+    if (editor && content && content !== editor.getHTML()) {
       editor.commands.setContent(content);
     }
-  }, [selectedChapterIndex]);
+  }, [selectedChapterIndex, content, editor]);
 
   // Load book data
   useEffect(() => {

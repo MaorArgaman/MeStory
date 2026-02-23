@@ -705,3 +705,258 @@ export function applyDesignToCoverDesign(design: CompleteBookDesign): any {
     spine: design.cover.spine,
   };
 }
+
+// ============================================
+// ENHANCED COMPLETE DESIGN WITH NANO BANANA PRO
+// ============================================
+
+import {
+  generateBookCovers,
+  generateBookInteriorImages,
+  BookImagePlacement,
+} from './imageGenerationService';
+
+export interface AIDesignProgress {
+  currentStep: number;
+  totalSteps: number;
+  stepName: string;
+}
+
+export interface CompleteDesignWithImages extends CompleteBookDesign {
+  covers: {
+    frontImageUrl?: string;
+    backImageUrl?: string;
+    spineImageUrl?: string;
+  };
+  generatedImages: Array<{
+    chapterIndex: number;
+    imageUrl: string;
+    prompt: string;
+  }>;
+}
+
+/**
+ * Generate complete book design with all images using Nano Banana Pro
+ * This is the main function for the AI Design Wizard
+ */
+export async function generateCompleteDesignWithImages(
+  input: BookDesignInput,
+  onProgress?: (progress: AIDesignProgress) => void,
+  generateInteriorImages: boolean = true
+): Promise<CompleteDesignWithImages> {
+  const totalSteps = generateInteriorImages ? 6 : 4;
+  let currentStep = 0;
+
+  const reportProgress = (stepName: string) => {
+    currentStep++;
+    if (onProgress) {
+      onProgress({ currentStep, totalSteps, stepName });
+    }
+    console.log(`  📍 Step ${currentStep}/${totalSteps}: ${stepName}`);
+  };
+
+  console.log(`🎨 Starting complete AI design for "${input.title}"...`);
+
+  // Step 1: Analyze book and generate typography
+  reportProgress('Analyzing book and generating typography...');
+  const typography = await generateTypographyDesign(input);
+
+  // Step 2: Generate page layout
+  reportProgress('Designing page layout...');
+  const layout = await generatePageLayoutDesign(input);
+
+  // Step 3: Generate cover design concept
+  reportProgress('Creating cover design concept...');
+  const coverConcept = await generateCoverDesign(input, typography);
+
+  // Step 4: Generate cover images with Nano Banana Pro
+  reportProgress('Generating cover images with AI...');
+  const coverImages = await generateBookCovers({
+    title: input.title,
+    author: input.authorName,
+    genre: input.genre,
+    synopsis: input.synopsis,
+    mood: coverConcept.reasoning,
+    style: 'artistic',
+  });
+
+  // Update cover concept with generated images
+  if (coverImages.frontCover.success && coverImages.frontCover.imageUrl) {
+    coverConcept.front.imageUrl = coverImages.frontCover.imageUrl;
+  }
+  if (coverImages.backCover?.success && coverImages.backCover.imageUrl) {
+    coverConcept.back.imageUrl = coverImages.backCover.imageUrl;
+  }
+
+  const covers = {
+    frontImageUrl: coverImages.frontCover.imageUrl,
+    backImageUrl: coverImages.backCover?.imageUrl,
+    spineImageUrl: coverImages.spine?.imageUrl,
+  };
+
+  let imagePlacements: ImagePlacementSuggestion[] = [];
+  let generatedImages: Array<{ chapterIndex: number; imageUrl: string; prompt: string }> = [];
+
+  if (generateInteriorImages) {
+    // Step 5: Analyze chapters for image placements
+    reportProgress('Identifying image placement opportunities...');
+    imagePlacements = await suggestImagePlacements(input);
+
+    // Step 6: Generate interior images (limit to top 5 for performance)
+    if (imagePlacements.length > 0) {
+      reportProgress('Generating interior illustrations...');
+      const topPlacements = imagePlacements.slice(0, 5);
+
+      const bookPlacements: BookImagePlacement[] = topPlacements.map((p) => ({
+        chapterIndex: p.chapterIndex,
+        pagePosition: p.position,
+        imagePosition: 'center' as const,
+        prompt: p.suggestedPrompt,
+      }));
+
+      const interiorImages = await generateBookInteriorImages(bookPlacements, {
+        title: input.title,
+        genre: input.genre,
+      });
+
+      interiorImages.forEach((result, chapterIndex) => {
+        if (result.success && result.imageUrl) {
+          generatedImages.push({
+            chapterIndex,
+            imageUrl: result.imageUrl,
+            prompt: result.prompt,
+          });
+        }
+      });
+    }
+  }
+
+  // Generate overall style description
+  const overallStyle = await generateStyleDescription(input, typography, coverConcept);
+
+  console.log(`✅ Complete AI design finished for "${input.title}"!`);
+  console.log(`   - Typography: ${typography.bodyFont} / ${typography.headingFont}`);
+  console.log(`   - Cover images: ${covers.frontImageUrl ? '✓' : '✗'} front, ${covers.backImageUrl ? '✓' : '✗'} back`);
+  console.log(`   - Interior images: ${generatedImages.length} generated`);
+
+  return {
+    typography,
+    layout,
+    cover: coverConcept,
+    imagePlacements,
+    overallStyle,
+    moodDescription: coverConcept.reasoning,
+    generatedAt: new Date(),
+    covers,
+    generatedImages,
+  };
+}
+
+/**
+ * Convert AI design state to format for Book model
+ */
+export function convertDesignToBookState(design: CompleteDesignWithImages): any {
+  return {
+    status: 'completed',
+    completedAt: new Date(),
+    design: {
+      typography: {
+        bodyFont: design.typography.bodyFont,
+        headingFont: design.typography.headingFont,
+        titleFont: design.typography.titleFont,
+        fontSize: design.typography.fontSize,
+        lineHeight: design.typography.lineHeight,
+        chapterTitleSize: design.typography.chapterTitleSize,
+        colors: design.typography.colors,
+        formatting: {
+          headingBold: true,
+          headingItalic: false,
+          firstParagraphDropCap: design.layout.dropCaps,
+        },
+      },
+      layout: {
+        columns: 1,
+        columnGap: 0,
+        margins: design.layout.margins,
+        paragraphSpacing: 12,
+        textAlign: 'justify',
+        pageNumbers: {
+          show: design.layout.pageNumberPosition !== 'none',
+          position: design.layout.pageNumberPosition,
+          startFrom: 1,
+          style: 'arabic',
+        },
+        headers: {
+          show: design.layout.headerStyle !== 'none',
+          content: design.layout.headerStyle,
+          position: 'top',
+        },
+      },
+      covers: {
+        front: {
+          backgroundColor: design.cover.front.colorPalette[0] || '#1a1a2e',
+          gradientColors: design.cover.front.colorPalette,
+          imagePrompt: design.cover.front.imagePrompt,
+          generatedImageUrl: design.covers.frontImageUrl,
+          title: {
+            position: design.cover.front.title.position,
+            fontSize: design.cover.front.title.size,
+            color: design.cover.front.title.color,
+          },
+          author: {
+            position: design.cover.front.author.position,
+            fontSize: design.cover.front.author.size,
+            color: design.cover.front.author.color,
+          },
+        },
+        back: {
+          backgroundColor: design.cover.back.backgroundColor,
+          imagePrompt: design.cover.back.imagePrompt,
+          generatedImageUrl: design.covers.backImageUrl,
+        },
+        spine: {
+          backgroundColor: design.cover.spine.backgroundColor,
+          textColor: design.cover.spine.color,
+        },
+      },
+      imagePlacements: design.imagePlacements.map((p) => ({
+        chapterIndex: p.chapterIndex,
+        pagePosition: p.position,
+        imagePosition: 'center',
+        imageSize: p.importance === 'high' ? 'large' : 'medium',
+        prompt: p.suggestedPrompt,
+        generatedImageUrl: design.generatedImages.find((g) => g.chapterIndex === p.chapterIndex)?.imageUrl,
+        caption: p.textContext,
+      })),
+      reasoning: design.overallStyle,
+      moodDescription: design.moodDescription,
+    },
+  };
+}
+
+/**
+ * Quick design generation (without interior images) for preview
+ */
+export async function generateQuickDesignPreview(
+  input: BookDesignInput
+): Promise<{
+  typography: TypographyDesign;
+  layout: PageLayoutDesign;
+  colorPalette: string[];
+  coverPrompt: string;
+}> {
+  console.log(`⚡ Quick design preview for "${input.title}"...`);
+
+  const typography = await generateTypographyDesign(input);
+  const layout = await generatePageLayoutDesign(input);
+
+  // Generate just the cover concept without images
+  const coverConcept = await generateCoverDesign(input, typography);
+
+  return {
+    typography,
+    layout,
+    colorPalette: coverConcept.front.colorPalette,
+    coverPrompt: coverConcept.front.imagePrompt,
+  };
+}

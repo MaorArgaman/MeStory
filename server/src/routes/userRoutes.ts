@@ -6,6 +6,7 @@ import {
   requestWithdrawal,
   getUserProfile,
   followUser,
+  updateLanguage,
 } from '../controllers/userController';
 import { authenticate } from '../middleware/auth';
 
@@ -27,6 +28,9 @@ router.get('/earnings', getEarnings as any);
 
 // PUT /api/user/profile - Update user profile
 router.put('/profile', updateProfile as any);
+
+// PUT /api/user/language - Update language preference
+router.put('/language', updateLanguage as any);
 
 // PUT /api/user/password - Change password
 router.put('/password', changePassword as any);

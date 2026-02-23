@@ -12,6 +12,10 @@ import {
   generateTypography,
   getImageSuggestions,
   generateContextualImage,
+  generateCompleteDesign,
+  getDesignPreview,
+  getDesignState,
+  applyCompleteDesign,
 } from '../controllers/aiBookDesignController';
 import {
   startInterview,
@@ -225,6 +229,36 @@ router.post('/suggest-images/:bookId', getImageSuggestions as any);
  * }
  */
 router.post('/generate-contextual-image', generateContextualImage as any);
+
+/**
+ * POST /api/ai/design-complete/:bookId
+ * Generate complete AI design with all images (Nano Banana Pro)
+ * This is the main endpoint for the AI Design Wizard
+ *
+ * Body:
+ * {
+ *   generateImages?: boolean (default true)
+ * }
+ */
+router.post('/design-complete/:bookId', generateCompleteDesign as any);
+
+/**
+ * POST /api/ai/design-preview/:bookId
+ * Get quick design preview without generating images
+ */
+router.post('/design-preview/:bookId', getDesignPreview as any);
+
+/**
+ * GET /api/ai/design-state/:bookId
+ * Get current AI design state (for resuming)
+ */
+router.get('/design-state/:bookId', getDesignState as any);
+
+/**
+ * POST /api/ai/apply-complete-design/:bookId
+ * Apply AI design state to book layout and cover
+ */
+router.post('/apply-complete-design/:bookId', applyCompleteDesign as any);
 
 // ============================================
 // AI CHAT INTERVIEW ROUTES

@@ -8,7 +8,6 @@ import mammoth from 'mammoth';
 import { Book } from '../models/Book';
 import { User } from '../models/User';
 import { AuthRequest } from '../types';
-import { generateBookPDF } from '../services/pdfService';
 import { transcribeAudio } from '../services/whisperService';
 import { generatePricingStrategy } from '../services/pricingStrategyService';
 import { exportBook } from '../services/bookExportService';
@@ -835,7 +834,7 @@ export const getPublicBooks = async (req: Request, res: Response): Promise<void>
 /**
  * Export book as PDF
  * GET /api/books/:id/export
- * Section 16.1: PDF Export
+ * Section 16.1: PDF Export (Legacy endpoint - redirects to new format)
  */
 export const exportBookPDF = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -878,16 +877,17 @@ export const exportBookPDF = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    // Generate PDF
-    const pdfDoc = await generateBookPDF(id);
+    // Generate PDF using the new comprehensive export service
+    const pdfBuffer = await exportBook(id, 'pdf');
 
     // Set response headers for PDF download
-    const filename = book.title.replace(/[^a-zA-Z0-9]/g, '_');
+    const filename = book.title.replace(/[^a-zA-Z0-9\u0590-\u05FF]/g, '_');
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}.pdf"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
 
-    // Pipe the PDF to the response
-    pdfDoc.pipe(res);
+    // Send the PDF buffer
+    res.send(pdfBuffer);
   } catch (error) {
     console.error('Export book error:', error);
     res.status(500).json({

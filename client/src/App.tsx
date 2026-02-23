@@ -2,9 +2,13 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AnimatePresence } from 'framer-motion';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import RequireAuth from './components/RequireAuth';
 import Layout from './components/layout/Layout';
 import LoadingScreen from './components/LoadingScreen';
+
+// Initialize i18n
+import './i18n';
 
 // Pages
 import LandingPage from './pages/LandingPage';
@@ -15,6 +19,7 @@ import DashboardPage from './pages/DashboardPage';
 import BookWritingPage from './pages/BookWritingPage';
 import DesignStudioPage from './pages/DesignStudioPage';
 import BookLayoutPage from './pages/BookLayoutPage';
+import BookDesignPage from './pages/BookDesignPage';
 import PublishingPage from './pages/PublishingPage';
 import PublishMetadata from './pages/publish/PublishMetadata';
 import MarketplacePage from './pages/MarketplacePage';
@@ -29,6 +34,7 @@ import AdminCheck from './components/AdminCheck';
 
 function AppContent() {
   const { loading } = useAuth();
+  const { direction, language } = useLanguage();
   const location = useLocation();
 
   // Show loading screen while checking authentication
@@ -37,7 +43,7 @@ function AppContent() {
   }
 
   return (
-    <div dir="auto">
+    <div dir={direction} lang={language}>
       <Toaster
         position="top-right"
         toastOptions={{
@@ -90,6 +96,14 @@ function AppContent() {
           element={
             <RequireAuth>
               <BookLayoutPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/book-design/:bookId"
+          element={
+            <RequireAuth>
+              <BookDesignPage />
             </RequireAuth>
           }
         />
@@ -194,9 +208,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 

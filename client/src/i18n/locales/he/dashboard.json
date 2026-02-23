@@ -1,0 +1,66 @@
+{
+  "title": "מרכז היצירה",
+  "welcome": "ברוך הבא, {{name}}! יש לך {{credits}} קרדיטים.",
+  "begin_masterpiece": "התחל את יצירת המופת הבאה שלך",
+  "choose_method": "בחר איך אתה רוצה להפיח חיים בסיפור שלך",
+  "creation_methods": {
+    "scratch": {
+      "title": "התחל מאפס",
+      "description": "צור ספר ריק וצלול ישירות לכתיבת יצירת המופת שלך.",
+      "button": "התחלה מהירה"
+    },
+    "interview": {
+      "title": "ראיון מעמיק",
+      "description": "צ'אט מונחה AI לבניית יסודות הסיפור שלך ב-8 אלמנטים מרכזיים.",
+      "button": "ראיון AI"
+    },
+    "voice": {
+      "title": "הכתבה קולית",
+      "description": "דבר את הסיפור שלך ותן ל-AI לתמלל אותו לטקסט אוטומטית.",
+      "button": "קול לטקסט"
+    },
+    "import": {
+      "title": "ייבוא כתב יד",
+      "description": "העלה את כתב היד הקיים שלך בפורמט PDF, DOCX או TXT.",
+      "button": "עד 50MB"
+    }
+  },
+  "my_books": {
+    "title": "הספרים שלי",
+    "empty": "עדיין לא יצרת ספרים",
+    "empty_subtitle": "התחל את הספר הראשון שלך באמצעות אחת משיטות היצירה למעלה",
+    "view_all": "צפה בכל",
+    "filter": {
+      "all": "הכל",
+      "drafts": "טיוטות",
+      "published": "פורסמו"
+    },
+    "sort": {
+      "recent": "אחרונים",
+      "title": "כותרת",
+      "progress": "התקדמות"
+    }
+  },
+  "book_card": {
+    "chapters": "{{count}} פרקים",
+    "words": "{{count}} מילים",
+    "last_edited": "נערך לאחרונה {{date}}",
+    "continue_writing": "המשך לכתוב",
+    "edit": "עריכה",
+    "delete": "מחיקה",
+    "publish": "פרסום",
+    "view": "צפייה"
+  },
+  "stats": {
+    "total_books": "סך הספרים",
+    "total_words": "סך המילים",
+    "published": "פורסמו",
+    "earnings": "הכנסות"
+  },
+  "quick_actions": {
+    "title": "פעולות מהירות",
+    "new_book": "ספר חדש",
+    "continue_writing": "המשך לכתוב",
+    "view_marketplace": "צפה בחנות"
+  }
+}

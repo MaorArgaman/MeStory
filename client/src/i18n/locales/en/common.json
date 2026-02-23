@@ -1,0 +1,74 @@
+{
+  "app_name": "MeStory",
+  "tagline": "Unleash Your Inner Author",
+  "nav": {
+    "my_books": "My Books",
+    "marketplace": "Marketplace",
+    "notifications": "Notifications",
+    "messages": "Messages",
+    "settings": "Settings",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Get Started",
+    "upgrade": "Upgrade Plan",
+    "memorial": "Personal Stories"
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "submit": "Submit",
+    "continue": "Continue",
+    "back": "Back",
+    "next": "Next",
+    "close": "Close",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "retry": "Retry",
+    "view": "View",
+    "download": "Download",
+    "share": "Share",
+    "copy": "Copy",
+    "search": "Search"
+  },
+  "status": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "error": "Error",
+    "success": "Success",
+    "pending": "Pending",
+    "active": "Active",
+    "inactive": "Inactive",
+    "published": "Published",
+    "draft": "Draft"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Network error. Please check your connection.",
+    "not_found": "Not found",
+    "unauthorized": "Please log in to continue",
+    "forbidden": "You don't have permission to access this"
+  },
+  "user": {
+    "signed_in_as": "Signed in as",
+    "credits": "credits",
+    "premium": "PREMIUM",
+    "standard": "STANDARD",
+    "free": "FREE"
+  },
+  "language": {
+    "select": "Language",
+    "english": "English",
+    "hebrew": "Hebrew"
+  },
+  "footer": {
+    "copyright": "All rights reserved",
+    "powered_by": "Powered by Google Gemini 2.5 Flash",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "contact": "Contact Us"
+  }
+}

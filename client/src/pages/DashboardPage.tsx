@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { api } from '../services/api';
 import { Plus, Loader2, BookOpen, Edit, Palette, Download, Rocket, MessageSquare, Upload, Sparkles, FileText, Mic, PenTool, X, Volume2, Feather, MessageCircle, FileUp, AudioLines } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,6 +16,7 @@ import {
   RecommendedForYou,
 } from '../components/recommendations';
 import emptyDashboard from '../assets/images/empty-dashboard.png';
+import MemorialSection from '../components/memorial/MemorialSection';
 // Dashboard branded images
 import dashboardIconScratch from '../assets/images/dashboard-icon-scratch.png';
 import dashboardIconInterview from '../assets/images/dashboard-icon-interview.png';
@@ -52,6 +54,7 @@ export default function DashboardPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
+  const { language } = useLanguage();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -87,25 +90,25 @@ export default function DashboardPage() {
   const exportBook = async (bookId: string, bookTitle: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      toast('Generating PDF...');
-      const response = await api.get(`/books/${bookId}/export`, {
+      toast('מייצר PDF...');
+      const response = await api.get(`/books/${bookId}/export/pdf`, {
         responseType: 'blob',
       });
 
       // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `${bookTitle.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+      link.setAttribute('download', `${bookTitle.replace(/[^a-zA-Z0-9\u0590-\u05FF]/g, '_')}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      toast.success('PDF exported successfully!');
+      toast.success('הקובץ יוצא בהצלחה!');
     } catch (error) {
       console.error('Failed to export book:', error);
-      toast.error('Failed to export PDF');
+      toast.error('הייצוא נכשל');
     }
   };
 
@@ -424,6 +427,13 @@ export default function DashboardPage() {
 
         </div>
       </div>
+
+      {/* Memorial Section - Hebrew only */}
+      {language === 'he' && (
+        <div className="max-w-7xl mx-auto mb-16 px-4">
+          <MemorialSection />
+        </div>
+      )}
 
       {/* Continue Reading & Writing Sections */}
       <div className="max-w-7xl mx-auto mb-12">

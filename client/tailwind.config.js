@@ -48,6 +48,9 @@ export default {
           900: '#03030b',
         },
         'glass-border': 'rgba(255, 255, 255, 0.1)',
+        // Memorial theme colors
+        'memorial-accent': '#c9b037',
+        'memorial-bg': '#0f0f1a',
         'cosmic-purple': {
           DEFAULT: '#a855f7',
           light: '#c084fc',

@@ -24,6 +24,7 @@ export interface IProfile {
   bio?: string;
   avatar?: string;
   headerImage?: string;
+  language?: 'en' | 'he';
   authorProfile?: {
     publishedBooks: number;
     totalSales: number;
@@ -152,6 +153,11 @@ const ProfileSchema = new Schema<IProfile>(
     },
     headerImage: {
       type: String,
+    },
+    language: {
+      type: String,
+      enum: ['en', 'he'],
+      default: 'en',
     },
     authorProfile: {
       publishedBooks: {

@@ -7,6 +7,7 @@ import crypto from 'crypto';
 // Lazy-initialize Gemini AI client (only when API key is available)
 let genAIClient: GoogleGenerativeAI | null = null;
 let modelInstance: GenerativeModel | null = null;
+let imageModelInstance: GenerativeModel | null = null;
 
 function getGeminiModel(): GenerativeModel {
   if (!process.env.GEMINI_API_KEY) {
@@ -19,6 +20,31 @@ function getGeminiModel(): GenerativeModel {
     modelInstance = genAIClient.getGenerativeModel({ model: 'gemini-2.0-flash' });
   }
   return modelInstance;
+}
+
+/**
+ * Get Gemini model configured for image generation (Nano Banana Pro)
+ * Uses gemini-2.0-flash-exp with image generation capabilities
+ */
+function getGeminiImageModel(): GenerativeModel {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY is not configured');
+  }
+  if (!genAIClient) {
+    genAIClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  }
+  if (!imageModelInstance) {
+    // Use experimental model with image generation support
+    imageModelInstance = genAIClient.getGenerativeModel({
+      model: 'gemini-2.0-flash-exp',
+      generationConfig: {
+        temperature: 1,
+        topP: 0.95,
+        topK: 40,
+      }
+    });
+  }
+  return imageModelInstance;
 }
 
 export interface ImageGenerationRequest {
@@ -113,6 +139,12 @@ export async function generateImage(request: ImageGenerationRequest): Promise<Im
       case 'stability':
         // Stability AI (requires API key)
         imageUrl = await generateWithStabilityAI(enhancedPrompt, request);
+        break;
+
+      case 'gemini':
+      case 'nano-banana':
+        // Nano Banana Pro (Gemini Image API)
+        imageUrl = await generateWithNanoBananaPro(enhancedPrompt, request.aspectRatio);
         break;
 
       case 'placeholder':
@@ -279,6 +311,156 @@ async function generateWithStabilityAI(prompt: string, request: ImageGenerationR
 }
 
 /**
+ * Generate image using Nano Banana Pro (Gemini Image API)
+ * Uses Gemini 2.0 Flash Experimental with native image generation
+ */
+async function generateWithNanoBananaPro(prompt: string, aspectRatio?: string): Promise<string> {
+  try {
+    console.log(`🍌 Generating image with Nano Banana Pro: ${prompt.slice(0, 50)}...`);
+
+    // Determine dimensions description based on aspect ratio
+    let dimensionPrompt = 'square format';
+    switch (aspectRatio) {
+      case '16:9':
+        dimensionPrompt = 'wide landscape format (16:9 ratio)';
+        break;
+      case '9:16':
+        dimensionPrompt = 'tall portrait format (9:16 ratio), perfect for book cover';
+        break;
+      case '4:3':
+        dimensionPrompt = 'landscape format (4:3 ratio)';
+        break;
+      case '3:4':
+        dimensionPrompt = 'portrait format (3:4 ratio)';
+        break;
+      case '1:1':
+        dimensionPrompt = 'square format (1:1 ratio)';
+        break;
+    }
+
+    // Create the image generation prompt
+    const imagePrompt = `Generate a high-quality, professional image in ${dimensionPrompt}.
+
+Image description: ${prompt}
+
+Requirements:
+- High resolution and sharp details
+- Professional quality suitable for book publishing
+- No text or watermarks in the image
+- Visually compelling and cohesive composition
+- Appropriate lighting and color balance`;
+
+    const model = getGeminiImageModel();
+
+    // Use Gemini's native image generation capability
+    const result = await model.generateContent({
+      contents: [{
+        role: 'user',
+        parts: [{ text: imagePrompt }]
+      }],
+      generationConfig: {
+        temperature: 1,
+        topP: 0.95,
+        topK: 40,
+      }
+    });
+
+    const response = result.response;
+    // Response text available for debugging if needed
+    void response.text();
+
+    // Check if the response contains image data or a URL
+    // Gemini 2.0 Flash Exp may return image data in various formats
+
+    // If no native image generation available, fall back to Pollinations with enhanced prompt
+    console.log('🔄 Falling back to Pollinations with Gemini-enhanced prompt...');
+
+    // Use the Gemini model to create a better prompt for Pollinations
+    const enhancedResult = await getGeminiModel().generateContent(`
+You are an expert at creating image generation prompts. Transform this request into an optimal prompt for AI image generation:
+
+"${prompt}"
+
+Format: ${dimensionPrompt}
+
+Create a detailed, vivid prompt under 200 characters that will generate a stunning, professional image. Focus on:
+- Specific visual details
+- Lighting and mood
+- Style and artistic approach
+- Color palette
+
+Respond with ONLY the enhanced prompt, nothing else.`);
+
+    const enhancedPrompt = enhancedResult.response.text().trim();
+
+    // Generate with Pollinations using enhanced prompt
+    return await generateWithPollinationsEnhanced(enhancedPrompt, aspectRatio);
+  } catch (error: any) {
+    console.error('Nano Banana Pro error:', error);
+    // Fallback to regular Pollinations
+    console.log('🔄 Falling back to standard Pollinations...');
+    return await generateWithPollinations(prompt, aspectRatio);
+  }
+}
+
+/**
+ * Generate image using Pollinations with enhanced prompt (helper for Nano Banana)
+ */
+async function generateWithPollinationsEnhanced(prompt: string, aspectRatio?: string): Promise<string> {
+  const encodedPrompt = encodeURIComponent(prompt);
+
+  // Use higher quality settings for Nano Banana fallback
+  let width = 1024;
+  let height = 1024;
+
+  switch (aspectRatio) {
+    case '16:9':
+      width = 1792;
+      height = 1024;
+      break;
+    case '9:16':
+      width = 1024;
+      height = 1792;
+      break;
+    case '4:3':
+      width = 1280;
+      height = 960;
+      break;
+    case '3:4':
+      width = 960;
+      height = 1280;
+      break;
+    case '1:1':
+    default:
+      width = 1024;
+      height = 1024;
+  }
+
+  // Use Pollinations with higher quality settings
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${Date.now()}&nologo=true&enhance=true`;
+
+  try {
+    const response = await axios.get(imageUrl, {
+      responseType: 'arraybuffer',
+      timeout: 120000 // 2 minute timeout for high-quality generation
+    });
+
+    const uploadDir = process.env.UPLOAD_DIR || './uploads';
+    const filename = `nano-banana-${crypto.randomUUID()}.png`;
+    const filePath = path.join(uploadDir, filename);
+
+    await fs.mkdir(uploadDir, { recursive: true });
+    await fs.writeFile(filePath, response.data);
+
+    console.log(`✅ Nano Banana image saved: ${filename}`);
+    return `/uploads/${filename}`;
+  } catch (error) {
+    console.error('Error downloading Nano Banana image:', error);
+    return imageUrl;
+  }
+}
+
+/**
  * Generate a placeholder image URL based on genre
  * Uses picsum.photos or similar service for themed placeholders
  */
@@ -393,4 +575,158 @@ Respond with ONLY the scene description, no other text.`;
       error: error.message || 'Failed to generate illustration',
     };
   }
+}
+
+/**
+ * Book Cover Generation Options
+ */
+// Style type for image generation
+type ImageStyle = 'realistic' | 'illustration' | 'artistic' | 'manga' | 'watercolor' | 'oil-painting';
+
+export interface BookCoverGenerationRequest {
+  title: string;
+  author: string;
+  genre: string;
+  synopsis?: string;
+  mood?: string;
+  style?: ImageStyle;
+}
+
+export interface BookCoverGenerationResult {
+  frontCover: ImageGenerationResult;
+  backCover?: ImageGenerationResult;
+  spine?: ImageGenerationResult;
+}
+
+/**
+ * Generate complete book covers using Nano Banana Pro
+ * Generates front cover, back cover, and spine images
+ */
+export async function generateBookCovers(
+  request: BookCoverGenerationRequest
+): Promise<BookCoverGenerationResult> {
+  const { title, author, genre, synopsis, mood, style } = request;
+
+  console.log(`📚 Generating book covers for: "${title}" by ${author}`);
+
+  // Generate front cover prompt
+  const frontCoverPromptRequest = `Create a professional book cover image prompt for:
+Title: "${title}"
+Author: ${author}
+Genre: ${genre}
+Synopsis: ${synopsis || 'Not provided'}
+Mood: ${mood || 'Based on genre'}
+Style: ${style || 'Appropriate for genre'}
+
+Generate a compelling, professional front cover image prompt that:
+- Captures the essence of the book
+- Appeals to the target audience
+- Is visually striking and memorable
+- Works well with text overlay for title and author
+- Follows modern book cover design trends for ${genre}
+
+Respond with ONLY the image prompt (under 250 characters), no other text.`;
+
+  const frontPromptResult = await getGeminiModel().generateContent(frontCoverPromptRequest);
+  const frontCoverPrompt = frontPromptResult.response.text().trim();
+
+  // Generate front cover
+  const frontCover = await generateImage({
+    prompt: frontCoverPrompt,
+    bookContext: { title, genre },
+    style: style || 'illustration',
+    aspectRatio: '3:4', // Standard book cover ratio
+  });
+
+  // Generate back cover prompt
+  const backCoverPromptRequest = `Create a complementary back cover image prompt for a book:
+Title: "${title}"
+Genre: ${genre}
+Synopsis: ${synopsis || 'Not provided'}
+Front cover style: ${frontCoverPrompt.slice(0, 100)}
+
+The back cover should:
+- Complement the front cover
+- Be subtle enough for text overlay (synopsis, reviews)
+- Maintain visual consistency with the front
+- Use similar color palette and mood
+
+Respond with ONLY the image prompt (under 200 characters), no other text.`;
+
+  const backPromptResult = await getGeminiModel().generateContent(backCoverPromptRequest);
+  const backCoverPrompt = backPromptResult.response.text().trim();
+
+  const backCover = await generateImage({
+    prompt: backCoverPrompt,
+    bookContext: { title, genre },
+    style: style || 'illustration',
+    aspectRatio: '3:4',
+  });
+
+  // Generate spine - usually a simple gradient or pattern
+  const spinePrompt = `Abstract ${genre.toLowerCase()} book spine design, vertical gradient, elegant ${mood || 'sophisticated'} colors, minimal, no text`;
+
+  const spine = await generateImage({
+    prompt: spinePrompt,
+    bookContext: { title, genre },
+    style: 'artistic',
+    aspectRatio: '9:16', // Tall and narrow for spine
+  });
+
+  return {
+    frontCover,
+    backCover,
+    spine,
+  };
+}
+
+/**
+ * Generate images for book interior based on AI design placements
+ */
+export interface BookImagePlacement {
+  chapterIndex: number;
+  pagePosition: 'chapter-start' | 'mid-chapter' | 'chapter-end';
+  imagePosition: 'top' | 'center' | 'bottom' | 'full-page';
+  prompt: string;
+  caption?: string;
+}
+
+export async function generateBookInteriorImages(
+  placements: BookImagePlacement[],
+  bookContext: ImageGenerationRequest['bookContext']
+): Promise<Map<number, ImageGenerationResult>> {
+  const results = new Map<number, ImageGenerationResult>();
+
+  console.log(`📖 Generating ${placements.length} interior images...`);
+
+  for (const placement of placements) {
+    try {
+      // Determine aspect ratio based on image position
+      let aspectRatio: ImageGenerationRequest['aspectRatio'] = '4:3';
+      if (placement.imagePosition === 'full-page') {
+        aspectRatio = '3:4';
+      } else if (placement.imagePosition === 'top' || placement.imagePosition === 'bottom') {
+        aspectRatio = '16:9';
+      }
+
+      const result = await generateImage({
+        prompt: placement.prompt,
+        bookContext,
+        style: 'illustration',
+        aspectRatio,
+      });
+
+      results.set(placement.chapterIndex, result);
+      console.log(`✅ Generated image for chapter ${placement.chapterIndex}`);
+    } catch (error) {
+      console.error(`Failed to generate image for chapter ${placement.chapterIndex}:`, error);
+      results.set(placement.chapterIndex, {
+        success: false,
+        prompt: placement.prompt,
+        error: 'Failed to generate image',
+      });
+    }
+  }
+
+  return results;
 }

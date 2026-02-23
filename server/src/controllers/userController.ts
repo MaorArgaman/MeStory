@@ -416,6 +416,65 @@ export const getUserProfile = async (req: AuthRequest, res: Response): Promise<v
 };
 
 /**
+ * Update user language preference
+ * PUT /api/user/language
+ */
+export const updateLanguage = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: 'Authentication required',
+      });
+      return;
+    }
+
+    const { language } = req.body;
+
+    // Validate language
+    if (!language || !['en', 'he'].includes(language)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid language. Must be "en" or "he"',
+      });
+      return;
+    }
+
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: 'User not found',
+      });
+      return;
+    }
+
+    // Initialize profile if it doesn't exist
+    if (!user.profile) {
+      user.profile = {};
+    }
+
+    user.profile.language = language;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Language preference updated successfully',
+      data: {
+        language,
+      },
+    });
+  } catch (error) {
+    console.error('Update language error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update language preference',
+    });
+  }
+};
+
+/**
  * Toggle follow/unfollow a user
  * POST /api/user/:id/follow
  */

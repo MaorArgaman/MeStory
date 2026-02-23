@@ -25,10 +25,13 @@ export const startInterview = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { genre, targetAudience } = req.body;
+    const { genre, targetAudience, language = 'he' } = req.body;
+
+    // Validate language
+    const validLanguage = ['en', 'he'].includes(language) ? language : 'he';
 
     // Create interview state
-    const state = createInterview(genre, targetAudience);
+    const state = createInterview(genre, targetAudience, validLanguage);
 
     // Generate first AI message
     const firstMessage = await generateFirstMessage(state);
@@ -44,6 +47,7 @@ export const startInterview = async (
           isComplete: state.isComplete,
           progress: getInterviewProgress(state),
           canCompleteEarly: canCompleteEarly(state),
+          language: state.language,
         },
         firstMessage,
       },
@@ -110,6 +114,7 @@ export const sendMessage = async (
           isComplete: result.state.isComplete,
           progress: getInterviewProgress(result.state),
           canCompleteEarly: canCompleteEarly(result.state),
+          language: result.state.language,
         },
         aiMessage: result.aiMessage,
         topicTransition: result.topicTransition,

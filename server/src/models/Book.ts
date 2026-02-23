@@ -246,6 +246,88 @@ export interface IStoryContext {
   voiceInterview?: IVoiceInterview; // Voice interview data
 }
 
+// AI Design State interface - tracks AI design progress
+export interface IAIDesignState {
+  status: 'idle' | 'analyzing' | 'generating-design' | 'generating-images' | 'completed' | 'error';
+  startedAt?: Date;
+  completedAt?: Date;
+  error?: string;
+  progress?: {
+    currentStep: number;
+    totalSteps: number;
+    stepName: string;
+  };
+  design?: {
+    typography?: {
+      bodyFont: string;
+      headingFont: string;
+      titleFont: string;
+      fontSize: number;
+      lineHeight: number;
+      chapterTitleSize: number;
+      colors: {
+        text: string;
+        heading: string;
+        accent: string;
+        background: string;
+      };
+      formatting?: {
+        headingBold: boolean;
+        headingItalic: boolean;
+        firstParagraphDropCap: boolean;
+      };
+    };
+    layout?: {
+      columns: number;
+      columnGap: number;
+      margins: { top: number; bottom: number; inner: number; outer: number };
+      paragraphSpacing: number;
+      textAlign: string;
+      pageNumbers?: {
+        show: boolean;
+        position: string;
+        startFrom: number;
+        style: string;
+      };
+      headers?: {
+        show: boolean;
+        content: string;
+        position: string;
+      };
+    };
+    covers?: {
+      front?: {
+        backgroundColor: string;
+        gradientColors?: string[];
+        imagePrompt: string;
+        generatedImageUrl?: string;
+        title: { position: string; fontSize: number; color: string };
+        author: { position: string; fontSize: number; color: string };
+      };
+      back?: {
+        backgroundColor: string;
+        imagePrompt?: string;
+        generatedImageUrl?: string;
+      };
+      spine?: {
+        backgroundColor: string;
+        textColor: string;
+      };
+    };
+    imagePlacements?: Array<{
+      chapterIndex: number;
+      pagePosition: string;
+      imagePosition: string;
+      imageSize: string;
+      prompt: string;
+      generatedImageUrl?: string;
+      caption?: string;
+    }>;
+    reasoning?: string;
+    moodDescription?: string;
+  };
+}
+
 // Plot Structure interface
 export interface IPlotStructure {
   threeActStructure?: {
@@ -300,6 +382,8 @@ export interface IBook extends Document {
   coverDesign?: ICoverDesign;
   pageLayout?: IPageLayout;
   pageImages?: IPageImage[];
+  templateId?: mongoose.Types.ObjectId; // Reference to applied template
+  aiDesignState?: IAIDesignState; // AI design progress and state
   publishingStatus: IPublishingStatus;
   statistics: IStatistics;
   tags?: string[];
@@ -894,6 +978,108 @@ const StoryContextSchema = new Schema<IStoryContext>(
   { _id: false }
 );
 
+// AI Design State schema
+const AIDesignStateSchema = new Schema<IAIDesignState>(
+  {
+    status: {
+      type: String,
+      enum: ['idle', 'analyzing', 'generating-design', 'generating-images', 'completed', 'error'],
+      default: 'idle',
+    },
+    startedAt: Date,
+    completedAt: Date,
+    error: String,
+    progress: {
+      currentStep: Number,
+      totalSteps: Number,
+      stepName: String,
+    },
+    design: {
+      typography: {
+        bodyFont: String,
+        headingFont: String,
+        titleFont: String,
+        fontSize: Number,
+        lineHeight: Number,
+        chapterTitleSize: Number,
+        colors: {
+          text: String,
+          heading: String,
+          accent: String,
+          background: String,
+        },
+        formatting: {
+          headingBold: Boolean,
+          headingItalic: Boolean,
+          firstParagraphDropCap: Boolean,
+        },
+      },
+      layout: {
+        columns: Number,
+        columnGap: Number,
+        margins: {
+          top: Number,
+          bottom: Number,
+          inner: Number,
+          outer: Number,
+        },
+        paragraphSpacing: Number,
+        textAlign: String,
+        pageNumbers: {
+          show: Boolean,
+          position: String,
+          startFrom: Number,
+          style: String,
+        },
+        headers: {
+          show: Boolean,
+          content: String,
+          position: String,
+        },
+      },
+      covers: {
+        front: {
+          backgroundColor: String,
+          gradientColors: [String],
+          imagePrompt: String,
+          generatedImageUrl: String,
+          title: {
+            position: String,
+            fontSize: Number,
+            color: String,
+          },
+          author: {
+            position: String,
+            fontSize: Number,
+            color: String,
+          },
+        },
+        back: {
+          backgroundColor: String,
+          imagePrompt: String,
+          generatedImageUrl: String,
+        },
+        spine: {
+          backgroundColor: String,
+          textColor: String,
+        },
+      },
+      imagePlacements: [{
+        chapterIndex: Number,
+        pagePosition: String,
+        imagePosition: String,
+        imageSize: String,
+        prompt: String,
+        generatedImageUrl: String,
+        caption: String,
+      }],
+      reasoning: String,
+      moodDescription: String,
+    },
+  },
+  { _id: false }
+);
+
 // Plot Structure schema
 const PlotStructureSchema = new Schema(
   {
@@ -1021,6 +1207,13 @@ const BookSchema = new Schema<IBook>(
     pageImages: {
       type: [PageImageSchema],
       default: [],
+    },
+    templateId: {
+      type: Schema.Types.ObjectId,
+      ref: 'BookTemplate',
+    },
+    aiDesignState: {
+      type: AIDesignStateSchema,
     },
     publishingStatus: {
       type: PublishingStatusSchema,

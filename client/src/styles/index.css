@@ -446,6 +446,83 @@
     text-align: left;
   }
 
+  /* RTL-aware spacing utilities */
+  [dir="rtl"] .space-x-2 > * + * {
+    margin-left: 0;
+    margin-right: 0.5rem;
+  }
+
+  [dir="rtl"] .space-x-3 > * + * {
+    margin-left: 0;
+    margin-right: 0.75rem;
+  }
+
+  [dir="rtl"] .space-x-4 > * + * {
+    margin-left: 0;
+    margin-right: 1rem;
+  }
+
+  [dir="rtl"] .ml-auto {
+    margin-left: 0;
+    margin-right: auto;
+  }
+
+  [dir="rtl"] .mr-auto {
+    margin-right: 0;
+    margin-left: auto;
+  }
+
+  /* RTL-aware text alignment */
+  [dir="rtl"] .text-left {
+    text-align: right;
+  }
+
+  [dir="rtl"] .text-right {
+    text-align: left;
+  }
+
+  /* RTL-aware borders */
+  [dir="rtl"] .border-l {
+    border-left: 0;
+    border-right-width: 1px;
+  }
+
+  [dir="rtl"] .border-r {
+    border-right: 0;
+    border-left-width: 1px;
+  }
+
+  /* RTL-aware padding */
+  [dir="rtl"] .pl-4 {
+    padding-left: 0;
+    padding-right: 1rem;
+  }
+
+  [dir="rtl"] .pr-4 {
+    padding-right: 0;
+    padding-left: 1rem;
+  }
+
+  /* RTL-aware rounded corners */
+  [dir="rtl"] .rounded-l-xl {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: 0.75rem;
+    border-bottom-right-radius: 0.75rem;
+  }
+
+  [dir="rtl"] .rounded-r-xl {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-left-radius: 0.75rem;
+    border-bottom-left-radius: 0.75rem;
+  }
+
+  /* RTL-aware icons and transforms */
+  [dir="rtl"] .rtl-flip {
+    transform: scaleX(-1);
+  }
+
   /* Responsive image utilities */
   .img-responsive {
     @apply w-full h-auto object-cover;
@@ -454,4 +531,62 @@
   .img-contain {
     @apply w-full h-auto object-contain;
   }
+}
+
+/* ==================== MEMORIAL THEME ==================== */
+/* Respectful, dignified styling for memorial stories section */
+
+:root {
+  --memorial-bg: #0f0f1a;
+  --memorial-accent: #c9b037;
+  --memorial-text: #e8e8e8;
+  --memorial-border: rgba(201, 176, 55, 0.2);
+}
+
+.memorial-theme {
+  background: var(--memorial-bg);
+  color: var(--memorial-text);
+}
+
+.memorial-card {
+  background: rgba(26, 26, 46, 0.9);
+  border: 1px solid var(--memorial-border);
+  transition: all 0.3s ease;
+}
+
+.memorial-card:hover {
+  border-color: rgba(201, 176, 55, 0.4);
+  box-shadow: 0 4px 20px rgba(201, 176, 55, 0.1);
+}
+
+.text-memorial-accent {
+  color: var(--memorial-accent);
+}
+
+.bg-memorial-accent {
+  background-color: var(--memorial-accent);
+}
+
+.border-memorial-accent {
+  border-color: var(--memorial-accent);
+}
+
+/* Memorial heading style - more somber, no animation */
+.memorial-heading {
+  font-family: 'Frank Ruhl Libre', 'Cinzel', serif;
+  color: var(--memorial-accent);
+  letter-spacing: 0.02em;
+}
+
+/* Memorial button style */
+.memorial-btn {
+  background: linear-gradient(135deg, rgba(201, 176, 55, 0.1), rgba(201, 176, 55, 0.05));
+  border: 1px solid var(--memorial-border);
+  color: var(--memorial-accent);
+  transition: all 0.3s ease;
+}
+
+.memorial-btn:hover {
+  background: linear-gradient(135deg, rgba(201, 176, 55, 0.2), rgba(201, 176, 55, 0.1));
+  border-color: rgba(201, 176, 55, 0.4);
 }

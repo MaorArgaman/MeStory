@@ -1,0 +1,93 @@
+{
+  "title": "עורך הספר",
+  "untitled_book": "ספר ללא שם",
+  "untitled_chapter": "פרק ללא שם",
+  "toolbar": {
+    "bold": "מודגש",
+    "italic": "נטוי",
+    "underline": "קו תחתון",
+    "strikethrough": "קו חוצה",
+    "heading1": "כותרת 1",
+    "heading2": "כותרת 2",
+    "heading3": "כותרת 3",
+    "bullet_list": "רשימה עם נקודות",
+    "numbered_list": "רשימה ממוספרת",
+    "quote": "ציטוט",
+    "code": "קוד",
+    "link": "קישור",
+    "image": "תמונה",
+    "undo": "בטל",
+    "redo": "בצע שוב",
+    "align_left": "יישור לשמאל",
+    "align_center": "יישור למרכז",
+    "align_right": "יישור לימין",
+    "align_justify": "יישור לשני הצדדים"
+  },
+  "chapters": {
+    "title": "פרקים",
+    "add": "הוסף פרק",
+    "rename": "שנה שם",
+    "delete": "מחק",
+    "delete_confirm": "האם אתה בטוח שברצונך למחוק את הפרק הזה?",
+    "empty": "אין עדיין פרקים"
+  },
+  "ai_copilot": {
+    "title": "עוזר AI",
+    "get_suggestions": "קבל הצעות",
+    "generating": "מייצר...",
+    "suggestions_title": "הצעות כתיבה",
+    "apply": "החל",
+    "regenerate": "צור מחדש",
+    "no_suggestions": "לחץ על 'קבל הצעות' לקבלת רעיונות כתיבה מבוססי AI",
+    "error": "נכשל בקבלת הצעות. אנא נסה שוב."
+  },
+  "analysis": {
+    "title": "ניתוח סיפור",
+    "analyze": "נתח",
+    "analyzing": "מנתח...",
+    "writing_quality": "איכות כתיבה",
+    "plot_structure": "מבנה עלילה",
+    "character_development": "פיתוח דמויות",
+    "dialogue": "דיאלוג",
+    "setting": "סביבה",
+    "originality": "מקוריות",
+    "overall_score": "ציון כללי",
+    "feedback": "משוב",
+    "suggestions": "הצעות"
+  },
+  "word_count": "{{count}} מילים",
+  "character_count": "{{count}} תווים",
+  "save_status": {
+    "saving": "שומר...",
+    "saved": "כל השינויים נשמרו",
+    "error": "השמירה נכשלה"
+  },
+  "settings": {
+    "title": "הגדרות עורך",
+    "font_size": "גודל גופן",
+    "font_family": "סוג גופן",
+    "line_height": "גובה שורה",
+    "theme": "ערכת נושא",
+    "auto_save": "שמירה אוטומטית",
+    "spell_check": "בדיקת איות"
+  },
+  "interview": {
+    "title": "ראיון סיפור",
+    "start": "התחל ראיון",
+    "continue": "המשך ראיון",
+    "complete": "סיים ראיון",
+    "skip": "דלג",
+    "topics": {
+      "theme": "נושא ורעיון מרכזי",
+      "characters": "דמויות ראשיות",
+      "conflict": "קונפליקט מרכזי",
+      "climax": "שיא מתוכנן",
+      "resolution": "סיום ופתרון",
+      "setting": "סביבה ועולם",
+      "plot_points": "נקודות מפתח בעלילה",
+      "narrative_arc": "קשת נרטיבית"
+    },
+    "progress": "נושא {{current}} מתוך {{total}}",
+    "summary": "סיכום ראיון"
+  }
+}

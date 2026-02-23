@@ -1,0 +1,93 @@
+{
+  "title": "Book Editor",
+  "untitled_book": "Untitled Book",
+  "untitled_chapter": "Untitled Chapter",
+  "toolbar": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "strikethrough": "Strikethrough",
+    "heading1": "Heading 1",
+    "heading2": "Heading 2",
+    "heading3": "Heading 3",
+    "bullet_list": "Bullet List",
+    "numbered_list": "Numbered List",
+    "quote": "Quote",
+    "code": "Code",
+    "link": "Link",
+    "image": "Image",
+    "undo": "Undo",
+    "redo": "Redo",
+    "align_left": "Align Left",
+    "align_center": "Align Center",
+    "align_right": "Align Right",
+    "align_justify": "Justify"
+  },
+  "chapters": {
+    "title": "Chapters",
+    "add": "Add Chapter",
+    "rename": "Rename",
+    "delete": "Delete",
+    "delete_confirm": "Are you sure you want to delete this chapter?",
+    "empty": "No chapters yet"
+  },
+  "ai_copilot": {
+    "title": "AI Copilot",
+    "get_suggestions": "Get Suggestions",
+    "generating": "Generating...",
+    "suggestions_title": "Writing Suggestions",
+    "apply": "Apply",
+    "regenerate": "Regenerate",
+    "no_suggestions": "Click 'Get Suggestions' to get AI-powered writing ideas",
+    "error": "Failed to get suggestions. Please try again."
+  },
+  "analysis": {
+    "title": "Story Analysis",
+    "analyze": "Analyze",
+    "analyzing": "Analyzing...",
+    "writing_quality": "Writing Quality",
+    "plot_structure": "Plot Structure",
+    "character_development": "Character Development",
+    "dialogue": "Dialogue",
+    "setting": "Setting",
+    "originality": "Originality",
+    "overall_score": "Overall Score",
+    "feedback": "Feedback",
+    "suggestions": "Suggestions"
+  },
+  "word_count": "{{count}} words",
+  "character_count": "{{count}} characters",
+  "save_status": {
+    "saving": "Saving...",
+    "saved": "All changes saved",
+    "error": "Failed to save"
+  },
+  "settings": {
+    "title": "Editor Settings",
+    "font_size": "Font Size",
+    "font_family": "Font Family",
+    "line_height": "Line Height",
+    "theme": "Theme",
+    "auto_save": "Auto Save",
+    "spell_check": "Spell Check"
+  },
+  "interview": {
+    "title": "Story Interview",
+    "start": "Start Interview",
+    "continue": "Continue Interview",
+    "complete": "Complete Interview",
+    "skip": "Skip",
+    "topics": {
+      "theme": "Theme & Premise",
+      "characters": "Main Characters",
+      "conflict": "Central Conflict",
+      "climax": "Planned Climax",
+      "resolution": "Resolution",
+      "setting": "World & Setting",
+      "plot_points": "Key Plot Points",
+      "narrative_arc": "Narrative Arc"
+    },
+    "progress": "Topic {{current}} of {{total}}",
+    "summary": "Interview Summary"
+  }
+}
