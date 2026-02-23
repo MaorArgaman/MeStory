@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import {
@@ -14,6 +14,12 @@ import {
   Sparkles,
   Target,
   PenTool,
+  Menu,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  PanelLeftClose,
+  PanelRightClose,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -59,6 +65,11 @@ export default function BookWritingPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(true);
   const [loading, setLoading] = useState(true);
+
+  // Mobile sidebar states
+  const [showLeftSidebar, setShowLeftSidebar] = useState(false);
+  const [showRightSidebar, setShowRightSidebar] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // AI Enhancement state
   const [enhancing, setEnhancing] = useState(false);
@@ -115,8 +126,25 @@ export default function BookWritingPage() {
 
   // Update editor content when chapter changes or content is first loaded
   useEffect(() => {
-    if (editor && content && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
+    if (editor && content !== undefined) {
+      // Convert plain text to HTML if needed (for uploaded manuscripts)
+      let htmlContent = content;
+      if (content && !content.startsWith('<')) {
+        // Plain text - wrap in paragraphs
+        htmlContent = content
+          .split(/\n\n+/)
+          .map(para => `<p>${para.trim()}</p>`)
+          .join('');
+      }
+
+      // Only update if content is different from what's in editor
+      const currentHtml = editor.getHTML();
+      if (htmlContent && currentHtml !== htmlContent) {
+        editor.commands.setContent(htmlContent);
+      } else if (!htmlContent && currentHtml !== '<p></p>') {
+        // Set empty content if needed
+        editor.commands.setContent('');
+      }
     }
   }, [selectedChapterIndex, content, editor]);
 
@@ -147,7 +175,20 @@ export default function BookWritingPage() {
 
         // If book has chapters, load the first one
         if (bookData.chapters && bookData.chapters.length > 0) {
-          setContent(bookData.chapters[0].content || '');
+          const chapterContent = bookData.chapters[0].content || '';
+          setContent(chapterContent);
+
+          // Also set editor content directly if editor is ready
+          if (editor) {
+            let htmlContent = chapterContent;
+            if (chapterContent && !chapterContent.startsWith('<')) {
+              htmlContent = chapterContent
+                .split(/\n\n+/)
+                .map((para: string) => `<p>${para.trim()}</p>`)
+                .join('');
+            }
+            editor.commands.setContent(htmlContent);
+          }
         }
       }
     } catch (error) {
@@ -314,21 +355,22 @@ export default function BookWritingPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       {/* Top Bar */}
-      <div className="glass-strong border-b border-white/10 px-6 py-4">
+      <div className="glass-strong border-b border-white/10 px-3 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => navigate('/dashboard')}
-              className="btn-ghost flex items-center gap-2"
+              className="btn-ghost flex items-center gap-1 sm:gap-2 p-2 sm:px-3 sm:py-2"
             >
-              <ArrowLeft className="w-5 h-5" />
-              Back
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Back</span>
             </button>
-            <div className="h-6 w-px bg-gray-700" />
-            <h1 className="text-xl font-semibold text-white">{book.title}</h1>
+            <div className="hidden sm:block h-6 w-px bg-gray-700" />
+            <h1 className="text-sm sm:text-xl font-semibold text-white truncate max-w-[120px] sm:max-w-none">{book.title}</h1>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* Desktop Actions */}
+          <div className="hidden lg:flex items-center gap-3">
             {/* Save Status */}
             <div className="flex items-center gap-2 text-sm">
               {saving ? (
@@ -374,18 +416,115 @@ export default function BookWritingPage() {
               Save
             </button>
           </div>
+
+          {/* Mobile Actions */}
+          <div className="flex lg:hidden items-center gap-2">
+            {/* Save Status Icon */}
+            <div className="flex items-center">
+              {saving ? (
+                <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+              ) : saved ? (
+                <Check className="w-4 h-4 text-green-400" />
+              ) : (
+                <div className="w-2 h-2 rounded-full bg-yellow-400" />
+              )}
+            </div>
+
+            {/* Save Button */}
+            <button
+              onClick={saveBook}
+              disabled={saving || saved}
+              className="btn-primary p-2"
+            >
+              <Save className="w-4 h-4" />
+            </button>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="btn-ghost p-2"
+            >
+              {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {showMobileMenu && (
+          <div className="lg:hidden mt-3 pt-3 border-t border-white/10 space-y-2">
+            <button
+              onClick={() => {
+                navigate(`/design/${bookId}`);
+                setShowMobileMenu(false);
+              }}
+              className="w-full btn-secondary flex items-center justify-center gap-2 py-2"
+            >
+              <Palette className="w-4 h-4" />
+              Design Cover
+            </button>
+            <button
+              onClick={() => {
+                navigate(`/layout/${bookId}`);
+                setShowMobileMenu(false);
+              }}
+              className="w-full btn-secondary flex items-center justify-center gap-2 py-2"
+            >
+              <LayoutGrid className="w-4 h-4" />
+              Page Layout
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Three-Column Layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Mobile Toggle Buttons */}
+        <div className="lg:hidden fixed bottom-4 left-4 z-40 flex flex-col gap-2">
+          <button
+            onClick={() => setShowLeftSidebar(!showLeftSidebar)}
+            className="glass-strong p-3 rounded-full border border-white/10 shadow-lg"
+          >
+            <BookOpen className="w-5 h-5 text-indigo-400" />
+          </button>
+        </div>
+        <div className="lg:hidden fixed bottom-4 right-4 z-40 flex flex-col gap-2">
+          <button
+            onClick={() => setShowRightSidebar(!showRightSidebar)}
+            className="glass-strong p-3 rounded-full border border-white/10 shadow-lg"
+          >
+            <Sparkles className="w-5 h-5 text-purple-400" />
+          </button>
+        </div>
+
+        {/* Left Sidebar Overlay for Mobile */}
+        {showLeftSidebar && (
+          <div
+            className="lg:hidden fixed inset-0 bg-black/50 z-40"
+            onClick={() => setShowLeftSidebar(false)}
+          />
+        )}
+
         {/* Left Sidebar - Chapters */}
-        <div className="w-64 glass-strong border-r border-white/10 p-4 overflow-y-auto">
+        <div className={`
+          ${showLeftSidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          fixed lg:relative z-50 lg:z-auto
+          w-64 sm:w-72 lg:w-64 h-full
+          glass-strong border-r border-white/10 p-3 sm:p-4 overflow-y-auto
+          transition-transform duration-300 ease-in-out
+        `}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-gray-300">CHAPTERS</h2>
-            <button onClick={addChapter} className="btn-ghost p-2">
-              <Plus className="w-4 h-4" />
-            </button>
+            <h2 className="text-xs sm:text-sm font-semibold text-gray-300">CHAPTERS</h2>
+            <div className="flex items-center gap-2">
+              <button onClick={addChapter} className="btn-ghost p-2">
+                <Plus className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setShowLeftSidebar(false)}
+                className="lg:hidden btn-ghost p-2"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -393,7 +532,10 @@ export default function BookWritingPage() {
               book.chapters.map((chapter, index) => (
                 <button
                   key={index}
-                  onClick={() => selectChapter(index)}
+                  onClick={() => {
+                    selectChapter(index);
+                    setShowLeftSidebar(false);
+                  }}
                   className={
                     selectedChapterIndex === index
                       ? 'sidebar-item-active w-full text-left'
@@ -402,7 +544,7 @@ export default function BookWritingPage() {
                 >
                   <div className="flex items-center gap-2">
                     <BookOpen className="w-4 h-4" />
-                    <span className="flex-1 truncate">{chapter.title}</span>
+                    <span className="flex-1 truncate text-sm">{chapter.title}</span>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
                     {chapter.wordCount} words
@@ -421,7 +563,7 @@ export default function BookWritingPage() {
         </div>
 
         {/* Main Editor */}
-        <div className="flex-1 flex flex-col p-6 overflow-hidden">
+        <div className="flex-1 flex flex-col p-3 sm:p-4 lg:p-6 overflow-hidden pb-20 lg:pb-6">
           <div className="flex flex-col h-full">
             {currentChapter ? (
               <>
@@ -434,47 +576,75 @@ export default function BookWritingPage() {
                     setBook({ ...book, chapters: updated });
                     setSaved(false);
                   }}
-                  className="w-full bg-transparent text-2xl font-bold text-white mb-4 focus:outline-none border-b border-transparent focus:border-indigo-500/30 pb-2"
+                  className="w-full bg-transparent text-lg sm:text-xl lg:text-2xl font-bold text-white mb-3 sm:mb-4 focus:outline-none border-b border-transparent focus:border-indigo-500/30 pb-2"
                   placeholder="Chapter Title"
                 />
 
                 {/* Rich Text Editor Toolbar */}
-                <EditorToolbar editor={editor} />
+                <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+                  <EditorToolbar editor={editor} />
+                </div>
 
                 {/* Rich Text Editor with AI Floating Toolbar */}
-                <div className="editor-panel flex-1 overflow-y-auto relative">
+                <div className="editor-panel flex-1 overflow-y-auto relative text-sm sm:text-base">
                   <EditorContent editor={editor} />
                 </div>
               </>
             ) : (
               <div className="flex items-center justify-center h-full text-gray-500">
-                <div className="text-center">
-                  <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p>Select or create a chapter to start writing</p>
+                <div className="text-center px-4">
+                  <BookOpen className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 opacity-50" />
+                  <p className="text-sm sm:text-base">Select or create a chapter to start writing</p>
                 </div>
               </div>
             )}
           </div>
         </div>
 
+        {/* Right Sidebar Overlay for Mobile */}
+        {showRightSidebar && (
+          <div
+            className="lg:hidden fixed inset-0 bg-black/50 z-40"
+            onClick={() => setShowRightSidebar(false)}
+          />
+        )}
+
         {/* Right Panel - AI & Analysis */}
-        <div className="w-80 glass-strong border-l border-white/10 flex flex-col overflow-hidden">
+        <div className={`
+          ${showRightSidebar ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+          fixed lg:relative right-0 z-50 lg:z-auto
+          w-[85%] sm:w-80 lg:w-80 h-full
+          glass-strong border-l border-white/10 flex flex-col overflow-hidden
+          transition-transform duration-300 ease-in-out
+        `}>
+          {/* Mobile Close Button */}
+          <div className="lg:hidden flex items-center justify-between p-3 border-b border-white/10">
+            <span className="text-sm font-semibold text-gray-300">AI & Analysis</span>
+            <button
+              onClick={() => setShowRightSidebar(false)}
+              className="btn-ghost p-2"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
           {/* Tab Navigation */}
           <div className="flex border-b border-white/10 p-2 gap-1">
             <button
               onClick={() => setActiveTab('copilot')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'copilot'
                   ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
                   : 'text-gray-400 hover:bg-white/5 hover:text-white'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              AI Assistant
+              <span className="hidden sm:inline">AI Assistant</span>
+              <span className="sm:hidden">AI</span>
             </button>
             <button
               onClick={() => setActiveTab('plot')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'plot'
                   ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
                   : 'text-gray-400 hover:bg-white/5 hover:text-white'
@@ -485,20 +655,21 @@ export default function BookWritingPage() {
             </button>
             <button
               onClick={() => setActiveTab('analysis')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'analysis'
                   ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                   : 'text-gray-400 hover:bg-white/5 hover:text-white'
               }`}
             >
               <PenTool className="w-3.5 h-3.5" />
-              Analysis
+              <span className="hidden sm:inline">Analysis</span>
+              <span className="sm:hidden">Stats</span>
             </button>
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="space-y-6">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+            <div className="space-y-4 sm:space-y-6">
               {/* Writing Guidance Alert */}
               {guidance && activeTab === 'copilot' && (
                 <WritingGuidanceAlert

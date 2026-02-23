@@ -21,6 +21,9 @@ import {
   BookOpen,
   AlertCircle,
   LayoutGrid,
+  Menu,
+  Settings,
+  Eye,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import confetti from 'canvas-confetti';
@@ -122,6 +125,10 @@ export default function DesignStudioPage() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportFormat, setExportFormat] = useState<'pdf' | 'docx'>('pdf');
   const [exporting, setExporting] = useState(false);
+
+  // Mobile state
+  const [showMobileControls, setShowMobileControls] = useState(false);
+  const [showMobileActions, setShowMobileActions] = useState(false);
 
   // Load book data
   useEffect(() => {
@@ -497,21 +504,25 @@ export default function DesignStudioPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       {/* Top Bar */}
-      <div className="glass-strong border-b border-white/10 px-6 py-4">
+      <div className="glass-strong border-b border-white/10 px-3 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => navigate(`/editor/${bookId}`)}
-              className="btn-ghost flex items-center gap-2"
+              className="btn-ghost flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
             >
-              <ArrowLeft className="w-5 h-5" />
-              Back to Editor
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Back to Editor</span>
             </button>
-            <div className="h-6 w-px bg-gray-700" />
-            <h1 className="text-xl font-semibold text-white">Cover Design Studio</h1>
+            <div className="hidden sm:block h-6 w-px bg-gray-700" />
+            <h1 className="text-sm sm:text-lg lg:text-xl font-semibold text-white truncate max-w-[120px] sm:max-w-none">
+              <span className="hidden sm:inline">Cover Design Studio</span>
+              <span className="sm:hidden">Design</span>
+            </h1>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* Desktop Actions */}
+          <div className="hidden lg:flex items-center gap-3">
             {/* Save Design Button */}
             <button
               onClick={saveDesign}
@@ -558,13 +569,95 @@ export default function DesignStudioPage() {
               Publish to Store
             </button>
           </div>
+
+          {/* Mobile Actions */}
+          <div className="flex lg:hidden items-center gap-2">
+            <button
+              onClick={saveDesign}
+              disabled={saving}
+              className="btn-ghost p-2"
+            >
+              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+            </button>
+            <button
+              onClick={() => setShowMobileActions(!showMobileActions)}
+              className="btn-ghost p-2"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Actions Dropdown */}
+        <AnimatePresence>
+          {showMobileActions && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="lg:hidden mt-3 space-y-2 overflow-hidden"
+            >
+              <button
+                onClick={() => { navigate(`/layout/${bookId}`); setShowMobileActions(false); }}
+                className="w-full btn-secondary flex items-center justify-center gap-2 py-3"
+              >
+                <LayoutGrid className="w-4 h-4" />
+                Page Design
+              </button>
+              <button
+                onClick={() => { setShowExportModal(true); setShowMobileActions(false); }}
+                className="w-full btn-secondary flex items-center justify-center gap-2 py-3"
+              >
+                <Download className="w-4 h-4" />
+                Export to File
+              </button>
+              <button
+                onClick={() => { openPublishModal(); setShowMobileActions(false); }}
+                className="w-full btn-gold flex items-center justify-center gap-2 py-3 shadow-glow-gold"
+              >
+                <Rocket className="w-4 h-4" />
+                Publish to Store
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
+      {/* Mobile Controls Toggle */}
+      <div className="lg:hidden fixed bottom-4 left-4 z-40">
+        <button
+          onClick={() => setShowMobileControls(!showMobileControls)}
+          className="glass-strong p-3 rounded-full border border-white/10 shadow-lg"
+        >
+          {showMobileControls ? <Eye className="w-5 h-5 text-indigo-400" /> : <Settings className="w-5 h-5 text-indigo-400" />}
+        </button>
+      </div>
+
+      {/* Mobile Controls Overlay */}
+      {showMobileControls && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setShowMobileControls(false)}
+        />
+      )}
+
       {/* Split Screen Layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Left Panel - Controls */}
-        <div className="w-96 glass-strong border-r border-white/10 p-6 overflow-y-auto">
+        <div className={`
+          ${showMobileControls ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          fixed lg:relative z-50 lg:z-auto
+          w-[85%] sm:w-80 lg:w-80 xl:w-96 h-full
+          glass-strong border-r border-white/10 p-4 sm:p-6 overflow-y-auto
+          transition-transform duration-300 ease-in-out
+        `}>
+          {/* Mobile Close Button */}
+          <div className="lg:hidden flex items-center justify-between mb-4">
+            <span className="text-sm font-semibold text-gray-300">Design Controls</span>
+            <button onClick={() => setShowMobileControls(false)} className="btn-ghost p-2">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
           <div className="space-y-6">
             {/* Book Info */}
             <div>
@@ -753,7 +846,7 @@ export default function DesignStudioPage() {
         </div>
 
         {/* Right Panel - 3D Preview Stage */}
-        <div className="flex-1 relative overflow-hidden">
+        <div className="flex-1 relative overflow-hidden pb-16 lg:pb-0">
           {/* Studio background with gradient */}
           <div
             className="absolute inset-0"
@@ -779,20 +872,22 @@ export default function DesignStudioPage() {
           />
 
           {/* 3D Book Preview */}
-          <div className="relative z-10 h-full flex items-center justify-center">
-            <Book3DPreview
-              title={book.title}
-              author={book.author?.name || 'Unknown Author'}
-              coverColor={coverColor}
+          <div className="relative z-10 h-full flex items-center justify-center p-4 sm:p-8">
+            <div className="transform scale-75 sm:scale-90 lg:scale-100">
+              <Book3DPreview
+                title={book.title}
+                author={book.author?.name || 'Unknown Author'}
+                coverColor={coverColor}
               textColor={textColor}
               fontFamily={fontFamily}
               imageUrl={imageUrl}
             />
+            </div>
           </div>
 
           {/* Info overlay */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center">
-            <p className="text-sm text-gray-400">
+          <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 text-center px-4">
+            <p className="text-xs sm:text-sm text-gray-400">
               Real-time preview - Changes update automatically
             </p>
           </div>
@@ -813,18 +908,18 @@ export default function DesignStudioPage() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="glass-strong rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              className="glass-strong rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-2 sm:mx-4"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center">
-                    <Rocket className="w-6 h-6 text-deep-space" />
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center flex-shrink-0">
+                    <Rocket className="w-5 h-5 sm:w-6 sm:h-6 text-deep-space" />
                   </div>
-                  <div>
-                    <h2 className="text-2xl font-bold gradient-gold">Publish to Store</h2>
-                    <p className="text-gray-400 text-sm">{book.title}</p>
+                  <div className="min-w-0">
+                    <h2 className="text-lg sm:text-2xl font-bold gradient-gold">Publish to Store</h2>
+                    <p className="text-gray-400 text-xs sm:text-sm truncate">{book.title}</p>
                   </div>
                 </div>
                 <button
