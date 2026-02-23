@@ -209,30 +209,30 @@ export default function BookDesignPage() {
     <div className="min-h-screen bg-gray-900 text-white" dir={isHebrew ? 'rtl' : 'ltr'}>
       {/* Header */}
       <header className="bg-gray-800/80 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3">
+        <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between">
             {/* Left side */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <button
                 onClick={goToEditor}
-                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-1.5 sm:p-2 hover:bg-gray-700 rounded-lg transition-colors"
                 title={isHebrew ? 'חזור לעורך' : 'Back to Editor'}
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
 
               <div>
-                <h1 className="font-semibold text-lg">{book.title}</h1>
-                <p className="text-sm text-gray-400">
+                <h1 className="font-semibold text-sm sm:text-lg truncate max-w-[150px] sm:max-w-none">{book.title}</h1>
+                <p className="text-xs sm:text-sm text-gray-400 hidden sm:block">
                   {isHebrew ? 'עיצוב הספר' : 'Book Design'}
                 </p>
               </div>
             </div>
 
             {/* Right side */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {lastSaved && (
-                <span className="text-sm text-gray-400">
+                <span className="hidden md:block text-sm text-gray-400">
                   {saving ? (
                     <span className="flex items-center gap-1">
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -246,7 +246,7 @@ export default function BookDesignPage() {
 
               <button
                 onClick={goToDetailedLayout}
-                className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center gap-2 transition-colors"
+                className="p-2 sm:px-3 sm:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center gap-2 transition-colors"
               >
                 <Layout className="w-4 h-4" />
                 <span className="hidden sm:inline">
@@ -257,14 +257,14 @@ export default function BookDesignPage() {
               <button
                 onClick={saveDesign}
                 disabled={saving}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+                className="p-2 sm:px-4 sm:py-2 bg-purple-600 hover:bg-purple-700 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
               >
                 {saving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
-                <span>{isHebrew ? 'שמור' : 'Save'}</span>
+                <span className="hidden sm:inline">{isHebrew ? 'שמור' : 'Save'}</span>
               </button>
             </div>
           </div>
@@ -272,7 +272,7 @@ export default function BookDesignPage() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Show template selector if no path selected */}
         {!designPath && (
           <motion.div
@@ -281,11 +281,11 @@ export default function BookDesignPage() {
             className="max-w-6xl mx-auto"
           >
             {/* Title */}
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-3">
+            <div className="text-center mb-6 sm:mb-8">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3">
                 {isHebrew ? 'בחר את סגנון העיצוב שלך' : 'Choose Your Design Style'}
               </h2>
-              <p className="text-gray-400 max-w-2xl mx-auto">
+              <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto px-2">
                 {isHebrew
                   ? 'בחר תבנית מוכנה, תן לבינה המלאכותית לעצב את הספר, או התחל מאפס עם התאמה אישית מלאה'
                   : 'Choose a ready-made template, let AI design your book, or start from scratch with full customization'}
@@ -293,30 +293,30 @@ export default function BookDesignPage() {
             </div>
 
             {/* Design Path Cards */}
-            <div className="grid md:grid-cols-3 gap-6 mb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-12">
               {/* AI Design */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleSelectPath('ai')}
-                className="relative bg-gradient-to-br from-purple-600/20 to-pink-600/20 border-2 border-purple-500/50 rounded-2xl p-6 text-center hover:border-purple-400 transition-all group overflow-hidden"
+                className="relative bg-gradient-to-br from-purple-600/20 to-pink-600/20 border-2 border-purple-500/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center hover:border-purple-400 transition-all group overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="relative">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-purple-600/30 rounded-full flex items-center justify-center">
-                    <Sparkles className="w-8 h-8 text-purple-400" />
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-purple-600/30 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-purple-400" />
                   </div>
-                  <h3 className="text-xl font-bold mb-2">
+                  <h3 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">
                     {isHebrew ? 'עיצוב עם AI' : 'AI Design'}
                   </h3>
-                  <p className="text-gray-400 text-sm">
+                  <p className="text-gray-400 text-xs sm:text-sm">
                     {isHebrew
                       ? 'הבינה המלאכותית תנתח את הספר ותעצב הכל - כריכה, פריסה, גופנים ותמונות'
                       : 'AI analyzes your book and designs everything - cover, layout, fonts, and images'}
                   </p>
-                  <div className="mt-4 inline-flex items-center gap-1 text-purple-400 text-sm font-medium">
+                  <div className="mt-3 sm:mt-4 inline-flex items-center gap-1 text-purple-400 text-xs sm:text-sm font-medium">
                     <span>{isHebrew ? 'מומלץ' : 'Recommended'}</span>
-                    <Check className="w-4 h-4" />
+                    <Check className="w-3 h-3 sm:w-4 sm:h-4" />
                   </div>
                 </div>
               </motion.button>
@@ -326,15 +326,15 @@ export default function BookDesignPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleSelectPath('template')}
-                className="bg-gray-800/50 border-2 border-gray-600/50 rounded-2xl p-6 text-center hover:border-gray-500 transition-all"
+                className="bg-gray-800/50 border-2 border-gray-600/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center hover:border-gray-500 transition-all"
               >
-                <div className="w-16 h-16 mx-auto mb-4 bg-gray-700/50 rounded-full flex items-center justify-center">
-                  <Layout className="w-8 h-8 text-gray-400" />
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gray-700/50 rounded-full flex items-center justify-center">
+                  <Layout className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">
+                <h3 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">
                   {isHebrew ? 'תבנית מוכנה' : 'Ready Template'}
                 </h3>
-                <p className="text-gray-400 text-sm">
+                <p className="text-gray-400 text-xs sm:text-sm">
                   {isHebrew
                     ? 'בחר מתוך 10 תבניות מעוצבות מראש לפי סוג הספר שלך'
                     : 'Choose from 10 pre-designed templates based on your book type'}
@@ -346,15 +346,15 @@ export default function BookDesignPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleSelectPath('custom')}
-                className="bg-gray-800/50 border-2 border-gray-600/50 rounded-2xl p-6 text-center hover:border-gray-500 transition-all"
+                className="bg-gray-800/50 border-2 border-gray-600/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center hover:border-gray-500 transition-all sm:col-span-2 md:col-span-1"
               >
-                <div className="w-16 h-16 mx-auto mb-4 bg-gray-700/50 rounded-full flex items-center justify-center">
-                  <Palette className="w-8 h-8 text-gray-400" />
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gray-700/50 rounded-full flex items-center justify-center">
+                  <Palette className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">
+                <h3 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">
                   {isHebrew ? 'התאמה אישית' : 'Custom Design'}
                 </h3>
-                <p className="text-gray-400 text-sm">
+                <p className="text-gray-400 text-xs sm:text-sm">
                   {isHebrew
                     ? 'עצב את הספר בעצמך עם כל הכלים הזמינים'
                     : 'Design your book yourself with all available tools'}
@@ -370,14 +370,14 @@ export default function BookDesignPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
               <button
                 onClick={() => setDesignPath(null)}
-                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-1.5 sm:p-2 hover:bg-gray-700 rounded-lg transition-colors"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
-              <h2 className="text-2xl font-bold">
+              <h2 className="text-lg sm:text-2xl font-bold">
                 {isHebrew ? 'בחר תבנית' : 'Choose Template'}
               </h2>
             </div>
@@ -396,29 +396,29 @@ export default function BookDesignPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-12"
+            className="text-center py-8 sm:py-12 px-4"
           >
-            <Palette className="w-16 h-16 mx-auto mb-4 text-purple-400" />
-            <h2 className="text-2xl font-bold mb-4">
+            <Palette className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-purple-400" />
+            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
               {isHebrew ? 'מצב התאמה אישית' : 'Custom Design Mode'}
             </h2>
-            <p className="text-gray-400 mb-6 max-w-md mx-auto">
+            <p className="text-gray-400 text-sm sm:text-base mb-4 sm:mb-6 max-w-md mx-auto">
               {isHebrew
                 ? 'במצב זה תוכל לעצב כל היבט של הספר בעצמך'
                 : 'In this mode you can design every aspect of your book yourself'}
             </p>
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <button
                 onClick={() => setDesignPath(null)}
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                className="w-full sm:w-auto px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
               >
                 {isHebrew ? 'חזור' : 'Back'}
               </button>
               <button
                 onClick={goToDetailedLayout}
-                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg flex items-center gap-2 transition-colors"
+                className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 hover:bg-purple-700 rounded-lg flex items-center justify-center gap-2 transition-colors"
               >
-                <Layout className="w-5 h-5" />
+                <Layout className="w-4 h-4 sm:w-5 sm:h-5" />
                 {isHebrew ? 'פתח עורך מתקדם' : 'Open Advanced Editor'}
               </button>
             </div>
@@ -431,26 +431,26 @@ export default function BookDesignPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <button
                   onClick={() => {
                     setDesignPath(null);
                     setSelectedTemplate(null);
                   }}
-                  className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                  className="p-1.5 sm:p-2 hover:bg-gray-700 rounded-lg transition-colors"
                 >
-                  <ArrowLeft className="w-5 h-5" />
+                  <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
-                <h2 className="text-2xl font-bold">
+                <h2 className="text-lg sm:text-2xl font-bold">
                   {isHebrew ? 'תצוגה מקדימה' : 'Design Preview'}
                 </h2>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                 <button
                   onClick={goToDetailedLayout}
-                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center gap-2 transition-colors"
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm sm:text-base"
                 >
                   <Settings className="w-4 h-4" />
                   {isHebrew ? 'ערוך' : 'Edit'}
@@ -458,54 +458,57 @@ export default function BookDesignPage() {
                 <button
                   onClick={saveDesign}
                   disabled={saving}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg flex items-center gap-2 transition-colors"
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm sm:text-base"
                 >
                   <Check className="w-4 h-4" />
-                  {isHebrew ? 'אשר והמשך' : 'Confirm & Continue'}
+                  <span className="hidden sm:inline">{isHebrew ? 'אשר והמשך' : 'Confirm & Continue'}</span>
+                  <span className="sm:hidden">{isHebrew ? 'אשר' : 'Confirm'}</span>
                 </button>
               </div>
             </div>
 
             {/* 3D Preview */}
-            <div className="flex justify-center mb-8">
-              <Book3DPreview
-                title={book.title}
-                author={book.author?.name || 'Author'}
-                coverColor={book.coverDesign?.coverColor || '#1a1a2e'}
-                textColor={book.coverDesign?.textColor || '#ffffff'}
-                fontFamily={book.coverDesign?.fontFamily || 'Georgia'}
-                imageUrl={book.coverDesign?.imageUrl}
-                language={book.language}
-              />
+            <div className="flex justify-center mb-6 sm:mb-8 overflow-hidden">
+              <div className="transform scale-75 sm:scale-100">
+                <Book3DPreview
+                  title={book.title}
+                  author={book.author?.name || 'Author'}
+                  coverColor={book.coverDesign?.coverColor || '#1a1a2e'}
+                  textColor={book.coverDesign?.textColor || '#ffffff'}
+                  fontFamily={book.coverDesign?.fontFamily || 'Georgia'}
+                  imageUrl={book.coverDesign?.imageUrl}
+                  language={book.language}
+                />
+              </div>
             </div>
 
             {/* Design Summary */}
             {aiDesignState?.design && (
-              <div className="bg-gray-800/50 rounded-xl p-6 max-w-2xl mx-auto">
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-purple-400" />
+              <div className="bg-gray-800/50 rounded-xl p-4 sm:p-6 max-w-2xl mx-auto">
+                <h3 className="font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
                   {isHebrew ? 'סיכום העיצוב' : 'Design Summary'}
                 </h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
                   <div>
                     <span className="text-gray-400">{isHebrew ? 'גופן גוף:' : 'Body Font:'}</span>
-                    <span className="ml-2">{aiDesignState.design.typography?.bodyFont}</span>
+                    <span className="ml-1 sm:ml-2">{aiDesignState.design.typography?.bodyFont}</span>
                   </div>
                   <div>
                     <span className="text-gray-400">{isHebrew ? 'גופן כותרות:' : 'Heading Font:'}</span>
-                    <span className="ml-2">{aiDesignState.design.typography?.headingFont}</span>
+                    <span className="ml-1 sm:ml-2">{aiDesignState.design.typography?.headingFont}</span>
                   </div>
                   <div>
                     <span className="text-gray-400">{isHebrew ? 'עמודות:' : 'Columns:'}</span>
-                    <span className="ml-2">{aiDesignState.design.layout?.columns || 1}</span>
+                    <span className="ml-1 sm:ml-2">{aiDesignState.design.layout?.columns || 1}</span>
                   </div>
                   <div>
                     <span className="text-gray-400">{isHebrew ? 'תמונות:' : 'Images:'}</span>
-                    <span className="ml-2">{aiDesignState.design.imagePlacements?.length || 0}</span>
+                    <span className="ml-1 sm:ml-2">{aiDesignState.design.imagePlacements?.length || 0}</span>
                   </div>
                 </div>
                 {aiDesignState.design.reasoning && (
-                  <p className="mt-4 text-gray-400 text-sm italic">
+                  <p className="mt-3 sm:mt-4 text-gray-400 text-xs sm:text-sm italic">
                     {aiDesignState.design.reasoning}
                   </p>
                 )}

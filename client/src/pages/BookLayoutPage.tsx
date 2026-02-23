@@ -24,8 +24,15 @@ import {
   BookOpenCheck,
   Check,
   RefreshCw,
+  Layout,
+  Palette,
+  Menu,
+  Layers,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import TemplateGallery from '../components/design/TemplateGallery';
+import { BookTemplate, textColorPresets, availableFonts } from '../data/bookTemplates';
+import { applyTemplate, loadGoogleFonts, PageLayoutSettings } from '../services/templateService';
 
 interface PageImage {
   id: string;
@@ -195,6 +202,8 @@ const defaultSettings = {
   showPageNumbers: true,
   includeToc: true,
   includeBackCover: true,
+  textColor: '#000000',
+  templateId: undefined as string | undefined,
 };
 
 export default function BookLayoutPage() {
@@ -214,6 +223,7 @@ export default function BookLayoutPage() {
   // UI state
   const [showSettings, setShowSettings] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [showTemplateGallery, setShowTemplateGallery] = useState(false);
   const [selectedPageIndex, setSelectedPageIndex] = useState<number | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [generatingImage, setGeneratingImage] = useState(false);
@@ -232,6 +242,9 @@ export default function BookLayoutPage() {
   });
   const [generatingCoverImage, setGeneratingCoverImage] = useState(false);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+
+  // Mobile UI state
+  const [showMobilePages, setShowMobilePages] = useState(false);
 
   // Determine text direction based on book language
   const isBookRTL = book ? isRTL(book.title) || book.language === 'he' || book.language === 'ar' : false;
@@ -382,6 +395,15 @@ export default function BookLayoutPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Handle template selection
+  const handleTemplateSelect = (template: BookTemplate) => {
+    const newSettings = applyTemplate(settings as PageLayoutSettings, template);
+    setSettings(newSettings as typeof settings);
+    loadGoogleFonts(newSettings);
+    toast.success(`Template "${template.name}" applied!`);
+    setShowTemplateGallery(false);
   };
 
   // Handle image upload
@@ -753,26 +775,34 @@ export default function BookLayoutPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-deep-space via-deep-space to-cosmic-purple/20">
       {/* Top Toolbar */}
-      <div className="glass-strong border-b border-white/10 px-6 py-3">
+      <div className="glass-strong border-b border-white/10 px-3 sm:px-6 py-2 sm:py-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Mobile Pages Toggle */}
+            <button
+              onClick={() => setShowMobilePages(!showMobilePages)}
+              className="lg:hidden btn-ghost p-2"
+            >
+              <Layers className="w-5 h-5" />
+            </button>
+
             <button
               onClick={() => navigate(`/editor/${bookId}`)}
-              className="btn-ghost flex items-center gap-2"
+              className="btn-ghost flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
             >
-              <ArrowLeft className="w-5 h-5" />
-              Back to Editor
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Back to Editor</span>
             </button>
-            <div className="h-6 w-px bg-gray-700" />
-            <h1 className="text-xl font-semibold text-white">{book.title}</h1>
-            <span className="px-2 py-1 rounded bg-magic-gold/20 text-magic-gold text-xs font-medium">
+            <div className="hidden sm:block h-6 w-px bg-gray-700" />
+            <h1 className="hidden md:block text-lg sm:text-xl font-semibold text-white truncate max-w-[200px]">{book.title}</h1>
+            <span className="hidden lg:inline px-2 py-1 rounded bg-magic-gold/20 text-magic-gold text-xs font-medium">
               {isBookRTL ? 'Hebrew (RTL)' : 'English (LTR)'}
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Auto-save indicator */}
-            <div className="flex items-center gap-2 text-sm text-gray-400">
+          <div className="flex items-center gap-1 sm:gap-3">
+            {/* Auto-save indicator - hidden on mobile */}
+            <div className="hidden md:flex items-center gap-2 text-sm text-gray-400">
               {saving ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -781,7 +811,7 @@ export default function BookLayoutPage() {
               ) : lastSaved ? (
                 <>
                   <CheckCircle2 className="w-4 h-4 text-green-400" />
-                  <span>Saved {lastSaved.toLocaleTimeString('en-US')}</span>
+                  <span className="hidden lg:inline">Saved {lastSaved.toLocaleTimeString('en-US')}</span>
                 </>
               ) : null}
             </div>
@@ -794,42 +824,68 @@ export default function BookLayoutPage() {
                   generateAIDesign();
                 }
               }}
-              className="btn-gold flex items-center gap-2"
+              className="btn-gold flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2"
             >
               <Wand2 className="w-4 h-4" />
-              Complete AI Design
+              <span className="hidden sm:inline">AI Design</span>
             </button>
 
             {/* Settings Button */}
             <button
               onClick={() => setShowSettings(!showSettings)}
-              className={`btn-ghost p-2 ${showSettings ? 'bg-white/10' : ''}`}
+              className={`btn-ghost p-1.5 sm:p-2 ${showSettings ? 'bg-white/10' : ''}`}
             >
-              <Settings className="w-5 h-5" />
+              <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
             {/* Save Button */}
             <button
               onClick={() => saveLayout()}
               disabled={saving}
-              className="btn-primary flex items-center gap-2"
+              className="btn-primary flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2"
             >
               <Save className="w-4 h-4" />
-              Save Layout
+              <span className="hidden sm:inline">Save</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Mobile Pages Overlay */}
+        {showMobilePages && (
+          <div
+            className="lg:hidden fixed inset-0 bg-black/50 z-40"
+            onClick={() => setShowMobilePages(false)}
+          />
+        )}
+
         {/* Left Sidebar - Page Thumbnails */}
-        <div className="w-48 glass-strong border-r border-white/10 p-4 overflow-y-auto">
-          <h3 className="text-sm font-semibold text-gray-300 mb-4">Pages</h3>
+        <div className={`
+          ${showMobilePages ? 'translate-x-0' : '-translate-x-full'}
+          lg:translate-x-0
+          fixed lg:relative z-50 lg:z-auto
+          w-[200px] sm:w-48 h-full
+          glass-strong border-r border-white/10 p-3 sm:p-4 overflow-y-auto
+          transition-transform duration-300 ease-in-out
+        `}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-gray-300">Pages</h3>
+            <button
+              onClick={() => setShowMobilePages(false)}
+              className="lg:hidden btn-ghost p-1"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
           <div className="space-y-2">
             {/* Cover */}
             <button
-              onClick={() => setCurrentSpread(0)}
+              onClick={() => {
+                setCurrentSpread(0);
+                setShowMobilePages(false);
+              }}
               className={`w-full aspect-[3/4] rounded-lg border-2 transition-all ${
                 currentSpread === 0
                   ? 'border-magic-gold bg-magic-gold/20'
@@ -845,7 +901,10 @@ export default function BookLayoutPage() {
             {Array.from({ length: Math.ceil(pages.length / 2) }).map((_, i) => (
               <button
                 key={i}
-                onClick={() => setCurrentSpread(i + 1)}
+                onClick={() => {
+                  setCurrentSpread(i + 1);
+                  setShowMobilePages(false);
+                }}
                 className={`w-full aspect-[3/4] rounded-lg border-2 transition-all ${
                   currentSpread === i + 1
                     ? 'border-magic-gold bg-magic-gold/20'
@@ -863,41 +922,40 @@ export default function BookLayoutPage() {
           <div className="mt-6 space-y-2">
             <button
               onClick={toggleToc}
-              className="w-full btn-secondary text-sm flex items-center justify-center gap-2"
+              className="w-full btn-secondary text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-2"
             >
               <List className="w-4 h-4" />
-              {settings.includeToc ? 'Remove Table of Contents' : 'Add Table of Contents'}
+              <span className="truncate">{settings.includeToc ? 'Remove TOC' : 'Add TOC'}</span>
             </button>
           </div>
         </div>
 
         {/* Center - Page Spread View */}
-        <div className="flex-1 flex flex-col items-center justify-center p-8 overflow-hidden">
+        <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 lg:p-8 overflow-hidden">
           {/* Navigation */}
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-4">
             <button
               onClick={isBookRTL ? goToNextSpread : goToPrevSpread}
               disabled={isBookRTL ? currentSpread >= totalSpreads - 1 : currentSpread === 0}
-              className="btn-ghost p-2 disabled:opacity-30"
+              className="btn-ghost p-1.5 sm:p-2 disabled:opacity-30"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <span className="text-gray-400">
-              {currentSpread === 0 ? 'Cover' : `Pages ${(currentSpread - 1) * 2 + 1}-${(currentSpread - 1) * 2 + 2}`}
+            <span className="text-gray-400 text-xs sm:text-sm">
+              {currentSpread === 0 ? 'Cover' : `${(currentSpread - 1) * 2 + 1}-${(currentSpread - 1) * 2 + 2}`}
             </span>
             <button
               onClick={isBookRTL ? goToPrevSpread : goToNextSpread}
               disabled={isBookRTL ? currentSpread === 0 : currentSpread >= totalSpreads - 1}
-              className="btn-ghost p-2 disabled:opacity-30"
+              className="btn-ghost p-1.5 sm:p-2 disabled:opacity-30"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
 
-          {/* Book Spread */}
+          {/* Book Spread - responsive scaling */}
           <div
-            className={`flex ${isBookRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 perspective-1000`}
-            style={{ maxHeight: 'calc(100vh - 300px)' }}
+            className={`flex ${isBookRTL ? 'flex-row-reverse' : 'flex-row'} gap-1 sm:gap-2 perspective-1000 transform scale-[0.45] sm:scale-[0.65] md:scale-[0.8] lg:scale-100 origin-center`}
           >
             {/* Left Page */}
             <div
@@ -941,7 +999,7 @@ export default function BookLayoutPage() {
             </div>
 
             {/* Spine */}
-            <div className="w-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded shadow-inner" />
+            <div className="w-2 sm:w-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded shadow-inner" />
 
             {/* Right Page */}
             <div
@@ -989,52 +1047,89 @@ export default function BookLayoutPage() {
 
           {/* Page Actions */}
           {selectedPageIndex !== null && (
-            <div className="flex items-center gap-2 mt-4">
+            <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 mt-2 sm:mt-4">
               <button
                 onClick={() => {
                   setShowImageModal(true);
                 }}
-                className="btn-secondary text-sm flex items-center gap-2"
+                className="btn-secondary text-xs sm:text-sm flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5"
               >
-                <ImageIcon className="w-4 h-4" />
-                Add Image
+                <ImageIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Add Image</span>
+                <span className="sm:hidden">Image</span>
               </button>
               <button
                 onClick={() => addBlankPage(selectedPageIndex)}
-                className="btn-secondary text-sm flex items-center gap-2"
+                className="btn-secondary text-xs sm:text-sm flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5"
               >
-                <Plus className="w-4 h-4" />
-                Add Blank Page
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Add Page</span>
+                <span className="sm:hidden">Page</span>
               </button>
               {pages[selectedPageIndex]?.type === 'blank' && (
                 <button
                   onClick={() => removePage(selectedPageIndex)}
-                  className="btn-secondary text-sm flex items-center gap-2 text-red-400"
+                  className="btn-secondary text-xs sm:text-sm flex items-center gap-1 sm:gap-2 text-red-400 px-2 sm:px-3 py-1.5"
                 >
-                  <Trash2 className="w-4 h-4" />
-                  Remove Page
+                  <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Remove</span>
                 </button>
               )}
             </div>
           )}
 
-          {/* Keyboard shortcuts hint */}
-          <div className="mt-4 text-xs text-gray-500">
+          {/* Keyboard shortcuts hint - hidden on mobile */}
+          <div className="hidden sm:block mt-4 text-xs text-gray-500">
             Ctrl+Enter = Add page | Ctrl+S = Save | Arrows = Navigate
           </div>
         </div>
+
+        {/* Settings Overlay for mobile */}
+        {showSettings && (
+          <div
+            className="lg:hidden fixed inset-0 bg-black/50 z-40"
+            onClick={() => setShowSettings(false)}
+          />
+        )}
 
         {/* Right Sidebar - Settings */}
         <AnimatePresence>
           {showSettings && (
             <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 320, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              className="glass-strong border-l border-white/10 overflow-hidden"
+              initial={{ x: '100%', opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed lg:relative right-0 top-0 lg:top-auto h-full z-50 lg:z-auto glass-strong border-l border-white/10 overflow-hidden w-[85%] sm:w-80"
             >
-              <div className="p-6 w-80">
-                <h3 className="text-lg font-semibold text-white mb-6">Layout Settings</h3>
+              <div className="p-4 sm:p-6 w-full sm:w-80 h-full overflow-y-auto">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <h3 className="text-base sm:text-lg font-semibold text-white">Layout Settings</h3>
+                  <button
+                    onClick={() => setShowSettings(false)}
+                    className="lg:hidden btn-ghost p-1"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Template Selection */}
+                <div className="mb-6">
+                  <button
+                    onClick={() => setShowTemplateGallery(true)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl text-white font-medium transition-all"
+                  >
+                    <Layout className="w-5 h-5" />
+                    Choose Template
+                  </button>
+                  {settings.templateId && (
+                    <p className="text-xs text-indigo-400 mt-2 text-center">
+                      Using: {settings.templateId}
+                    </p>
+                  )}
+                </div>
+
+                <div className="border-b border-white/10 mb-4" />
 
                 {/* Font Size */}
                 <div className="mb-4">
@@ -1079,13 +1174,42 @@ export default function BookLayoutPage() {
                     onChange={(e) => setSettings({ ...settings, fontFamily: e.target.value })}
                     className="input w-full"
                   >
-                    <option value="David Libre">David Libre</option>
-                    <option value="Heebo">Heebo</option>
-                    <option value="Rubik">Rubik</option>
-                    <option value="Frank Ruhl Libre">Frank Ruhl Libre</option>
-                    <option value="Georgia">Georgia</option>
-                    <option value="Times New Roman">Times New Roman</option>
+                    {availableFonts.map(font => (
+                      <option key={font} value={font}>{font}</option>
+                    ))}
                   </select>
+                </div>
+
+                {/* Text Color */}
+                <div className="mb-4">
+                  <label className="block text-sm text-gray-300 mb-2 flex items-center gap-2">
+                    <Palette className="w-4 h-4" />
+                    Text Color
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {textColorPresets.map(preset => (
+                      <button
+                        key={preset.color}
+                        onClick={() => setSettings({ ...settings, textColor: preset.color })}
+                        className={`w-8 h-8 rounded-lg border-2 transition-all ${
+                          settings.textColor === preset.color
+                            ? 'border-indigo-500 ring-2 ring-indigo-500/30 scale-110'
+                            : 'border-white/20 hover:border-white/40'
+                        }`}
+                        style={{ backgroundColor: preset.color }}
+                        title={preset.name}
+                      />
+                    ))}
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={settings.textColor || '#000000'}
+                      onChange={(e) => setSettings({ ...settings, textColor: e.target.value })}
+                      className="w-8 h-8 rounded cursor-pointer"
+                    />
+                    <span className="text-xs text-gray-400">Custom color</span>
+                  </div>
                 </div>
 
                 {/* Margins */}
@@ -1204,32 +1328,32 @@ export default function BookLayoutPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm"
             onClick={() => setShowImageModal(false)}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="glass-strong rounded-2xl p-6 max-w-lg w-full"
+              className="glass-strong rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-white">Add Image</h2>
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-bold text-white">Add Image</h2>
                 <button
                   onClick={() => setShowImageModal(false)}
-                  className="btn-ghost p-2"
+                  className="btn-ghost p-1.5 sm:p-2"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Upload Option */}
-              <div className="mb-6">
-                <h3 className="text-sm font-semibold text-gray-300 mb-3">Upload Image</h3>
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer hover:border-magic-gold transition">
-                  <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                  <span className="text-sm text-gray-400">Click to upload image</span>
+              <div className="mb-4 sm:mb-6">
+                <h3 className="text-sm font-semibold text-gray-300 mb-2 sm:mb-3">Upload Image</h3>
+                <label className="flex flex-col items-center justify-center w-full h-28 sm:h-32 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer hover:border-magic-gold transition">
+                  <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mb-2" />
+                  <span className="text-xs sm:text-sm text-gray-400">Click to upload image</span>
                   <span className="text-xs text-gray-500">PNG, JPG up to 10MB</span>
                   <input
                     type="file"
@@ -1240,37 +1364,37 @@ export default function BookLayoutPage() {
                 </label>
               </div>
 
-              <div className="relative mb-6">
+              <div className="relative mb-4 sm:mb-6">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-700" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="px-4 bg-deep-space text-gray-400 text-sm">or</span>
+                  <span className="px-4 bg-deep-space text-gray-400 text-xs sm:text-sm">or</span>
                 </div>
               </div>
 
               {/* AI Generation Option */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-300 mb-3">Generate Image with AI</h3>
+                <h3 className="text-sm font-semibold text-gray-300 mb-2 sm:mb-3">Generate Image with AI</h3>
                 <textarea
                   value={imagePrompt}
                   onChange={(e) => setImagePrompt(e.target.value)}
                   placeholder="Describe the image you want to create..."
-                  className="input w-full h-24 resize-none mb-3"
+                  className="input w-full h-20 sm:h-24 resize-none mb-2 sm:mb-3 text-sm"
                 />
                 <button
                   onClick={handleGenerateImage}
                   disabled={generatingImage || !imagePrompt.trim()}
-                  className="btn-gold w-full flex items-center justify-center gap-2"
+                  className="btn-gold w-full flex items-center justify-center gap-2 text-sm"
                 >
                   {generatingImage ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                       Generating...
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-5 h-5" />
+                      <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                       Generate Image
                     </>
                   )}
@@ -1288,30 +1412,30 @@ export default function BookLayoutPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm"
             onClick={() => setShowAIDesignModal(false)}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="glass-strong rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+              className="glass-strong rounded-xl sm:rounded-2xl w-full max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="flex items-center justify-between p-6 border-b border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-magic-gold/20 rounded-lg">
-                    <Wand2 className="w-6 h-6 text-magic-gold" />
+              <div className="flex items-center justify-between p-3 sm:p-6 border-b border-white/10">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-magic-gold/20 rounded-lg">
+                    <Wand2 className="w-5 h-5 sm:w-6 sm:h-6 text-magic-gold" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">Complete AI Design</h2>
-                    <p className="text-sm text-gray-400">Automatic design of typography, layout and cover</p>
+                    <h2 className="text-base sm:text-xl font-bold text-white">AI Design</h2>
+                    <p className="hidden sm:block text-sm text-gray-400">Automatic design of typography, layout and cover</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowAIDesignModal(false)}
-                  className="btn-ghost p-2"
+                  className="btn-ghost p-1.5 sm:p-2"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1336,25 +1460,26 @@ export default function BookLayoutPage() {
               {!generatingDesign && aiDesign && (
                 <>
                   {/* Tabs */}
-                  <div className="flex border-b border-white/10">
+                  <div className="flex border-b border-white/10 overflow-x-auto scrollbar-hide">
                     {[
-                      { id: 'typography', label: 'Typography', icon: Type },
-                      { id: 'layout', label: 'Layout', icon: LayoutTemplate },
-                      { id: 'cover', label: 'Cover', icon: BookOpenCheck },
-                      { id: 'images', label: 'Images', icon: ImageIcon },
+                      { id: 'typography', label: 'Typography', shortLabel: 'Type', icon: Type },
+                      { id: 'layout', label: 'Layout', shortLabel: 'Layout', icon: LayoutTemplate },
+                      { id: 'cover', label: 'Cover', shortLabel: 'Cover', icon: BookOpenCheck },
+                      { id: 'images', label: 'Images', shortLabel: 'Images', icon: ImageIcon },
                     ].map((tab) => (
                       <button
                         key={tab.id}
                         onClick={() => setAiDesignTab(tab.id as any)}
-                        className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all ${
+                        className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
                           aiDesignTab === tab.id
                             ? 'text-magic-gold border-b-2 border-magic-gold bg-magic-gold/10'
                             : 'text-gray-400 hover:text-white'
                         }`}
                       >
-                        <tab.icon className="w-4 h-4" />
-                        {tab.label}
-                        <label className="flex items-center ml-2">
+                        <tab.icon className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">{tab.label}</span>
+                        <span className="sm:hidden">{tab.shortLabel}</span>
+                        <label className="flex items-center ml-1 sm:ml-2">
                           <input
                             type="checkbox"
                             checked={selectedDesignElements[tab.id as keyof typeof selectedDesignElements]}
@@ -1363,7 +1488,7 @@ export default function BookLayoutPage() {
                               [tab.id]: e.target.checked,
                             })}
                             onClick={(e) => e.stopPropagation()}
-                            className="w-4 h-4 rounded border-gray-600 bg-white/10"
+                            className="w-3 h-3 sm:w-4 sm:h-4 rounded border-gray-600 bg-white/10"
                           />
                         </label>
                       </button>
@@ -1371,17 +1496,17 @@ export default function BookLayoutPage() {
                   </div>
 
                   {/* Tab Content */}
-                  <div className="flex-1 overflow-y-auto p-6">
+                  <div className="flex-1 overflow-y-auto p-3 sm:p-6">
                     {/* Typography Tab */}
                     {aiDesignTab === 'typography' && (
-                      <div className="space-y-6">
-                        <div className="bg-white/5 rounded-xl p-6">
-                          <h3 className="text-lg font-semibold text-white mb-4">Overall Style</h3>
-                          <p className="text-gray-300">{aiDesign.overallStyle}</p>
-                          <p className="text-sm text-gray-400 mt-2">{aiDesign.moodDescription}</p>
+                      <div className="space-y-4 sm:space-y-6">
+                        <div className="bg-white/5 rounded-xl p-4 sm:p-6">
+                          <h3 className="text-base sm:text-lg font-semibold text-white mb-2 sm:mb-4">Overall Style</h3>
+                          <p className="text-sm sm:text-base text-gray-300">{aiDesign.overallStyle}</p>
+                          <p className="text-xs sm:text-sm text-gray-400 mt-2">{aiDesign.moodDescription}</p>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                           <div className="bg-white/5 rounded-xl p-6">
                             <h4 className="text-sm font-semibold text-gray-400 mb-3">Title Font</h4>
                             <div
@@ -1465,8 +1590,8 @@ export default function BookLayoutPage() {
 
                     {/* Layout Tab */}
                     {aiDesignTab === 'layout' && (
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-4 sm:space-y-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                           <div className="bg-white/5 rounded-xl p-6">
                             <h4 className="text-sm font-semibold text-gray-400 mb-4">Margins</h4>
                             <div className="relative bg-white rounded-lg aspect-[3/4] max-w-[200px] mx-auto">
@@ -1532,8 +1657,8 @@ export default function BookLayoutPage() {
 
                     {/* Cover Tab */}
                     {aiDesignTab === 'cover' && (
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-3 gap-6">
+                      <div className="space-y-4 sm:space-y-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                           {/* Front Cover */}
                           <div className="bg-white/5 rounded-xl p-4">
                             <h4 className="text-sm font-semibold text-gray-400 mb-3">Front Cover</h4>
@@ -1740,37 +1865,39 @@ export default function BookLayoutPage() {
                   </div>
 
                   {/* Modal Footer */}
-                  <div className="flex items-center justify-between p-6 border-t border-white/10 bg-white/5">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0 p-3 sm:p-6 border-t border-white/10 bg-white/5">
                     <button
                       onClick={generateAIDesign}
                       disabled={generatingDesign}
-                      className="btn-secondary flex items-center gap-2"
+                      className="btn-secondary flex items-center justify-center gap-2 text-xs sm:text-sm order-2 sm:order-1"
                     >
                       <RefreshCw className="w-4 h-4" />
-                      Generate New Design
+                      <span className="hidden sm:inline">Generate New Design</span>
+                      <span className="sm:hidden">Regenerate</span>
                     </button>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 order-1 sm:order-2">
                       <button
                         onClick={() => setShowAIDesignModal(false)}
-                        className="btn-ghost"
+                        className="btn-ghost text-xs sm:text-sm flex-1 sm:flex-none"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={applyAIDesign}
                         disabled={saving || !Object.values(selectedDesignElements).some(v => v)}
-                        className="btn-gold flex items-center gap-2"
+                        className="btn-gold flex items-center justify-center gap-2 text-xs sm:text-sm flex-1 sm:flex-none"
                       >
                         {saving ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            Applying...
+                            <span className="hidden sm:inline">Applying...</span>
                           </>
                         ) : (
                           <>
                             <Check className="w-4 h-4" />
-                            Apply Selected Design
+                            <span className="hidden sm:inline">Apply Design</span>
+                            <span className="sm:hidden">Apply</span>
                           </>
                         )}
                       </button>
@@ -1800,6 +1927,14 @@ export default function BookLayoutPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Template Gallery Modal */}
+      <TemplateGallery
+        isOpen={showTemplateGallery}
+        onClose={() => setShowTemplateGallery(false)}
+        onSelect={handleTemplateSelect}
+        currentTemplateId={settings.templateId}
+      />
     </div>
   );
 }
@@ -1888,6 +2023,7 @@ function PageRenderer({
         fontFamily: settings.fontFamily,
         fontSize: `${settings.fontSize}px`,
         lineHeight: settings.lineHeight,
+        color: settings.textColor || '#000000',
         direction: isRTL ? 'rtl' : 'ltr',
         textAlign: isRTL ? 'right' : 'left',
       }}

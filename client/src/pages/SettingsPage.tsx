@@ -215,40 +215,42 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold gradient-text mb-2">Settings</h1>
-          <p className="text-gray-400">Manage your account and preferences</p>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-1 sm:mb-2">Settings</h1>
+          <p className="text-sm sm:text-base text-gray-400">Manage your account and preferences</p>
         </div>
 
-        <div className="flex gap-8">
-          {/* Sidebar Tabs */}
-          <div className="w-64 flex-shrink-0">
-            <div className="glass-strong rounded-xl p-4 sticky top-8">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all mb-2 ${
-                      activeTab === tab.id
-                        ? 'bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border border-indigo-500/50 text-white'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span className="font-medium">{tab.label}</span>
-                  </button>
-                );
-              })}
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
+          {/* Sidebar Tabs - Horizontal scroll on mobile */}
+          <div className="lg:w-64 flex-shrink-0">
+            <div className="glass-strong rounded-xl p-2 sm:p-4 lg:sticky lg:top-8 overflow-x-auto">
+              <div className="flex lg:flex-col gap-1 sm:gap-2 min-w-max lg:min-w-0">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-all whitespace-nowrap ${
+                        activeTab === tab.id
+                          ? 'bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border border-indigo-500/50 text-white'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="font-medium text-sm sm:text-base">{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
           {/* Content */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <AnimatePresence mode="wait">
               {/* Profile Tab */}
               {activeTab === 'profile' && (
@@ -257,22 +259,22 @@ export default function SettingsPage() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="glass-strong rounded-xl p-8"
+                  className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8"
                 >
-                  <h2 className="text-2xl font-bold mb-6">Profile Information</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Profile Information</h2>
 
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
                     {/* Language Selection - First for visibility */}
-                    <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-600/10 to-purple-600/10 border border-indigo-500/30">
-                      <label className="block text-sm font-medium mb-3 flex items-center gap-2">
+                    <div className="p-3 sm:p-4 rounded-xl bg-gradient-to-r from-indigo-600/10 to-purple-600/10 border border-indigo-500/30">
+                      <label className="block text-sm font-medium mb-2 sm:mb-3 flex items-center gap-2">
                         <Globe className="w-4 h-4 text-indigo-400" />
                         System Language
                       </label>
-                      <div className="flex gap-4">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                         <button
                           onClick={() => handleLanguageChange('en')}
                           disabled={languageLoading}
-                          className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border transition-all ${
+                          className={`flex-1 flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl border transition-all ${
                             language === 'en'
                               ? 'bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border-indigo-500/50 text-white'
                               : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
@@ -282,16 +284,16 @@ export default function SettingsPage() {
                             <Loader2 className="w-5 h-5 animate-spin" />
                           ) : (
                             <>
-                              <span className="text-2xl">🇺🇸</span>
-                              <span className="font-medium">English</span>
-                              {language === 'en' && <Check className="w-5 h-5 text-green-400" />}
+                              <span className="text-xl sm:text-2xl">🇺🇸</span>
+                              <span className="font-medium text-sm sm:text-base">English</span>
+                              {language === 'en' && <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />}
                             </>
                           )}
                         </button>
                         <button
                           onClick={() => handleLanguageChange('he')}
                           disabled={languageLoading}
-                          className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border transition-all ${
+                          className={`flex-1 flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl border transition-all ${
                             language === 'he'
                               ? 'bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border-indigo-500/50 text-white'
                               : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
@@ -301,9 +303,9 @@ export default function SettingsPage() {
                             <Loader2 className="w-5 h-5 animate-spin" />
                           ) : (
                             <>
-                              <span className="text-2xl">🇮🇱</span>
-                              <span className="font-medium">עברית</span>
-                              {language === 'he' && <Check className="w-5 h-5 text-green-400" />}
+                              <span className="text-xl sm:text-2xl">🇮🇱</span>
+                              <span className="font-medium text-sm sm:text-base">עברית</span>
+                              {language === 'he' && <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />}
                             </>
                           )}
                         </button>
@@ -397,9 +399,9 @@ export default function SettingsPage() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                 >
-                  <div className="glass-strong rounded-xl p-8 mb-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-2xl font-bold">Earnings Dashboard</h2>
+                  <div className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+                      <h2 className="text-xl sm:text-2xl font-bold">Earnings Dashboard</h2>
                       <button
                         onClick={loadEarnings}
                         className="btn-secondary text-sm py-2 px-4"
@@ -409,51 +411,51 @@ export default function SettingsPage() {
                     </div>
 
                     {loadingEarnings ? (
-                      <div className="flex items-center justify-center py-20">
-                        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+                      <div className="flex items-center justify-center py-12 sm:py-20">
+                        <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin text-indigo-500" />
                       </div>
                     ) : earningsData ? (
                       <>
                         {/* Earnings Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
                           {/* Total Earnings */}
-                          <div className="glass rounded-xl p-6">
-                            <div className="flex items-center gap-2 mb-2">
-                              <DollarSign className="w-5 h-5 text-green-400" />
-                              <span className="text-sm text-gray-400">Total Earnings</span>
+                          <div className="glass rounded-xl p-4 sm:p-6">
+                            <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
+                              <span className="text-xs sm:text-sm text-gray-400">Total Earnings</span>
                             </div>
-                            <div className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+                            <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
                               ${earningsData.earnings.total.toFixed(2)}
                             </div>
                           </div>
 
                           {/* Available Balance */}
-                          <div className="glass rounded-xl p-6">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Download className="w-5 h-5 text-indigo-400" />
-                              <span className="text-sm text-gray-400">Available</span>
+                          <div className="glass rounded-xl p-4 sm:p-6">
+                            <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                              <Download className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" />
+                              <span className="text-xs sm:text-sm text-gray-400">Available</span>
                             </div>
-                            <div className="text-3xl font-bold text-white">
+                            <div className="text-2xl sm:text-3xl font-bold text-white">
                               ${earningsData.earnings.available.toFixed(2)}
                             </div>
                           </div>
 
                           {/* Total Sales */}
-                          <div className="glass rounded-xl p-6">
-                            <div className="flex items-center gap-2 mb-2">
-                              <TrendingUp className="w-5 h-5 text-purple-400" />
-                              <span className="text-sm text-gray-400">Total Sales</span>
+                          <div className="glass rounded-xl p-4 sm:p-6 sm:col-span-2 md:col-span-1">
+                            <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+                              <span className="text-xs sm:text-sm text-gray-400">Total Sales</span>
                             </div>
-                            <div className="text-3xl font-bold text-white">
+                            <div className="text-2xl sm:text-3xl font-bold text-white">
                               {earningsData.sales.totalSales}
                             </div>
                           </div>
                         </div>
 
                         {/* Simple Chart (SVG visualization) */}
-                        <div className="glass rounded-xl p-6 mb-8">
-                          <h3 className="text-lg font-semibold mb-4">Revenue Trend</h3>
-                          <div className="h-48 flex items-end justify-between gap-2">
+                        <div className="glass rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+                          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Revenue Trend</h3>
+                          <div className="h-36 sm:h-48 flex items-end justify-between gap-1 sm:gap-2">
                             {earningsData.monthlySales.slice(-6).map((month, index) => {
                               const maxAmount = Math.max(...earningsData.monthlySales.map(m => m.amount));
                               const height = maxAmount > 0 ? (month.amount / maxAmount) * 100 : 0;
@@ -477,21 +479,21 @@ export default function SettingsPage() {
                         </div>
 
                         {/* Top Books */}
-                        <div className="glass rounded-xl p-6 mb-8">
-                          <h3 className="text-lg font-semibold mb-4">Top Earning Books</h3>
-                          <div className="space-y-3">
+                        <div className="glass rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+                          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Top Earning Books</h3>
+                          <div className="space-y-2 sm:space-y-3">
                             {earningsData.topBooks.map((book) => (
                               <div
                                 key={book.id}
-                                className="flex items-center justify-between p-3 bg-white/5 rounded-lg"
+                                className="flex items-center justify-between p-2 sm:p-3 bg-white/5 rounded-lg"
                               >
-                                <div className="flex-1">
-                                  <div className="font-medium text-white">{book.title}</div>
-                                  <div className="text-sm text-gray-400">
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-white text-sm sm:text-base truncate">{book.title}</div>
+                                  <div className="text-xs sm:text-sm text-gray-400">
                                     {book.sales} sales • ${book.price}
                                   </div>
                                 </div>
-                                <div className="text-lg font-bold text-green-400">
+                                <div className="text-base sm:text-lg font-bold text-green-400 ml-2">
                                   ${book.revenue}
                                 </div>
                               </div>
@@ -500,9 +502,9 @@ export default function SettingsPage() {
                         </div>
 
                         {/* Withdrawal Section */}
-                        <div className="glass rounded-xl p-6">
-                          <h3 className="text-lg font-semibold mb-4">Withdraw Funds</h3>
-                          <div className="flex gap-4">
+                        <div className="glass rounded-xl p-4 sm:p-6">
+                          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Withdraw Funds</h3>
+                          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                             <div className="flex-1">
                               <input
                                 type="number"
@@ -517,7 +519,7 @@ export default function SettingsPage() {
                             <button
                               onClick={handleWithdraw}
                               disabled={loading || !withdrawAmount || parseFloat(withdrawAmount) < 10}
-                              className="btn-primary px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="btn-primary px-6 sm:px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {loading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -547,29 +549,29 @@ export default function SettingsPage() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="glass-strong rounded-xl p-8"
+                  className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8"
                 >
-                  <h2 className="text-2xl font-bold mb-6">Subscription & Billing</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Subscription & Billing</h2>
 
                   {/* Current Plan */}
-                  <div className="glass rounded-xl p-6 mb-6">
-                    <div className="flex items-center justify-between mb-4">
+                  <div className="glass rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-3 sm:mb-4">
                       <div className="flex items-center gap-3">
                         {user?.role === 'premium' && (
-                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
-                            <Crown className="w-6 h-6 text-gray-900" />
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
+                            <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-gray-900" />
                           </div>
                         )}
                         <div>
-                          <h3 className="text-lg font-semibold capitalize">{user?.role} Plan</h3>
-                          <p className="text-sm text-gray-400">
+                          <h3 className="text-base sm:text-lg font-semibold capitalize">{user?.role} Plan</h3>
+                          <p className="text-xs sm:text-sm text-gray-400">
                             {user?.credits === 999999 ? 'Unlimited' : user?.credits.toLocaleString()} credits
                           </p>
                         </div>
                       </div>
                       <button
                         onClick={() => window.location.href = '/subscription'}
-                        className="btn-secondary px-6 py-2"
+                        className="btn-secondary px-4 sm:px-6 py-2 text-sm w-full sm:w-auto"
                       >
                         Change Plan
                       </button>
@@ -614,14 +616,14 @@ export default function SettingsPage() {
                   exit={{ opacity: 0, x: -20 }}
                 >
                   {/* Change Password */}
-                  <div className="glass-strong rounded-xl p-8 mb-6">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                        <Lock className="w-6 h-6 text-white" />
+                  <div className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6">
+                    <div className="flex items-start sm:items-center gap-3 mb-4 sm:mb-6">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                        <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold">Change Password</h2>
-                        <p className="text-gray-400 text-sm">
+                        <h2 className="text-xl sm:text-2xl font-bold">Change Password</h2>
+                        <p className="text-gray-400 text-xs sm:text-sm">
                           Update your password to keep your account secure
                         </p>
                       </div>
@@ -683,14 +685,14 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Active Sessions */}
-                  <div className="glass-strong rounded-xl p-8">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-                        <Smartphone className="w-6 h-6 text-white" />
+                  <div className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8">
+                    <div className="flex items-start sm:items-center gap-3 mb-4 sm:mb-6">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+                        <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold">Active Sessions</h2>
-                        <p className="text-gray-400 text-sm">
+                        <h2 className="text-xl sm:text-2xl font-bold">Active Sessions</h2>
+                        <p className="text-gray-400 text-xs sm:text-sm">
                           Manage devices that are logged into your account
                         </p>
                       </div>
@@ -761,15 +763,15 @@ export default function SettingsPage() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="glass-strong rounded-xl p-8"
+                  className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8"
                 >
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                      <Bell className="w-6 h-6 text-white" />
+                  <div className="flex items-start sm:items-center gap-3 mb-4 sm:mb-6">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0">
+                      <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold">Notification Preferences</h2>
-                      <p className="text-gray-400 text-sm">
+                      <h2 className="text-xl sm:text-2xl font-bold">Notification Preferences</h2>
+                      <p className="text-gray-400 text-xs sm:text-sm">
                         Choose what updates you want to receive
                       </p>
                     </div>

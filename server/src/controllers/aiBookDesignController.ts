@@ -11,6 +11,7 @@ import {
   generateCompleteDesignWithImages,
   convertDesignToBookState,
   generateQuickDesignPreview,
+  generateTemplateBasedDesign,
   BookDesignInput,
   CompleteBookDesign,
 } from '../services/aiBookDesignService';
@@ -849,6 +850,77 @@ export const applyCompleteDesign = async (req: AuthRequest, res: Response): Prom
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to apply design',
+    });
+  }
+};
+
+/**
+ * Generate template-based design (quick AI design using templates)
+ * POST /api/ai/design/complete
+ */
+export const generateTemplateDesign = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: 'Authentication required',
+      });
+      return;
+    }
+
+    const { bookId, bookTitle, bookGenre, bookSynopsis, language, generateCoverImage } = req.body;
+
+    if (!bookTitle || !bookGenre) {
+      res.status(400).json({
+        success: false,
+        error: 'Book title and genre are required',
+      });
+      return;
+    }
+
+    // If bookId provided, verify ownership
+    if (bookId) {
+      if (!mongoose.Types.ObjectId.isValid(bookId)) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid book ID',
+        });
+        return;
+      }
+
+      const book = await Book.findById(bookId).select('author');
+      if (book && book.author.toString() !== req.user.id) {
+        res.status(403).json({
+          success: false,
+          error: 'You do not have permission to design this book',
+        });
+        return;
+      }
+    }
+
+    // Generate template-based design
+    const design = await generateTemplateBasedDesign(
+      bookTitle,
+      bookGenre,
+      bookSynopsis,
+      language || 'en',
+      generateCoverImage || false
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {
+        templateId: design.templateId,
+        reasoning: design.reasoning,
+        coverPrompt: design.coverPrompt,
+        coverImageUrl: design.coverImageUrl,
+      },
+    });
+  } catch (error: any) {
+    console.error('Generate template design error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to generate template design',
     });
   }
 };

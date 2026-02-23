@@ -449,97 +449,94 @@ export default function ReaderPage() {
         animate={{ opacity: 1 }}
         whileHover={{ scale: 1.1 }}
         onClick={() => navigate('/marketplace')}
-        className="fixed top-6 right-6 z-50 w-12 h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold"
+        className="fixed top-3 sm:top-6 right-3 sm:right-6 z-50 w-10 h-10 sm:w-12 sm:h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold"
         style={{
           background: 'rgba(0, 0, 0, 0.3)',
           border: `1px solid ${currentTheme.accent}`,
         }}
       >
-        <X className="w-6 h-6" style={{ color: currentTheme.accent }} />
+        <X className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: currentTheme.accent }} />
       </motion.button>
 
-      {/* Settings Button */}
-      <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        whileHover={{ scale: 1.1 }}
-        onClick={() => setShowControls(!showControls)}
-        className="fixed top-6 left-6 z-50 w-12 h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold"
-        style={{
-          background: 'rgba(0, 0, 0, 0.3)',
-          border: `1px solid ${currentTheme.accent}`,
-        }}
-      >
-        <Settings
-          className={`w-6 h-6 transition-transform ${showControls ? 'rotate-90' : ''}`}
-          style={{ color: currentTheme.accent }}
-        />
-      </motion.button>
+      {/* Left Control Buttons - Stack vertically on mobile */}
+      <div className="fixed top-3 sm:top-6 left-3 sm:left-6 z-50 flex flex-col sm:flex-row gap-2 sm:gap-3">
+        {/* Settings Button */}
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          whileHover={{ scale: 1.1 }}
+          onClick={() => setShowControls(!showControls)}
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold"
+          style={{
+            background: 'rgba(0, 0, 0, 0.3)',
+            border: `1px solid ${currentTheme.accent}`,
+          }}
+        >
+          <Settings
+            className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform ${showControls ? 'rotate-90' : ''}`}
+            style={{ color: currentTheme.accent }}
+          />
+        </motion.button>
 
-      {/* Narration Button */}
-      <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        whileHover={{ scale: 1.1 }}
-        onClick={() => {
-          if (isNarrating) {
-            setShowNarrationControls(!showNarrationControls);
-          } else {
-            startNarration();
-          }
-        }}
-        className={`fixed top-6 left-20 z-50 w-12 h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold ${
-          isNarrating ? 'animate-pulse' : ''
-        }`}
-        style={{
-          background: isNarrating ? 'rgba(34, 197, 94, 0.3)' : 'rgba(0, 0, 0, 0.3)',
-          border: `1px solid ${isNarrating ? '#22c55e' : currentTheme.accent}`,
-        }}
-      >
-        {isNarrating ? (
-          <Volume2 className="w-6 h-6 text-green-400" />
-        ) : (
-          <Mic2 className="w-6 h-6" style={{ color: currentTheme.accent }} />
-        )}
-      </motion.button>
+        {/* Narration Button */}
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          whileHover={{ scale: 1.1 }}
+          onClick={() => {
+            if (isNarrating) {
+              setShowNarrationControls(!showNarrationControls);
+            } else {
+              startNarration();
+            }
+          }}
+          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold ${
+            isNarrating ? 'animate-pulse' : ''
+          }`}
+          style={{
+            background: isNarrating ? 'rgba(34, 197, 94, 0.3)' : 'rgba(0, 0, 0, 0.3)',
+            border: `1px solid ${isNarrating ? '#22c55e' : currentTheme.accent}`,
+          }}
+        >
+          {isNarrating ? (
+            <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" />
+          ) : (
+            <Mic2 className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: currentTheme.accent }} />
+          )}
+        </motion.button>
 
-      {/* Chat with Author Button */}
-      <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        whileHover={{ scale: 1.1 }}
-        onClick={() => setShowChatModal(true)}
-        className="fixed top-6 left-[136px] z-50 w-12 h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold group"
-        style={{
-          background: 'rgba(0, 0, 0, 0.3)',
-          border: `1px solid ${currentTheme.accent}`,
-        }}
-        title={`Chat with ${book.author.name}`}
-      >
-        <MessageCircle className="w-6 h-6" style={{ color: currentTheme.accent }} />
-        <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs bg-black/80 text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-          Chat with Author
-        </span>
-      </motion.button>
+        {/* Chat with Author Button */}
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          whileHover={{ scale: 1.1 }}
+          onClick={() => setShowChatModal(true)}
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold group"
+          style={{
+            background: 'rgba(0, 0, 0, 0.3)',
+            border: `1px solid ${currentTheme.accent}`,
+          }}
+          title={`Chat with ${book.author.name}`}
+        >
+          <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: currentTheme.accent }} />
+        </motion.button>
 
-      {/* Share Button */}
-      <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        whileHover={{ scale: 1.1 }}
-        onClick={() => setShowShareModal(true)}
-        className="fixed top-6 left-[192px] z-50 w-12 h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold group"
-        style={{
-          background: 'rgba(0, 0, 0, 0.3)',
-          border: `1px solid ${currentTheme.accent}`,
-        }}
-        title="Share this book"
-      >
-        <Share2 className="w-6 h-6" style={{ color: currentTheme.accent }} />
-        <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs bg-black/80 text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-          Share
-        </span>
-      </motion.button>
+        {/* Share Button */}
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          whileHover={{ scale: 1.1 }}
+          onClick={() => setShowShareModal(true)}
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold group"
+          style={{
+            background: 'rgba(0, 0, 0, 0.3)',
+            border: `1px solid ${currentTheme.accent}`,
+          }}
+          title="Share this book"
+        >
+          <Share2 className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: currentTheme.accent }} />
+        </motion.button>
+      </div>
 
       {/* Control Panel */}
       <AnimatePresence>
@@ -548,9 +545,9 @@ export default function ReaderPage() {
             initial={{ x: -300, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -300, opacity: 0 }}
-            className="fixed top-24 left-6 z-40"
+            className="fixed top-32 sm:top-24 left-3 sm:left-6 z-40 max-w-[calc(100vw-24px)] sm:max-w-none"
           >
-            <GlassCard className="w-72 p-6 space-y-6">
+            <GlassCard className="w-64 sm:w-72 p-4 sm:p-6 space-y-4 sm:space-y-6 max-h-[70vh] overflow-y-auto">
               {/* Theme Selection */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
@@ -704,9 +701,9 @@ export default function ReaderPage() {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-32 left-1/2 -translate-x-1/2 z-50"
+            className="fixed bottom-20 sm:bottom-32 left-1/2 -translate-x-1/2 z-50 w-[calc(100vw-32px)] sm:w-auto"
           >
-            <GlassCard className="px-6 py-4">
+            <GlassCard className="px-4 sm:px-6 py-3 sm:py-4">
               {/* Progress bar */}
               <div className="w-64 h-1 bg-gray-700 rounded-full mb-4 overflow-hidden">
                 <motion.div
@@ -808,7 +805,7 @@ export default function ReaderPage() {
       </AnimatePresence>
 
       {/* Main Reading Area */}
-      <div className="fixed inset-0 flex items-center justify-center px-8 py-24">
+      <div className="fixed inset-0 flex items-center justify-center px-3 sm:px-8 py-16 sm:py-24">
         <div className="max-w-4xl w-full h-full flex items-center justify-center perspective-1000">
           <AnimatePresence mode="wait" custom={pageDirection}>
             <motion.div
@@ -823,23 +820,23 @@ export default function ReaderPage() {
                 opacity: { duration: 0.4 },
                 scale: { duration: 0.4 },
               }}
-              className="w-full h-full rounded-2xl shadow-2xl overflow-hidden"
+              className="w-full h-full rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden"
               style={{
                 background: currentTheme.paper,
                 backdropFilter: 'blur(20px)',
               }}
             >
               {/* Page Content */}
-              <div ref={contentRef} className="h-full overflow-y-auto px-12 py-16 custom-scrollbar">
+              <div ref={contentRef} className="h-full overflow-y-auto px-4 sm:px-8 lg:px-12 py-8 sm:py-12 lg:py-16 custom-scrollbar">
                 {/* Chapter Title */}
                 <motion.h1
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="font-display font-bold mb-8"
+                  className="font-display font-bold mb-4 sm:mb-6 lg:mb-8 text-center sm:text-left"
                   style={{
                     color: currentTheme.accent,
-                    fontSize: `${fontSize * 1.8}px`,
+                    fontSize: `${Math.max(fontSize * 1.2, fontSize * 1.8 * 0.7)}px`,
                   }}
                 >
                   {currentChapter.title}
@@ -985,49 +982,49 @@ export default function ReaderPage() {
       </AnimatePresence>
 
       {/* Navigation Buttons */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 flex items-center gap-4">
-        <GlowingButton
-          variant={currentChapterIndex === 0 ? 'cosmic' : 'gold'}
-          size="lg"
+      <div className="fixed bottom-3 sm:bottom-8 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 sm:gap-4 px-2 sm:px-0">
+        <button
           onClick={prevChapter}
           disabled={currentChapterIndex === 0}
-          className={currentChapterIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''}
+          className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-full backdrop-blur-md transition-all text-sm sm:text-base ${
+            currentChapterIndex === 0 ? 'opacity-50 cursor-not-allowed bg-gray-600/50' : 'bg-magic-gold/20 hover:bg-magic-gold/30 border border-magic-gold/50'
+          }`}
+          style={{ color: currentTheme.accent }}
         >
-          <ChevronLeft className="w-6 h-6" />
-          Previous
-        </GlowingButton>
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="hidden sm:inline">Previous</span>
+        </button>
 
-        <div className="glass rounded-full px-6 py-3 backdrop-blur-md">
-          <p className="text-sm font-medium" style={{ color: currentTheme.accent }}>
+        <div className="glass rounded-full px-3 sm:px-6 py-2 sm:py-3 backdrop-blur-md">
+          <p className="text-xs sm:text-sm font-medium" style={{ color: currentTheme.accent }}>
             {currentChapterIndex + 1} / {book.chapters.length}
           </p>
         </div>
 
-        <GlowingButton
-          variant={currentChapterIndex === book.chapters.length - 1 ? 'cosmic' : 'gold'}
-          size="lg"
+        <button
           onClick={nextChapter}
           disabled={currentChapterIndex === book.chapters.length - 1}
-          className={
-            currentChapterIndex === book.chapters.length - 1 ? 'opacity-50 cursor-not-allowed' : ''
-          }
+          className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-full backdrop-blur-md transition-all text-sm sm:text-base ${
+            currentChapterIndex === book.chapters.length - 1 ? 'opacity-50 cursor-not-allowed bg-gray-600/50' : 'bg-magic-gold/20 hover:bg-magic-gold/30 border border-magic-gold/50'
+          }`}
+          style={{ color: currentTheme.accent }}
         >
-          Next
-          <ChevronRight className="w-6 h-6" />
-        </GlowingButton>
+          <span className="hidden sm:inline">Next</span>
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
       </div>
 
-      {/* Book Info */}
+      {/* Book Info - Hidden on very small screens */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed bottom-8 left-8 z-30"
+        className="hidden sm:block fixed bottom-8 left-4 sm:left-8 z-30"
       >
-        <div className="glass rounded-xl px-4 py-3 backdrop-blur-md">
-          <p className="text-sm font-display font-semibold" style={{ color: currentTheme.accent }}>
+        <div className="glass rounded-xl px-3 sm:px-4 py-2 sm:py-3 backdrop-blur-md max-w-[200px]">
+          <p className="text-xs sm:text-sm font-display font-semibold truncate" style={{ color: currentTheme.accent }}>
             {book.title}
           </p>
-          <p className="text-xs opacity-60" style={{ color: currentTheme.text }}>
+          <p className="text-xs opacity-60 truncate" style={{ color: currentTheme.text }}>
             by {book.author.name}
           </p>
         </div>

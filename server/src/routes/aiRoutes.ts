@@ -16,6 +16,7 @@ import {
   getDesignPreview,
   getDesignState,
   applyCompleteDesign,
+  generateTemplateDesign,
 } from '../controllers/aiBookDesignController';
 import {
   startInterview,
@@ -259,6 +260,22 @@ router.get('/design-state/:bookId', getDesignState as any);
  * Apply AI design state to book layout and cover
  */
 router.post('/apply-complete-design/:bookId', applyCompleteDesign as any);
+
+/**
+ * POST /api/ai/design/complete
+ * Generate template-based design (quick AI design using pre-made templates)
+ *
+ * Body:
+ * {
+ *   bookId?: string (optional, for ownership verification)
+ *   bookTitle: string (required)
+ *   bookGenre: string (required)
+ *   bookSynopsis?: string
+ *   language?: 'en' | 'he' (default 'en')
+ *   generateCoverImage?: boolean (default false)
+ * }
+ */
+router.post('/design/complete', generateTemplateDesign as any);
 
 // ============================================
 // AI CHAT INTERVIEW ROUTES

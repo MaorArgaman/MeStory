@@ -142,92 +142,92 @@ const ShareModal: React.FC<ShareModalProps> = ({
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl w-full max-w-sm p-6 shadow-2xl border border-purple-500/20"
+          className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl w-full max-w-sm p-4 sm:p-6 shadow-2xl border border-purple-500/20"
         >
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <Share2 className="w-5 h-5 text-purple-400" />
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+              <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
               Share Book
             </h3>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors"
             >
               <X className="w-5 h-5 text-gray-400" />
             </button>
           </div>
 
           {/* Book info */}
-          <div className="mb-6 p-4 bg-white/5 rounded-xl">
-            <h4 className="font-semibold text-white truncate">{bookTitle}</h4>
-            <p className="text-sm text-gray-400">by {authorName}</p>
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-white/5 rounded-xl">
+            <h4 className="font-semibold text-white text-sm sm:text-base truncate">{bookTitle}</h4>
+            <p className="text-xs sm:text-sm text-gray-400">by {authorName}</p>
           </div>
 
           {/* Social buttons */}
-          <div className="grid grid-cols-4 gap-3 mb-6">
+          <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
             <button
               onClick={handleWhatsAppShare}
-              className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 hover:bg-green-500/20 text-gray-400 hover:text-green-400 transition-all group"
+              className="flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-3 rounded-xl bg-white/5 hover:bg-green-500/20 text-gray-400 hover:text-green-400 transition-all group"
             >
-              <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center group-hover:bg-green-500/30 transition-colors">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-500/20 flex items-center justify-center group-hover:bg-green-500/30 transition-colors">
                 <WhatsAppIcon />
               </div>
-              <span className="text-xs">WhatsApp</span>
+              <span className="text-[10px] sm:text-xs">WhatsApp</span>
             </button>
 
             <button
               onClick={handleTwitterShare}
-              className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 hover:bg-blue-500/20 text-gray-400 hover:text-blue-400 transition-all group"
+              className="flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-3 rounded-xl bg-white/5 hover:bg-blue-500/20 text-gray-400 hover:text-blue-400 transition-all group"
             >
-              <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
                 <TwitterIcon />
               </div>
-              <span className="text-xs">Twitter</span>
+              <span className="text-[10px] sm:text-xs">Twitter</span>
             </button>
 
             <button
               onClick={handleFacebookShare}
-              className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 hover:bg-blue-600/20 text-gray-400 hover:text-blue-500 transition-all group"
+              className="flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-3 rounded-xl bg-white/5 hover:bg-blue-600/20 text-gray-400 hover:text-blue-500 transition-all group"
             >
-              <div className="w-12 h-12 rounded-full bg-blue-600/20 flex items-center justify-center group-hover:bg-blue-600/30 transition-colors">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-600/20 flex items-center justify-center group-hover:bg-blue-600/30 transition-colors">
                 <FacebookIcon />
               </div>
-              <span className="text-xs">Facebook</span>
+              <span className="text-[10px] sm:text-xs">Facebook</span>
             </button>
 
             <button
               onClick={handleTelegramShare}
-              className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 hover:bg-sky-500/20 text-gray-400 hover:text-sky-400 transition-all group"
+              className="flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-3 rounded-xl bg-white/5 hover:bg-sky-500/20 text-gray-400 hover:text-sky-400 transition-all group"
             >
-              <div className="w-12 h-12 rounded-full bg-sky-500/20 flex items-center justify-center group-hover:bg-sky-500/30 transition-colors">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-sky-500/20 flex items-center justify-center group-hover:bg-sky-500/30 transition-colors">
                 <TelegramIcon />
               </div>
-              <span className="text-xs">Telegram</span>
+              <span className="text-[10px] sm:text-xs">Telegram</span>
             </button>
           </div>
 
           {/* Copy link */}
-          <div className="flex items-center gap-2 p-3 bg-white/5 rounded-xl mb-4">
+          <div className="flex items-center gap-2 p-2 sm:p-3 bg-white/5 rounded-xl mb-3 sm:mb-4">
             <input
               type="text"
               value={shareUrl}
               readOnly
-              className="flex-1 bg-transparent text-gray-300 text-sm truncate outline-none"
+              className="flex-1 bg-transparent text-gray-300 text-xs sm:text-sm truncate outline-none min-w-0"
               dir="ltr"
             />
             <button
               onClick={handleCopyLink}
-              className={`p-2 rounded-lg transition-all ${
+              className={`p-1.5 sm:p-2 rounded-lg transition-all flex-shrink-0 ${
                 copied
                   ? 'bg-green-500/20 text-green-400'
                   : 'bg-white/10 text-gray-400 hover:text-white'
               }`}
             >
               {copied ? (
-                <Check className="w-5 h-5" />
+                <Check className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
-                <Link className="w-5 h-5" />
+                <Link className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
             </button>
           </div>
@@ -237,14 +237,15 @@ const ShareModal: React.FC<ShareModalProps> = ({
             <button
               onClick={handleNativeShare}
               disabled={sharing}
-              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm sm:text-base font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {sharing ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
               ) : (
                 <>
-                  <Share2 className="w-5 h-5" />
-                  More sharing options...
+                  <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="hidden sm:inline">More sharing options...</span>
+                  <span className="sm:hidden">More options</span>
                 </>
               )}
             </button>

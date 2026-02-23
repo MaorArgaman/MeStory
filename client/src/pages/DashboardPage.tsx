@@ -308,7 +308,7 @@ export default function DashboardPage() {
             onClick={() => setShowQuickCreateModal(true)}
             whileHover={{ scale: 1.02, y: -8 }}
             whileTap={{ scale: 0.98 }}
-            className="glass rounded-2xl overflow-hidden group cursor-pointer relative h-[340px] border border-white/10 hover:border-cyan-500/50 transition-all duration-500"
+            className="glass rounded-xl sm:rounded-2xl overflow-hidden group cursor-pointer relative h-[220px] sm:h-[280px] lg:h-[340px] border border-white/10 hover:border-cyan-500/50 transition-all duration-500"
           >
             {/* Background Image */}
             <div className="absolute inset-0">
@@ -320,16 +320,16 @@ export default function DashboardPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
-              <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
+            <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-6 z-10">
+              <h3 className="text-sm sm:text-lg lg:text-xl font-bold text-white mb-1 sm:mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
                 {t('dashboard.cards.scratch.title')}
               </h3>
-              <p className="text-gray-300 text-sm leading-relaxed mb-3">
+              <p className="text-gray-300 text-xs sm:text-sm leading-relaxed mb-2 sm:mb-3 line-clamp-2 sm:line-clamp-none">
                 {t('dashboard.cards.scratch.description')}
               </p>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/20 border border-cyan-500/30">
-                <Feather className="w-4 h-4 text-cyan-400" />
-                <span className="text-xs text-cyan-300 font-medium">{t('dashboard.cards.scratch.badge')}</span>
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-cyan-500/20 border border-cyan-500/30">
+                <Feather className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-400" />
+                <span className="text-[10px] sm:text-xs text-cyan-300 font-medium">{t('dashboard.cards.scratch.badge')}</span>
               </div>
             </div>
           </motion.button>
@@ -339,7 +339,7 @@ export default function DashboardPage() {
             onClick={() => setShowInterviewModal(true)}
             whileHover={{ scale: 1.02, y: -8 }}
             whileTap={{ scale: 0.98 }}
-            className="glass rounded-2xl overflow-hidden group cursor-pointer relative h-[340px] border border-white/10 hover:border-indigo-500/50 transition-all duration-500"
+            className="glass rounded-xl sm:rounded-2xl overflow-hidden group cursor-pointer relative h-[220px] sm:h-[280px] lg:h-[340px] border border-white/10 hover:border-indigo-500/50 transition-all duration-500"
           >
             {/* Background Image */}
             <div className="absolute inset-0">
@@ -351,16 +351,16 @@ export default function DashboardPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
-              <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
+            <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-6 z-10">
+              <h3 className="text-sm sm:text-lg lg:text-xl font-bold text-white mb-1 sm:mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
                 {t('dashboard.cards.interview.title')}
               </h3>
-              <p className="text-gray-300 text-sm leading-relaxed mb-3">
+              <p className="text-gray-300 text-xs sm:text-sm leading-relaxed mb-2 sm:mb-3 line-clamp-2 sm:line-clamp-none">
                 {t('dashboard.cards.interview.description')}
               </p>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-500/30">
-                <MessageCircle className="w-4 h-4 text-indigo-400" />
-                <span className="text-xs text-indigo-300 font-medium">{t('dashboard.cards.interview.badge')}</span>
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-indigo-500/20 border border-indigo-500/30">
+                <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-400" />
+                <span className="text-[10px] sm:text-xs text-indigo-300 font-medium">{t('dashboard.cards.interview.badge')}</span>
               </div>
             </div>
           </motion.button>
@@ -370,7 +370,7 @@ export default function DashboardPage() {
             onClick={() => setShowVoiceModal(true)}
             whileHover={{ scale: 1.02, y: -8 }}
             whileTap={{ scale: 0.98 }}
-            className="glass rounded-2xl overflow-hidden group cursor-pointer relative h-[340px] border border-white/10 hover:border-magic-gold/50 transition-all duration-500"
+            className="glass rounded-xl sm:rounded-2xl overflow-hidden group cursor-pointer relative h-[220px] sm:h-[280px] lg:h-[340px] border border-white/10 hover:border-magic-gold/50 transition-all duration-500"
           >
             {/* Background Image */}
             <div className="absolute inset-0">
@@ -382,16 +382,16 @@ export default function DashboardPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
-              <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
+            <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-6 z-10">
+              <h3 className="text-sm sm:text-lg lg:text-xl font-bold text-white mb-1 sm:mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
                 {t('dashboard.cards.voice.title')}
               </h3>
-              <p className="text-gray-300 text-sm leading-relaxed mb-3">
+              <p className="text-gray-300 text-xs sm:text-sm leading-relaxed mb-2 sm:mb-3 line-clamp-2 sm:line-clamp-none">
                 {t('dashboard.cards.voice.description')}
               </p>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-magic-gold/20 border border-magic-gold/30">
-                <Mic className="w-4 h-4 text-magic-gold" />
-                <span className="text-xs text-magic-gold font-medium">{t('dashboard.cards.voice.badge')}</span>
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-magic-gold/20 border border-magic-gold/30">
+                <Mic className="w-3 h-3 sm:w-4 sm:h-4 text-magic-gold" />
+                <span className="text-[10px] sm:text-xs text-magic-gold font-medium">{t('dashboard.cards.voice.badge')}</span>
               </div>
             </div>
           </motion.button>
@@ -401,7 +401,7 @@ export default function DashboardPage() {
             onClick={() => setShowUploadModal(true)}
             whileHover={{ scale: 1.02, y: -8 }}
             whileTap={{ scale: 0.98 }}
-            className="glass rounded-2xl overflow-hidden group cursor-pointer relative h-[340px] border border-white/10 hover:border-purple-500/50 transition-all duration-500"
+            className="glass rounded-xl sm:rounded-2xl overflow-hidden group cursor-pointer relative h-[220px] sm:h-[280px] lg:h-[340px] border border-white/10 hover:border-purple-500/50 transition-all duration-500"
           >
             {/* Background Image */}
             <div className="absolute inset-0">
@@ -413,16 +413,16 @@ export default function DashboardPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
-              <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
+            <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-6 z-10">
+              <h3 className="text-sm sm:text-lg lg:text-xl font-bold text-white mb-1 sm:mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
                 {t('dashboard.cards.import.title')}
               </h3>
-              <p className="text-gray-300 text-sm leading-relaxed mb-3">
+              <p className="text-gray-300 text-xs sm:text-sm leading-relaxed mb-2 sm:mb-3 line-clamp-2 sm:line-clamp-none">
                 {t('dashboard.cards.import.description')}
               </p>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/20 border border-purple-500/30">
-                <FileUp className="w-4 h-4 text-purple-400" />
-                <span className="text-xs text-purple-300 font-medium">{t('dashboard.cards.import.badge')}</span>
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-purple-500/20 border border-purple-500/30">
+                <FileUp className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400" />
+                <span className="text-[10px] sm:text-xs text-purple-300 font-medium">{t('dashboard.cards.import.badge')}</span>
               </div>
             </div>
           </motion.button>
@@ -451,11 +451,11 @@ export default function DashboardPage() {
 
       {/* Your Library Section */}
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold gradient-gold mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
+        <div className="mb-4 sm:mb-6 lg:mb-8">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-gold mb-1 sm:mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
             {t('dashboard.sections.your_library')}
           </h2>
-          <p className="text-gray-400">{t('dashboard.sections.your_library_subtitle')}</p>
+          <p className="text-sm sm:text-base text-gray-400">{t('dashboard.sections.your_library_subtitle')}</p>
         </div>
 
         {loading ? (
@@ -723,22 +723,22 @@ export default function DashboardPage() {
                   <PenTool className="w-10 h-10 text-white" />
                 </div>
                 <h2 className="text-3xl font-bold gradient-gold mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
-                  Start from Scratch
+                  {t('dashboard.modals.quick_create.title')}
                 </h2>
                 <p className="text-gray-300 mb-6 leading-relaxed">
-                  Create a blank book with just a title and genre. Perfect for when you're ready to dive straight into writing.
+                  {t('dashboard.modals.quick_create.description')}
                 </p>
 
                 <div className="space-y-4 mb-6">
                   <div className="text-left">
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Book Title *
+                      {t('dashboard.modals.quick_create.book_title')}
                     </label>
                     <input
                       type="text"
                       value={quickTitle}
                       onChange={(e) => setQuickTitle(e.target.value)}
-                      placeholder="Enter your book title"
+                      placeholder={t('dashboard.modals.quick_create.book_title_placeholder')}
                       className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                       autoFocus
                       disabled={creating}
@@ -747,7 +747,7 @@ export default function DashboardPage() {
 
                   <div className="text-left">
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Genre
+                      {t('dashboard.modals.quick_create.genre')}
                     </label>
                     <select
                       value={quickGenre}
@@ -755,19 +755,19 @@ export default function DashboardPage() {
                       className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                       disabled={creating}
                     >
-                      <option value="Fiction" className="bg-gray-800 text-white">Fiction</option>
-                      <option value="Fantasy" className="bg-gray-800 text-white">Fantasy</option>
-                      <option value="Science Fiction" className="bg-gray-800 text-white">Science Fiction</option>
-                      <option value="Mystery" className="bg-gray-800 text-white">Mystery</option>
-                      <option value="Thriller" className="bg-gray-800 text-white">Thriller</option>
-                      <option value="Romance" className="bg-gray-800 text-white">Romance</option>
-                      <option value="Horror" className="bg-gray-800 text-white">Horror</option>
-                      <option value="Adventure" className="bg-gray-800 text-white">Adventure</option>
-                      <option value="Historical Fiction" className="bg-gray-800 text-white">Historical Fiction</option>
-                      <option value="Non-Fiction" className="bg-gray-800 text-white">Non-Fiction</option>
-                      <option value="Biography" className="bg-gray-800 text-white">Biography</option>
-                      <option value="Self-Help" className="bg-gray-800 text-white">Self-Help</option>
-                      <option value="Other" className="bg-gray-800 text-white">Other</option>
+                      <option value="Fiction" className="bg-gray-800 text-white">{t('dashboard.genres.fiction')}</option>
+                      <option value="Fantasy" className="bg-gray-800 text-white">{t('dashboard.genres.fantasy')}</option>
+                      <option value="Science Fiction" className="bg-gray-800 text-white">{t('dashboard.genres.science_fiction')}</option>
+                      <option value="Mystery" className="bg-gray-800 text-white">{t('dashboard.genres.mystery')}</option>
+                      <option value="Thriller" className="bg-gray-800 text-white">{t('dashboard.genres.thriller')}</option>
+                      <option value="Romance" className="bg-gray-800 text-white">{t('dashboard.genres.romance')}</option>
+                      <option value="Horror" className="bg-gray-800 text-white">{t('dashboard.genres.horror')}</option>
+                      <option value="Adventure" className="bg-gray-800 text-white">{t('dashboard.genres.adventure')}</option>
+                      <option value="Historical Fiction" className="bg-gray-800 text-white">{t('dashboard.genres.historical_fiction')}</option>
+                      <option value="Non-Fiction" className="bg-gray-800 text-white">{t('dashboard.genres.non_fiction')}</option>
+                      <option value="Biography" className="bg-gray-800 text-white">{t('dashboard.genres.biography')}</option>
+                      <option value="Self-Help" className="bg-gray-800 text-white">{t('dashboard.genres.self_help')}</option>
+                      <option value="Other" className="bg-gray-800 text-white">{t('dashboard.genres.other')}</option>
                     </select>
                   </div>
                 </div>
@@ -780,12 +780,12 @@ export default function DashboardPage() {
                   {creating ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Creating...
+                      {t('dashboard.modals.quick_create.creating')}
                     </>
                   ) : (
                     <>
                       <PenTool className="w-5 h-5" />
-                      Create & Start Writing
+                      {t('dashboard.modals.quick_create.button')}
                     </>
                   )}
                 </button>
@@ -798,7 +798,7 @@ export default function DashboardPage() {
                     }}
                     className="btn-ghost w-full"
                   >
-                    Cancel
+                    {t('buttons.cancel')}
                   </button>
                 )}
               </div>
@@ -829,10 +829,10 @@ export default function DashboardPage() {
                   <Mic className="w-10 h-10 text-white" />
                 </div>
                 <h2 className="text-3xl font-bold gradient-gold mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
-                  Voice to Text
+                  {t('dashboard.modals.voice.title')}
                 </h2>
                 <p className="text-gray-300 mb-6 leading-relaxed">
-                  Upload an audio file of your story and we'll transcribe it into text using AI. Supports English, Hebrew, and many other languages.
+                  {t('dashboard.modals.voice.description')}
                 </p>
 
                 {/* Hidden Audio Input */}
@@ -854,12 +854,12 @@ export default function DashboardPage() {
                   {transcribing ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Transcribing...
+                      {t('dashboard.modals.voice.transcribing')}
                     </>
                   ) : (
                     <>
                       <Upload className="w-5 h-5" />
-                      Choose Audio File
+                      {t('dashboard.modals.voice.button')}
                     </>
                   )}
                 </button>
@@ -869,14 +869,14 @@ export default function DashboardPage() {
                     onClick={() => setShowVoiceModal(false)}
                     className="btn-ghost w-full"
                   >
-                    Cancel
+                    {t('buttons.cancel')}
                   </button>
                 )}
 
                 <div className="glass rounded-xl p-4 mt-6">
-                  <p className="text-xs text-gray-400 mb-2">Supported formats:</p>
-                  <p className="text-xs text-gray-300">MP3, WAV, M4A, MP4, MPEG, MPGA, WEBM</p>
-                  <p className="text-xs text-gray-400 mt-2">Max size: 25MB</p>
+                  <p className="text-xs text-gray-400 mb-2">{t('dashboard.modals.voice.formats')}</p>
+                  <p className="text-xs text-gray-300">{t('dashboard.modals.voice.formats_list')}</p>
+                  <p className="text-xs text-gray-400 mt-2">{t('dashboard.modals.voice.max_size')}</p>
                 </div>
               </div>
             </motion.div>

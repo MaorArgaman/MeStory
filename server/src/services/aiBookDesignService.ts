@@ -960,3 +960,173 @@ export async function generateQuickDesignPreview(
     coverPrompt: coverConcept.front.imagePrompt,
   };
 }
+
+// ============================================
+// TEMPLATE-BASED DESIGN
+// ============================================
+
+// Available template IDs (matching client-side templates)
+const TEMPLATE_IDS = [
+  'classic-book',
+  'modern-clean',
+  'fantasy-epic',
+  'childrens-book',
+  'academic',
+  'magazine-style',
+  'photo-book',
+  'novel',
+  'poetry',
+  'custom',
+] as const;
+
+// Genre to template mapping
+const GENRE_TEMPLATE_MAPPING: Record<string, string[]> = {
+  fantasy: ['fantasy-epic', 'classic-book', 'novel'],
+  'science fiction': ['modern-clean', 'magazine-style', 'novel'],
+  romance: ['poetry', 'classic-book', 'novel'],
+  mystery: ['novel', 'classic-book', 'modern-clean'],
+  thriller: ['modern-clean', 'novel', 'magazine-style'],
+  horror: ['fantasy-epic', 'novel', 'classic-book'],
+  children: ['childrens-book', 'photo-book', 'magazine-style'],
+  'young adult': ['modern-clean', 'magazine-style', 'novel'],
+  historical: ['classic-book', 'novel', 'academic'],
+  biography: ['modern-clean', 'classic-book', 'academic'],
+  'self-help': ['modern-clean', 'academic', 'magazine-style'],
+  poetry: ['poetry', 'classic-book', 'modern-clean'],
+  academic: ['academic', 'modern-clean', 'classic-book'],
+  memoir: ['novel', 'classic-book', 'poetry'],
+  default: ['novel', 'classic-book', 'modern-clean'],
+};
+
+/**
+ * Select the best template based on book content and genre using AI
+ */
+export async function selectBestTemplate(
+  bookTitle: string,
+  bookGenre: string,
+  bookSynopsis?: string,
+  language: string = 'en'
+): Promise<{
+  templateId: string;
+  reasoning: string;
+  coverPrompt: string;
+}> {
+  const model = getGeminiModel();
+
+  // Get suggested templates for genre
+  const genreKey = bookGenre.toLowerCase().replace(/[_-]/g, ' ');
+  const suggestedTemplates = GENRE_TEMPLATE_MAPPING[genreKey] || GENRE_TEMPLATE_MAPPING.default;
+
+  const prompt = `You are a professional book designer. Select the best design template for this book.
+
+BOOK INFORMATION:
+Title: "${bookTitle}"
+Genre: ${bookGenre}
+Synopsis: ${bookSynopsis || 'Not provided'}
+Language: ${language === 'he' ? 'Hebrew' : 'English'}
+
+AVAILABLE TEMPLATES (choose one):
+1. classic-book - Traditional serif fonts, single column, elegant. Best for: literary fiction, historical, classic novels
+2. modern-clean - Sans-serif, generous whitespace, minimal. Best for: self-help, business, contemporary fiction
+3. fantasy-epic - Decorative headers, ornate styling. Best for: fantasy, epic adventure, mythological stories
+4. childrens-book - Playful fonts, colorful, 2 columns. Best for: children's books, picture books
+5. academic - Professional, structured. Best for: academic, non-fiction, educational
+6. magazine-style - Multiple columns, dynamic. Best for: magazines, catalogs, visual books
+7. photo-book - Image-heavy layout. Best for: photography, travel, art books
+8. novel - Classic single column for immersive reading. Best for: novels, fiction
+9. poetry - Centered text, elegant spacing. Best for: poetry, verse, short prose
+
+SUGGESTED TEMPLATES FOR THIS GENRE: ${suggestedTemplates.join(', ')}
+
+TASK:
+1. Choose the best template ID from the list above
+2. Explain why this template fits the book (2-3 sentences)
+3. Create a cover image prompt that matches the book's theme
+
+Respond in JSON format:
+{
+  "templateId": "chosen-template-id",
+  "reasoning": "Why this template is perfect for the book...",
+  "coverPrompt": "Detailed image prompt for the book cover..."
+}
+
+IMPORTANT:
+- Response must be valid JSON only, no markdown
+- templateId must be one of: ${TEMPLATE_IDS.join(', ')}
+- coverPrompt should be detailed and visual, suitable for AI image generation`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    let text = response.text();
+
+    // Clean up response
+    text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+    const parsed = JSON.parse(text);
+
+    // Validate templateId
+    if (!TEMPLATE_IDS.includes(parsed.templateId)) {
+      parsed.templateId = suggestedTemplates[0] || 'novel';
+    }
+
+    return {
+      templateId: parsed.templateId,
+      reasoning: parsed.reasoning || 'Selected based on genre analysis',
+      coverPrompt: parsed.coverPrompt || `Professional book cover for "${bookTitle}", ${bookGenre} style`,
+    };
+  } catch (error) {
+    console.error('Template selection failed, using fallback:', error);
+    // Fallback to first suggested template
+    return {
+      templateId: suggestedTemplates[0] || 'novel',
+      reasoning: 'Selected based on genre matching',
+      coverPrompt: `Professional book cover for "${bookTitle}", ${bookGenre} genre, elegant design`,
+    };
+  }
+}
+
+/**
+ * Generate complete template-based design with optional cover image
+ */
+export async function generateTemplateBasedDesign(
+  bookTitle: string,
+  bookGenre: string,
+  bookSynopsis?: string,
+  language: string = 'en',
+  generateCoverImage: boolean = false
+): Promise<{
+  templateId: string;
+  reasoning: string;
+  coverPrompt: string;
+  coverImageUrl?: string;
+}> {
+  console.log(`🎨 Generating template-based design for "${bookTitle}"...`);
+
+  // Select the best template
+  const selection = await selectBestTemplate(bookTitle, bookGenre, bookSynopsis, language);
+
+  let coverImageUrl: string | undefined;
+
+  // Optionally generate cover image
+  if (generateCoverImage && selection.coverPrompt) {
+    try {
+      const { generateImage } = await import('./imageGenerationService');
+      const result = await generateImage({
+        prompt: selection.coverPrompt,
+        style: 'artistic',
+        aspectRatio: '3:4', // Closest to book cover ratio
+      });
+      coverImageUrl = result.imageUrl;
+      console.log('✅ Cover image generated:', coverImageUrl);
+    } catch (error) {
+      console.error('Cover image generation failed:', error);
+      // Continue without image
+    }
+  }
+
+  return {
+    ...selection,
+    coverImageUrl,
+  };
+}

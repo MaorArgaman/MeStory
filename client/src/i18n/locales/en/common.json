@@ -277,5 +277,69 @@
       "invalid_audio_type": "Please upload a valid audio file (MP3, WAV, M4A)",
       "audio_too_large": "Audio file size must be less than 25MB"
     }
+  },
+  "marketplace": {
+    "hero": {
+      "title": "Discover Worlds Unseen",
+      "subtitle": "Explore a universe of stories crafted by visionary authors.",
+      "highlight": "Every book is a portal."
+    },
+    "search": {
+      "placeholder": "Search for books, authors, or genres...",
+      "button": "Search"
+    },
+    "categories": {
+      "all": "All",
+      "fantasy": "Fantasy",
+      "scifi": "Sci-Fi",
+      "romance": "Romance",
+      "mystery": "Mystery",
+      "thriller": "Thriller",
+      "horror": "Horror",
+      "historical": "Historical",
+      "literary_fiction": "Literary Fiction",
+      "young_adult": "Young Adult",
+      "adventure": "Adventure"
+    },
+    "banners": {
+      "fantasy": {
+        "title": "Fantasy Worlds",
+        "subtitle": "Step into realms of magic, adventure, and wonder. Where dragons soar and heroes rise."
+      },
+      "scifi": {
+        "title": "Sci-Fi & Cyberworlds",
+        "subtitle": "Explore distant galaxies, cyberpunk cities, and futures beyond imagination."
+      },
+      "mystery": {
+        "title": "Mystery & Thrillers",
+        "subtitle": "Unravel dark secrets, solve impossible crimes, and face heart-pounding suspense."
+      }
+    },
+    "sort": {
+      "label": "Sort by:",
+      "newest": "Newest First",
+      "popular": "Most Popular",
+      "rated": "Highest Rated",
+      "price": "Price: Low to High"
+    },
+    "results": {
+      "count_singular": "{{count}} stellar book discovered",
+      "count_plural": "{{count}} stellar books discovered",
+      "stellar": "stellar"
+    },
+    "empty": {
+      "title": "No Worlds Found",
+      "subtitle": "Try adjusting your search or exploring different categories"
+    },
+    "book": {
+      "free": "FREE",
+      "view_details": "View Details",
+      "quick_preview": "Quick Preview",
+      "masterpiece": "MASTERPIECE",
+      "score": "SCORE"
+    },
+    "messages": {
+      "load_failed": "Failed to load marketplace books"
+    }
   }
 }

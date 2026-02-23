@@ -148,6 +148,17 @@ export interface IPageLayout {
     includePageNumbers: boolean;
     pageNumberPosition: 'top' | 'bottom' | 'none';
   };
+  // Template-related fields
+  textColor?: string;
+  titleFont?: string;
+  headerFont?: string;
+  accentColor?: string;
+  backgroundColor?: string;
+  columns?: 1 | 2 | 3 | 4;
+  paragraphIndent?: number;
+  paragraphSpacing?: number;
+  pageNumberPosition?: 'top-left' | 'top-right' | 'bottom-center' | 'bottom-outside' | 'none';
+  templateId?: string;
 }
 
 // Publishing Status interface (Section 9.1)
@@ -754,6 +765,45 @@ const PageLayoutSchema = new Schema<IPageLayout>(
         enum: ['top', 'bottom', 'none'],
         default: 'bottom',
       },
+    },
+    // Template-related fields
+    textColor: {
+      type: String,
+      default: '#000000',
+    },
+    titleFont: {
+      type: String,
+    },
+    headerFont: {
+      type: String,
+    },
+    accentColor: {
+      type: String,
+    },
+    backgroundColor: {
+      type: String,
+      default: '#ffffff',
+    },
+    columns: {
+      type: Number,
+      enum: [1, 2, 3, 4],
+      default: 1,
+    },
+    paragraphIndent: {
+      type: Number,
+      default: 0,
+    },
+    paragraphSpacing: {
+      type: Number,
+      default: 12,
+    },
+    pageNumberPosition: {
+      type: String,
+      enum: ['top-left', 'top-right', 'bottom-center', 'bottom-outside', 'none'],
+      default: 'bottom-center',
+    },
+    templateId: {
+      type: String,
     },
   },
   { _id: false }

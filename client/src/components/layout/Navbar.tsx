@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { BookOpen, User, LogOut, ChevronDown, Crown, MessageCircle, Bell, Store, Library } from 'lucide-react';
+import { BookOpen, User, LogOut, ChevronDown, Crown, MessageCircle, Bell, Store, Library, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getUnreadCount as getMessagesUnreadCount } from '../../services/messagingApi';
 import { getUnreadCount as getNotificationsUnreadCount } from '../../services/notificationApi';
@@ -20,9 +20,11 @@ export default function Navbar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [messagesUnreadCount, setMessagesUnreadCount] = useState(0);
   const [notificationsUnreadCount, setNotificationsUnreadCount] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   // Fetch unread message and notification counts
   useEffect(() => {
@@ -53,11 +55,19 @@ export default function Navbar() {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false);
       }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setShowMobileMenu(false);
+      }
     }
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setShowMobileMenu(false);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -71,80 +81,90 @@ export default function Navbar() {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl"
+      className="fixed top-3 sm:top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl"
+      ref={mobileMenuRef}
     >
-      <div className="glass-strong rounded-2xl border border-white/10 shadow-2xl shadow-black/50 backdrop-blur-2xl">
-        <div className="px-8 py-4">
+      <div className="glass-strong rounded-xl sm:rounded-2xl border border-white/10 shadow-2xl shadow-black/50 backdrop-blur-2xl">
+        <div className="px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             {/* Logo - Left Side */}
-            <Link to="/dashboard" className="flex items-center gap-3 group flex-shrink-0">
+            <Link to="/dashboard" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0">
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="h-12 flex items-center gap-3"
+                className="h-8 sm:h-10 lg:h-12 flex items-center gap-2 sm:gap-3"
               >
                 <img
                   src={logoIcon}
                   alt="MeStory"
-                  className="h-12 w-auto object-contain drop-shadow-lg"
+                  className="h-8 sm:h-10 lg:h-12 w-auto object-contain drop-shadow-lg"
                 />
-                <span className="text-2xl font-bold gradient-gold hidden sm:block" style={{ fontFamily: "'Cinzel', serif" }}>
+                <span className="text-lg sm:text-xl lg:text-2xl font-bold gradient-gold hidden sm:block" style={{ fontFamily: "'Cinzel', serif" }}>
                   MeStory
                 </span>
               </motion.div>
             </Link>
 
-            {/* Navigation Links - Centered */}
-            <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+            {/* Navigation Links - Centered (Hidden on mobile) */}
+            <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-2">
               <Link
                 to="/dashboard"
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-300 ${
+                className={`flex items-center gap-2 px-4 xl:px-5 py-2 xl:py-2.5 rounded-xl transition-all duration-300 ${
                   isActive('/dashboard')
                     ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30 shadow-glow-gold'
                     : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <BookOpen className="w-5 h-5" />
-                <span className="font-semibold">{t('nav.my_books')}</span>
+                <BookOpen className="w-4 h-4 xl:w-5 xl:h-5" />
+                <span className="font-semibold text-sm xl:text-base">{t('nav.my_books')}</span>
               </Link>
 
               <Link
                 to="/marketplace"
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-300 ${
+                className={`flex items-center gap-2 px-4 xl:px-5 py-2 xl:py-2.5 rounded-xl transition-all duration-300 ${
                   isActive('/marketplace')
                     ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30 shadow-glow-gold'
                     : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Store className="w-5 h-5" />
-                <span className="font-semibold">{t('nav.marketplace')}</span>
+                <Store className="w-4 h-4 xl:w-5 xl:h-5" />
+                <span className="font-semibold text-sm xl:text-base">{t('nav.marketplace')}</span>
               </Link>
 
               <Link
                 to="/library"
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-300 ${
+                className={`flex items-center gap-2 px-4 xl:px-5 py-2 xl:py-2.5 rounded-xl transition-all duration-300 ${
                   isActive('/library')
                     ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30 shadow-glow-gold'
                     : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Library className="w-5 h-5" />
-                <span className="font-semibold">{t('nav.library', 'My Library')}</span>
+                <Library className="w-4 h-4 xl:w-5 xl:h-5" />
+                <span className="font-semibold text-sm xl:text-base">{t('nav.library', 'My Library')}</span>
               </Link>
             </div>
 
             {/* Right Side - Notifications, Messages, User */}
-            <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 flex-shrink-0">
+              {/* Mobile Menu Button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="lg:hidden p-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300"
+              >
+                {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </motion.button>
               {/* Notifications Button */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowNotifications(true)}
-                className="relative p-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300"
+                className="relative p-2 sm:p-2.5 rounded-lg sm:rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300"
                 title={t('nav.notifications')}
               >
-                <Bell className="w-5 h-5" />
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                 {notificationsUnreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space text-xs flex items-center justify-center font-bold">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space text-[10px] sm:text-xs flex items-center justify-center font-bold">
                     {notificationsUnreadCount > 9 ? '9+' : notificationsUnreadCount}
                   </span>
                 )}
@@ -155,12 +175,12 @@ export default function Navbar() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowMessages(true)}
-                className="relative p-2.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300"
+                className="relative p-2 sm:p-2.5 rounded-lg sm:rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300"
                 title={t('nav.messages')}
               >
-                <MessageCircle className="w-5 h-5" />
+                <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                 {messagesUnreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs flex items-center justify-center font-bold">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white text-[10px] sm:text-xs flex items-center justify-center font-bold">
                     {messagesUnreadCount > 9 ? '9+' : messagesUnreadCount}
                   </span>
                 )}
@@ -172,23 +192,23 @@ export default function Navbar() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-200 hover:text-white hover:bg-white/5 transition-all duration-300"
+                  className="flex items-center gap-1 sm:gap-2 lg:gap-3 px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-gray-200 hover:text-white hover:bg-white/5 transition-all duration-300"
                 >
                   {/* Avatar with Gold Glow */}
                   <div className="relative">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold ring-2 ring-magic-gold/30">
-                      <User className="w-6 h-6 text-deep-space" />
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold ring-2 ring-magic-gold/30">
+                      <User className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-deep-space" />
                     </div>
                     {/* Premium Badge */}
                     {user?.role === 'premium' && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center border-2 border-deep-space">
-                        <Crown className="w-3 h-3 text-deep-space" />
+                      <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center border-2 border-deep-space">
+                        <Crown className="w-2 h-2 sm:w-3 sm:h-3 text-deep-space" />
                       </div>
                     )}
                   </div>
-                  <span className="font-semibold">{user?.name}</span>
+                  <span className="font-semibold hidden sm:block text-sm lg:text-base max-w-[80px] lg:max-w-none truncate">{user?.name}</span>
                   <ChevronDown
-                    className={`w-4 h-4 transition-transform duration-300 ${
+                    className={`w-3 h-3 sm:w-4 sm:h-4 hidden sm:block transition-transform duration-300 ${
                       showUserMenu ? 'rotate-180' : ''
                     }`}
                   />
@@ -263,6 +283,91 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Menu Dropdown */}
+      <AnimatePresence>
+        {showMobileMenu && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -10, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="lg:hidden mt-2 glass-strong rounded-xl border border-white/10 shadow-xl overflow-hidden"
+          >
+            <div className="p-3 space-y-1">
+              <Link
+                to="/dashboard"
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+                  isActive('/dashboard')
+                    ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                    : 'text-gray-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <BookOpen className="w-5 h-5" />
+                <span className="font-semibold">{t('nav.my_books')}</span>
+              </Link>
+
+              <Link
+                to="/marketplace"
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+                  isActive('/marketplace')
+                    ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                    : 'text-gray-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Store className="w-5 h-5" />
+                <span className="font-semibold">{t('nav.marketplace')}</span>
+              </Link>
+
+              <Link
+                to="/library"
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+                  isActive('/library')
+                    ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                    : 'text-gray-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Library className="w-5 h-5" />
+                <span className="font-semibold">{t('nav.library', 'My Library')}</span>
+              </Link>
+
+              <div className="border-t border-white/10 my-2" />
+
+              <Link
+                to="/subscription"
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+                  isActive('/subscription')
+                    ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                    : 'text-gray-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Crown className="w-5 h-5" />
+                <span className="font-semibold">{t('nav.upgrade')}</span>
+              </Link>
+
+              <Link
+                to="/settings"
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+                  isActive('/settings')
+                    ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                    : 'text-gray-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <User className="w-5 h-5" />
+                <span className="font-semibold">{t('nav.settings')}</span>
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300"
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="font-semibold">{t('nav.logout')}</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Ambient Glow Effect */}
       <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-magic-gold/10 blur-3xl -z-10 opacity-50" />

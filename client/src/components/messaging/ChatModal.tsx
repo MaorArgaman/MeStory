@@ -202,19 +202,19 @@ const ChatModal: React.FC<ChatModalProps> = ({
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl w-full max-w-lg h-[600px] max-h-[90vh] flex flex-col shadow-2xl border border-purple-500/20 overflow-hidden"
+          className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl w-full max-w-lg h-[85vh] sm:h-[600px] max-h-[90vh] flex flex-col shadow-2xl border border-purple-500/20 overflow-hidden"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black/20">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between p-3 sm:p-4 border-b border-white/10 bg-black/20">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               <button
                 onClick={onClose}
-                className="p-2 rounded-lg hover:bg-white/10 transition-colors md:hidden"
+                className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors md:hidden flex-shrink-0"
               >
                 <ChevronLeft className="w-5 h-5 text-gray-400" />
               </button>
 
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden flex-shrink-0">
                 {authorPicture ? (
                   <img
                     src={authorPicture}
@@ -222,14 +222,14 @@ const ChatModal: React.FC<ChatModalProps> = ({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <User className="w-5 h-5 text-white" />
+                  <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 )}
               </div>
 
-              <div>
-                <h3 className="font-semibold text-white">{authorName}</h3>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-white text-sm sm:text-base truncate">{authorName}</h3>
                 {bookTitle && (
-                  <p className="text-xs text-gray-400 truncate max-w-[200px]">
+                  <p className="text-[10px] sm:text-xs text-gray-400 truncate">
                     About: {bookTitle}
                   </p>
                 )}
@@ -238,7 +238,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
 
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-white/10 transition-colors hidden md:block"
+              className="p-2 rounded-lg hover:bg-white/10 transition-colors hidden md:block flex-shrink-0"
             >
               <X className="w-5 h-5 text-gray-400" />
             </button>
@@ -310,7 +310,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
           </div>
 
           {/* Input Area */}
-          <div className="p-4 border-t border-white/10 bg-black/20">
+          <div className="p-3 sm:p-4 border-t border-white/10 bg-black/20">
             <div className="flex items-center gap-2">
               <input
                 ref={inputRef}
@@ -319,19 +319,19 @@ const ChatModal: React.FC<ChatModalProps> = ({
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Write a message..."
-                className="flex-1 bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
+                className="flex-1 bg-white/10 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
                 disabled={loading || sending}
               />
 
               <button
                 onClick={handleSend}
                 disabled={!newMessage.trim() || loading || sending}
-                className="p-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg hover:shadow-purple-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg hover:shadow-purple-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
               >
                 {sending ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                 ) : (
-                  <Send className="w-5 h-5" />
+                  <Send className="w-4 h-4 sm:w-5 sm:h-5" />
                 )}
               </button>
             </div>

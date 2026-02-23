@@ -277,5 +277,129 @@
       "invalid_audio_type": "אנא העלה קובץ אודיו תקין (MP3, WAV, M4A)",
       "audio_too_large": "גודל קובץ האודיו חייב להיות פחות מ-25MB"
     }
+  },
+  "marketplace": {
+    "hero": {
+      "title": "גלה עולמות חדשים",
+      "subtitle": "חקור יקום של סיפורים שנוצרו על ידי סופרים מבריקים.",
+      "highlight": "כל ספר הוא שער לעולם אחר."
+    },
+    "search": {
+      "placeholder": "חפש ספרים, סופרים או ז'אנרים...",
+      "button": "חיפוש"
+    },
+    "categories": {
+      "all": "הכל",
+      "fantasy": "פנטזיה",
+      "scifi": "מדע בדיוני",
+      "romance": "רומנטיקה",
+      "mystery": "מסתורין",
+      "thriller": "מותחן",
+      "horror": "אימה",
+      "historical": "היסטורי",
+      "literary_fiction": "ספרות יפה",
+      "young_adult": "נוער",
+      "adventure": "הרפתקאות",
+      "israel_wars": "מלחמות ישראל",
+      "october7": "סיפורי ה-7 באוקטובר",
+      "holocaust_survivors": "סיפורי ניצולי שואה",
+      "personal_stories": "סיפורים אישיים",
+      "memorial": "זיכרון והנצחה"
+    },
+    "israeli_categories": {
+      "section_title": "סיפורים ישראליים",
+      "october7": {
+        "title": "אירועי השבעה באוקטובר",
+        "description": "סיפורים של גבורה, אמונה ותקווה מהטרגדיה הלאומית",
+        "subcategories": {
+          "hostages_returnees": "סיפורי חטופים ושבים",
+          "soldiers_combatants": "סיפורי לוחמים וחיילים",
+          "bereaved_families": "משפחות שכולות",
+          "hostage_families": "משפחות החטופים",
+          "missing_families": "משפחות נעדרים",
+          "evacuated_communities": "קהילות מפונות",
+          "rescue_emergency": "חילוץ והצלה",
+          "community_resilience": "חוסן קהילתי והתנדבות",
+          "memorial": "הנצחה וזיכרון"
+        }
+      },
+      "israel_wars": {
+        "title": "מלחמות ישראל",
+        "description": "סיפורים מהקרבות על הבית ועל העם",
+        "subcategories": {
+          "independence": "מלחמת העצמאות",
+          "six_day": "מלחמת ששת הימים",
+          "yom_kippur": "מלחמת יום כיפור",
+          "lebanon": "מלחמות לבנון",
+          "operations": "מבצעים צבאיים",
+          "idf_stories": "סיפורי צה\"ל",
+          "memorial": "הנצחה וזיכרון"
+        }
+      },
+      "holocaust_survivors": {
+        "title": "סיפורי ניצולי שואה",
+        "description": "עדויות חיות מדור הולך ונעלם",
+        "subcategories": {
+          "testimonies": "עדויות",
+          "survival": "סיפורי הישרדות",
+          "families": "סיפורי משפחות",
+          "children": "ילדי השואה",
+          "second_third_gen": "דור שני ושלישי",
+          "heritage": "מורשת וזיכרון"
+        }
+      }
+    },
+    "banners": {
+      "fantasy": {
+        "title": "עולמות פנטזיה",
+        "subtitle": "צעד לעולמות של קסם, הרפתקאות ופלא. היכן שדרקונים עפים וגיבורים קמים."
+      },
+      "scifi": {
+        "title": "מדע בדיוני וסייברפאנק",
+        "subtitle": "חקור גלקסיות רחוקות, ערים קיברנטיות ועתידים מעבר לדמיון."
+      },
+      "mystery": {
+        "title": "מסתורין ומותחנים",
+        "subtitle": "חשוף סודות אפלים, פתור פשעים בלתי אפשריים והתמודד עם מתח עוצר נשימה."
+      },
+      "october7": {
+        "title": "סיפורי ה-7 באוקטובר",
+        "subtitle": "סיפורים של גבורה, אמונה ותקווה מהטרגדיה הלאומית. זכרונות שחשוב לשמר."
+      },
+      "israel_wars": {
+        "title": "מלחמות ישראל",
+        "subtitle": "סיפורים מהקרבות על הבית ועל העם. גבורה, מסירות וזיכרון."
+      },
+      "holocaust_survivors": {
+        "title": "סיפורי ניצולי שואה",
+        "subtitle": "עדויות חיות מדור הולך ונעלם. סיפורים של הישרדות, תקומה ותקווה."
+      }
+    },
+    "sort": {
+      "label": "מיין לפי:",
+      "newest": "החדשים ביותר",
+      "popular": "הפופולריים ביותר",
+      "rated": "הדירוג הגבוה ביותר",
+      "price": "מחיר: מהנמוך לגבוה"
+    },
+    "results": {
+      "count_singular": "נמצא ספר מדהים {{count}}",
+      "count_plural": "נמצאו {{count}} ספרים מדהימים",
+      "stellar": "מדהים"
+    },
+    "empty": {
+      "title": "לא נמצאו עולמות",
+      "subtitle": "נסה לשנות את החיפוש או לחקור קטגוריות אחרות"
+    },
+    "book": {
+      "free": "חינם",
+      "view_details": "צפייה בפרטים",
+      "quick_preview": "תצוגה מקדימה",
+      "masterpiece": "יצירת מופת",
+      "score": "ציון"
+    },
+    "messages": {
+      "load_failed": "נכשל בטעינת ספרי החנות"
+    }
   }
 }

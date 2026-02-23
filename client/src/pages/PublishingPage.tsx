@@ -193,20 +193,20 @@ export default function PublishingPage() {
   const canProceedFromStep1 = qualityScore >= 70;
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold gradient-text mb-2">Publish Your Book</h1>
-          <p className="text-gray-400">{book.title}</p>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-1 sm:mb-2">Publish Your Book</h1>
+          <p className="text-sm sm:text-base text-gray-400 truncate">{book.title}</p>
         </div>
 
         {/* Step Indicator */}
-        <div className="flex items-center justify-center mb-12 gap-4">
+        <div className="flex items-center justify-center mb-8 sm:mb-12 gap-2 sm:gap-4">
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center">
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold transition-all ${
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-sm sm:text-base transition-all ${
                   step >= s
                     ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white glow'
                     : 'glass text-gray-400'
@@ -216,7 +216,7 @@ export default function PublishingPage() {
               </div>
               {s < 3 && (
                 <div
-                  className={`w-20 h-1 mx-2 rounded transition-all ${
+                  className={`w-8 sm:w-16 lg:w-20 h-1 mx-1 sm:mx-2 rounded transition-all ${
                     step > s ? 'bg-gradient-to-r from-indigo-500 to-purple-600' : 'bg-gray-700'
                   }`}
                 />
@@ -234,18 +234,18 @@ export default function PublishingPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="glass-strong rounded-xl p-8"
+              className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8"
             >
-              <div className="flex items-center gap-3 mb-6">
-                <Sparkles className="w-8 h-8 text-indigo-400" />
-                <h2 className="text-2xl font-bold">Quality Check</h2>
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-400" />
+                <h2 className="text-xl sm:text-2xl font-bold">Quality Check</h2>
               </div>
 
               {book.qualityScore ? (
                 <div>
-                  <div className="flex items-center justify-center mb-8">
-                    <div className="relative w-40 h-40">
-                      <svg className="w-full h-full transform -rotate-90">
+                  <div className="flex items-center justify-center mb-6 sm:mb-8">
+                    <div className="relative w-32 h-32 sm:w-40 sm:h-40">
+                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
                         <circle
                           cx="80"
                           cy="80"
@@ -266,47 +266,47 @@ export default function PublishingPage() {
                         />
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-4xl font-bold">{qualityScore}</span>
-                        <span className="text-sm text-gray-400">/ 100</span>
+                        <span className="text-3xl sm:text-4xl font-bold">{qualityScore}</span>
+                        <span className="text-xs sm:text-sm text-gray-400">/ 100</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
                     {Object.entries(book.qualityScore.categories).map(([key, value]) => (
-                      <div key={key} className="glass rounded-lg p-4">
-                        <div className="text-sm text-gray-400 mb-1 capitalize">
+                      <div key={key} className="glass rounded-lg p-3 sm:p-4">
+                        <div className="text-xs sm:text-sm text-gray-400 mb-1 capitalize">
                           {key.replace(/([A-Z])/g, ' $1').trim()}
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="flex-1 bg-gray-700 rounded-full h-2">
+                          <div className="flex-1 bg-gray-700 rounded-full h-1.5 sm:h-2">
                             <div
-                              className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full transition-all"
+                              className="bg-gradient-to-r from-indigo-500 to-purple-600 h-1.5 sm:h-2 rounded-full transition-all"
                               style={{ width: `${value.score}%` }}
                             />
                           </div>
-                          <span className="text-sm font-semibold">{value.score}</span>
+                          <span className="text-xs sm:text-sm font-semibold">{value.score}</span>
                         </div>
                       </div>
                     ))}
                   </div>
 
                   {canProceedFromStep1 ? (
-                    <div className="flex items-start gap-3 p-4 bg-green-500/10 border border-green-500/30 rounded-lg mb-6">
-                      <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                    <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-green-500/10 border border-green-500/30 rounded-lg mb-4 sm:mb-6">
+                      <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-400 flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-green-300 font-medium">Ready to Publish!</p>
-                        <p className="text-sm text-green-400/80">
+                        <p className="text-sm sm:text-base text-green-300 font-medium">Ready to Publish!</p>
+                        <p className="text-xs sm:text-sm text-green-400/80">
                           Your book meets the quality standards required for publication.
                         </p>
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg mb-6">
-                      <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                    <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-red-500/10 border border-red-500/30 rounded-lg mb-4 sm:mb-6">
+                      <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-red-300 font-medium">Quality Score Too Low</p>
-                        <p className="text-sm text-red-400/80">
+                        <p className="text-sm sm:text-base text-red-300 font-medium">Quality Score Too Low</p>
+                        <p className="text-xs sm:text-sm text-red-400/80">
                           Your book needs a quality score of at least 70 to publish. Consider improving
                           your content using the AI writing assistant.
                         </p>
@@ -315,29 +315,30 @@ export default function PublishingPage() {
                   )}
                 </div>
               ) : (
-                <div className="flex items-start gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg mb-6">
-                  <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg mb-4 sm:mb-6">
+                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-yellow-300 font-medium">No Quality Score Yet</p>
-                    <p className="text-sm text-yellow-400/80">
+                    <p className="text-sm sm:text-base text-yellow-300 font-medium">No Quality Score Yet</p>
+                    <p className="text-xs sm:text-sm text-yellow-400/80">
                       Run the AI quality analysis in the editor to get your quality score.
                     </p>
                   </div>
                 </div>
               )}
 
-              <div className="flex justify-between gap-4">
-                <button onClick={() => navigate('/dashboard')} className="btn-secondary">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Dashboard
+              <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 sm:gap-4">
+                <button onClick={() => navigate('/dashboard')} className="btn-secondary text-sm sm:text-base">
+                  <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Back to Dashboard</span>
+                  <span className="sm:hidden">Back</span>
                 </button>
                 <button
                   onClick={() => setStep(2)}
                   disabled={!canProceedFromStep1}
-                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
                 >
                   Continue
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <ArrowRight className="w-4 h-4 ml-1 sm:ml-2" />
                 </button>
               </div>
             </motion.div>
@@ -350,14 +351,14 @@ export default function PublishingPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="glass-strong rounded-xl p-8"
+              className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8"
             >
-              <div className="flex items-center gap-3 mb-6">
-                <DollarSign className="w-8 h-8 text-indigo-400" />
-                <h2 className="text-2xl font-bold">Pricing & Strategy</h2>
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-400" />
+                <h2 className="text-xl sm:text-2xl font-bold">Pricing & Strategy</h2>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Pricing */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Pricing</label>
@@ -434,7 +435,7 @@ export default function PublishingPage() {
                     <Tag className="w-4 h-4" />
                     Categories (select up to 3)
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {GENRE_CATEGORIES.map((category) => (
                       <button
                         key={category}
@@ -442,7 +443,7 @@ export default function PublishingPage() {
                         disabled={
                           !selectedCategories.includes(category) && selectedCategories.length >= 3
                         }
-                        className={`py-2 px-3 rounded-lg border transition-all text-sm ${
+                        className={`py-2 px-2 sm:px-3 rounded-lg border transition-all text-xs sm:text-sm ${
                           selectedCategories.includes(category)
                             ? 'border-indigo-500 bg-indigo-500/20 text-white'
                             : 'border-gray-700 text-gray-400 hover:border-gray-600 disabled:opacity-30'
@@ -467,18 +468,18 @@ export default function PublishingPage() {
                 </div>
               </div>
 
-              <div className="flex justify-between gap-4 mt-8">
-                <button onClick={() => setStep(1)} className="btn-secondary">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+              <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 sm:gap-4 mt-6 sm:mt-8">
+                <button onClick={() => setStep(1)} className="btn-secondary text-sm sm:text-base">
+                  <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
                   Back
                 </button>
                 <button
                   onClick={() => setStep(3)}
                   disabled={selectedCategories.length === 0}
-                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
                 >
                   Continue
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <ArrowRight className="w-4 h-4 ml-1 sm:ml-2" />
                 </button>
               </div>
             </motion.div>
@@ -491,17 +492,17 @@ export default function PublishingPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="glass-strong rounded-xl p-8"
+              className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8"
             >
-              <div className="flex items-center gap-3 mb-6">
-                <Rocket className="w-8 h-8 text-indigo-400" />
-                <h2 className="text-2xl font-bold">Ready to Launch!</h2>
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <Rocket className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-400" />
+                <h2 className="text-xl sm:text-2xl font-bold">Ready to Launch!</h2>
               </div>
 
-              <div className="space-y-6">
-                <div className="glass rounded-lg p-6">
-                  <h3 className="font-semibold mb-4">Publishing Summary</h3>
-                  <div className="space-y-3 text-sm">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="glass rounded-lg p-4 sm:p-6">
+                  <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Publishing Summary</h3>
+                  <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Quality Score:</span>
                       <span className="font-semibold text-green-400">{qualityScore}/100</span>
@@ -514,17 +515,17 @@ export default function PublishingPage() {
                       <span className="text-gray-400">Categories:</span>
                       <span className="font-semibold">{selectedCategories.length} selected</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-start">
                       <span className="text-gray-400">Target Audience:</span>
-                      <span className="font-semibold">
+                      <span className="font-semibold text-right max-w-[60%] truncate">
                         {targetAudience || 'Not specified'}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-4 bg-indigo-500/10 border border-indigo-500/30 rounded-lg">
-                  <p className="text-sm text-indigo-300">
+                <div className="p-3 sm:p-4 bg-indigo-500/10 border border-indigo-500/30 rounded-lg">
+                  <p className="text-xs sm:text-sm text-indigo-300">
                     Once published, your book will be visible in the marketplace for readers to discover
                     and purchase. You can unpublish it at any time from your dashboard.
                   </p>
@@ -533,25 +534,25 @@ export default function PublishingPage() {
                 <button
                   onClick={handlePublish}
                   disabled={publishing}
-                  className="w-full btn-primary py-4 text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full btn-primary py-3 sm:py-4 text-base sm:text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {publishing ? (
                     <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
                       Publishing...
                     </>
                   ) : (
                     <>
-                      <Rocket className="w-5 h-5 mr-2" />
+                      <Rocket className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                       Publish Book
                     </>
                   )}
                 </button>
               </div>
 
-              <div className="flex justify-start mt-8">
-                <button onClick={() => setStep(2)} className="btn-secondary" disabled={publishing}>
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+              <div className="flex justify-start mt-6 sm:mt-8">
+                <button onClick={() => setStep(2)} className="btn-secondary text-sm sm:text-base" disabled={publishing}>
+                  <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
                   Back
                 </button>
               </div>
@@ -564,23 +565,23 @@ export default function PublishingPage() {
               key="step4"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="glass-strong rounded-xl p-12 text-center"
+              className="glass-strong rounded-xl p-6 sm:p-8 lg:p-12 text-center"
             >
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-6 glow">
-                <CheckCircle2 className="w-12 h-12 text-white" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-4 sm:mb-6 glow">
+                <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white" />
               </div>
 
-              <h2 className="text-4xl font-bold gradient-text mb-4">Congratulations!</h2>
-              <p className="text-xl text-gray-300 mb-8">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text mb-2 sm:mb-4">Congratulations!</h2>
+              <p className="text-base sm:text-lg lg:text-xl text-gray-300 mb-6 sm:mb-8 px-2">
                 Your book "{book.title}" is now live in the marketplace!
               </p>
 
-              <div className="flex gap-4 justify-center">
-                <button onClick={() => navigate('/marketplace')} className="btn-primary">
-                  <Sparkles className="w-4 h-4 mr-2" />
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+                <button onClick={() => navigate('/marketplace')} className="btn-primary text-sm sm:text-base">
+                  <Sparkles className="w-4 h-4 mr-1 sm:mr-2" />
                   View in Marketplace
                 </button>
-                <button onClick={() => navigate('/dashboard')} className="btn-secondary">
+                <button onClick={() => navigate('/dashboard')} className="btn-secondary text-sm sm:text-base">
                   Back to Dashboard
                 </button>
               </div>
