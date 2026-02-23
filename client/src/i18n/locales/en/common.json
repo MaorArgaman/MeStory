@@ -263,6 +263,8 @@
       "generating_pdf": "Generating PDF...",
       "export_success": "File exported successfully!",
       "export_failed": "Export failed",
+      "export_no_chapters": "Cannot export a book without chapters. Please add content to your book first.",
+      "export_no_content": "Cannot export a book without content. Please add some text to your chapters first.",
       "upload_success": "Manuscript uploaded successfully!",
       "upload_failed": "Failed to upload manuscript",
       "book_created": "Book created! Start writing...",
