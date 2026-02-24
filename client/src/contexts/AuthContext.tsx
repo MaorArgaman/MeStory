@@ -37,14 +37,47 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
       }
 
+      // Try to load cached user first for better UX
+      const cachedUser = localStorage.getItem('user');
+      if (cachedUser) {
+        try {
+          setUser(JSON.parse(cachedUser));
+        } catch (e) {
+          // Invalid cached user, continue to fetch from server
+        }
+      }
+
       const response = await api.get('/auth/me');
       if (response.data.success) {
-        setUser(response.data.data.user);
+        const freshUser = response.data.data.user;
+        setUser(freshUser);
+        localStorage.setItem('user', JSON.stringify(freshUser));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load user:', error);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+
+      // Only remove token on authentication errors (401)
+      // Don't logout user on server errors (500) or network issues
+      const status = error.response?.status;
+      if (status === 401 || status === 403) {
+        console.log('Authentication failed, clearing session');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+      } else {
+        // Server/network error - keep user logged in with cached data
+        console.log('Server error, keeping cached user session');
+        const cachedUser = localStorage.getItem('user');
+        if (cachedUser) {
+          try {
+            setUser(JSON.parse(cachedUser));
+          } catch (e) {
+            // If we can't parse cached user and server is down, stay logged out
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+          }
+        }
+      }
     } finally {
       setLoading(false);
     }
