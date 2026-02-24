@@ -11,7 +11,8 @@ import {
   ApplyTemplateResponse,
 } from '../types/templates';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_BASE = import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
 
 // Helper function for API calls
 async function apiCall<T>(
