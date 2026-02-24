@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 interface EditorToolbarProps {
@@ -34,10 +35,26 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   const { t } = useTranslation('common');
   const [showHeadingMenu, setShowHeadingMenu] = useState(false);
   const headingMenuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+
+  // Calculate menu position when opening
+  useEffect(() => {
+    if (showHeadingMenu && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+      });
+    }
+  }, [showHeadingMenu]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (headingMenuRef.current && !headingMenuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const isOutsideButton = buttonRef.current && !buttonRef.current.contains(target);
+      const isOutsideMenu = headingMenuRef.current && !headingMenuRef.current.contains(target);
+      if (isOutsideButton && isOutsideMenu) {
         setShowHeadingMenu(false);
       }
     };
@@ -125,8 +142,9 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
       </div>
 
       {/* Paragraph/Heading Dropdown */}
-      <div className="relative" ref={headingMenuRef}>
+      <div className="relative">
         <motion.button
+          ref={buttonRef}
           whileHover={{ scale: 1.02 }}
           onClick={() => setShowHeadingMenu(!showHeadingMenu)}
           className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all min-w-[80px] justify-between"
@@ -140,11 +158,17 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           </svg>
         </motion.button>
 
-        {showHeadingMenu && (
+        {showHeadingMenu && createPortal(
           <motion.div
+            ref={headingMenuRef}
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
-            className="absolute top-full left-0 mt-1 bg-slate-800 border border-white/10 rounded-lg shadow-xl z-[100] min-w-[160px]"
+            className="fixed bg-slate-800 border border-white/10 rounded-lg shadow-2xl min-w-[160px]"
+            style={{
+              top: menuPosition.top,
+              left: menuPosition.left,
+              zIndex: 9999,
+            }}
           >
             <button
               onClick={() => setHeading('paragraph')}
@@ -182,7 +206,8 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               <Heading3 className="w-4 h-4" />
               <span className="text-sm font-semibold">{t('editor.toolbar.heading3')}</span>
             </button>
-          </motion.div>
+          </motion.div>,
+          document.body
         )}
       </div>
 
