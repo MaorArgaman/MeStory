@@ -143,7 +143,7 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* Right Side - Notifications, Messages, User */}
+            {/* Right Side - Notifications, Messages, User OR Login/Register */}
             <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 flex-shrink-0">
               {/* Mobile Menu Button */}
               <motion.button
@@ -154,21 +154,40 @@ export default function Navbar() {
               >
                 {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </motion.button>
-              {/* Notifications Button */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowNotifications(true)}
-                className="relative p-2 sm:p-2.5 rounded-lg sm:rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300"
-                title={t('nav.notifications')}
-              >
-                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-                {notificationsUnreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space text-[10px] sm:text-xs flex items-center justify-center font-bold">
-                    {notificationsUnreadCount > 9 ? '9+' : notificationsUnreadCount}
-                  </span>
-                )}
-              </motion.button>
+
+              {/* Show login/register for unauthenticated users */}
+              {!user ? (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/login"
+                    className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+                  >
+                    {t('nav.login', 'Login')}
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="px-3 sm:px-4 py-2 text-sm font-medium bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space rounded-lg hover:shadow-glow-gold transition-all"
+                  >
+                    {t('nav.get_started', 'Get Started')}
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  {/* Notifications Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowNotifications(true)}
+                    className="relative p-2 sm:p-2.5 rounded-lg sm:rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300"
+                    title={t('nav.notifications')}
+                  >
+                    <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+                    {notificationsUnreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space text-[10px] sm:text-xs flex items-center justify-center font-bold">
+                        {notificationsUnreadCount > 9 ? '9+' : notificationsUnreadCount}
+                      </span>
+                    )}
+                  </motion.button>
 
               {/* Messages Button */}
               <motion.button
@@ -279,6 +298,8 @@ export default function Navbar() {
                   )}
                 </AnimatePresence>
               </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -295,18 +316,7 @@ export default function Navbar() {
             className="lg:hidden glass-strong border-b border-white/10 shadow-lg overflow-hidden"
           >
             <div className="p-3 space-y-1">
-              <Link
-                to="/dashboard"
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-                  isActive('/dashboard')
-                    ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
-                    : 'text-gray-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <BookOpen className="w-5 h-5" />
-                <span className="font-semibold">{t('nav.my_books')}</span>
-              </Link>
-
+              {/* Always show marketplace */}
               <Link
                 to="/marketplace"
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
@@ -319,51 +329,85 @@ export default function Navbar() {
                 <span className="font-semibold">{t('nav.marketplace')}</span>
               </Link>
 
-              <Link
-                to="/library"
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-                  isActive('/library')
-                    ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
-                    : 'text-gray-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Library className="w-5 h-5" />
-                <span className="font-semibold">{t('nav.library', 'My Library')}</span>
-              </Link>
+              {/* Show authenticated links only when logged in */}
+              {user ? (
+                <>
+                  <Link
+                    to="/dashboard"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+                      isActive('/dashboard')
+                        ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                        : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <BookOpen className="w-5 h-5" />
+                    <span className="font-semibold">{t('nav.my_books')}</span>
+                  </Link>
 
-              <div className="border-t border-white/10 my-2" />
+                  <Link
+                    to="/library"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+                      isActive('/library')
+                        ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                        : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <Library className="w-5 h-5" />
+                    <span className="font-semibold">{t('nav.library', 'My Library')}</span>
+                  </Link>
 
-              <Link
-                to="/subscription"
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-                  isActive('/subscription')
-                    ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
-                    : 'text-gray-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Crown className="w-5 h-5" />
-                <span className="font-semibold">{t('nav.upgrade')}</span>
-              </Link>
+                  <div className="border-t border-white/10 my-2" />
 
-              <Link
-                to="/settings"
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-                  isActive('/settings')
-                    ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
-                    : 'text-gray-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <User className="w-5 h-5" />
-                <span className="font-semibold">{t('nav.settings')}</span>
-              </Link>
+                  <Link
+                    to="/subscription"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+                      isActive('/subscription')
+                        ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                        : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <Crown className="w-5 h-5" />
+                    <span className="font-semibold">{t('nav.upgrade')}</span>
+                  </Link>
 
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300"
-              >
-                <LogOut className="w-5 h-5" />
-                <span className="font-semibold">{t('nav.logout')}</span>
-              </button>
+                  <Link
+                    to="/settings"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+                      isActive('/settings')
+                        ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                        : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <User className="w-5 h-5" />
+                    <span className="font-semibold">{t('nav.settings')}</span>
+                  </Link>
+
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span className="font-semibold">{t('nav.logout')}</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="border-t border-white/10 my-2" />
+                  <Link
+                    to="/login"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300"
+                  >
+                    <User className="w-5 h-5" />
+                    <span className="font-semibold">{t('nav.login', 'Login')}</span>
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space font-semibold hover:shadow-glow-gold transition-all duration-300"
+                  >
+                    <span>{t('nav.get_started', 'Get Started')}</span>
+                  </Link>
+                </>
+              )}
             </div>
           </motion.div>
         )}
