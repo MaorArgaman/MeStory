@@ -11,10 +11,22 @@ export const connectDatabase = async (): Promise<void> => {
   }
 
   const mongoUri = process.env.MONGODB_URI;
+  const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
 
   if (!mongoUri) {
     const error = new Error('MONGODB_URI environment variable is not set');
     console.error('❌ MongoDB connection error:', error.message);
+    throw error;
+  }
+
+  // Check for localhost MongoDB on Vercel (common misconfiguration)
+  if (isVercel && (mongoUri.includes('localhost') || mongoUri.includes('127.0.0.1'))) {
+    const error = new Error(
+      'MONGODB_URI is set to localhost but running on Vercel. ' +
+      'Please update MONGODB_URI in Vercel Environment Variables to use MongoDB Atlas: ' +
+      'mongodb+srv://username:password@cluster.mongodb.net/mestory'
+    );
+    console.error('❌ MongoDB configuration error:', error.message);
     throw error;
   }
 

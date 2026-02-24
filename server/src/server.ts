@@ -180,18 +180,39 @@ app.use('/uploads', express.static(path.resolve(uploadDir)));
 // ============================================
 app.get('/health', (_req, res) => {
   const dbStatus = getDatabaseStatus();
+  const mongoUri = process.env.MONGODB_URI || '';
+  const isLocalMongo = mongoUri.includes('localhost') || mongoUri.includes('127.0.0.1');
+  const isVercelEnv = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+
+  // Check for configuration issues
+  const configIssues: string[] = [];
+  if (!process.env.MONGODB_URI) {
+    configIssues.push('MONGODB_URI is not set');
+  } else if (isVercelEnv && isLocalMongo) {
+    configIssues.push('MONGODB_URI points to localhost but running on Vercel - update to MongoDB Atlas URI');
+  }
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    configIssues.push('GOOGLE_CLIENT_ID is not set');
+  }
+  if (!process.env.GOOGLE_CLIENT_SECRET) {
+    configIssues.push('GOOGLE_CLIENT_SECRET is not set');
+  }
+
   res.status(200).json({
-    status: 'ok',
+    status: configIssues.length === 0 ? 'ok' : 'warning',
     message: 'MeStory API is running',
     initialized: isInitialized,
     initError: initializationError?.message || null,
+    configIssues: configIssues.length > 0 ? configIssues : undefined,
     database: dbStatus,
     env: {
       hasMongoUri: !!process.env.MONGODB_URI,
+      mongoUriType: isLocalMongo ? 'localhost' : 'remote',
       hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
       hasGoogleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+      hasGoogleCallbackUrl: !!process.env.GOOGLE_CALLBACK_URL,
       nodeEnv: process.env.NODE_ENV,
-      isVercel: process.env.VERCEL === '1' || process.env.VERCEL === 'true',
+      isVercel: isVercelEnv,
     }
   });
 });
