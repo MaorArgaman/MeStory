@@ -126,7 +126,8 @@ export async function generateImage(request: ImageGenerationRequest): Promise<Im
 
     // For now, use a placeholder image service
     // In production, replace this with actual AI image generation API
-    const placeholderService = process.env.IMAGE_GENERATION_SERVICE || 'placeholder';
+    // Default to nano-banana for AI-generated images (uses Gemini + Pollinations)
+    const placeholderService = process.env.IMAGE_GENERATION_SERVICE || 'nano-banana';
 
     let imageUrl: string;
 
