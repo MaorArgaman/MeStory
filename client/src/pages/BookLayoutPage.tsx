@@ -287,7 +287,12 @@ export default function BookLayoutPage() {
 
         // Load existing layout or generate new one
         if (bookData.pageLayout?.pages) {
-          setPages(bookData.pageLayout.pages);
+          // Ensure each page has an images array (for backwards compatibility)
+          const pagesWithImages = bookData.pageLayout.pages.map((page: any) => ({
+            ...page,
+            images: page.images || [],
+          }));
+          setPages(pagesWithImages);
           setSettings({ ...defaultSettings, ...bookData.pageLayout.settings });
         } else {
           generatePagesFromChapters(bookData);
@@ -444,6 +449,10 @@ export default function BookLayoutPage() {
         };
 
         const updatedPages = [...pages];
+        // Ensure images array exists
+        if (!updatedPages[selectedPageIndex].images) {
+          updatedPages[selectedPageIndex].images = [];
+        }
         updatedPages[selectedPageIndex].images.push(newImage);
         setPages(updatedPages);
 
@@ -482,6 +491,10 @@ export default function BookLayoutPage() {
         };
 
         const updatedPages = [...pages];
+        // Ensure images array exists
+        if (!updatedPages[selectedPageIndex].images) {
+          updatedPages[selectedPageIndex].images = [];
+        }
         updatedPages[selectedPageIndex].images.push(newImage);
         setPages(updatedPages);
 
