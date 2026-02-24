@@ -1061,7 +1061,18 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
  * Generate professional DOCX from book data
  */
 export async function generateDOCX(bookId: string): Promise<Buffer> {
-  const bookData = await extractBookData(bookId);
+  let bookData;
+  try {
+    bookData = await extractBookData(bookId);
+  } catch (error: any) {
+    console.error('Failed to extract book data for DOCX:', error);
+    throw new Error(`Failed to extract book data: ${error.message}`);
+  }
+
+  // Validate we have chapters
+  if (!bookData.chapters || bookData.chapters.length === 0) {
+    throw new Error('Cannot export book without chapters');
+  }
 
   // Determine if book is RTL (Hebrew)
   const isRTL = bookData.language === 'he' || containsHebrew(bookData.title);
@@ -1709,11 +1720,13 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
   }
 
   // Statistics
+  const wordCount = bookData.statistics?.wordCount || 0;
+  const chapterCount = bookData.statistics?.chapterCount || bookData.chapters.length;
   backMatter.push(
     new Paragraph({
       children: [
         new TextRun({
-          text: `${bookData.statistics.wordCount.toLocaleString('he-IL')} מילים • ${bookData.statistics.chapterCount} פרקים`,
+          text: `${wordCount.toLocaleString('he-IL')} מילים • ${chapterCount} פרקים`,
           size: 20,
           italics: true,
           font: bodyFont,
@@ -1798,7 +1811,12 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
     ],
   });
 
-  return await Packer.toBuffer(doc);
+  try {
+    return await Packer.toBuffer(doc);
+  } catch (error: any) {
+    console.error('Failed to generate DOCX buffer:', error);
+    throw new Error(`Failed to generate DOCX: ${error.message}`);
+  }
 }
 
 // ============================================================================
