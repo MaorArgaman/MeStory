@@ -17,6 +17,7 @@ import {
   getDesignState,
   applyCompleteDesign,
   generateTemplateDesign,
+  designWizard,
 } from '../controllers/aiBookDesignController';
 import {
   startInterview,
@@ -234,7 +235,6 @@ router.post('/generate-contextual-image', generateContextualImage as any);
 /**
  * POST /api/ai/design-complete/:bookId
  * Generate complete AI design with all images (Nano Banana Pro)
- * This is the main endpoint for the AI Design Wizard
  *
  * Body:
  * {
@@ -242,6 +242,18 @@ router.post('/generate-contextual-image', generateContextualImage as any);
  * }
  */
 router.post('/design-complete/:bookId', generateCompleteDesign as any);
+
+/**
+ * POST /api/ai/design-wizard/:bookId
+ * AI Design Wizard - One-click complete book design
+ * Creates a full professional design including typography, layout, covers, and images
+ *
+ * Body:
+ * {
+ *   generateInteriorImages?: boolean (default false)
+ * }
+ */
+router.post('/design-wizard/:bookId', designWizard as any);
 
 /**
  * POST /api/ai/design-preview/:bookId

@@ -11,6 +11,9 @@ interface Book3DPreviewProps {
   textColor?: string;
   language?: string;
   content?: string;
+  synopsis?: string;
+  backCoverImageUrl?: string;
+  backCoverColor?: string;
 }
 
 export default function Book3DPreview({
@@ -22,6 +25,9 @@ export default function Book3DPreview({
   textColor = '#ffffff',
   language = 'en',
   content = '',
+  synopsis = '',
+  backCoverImageUrl,
+  backCoverColor,
 }: Book3DPreviewProps) {
   // Detect RTL languages
   const isRTL = language === 'he' || language === 'ar';
@@ -209,19 +215,101 @@ export default function Book3DPreview({
             </div>
           </div>
 
-          {/* Back Cover */}
+          {/* Back Cover with Synopsis */}
           <div
             className="book-cover back-cover"
             style={{
               position: 'absolute',
               width: '100%',
               height: '100%',
-              background: `linear-gradient(135deg, ${adjustBrightness(coverColor, -10)}, ${adjustBrightness(coverColor, -30)})`,
+              background: backCoverImageUrl
+                ? `url(${backCoverImageUrl}) center/cover`
+                : `linear-gradient(135deg, ${backCoverColor || adjustBrightness(coverColor, -10)}, ${adjustBrightness(backCoverColor || coverColor, -30)})`,
               borderRadius: isRTL ? '4px 8px 8px 4px' : '8px 4px 4px 8px',
               boxShadow: 'inset 0 0 30px rgba(0,0,0,0.4)',
               transform: 'translateZ(-25px) rotateY(180deg)',
+              padding: '30px 25px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              overflow: 'hidden',
+              direction: isRTL ? 'rtl' : 'ltr',
             }}
-          />
+          >
+            {/* Background overlay for text readability */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: 'linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.7))',
+              }}
+            />
+
+            {/* Synopsis Content */}
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              {/* Synopsis Text */}
+              <div className="flex-1 overflow-hidden">
+                <p
+                  style={{
+                    fontFamily: fontFamily,
+                    fontSize: '11px',
+                    lineHeight: '1.5',
+                    color: textColor,
+                    textShadow: '1px 1px 3px rgba(0,0,0,0.8)',
+                    textAlign: isRTL ? 'right' : 'left',
+                    opacity: 0.95,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 12,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {synopsis || (language === 'he'
+                    ? 'תקציר הספר יופיע כאן...'
+                    : 'Book synopsis will appear here...')}
+                </p>
+              </div>
+
+              {/* Author Section at Bottom */}
+              <div className="pt-4 border-t border-white/20 mt-4">
+                <p
+                  style={{
+                    fontFamily: fontFamily,
+                    fontSize: '10px',
+                    color: textColor,
+                    textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+                    opacity: 0.85,
+                    textAlign: isRTL ? 'right' : 'left',
+                  }}
+                >
+                  {language === 'he' ? 'מאת: ' : 'By: '}{author || 'Author Name'}
+                </p>
+              </div>
+
+              {/* Barcode Placeholder */}
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '15px',
+                  [isRTL ? 'left' : 'right']: '15px',
+                  width: '50px',
+                  height: '30px',
+                  background: 'white',
+                  borderRadius: '2px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <div
+                  style={{
+                    width: '40px',
+                    height: '20px',
+                    background: 'repeating-linear-gradient(90deg, #000 0px, #000 2px, #fff 2px, #fff 4px)',
+                  }}
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Pages with content - Animated page turning */}
           <AnimatePresence mode="wait">

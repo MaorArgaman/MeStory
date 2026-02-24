@@ -33,6 +33,13 @@ import toast from 'react-hot-toast';
 import TemplateGallery from '../components/design/TemplateGallery';
 import { BookTemplate, textColorPresets, availableFonts } from '../data/bookTemplates';
 import { applyTemplate, loadGoogleFonts, PageLayoutSettings } from '../services/templateService';
+import {
+  loadDesignFonts,
+  applyAIDesignToBook,
+  getAIDesign,
+  hasAIDesign,
+} from '../services/designApplicationService';
+import type { AICompleteDesign } from '../types/templates';
 
 interface PageImage {
   id: string;
@@ -297,6 +304,11 @@ export default function BookLayoutPage() {
         } else {
           generatePagesFromChapters(bookData);
         }
+
+        // Apply AI design if available
+        if (bookData.aiDesignState?.status === 'completed' && bookData.aiDesignState?.design) {
+          await applyStoredAIDesign(bookData.aiDesignState.design);
+        }
       }
     } catch (error) {
       console.error('Failed to load book:', error);
@@ -304,6 +316,146 @@ export default function BookLayoutPage() {
       navigate('/dashboard');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Apply AI design from book's stored aiDesignState
+  const applyStoredAIDesign = async (design: AICompleteDesign) => {
+    try {
+      // Load fonts first
+      if (design.typography) {
+        await loadDesignFonts(design.typography);
+      }
+
+      // Apply typography settings
+      if (design.typography) {
+        setSettings(prev => ({
+          ...prev,
+          fontFamily: design.typography.bodyFont || prev.fontFamily,
+          fontSize: design.typography.fontSize?.body || prev.fontSize,
+          lineHeight: design.typography.lineHeight?.body || prev.lineHeight,
+          textColor: design.typography.colors?.text || prev.textColor,
+        }));
+      }
+
+      // Apply layout settings
+      if (design.layout?.margins) {
+        setSettings(prev => ({
+          ...prev,
+          margins: {
+            top: design.layout.margins.top || prev.margins.top,
+            bottom: design.layout.margins.bottom || prev.margins.bottom,
+            left: design.layout.margins.inner || prev.margins.left,
+            right: design.layout.margins.outer || prev.margins.right,
+          },
+          showPageNumbers: design.layout.pageNumbers?.show ?? prev.showPageNumbers,
+        }));
+      }
+
+      // Apply cover design
+      if (design.covers?.front && book) {
+        setCoverImageUrl(design.covers.front.imageUrl || null);
+        setBook(prev => prev ? {
+          ...prev,
+          coverDesign: {
+            ...prev.coverDesign,
+            coverColor: design.covers?.front?.backgroundColor || prev.coverDesign?.coverColor || '#1a1a2e',
+            textColor: design.covers?.front?.textColor || prev.coverDesign?.textColor || '#ffffff',
+            fontFamily: design.typography?.titleFont || prev.coverDesign?.fontFamily || 'David Libre',
+            imageUrl: design.covers?.front?.imageUrl || prev.coverDesign?.imageUrl,
+          },
+        } : null);
+      }
+
+      // Store the complete design for reference
+      setAiDesign({
+        typography: {
+          bodyFont: design.typography?.bodyFont || '',
+          headingFont: design.typography?.headingFont || '',
+          titleFont: design.typography?.titleFont || '',
+          fontSize: design.typography?.fontSize?.body || 14,
+          lineHeight: design.typography?.lineHeight?.body || 1.6,
+          chapterTitleSize: design.typography?.fontSize?.heading || 24,
+          pageNumberSize: 10,
+          colors: {
+            text: design.typography?.colors?.text || '#000000',
+            heading: design.typography?.colors?.heading || '#000000',
+            accent: design.typography?.colors?.accent || '#007bff',
+          },
+          reasoning: 'Applied from stored AI design',
+        },
+        layout: {
+          margins: design.layout?.margins || { top: 60, bottom: 60, inner: 50, outer: 50 },
+          chapterStartStyle: design.layout?.chapterStartPosition === 'new-page' ? 'new-page' : 'same-page',
+          pageNumberPosition: (design.layout?.pageNumbers?.position as any) || 'bottom-center',
+          headerStyle: (design.layout?.headers?.style as any) || 'none',
+          dropCaps: false,
+          ornaments: false,
+          reasoning: 'Applied from stored AI design',
+        },
+        cover: {
+          front: {
+            imagePrompt: '',
+            imageUrl: design.covers?.front?.imageUrl,
+            title: {
+              text: book?.title || '',
+              font: design.typography?.titleFont || 'David Libre',
+              size: design.typography?.fontSize?.title || 48,
+              color: design.covers?.front?.textColor || '#ffffff',
+              position: 'center',
+              alignment: 'center',
+            },
+            author: {
+              text: book?.author?.name || '',
+              font: design.typography?.bodyFont || 'David Libre',
+              size: 18,
+              color: design.covers?.front?.textColor || '#ffffff',
+              position: 'bottom',
+            },
+            colorPalette: [design.covers?.front?.backgroundColor || '#1a1a2e'],
+          },
+          back: {
+            imagePrompt: '',
+            imageUrl: design.covers?.back?.imageUrl,
+            synopsis: {
+              text: book?.synopsis || '',
+              font: design.typography?.bodyFont || 'David Libre',
+              size: 12,
+              color: design.covers?.back?.textColor || '#ffffff',
+            },
+            author: {
+              text: book?.author?.name || '',
+              font: design.typography?.bodyFont || 'David Libre',
+              size: 14,
+              color: design.covers?.back?.textColor || '#ffffff',
+            },
+            backgroundColor: design.covers?.back?.backgroundColor || '#1a1a2e',
+          },
+          spine: {
+            title: book?.title || '',
+            author: book?.author?.name || '',
+            font: design.typography?.titleFont || 'David Libre',
+            color: design.covers?.spine?.textColor || '#ffffff',
+            backgroundColor: design.covers?.spine?.backgroundColor || '#1a1a2e',
+          },
+          reasoning: 'Applied from stored AI design',
+        },
+        imagePlacements: (design.imagePlacements || []).map(p => ({
+          chapterIndex: p.chapterIndex,
+          position: p.position as 'chapter-start' | 'mid-chapter' | 'chapter-end',
+          textContext: '',
+          suggestedPrompt: p.prompt || '',
+          importance: 'medium' as const,
+          reasoning: 'Suggested by AI',
+        })),
+        overallStyle: 'AI Generated Design',
+        moodDescription: 'Custom AI-generated design for this book',
+        generatedAt: new Date(),
+      });
+
+      console.log('Applied stored AI design:', design);
+    } catch (error) {
+      console.error('Error applying stored AI design:', error);
     }
   };
 
@@ -1025,6 +1177,17 @@ export default function BookLayoutPage() {
                     const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
                     if (idx !== -1) deleteImage(idx, imageId);
                   }}
+                  pageNumber={currentSpread > 0 ? (currentSpread - 1) * 2 + 1 : undefined}
+                  bookTitle={book.title}
+                  showHeader={aiDesign?.layout?.headerStyle !== 'none'}
+                  headerStyle={aiDesign?.layout?.headerStyle as 'book-title' | 'chapter-title' | 'none'}
+                  aiImagePlacements={
+                    spreadPages.left?.type === 'chapter' && spreadPages.left?.chapterIndex !== undefined
+                      ? (aiDesign?.imagePlacements || []).filter(
+                          (p: any) => p.chapterIndex === spreadPages.left?.chapterIndex
+                        )
+                      : []
+                  }
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-300 text-sm">
@@ -1071,6 +1234,17 @@ export default function BookLayoutPage() {
                     const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
                     if (idx !== -1) deleteImage(idx, imageId);
                   }}
+                  pageNumber={currentSpread > 0 ? (currentSpread - 1) * 2 + 2 : undefined}
+                  bookTitle={book.title}
+                  showHeader={aiDesign?.layout?.headerStyle !== 'none'}
+                  headerStyle={aiDesign?.layout?.headerStyle as 'book-title' | 'chapter-title' | 'none'}
+                  aiImagePlacements={
+                    spreadPages.right?.type === 'chapter' && spreadPages.right?.chapterIndex !== undefined
+                      ? (aiDesign?.imagePlacements || []).filter(
+                          (p: any) => p.chapterIndex === spreadPages.right?.chapterIndex
+                        )
+                      : []
+                  }
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-300 text-sm">
@@ -1974,6 +2148,14 @@ export default function BookLayoutPage() {
   );
 }
 
+// AI Image Placement interface
+interface AIImagePlacementLocal {
+  chapterIndex: number;
+  position: 'chapter-start' | 'mid-chapter' | 'chapter-end';
+  generatedImageUrl?: string;
+  prompt?: string;
+}
+
 // Page Renderer Component
 interface PageRendererProps {
   page: PageContent;
@@ -1984,6 +2166,11 @@ interface PageRendererProps {
   selectedImageId: string | null;
   onImageUpdate: (imageId: string, updates: Partial<PageImage>) => void;
   onImageDelete: (imageId: string) => void;
+  pageNumber?: number;
+  bookTitle?: string;
+  showHeader?: boolean;
+  headerStyle?: 'book-title' | 'chapter-title' | 'none';
+  aiImagePlacements?: AIImagePlacementLocal[];
 }
 
 function PageRenderer({
@@ -1995,6 +2182,11 @@ function PageRenderer({
   selectedImageId,
   onImageUpdate,
   onImageDelete,
+  pageNumber,
+  bookTitle,
+  showHeader = false,
+  headerStyle = 'book-title',
+  aiImagePlacements = [],
 }: PageRendererProps) {
   const [_isDragging, setIsDragging] = useState(false);
   const [_isResizing, setIsResizing] = useState(false);
@@ -2049,6 +2241,16 @@ function PageRenderer({
     document.addEventListener('mouseup', handleMouseUp);
   };
 
+  // Determine header text based on style
+  const getHeaderText = () => {
+    if (headerStyle === 'chapter-title' && page.type === 'chapter') {
+      // Extract chapter title from content
+      const match = page.content.match(/<h2[^>]*>(.*?)<\/h2>/);
+      return match ? match[1].replace(/<[^>]*>/g, '') : '';
+    }
+    return bookTitle || '';
+  };
+
   return (
     <div
       ref={containerRef}
@@ -2063,16 +2265,60 @@ function PageRenderer({
         textAlign: isRTL ? 'right' : 'left',
       }}
     >
+      {/* Header */}
+      {showHeader && headerStyle !== 'none' && page.type !== 'title' && page.type !== 'toc' && (
+        <div
+          className="absolute top-2 left-0 right-0 text-center"
+          style={{
+            fontSize: '9px',
+            color: '#6b7280',
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase',
+            fontFamily: settings.fontFamily,
+          }}
+        >
+          {getHeaderText()}
+        </div>
+      )}
+
       {/* Page Content */}
       <div
         className="h-full overflow-hidden text-gray-900 prose prose-sm max-w-none"
         dangerouslySetInnerHTML={{ __html: page.content }}
         style={{
           direction: isRTL ? 'rtl' : 'ltr',
+          paddingTop: showHeader ? '15px' : '0',
+          paddingBottom: settings.showPageNumbers ? '20px' : '0',
         }}
       />
 
-      {/* Images */}
+      {/* AI-Generated Interior Images */}
+      {page.type === 'chapter' && aiImagePlacements.length > 0 && (
+        <div className="relative mb-4">
+          {aiImagePlacements
+            .filter(p => p.generatedImageUrl && p.position === 'chapter-start')
+            .map((placement, idx) => (
+              <div
+                key={`ai-img-${idx}`}
+                className="relative w-full mb-4 rounded-lg overflow-hidden shadow-md"
+                style={{ maxHeight: '150px' }}
+              >
+                <img
+                  src={placement.generatedImageUrl}
+                  alt={placement.prompt || 'AI-generated illustration'}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                  <span className="text-xs text-white/80 italic">
+                    {placement.prompt ? placement.prompt.slice(0, 50) + '...' : 'AI illustration'}
+                  </span>
+                </div>
+              </div>
+            ))}
+        </div>
+      )}
+
+      {/* User-Added Images */}
       {page.images.map((image) => (
         <div
           key={image.id}
@@ -2115,6 +2361,20 @@ function PageRenderer({
           )}
         </div>
       ))}
+
+      {/* Page Number Footer */}
+      {settings.showPageNumbers && pageNumber !== undefined && page.type !== 'title' && (
+        <div
+          className="absolute bottom-3 left-0 right-0 text-center"
+          style={{
+            fontSize: '10px',
+            color: '#6b7280',
+            fontFamily: settings.fontFamily,
+          }}
+        >
+          {pageNumber}
+        </div>
+      )}
 
       {/* Page type indicator */}
       {page.type === 'blank' && (

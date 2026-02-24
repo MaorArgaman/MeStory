@@ -33,6 +33,8 @@ import Book3DPreview from '../components/design/Book3DPreview';
 import TemplateGallery from '../components/design/TemplateGallery';
 import { BookTemplate, bookTemplates } from '../data/bookTemplates';
 import { useLanguage } from '../contexts/LanguageContext';
+import { loadDesignFonts } from '../services/designApplicationService';
+import type { AICompleteDesign } from '../types/templates';
 
 interface CoverDesign {
   coverColor?: string;
@@ -173,8 +175,12 @@ export default function DesignStudioPage() {
         const bookData = response.data.data.book;
         setBook(bookData);
 
-        // Load existing design if available
-        if (bookData.coverDesign) {
+        // Check for AI design state first (takes priority)
+        if (bookData.aiDesignState?.status === 'completed' && bookData.aiDesignState?.design) {
+          await applyAIDesignState(bookData.aiDesignState.design);
+        }
+        // Load existing cover design if available and no AI design
+        else if (bookData.coverDesign) {
           // Support both old format (flat) and new format (with front object)
           const coverDesign = bookData.coverDesign;
           setCoverColor(coverDesign.front?.backgroundColor || coverDesign.coverColor || '#1a1a2e');
@@ -198,6 +204,34 @@ export default function DesignStudioPage() {
       navigate('/dashboard');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Apply AI design state from book's aiDesignState
+  const applyAIDesignState = async (design: AICompleteDesign) => {
+    try {
+      // Load fonts
+      if (design.typography) {
+        await loadDesignFonts(design.typography);
+      }
+
+      // Apply cover colors
+      if (design.covers?.front) {
+        setCoverColor(design.covers.front.backgroundColor || '#1a1a2e');
+        setTextColor(design.covers.front.textColor || '#ffffff');
+        if (design.covers.front.imageUrl) {
+          setImageUrl(design.covers.front.imageUrl);
+        }
+      }
+
+      // Apply font
+      if (design.typography?.titleFont) {
+        setFontFamily(`"${design.typography.titleFont}", serif`);
+      }
+
+      console.log('Applied AI design state to Design Studio:', design);
+    } catch (error) {
+      console.error('Error applying AI design state:', error);
     }
   };
 
@@ -279,7 +313,20 @@ export default function DesignStudioPage() {
     }
   };
 
-  // Handle AI design generation
+  // AI Design Wizard progress state
+  const [wizardProgress, setWizardProgress] = useState<{
+    show: boolean;
+    currentStep: number;
+    totalSteps: number;
+    stepName: string;
+  }>({
+    show: false,
+    currentStep: 0,
+    totalSteps: 6,
+    stepName: '',
+  });
+
+  // Handle quick AI design generation (existing)
   const handleAIDesign = async () => {
     if (!book) return;
 
@@ -320,6 +367,78 @@ export default function DesignStudioPage() {
       );
     } finally {
       setIsGeneratingAI(false);
+    }
+  };
+
+  // Handle AI Design Wizard (complete design with all images)
+  const handleAIDesignWizard = async () => {
+    if (!book) return;
+
+    setWizardProgress({
+      show: true,
+      currentStep: 1,
+      totalSteps: 6,
+      stepName: language === 'he' ? 'מנתח את הספר...' : 'Analyzing book...',
+    });
+
+    try {
+      // Start the wizard - poll for progress
+      const progressInterval = setInterval(async () => {
+        try {
+          const stateResponse = await api.get(`/ai/design-state/${bookId}`);
+          if (stateResponse.data.success && stateResponse.data.data.aiDesignState?.progress) {
+            const progress = stateResponse.data.data.aiDesignState.progress;
+            setWizardProgress(prev => ({
+              ...prev,
+              currentStep: progress.currentStep,
+              totalSteps: progress.totalSteps,
+              stepName: progress.stepName,
+            }));
+          }
+        } catch (e) {
+          // Ignore polling errors
+        }
+      }, 2000);
+
+      const response = await api.post(`/ai/design-wizard/${bookId}`, {
+        generateInteriorImages: false,
+      });
+
+      clearInterval(progressInterval);
+
+      if (response.data.success) {
+        // Apply the design to local state
+        const { coverDesign } = response.data.data;
+
+        if (coverDesign?.front) {
+          setCoverColor(coverDesign.front.backgroundColor || coverColor);
+          setTextColor(coverDesign.front.title?.color || textColor);
+          if (coverDesign.front.title?.font) {
+            setFontFamily(`"${coverDesign.front.title.font}", serif`);
+          }
+          if (coverDesign.front.imageUrl) {
+            setImageUrl(coverDesign.front.imageUrl);
+          }
+        }
+
+        // Reload book to get all changes
+        loadBook();
+
+        toast.success(
+          language === 'he'
+            ? '🎨 אשף העיצוב הושלם בהצלחה!'
+            : '🎨 AI Design Wizard completed successfully!'
+        );
+      }
+    } catch (error: any) {
+      console.error('AI Design Wizard failed:', error);
+      toast.error(
+        language === 'he'
+          ? 'אשף העיצוב נכשל'
+          : 'Design Wizard failed'
+      );
+    } finally {
+      setWizardProgress(prev => ({ ...prev, show: false }));
     }
   };
 
@@ -823,11 +942,27 @@ export default function DesignStudioPage() {
                   {language === 'he' ? 'בחר תבנית' : 'Choose Template'}
                 </button>
 
-                {/* AI Design Button */}
+                {/* AI Design Wizard Button - Main One-Click Design */}
+                <button
+                  onClick={handleAIDesignWizard}
+                  disabled={wizardProgress.show || isGeneratingAI}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 hover:from-amber-400 hover:via-orange-400 hover:to-pink-400 rounded-xl text-white font-bold text-lg shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed animate-pulse hover:animate-none"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  {language === 'he' ? 'אשף עיצוב AI' : 'AI Design Wizard'}
+                  <Sparkles className="w-5 h-5" />
+                </button>
+                <p className="text-xs text-center text-gray-400 mt-1">
+                  {language === 'he'
+                    ? 'לחיצה אחת ליצירת עיצוב מקצועי מלא'
+                    : 'One click to create a complete professional design'}
+                </p>
+
+                {/* Quick AI Design Button */}
                 <button
                   onClick={handleAIDesign}
-                  disabled={isGeneratingAI}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isGeneratingAI || wizardProgress.show}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600/60 to-indigo-600/60 hover:from-purple-600 hover:to-indigo-600 border border-purple-500/30 rounded-xl text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isGeneratingAI ? (
                     <>
@@ -837,7 +972,7 @@ export default function DesignStudioPage() {
                   ) : (
                     <>
                       <Wand2 className="w-4 h-4" />
-                      {language === 'he' ? 'עיצוב AI אוטומטי' : 'AI Auto Design'}
+                      {language === 'he' ? 'עיצוב מהיר' : 'Quick Design'}
                     </>
                   )}
                 </button>
@@ -1043,10 +1178,12 @@ export default function DesignStudioPage() {
                 title={book.title}
                 author={book.author?.name || 'Unknown Author'}
                 coverColor={coverColor}
-              textColor={textColor}
-              fontFamily={fontFamily}
-              imageUrl={imageUrl}
-            />
+                textColor={textColor}
+                fontFamily={fontFamily}
+                imageUrl={imageUrl}
+                synopsis={book.synopsis || book.description || ''}
+                language={language}
+              />
             </div>
           </div>
 
@@ -1058,6 +1195,68 @@ export default function DesignStudioPage() {
           </div>
         </div>
       </div>
+
+      {/* AI Design Wizard Progress Modal */}
+      <AnimatePresence>
+        {wizardProgress.show && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="glass-strong rounded-2xl p-8 max-w-md w-full text-center"
+            >
+              {/* Animated Icon */}
+              <div className="relative w-24 h-24 mx-auto mb-6">
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 rounded-full animate-spin-slow opacity-50 blur-xl" />
+                <div className="relative w-24 h-24 bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 rounded-full flex items-center justify-center">
+                  <Sparkles className="w-12 h-12 text-white animate-pulse" />
+                </div>
+              </div>
+
+              {/* Title */}
+              <h2 className="text-2xl font-bold text-white mb-2">
+                {language === 'he' ? 'אשף העיצוב עובד...' : 'Design Wizard Working...'}
+              </h2>
+
+              {/* Progress Bar */}
+              <div className="mb-4">
+                <div className="flex justify-between text-sm text-gray-400 mb-2">
+                  <span>
+                    {language === 'he' ? 'שלב' : 'Step'} {wizardProgress.currentStep}/{wizardProgress.totalSteps}
+                  </span>
+                  <span>{Math.round((wizardProgress.currentStep / wizardProgress.totalSteps) * 100)}%</span>
+                </div>
+                <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(wizardProgress.currentStep / wizardProgress.totalSteps) * 100}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+              </div>
+
+              {/* Current Step */}
+              <p className="text-gray-300 text-lg">
+                {wizardProgress.stepName}
+              </p>
+
+              {/* Sub-text */}
+              <p className="text-gray-500 text-sm mt-4">
+                {language === 'he'
+                  ? 'יוצר עיצוב מקצועי מלא עבור הספר שלך'
+                  : 'Creating a complete professional design for your book'}
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Publish Modal */}
       <AnimatePresence>

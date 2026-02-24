@@ -420,11 +420,10 @@ Respond with ONLY the enhanced prompt, nothing else.`);
 
 /**
  * Generate image using Pollinations with enhanced prompt (helper for Nano Banana)
+ * Includes retry logic and quality validation for professional book covers
  */
-async function generateWithPollinationsEnhanced(prompt: string, aspectRatio?: string): Promise<string> {
-  const encodedPrompt = encodeURIComponent(prompt);
-
-  // Use higher quality settings for Nano Banana fallback
+async function generateWithPollinationsEnhanced(prompt: string, aspectRatio?: string, maxRetries: number = 3): Promise<string> {
+  // Use higher quality settings for book covers
   let width = 1024;
   let height = 1024;
 
@@ -451,35 +450,58 @@ async function generateWithPollinationsEnhanced(prompt: string, aspectRatio?: st
       height = 1024;
   }
 
-  // Use Pollinations with higher quality settings
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${Date.now()}&nologo=true&enhance=true`;
+  // Enhanced prompt for professional quality
+  const enhancedPrompt = `${prompt}, professional quality, high resolution, sharp details, no text, no watermarks`;
+  const encodedPrompt = encodeURIComponent(enhancedPrompt);
 
-  // Check if running on Vercel - if so, return direct URL (no local storage in serverless)
-  const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
-  if (isVercel) {
-    console.log('🌐 Running on Vercel - returning direct enhanced Pollinations URL');
-    return imageUrl;
+  // Retry logic with different seeds
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const seed = Date.now() + attempt * 12345;
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true&enhance=true&model=flux`;
+
+    console.log(`🎨 Attempt ${attempt}/${maxRetries} generating image (seed: ${seed})`);
+
+    // Check if running on Vercel - if so, return direct URL (no local storage in serverless)
+    const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+    if (isVercel) {
+      console.log('🌐 Running on Vercel - returning direct enhanced Pollinations URL');
+      return imageUrl;
+    }
+
+    try {
+      const response = await axios.get(imageUrl, {
+        responseType: 'arraybuffer',
+        timeout: 120000 // 2 minute timeout for high-quality generation
+      });
+
+      // Quality validation - check minimum file size (at least 50KB for good quality)
+      const minFileSize = 50 * 1024; // 50KB
+      if (response.data.length < minFileSize && attempt < maxRetries) {
+        console.log(`⚠️ Image too small (${response.data.length} bytes), retrying...`);
+        continue;
+      }
+
+      const uploadDir = process.env.UPLOAD_DIR || './uploads';
+      const filename = `nano-banana-${crypto.randomUUID()}.png`;
+      const filePath = path.join(uploadDir, filename);
+
+      await fs.mkdir(uploadDir, { recursive: true });
+      await fs.writeFile(filePath, response.data);
+
+      console.log(`✅ High-quality image saved: ${filename} (${(response.data.length / 1024).toFixed(1)}KB)`);
+      return `/uploads/${filename}`;
+    } catch (error) {
+      console.error(`Attempt ${attempt} failed:`, error);
+      if (attempt === maxRetries) {
+        console.log('🔄 All retries failed, returning direct URL');
+        return imageUrl;
+      }
+    }
   }
 
-  try {
-    const response = await axios.get(imageUrl, {
-      responseType: 'arraybuffer',
-      timeout: 120000 // 2 minute timeout for high-quality generation
-    });
-
-    const uploadDir = process.env.UPLOAD_DIR || './uploads';
-    const filename = `nano-banana-${crypto.randomUUID()}.png`;
-    const filePath = path.join(uploadDir, filename);
-
-    await fs.mkdir(uploadDir, { recursive: true });
-    await fs.writeFile(filePath, response.data);
-
-    console.log(`✅ Nano Banana image saved: ${filename}`);
-    return `/uploads/${filename}`;
-  } catch (error) {
-    console.error('Error downloading Nano Banana image:', error);
-    return imageUrl;
-  }
+  // Fallback - return direct URL
+  const seed = Date.now();
+  return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true&enhance=true&model=flux`;
 }
 
 /**
@@ -620,19 +642,45 @@ export interface BookCoverGenerationResult {
   spine?: ImageGenerationResult;
 }
 
+// Genre-specific style modifiers for professional book covers
+const GENRE_STYLE_MODIFIERS: Record<string, string> = {
+  'fiction': 'cinematic lighting, dramatic atmosphere, professional photography',
+  'fantasy': 'magical atmosphere, ethereal glow, fantasy art style, vibrant colors',
+  'sci-fi': 'futuristic, cyberpunk aesthetic, neon accents, high-tech atmosphere',
+  'romance': 'soft romantic lighting, warm tones, dreamy atmosphere, elegant composition',
+  'thriller': 'dark moody atmosphere, dramatic shadows, intense suspense, noir style',
+  'mystery': 'mysterious shadows, foggy atmosphere, intriguing composition, dark tones',
+  'horror': 'eerie atmosphere, dark shadows, unsettling mood, horror aesthetic',
+  'children': 'bright cheerful colors, playful illustration style, friendly and warm',
+  'young-adult': 'vibrant and dynamic, modern aesthetic, emotional depth',
+  'historical': 'period-accurate details, warm sepia tones, classical composition',
+  'biography': 'professional portrait style, dignified lighting, documentary feel',
+  'self-help': 'uplifting atmosphere, clean and inspiring, positive energy',
+  'business': 'professional and corporate, clean modern design, confident composition',
+  'poetry': 'artistic and evocative, abstract elements, emotional depth, minimalist',
+  'default': 'professional book cover style, high quality, compelling composition',
+};
+
+// Negative prompts to avoid common image generation issues
+const NEGATIVE_PROMPTS = 'no text, no letters, no words, no watermarks, no signatures, no borders, no frames, no blurry areas, no distorted faces';
+
 /**
  * Generate complete book covers using Nano Banana Pro
- * Generates front cover, back cover, and spine images
+ * Generates front cover, back cover, and spine images with genre-specific styling
  */
 export async function generateBookCovers(
   request: BookCoverGenerationRequest
 ): Promise<BookCoverGenerationResult> {
   const { title, author, genre, synopsis, mood, style } = request;
 
-  console.log(`📚 Generating book covers for: "${title}" by ${author}`);
+  console.log(`📚 Generating professional book covers for: "${title}" by ${author}`);
 
-  // Generate front cover prompt
-  const frontCoverPromptRequest = `Create a professional book cover image prompt for:
+  // Get genre-specific style modifier
+  const genreKey = genre.toLowerCase().replace(/[^a-z-]/g, '');
+  const genreStyle = GENRE_STYLE_MODIFIERS[genreKey] || GENRE_STYLE_MODIFIERS['default'];
+
+  // Generate front cover prompt with genre-specific enhancements
+  const frontCoverPromptRequest = `Create a professional, high-quality book cover image prompt for:
 Title: "${title}"
 Author: ${author}
 Genre: ${genre}
@@ -640,17 +688,25 @@ Synopsis: ${synopsis || 'Not provided'}
 Mood: ${mood || 'Based on genre'}
 Style: ${style || 'Appropriate for genre'}
 
-Generate a compelling, professional front cover image prompt that:
-- Captures the essence of the book
-- Appeals to the target audience
-- Is visually striking and memorable
+Genre-specific style elements: ${genreStyle}
+
+IMPORTANT REQUIREMENTS:
+- NO text, letters, or words in the image
+- Professional quality suitable for commercial publishing
+- Visually striking and memorable
 - Works well with text overlay for title and author
 - Follows modern book cover design trends for ${genre}
+- High resolution quality with sharp details
 
-Respond with ONLY the image prompt (under 250 characters), no other text.`;
+Create a detailed, vivid image description (under 300 characters) that will generate a stunning professional cover.
+
+Respond with ONLY the image prompt, nothing else.`;
 
   const frontPromptResult = await getGeminiModel().generateContent(frontCoverPromptRequest);
-  const frontCoverPrompt = frontPromptResult.response.text().trim();
+  let frontCoverPrompt = frontPromptResult.response.text().trim();
+
+  // Add genre style and negative prompts
+  frontCoverPrompt = `${frontCoverPrompt}, ${genreStyle}, ${NEGATIVE_PROMPTS}`;
 
   // Generate front cover
   const frontCover = await generateImage({
@@ -660,23 +716,28 @@ Respond with ONLY the image prompt (under 250 characters), no other text.`;
     aspectRatio: '3:4', // Standard book cover ratio
   });
 
-  // Generate back cover prompt
+  // Generate back cover prompt with matching style
   const backCoverPromptRequest = `Create a complementary back cover image prompt for a book:
 Title: "${title}"
 Genre: ${genre}
 Synopsis: ${synopsis || 'Not provided'}
-Front cover style: ${frontCoverPrompt.slice(0, 100)}
+Front cover style: ${frontCoverPrompt.slice(0, 150)}
 
 The back cover should:
-- Complement the front cover
-- Be subtle enough for text overlay (synopsis, reviews)
-- Maintain visual consistency with the front
+- Complement the front cover style perfectly
+- Be subtle and elegant for text overlay (synopsis, reviews, barcode area)
+- Maintain visual consistency with the front cover
 - Use similar color palette and mood
+- NO text, letters, or words
+- Professional quality suitable for publishing
 
-Respond with ONLY the image prompt (under 200 characters), no other text.`;
+Respond with ONLY the image prompt (under 250 characters), no other text.`;
 
   const backPromptResult = await getGeminiModel().generateContent(backCoverPromptRequest);
-  const backCoverPrompt = backPromptResult.response.text().trim();
+  let backCoverPrompt = backPromptResult.response.text().trim();
+
+  // Add negative prompts to back cover
+  backCoverPrompt = `${backCoverPrompt}, subtle background, ${NEGATIVE_PROMPTS}`;
 
   const backCover = await generateImage({
     prompt: backCoverPrompt,

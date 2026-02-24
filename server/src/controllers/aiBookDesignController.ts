@@ -855,6 +855,230 @@ export const applyCompleteDesign = async (req: AuthRequest, res: Response): Prom
 };
 
 /**
+ * AI Design Wizard - One-click complete book design
+ * POST /api/ai/design-wizard/:bookId
+ *
+ * This endpoint creates a complete professional book design including:
+ * - Typography (fonts, sizes, colors)
+ * - Layout (margins, spacing, headers, page numbers)
+ * - Front cover with AI-generated image
+ * - Back cover with synopsis
+ * - Interior image suggestions
+ */
+export const designWizard = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: 'Authentication required',
+      });
+      return;
+    }
+
+    const { bookId } = req.params;
+    const { generateInteriorImages = false } = req.body;
+
+    // Validate MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid book ID',
+      });
+      return;
+    }
+
+    // Find book with all data
+    const book = await Book.findById(bookId).populate('author', 'name');
+    if (!book) {
+      res.status(404).json({
+        success: false,
+        error: 'Book not found',
+      });
+      return;
+    }
+
+    // Ensure user owns this book
+    if (book.author._id?.toString() !== req.user.id && (book.author as any).toString() !== req.user.id) {
+      res.status(403).json({
+        success: false,
+        error: 'You do not have permission to design this book',
+      });
+      return;
+    }
+
+    // Calculate total steps based on options
+    const totalSteps = generateInteriorImages ? 8 : 6;
+    const stepNames = [
+      'Analyzing book content...',
+      'Generating typography design...',
+      'Creating layout settings...',
+      'Designing cover concept...',
+      'Generating front cover image...',
+      'Creating back cover design...',
+      ...(generateInteriorImages ? ['Generating interior images...', 'Finalizing design...'] : ['Finalizing design...']),
+    ];
+
+    // Initialize design state
+    book.aiDesignState = {
+      status: 'analyzing',
+      startedAt: new Date(),
+      progress: {
+        currentStep: 1,
+        totalSteps,
+        stepName: stepNames[0],
+      },
+    };
+    await book.save();
+
+    // Prepare design input
+    const designInput: BookDesignInput = {
+      title: book.title,
+      authorName: (book.author as any).name || 'Unknown Author',
+      genre: book.genre,
+      language: book.language || 'en',
+      synopsis: book.synopsis || book.description,
+      chapters: book.chapters.map((ch) => ({
+        title: ch.title,
+        content: ch.content,
+        wordCount: ch.wordCount,
+      })),
+      targetAudience: book.targetAudience,
+    };
+
+    // Helper to update progress
+    const updateProgress = async (step: number) => {
+      book.aiDesignState = {
+        ...book.aiDesignState,
+        status: step === totalSteps ? 'completed' : 'generating-design',
+        progress: {
+          currentStep: step,
+          totalSteps,
+          stepName: stepNames[step - 1] || 'Processing...',
+        },
+      };
+      await book.save();
+    };
+
+    // Step 1: Analyze book
+    await updateProgress(1);
+
+    // Step 2-6: Generate complete design with images
+    const design = await generateCompleteDesignWithImages(
+      designInput,
+      async (progress) => {
+        // Map internal progress to wizard steps
+        const wizardStep = Math.min(progress.currentStep + 1, totalSteps - 1);
+        await updateProgress(wizardStep);
+      },
+      true // Always generate cover images in wizard mode
+    );
+
+    // Final step: Save completed design
+    await updateProgress(totalSteps);
+
+    // Convert and save design state
+    const designState = convertDesignToBookState(design);
+    book.aiDesignState = {
+      ...designState,
+      status: 'completed',
+      completedAt: new Date(),
+    };
+
+    // Also apply design to book's coverDesign and pageLayout
+    if (design.typography && design.layout) {
+      book.pageLayout = {
+        bodyFont: design.typography.bodyFont,
+        fontSize: design.typography.fontSize?.body || 14,
+        lineHeight: design.typography.lineHeight?.body || 1.6,
+        pageSize: 'A5',
+        margins: {
+          top: design.layout.margins?.top || 60,
+          bottom: design.layout.margins?.bottom || 60,
+          left: design.layout.margins?.inner || 50,
+          right: design.layout.margins?.outer || 50,
+        },
+        includeTableOfContents: true,
+        headerFooter: {
+          includeHeader: design.layout.headers?.show || false,
+          includeFooter: true,
+          includePageNumbers: design.layout.pageNumbers?.show ?? true,
+          pageNumberPosition: 'bottom',
+        },
+      };
+    }
+
+    if (design.covers) {
+      book.coverDesign = {
+        front: {
+          type: design.covers.front?.generatedImageUrl ? 'ai-generated' : 'gradient',
+          imageUrl: design.covers.front?.generatedImageUrl,
+          backgroundColor: design.covers.front?.backgroundColor,
+          gradientColors: design.covers.front?.gradientColors,
+          title: {
+            text: book.title,
+            font: design.typography?.titleFont || 'Playfair Display',
+            size: design.covers.front?.title?.fontSize || 48,
+            color: design.covers.front?.title?.color || '#ffffff',
+            position: { x: 50, y: 40 },
+          },
+          authorName: {
+            text: (book.author as any).name || '',
+            font: design.typography?.bodyFont || 'Inter',
+            size: design.covers.front?.author?.fontSize || 18,
+            color: design.covers.front?.author?.color || '#ffffff',
+          },
+        },
+        back: {
+          imageUrl: design.covers.back?.generatedImageUrl,
+          backgroundColor: design.covers.back?.backgroundColor,
+          synopsis: book.synopsis || book.description || '',
+        },
+        spine: {
+          width: Math.ceil((book.statistics?.pageCount || 100) / 10) + 5,
+          title: book.title,
+          author: (book.author as any).name || '',
+          backgroundColor: design.covers.spine?.backgroundColor,
+        },
+      };
+    }
+
+    await book.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'AI Design Wizard completed successfully!',
+      data: {
+        bookId,
+        design: book.aiDesignState.design,
+        coverDesign: book.coverDesign,
+        pageLayout: book.pageLayout,
+        completedAt: book.aiDesignState.completedAt,
+      },
+    });
+  } catch (error: any) {
+    console.error('Design Wizard error:', error);
+
+    // Update book with error state
+    try {
+      const { bookId } = req.params;
+      await Book.findByIdAndUpdate(bookId, {
+        aiDesignState: {
+          status: 'error',
+          error: error.message,
+        },
+      });
+    } catch (e) {
+      console.error('Failed to update error state:', e);
+    }
+
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Design Wizard failed',
+    });
+  }
+};
+
+/**
  * Generate template-based design (quick AI design using templates)
  * POST /api/ai/design/complete
  */
