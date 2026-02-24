@@ -197,6 +197,12 @@ app.get('/health', (_req, res) => {
   if (!process.env.GOOGLE_CLIENT_SECRET) {
     configIssues.push('GOOGLE_CLIENT_SECRET is not set');
   }
+  if (!process.env.OPENAI_API_KEY) {
+    configIssues.push('OPENAI_API_KEY is not set (required for audio transcription)');
+  }
+  if (!process.env.GEMINI_API_KEY) {
+    configIssues.push('GEMINI_API_KEY is not set (required for AI features)');
+  }
 
   res.status(200).json({
     status: configIssues.length === 0 ? 'ok' : 'warning',
@@ -211,6 +217,10 @@ app.get('/health', (_req, res) => {
       hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
       hasGoogleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
       hasGoogleCallbackUrl: !!process.env.GOOGLE_CALLBACK_URL,
+      hasOpenAiKey: !!process.env.OPENAI_API_KEY,
+      hasGeminiKey: !!process.env.GEMINI_API_KEY,
+      hasClientUrl: !!process.env.CLIENT_URL,
+      clientUrl: process.env.CLIENT_URL || 'not set',
       nodeEnv: process.env.NODE_ENV,
       isVercel: isVercelEnv,
     }
