@@ -332,7 +332,10 @@ async function generateWithStabilityAI(prompt: string, request: ImageGenerationR
  */
 async function generateWithNanoBananaPro(prompt: string, aspectRatio?: string): Promise<string> {
   try {
-    console.log(`🍌 Generating image with Nano Banana Pro: ${prompt.slice(0, 50)}...`);
+    console.log(`🍌 Nano Banana Pro: Starting image generation`);
+    console.log(`🍌 Prompt length: ${prompt.length} chars`);
+    console.log(`🍌 Aspect ratio: ${aspectRatio || 'default'}`);
+    console.log(`🍌 Prompt preview: ${prompt.slice(0, 100)}...`);
 
     // Determine dimensions description based on aspect ratio
     let dimensionPrompt = 'square format';
@@ -389,7 +392,7 @@ Requirements:
     // Gemini 2.0 Flash Exp may return image data in various formats
 
     // If no native image generation available, fall back to Pollinations with enhanced prompt
-    console.log('🔄 Falling back to Pollinations with Gemini-enhanced prompt...');
+    console.log('🍌 Gemini does not support native image generation, falling back to Pollinations...');
 
     // Use the Gemini model to create a better prompt for Pollinations
     const enhancedResult = await getGeminiModel().generateContent(`
@@ -451,9 +454,16 @@ async function generateWithPollinationsEnhanced(prompt: string, aspectRatio?: st
       height = 1024;
   }
 
+  // Truncate and sanitize prompt to avoid URL issues (max 500 chars)
+  let sanitizedPrompt = prompt
+    .replace(/[^\w\s,.-]/g, '') // Remove special characters except basic punctuation
+    .slice(0, 400); // Limit length for URL safety
+
   // Enhanced prompt for professional quality
-  const enhancedPrompt = `${prompt}, professional quality, high resolution, sharp details, no text, no watermarks`;
+  const enhancedPrompt = `${sanitizedPrompt}, professional quality, high resolution, sharp details, no text, no watermarks`;
   const encodedPrompt = encodeURIComponent(enhancedPrompt);
+
+  console.log(`🎨 Pollinations Enhanced: generating with prompt length ${enhancedPrompt.length}`);
 
   // Retry logic with different seeds
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -465,7 +475,9 @@ async function generateWithPollinationsEnhanced(prompt: string, aspectRatio?: st
     // Check if running on Vercel - if so, return direct URL (no local storage in serverless)
     const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
     if (isVercel) {
-      console.log('🌐 Running on Vercel - returning direct enhanced Pollinations URL');
+      console.log('🌐 Vercel: returning direct Pollinations URL');
+      console.log(`🌐 URL length: ${imageUrl.length} chars`);
+      console.log(`🌐 URL preview: ${imageUrl.slice(0, 150)}...`);
       return imageUrl;
     }
 
@@ -710,12 +722,17 @@ Respond with ONLY the image prompt, nothing else.`;
   frontCoverPrompt = `${frontCoverPrompt}, ${genreStyle}, ${NEGATIVE_PROMPTS}`;
 
   // Generate front cover
+  console.log(`📚 Generating FRONT cover image...`);
   const frontCover = await generateImage({
     prompt: frontCoverPrompt,
     bookContext: { title, genre },
     style: style || 'illustration',
     aspectRatio: '3:4', // Standard book cover ratio
   });
+  console.log(`📚 Front cover result: success=${frontCover.success}, hasUrl=${!!frontCover.imageUrl}`);
+  if (frontCover.error) {
+    console.error(`📚 Front cover error: ${frontCover.error}`);
+  }
 
   // Generate back cover prompt with matching style
   const backCoverPromptRequest = `Create a complementary back cover image prompt for a book:
@@ -740,12 +757,14 @@ Respond with ONLY the image prompt (under 250 characters), no other text.`;
   // Add negative prompts to back cover
   backCoverPrompt = `${backCoverPrompt}, subtle background, ${NEGATIVE_PROMPTS}`;
 
+  console.log(`📚 Generating BACK cover image...`);
   const backCover = await generateImage({
     prompt: backCoverPrompt,
     bookContext: { title, genre },
     style: style || 'illustration',
     aspectRatio: '3:4',
   });
+  console.log(`📚 Back cover result: success=${backCover.success}, hasUrl=${!!backCover.imageUrl}`);
 
   // Generate spine - usually a simple gradient or pattern
   const spinePrompt = `Abstract ${genre.toLowerCase()} book spine design, vertical gradient, elegant ${mood || 'sophisticated'} colors, minimal, no text`;

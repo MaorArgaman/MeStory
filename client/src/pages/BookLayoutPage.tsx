@@ -332,9 +332,15 @@ export default function BookLayoutPage() {
         // Also apply coverDesign from DesignStudioPage (if no AI design or as fallback)
         if (bookData.coverDesign) {
           const cd = bookData.coverDesign;
+          console.log('📚 Loading coverDesign from database:', cd);
+          console.log('📚 imageUrl:', cd.imageUrl);
+          console.log('📚 front?.imageUrl:', cd.front?.imageUrl);
+
           // Apply cover settings
-          if (cd.imageUrl || cd.front?.imageUrl) {
-            setCoverImageUrl(cd.imageUrl || cd.front?.imageUrl || null);
+          const resolvedImageUrl = cd.imageUrl || cd.front?.imageUrl || null;
+          if (resolvedImageUrl) {
+            console.log('📚 Setting coverImageUrl to:', resolvedImageUrl);
+            setCoverImageUrl(resolvedImageUrl);
           }
           // Update book state with cover design
           setBook(prev => prev ? {
@@ -344,9 +350,11 @@ export default function BookLayoutPage() {
               coverColor: cd.coverColor || cd.front?.backgroundColor || prev.coverDesign?.coverColor,
               textColor: cd.textColor || cd.front?.title?.color || prev.coverDesign?.textColor,
               fontFamily: cd.fontFamily || cd.front?.title?.font || prev.coverDesign?.fontFamily,
-              imageUrl: cd.imageUrl || cd.front?.imageUrl || prev.coverDesign?.imageUrl,
+              imageUrl: resolvedImageUrl || prev.coverDesign?.imageUrl,
             },
           } : null);
+        } else {
+          console.log('📚 No coverDesign found in book data');
         }
 
         // Apply pageLayout settings if available
@@ -2460,7 +2468,7 @@ function PageRenderer({
 
 // Cover Preview Component
 function CoverPreview({ book, coverImageUrl }: { book: BookData; coverImageUrl?: string | null }) {
-  const coverDesign = book.coverDesign || {
+  const coverDesign = book.coverDesign as any || {
     coverColor: '#1a1a2e',
     textColor: '#ffffff',
     fontFamily: 'Arial',

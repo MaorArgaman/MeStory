@@ -181,7 +181,7 @@ export async function generateTypographyDesign(input: BookDesignInput): Promise<
   const fontDb = isHebrew ? FONT_DATABASE.hebrew : FONT_DATABASE.english;
   const genreMapping = GENRE_FONT_MAPPING[input.genre.toLowerCase()] || GENRE_FONT_MAPPING.default;
 
-  const prompt = `You are a professional book designer and typographer. Analyze this book and recommend the best typography design.
+  const prompt = `You are an award-winning book designer and typographer with 20+ years of experience in publishing. You design bestsellers and visually stunning books.
 
 BOOK INFORMATION:
 Title: "${input.title}"
@@ -196,11 +196,17 @@ Heading fonts: ${fontDb[genreMapping.heading as keyof typeof fontDb].join(', ')}
 Title fonts: ${fontDb[genreMapping.title as keyof typeof fontDb].join(', ')}
 
 TASK:
-Design the typography for this book. Consider:
-1. The genre and its conventions
-2. The target audience (readability for children vs adults)
-3. The mood and tone of the book
-4. Hebrew/English specific considerations (RTL, font legibility)
+Create a STUNNING, PROFESSIONAL typography design that would be worthy of a bestseller. Consider:
+1. The genre conventions but push creative boundaries
+2. Premium feel - this should look like a professionally published book
+3. Visual hierarchy that draws readers in
+4. Color choices that evoke emotion and match the book's mood
+5. ${isHebrew ? 'RTL layout with beautiful Hebrew typography' : 'Elegant Latin typography'}
+
+IMPORTANT: Choose RICH, SOPHISTICATED colors - not plain black/white! Use:
+- Deep, atmospheric text colors (navy, charcoal, burgundy)
+- Bold, eye-catching heading colors
+- Vibrant accent colors that pop
 
 Respond with ONLY valid JSON in this exact format:
 {
@@ -771,6 +777,7 @@ export async function generateCompleteDesignWithImages(
 
   // Step 4: Generate cover images with Nano Banana Pro
   reportProgress('Generating cover images with AI...');
+  console.log('🎨 Starting cover image generation via generateBookCovers...');
   const coverImages = await generateBookCovers({
     title: input.title,
     author: input.authorName,
@@ -780,12 +787,21 @@ export async function generateCompleteDesignWithImages(
     style: 'artistic',
   });
 
+  console.log('🎨 Cover generation results:');
+  console.log(`  - Front: success=${coverImages.frontCover.success}, url=${coverImages.frontCover.imageUrl?.slice(0, 80) || 'NONE'}...`);
+  console.log(`  - Back: success=${coverImages.backCover?.success}, url=${coverImages.backCover?.imageUrl?.slice(0, 80) || 'NONE'}...`);
+  console.log(`  - Spine: success=${coverImages.spine?.success}, url=${coverImages.spine?.imageUrl?.slice(0, 80) || 'NONE'}...`);
+
   // Update cover concept with generated images
   if (coverImages.frontCover.success && coverImages.frontCover.imageUrl) {
     coverConcept.front.imageUrl = coverImages.frontCover.imageUrl;
+    console.log('🎨 Updated coverConcept.front.imageUrl');
+  } else {
+    console.warn('⚠️ Front cover generation failed or no URL returned');
   }
   if (coverImages.backCover?.success && coverImages.backCover.imageUrl) {
     coverConcept.back.imageUrl = coverImages.backCover.imageUrl;
+    console.log('🎨 Updated coverConcept.back.imageUrl');
   }
 
   const covers = {
@@ -793,6 +809,12 @@ export async function generateCompleteDesignWithImages(
     backImageUrl: coverImages.backCover?.imageUrl,
     spineImageUrl: coverImages.spine?.imageUrl,
   };
+
+  console.log('🎨 Final covers object:', {
+    frontImageUrl: covers.frontImageUrl ? 'SET' : 'UNDEFINED',
+    backImageUrl: covers.backImageUrl ? 'SET' : 'UNDEFINED',
+    spineImageUrl: covers.spineImageUrl ? 'SET' : 'UNDEFINED',
+  });
 
   let imagePlacements: ImagePlacementSuggestion[] = [];
   let generatedImages: Array<{ chapterIndex: number; imageUrl: string; prompt: string }> = [];

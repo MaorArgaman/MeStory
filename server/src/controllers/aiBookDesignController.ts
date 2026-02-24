@@ -984,6 +984,9 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
       completedAt: new Date(),
     };
 
+    console.log('🧙 Design Wizard: Converting design to book state...');
+    console.log(`🧙 aiDesignState.design.covers.front.generatedImageUrl: ${designState.design?.covers?.front?.generatedImageUrl ? 'SET' : 'UNDEFINED'}`);
+
     // Also apply design to book's coverDesign and pageLayout
     if (design.typography && design.layout) {
       book.pageLayout = {
@@ -1009,6 +1012,9 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
 
     if (design.covers || design.cover) {
       const coverData = design.cover; // Original cover design with colors
+      console.log('🧙 Design Wizard: Applying cover design to book...');
+      console.log(`🧙 design.covers.frontImageUrl: ${design.covers?.frontImageUrl ? 'SET' : 'UNDEFINED'}`);
+
       book.coverDesign = {
         front: {
           type: design.covers?.frontImageUrl ? 'ai-generated' : 'gradient',
@@ -1041,6 +1047,9 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
           backgroundColor: coverData?.spine?.backgroundColor || '#1a1a2e',
         },
       };
+
+      console.log(`🧙 Final book.coverDesign.front.imageUrl: ${book.coverDesign.front?.imageUrl ? 'SET' : 'UNDEFINED'}`);
+      console.log(`🧙 Final book.coverDesign.front.type: ${book.coverDesign.front?.type}`);
     }
 
     await book.save();
