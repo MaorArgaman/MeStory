@@ -523,7 +523,13 @@
       "back": "חזרה",
       "design_cover": "עיצוב עטיפה",
       "page_layout": "פריסת עמוד",
-      "save": "שמירה"
+      "save": "שמירה",
+      "normal_text": "טקסט רגיל",
+      "heading1": "כותרת 1",
+      "heading2": "כותרת 2",
+      "heading3": "כותרת 3",
+      "words": "מילים",
+      "chars": "תווים"
     },
     "empty": {
       "select_chapter": "בחר או צור פרק כדי להתחיל לכתוב",

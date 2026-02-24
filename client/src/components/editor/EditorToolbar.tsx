@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface EditorToolbarProps {
   editor: Editor | null;
@@ -30,6 +31,7 @@ interface EditorToolbarProps {
 type HeadingLevel = 1 | 2 | 3;
 
 export default function EditorToolbar({ editor }: EditorToolbarProps) {
+  const { t } = useTranslation('common');
   const [showHeadingMenu, setShowHeadingMenu] = useState(false);
   const headingMenuRef = useRef<HTMLDivElement>(null);
 
@@ -151,7 +153,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               }`}
             >
               <Pilcrow className="w-4 h-4" />
-              <span className="text-sm">Normal text</span>
+              <span className="text-sm">{t('editor.toolbar.normal_text')}</span>
             </button>
             <button
               onClick={() => setHeading(1)}
@@ -160,7 +162,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               }`}
             >
               <Heading1 className="w-4 h-4" />
-              <span className="text-lg font-bold">Heading 1</span>
+              <span className="text-lg font-bold">{t('editor.toolbar.heading1')}</span>
             </button>
             <button
               onClick={() => setHeading(2)}
@@ -169,7 +171,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               }`}
             >
               <Heading2 className="w-4 h-4" />
-              <span className="text-base font-bold">Heading 2</span>
+              <span className="text-base font-bold">{t('editor.toolbar.heading2')}</span>
             </button>
             <button
               onClick={() => setHeading(3)}
@@ -178,7 +180,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               }`}
             >
               <Heading3 className="w-4 h-4" />
-              <span className="text-sm font-semibold">Heading 3</span>
+              <span className="text-sm font-semibold">{t('editor.toolbar.heading3')}</span>
             </button>
           </motion.div>
         )}
@@ -288,13 +290,13 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
       {/* Word Count - Right aligned */}
       <div className="ml-auto flex items-center gap-3 text-xs text-gray-400 px-3">
         <span className="hidden sm:inline">
-          {editor.storage.characterCount?.words() || 0} words
+          {editor.storage.characterCount?.words() || 0} {t('editor.toolbar.words')}
         </span>
         <span className="sm:hidden">
           {editor.storage.characterCount?.words() || 0}
         </span>
         <span className="hidden md:inline text-gray-500">
-          · {editor.storage.characterCount?.characters() || 0} chars
+          · {editor.storage.characterCount?.characters() || 0} {t('editor.toolbar.chars')}
         </span>
       </div>
     </div>

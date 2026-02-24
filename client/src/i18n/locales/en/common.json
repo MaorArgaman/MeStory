@@ -463,7 +463,13 @@
       "back": "Back",
       "design_cover": "Design Cover",
       "page_layout": "Page Layout",
-      "save": "Save"
+      "save": "Save",
+      "normal_text": "Normal text",
+      "heading1": "Heading 1",
+      "heading2": "Heading 2",
+      "heading3": "Heading 3",
+      "words": "words",
+      "chars": "chars"
     },
     "empty": {
       "select_chapter": "Select or create a chapter to start writing",
