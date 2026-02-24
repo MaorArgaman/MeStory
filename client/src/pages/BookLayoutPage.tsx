@@ -403,12 +403,34 @@ export default function BookLayoutPage() {
   };
 
   // Handle template selection
-  const handleTemplateSelect = (template: BookTemplate) => {
+  const handleTemplateSelect = async (template: BookTemplate) => {
     const newSettings = applyTemplate(settings as PageLayoutSettings, template);
     setSettings(newSettings as typeof settings);
     loadGoogleFonts(newSettings);
-    toast.success(`Template "${template.name}" applied!`);
     setShowTemplateGallery(false);
+
+    // Save immediately with the new settings
+    if (book) {
+      setSaving(true);
+      try {
+        const response = await api.put(`/books/${bookId}`, {
+          pageLayout: {
+            pages,
+            settings: newSettings,
+          },
+        });
+
+        if (response.data.success) {
+          setLastSaved(new Date());
+          toast.success(`תבנית "${template.name}" הוחלה ונשמרה בהצלחה!`);
+        }
+      } catch (error) {
+        console.error('Failed to save template:', error);
+        toast.error('התבנית הוחלה אך השמירה נכשלה');
+      } finally {
+        setSaving(false);
+      }
+    }
   };
 
   // Handle image upload

@@ -125,6 +125,25 @@ export interface IPageImage {
 }
 
 // Page Layout interface (Section 6.2)
+// Page content interface for storing generated pages
+export interface IPageContent {
+  id: string;
+  type: 'cover' | 'content' | 'chapter-start' | 'toc' | 'back-cover' | 'blank';
+  chapterIndex?: number;
+  chapterTitle?: string;
+  content?: string;
+  pageNumber?: number;
+  images?: Array<{
+    id: string;
+    url: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    rotation?: number;
+  }>;
+}
+
 export interface IPageLayout {
   bodyFont: string;
   fontSize: number; // 10-16pt
@@ -159,6 +178,28 @@ export interface IPageLayout {
   paragraphSpacing?: number;
   pageNumberPosition?: 'top-left' | 'top-right' | 'top-outer' | 'bottom-center' | 'bottom-outside' | 'bottom-outer' | 'none';
   templateId?: string;
+  // Generated pages content
+  pages?: IPageContent[];
+  // Nested settings (for client compatibility)
+  settings?: {
+    fontSize?: number;
+    lineHeight?: number;
+    fontFamily?: string;
+    margins?: { top: number; bottom: number; left: number; right: number };
+    showPageNumbers?: boolean;
+    includeToc?: boolean;
+    includeBackCover?: boolean;
+    textColor?: string;
+    titleFont?: string;
+    headerFont?: string;
+    accentColor?: string;
+    columns?: 1 | 2 | 3 | 4;
+    paragraphIndent?: number;
+    paragraphSpacing?: number;
+    pageNumberPosition?: string;
+    backgroundColor?: string;
+    templateId?: string;
+  };
 }
 
 // Publishing Status interface (Section 9.1)
@@ -804,6 +845,64 @@ const PageLayoutSchema = new Schema<IPageLayout>(
     },
     templateId: {
       type: String,
+    },
+    // Generated pages content
+    pages: {
+      type: [
+        {
+          id: String,
+          type: {
+            type: String,
+            enum: ['cover', 'content', 'chapter-start', 'toc', 'back-cover', 'blank'],
+          },
+          chapterIndex: Number,
+          chapterTitle: String,
+          content: String,
+          pageNumber: Number,
+          images: [
+            {
+              id: String,
+              url: String,
+              x: Number,
+              y: Number,
+              width: Number,
+              height: Number,
+              rotation: Number,
+            },
+          ],
+        },
+      ],
+      default: [],
+    },
+    // Nested settings for client compatibility
+    settings: {
+      type: {
+        fontSize: Number,
+        lineHeight: Number,
+        fontFamily: String,
+        margins: {
+          top: Number,
+          bottom: Number,
+          left: Number,
+          right: Number,
+        },
+        showPageNumbers: Boolean,
+        includeToc: Boolean,
+        includeBackCover: Boolean,
+        textColor: String,
+        titleFont: String,
+        headerFont: String,
+        accentColor: String,
+        columns: {
+          type: Number,
+          enum: [1, 2, 3, 4],
+        },
+        paragraphIndent: Number,
+        paragraphSpacing: Number,
+        pageNumberPosition: String,
+        backgroundColor: String,
+        templateId: String,
+      },
     },
   },
   { _id: false }
