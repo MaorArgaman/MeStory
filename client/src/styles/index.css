@@ -441,6 +441,30 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
+  /* Override prose text color for book layout pages */
+  .book-page-content.prose {
+    --tw-prose-body: currentColor;
+    --tw-prose-headings: currentColor;
+    --tw-prose-lead: currentColor;
+    --tw-prose-links: currentColor;
+    --tw-prose-bold: currentColor;
+    --tw-prose-counters: currentColor;
+    --tw-prose-bullets: currentColor;
+    --tw-prose-hr: currentColor;
+    --tw-prose-quotes: currentColor;
+    --tw-prose-quote-borders: currentColor;
+    --tw-prose-captions: currentColor;
+    --tw-prose-code: currentColor;
+    --tw-prose-pre-code: currentColor;
+    --tw-prose-pre-bg: currentColor;
+    --tw-prose-th-borders: currentColor;
+    --tw-prose-td-borders: currentColor;
+  }
+
+  .book-page-content.prose * {
+    color: inherit !important;
+  }
+
   /* Sidebar */
   .sidebar-item {
     @apply px-4 py-3 rounded-lg hover:bg-white/10 transition-all duration-300 cursor-pointer text-gray-300 hover:text-white;

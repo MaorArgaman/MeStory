@@ -2279,9 +2279,10 @@ function PageRenderer({
 
       {/* Page Content */}
       <div
-        className="h-full overflow-hidden text-gray-900 prose prose-sm max-w-none"
+        className="h-full overflow-hidden book-page-content prose prose-sm max-w-none"
         dangerouslySetInnerHTML={{ __html: page.content }}
         style={{
+          color: settings.textColor || '#000000',
           direction: isRTL ? 'rtl' : 'ltr',
           paddingTop: showHeader ? '15px' : '0',
           paddingBottom: settings.showPageNumbers ? '20px' : '0',
