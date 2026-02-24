@@ -12,37 +12,64 @@ const uploadDir = isVercel
   : (process.env.UPLOAD_DIR || './uploads');
 
 // Ensure upload directory exists (wrapped in try-catch for serverless compatibility)
-try {
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-    console.log(`📁 Created upload directory: ${uploadDir}`);
+// Only needed for disk storage (non-Vercel)
+if (!isVercel) {
+  try {
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+      console.log(`📁 Created upload directory: ${uploadDir}`);
+    }
+  } catch (error) {
+    console.warn(`⚠️ Could not create upload directory: ${uploadDir}`, error);
   }
-} catch (error) {
-  console.warn(`⚠️ Could not create upload directory: ${uploadDir}`, error);
-  // In serverless, directory creation might fail on module load but succeed at runtime
 }
 
-// Configure storage
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    // Ensure directory exists at upload time (handles serverless cold starts)
-    try {
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-    } catch (err) {
-      console.warn('Could not ensure upload directory exists:', err);
-    }
-    cb(null, uploadDir);
-  },
-  filename: (_req, file, cb) => {
-    // Generate unique filename: timestamp-randomstring-originalname
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const ext = path.extname(file.originalname);
-    const nameWithoutExt = path.basename(file.originalname, ext);
-    cb(null, `${nameWithoutExt}-${uniqueSuffix}${ext}`);
-  },
-});
+// Configure storage - use memory storage for Vercel (images stored as base64 in DB)
+// Use disk storage for local development
+const storage = isVercel
+  ? multer.memoryStorage()
+  : multer.diskStorage({
+      destination: (_req, _file, cb) => {
+        // Ensure directory exists at upload time
+        try {
+          if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+          }
+        } catch (err) {
+          console.warn('Could not ensure upload directory exists:', err);
+        }
+        cb(null, uploadDir);
+      },
+      filename: (_req, file, cb) => {
+        // Generate unique filename: timestamp-randomstring-originalname
+        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+        const ext = path.extname(file.originalname);
+        const nameWithoutExt = path.basename(file.originalname, ext);
+        cb(null, `${nameWithoutExt}-${uniqueSuffix}${ext}`);
+      },
+    });
+
+// Memory storage for images on Vercel
+const imageStorage = isVercel
+  ? multer.memoryStorage()
+  : multer.diskStorage({
+      destination: (_req, _file, cb) => {
+        try {
+          if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+          }
+        } catch (err) {
+          console.warn('Could not ensure upload directory exists:', err);
+        }
+        cb(null, uploadDir);
+      },
+      filename: (_req, file, cb) => {
+        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+        const ext = path.extname(file.originalname);
+        const nameWithoutExt = path.basename(file.originalname, ext);
+        cb(null, `${nameWithoutExt}-${uniqueSuffix}${ext}`);
+      },
+    });
 
 // File filter - only accept specific document types
 const documentFilter = (
@@ -118,7 +145,7 @@ export const upload = multer({
 });
 
 export const uploadImage = multer({
-  storage,
+  storage: imageStorage,
   fileFilter: imageFilter,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB max for images

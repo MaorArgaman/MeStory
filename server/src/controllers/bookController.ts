@@ -1171,6 +1171,8 @@ export const getBookReviews = async (req: Request, res: Response): Promise<void>
 /**
  * Upload cover image
  * POST /api/books/:id/upload-cover
+ * On Vercel: converts image to base64 data URL and stores in DB
+ * On local: stores file on disk
  */
 export const uploadCoverImage = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -1218,8 +1220,26 @@ export const uploadCoverImage = async (req: AuthRequest, res: Response): Promise
       return;
     }
 
-    // Generate public URL for the uploaded file
-    const imageUrl = `/uploads/${req.file.filename}`;
+    // Check if running in Vercel serverless environment
+    const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+
+    let imageUrl: string;
+
+    if (isVercel && req.file.buffer) {
+      // On Vercel: convert to base64 data URL for storage in MongoDB
+      const mimeType = req.file.mimetype || 'image/jpeg';
+      const base64Data = req.file.buffer.toString('base64');
+      imageUrl = `data:${mimeType};base64,${base64Data}`;
+    } else if (req.file.filename) {
+      // On local: use file path
+      imageUrl = `/uploads/${req.file.filename}`;
+    } else {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid file upload',
+      });
+      return;
+    }
 
     // Update book cover design with proper typing
     if (!book.coverDesign) {
@@ -1270,7 +1290,7 @@ export const uploadCoverImage = async (req: AuthRequest, res: Response): Promise
       message: 'Cover image uploaded successfully',
       data: {
         imageUrl,
-        filename: req.file.filename,
+        filename: req.file.filename || 'embedded-image',
       },
     });
   } catch (error) {
@@ -1818,8 +1838,26 @@ export const uploadPageImage = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    // Generate public URL for the uploaded file
-    const imageUrl = `/uploads/${req.file.filename}`;
+    // Check if running in Vercel serverless environment
+    const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+
+    let imageUrl: string;
+
+    if (isVercel && req.file.buffer) {
+      // On Vercel: convert to base64 data URL for storage in MongoDB
+      const mimeType = req.file.mimetype || 'image/jpeg';
+      const base64Data = req.file.buffer.toString('base64');
+      imageUrl = `data:${mimeType};base64,${base64Data}`;
+    } else if (req.file.filename) {
+      // On local: use file path
+      imageUrl = `/uploads/${req.file.filename}`;
+    } else {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid file upload',
+      });
+      return;
+    }
 
     // Initialize pageImages array if it doesn't exist
     if (!book.pageImages) {
