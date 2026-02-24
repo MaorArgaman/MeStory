@@ -291,10 +291,30 @@ export default function BookLayoutPage() {
         // Load existing layout or generate new one
         if (bookData.pageLayout?.pages) {
           // Ensure each page has an images array (for backwards compatibility)
-          const pagesWithImages = bookData.pageLayout.pages.map((page: any) => ({
-            ...page,
-            images: page.images || [],
-          }));
+          const pagesWithImages = bookData.pageLayout.pages.map((page: any, pageIndex: number) => {
+            // Merge any pageImages from the server for this page
+            const serverImages = (bookData.pageImages || [])
+              .filter((img: any) => img.pageIndex === pageIndex)
+              .map((img: any) => ({
+                id: img._id || `img-${img.createdAt || Date.now()}`,
+                url: img.url,
+                x: img.x || 10,
+                y: img.y || 10,
+                width: img.width || 30,
+                height: img.height || 30,
+                rotation: img.rotation || 0,
+              }));
+
+            // Combine existing images with server images (avoid duplicates)
+            const existingImages = page.images || [];
+            const existingIds = new Set(existingImages.map((img: any) => img.id));
+            const newImages = serverImages.filter((img: any) => !existingIds.has(img.id));
+
+            return {
+              ...page,
+              images: [...existingImages, ...newImages],
+            };
+          });
           setPages(pagesWithImages);
           setSettings({ ...defaultSettings, ...bookData.pageLayout.settings });
         } else {
@@ -646,14 +666,18 @@ export default function BookLayoutPage() {
       });
 
       if (response.data.success) {
+        // Server returns image object with url property, or direct imageUrl
+        const imageData = response.data.data.image || response.data.data;
+        const imageUrl = imageData.url || response.data.data.imageUrl;
+
         const newImage: PageImage = {
-          id: `img-${Date.now()}`,
-          url: response.data.data.imageUrl,
-          x: 25,
-          y: 25,
-          width: 50,
-          height: 40,
-          rotation: 0,
+          id: imageData._id || `img-${Date.now()}`,
+          url: imageUrl,
+          x: imageData.x || 25,
+          y: imageData.y || 25,
+          width: imageData.width || 50,
+          height: imageData.height || 40,
+          rotation: imageData.rotation || 0,
         };
 
         const updatedPages = [...pages];
@@ -663,6 +687,9 @@ export default function BookLayoutPage() {
         }
         updatedPages[selectedPageIndex].images.push(newImage);
         setPages(updatedPages);
+
+        // Auto-save after adding image
+        saveLayout(true);
 
         toast.success('Image uploaded successfully!', { id: 'upload-image' });
         setShowImageModal(false);
@@ -688,9 +715,12 @@ export default function BookLayoutPage() {
       });
 
       if (response.data.success) {
+        // Support both response formats
+        const imageUrl = response.data.data.imageUrl || response.data.data.image?.url;
+
         const newImage: PageImage = {
           id: `img-${Date.now()}`,
-          url: response.data.data.imageUrl,
+          url: imageUrl,
           x: 25,
           y: 25,
           width: 50,
@@ -705,6 +735,9 @@ export default function BookLayoutPage() {
         }
         updatedPages[selectedPageIndex].images.push(newImage);
         setPages(updatedPages);
+
+        // Auto-save after adding image
+        saveLayout(true);
 
         toast.success('Image generated successfully!', { id: 'generate-image' });
         setShowImageModal(false);
