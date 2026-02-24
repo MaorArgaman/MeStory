@@ -305,6 +305,44 @@ export default function BookLayoutPage() {
         if (bookData.aiDesignState?.status === 'completed' && bookData.aiDesignState?.design) {
           await applyStoredAIDesign(bookData.aiDesignState.design);
         }
+
+        // Also apply coverDesign from DesignStudioPage (if no AI design or as fallback)
+        if (bookData.coverDesign) {
+          const cd = bookData.coverDesign;
+          // Apply cover settings
+          if (cd.imageUrl || cd.front?.imageUrl) {
+            setCoverImageUrl(cd.imageUrl || cd.front?.imageUrl || null);
+          }
+          // Update book state with cover design
+          setBook(prev => prev ? {
+            ...prev,
+            coverDesign: {
+              ...prev.coverDesign,
+              coverColor: cd.coverColor || cd.front?.backgroundColor || prev.coverDesign?.coverColor,
+              textColor: cd.textColor || cd.front?.title?.color || prev.coverDesign?.textColor,
+              fontFamily: cd.fontFamily || cd.front?.title?.font || prev.coverDesign?.fontFamily,
+              imageUrl: cd.imageUrl || cd.front?.imageUrl || prev.coverDesign?.imageUrl,
+            },
+          } : null);
+        }
+
+        // Apply pageLayout settings if available
+        if (bookData.pageLayout) {
+          const pl = bookData.pageLayout;
+          setSettings(prev => ({
+            ...prev,
+            fontFamily: pl.bodyFont || prev.fontFamily,
+            fontSize: pl.fontSize || prev.fontSize,
+            lineHeight: pl.lineHeight || prev.lineHeight,
+            margins: pl.margins ? {
+              top: pl.margins.top || prev.margins.top,
+              bottom: pl.margins.bottom || prev.margins.bottom,
+              left: pl.margins.left || prev.margins.left,
+              right: pl.margins.right || prev.margins.right,
+            } : prev.margins,
+            showPageNumbers: pl.headerFooter?.includePageNumbers ?? prev.showPageNumbers,
+          }));
+        }
       }
     } catch (error) {
       console.error('Failed to load book:', error);
