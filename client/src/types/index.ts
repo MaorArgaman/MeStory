@@ -25,6 +25,9 @@ export interface User {
   };
 }
 
+// Import AI design types
+import type { AIDesignState } from './templates';
+
 // Book types
 export interface Book {
   id: string;
@@ -42,6 +45,8 @@ export interface Book {
   publishingStatus: 'draft' | 'published';
   createdAt: string;
   updatedAt: string;
+  // AI Design state
+  aiDesignState?: AIDesignState;
 }
 
 // Chapter type

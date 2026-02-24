@@ -218,9 +218,9 @@ export default function DesignStudioPage() {
       // Apply cover colors
       if (design.covers?.front) {
         setCoverColor(design.covers.front.backgroundColor || '#1a1a2e');
-        setTextColor(design.covers.front.textColor || '#ffffff');
-        if (design.covers.front.imageUrl) {
-          setImageUrl(design.covers.front.imageUrl);
+        setTextColor(design.covers.front.title?.color || '#ffffff');
+        if (design.covers.front.generatedImageUrl) {
+          setImageUrl(design.covers.front.generatedImageUrl);
         }
       }
 

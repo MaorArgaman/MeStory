@@ -988,8 +988,8 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
     if (design.typography && design.layout) {
       book.pageLayout = {
         bodyFont: design.typography.bodyFont,
-        fontSize: design.typography.fontSize?.body || 14,
-        lineHeight: design.typography.lineHeight?.body || 1.6,
+        fontSize: design.typography.fontSize || 14,
+        lineHeight: design.typography.lineHeight || 1.6,
         pageSize: 'A5',
         margins: {
           top: design.layout.margins?.top || 60,
@@ -999,45 +999,46 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
         },
         includeTableOfContents: true,
         headerFooter: {
-          includeHeader: design.layout.headers?.show || false,
+          includeHeader: design.layout.headerStyle !== 'none',
           includeFooter: true,
-          includePageNumbers: design.layout.pageNumbers?.show ?? true,
+          includePageNumbers: design.layout.pageNumberPosition !== 'none',
           pageNumberPosition: 'bottom',
         },
       };
     }
 
-    if (design.covers) {
+    if (design.covers || design.cover) {
+      const coverData = design.cover; // Original cover design with colors
       book.coverDesign = {
         front: {
-          type: design.covers.front?.generatedImageUrl ? 'ai-generated' : 'gradient',
-          imageUrl: design.covers.front?.generatedImageUrl,
-          backgroundColor: design.covers.front?.backgroundColor,
-          gradientColors: design.covers.front?.gradientColors,
+          type: design.covers?.frontImageUrl ? 'ai-generated' : 'gradient',
+          imageUrl: design.covers?.frontImageUrl,
+          backgroundColor: coverData?.front?.colorPalette?.[0] || '#1a1a2e',
+          gradientColors: coverData?.front?.colorPalette,
           title: {
             text: book.title,
             font: design.typography?.titleFont || 'Playfair Display',
-            size: design.covers.front?.title?.fontSize || 48,
-            color: design.covers.front?.title?.color || '#ffffff',
+            size: coverData?.front?.title?.size || 48,
+            color: coverData?.front?.title?.color || '#ffffff',
             position: { x: 50, y: 40 },
           },
           authorName: {
             text: (book.author as any).name || '',
             font: design.typography?.bodyFont || 'Inter',
-            size: design.covers.front?.author?.fontSize || 18,
-            color: design.covers.front?.author?.color || '#ffffff',
+            size: coverData?.front?.author?.size || 18,
+            color: coverData?.front?.author?.color || '#ffffff',
           },
         },
         back: {
-          imageUrl: design.covers.back?.generatedImageUrl,
-          backgroundColor: design.covers.back?.backgroundColor,
+          imageUrl: design.covers?.backImageUrl,
+          backgroundColor: coverData?.back?.backgroundColor || '#1a1a2e',
           synopsis: book.synopsis || book.description || '',
         },
         spine: {
           width: Math.ceil((book.statistics?.pageCount || 100) / 10) + 5,
           title: book.title,
           author: (book.author as any).name || '',
-          backgroundColor: design.covers.spine?.backgroundColor,
+          backgroundColor: coverData?.spine?.backgroundColor || '#1a1a2e',
         },
       };
     }
@@ -1049,10 +1050,10 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
       message: 'AI Design Wizard completed successfully!',
       data: {
         bookId,
-        design: book.aiDesignState.design,
+        design: book.aiDesignState?.design,
         coverDesign: book.coverDesign,
         pageLayout: book.pageLayout,
-        completedAt: book.aiDesignState.completedAt,
+        completedAt: book.aiDesignState?.completedAt,
       },
     });
   } catch (error: any) {

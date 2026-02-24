@@ -26,7 +26,6 @@ import {
   RefreshCw,
   Layout,
   Palette,
-  Menu,
   Layers,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -35,9 +34,6 @@ import { BookTemplate, textColorPresets, availableFonts } from '../data/bookTemp
 import { applyTemplate, loadGoogleFonts, PageLayoutSettings } from '../services/templateService';
 import {
   loadDesignFonts,
-  applyAIDesignToBook,
-  getAIDesign,
-  hasAIDesign,
 } from '../services/designApplicationService';
 import type { AICompleteDesign } from '../types/templates';
 
@@ -332,8 +328,8 @@ export default function BookLayoutPage() {
         setSettings(prev => ({
           ...prev,
           fontFamily: design.typography.bodyFont || prev.fontFamily,
-          fontSize: design.typography.fontSize?.body || prev.fontSize,
-          lineHeight: design.typography.lineHeight?.body || prev.lineHeight,
+          fontSize: design.typography.fontSize || prev.fontSize,
+          lineHeight: design.typography.lineHeight || prev.lineHeight,
           textColor: design.typography.colors?.text || prev.textColor,
         }));
       }
@@ -354,15 +350,15 @@ export default function BookLayoutPage() {
 
       // Apply cover design
       if (design.covers?.front && book) {
-        setCoverImageUrl(design.covers.front.imageUrl || null);
+        setCoverImageUrl(design.covers.front.generatedImageUrl || null);
         setBook(prev => prev ? {
           ...prev,
           coverDesign: {
             ...prev.coverDesign,
             coverColor: design.covers?.front?.backgroundColor || prev.coverDesign?.coverColor || '#1a1a2e',
-            textColor: design.covers?.front?.textColor || prev.coverDesign?.textColor || '#ffffff',
+            textColor: design.covers?.front?.title?.color || prev.coverDesign?.textColor || '#ffffff',
             fontFamily: design.typography?.titleFont || prev.coverDesign?.fontFamily || 'David Libre',
-            imageUrl: design.covers?.front?.imageUrl || prev.coverDesign?.imageUrl,
+            imageUrl: design.covers?.front?.generatedImageUrl || prev.coverDesign?.imageUrl,
           },
         } : null);
       }
@@ -373,9 +369,9 @@ export default function BookLayoutPage() {
           bodyFont: design.typography?.bodyFont || '',
           headingFont: design.typography?.headingFont || '',
           titleFont: design.typography?.titleFont || '',
-          fontSize: design.typography?.fontSize?.body || 14,
-          lineHeight: design.typography?.lineHeight?.body || 1.6,
-          chapterTitleSize: design.typography?.fontSize?.heading || 24,
+          fontSize: design.typography?.fontSize || 14,
+          lineHeight: design.typography?.lineHeight || 1.6,
+          chapterTitleSize: design.typography?.chapterTitleSize || 24,
           pageNumberSize: 10,
           colors: {
             text: design.typography?.colors?.text || '#000000',
@@ -386,22 +382,22 @@ export default function BookLayoutPage() {
         },
         layout: {
           margins: design.layout?.margins || { top: 60, bottom: 60, inner: 50, outer: 50 },
-          chapterStartStyle: design.layout?.chapterStartPosition === 'new-page' ? 'new-page' : 'same-page',
+          chapterStartStyle: 'same-page',
           pageNumberPosition: (design.layout?.pageNumbers?.position as any) || 'bottom-center',
-          headerStyle: (design.layout?.headers?.style as any) || 'none',
+          headerStyle: design.layout?.headers?.show ? 'book-title' : 'none',
           dropCaps: false,
           ornaments: false,
           reasoning: 'Applied from stored AI design',
         },
         cover: {
           front: {
-            imagePrompt: '',
-            imageUrl: design.covers?.front?.imageUrl,
+            imagePrompt: design.covers?.front?.imagePrompt || '',
+            imageUrl: design.covers?.front?.generatedImageUrl,
             title: {
               text: book?.title || '',
               font: design.typography?.titleFont || 'David Libre',
-              size: design.typography?.fontSize?.title || 48,
-              color: design.covers?.front?.textColor || '#ffffff',
+              size: design.typography?.chapterTitleSize || 48,
+              color: design.covers?.front?.title?.color || '#ffffff',
               position: 'center',
               alignment: 'center',
             },
@@ -409,25 +405,25 @@ export default function BookLayoutPage() {
               text: book?.author?.name || '',
               font: design.typography?.bodyFont || 'David Libre',
               size: 18,
-              color: design.covers?.front?.textColor || '#ffffff',
+              color: design.covers?.front?.author?.color || '#ffffff',
               position: 'bottom',
             },
-            colorPalette: [design.covers?.front?.backgroundColor || '#1a1a2e'],
+            colorPalette: design.covers?.front?.gradientColors || [design.covers?.front?.backgroundColor || '#1a1a2e'],
           },
           back: {
-            imagePrompt: '',
-            imageUrl: design.covers?.back?.imageUrl,
+            imagePrompt: design.covers?.back?.imagePrompt || '',
+            imageUrl: design.covers?.back?.generatedImageUrl,
             synopsis: {
               text: book?.synopsis || '',
               font: design.typography?.bodyFont || 'David Libre',
               size: 12,
-              color: design.covers?.back?.textColor || '#ffffff',
+              color: '#ffffff',
             },
             author: {
               text: book?.author?.name || '',
               font: design.typography?.bodyFont || 'David Libre',
               size: 14,
-              color: design.covers?.back?.textColor || '#ffffff',
+              color: '#ffffff',
             },
             backgroundColor: design.covers?.back?.backgroundColor || '#1a1a2e',
           },
@@ -442,7 +438,7 @@ export default function BookLayoutPage() {
         },
         imagePlacements: (design.imagePlacements || []).map(p => ({
           chapterIndex: p.chapterIndex,
-          position: p.position as 'chapter-start' | 'mid-chapter' | 'chapter-end',
+          position: p.pagePosition as 'chapter-start' | 'mid-chapter' | 'chapter-end',
           textContext: '',
           suggestedPrompt: p.prompt || '',
           importance: 'medium' as const,

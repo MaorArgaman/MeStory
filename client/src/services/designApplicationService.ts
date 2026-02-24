@@ -74,18 +74,18 @@ export const typographyToCssVariables = (typography: AITypographyDesign): Record
     vars['--design-title-font'] = `"${typography.titleFont}", sans-serif`;
   }
 
-  // Font sizes
+  // Font sizes (fontSize is a number in the type)
   if (typography.fontSize) {
-    vars['--design-font-size-body'] = `${typography.fontSize.body}px`;
-    vars['--design-font-size-heading'] = `${typography.fontSize.heading}px`;
-    vars['--design-font-size-title'] = `${typography.fontSize.title}px`;
-    vars['--design-font-size-caption'] = `${typography.fontSize.caption}px`;
+    vars['--design-font-size-body'] = `${typography.fontSize}px`;
+    vars['--design-font-size-heading'] = `${typography.chapterTitleSize || typography.fontSize * 1.5}px`;
+    vars['--design-font-size-title'] = `${typography.chapterTitleSize || typography.fontSize * 2}px`;
+    vars['--design-font-size-caption'] = `${typography.fontSize * 0.85}px`;
   }
 
-  // Line heights
+  // Line heights (lineHeight is a number in the type)
   if (typography.lineHeight) {
-    vars['--design-line-height-body'] = String(typography.lineHeight.body);
-    vars['--design-line-height-heading'] = String(typography.lineHeight.heading);
+    vars['--design-line-height-body'] = String(typography.lineHeight);
+    vars['--design-line-height-heading'] = String(typography.lineHeight * 0.9);
   }
 
   // Colors
@@ -112,6 +112,11 @@ export const layoutToCssVariables = (layout: AILayoutDesign): Record<string, str
     vars['--design-columns'] = String(layout.columns);
   }
 
+  // Column gap
+  if (layout.columnGap) {
+    vars['--design-column-gap'] = `${layout.columnGap}px`;
+  }
+
   // Margins
   if (layout.margins) {
     vars['--design-margin-top'] = `${layout.margins.top}mm`;
@@ -125,16 +130,16 @@ export const layoutToCssVariables = (layout: AILayoutDesign): Record<string, str
     vars['--design-paragraph-spacing'] = `${layout.paragraphSpacing}px`;
   }
 
-  // Chapter spacing
-  if (layout.chapterStartPosition) {
-    vars['--design-chapter-start'] = layout.chapterStartPosition;
+  // Text alignment
+  if (layout.textAlign) {
+    vars['--design-text-align'] = layout.textAlign;
   }
 
   // Page numbers
   if (layout.pageNumbers) {
     vars['--design-page-number-show'] = layout.pageNumbers.show ? '1' : '0';
     vars['--design-page-number-position'] = layout.pageNumbers.position || 'bottom-center';
-    vars['--design-page-number-format'] = layout.pageNumbers.format || 'numeric';
+    vars['--design-page-number-style'] = layout.pageNumbers.style || 'numeric';
     if (layout.pageNumbers.startFrom !== undefined) {
       vars['--design-page-number-start'] = String(layout.pageNumbers.startFrom);
     }
@@ -143,13 +148,8 @@ export const layoutToCssVariables = (layout: AILayoutDesign): Record<string, str
   // Headers
   if (layout.headers) {
     vars['--design-header-show'] = layout.headers.show ? '1' : '0';
-    vars['--design-header-style'] = layout.headers.style || 'book-title';
-    if (layout.headers.leftText) {
-      vars['--design-header-left'] = layout.headers.leftText;
-    }
-    if (layout.headers.rightText) {
-      vars['--design-header-right'] = layout.headers.rightText;
-    }
+    vars['--design-header-content'] = layout.headers.content || '';
+    vars['--design-header-position'] = layout.headers.position || 'center';
   }
 
   return vars;
@@ -175,11 +175,11 @@ export const applyTypographyToElement = (element: HTMLElement, typography: AITyp
   if (typography.bodyFont) {
     element.style.fontFamily = `"${typography.bodyFont}", sans-serif`;
   }
-  if (typography.fontSize?.body) {
-    element.style.fontSize = `${typography.fontSize.body}px`;
+  if (typography.fontSize) {
+    element.style.fontSize = `${typography.fontSize}px`;
   }
-  if (typography.lineHeight?.body) {
-    element.style.lineHeight = String(typography.lineHeight.body);
+  if (typography.lineHeight) {
+    element.style.lineHeight = String(typography.lineHeight);
   }
   if (typography.colors?.text) {
     element.style.color = typography.colors.text;
@@ -223,16 +223,27 @@ export const getCoverStyle = (cover: AICoverDesign, type: 'front' | 'back' | 'sp
   if (coverData.backgroundColor) {
     style.backgroundColor = coverData.backgroundColor;
   }
-  if (coverData.backgroundGradient) {
-    style.background = coverData.backgroundGradient;
+
+  // Handle gradient colors if available (front cover)
+  if (type === 'front' && cover.front?.gradientColors && cover.front.gradientColors.length > 1) {
+    style.background = `linear-gradient(135deg, ${cover.front.gradientColors.join(', ')})`;
   }
-  if (coverData.imageUrl) {
-    style.backgroundImage = `url(${coverData.imageUrl})`;
+
+  // Handle generated image URL
+  if ('generatedImageUrl' in coverData && coverData.generatedImageUrl) {
+    style.backgroundImage = `url(${coverData.generatedImageUrl})`;
     style.backgroundSize = 'cover';
     style.backgroundPosition = 'center';
   }
-  if (coverData.textColor) {
-    style.color = coverData.textColor;
+
+  // Handle text color for spine
+  if (type === 'spine' && cover.spine?.textColor) {
+    style.color = cover.spine.textColor;
+  }
+
+  // Handle title color for front cover
+  if (type === 'front' && cover.front?.title?.color) {
+    style.color = cover.front.title.color;
   }
 
   return style;
@@ -257,7 +268,7 @@ export const hasImageAtPosition = (
   position: string
 ): AIImagePlacement | undefined => {
   return placements.find(
-    p => p.chapterIndex === chapterIndex && p.position === position
+    p => p.chapterIndex === chapterIndex && p.pagePosition === position
   );
 };
 
@@ -319,24 +330,26 @@ export const getTextStyles = (typography: AITypographyDesign, type: 'body' | 'he
   switch (type) {
     case 'body':
       if (typography.bodyFont) styles.fontFamily = `"${typography.bodyFont}", sans-serif`;
-      if (typography.fontSize?.body) styles.fontSize = `${typography.fontSize.body}px`;
-      if (typography.lineHeight?.body) styles.lineHeight = typography.lineHeight.body;
+      if (typography.fontSize) styles.fontSize = `${typography.fontSize}px`;
+      if (typography.lineHeight) styles.lineHeight = typography.lineHeight;
       if (typography.colors?.text) styles.color = typography.colors.text;
       break;
     case 'heading':
       if (typography.headingFont) styles.fontFamily = `"${typography.headingFont}", sans-serif`;
-      if (typography.fontSize?.heading) styles.fontSize = `${typography.fontSize.heading}px`;
-      if (typography.lineHeight?.heading) styles.lineHeight = typography.lineHeight.heading;
+      if (typography.chapterTitleSize) styles.fontSize = `${typography.chapterTitleSize}px`;
+      else if (typography.fontSize) styles.fontSize = `${typography.fontSize * 1.5}px`;
+      if (typography.lineHeight) styles.lineHeight = typography.lineHeight * 0.9;
       if (typography.colors?.heading) styles.color = typography.colors.heading;
       break;
     case 'title':
       if (typography.titleFont) styles.fontFamily = `"${typography.titleFont}", sans-serif`;
-      if (typography.fontSize?.title) styles.fontSize = `${typography.fontSize.title}px`;
+      if (typography.chapterTitleSize) styles.fontSize = `${typography.chapterTitleSize * 1.2}px`;
+      else if (typography.fontSize) styles.fontSize = `${typography.fontSize * 2}px`;
       if (typography.colors?.heading) styles.color = typography.colors.heading;
       break;
     case 'caption':
       if (typography.bodyFont) styles.fontFamily = `"${typography.bodyFont}", sans-serif`;
-      if (typography.fontSize?.caption) styles.fontSize = `${typography.fontSize.caption}px`;
+      if (typography.fontSize) styles.fontSize = `${typography.fontSize * 0.85}px`;
       if (typography.colors?.text) styles.color = typography.colors.text;
       styles.opacity = 0.8;
       break;
