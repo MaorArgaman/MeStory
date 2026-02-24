@@ -191,7 +191,7 @@ export default function DesignStudioPage() {
           let existingImageUrl = coverDesign.front?.imageUrl || coverDesign.imageUrl || '';
           if (existingImageUrl && !existingImageUrl.startsWith('http') && !existingImageUrl.startsWith('data:')) {
             const apiUrl = import.meta.env.VITE_API_URL ||
-              (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
+              (import.meta.env.PROD ? 'https://server-two-henna-44.vercel.app/api' : 'http://localhost:5001/api');
             const serverBaseUrl = apiUrl.replace('/api', '');
             existingImageUrl = `${serverBaseUrl}${existingImageUrl}`;
           }
@@ -474,14 +474,28 @@ export default function DesignStudioPage() {
         // Construct the full URL from the API base URL
         // Remove /api from the API URL to get the server base URL
         const apiUrl = import.meta.env.VITE_API_URL ||
-          (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
+          (import.meta.env.PROD ? 'https://server-two-henna-44.vercel.app/api' : 'http://localhost:5001/api');
         const serverBaseUrl = apiUrl.replace('/api', '');
         const imageUrlPath = response.data.data.imageUrl;
         // If imageUrl is already absolute (starts with http), use it directly
         // Otherwise, construct the full URL with the server base
         const fullImageUrl = imageUrlPath.startsWith('http') ? imageUrlPath : `${serverBaseUrl}${imageUrlPath}`;
         setImageUrl(fullImageUrl);
-        toast.success('Image uploaded successfully!', { id: 'upload' });
+
+        // Auto-save the cover design with the new image
+        try {
+          const coverDesign: CoverDesign = {
+            coverColor,
+            textColor,
+            fontFamily,
+            imageUrl: fullImageUrl,
+          };
+          await api.put(`/books/${bookId}`, { coverDesign });
+          toast.success('Image uploaded and saved!', { id: 'upload' });
+        } catch (saveError) {
+          console.error('Failed to auto-save image:', saveError);
+          toast.success('Image uploaded! Click Save to persist.', { id: 'upload' });
+        }
       }
     } catch (error: any) {
       console.error('Upload error:', error);
