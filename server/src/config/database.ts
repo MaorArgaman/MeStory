@@ -2,11 +2,39 @@ import mongoose from 'mongoose';
 
 // Cache the connection for serverless environments
 let isConnected = false;
+let connectionPromise: Promise<void> | null = null;
+
+// Helper to wait for connection to be ready
+const waitForConnection = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const maxWait = 15000; // 15 seconds max wait
+    const startTime = Date.now();
+
+    const checkConnection = () => {
+      if (mongoose.connection.readyState === 1) {
+        resolve();
+      } else if (Date.now() - startTime > maxWait) {
+        reject(new Error('Timeout waiting for MongoDB connection'));
+      } else {
+        setTimeout(checkConnection, 100);
+      }
+    };
+
+    checkConnection();
+  });
+};
 
 export const connectDatabase = async (): Promise<void> => {
   // If already connected, skip
   if (isConnected && mongoose.connection.readyState === 1) {
     console.log('📊 Using existing MongoDB connection');
+    return;
+  }
+
+  // If connection is in progress, wait for it
+  if (connectionPromise) {
+    console.log('📊 Waiting for existing connection attempt...');
+    await connectionPromise;
     return;
   }
 
@@ -35,27 +63,37 @@ export const connectDatabase = async (): Promise<void> => {
   const safeUri = uriParts.length > 1 ? `***@${uriParts[1]}` : 'mongodb://***';
   console.log(`🔌 Connecting to MongoDB: ${safeUri}`);
 
-  try {
-    // Configure mongoose for serverless
-    mongoose.set('bufferCommands', false);
+  connectionPromise = (async () => {
+    try {
+      // Enable buffer commands so queries wait for connection
+      // This is safer for serverless where connections may take time
+      mongoose.set('bufferCommands', true);
+      mongoose.set('bufferTimeoutMS', 15000); // 15 second buffer timeout
 
-    await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 10000, // 10 second timeout
-      socketTimeoutMS: 45000, // 45 second socket timeout
-      maxPoolSize: 10, // Connection pool size
-      minPoolSize: 1, // Minimum connections
-    });
+      await mongoose.connect(mongoUri, {
+        serverSelectionTimeoutMS: 10000, // 10 second timeout
+        socketTimeoutMS: 45000, // 45 second socket timeout
+        maxPoolSize: 10, // Connection pool size
+        minPoolSize: 1, // Minimum connections
+      });
 
-    isConnected = true;
-    console.log('✅ MongoDB connected successfully');
-    console.log(`📊 Database: ${mongoose.connection.db?.databaseName}`);
-    console.log(`📊 Connection state: ${mongoose.connection.readyState}`);
-  } catch (error: any) {
-    isConnected = false;
-    console.error('❌ MongoDB connection error:', error.message);
-    console.error('❌ Full error:', error);
-    throw error;
-  }
+      // Wait until connection is fully ready
+      await waitForConnection();
+
+      isConnected = true;
+      console.log('✅ MongoDB connected successfully');
+      console.log(`📊 Database: ${mongoose.connection.db?.databaseName}`);
+      console.log(`📊 Connection state: ${mongoose.connection.readyState}`);
+    } catch (error: any) {
+      isConnected = false;
+      connectionPromise = null;
+      console.error('❌ MongoDB connection error:', error.message);
+      console.error('❌ Full error:', error);
+      throw error;
+    }
+  })();
+
+  await connectionPromise;
 };
 
 // Get connection status for health checks
