@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 import {
   ArrowLeft,
+  ArrowRight,
   Save,
   Loader2,
   Image as ImageIcon,
@@ -29,6 +30,7 @@ import {
   Layers,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useLanguage } from '../contexts/LanguageContext';
 import TemplateGallery from '../components/design/TemplateGallery';
 import { BookTemplate, textColorPresets, availableFonts } from '../data/bookTemplates';
 import { applyTemplate, loadGoogleFonts, PageLayoutSettings } from '../services/templateService';
@@ -212,6 +214,7 @@ const defaultSettings = {
 export default function BookLayoutPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
+  const { isRTL: isUIRTL } = useLanguage();
   const [book, setBook] = useState<BookData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -1044,7 +1047,7 @@ export default function BookLayoutPage() {
               onClick={() => navigate(`/editor/${bookId}`)}
               className="btn-ghost flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
             >
-              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              {isUIRTL ? <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" /> : <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />}
               <span className="hidden sm:inline">Back to Editor</span>
             </button>
             <div className="hidden sm:block h-6 w-px bg-gray-700" />
@@ -1115,13 +1118,14 @@ export default function BookLayoutPage() {
           />
         )}
 
-        {/* Left Sidebar - Page Thumbnails */}
+        {/* Left Sidebar - Page Thumbnails (Right in RTL) */}
         <div className={`
-          ${showMobilePages ? 'translate-x-0' : '-translate-x-full'}
+          ${showMobilePages ? 'translate-x-0' : isUIRTL ? 'translate-x-full' : '-translate-x-full'}
           lg:translate-x-0
           fixed lg:relative z-50 lg:z-auto
+          ${isUIRTL ? 'right-0 lg:right-auto' : 'left-0 lg:left-auto'}
           w-[200px] sm:w-48 h-full
-          glass-strong border-r border-white/10 p-3 sm:p-4 overflow-y-auto
+          glass-strong ${isUIRTL ? 'border-l' : 'border-r'} border-white/10 p-3 sm:p-4 overflow-y-auto
           transition-transform duration-300 ease-in-out
         `}>
           <div className="flex items-center justify-between mb-4">
@@ -1368,15 +1372,15 @@ export default function BookLayoutPage() {
           />
         )}
 
-        {/* Right Sidebar - Settings */}
+        {/* Right Sidebar - Settings (Left in RTL) */}
         <AnimatePresence>
           {showSettings && (
             <motion.div
-              initial={{ x: '100%', opacity: 0 }}
+              initial={{ x: isUIRTL ? '-100%' : '100%', opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              exit={{ x: '100%', opacity: 0 }}
+              exit={{ x: isUIRTL ? '-100%' : '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed lg:relative right-0 top-0 lg:top-auto h-full z-50 lg:z-auto glass-strong border-l border-white/10 overflow-hidden w-[85%] sm:w-80"
+              className={`fixed lg:relative ${isUIRTL ? 'left-0' : 'right-0'} top-0 lg:top-auto h-full z-50 lg:z-auto glass-strong ${isUIRTL ? 'border-r' : 'border-l'} border-white/10 overflow-hidden w-[85%] sm:w-80`}
             >
               <div className="p-4 sm:p-6 w-full sm:w-80 h-full overflow-y-auto">
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
