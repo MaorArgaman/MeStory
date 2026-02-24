@@ -235,18 +235,48 @@ export default function DesignStudioPage() {
   };
 
   // Handle template selection
-  const handleTemplateSelect = (template: BookTemplate) => {
+  const handleTemplateSelect = async (template: BookTemplate) => {
     // Apply template cover styles
-    setCoverColor(template.coverStyle.backgroundColor || template.previewGradient.split(',')[0].replace('linear-gradient(135deg, ', '').trim());
-    setTextColor(template.coverStyle.titleColor);
-    setFontFamily(`"${template.fonts.title}", serif`);
+    const newCoverColor = template.coverStyle.backgroundColor || '#1a1a2e';
+    const newTextColor = template.coverStyle.titleColor || '#ffffff';
+    const newFontFamily = `"${template.fonts.title}", serif`;
+
+    console.log('Applying template:', template.name);
+    console.log('Cover color:', newCoverColor);
+    console.log('Text color:', newTextColor);
+    console.log('Font:', newFontFamily);
+
+    setCoverColor(newCoverColor);
+    setTextColor(newTextColor);
+    setFontFamily(newFontFamily);
     setCurrentTemplateId(template.id);
     setShowTemplateGallery(false);
-    toast.success(
-      language === 'he'
-        ? `תבנית "${template.nameHe}" הוחלה!`
-        : `Template "${template.name}" applied!`
-    );
+
+    // Auto-save after template selection
+    if (book) {
+      try {
+        const coverDesign: CoverDesign = {
+          coverColor: newCoverColor,
+          textColor: newTextColor,
+          fontFamily: newFontFamily,
+          imageUrl: imageUrl || undefined,
+        };
+
+        await api.put(`/books/${bookId}`, { coverDesign });
+        toast.success(
+          language === 'he'
+            ? `תבנית "${template.nameHe}" הוחלה ונשמרה!`
+            : `Template "${template.name}" applied and saved!`
+        );
+      } catch (error) {
+        console.error('Failed to save template:', error);
+        toast.success(
+          language === 'he'
+            ? `תבנית "${template.nameHe}" הוחלה! (לחץ שמור כדי לשמור)`
+            : `Template "${template.name}" applied! (Click save to persist)`
+        );
+      }
+    }
   };
 
   // Handle AI design generation
