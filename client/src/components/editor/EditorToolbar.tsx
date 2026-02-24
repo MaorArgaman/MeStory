@@ -144,7 +144,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           <motion.div
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
-            className="absolute top-full left-0 mt-1 bg-slate-800 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden min-w-[160px]"
+            className="absolute top-full left-0 mt-1 bg-slate-800 border border-white/10 rounded-lg shadow-xl z-[100] min-w-[160px]"
           >
             <button
               onClick={() => setHeading('paragraph')}

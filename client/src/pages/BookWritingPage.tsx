@@ -573,12 +573,12 @@ export default function BookWritingPage() {
         </div>
 
         {/* Main Editor */}
-        <div className="flex-1 flex flex-col overflow-hidden pb-20 lg:pb-0 bg-gradient-to-b from-slate-900/50 to-slate-800/30">
-          <div className="flex flex-col h-full">
+        <div className="flex-1 flex flex-col pb-20 lg:pb-0 bg-gradient-to-b from-slate-900/50 to-slate-800/30 min-h-0">
+          <div className="flex flex-col h-full overflow-hidden">
             {currentChapter ? (
               <>
                 {/* Toolbar Container - Sticky */}
-                <div className="editor-toolbar-container px-3 sm:px-4 lg:px-6 py-3">
+                <div className="editor-toolbar-container px-3 sm:px-4 lg:px-6 py-3 overflow-visible relative z-30">
                   {/* Chapter Title Input */}
                   <input
                     type="text"

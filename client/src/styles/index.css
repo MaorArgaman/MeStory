@@ -436,9 +436,10 @@
 
   /* Dark mode editor panel header/toolbar */
   .editor-toolbar-container {
-    @apply sticky top-0 z-10 backdrop-blur-md;
+    @apply sticky top-0 z-30 backdrop-blur-md;
     background: rgba(26, 26, 46, 0.95);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: visible;
   }
 
   /* Override prose text color for book layout pages */
