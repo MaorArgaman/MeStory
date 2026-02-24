@@ -624,7 +624,7 @@ export default function LibraryPage() {
   return (
     <div className="min-h-screen relative">
       {/* Header */}
-      <div className="relative overflow-hidden py-20 px-8">
+      <div className="relative overflow-hidden py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
         <div
           className="absolute inset-0 opacity-20"
           style={{
@@ -637,33 +637,33 @@ export default function LibraryPage() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-center gap-3 mb-4"
+            className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4"
           >
-            <Library className="w-10 h-10 text-magic-gold" />
-            <h1 className="text-5xl font-display font-bold gradient-gold">
+            <Library className="w-8 h-8 sm:w-10 sm:h-10 text-magic-gold flex-shrink-0" />
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold gradient-gold">
               {t('library.title')}
             </h1>
           </motion.div>
-          <p className="text-xl text-gray-400">
+          <p className="text-sm sm:text-lg lg:text-xl text-gray-400 px-2">
             {t('library.subtitle')}
           </p>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-8 pb-20">
-        {/* Tabs */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-12 sm:pb-20">
+        {/* Tabs - Scrollable on mobile */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex justify-center gap-4 mb-12"
+          className="flex justify-start sm:justify-center gap-2 sm:gap-4 mb-8 sm:mb-12 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-hide"
         >
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300
+                flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium transition-all duration-300 whitespace-nowrap flex-shrink-0 text-sm sm:text-base
                 ${
                   activeTab === tab.id
                     ? 'bg-gradient-to-r from-magic-gold to-cosmic-purple text-white shadow-glow-gold'
@@ -671,11 +671,11 @@ export default function LibraryPage() {
                 }
               `}
             >
-              <tab.icon className="w-5 h-5" />
+              <tab.icon className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>{tab.label}</span>
               {tab.count !== null && (
                 <span
-                  className={`px-2 py-0.5 rounded-full text-xs ${
+                  className={`px-1.5 sm:px-2 py-0.5 rounded-full text-xs ${
                     activeTab === tab.id
                       ? 'bg-white/20 text-white'
                       : 'bg-white/10 text-gray-400'
@@ -690,12 +690,12 @@ export default function LibraryPage() {
 
         {/* Content */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="glass-strong rounded-xl p-4 animate-pulse">
-                <div className="aspect-[2/3] bg-gray-700 rounded-lg mb-4" />
-                <div className="h-4 bg-gray-700 rounded mb-2" />
-                <div className="h-3 bg-gray-700 rounded w-2/3" />
+              <div key={i} className="glass-strong rounded-xl p-3 sm:p-4 animate-pulse">
+                <div className="aspect-[2/3] bg-gray-700 rounded-lg mb-3 sm:mb-4" />
+                <div className="h-3 sm:h-4 bg-gray-700 rounded mb-2" />
+                <div className="h-2 sm:h-3 bg-gray-700 rounded w-2/3" />
               </div>
             ))}
           </div>
@@ -709,13 +709,13 @@ export default function LibraryPage() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-20"
+                className="text-center py-12 sm:py-20 px-4"
               >
-                <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center">
+                <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 rounded-full bg-white/5 flex items-center justify-center">
                   {activeTab === 'purchased' ? (
-                    <ShoppingBag className="w-12 h-12 text-gray-600" />
+                    <ShoppingBag className="w-8 h-8 sm:w-12 sm:h-12 text-gray-600" />
                   ) : (
-                    <PenTool className="w-12 h-12 text-gray-600" />
+                    <PenTool className="w-8 h-8 sm:w-12 sm:h-12 text-gray-600" />
                   )}
                 </div>
                 <h3 className="text-2xl font-display font-semibold text-gray-400 mb-3">
