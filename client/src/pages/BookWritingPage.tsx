@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import {
   BookOpen,
@@ -56,6 +57,7 @@ interface BookData {
 export default function BookWritingPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
   const [book, setBook] = useState<BookData | null>(null);
   const [selectedChapterIndex, setSelectedChapterIndex] = useState(0);
   const [content, setContent] = useState('');
@@ -245,7 +247,7 @@ export default function BookWritingPage() {
     if (!book) return;
 
     const newChapter: Chapter = {
-      title: `Chapter ${(book.chapters || []).length + 1}`,
+      title: t('editor.chapter_default', { number: (book.chapters || []).length + 1 }),
       content: '',
       order: (book.chapters || []).length,
       wordCount: 0,
@@ -521,7 +523,7 @@ export default function BookWritingPage() {
           transition-transform duration-300 ease-in-out
         `}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs sm:text-sm font-semibold text-gray-300">CHAPTERS</h2>
+            <h2 className="text-xs sm:text-sm font-semibold text-gray-300">{t('editor.sidebar.chapters')}</h2>
             <div className="flex items-center gap-2">
               <button onClick={addChapter} className="btn-ghost p-2">
                 <Plus className="w-4 h-4" />
@@ -555,15 +557,15 @@ export default function BookWritingPage() {
                     <span className="flex-1 truncate text-sm">{chapter.title}</span>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    {chapter.wordCount} words
+                    {chapter.wordCount} {t('editor.statistics.words_unit')}
                   </p>
                 </button>
               ))
             ) : (
               <div className="text-center py-8 text-gray-500 text-sm">
-                <p>No chapters yet</p>
+                <p>{t('editor.sidebar.no_chapters')}</p>
                 <button onClick={addChapter} className="btn-secondary mt-3 text-xs">
-                  Add First Chapter
+                  {t('editor.sidebar.add_first')}
                 </button>
               </div>
             )}
@@ -588,7 +590,7 @@ export default function BookWritingPage() {
                       setSaved(false);
                     }}
                     className="w-full max-w-4xl mx-auto block bg-transparent text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-3 focus:outline-none border-b-2 border-white/10 focus:border-indigo-500/50 pb-2 transition-colors"
-                    placeholder="Chapter Title"
+                    placeholder={t('editor.sidebar.chapter_title')}
                     style={{ fontFamily: "'Merriweather', Georgia, serif" }}
                   />
 
@@ -629,16 +631,16 @@ export default function BookWritingPage() {
                   <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-indigo-500/10 flex items-center justify-center">
                     <BookOpen className="w-10 h-10 text-indigo-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">Ready to Write</h3>
+                  <h3 className="text-xl font-semibold text-white mb-2">{t('editor.empty.ready_to_write')}</h3>
                   <p className="text-gray-400 mb-6 max-w-sm">
-                    Select an existing chapter from the sidebar or create a new one to begin your story
+                    {t('editor.empty.create_chapter_prompt')}
                   </p>
                   <button
                     onClick={addChapter}
                     className="btn-primary inline-flex items-center gap-2"
                   >
                     <Plus className="w-4 h-4" />
-                    Create First Chapter
+                    {t('editor.sidebar.add_first')}
                   </button>
                 </div>
               </div>
@@ -664,7 +666,7 @@ export default function BookWritingPage() {
         `}>
           {/* Mobile Close Button */}
           <div className="lg:hidden flex items-center justify-between p-3 border-b border-white/10">
-            <span className="text-sm font-semibold text-gray-300">AI & Analysis</span>
+            <span className="text-sm font-semibold text-gray-300">{t('editor.tabs.ai_analysis')}</span>
             <button
               onClick={() => setShowRightSidebar(false)}
               className="btn-ghost p-2"
@@ -684,8 +686,8 @@ export default function BookWritingPage() {
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">AI Assistant</span>
-              <span className="sm:hidden">AI</span>
+              <span className="hidden sm:inline">{t('editor.tabs.ai_assistant')}</span>
+              <span className="sm:hidden">{t('editor.tabs.ai')}</span>
             </button>
             <button
               onClick={() => setActiveTab('plot')}
@@ -696,7 +698,7 @@ export default function BookWritingPage() {
               }`}
             >
               <Target className="w-3.5 h-3.5" />
-              Plot
+              {t('editor.tabs.plot')}
             </button>
             <button
               onClick={() => setActiveTab('analysis')}
@@ -707,8 +709,8 @@ export default function BookWritingPage() {
               }`}
             >
               <PenTool className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Analysis</span>
-              <span className="sm:hidden">Stats</span>
+              <span className="hidden sm:inline">{t('editor.tabs.analysis')}</span>
+              <span className="sm:hidden">{t('editor.tabs.stats')}</span>
             </button>
           </div>
 
@@ -744,7 +746,7 @@ export default function BookWritingPage() {
                   ) : (
                     <div className="card p-4">
                       <p className="text-sm text-gray-400 text-center py-8">
-                        Select a chapter to use AI assistance
+                        {t('editor.ai.select_chapter')}
                       </p>
                     </div>
                   )}
@@ -753,26 +755,26 @@ export default function BookWritingPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-3">
                       <BarChart3 className="w-5 h-5 text-purple-400" />
-                      <h2 className="text-sm font-semibold text-gray-300">STATISTICS</h2>
+                      <h2 className="text-sm font-semibold text-gray-300">{t('editor.statistics.title')}</h2>
                     </div>
                     <div className="card space-y-3">
                       <div>
-                        <p className="text-xs text-gray-500">Words</p>
+                        <p className="text-xs text-gray-500">{t('editor.statistics.words')}</p>
                         <p className="text-lg font-semibold text-white">
                           {book.statistics.wordCount.toLocaleString()}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500">Chapters</p>
+                        <p className="text-xs text-gray-500">{t('editor.statistics.chapters')}</p>
                         <p className="text-lg font-semibold text-white">
                           {book.statistics.chapterCount}
                         </p>
                       </div>
                       {currentChapter && (
                         <div>
-                          <p className="text-xs text-gray-500">Current Chapter</p>
+                          <p className="text-xs text-gray-500">{t('editor.statistics.current_chapter')}</p>
                           <p className="text-lg font-semibold text-white">
-                            {currentChapter.wordCount} words
+                            {currentChapter.wordCount} {t('editor.statistics.words_unit')}
                           </p>
                         </div>
                       )}

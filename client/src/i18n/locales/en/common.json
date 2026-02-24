@@ -466,7 +466,9 @@
       "save": "Save"
     },
     "empty": {
-      "select_chapter": "Select or create a chapter to start writing"
+      "select_chapter": "Select or create a chapter to start writing",
+      "ready_to_write": "Ready to Write",
+      "create_chapter_prompt": "Select an existing chapter from the sidebar or create a new one to begin your story"
     },
     "tabs": {
       "ai_analysis": "AI & Analysis",
