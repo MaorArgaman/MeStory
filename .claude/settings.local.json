@@ -25,7 +25,9 @@
       "Bash(vercel --prod:*)",
       "Bash(vercel env ls:*)",
       "WebFetch(domain:client-livid-tau.vercel.app)",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "Bash(git status:*)",
+      "Bash(git fetch:*)"
     ]
   }
 }

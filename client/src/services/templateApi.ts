@@ -12,7 +12,7 @@ import {
 } from '../types/templates';
 
 const API_BASE = import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD ? 'https://server-two-henna-44.vercel.app/api' : 'http://localhost:5001/api');
+  (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
 
 // Helper function for API calls
 async function apiCall<T>(
