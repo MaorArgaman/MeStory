@@ -3,22 +3,46 @@ import {
   Bold,
   Italic,
   Underline,
+  Strikethrough,
   Heading1,
   Heading2,
+  Heading3,
   Pilcrow,
   AlignLeft,
   AlignCenter,
   AlignRight,
+  AlignJustify,
   List,
   ListOrdered,
+  Quote,
+  Minus,
+  Undo,
+  Redo,
+  Type,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useState, useRef, useEffect } from 'react';
 
 interface EditorToolbarProps {
   editor: Editor | null;
 }
 
+type HeadingLevel = 1 | 2 | 3;
+
 export default function EditorToolbar({ editor }: EditorToolbarProps) {
+  const [showHeadingMenu, setShowHeadingMenu] = useState(false);
+  const headingMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (headingMenuRef.current && !headingMenuRef.current.contains(event.target as Node)) {
+        setShowHeadingMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   if (!editor) {
     return null;
   }
@@ -28,19 +52,23 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
     isActive = false,
     children,
     title,
+    disabled = false,
   }: {
     onClick: () => void;
     isActive?: boolean;
     children: React.ReactNode;
     title: string;
+    disabled?: boolean;
   }) => (
     <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: disabled ? 1 : 1.05 }}
+      whileTap={{ scale: disabled ? 1 : 0.95 }}
       onClick={onClick}
+      disabled={disabled}
       title={title}
       className={`
-        p-1.5 sm:p-2 rounded-lg transition-all duration-200
+        p-2 rounded-lg transition-all duration-200
+        ${disabled ? 'opacity-40 cursor-not-allowed' : ''}
         ${
           isActive
             ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
@@ -52,12 +80,114 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
     </motion.button>
   );
 
-  const iconClass = "w-4 h-4 sm:w-5 sm:h-5";
+  const Divider = () => (
+    <div className="w-px h-6 bg-white/10 mx-1 hidden sm:block" />
+  );
+
+  const iconClass = "w-4 h-4";
+
+  const getCurrentHeading = (): string => {
+    if (editor.isActive('heading', { level: 1 })) return 'H1';
+    if (editor.isActive('heading', { level: 2 })) return 'H2';
+    if (editor.isActive('heading', { level: 3 })) return 'H3';
+    return 'P';
+  };
+
+  const setHeading = (level: HeadingLevel | 'paragraph') => {
+    if (level === 'paragraph') {
+      editor.chain().focus().setParagraph().run();
+    } else {
+      editor.chain().focus().toggleHeading({ level }).run();
+    }
+    setShowHeadingMenu(false);
+  };
 
   return (
-    <div className="glass-strong rounded-xl p-2 sm:p-3 mb-3 sm:mb-4 flex flex-wrap gap-1 sm:gap-2 items-center min-w-max">
+    <div className="bg-slate-800/80 backdrop-blur-md rounded-xl p-2 mb-4 flex flex-wrap gap-1 items-center border border-white/10 shadow-lg">
+      {/* Undo/Redo */}
+      <div className="flex gap-0.5 items-center pr-2 border-r border-white/10">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().undo().run()}
+          disabled={!editor.can().undo()}
+          title="Undo (Ctrl+Z)"
+        >
+          <Undo className={iconClass} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().redo().run()}
+          disabled={!editor.can().redo()}
+          title="Redo (Ctrl+Y)"
+        >
+          <Redo className={iconClass} />
+        </ToolbarButton>
+      </div>
+
+      {/* Paragraph/Heading Dropdown */}
+      <div className="relative" ref={headingMenuRef}>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          onClick={() => setShowHeadingMenu(!showHeadingMenu)}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all min-w-[80px] justify-between"
+        >
+          <div className="flex items-center gap-2">
+            <Type className="w-4 h-4" />
+            <span className="text-sm font-medium">{getCurrentHeading()}</span>
+          </div>
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </motion.button>
+
+        {showHeadingMenu && (
+          <motion.div
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute top-full left-0 mt-1 bg-slate-800 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden min-w-[160px]"
+          >
+            <button
+              onClick={() => setHeading('paragraph')}
+              className={`w-full px-4 py-2.5 text-left hover:bg-white/10 flex items-center gap-3 ${
+                editor.isActive('paragraph') ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-300'
+              }`}
+            >
+              <Pilcrow className="w-4 h-4" />
+              <span className="text-sm">Normal text</span>
+            </button>
+            <button
+              onClick={() => setHeading(1)}
+              className={`w-full px-4 py-2.5 text-left hover:bg-white/10 flex items-center gap-3 ${
+                editor.isActive('heading', { level: 1 }) ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-300'
+              }`}
+            >
+              <Heading1 className="w-4 h-4" />
+              <span className="text-lg font-bold">Heading 1</span>
+            </button>
+            <button
+              onClick={() => setHeading(2)}
+              className={`w-full px-4 py-2.5 text-left hover:bg-white/10 flex items-center gap-3 ${
+                editor.isActive('heading', { level: 2 }) ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-300'
+              }`}
+            >
+              <Heading2 className="w-4 h-4" />
+              <span className="text-base font-bold">Heading 2</span>
+            </button>
+            <button
+              onClick={() => setHeading(3)}
+              className={`w-full px-4 py-2.5 text-left hover:bg-white/10 flex items-center gap-3 ${
+                editor.isActive('heading', { level: 3 }) ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-300'
+              }`}
+            >
+              <Heading3 className="w-4 h-4" />
+              <span className="text-sm font-semibold">Heading 3</span>
+            </button>
+          </motion.div>
+        )}
+      </div>
+
+      <Divider />
+
       {/* Text Formatting */}
-      <div className="flex gap-0.5 sm:gap-1 items-center pr-1 sm:pr-2 border-r border-white/10">
+      <div className="flex gap-0.5 items-center">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           isActive={editor.isActive('bold')}
@@ -79,35 +209,19 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         >
           <Underline className={iconClass} />
         </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleStrike().run()}
+          isActive={editor.isActive('strike')}
+          title="Strikethrough"
+        >
+          <Strikethrough className={iconClass} />
+        </ToolbarButton>
       </div>
 
-      {/* Headings */}
-      <div className="flex gap-0.5 sm:gap-1 items-center pr-1 sm:pr-2 border-r border-white/10">
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          isActive={editor.isActive('heading', { level: 1 })}
-          title="Heading 1"
-        >
-          <Heading1 className={iconClass} />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          isActive={editor.isActive('heading', { level: 2 })}
-          title="Heading 2"
-        >
-          <Heading2 className={iconClass} />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setParagraph().run()}
-          isActive={editor.isActive('paragraph')}
-          title="Paragraph"
-        >
-          <Pilcrow className={iconClass} />
-        </ToolbarButton>
-      </div>
+      <Divider />
 
       {/* Text Alignment */}
-      <div className="flex gap-0.5 sm:gap-1 items-center pr-1 sm:pr-2 border-r border-white/10">
+      <div className="flex gap-0.5 items-center">
         <ToolbarButton
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
           isActive={editor.isActive({ textAlign: 'left' })}
@@ -129,10 +243,19 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         >
           <AlignRight className={iconClass} />
         </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+          isActive={editor.isActive({ textAlign: 'justify' })}
+          title="Justify"
+        >
+          <AlignJustify className={iconClass} />
+        </ToolbarButton>
       </div>
 
-      {/* Lists */}
-      <div className="flex gap-0.5 sm:gap-1 items-center">
+      <Divider />
+
+      {/* Lists & Blocks */}
+      <div className="flex gap-0.5 items-center">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           isActive={editor.isActive('bulletList')}
@@ -147,11 +270,32 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         >
           <ListOrdered className={iconClass} />
         </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          isActive={editor.isActive('blockquote')}
+          title="Quote"
+        >
+          <Quote className={iconClass} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          title="Horizontal Line"
+        >
+          <Minus className={iconClass} />
+        </ToolbarButton>
       </div>
 
-      {/* Word Count */}
-      <div className="ml-auto text-xs sm:text-sm text-gray-400 px-2 sm:px-3">
-        {editor.storage.characterCount?.words() || 0} <span className="hidden sm:inline">words</span>
+      {/* Word Count - Right aligned */}
+      <div className="ml-auto flex items-center gap-3 text-xs text-gray-400 px-3">
+        <span className="hidden sm:inline">
+          {editor.storage.characterCount?.words() || 0} words
+        </span>
+        <span className="sm:hidden">
+          {editor.storage.characterCount?.words() || 0}
+        </span>
+        <span className="hidden md:inline text-gray-500">
+          · {editor.storage.characterCount?.characters() || 0} chars
+        </span>
       </div>
     </div>
   );

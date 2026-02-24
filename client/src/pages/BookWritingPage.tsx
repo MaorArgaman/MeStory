@@ -96,20 +96,30 @@ export default function BookWritingPage() {
     activeTab === 'copilot'
   );
 
-  // Initialize TipTap editor
+  // Initialize TipTap editor with enhanced configuration
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3],
+        },
+        blockquote: {
+          HTMLAttributes: {
+            class: 'border-l-4 border-indigo-500 pl-4 italic',
+          },
+        },
+      }),
       Underline,
       TextAlign.configure({
         types: ['heading', 'paragraph'],
+        alignments: ['left', 'center', 'right', 'justify'],
       }),
       CharacterCount,
     ],
     content: '',
     editorProps: {
       attributes: {
-        class: 'editor-content flex-1 w-full h-full outline-none',
+        class: 'editor-content flex-1 w-full h-full outline-none focus:outline-none',
         dir: 'auto', // Automatic RTL detection
         'data-placeholder': 'Start writing your story...',
       },
@@ -561,61 +571,75 @@ export default function BookWritingPage() {
         </div>
 
         {/* Main Editor */}
-        <div className="flex-1 flex flex-col p-3 sm:p-4 lg:p-6 overflow-hidden pb-20 lg:pb-6">
+        <div className="flex-1 flex flex-col overflow-hidden pb-20 lg:pb-0 bg-gradient-to-b from-slate-900/50 to-slate-800/30">
           <div className="flex flex-col h-full">
             {currentChapter ? (
               <>
-                <input
-                  type="text"
-                  value={currentChapter.title}
-                  onChange={(e) => {
-                    const updated = [...book.chapters];
-                    updated[selectedChapterIndex].title = e.target.value;
-                    setBook({ ...book, chapters: updated });
-                    setSaved(false);
-                  }}
-                  className="w-full bg-transparent text-lg sm:text-xl lg:text-2xl font-bold text-white mb-3 sm:mb-4 focus:outline-none border-b border-transparent focus:border-indigo-500/30 pb-2"
-                  placeholder="Chapter Title"
-                />
+                {/* Toolbar Container - Sticky */}
+                <div className="editor-toolbar-container px-3 sm:px-4 lg:px-6 py-3">
+                  {/* Chapter Title Input */}
+                  <input
+                    type="text"
+                    value={currentChapter.title}
+                    onChange={(e) => {
+                      const updated = [...book.chapters];
+                      updated[selectedChapterIndex].title = e.target.value;
+                      setBook({ ...book, chapters: updated });
+                      setSaved(false);
+                    }}
+                    className="w-full max-w-4xl mx-auto block bg-transparent text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-3 focus:outline-none border-b-2 border-white/10 focus:border-indigo-500/50 pb-2 transition-colors"
+                    placeholder="Chapter Title"
+                    style={{ fontFamily: "'Merriweather', Georgia, serif" }}
+                  />
 
-                {/* Rich Text Editor Toolbar */}
-                <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
-                  <EditorToolbar editor={editor} />
+                  {/* Rich Text Editor Toolbar */}
+                  <div className="overflow-x-auto max-w-4xl mx-auto">
+                    <EditorToolbar editor={editor} />
+                  </div>
                 </div>
 
-                {/* Rich Text Editor with AI Floating Toolbar */}
-                <div className="editor-panel flex-1 overflow-y-auto relative text-sm sm:text-base">
-                  {editor && (
-                    <BubbleMenu
-                      editor={editor}
-                      tippyOptions={{
-                        duration: 100,
-                        placement: 'top',
-                        appendTo: () => document.body,
-                      }}
-                      shouldShow={({ editor, state }) => {
-                        const { from, to } = state.selection;
-                        const text = state.doc.textBetween(from, to, ' ');
-                        // Show toolbar only when text is selected (min 5 chars)
-                        return text.trim().length >= 5;
-                      }}
-                    >
-                      <AIFloatingToolbar
+                {/* Rich Text Editor with AI Floating Toolbar - Paper-like design */}
+                <div className="flex-1 overflow-y-auto relative px-3 sm:px-4 lg:px-6 py-4 bg-slate-800/30">
+                  <div className="editor-paper">
+                    {editor && (
+                      <BubbleMenu
                         editor={editor}
-                        onEnhance={handleEnhance}
-                        isLoading={enhancing}
-                        loadingAction={loadingAction}
-                      />
-                    </BubbleMenu>
-                  )}
-                  <EditorContent editor={editor} />
+                        shouldShow={({ state }) => {
+                          const { from, to } = state.selection;
+                          const selectedText = state.doc.textBetween(from, to, ' ');
+                          // Show toolbar only when text is selected (min 5 chars)
+                          return selectedText.trim().length >= 5;
+                        }}
+                      >
+                        <AIFloatingToolbar
+                          editor={editor}
+                          onEnhance={handleEnhance}
+                          isLoading={enhancing}
+                          loadingAction={loadingAction}
+                        />
+                      </BubbleMenu>
+                    )}
+                    <EditorContent editor={editor} />
+                  </div>
                 </div>
               </>
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                <div className="text-center px-4">
-                  <BookOpen className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 opacity-50" />
-                  <p className="text-sm sm:text-base">Select or create a chapter to start writing</p>
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center px-4 py-12">
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-indigo-500/10 flex items-center justify-center">
+                    <BookOpen className="w-10 h-10 text-indigo-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">Ready to Write</h3>
+                  <p className="text-gray-400 mb-6 max-w-sm">
+                    Select an existing chapter from the sidebar or create a new one to begin your story
+                  </p>
+                  <button
+                    onClick={addChapter}
+                    className="btn-primary inline-flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create First Chapter
+                  </button>
                 </div>
               </div>
             )}
@@ -696,7 +720,7 @@ export default function BookWritingPage() {
                 <WritingGuidanceAlert
                   guidance={guidance}
                   onDismiss={dismissGuidance}
-                  onApplySuggestion={(text, insertable) => {
+                  onApplySuggestion={(_text, insertable) => {
                     if (insertable && editor) {
                       editor.chain().focus().insertContent(insertable).run();
                       setSaved(false);
