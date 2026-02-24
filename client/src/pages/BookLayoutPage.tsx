@@ -1284,7 +1284,7 @@ export default function BookLayoutPage() {
               }}
             >
               {spreadPages.isCover ? (
-                <CoverPreview book={book} />
+                <CoverPreview book={book} coverImageUrl={coverImageUrl} />
               ) : spreadPages.right ? (
                 <PageRenderer
                   page={spreadPages.right}
@@ -2455,33 +2455,40 @@ function PageRenderer({
 }
 
 // Cover Preview Component
-function CoverPreview({ book }: { book: BookData }) {
+function CoverPreview({ book, coverImageUrl }: { book: BookData; coverImageUrl?: string | null }) {
   const coverDesign = book.coverDesign || {
     coverColor: '#1a1a2e',
     textColor: '#ffffff',
     fontFamily: 'Arial',
   };
 
+  // Get image URL from multiple sources
+  const imageUrl = coverImageUrl || coverDesign.imageUrl || coverDesign.front?.imageUrl;
+
   return (
     <div
-      className="h-full flex flex-col items-center justify-center p-8"
+      className="h-full flex flex-col items-center justify-center p-8 relative overflow-hidden"
       style={{
-        background: coverDesign.coverColor,
-        color: coverDesign.textColor,
-        fontFamily: coverDesign.fontFamily,
+        background: imageUrl ? 'transparent' : (coverDesign.coverColor || coverDesign.front?.backgroundColor || '#1a1a2e'),
+        color: coverDesign.textColor || coverDesign.front?.title?.color || '#ffffff',
+        fontFamily: coverDesign.fontFamily || coverDesign.front?.title?.font || 'Arial',
       }}
     >
-      {coverDesign.imageUrl && (
+      {imageUrl && (
         <img
-          src={coverDesign.imageUrl}
+          src={imageUrl}
           alt="Cover"
-          className="absolute inset-0 w-full h-full object-cover opacity-50"
+          className="absolute inset-0 w-full h-full object-cover"
         />
       )}
-      <h1 className="text-2xl font-bold text-center relative z-10 mb-4">
+      {/* Dark overlay for text readability */}
+      {imageUrl && (
+        <div className="absolute inset-0 bg-black/30" />
+      )}
+      <h1 className="text-2xl font-bold text-center relative z-10 mb-4 text-white drop-shadow-lg">
         {book.title}
       </h1>
-      <p className="text-lg relative z-10">
+      <p className="text-lg relative z-10 text-white drop-shadow-lg">
         {book.author?.name}
       </p>
     </div>
