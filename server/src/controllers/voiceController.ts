@@ -5,8 +5,44 @@
 
 import { Response } from 'express';
 import fs from 'fs';
+import fsPromises from 'fs/promises';
+import path from 'path';
 import { AuthRequest } from '../types';
 import { transcribeAudio } from '../services/whisperService';
+
+// Helper to get file path, handling Vercel memory storage
+async function getAudioFilePath(file: Express.Multer.File): Promise<{ filePath: string; tempFile: string | null }> {
+  if (file.path) {
+    // Disk storage - file is already on disk
+    return { filePath: file.path, tempFile: null };
+  }
+
+  if (file.buffer) {
+    // Memory storage (Vercel) - write buffer to temp file
+    const tempDir = '/tmp';
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+    const tempFileName = `voice-${Date.now()}-${Math.random().toString(36).substring(7)}${fileExtension}`;
+    const tempFilePath = path.join(tempDir, tempFileName);
+
+    console.log(`📁 Writing audio buffer to temp file: ${tempFilePath}`);
+    await fsPromises.writeFile(tempFilePath, file.buffer);
+    return { filePath: tempFilePath, tempFile: tempFilePath };
+  }
+
+  throw new Error('No file data received');
+}
+
+// Helper to clean up temp file
+async function cleanupTempFile(tempFile: string | null): Promise<void> {
+  if (tempFile) {
+    try {
+      await fsPromises.unlink(tempFile);
+      console.log(`🗑️ Cleaned up temp file: ${tempFile}`);
+    } catch (err) {
+      // Ignore cleanup errors
+    }
+  }
+}
 import {
   createInterviewState,
   getFirstQuestion,
@@ -124,28 +160,40 @@ export const processInterviewResponse = async (req: AuthRequest, res: Response):
     }
 
     let responseText = textResponse;
+    let tempFile: string | null = null;
 
     // Transcribe audio if provided
     if (audioFile) {
       try {
-        const transcription = await transcribeAudio(audioFile.path, 'he');
+        // Get file path (handle both disk and memory storage)
+        const { filePath, tempFile: tempFilePath } = await getAudioFilePath(audioFile);
+        tempFile = tempFilePath;
+
+        const transcription = await transcribeAudio(filePath, 'he');
         responseText = transcription.text;
 
-        // Clean up uploaded file
-        fs.unlink(audioFile.path, (err) => {
-          if (err) console.error('Failed to delete audio file:', err);
-        });
+        // Clean up disk storage file if exists (local development)
+        if (audioFile.path) {
+          fs.unlink(audioFile.path, () => {});
+        }
       } catch (transcribeError: any) {
         console.error('Transcription error:', transcribeError);
 
-        // Clean up uploaded file on error
+        // Clean up temp file on error
+        await cleanupTempFile(tempFile);
+
+        // Clean up disk storage file on error
         if (audioFile.path) {
           fs.unlink(audioFile.path, () => {});
         }
 
+        const errorMessage = transcribeError.message?.includes('API key')
+          ? 'Audio transcription service is not configured.'
+          : 'Failed to transcribe audio. Please try again or type your response.';
+
         res.status(500).json({
           success: false,
-          error: 'Failed to transcribe audio. Please try again or type your response.',
+          error: errorMessage,
         });
         return;
       }
@@ -200,6 +248,8 @@ export const processInterviewResponse = async (req: AuthRequest, res: Response):
  * POST /api/voice/transcribe
  */
 export const transcribeVoice = async (req: AuthRequest, res: Response): Promise<void> => {
+  let tempFile: string | null = null;
+
   try {
     if (!req.user) {
       res.status(401).json({
@@ -219,13 +269,21 @@ export const transcribeVoice = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    // Transcribe audio
-    const transcription = await transcribeAudio(audioFile.path, 'he');
+    // Get file path (handle both disk and memory storage)
+    const { filePath, tempFile: tempFilePath } = await getAudioFilePath(audioFile);
+    tempFile = tempFilePath;
 
-    // Clean up uploaded file
-    fs.unlink(audioFile.path, (err) => {
-      if (err) console.error('Failed to delete audio file:', err);
-    });
+    // Transcribe audio
+    const transcription = await transcribeAudio(filePath, 'he');
+
+    // Clean up temp file if created
+    await cleanupTempFile(tempFile);
+    tempFile = null;
+
+    // Clean up disk storage file if exists
+    if (audioFile.path) {
+      fs.unlink(audioFile.path, () => {});
+    }
 
     res.status(200).json({
       success: true,
@@ -237,14 +295,21 @@ export const transcribeVoice = async (req: AuthRequest, res: Response): Promise<
   } catch (error: any) {
     console.error('Transcribe voice error:', error);
 
-    // Clean up uploaded file on error
+    // Clean up temp file on error
+    await cleanupTempFile(tempFile);
+
+    // Clean up disk storage file on error
     if (req.file?.path) {
       fs.unlink(req.file.path, () => {});
     }
 
+    const errorMessage = error.message?.includes('API key')
+      ? 'Audio transcription service is not configured.'
+      : error.message || 'Failed to transcribe audio';
+
     res.status(500).json({
       success: false,
-      error: error.message || 'Failed to transcribe audio',
+      error: errorMessage,
     });
   }
 };

@@ -5,13 +5,24 @@ import fs from 'fs';
 let openaiClient: OpenAI | null = null;
 
 function getOpenAIClient(): OpenAI {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY is not configured');
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  // Debug logging for serverless environments
+  console.log('🔑 Checking OPENAI_API_KEY:', apiKey ? `configured (${apiKey.substring(0, 12)}...)` : 'NOT SET');
+
+  if (!apiKey) {
+    console.error('❌ OPENAI_API_KEY environment variable is not set');
+    console.error('🔍 Available API-related env vars:', Object.keys(process.env).filter(k =>
+      k.includes('OPENAI') || k.includes('API') || k.includes('KEY')
+    ).join(', '));
+    throw new Error('OPENAI_API_KEY is not configured. Please add it to Vercel Environment Variables.');
   }
+
   if (!openaiClient) {
     openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: apiKey,
     });
+    console.log('✅ OpenAI client initialized successfully');
   }
   return openaiClient;
 }

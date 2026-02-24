@@ -1308,6 +1308,10 @@ export const uploadCoverImage = async (req: AuthRequest, res: Response): Promise
  * Section 4.1: File Upload → Analysis → Book
  */
 export const uploadManuscript = async (req: AuthRequest, res: Response): Promise<void> => {
+  // Track temp file for cleanup
+  let tempFilePath: string | null = null;
+  const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+
   try {
     if (!req.user) {
       res.status(401).json({
@@ -1335,41 +1339,64 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
       return;
     }
 
-    const filePath = req.file.path;
     const fileExtension = path.extname(req.file.originalname).toLowerCase();
-
     let extractedText = '';
+
+    // Handle both disk storage (local) and memory storage (Vercel)
+    let filePath: string;
+
+    if (req.file.path) {
+      // Disk storage - file is on disk
+      filePath = req.file.path;
+    } else if (req.file.buffer) {
+      // Memory storage (Vercel) - write buffer to temp file
+      const tempDir = '/tmp';
+      const tempFileName = `manuscript-${Date.now()}-${Math.random().toString(36).substring(7)}${fileExtension}`;
+      tempFilePath = path.join(tempDir, tempFileName);
+
+      console.log(`📁 Writing buffer to temp file: ${tempFilePath}`);
+      await fs.writeFile(tempFilePath, req.file.buffer);
+      filePath = tempFilePath;
+    } else {
+      res.status(400).json({
+        success: false,
+        error: 'File upload failed. No file data received.',
+      });
+      return;
+    }
 
     try {
       // Extract text based on file type
       if (fileExtension === '.pdf') {
         // PDF parsing is temporarily disabled for serverless compatibility
-        // Clean up file
-        await fs.unlink(filePath);
         res.status(400).json({
           success: false,
           error: 'PDF upload is temporarily unavailable. Please upload DOCX or TXT files instead.',
         });
         return;
       } else if (fileExtension === '.docx' || fileExtension === '.doc') {
-        // Extract text from DOCX
-        const result = await mammoth.extractRawText({ path: filePath });
-        extractedText = result.value;
+        // Extract text from DOCX - mammoth can use buffer directly on Vercel
+        if (isVercel && req.file.buffer) {
+          const result = await mammoth.extractRawText({ buffer: req.file.buffer });
+          extractedText = result.value;
+        } else {
+          const result = await mammoth.extractRawText({ path: filePath });
+          extractedText = result.value;
+        }
       } else if (fileExtension === '.txt') {
-        // Read plain text file
-        extractedText = await fs.readFile(filePath, 'utf-8');
+        // Read plain text file - can use buffer directly on Vercel
+        if (isVercel && req.file.buffer) {
+          extractedText = req.file.buffer.toString('utf-8');
+        } else {
+          extractedText = await fs.readFile(filePath, 'utf-8');
+        }
       } else {
-        // Clean up file
-        await fs.unlink(filePath);
         res.status(400).json({
           success: false,
           error: 'Unsupported file type. Please upload DOCX or TXT files.',
         });
         return;
       }
-
-      // Clean up uploaded file after extraction
-      await fs.unlink(filePath);
 
       // Validate extracted text
       if (!extractedText || extractedText.trim().length < 100) {
@@ -1449,19 +1476,56 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
         },
       });
     } catch (extractError) {
-      // Clean up file on error
-      try {
-        await fs.unlink(filePath);
-      } catch (unlinkError) {
-        console.error('Failed to clean up file:', unlinkError);
-      }
       throw extractError;
+    } finally {
+      // Clean up temp file if created (Vercel memory storage case)
+      if (tempFilePath) {
+        try {
+          await fs.unlink(tempFilePath);
+          console.log(`🗑️ Cleaned up temp file: ${tempFilePath}`);
+        } catch (unlinkError) {
+          // Ignore cleanup errors
+        }
+      }
+      // Clean up disk storage file (local development)
+      if (req.file?.path) {
+        try {
+          await fs.unlink(req.file.path);
+        } catch (unlinkError) {
+          // Ignore cleanup errors
+        }
+      }
     }
-  } catch (error) {
-    console.error('Upload manuscript error:', error);
+  } catch (error: any) {
+    // Clean up temp file on error
+    if (tempFilePath) {
+      try {
+        await fs.unlink(tempFilePath);
+      } catch (unlinkError) {
+        // Ignore cleanup errors
+      }
+    }
+
+    console.error('Upload manuscript error:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+    });
+
+    // Provide specific error messages
+    let errorMessage = 'Failed to process uploaded manuscript';
+
+    if (error.code === 'ENOENT') {
+      errorMessage = 'File upload failed. Please try again.';
+    } else if (error.message?.includes('DOCX') || error.message?.includes('mammoth')) {
+      errorMessage = 'Failed to read DOCX file. Please ensure the file is not corrupted.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
     res.status(500).json({
       success: false,
-      error: 'Failed to process uploaded manuscript',
+      error: errorMessage,
     });
   }
 };
@@ -1472,6 +1536,9 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
  * Section 4.1: Audio Upload → Transcription → Book
  */
 export const uploadAudio = async (req: AuthRequest, res: Response): Promise<void> => {
+  // Track temp file for cleanup
+  let tempFilePath: string | null = null;
+
   try {
     if (!req.user) {
       res.status(401).json({
@@ -1499,7 +1566,29 @@ export const uploadAudio = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    const filePath = req.file.path;
+    // Handle both disk storage (local) and memory storage (Vercel)
+    let filePath: string;
+    const fileExtension = path.extname(req.file.originalname).toLowerCase();
+
+    if (req.file.path) {
+      // Disk storage - file is on disk
+      filePath = req.file.path;
+    } else if (req.file.buffer) {
+      // Memory storage (Vercel) - write buffer to temp file
+      const tempDir = '/tmp';
+      const tempFileName = `audio-${Date.now()}-${Math.random().toString(36).substring(7)}${fileExtension}`;
+      tempFilePath = path.join(tempDir, tempFileName);
+
+      console.log(`📁 Writing audio buffer to temp file: ${tempFilePath}`);
+      await fs.writeFile(tempFilePath, req.file.buffer);
+      filePath = tempFilePath;
+    } else {
+      res.status(400).json({
+        success: false,
+        error: 'File upload failed. No file data received.',
+      });
+      return;
+    }
 
     try {
       console.log(`🎤 Processing audio file: ${req.file.originalname}`);
@@ -1509,9 +1598,6 @@ export const uploadAudio = async (req: AuthRequest, res: Response): Promise<void
         filePath,
         language
       );
-
-      // Clean up uploaded file after transcription
-      await fs.unlink(filePath);
 
       // Validate transcribed text
       if (!transcribedText || transcribedText.trim().length < 50) {
@@ -1594,26 +1680,50 @@ export const uploadAudio = async (req: AuthRequest, res: Response): Promise<void
         },
       });
     } catch (transcriptionError: any) {
-      // Clean up file on error
-      try {
-        await fs.unlink(filePath);
-      } catch (unlinkError) {
-        console.error('Failed to clean up audio file:', unlinkError);
-      }
-
       // Handle specific transcription errors
       if (transcriptionError.message.includes('API key')) {
         res.status(500).json({
           success: false,
-          error: 'Audio transcription is not configured. Please contact support.',
+          error: 'Audio transcription service is not configured. Please contact support.',
         });
         return;
       }
 
       throw transcriptionError;
+    } finally {
+      // Clean up temp file if created (Vercel memory storage case)
+      if (tempFilePath) {
+        try {
+          await fs.unlink(tempFilePath);
+          console.log(`🗑️ Cleaned up temp audio file: ${tempFilePath}`);
+        } catch (unlinkError) {
+          // Ignore cleanup errors
+        }
+      }
+      // Clean up disk storage file (local development)
+      if (req.file?.path) {
+        try {
+          await fs.unlink(req.file.path);
+        } catch (unlinkError) {
+          // Ignore cleanup errors
+        }
+      }
     }
   } catch (error: any) {
-    console.error('Upload audio error:', error);
+    // Clean up temp file on error
+    if (tempFilePath) {
+      try {
+        await fs.unlink(tempFilePath);
+      } catch (unlinkError) {
+        // Ignore cleanup errors
+      }
+    }
+
+    console.error('Upload audio error:', {
+      message: error.message,
+      stack: error.stack,
+    });
+
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to process uploaded audio',
