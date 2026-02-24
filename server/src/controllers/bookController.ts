@@ -1612,15 +1612,21 @@ export const uploadAudio = async (req: AuthRequest, res: Response): Promise<void
       const wordCount = transcribedText.trim().split(/\s+/).length;
 
       // Create new book with transcribed content
+      // Use language-appropriate chapter title
+      const chapterTitle = detectedLanguage === 'he' ? 'תוכן מתומלל' : 'Transcribed Content';
+      const descriptionText = detectedLanguage === 'he'
+        ? `תומלל מקובץ אודיו: ${req.file.originalname}`
+        : `Transcribed from audio: ${req.file.originalname}`;
+
       const book = new Book({
         title: title.trim(),
         author: req.user.id,
         genre,
-        description: `Transcribed from audio: ${req.file.originalname}`,
+        description: descriptionText,
         language: detectedLanguage || 'en',
         chapters: [
           {
-            title: 'Transcribed Content',
+            title: chapterTitle,
             content: transcribedText.trim(),
             order: 0,
             wordCount,

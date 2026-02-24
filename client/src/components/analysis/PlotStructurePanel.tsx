@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen,
@@ -24,21 +25,22 @@ interface PlotStructurePanelProps {
   onChapterClick?: (index: number) => void;
 }
 
-const actLabels = {
-  act1: { name: 'Beginning', color: 'from-blue-500 to-cyan-500', bgColor: 'bg-blue-500/20', borderColor: 'border-blue-500/30' },
-  act2: { name: 'Middle', color: 'from-purple-500 to-pink-500', bgColor: 'bg-purple-500/20', borderColor: 'border-purple-500/30' },
-  act3: { name: 'End', color: 'from-orange-500 to-red-500', bgColor: 'bg-orange-500/20', borderColor: 'border-orange-500/30' },
-};
-
 export default function PlotStructurePanel({
   bookId,
   chapterCount,
   onChapterClick,
 }: PlotStructurePanelProps) {
+  const { t } = useTranslation('common');
   const [analysis, setAnalysis] = useState<PlotAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedAct, setExpandedAct] = useState<string | null>(null);
+
+  const actLabels = {
+    act1: { name: t('editor.plot.beginning'), color: 'from-blue-500 to-cyan-500', bgColor: 'bg-blue-500/20', borderColor: 'border-blue-500/30' },
+    act2: { name: t('editor.plot.middle'), color: 'from-purple-500 to-pink-500', bgColor: 'bg-purple-500/20', borderColor: 'border-purple-500/30' },
+    act3: { name: t('editor.plot.end'), color: 'from-orange-500 to-red-500', bgColor: 'bg-orange-500/20', borderColor: 'border-orange-500/30' },
+  };
 
   const fetchAnalysis = async () => {
     if (chapterCount === 0) return;
@@ -51,7 +53,7 @@ export default function PlotStructurePanel({
       setAnalysis(result);
     } catch (err) {
       console.error('Failed to analyze plot:', err);
-      setError('Error analyzing plot structure');
+      setError(t('editor.plot.error_analyzing'));
     } finally {
       setLoading(false);
     }
@@ -65,10 +67,10 @@ export default function PlotStructurePanel({
 
   const getBalanceLabel = (balance: string) => {
     switch (balance) {
-      case 'balanced': return 'Balanced';
-      case 'front-heavy': return 'Front-heavy';
-      case 'back-heavy': return 'Back-heavy';
-      case 'middle-heavy': return 'Middle-heavy';
+      case 'balanced': return t('editor.plot.balanced');
+      case 'front-heavy': return t('editor.plot.front_heavy');
+      case 'back-heavy': return t('editor.plot.back_heavy');
+      case 'middle-heavy': return t('editor.plot.middle_heavy');
       default: return balance;
     }
   };
@@ -81,7 +83,7 @@ export default function PlotStructurePanel({
     return (
       <div className="text-center py-8 text-gray-500 text-sm">
         <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-50" />
-        <p>Write at least one chapter to analyze plot structure</p>
+        <p>{t('editor.plot.write_chapter_first')}</p>
       </div>
     );
   }
@@ -91,8 +93,8 @@ export default function PlotStructurePanel({
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-          <Target className="w-4 h-4 text-indigo-400" />
-          Three-Act Structure
+          <Target className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+          <span className="truncate">{t('editor.plot.three_act_structure')}</span>
         </h3>
         <button
           onClick={fetchAnalysis}
@@ -153,13 +155,13 @@ export default function PlotStructurePanel({
           </div>
 
           {/* Balance Indicator */}
-          <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
-            <span className="text-sm text-gray-400">Structure Balance:</span>
-            <span className={`text-sm font-medium ${getBalanceColor(analysis.balance)}`}>
-              {getBalanceLabel(analysis.balance)}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 p-3 rounded-lg bg-white/5 border border-white/10">
+            <span className="text-xs sm:text-sm text-gray-400">{t('editor.plot.structure_balance')}:</span>
+            <span className={`text-xs sm:text-sm font-medium flex items-center gap-1 ${getBalanceColor(analysis.balance)}`}>
               {analysis.balance === 'balanced' && (
-                <CheckCircle className="w-4 h-4 inline-block mr-1" />
+                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
               )}
+              <span className="truncate">{getBalanceLabel(analysis.balance)}</span>
             </span>
           </div>
 
@@ -190,7 +192,7 @@ export default function PlotStructurePanel({
 
                       {/* Chapters */}
                       <div className="mb-3">
-                        <p className="text-xs text-gray-400 mb-1">Chapters:</p>
+                        <p className="text-xs text-gray-400 mb-1">{t('editor.plot.chapters')}:</p>
                         <div className="flex flex-wrap gap-1">
                           {act.chapters.map((chapIdx) => (
                             <button
@@ -207,7 +209,7 @@ export default function PlotStructurePanel({
                       {/* Completeness */}
                       <div className="mb-3">
                         <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="text-gray-400">Completeness:</span>
+                          <span className="text-gray-400">{t('editor.plot.completeness')}:</span>
                           <span className="text-white">{act.completeness}%</span>
                         </div>
                         <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -222,7 +224,7 @@ export default function PlotStructurePanel({
                       {/* Elements */}
                       {act.elements.length > 0 && (
                         <div className="mb-3">
-                          <p className="text-xs text-gray-400 mb-1">Elements found:</p>
+                          <p className="text-xs text-gray-400 mb-1">{t('editor.plot.elements_found')}:</p>
                           <ul className="text-xs text-gray-300 space-y-0.5">
                             {act.elements.map((el, idx) => (
                               <li key={idx} className="flex items-center gap-1">
@@ -237,7 +239,7 @@ export default function PlotStructurePanel({
                       {/* Suggestions */}
                       {act.suggestions.length > 0 && (
                         <div>
-                          <p className="text-xs text-gray-400 mb-1">Improvement suggestions:</p>
+                          <p className="text-xs text-gray-400 mb-1">{t('editor.plot.improvement_suggestions')}:</p>
                           <ul className="text-xs text-gray-300 space-y-0.5">
                             {act.suggestions.map((sug, idx) => (
                               <li key={idx} className="flex items-start gap-1">
@@ -258,20 +260,20 @@ export default function PlotStructurePanel({
           {/* Click hint */}
           {!expandedAct && (
             <p className="text-xs text-gray-500 text-center">
-              Click on an act for more details
+              {t('editor.plot.click_for_details')}
             </p>
           )}
 
           {/* Plot Points */}
           {(analysis.plotPoints.incitingIncident || analysis.plotPoints.midpoint || analysis.plotPoints.climax) && (
             <div className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-2">
-              <p className="text-xs font-medium text-gray-300 mb-2">Plot Points:</p>
+              <p className="text-xs font-medium text-gray-300 mb-2">{t('editor.plot.plot_points')}:</p>
 
               {analysis.plotPoints.incitingIncident && (
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 flex-shrink-0" />
                   <div>
-                    <p className="text-xs text-gray-400">Inciting Incident (Chapter {analysis.plotPoints.incitingIncident.chapter + 1})</p>
+                    <p className="text-xs text-gray-400">{t('editor.plot.inciting_incident')} ({t('editor.plot.chapter')} {analysis.plotPoints.incitingIncident.chapter + 1})</p>
                     <p className="text-xs text-gray-300">{analysis.plotPoints.incitingIncident.description}</p>
                   </div>
                 </div>
@@ -281,7 +283,7 @@ export default function PlotStructurePanel({
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 rounded-full bg-purple-400 mt-1.5 flex-shrink-0" />
                   <div>
-                    <p className="text-xs text-gray-400">Midpoint (Chapter {analysis.plotPoints.midpoint.chapter + 1})</p>
+                    <p className="text-xs text-gray-400">{t('editor.plot.midpoint')} ({t('editor.plot.chapter')} {analysis.plotPoints.midpoint.chapter + 1})</p>
                     <p className="text-xs text-gray-300">{analysis.plotPoints.midpoint.description}</p>
                   </div>
                 </div>
@@ -291,7 +293,7 @@ export default function PlotStructurePanel({
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 rounded-full bg-orange-400 mt-1.5 flex-shrink-0" />
                   <div>
-                    <p className="text-xs text-gray-400">Climax (Chapter {analysis.plotPoints.climax.chapter + 1})</p>
+                    <p className="text-xs text-gray-400">{t('editor.plot.climax')} ({t('editor.plot.chapter')} {analysis.plotPoints.climax.chapter + 1})</p>
                     <p className="text-xs text-gray-300">{analysis.plotPoints.climax.description}</p>
                   </div>
                 </div>
@@ -302,7 +304,7 @@ export default function PlotStructurePanel({
           {/* General Suggestions */}
           {analysis.suggestions.length > 0 && (
             <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/30">
-              <p className="text-xs font-medium text-indigo-300 mb-2">General Suggestions:</p>
+              <p className="text-xs font-medium text-indigo-300 mb-2">{t('editor.plot.general_suggestions')}:</p>
               <ul className="text-xs text-gray-300 space-y-1">
                 {analysis.suggestions.map((sug, idx) => (
                   <li key={idx} className="flex items-start gap-1">

@@ -538,6 +538,30 @@
       "analysis": "ניתוח",
       "stats": "סטטיסטיקות"
     },
+    "plot": {
+      "three_act_structure": "מבנה שלושת המערכות",
+      "beginning": "התחלה",
+      "middle": "אמצע",
+      "end": "סוף",
+      "structure_balance": "איזון מבנה",
+      "balanced": "מאוזן",
+      "front_heavy": "כבד בהתחלה",
+      "back_heavy": "כבד בסוף",
+      "middle_heavy": "כבד באמצע",
+      "chapters": "פרקים",
+      "completeness": "השלמה",
+      "elements_found": "אלמנטים שנמצאו",
+      "improvement_suggestions": "הצעות לשיפור",
+      "click_for_details": "לחץ על מערכה לפרטים נוספים",
+      "plot_points": "נקודות עלילה",
+      "inciting_incident": "אירוע מעורר",
+      "midpoint": "נקודת אמצע",
+      "climax": "שיא",
+      "chapter": "פרק",
+      "general_suggestions": "הצעות כלליות",
+      "write_chapter_first": "כתוב לפחות פרק אחד כדי לנתח מבנה עלילה",
+      "error_analyzing": "שגיאה בניתוח מבנה העלילה"
+    },
     "ai": {
       "select_chapter": "בחר פרק כדי להשתמש בעזרת AI"
     },

@@ -595,13 +595,13 @@ export default function BookWritingPage() {
                   />
 
                   {/* Rich Text Editor Toolbar */}
-                  <div className="overflow-x-auto max-w-4xl mx-auto">
+                  <div className="overflow-visible max-w-4xl mx-auto relative z-20">
                     <EditorToolbar editor={editor} />
                   </div>
                 </div>
 
                 {/* Rich Text Editor with AI Floating Toolbar - Paper-like design */}
-                <div className="flex-1 overflow-y-auto relative px-3 sm:px-4 lg:px-6 py-4 bg-slate-800/30">
+                <div className="flex-1 overflow-y-auto relative px-3 sm:px-4 lg:px-6 py-4 bg-slate-800/30 z-10">
                   <div className="editor-paper">
                     {editor && (
                       <BubbleMenu

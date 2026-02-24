@@ -478,6 +478,30 @@
       "analysis": "Analysis",
       "stats": "Stats"
     },
+    "plot": {
+      "three_act_structure": "Three-Act Structure",
+      "beginning": "Beginning",
+      "middle": "Middle",
+      "end": "End",
+      "structure_balance": "Structure Balance",
+      "balanced": "Balanced",
+      "front_heavy": "Front-heavy",
+      "back_heavy": "Back-heavy",
+      "middle_heavy": "Middle-heavy",
+      "chapters": "Chapters",
+      "completeness": "Completeness",
+      "elements_found": "Elements found",
+      "improvement_suggestions": "Improvement suggestions",
+      "click_for_details": "Click on an act for more details",
+      "plot_points": "Plot Points",
+      "inciting_incident": "Inciting Incident",
+      "midpoint": "Midpoint",
+      "climax": "Climax",
+      "chapter": "Chapter",
+      "general_suggestions": "General Suggestions",
+      "write_chapter_first": "Write at least one chapter to analyze plot structure",
+      "error_analyzing": "Error analyzing plot structure"
+    },
     "ai": {
       "select_chapter": "Select a chapter to use AI assistance"
     },
