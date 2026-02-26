@@ -720,9 +720,25 @@ export default function BookLayoutPage() {
 
     setSaving(true);
     try {
+      // Strip base64 image URLs from pages to reduce payload size
+      // Images are stored separately in pageImages collection
+      const pagesForSave = pages.map(page => ({
+        ...page,
+        images: (page.images || []).map(img => ({
+          id: img.id,
+          x: img.x,
+          y: img.y,
+          width: img.width,
+          height: img.height,
+          rotation: img.rotation,
+          // Only include URL if it's not a base64 data URL
+          url: img.url?.startsWith('data:') ? undefined : img.url,
+        })).filter(img => img.url || img.id), // Keep images with URL or ID
+      }));
+
       const response = await api.put(`/books/${bookId}`, {
         pageLayout: {
-          pages,
+          pages: pagesForSave,
           settings,
         },
       });
@@ -754,13 +770,26 @@ export default function BookLayoutPage() {
     if (book) {
       setSaving(true);
       try {
+        // Strip base64 image URLs to reduce payload size
+        const pagesForSave = pages.map(page => ({
+          ...page,
+          images: (page.images || []).map(img => ({
+            id: img.id,
+            x: img.x,
+            y: img.y,
+            width: img.width,
+            height: img.height,
+            rotation: img.rotation,
+            url: img.url?.startsWith('data:') ? undefined : img.url,
+          })).filter(img => img.url || img.id),
+        }));
+
         const payload = {
           pageLayout: {
-            pages,
+            pages: pagesForSave,
             settings: newSettings,
           },
         };
-        console.log('Sending payload to server:', JSON.stringify(payload, null, 2));
         console.log('Payload size:', JSON.stringify(payload).length, 'bytes');
         const response = await api.put(`/books/${bookId}`, payload);
 
@@ -795,7 +824,9 @@ export default function BookLayoutPage() {
     }
 
     try {
-      toast.loading('Uploading image...', { id: 'upload-image' });
+      const selectedPage = pages[selectedPageIndex];
+      console.log('Uploading image to page:', selectedPageIndex, 'Page ID:', selectedPage?.id, 'Type:', selectedPage?.type);
+      toast.loading(`Uploading image to page ${selectedPageIndex + 1}...`, { id: 'upload-image' });
 
       const formData = new FormData();
       formData.append('image', file);
@@ -1756,7 +1787,14 @@ export default function BookLayoutPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-bold text-white">Add Image</h2>
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-white">Add Image</h2>
+                  {selectedPageIndex !== null && (
+                    <p className="text-xs text-magic-gold mt-1">
+                      Adding to: Page {selectedPageIndex + 1} ({pages[selectedPageIndex]?.type || 'unknown'})
+                    </p>
+                  )}
+                </div>
                 <button
                   onClick={() => setShowImageModal(false)}
                   className="btn-ghost p-1.5 sm:p-2"
@@ -2263,6 +2301,9 @@ export default function BookLayoutPage() {
                                           rotation: 0,
                                         };
                                         const updatedPages = [...pages];
+                                        if (!updatedPages[pageIndex].images) {
+                                          updatedPages[pageIndex].images = [];
+                                        }
                                         updatedPages[pageIndex].images.push(newImage);
                                         setPages(updatedPages);
                                       }
@@ -2528,7 +2569,7 @@ function PageRenderer({
       )}
 
       {/* User-Added Images */}
-      {page.images.map((image) => (
+      {(page.images || []).map((image) => (
         <div
           key={image.id}
           className={`absolute cursor-move ${
