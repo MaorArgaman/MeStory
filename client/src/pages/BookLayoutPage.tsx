@@ -198,6 +198,104 @@ const isRTL = (text: string): boolean => {
   return rtlChars.test(text);
 };
 
+// Page dimensions for content estimation (based on A5-like page)
+const PAGE_WIDTH_PX = 400; // Approximate page width in pixels
+const PAGE_HEIGHT_PX = 560; // Approximate page height in pixels
+
+// Estimate how many characters fit on a page based on settings
+const estimateCharsPerPage = (settings: typeof defaultSettings): number => {
+  const availableWidth = PAGE_WIDTH_PX - settings.margins.left - settings.margins.right;
+  const availableHeight = PAGE_HEIGHT_PX - settings.margins.top - settings.margins.bottom;
+
+  // Estimate characters per line (average character width is roughly 0.5 * fontSize)
+  const avgCharWidth = settings.fontSize * 0.5;
+  const charsPerLine = Math.floor(availableWidth / avgCharWidth);
+
+  // Estimate lines per page
+  const lineHeightPx = settings.fontSize * settings.lineHeight;
+  const linesPerPage = Math.floor(availableHeight / lineHeightPx);
+
+  // Return total characters, with some buffer for HTML tags and spacing
+  return Math.floor(charsPerLine * linesPerPage * 0.7);
+};
+
+// Split HTML content into pages while preserving HTML structure
+const splitContentIntoPages = (
+  htmlContent: string,
+  charsPerPage: number,
+  isFirstPage: boolean = true
+): string[] => {
+  const pages: string[] = [];
+
+  // If content is short enough, return as single page
+  if (htmlContent.length <= charsPerPage) {
+    return [htmlContent];
+  }
+
+  // Split by paragraphs (works for both <p> tags and text with line breaks)
+  const paragraphRegex = /<p[^>]*>[\s\S]*?<\/p>|<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>|<blockquote[^>]*>[\s\S]*?<\/blockquote>|<ul[^>]*>[\s\S]*?<\/ul>|<ol[^>]*>[\s\S]*?<\/ol>|[^<]+(?=<|$)/g;
+  const paragraphs = htmlContent.match(paragraphRegex) || [htmlContent];
+
+  let currentPage = '';
+  let currentLength = 0;
+  const titleBuffer = isFirstPage ? charsPerPage * 0.15 : 0; // Reserve space for title on first page
+  const effectiveCharsPerPage = charsPerPage - titleBuffer;
+
+  for (const paragraph of paragraphs) {
+    const paragraphText = paragraph.replace(/<[^>]*>/g, ''); // Get text without tags
+    const paragraphLength = paragraphText.length;
+
+    // If this single paragraph is longer than a page, split it
+    if (paragraphLength > effectiveCharsPerPage) {
+      // Save current page if it has content
+      if (currentPage.trim()) {
+        pages.push(currentPage);
+        currentPage = '';
+        currentLength = 0;
+      }
+
+      // Split long paragraph by sentences
+      const sentences = paragraphText.match(/[^.!?]+[.!?]+\s*/g) || [paragraphText];
+      let longParagraphPart = '';
+      let partLength = 0;
+
+      for (const sentence of sentences) {
+        if (partLength + sentence.length > effectiveCharsPerPage && longParagraphPart.trim()) {
+          pages.push(`<p>${longParagraphPart.trim()}</p>`);
+          longParagraphPart = sentence;
+          partLength = sentence.length;
+        } else {
+          longParagraphPart += sentence;
+          partLength += sentence.length;
+        }
+      }
+
+      if (longParagraphPart.trim()) {
+        currentPage = `<p>${longParagraphPart.trim()}</p>`;
+        currentLength = partLength;
+      }
+    } else if (currentLength + paragraphLength > effectiveCharsPerPage) {
+      // Start new page
+      if (currentPage.trim()) {
+        pages.push(currentPage);
+      }
+      currentPage = paragraph;
+      currentLength = paragraphLength;
+    } else {
+      // Add to current page
+      currentPage += paragraph;
+      currentLength += paragraphLength;
+    }
+  }
+
+  // Don't forget the last page
+  if (currentPage.trim()) {
+    pages.push(currentPage);
+  }
+
+  return pages.length > 0 ? pages : [htmlContent];
+};
+
 // Default page layout settings
 const defaultSettings = {
   fontSize: 14,
@@ -545,10 +643,44 @@ export default function BookLayoutPage() {
       images: [],
     });
 
-    // Table of contents (if enabled)
+    // Chapter pages - split long chapters into multiple pages
+    const charsPerPage = estimateCharsPerPage(settings);
+    const chapterPages: PageContent[] = [];
+    const chapterStartPages: number[] = []; // Track where each chapter starts
+
+    bookData.chapters.forEach((chapter, index) => {
+      const chapterContent = chapter.content || '';
+
+      // Track the page number where this chapter starts
+      // Account for: title page (1), blank page (1), TOC (2 if enabled)
+      const basePages = settings.includeToc && bookData.chapters.length > 1 ? 4 : 2;
+      chapterStartPages.push(basePages + chapterPages.length + 1);
+
+      // Split content into pages if needed
+      const contentPages = splitContentIntoPages(chapterContent, charsPerPage, true);
+
+      contentPages.forEach((pageContent, pageIndex) => {
+        const isFirstPageOfChapter = pageIndex === 0;
+        const pageId = pageIndex === 0
+          ? `page-chapter-${index}`
+          : `page-chapter-${index}-cont-${pageIndex}`;
+
+        chapterPages.push({
+          id: pageId,
+          type: 'chapter',
+          chapterIndex: index,
+          content: isFirstPageOfChapter
+            ? `<h2 class="chapter-title">${chapter.title}</h2>${pageContent}`
+            : pageContent,
+          images: [],
+        });
+      });
+    });
+
+    // Table of contents (if enabled) - now with correct page numbers
     if (settings.includeToc && bookData.chapters.length > 1) {
       const tocContent = bookData.chapters
-        .map((ch, i) => `<div class="toc-item"><span class="toc-title">${ch.title}</span><span class="toc-page">${i * 2 + 5}</span></div>`)
+        .map((ch, i) => `<div class="toc-item"><span class="toc-title">${ch.title}</span><span class="toc-page">${chapterStartPages[i] || ''}</span></div>`)
         .join('');
       newPages.push({
         id: `page-toc`,
@@ -566,16 +698,8 @@ export default function BookLayoutPage() {
       });
     }
 
-    // Chapter pages
-    bookData.chapters.forEach((chapter, index) => {
-      newPages.push({
-        id: `page-chapter-${index}`,
-        type: 'chapter',
-        chapterIndex: index,
-        content: `<h2 class="chapter-title">${chapter.title}</h2>${chapter.content}`,
-        images: [],
-      });
-    });
+    // Add all chapter pages
+    newPages.push(...chapterPages);
 
     // Back cover with summary
     if (settings.includeBackCover) {
@@ -641,9 +765,11 @@ export default function BookLayoutPage() {
           setLastSaved(new Date());
           toast.success(`תבנית "${template.name}" הוחלה ונשמרה בהצלחה!`);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to save template:', error);
-        toast.error('התבנית הוחלה אך השמירה נכשלה');
+        const errorMessage = error.response?.data?.error || error.message || 'Unknown error';
+        console.error('Error details:', error.response?.data);
+        toast.error(`התבנית הוחלה אך השמירה נכשלה: ${errorMessage}`);
       } finally {
         setSaving(false);
       }
