@@ -102,9 +102,11 @@ Transform the user's request into a detailed, vivid image generation prompt that
 - Avoids any inappropriate or copyrighted content
 - Is clear and specific for AI image generation
 
+IMPORTANT: The output MUST be in ENGLISH only. If the user's request is in Hebrew or any other language, translate it to English.
+
 Keep the enhanced prompt under 300 characters for optimal AI image generation.
 
-Respond ONLY with the enhanced prompt text, nothing else.`;
+Respond ONLY with the enhanced prompt text in English, nothing else.`;
 
     const result = await getGeminiModel().generateContent(aiPrompt);
     const response = result.response;
@@ -410,7 +412,9 @@ Create a detailed, vivid prompt under 200 characters that will generate a stunni
 - Style and artistic approach
 - Color palette
 
-Respond with ONLY the enhanced prompt, nothing else.`);
+IMPORTANT: The output MUST be in ENGLISH only. If the input is in Hebrew or any other language, translate it to English first.
+
+Respond with ONLY the enhanced prompt in English, nothing else.`);
 
     const enhancedPrompt = enhancedResult.response.text().trim();
 
