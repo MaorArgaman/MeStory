@@ -128,7 +128,7 @@ export interface IPageImage {
 // Page content interface for storing generated pages
 export interface IPageContent {
   id: string;
-  type: 'cover' | 'content' | 'chapter-start' | 'toc' | 'back-cover' | 'blank';
+  type: 'cover' | 'content' | 'chapter-start' | 'toc' | 'back-cover' | 'blank' | 'title' | 'chapter' | 'summary';
   chapterIndex?: number;
   chapterTitle?: string;
   content?: string;
@@ -853,7 +853,7 @@ const PageLayoutSchema = new Schema<IPageLayout>(
           id: String,
           type: {
             type: String,
-            enum: ['cover', 'content', 'chapter-start', 'toc', 'back-cover', 'blank'],
+            enum: ['cover', 'content', 'chapter-start', 'toc', 'back-cover', 'blank', 'title', 'chapter', 'summary'],
           },
           chapterIndex: Number,
           chapterTitle: String,

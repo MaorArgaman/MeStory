@@ -366,11 +366,15 @@ export const updateBook = async (req: AuthRequest, res: Response): Promise<void>
         },
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update book error:', error);
+    // Return more detailed error for debugging
+    const errorMessage = error.message || 'Failed to update book';
+    const validationErrors = error.errors ? Object.keys(error.errors).map(key => `${key}: ${error.errors[key].message}`).join(', ') : null;
     res.status(500).json({
       success: false,
-      error: 'Failed to update book',
+      error: validationErrors || errorMessage,
+      details: process.env.NODE_ENV !== 'production' ? error.toString() : undefined,
     });
   }
 };

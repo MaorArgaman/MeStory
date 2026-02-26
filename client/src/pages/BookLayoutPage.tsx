@@ -203,20 +203,20 @@ const PAGE_WIDTH_PX = 400; // Approximate page width in pixels
 const PAGE_HEIGHT_PX = 560; // Approximate page height in pixels
 
 // Estimate how many characters fit on a page based on settings
-const estimateCharsPerPage = (settings: typeof defaultSettings): number => {
+const estimateCharsPerPage = (settings: typeof defaultSettings, isHebrew: boolean = true): number => {
   const availableWidth = PAGE_WIDTH_PX - settings.margins.left - settings.margins.right;
   const availableHeight = PAGE_HEIGHT_PX - settings.margins.top - settings.margins.bottom;
 
-  // Estimate characters per line (average character width is roughly 0.5 * fontSize)
-  const avgCharWidth = settings.fontSize * 0.5;
+  // Hebrew characters are wider than Latin - use 0.6 for Hebrew, 0.5 for Latin
+  const avgCharWidth = settings.fontSize * (isHebrew ? 0.65 : 0.5);
   const charsPerLine = Math.floor(availableWidth / avgCharWidth);
 
   // Estimate lines per page
   const lineHeightPx = settings.fontSize * settings.lineHeight;
   const linesPerPage = Math.floor(availableHeight / lineHeightPx);
 
-  // Return total characters, with some buffer for HTML tags and spacing
-  return Math.floor(charsPerLine * linesPerPage * 0.7);
+  // More conservative buffer for better accuracy (0.55 instead of 0.7)
+  return Math.floor(charsPerLine * linesPerPage * 0.55);
 };
 
 // Split HTML content into pages while preserving HTML structure
@@ -644,7 +644,7 @@ export default function BookLayoutPage() {
     });
 
     // Chapter pages - split long chapters into multiple pages
-    const charsPerPage = estimateCharsPerPage(settings);
+    const charsPerPage = estimateCharsPerPage(settings, bookIsRTL);
     const chapterPages: PageContent[] = [];
     const chapterStartPages: number[] = []; // Track where each chapter starts
 
@@ -754,12 +754,15 @@ export default function BookLayoutPage() {
     if (book) {
       setSaving(true);
       try {
-        const response = await api.put(`/books/${bookId}`, {
+        const payload = {
           pageLayout: {
             pages,
             settings: newSettings,
           },
-        });
+        };
+        console.log('Sending payload to server:', JSON.stringify(payload, null, 2));
+        console.log('Payload size:', JSON.stringify(payload).length, 'bytes');
+        const response = await api.put(`/books/${bookId}`, payload);
 
         if (response.data.success) {
           setLastSaved(new Date());
