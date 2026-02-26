@@ -212,17 +212,8 @@ async function generateWithPollinations(prompt: string, aspectRatio?: string): P
   const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
   if (isVercel) {
     console.log('🌐 Running on Vercel - returning direct Pollinations URL');
-    // Try to verify the URL works, otherwise use fallback
-    try {
-      const testResponse = await axios.head(imageUrl, { timeout: 10000 });
-      if (testResponse.status === 200) {
-        return imageUrl;
-      }
-    } catch (error) {
-      console.log('⚠️ Pollinations URL check failed, using fallback placeholder');
-      // Return a placeholder image
-      return `https://picsum.photos/seed/${Date.now()}/${width}/${height}`;
-    }
+    // Pollinations generates images on-demand when the URL is accessed by the browser
+    // Don't do HEAD check as it can fail - just return the URL directly
     return imageUrl;
   }
 
@@ -487,17 +478,7 @@ async function generateWithPollinationsEnhanced(prompt: string, aspectRatio?: st
     const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
     if (isVercel) {
       console.log('🌐 Vercel: returning direct Pollinations URL');
-      console.log(`🌐 URL length: ${imageUrl.length} chars`);
-      // Try to verify the URL works
-      try {
-        const testResponse = await axios.head(imageUrl, { timeout: 10000 });
-        if (testResponse.status === 200) {
-          return imageUrl;
-        }
-      } catch (error) {
-        console.log('⚠️ Pollinations Enhanced URL check failed, using fallback');
-        return `https://picsum.photos/seed/${Date.now()}/${width}/${height}`;
-      }
+      // Pollinations generates images on-demand - return URL directly
       return imageUrl;
     }
 
