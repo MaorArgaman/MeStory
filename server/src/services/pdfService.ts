@@ -1,5 +1,6 @@
 import PDFDocument from 'pdfkit';
 import { Book } from '../models/Book';
+import { User } from '../models/User';
 
 /**
  * Generate a PDF for a book
@@ -7,14 +8,15 @@ import { Book } from '../models/Book';
  */
 export async function generateBookPDF(bookId: string): Promise<PDFKit.PDFDocument> {
   // Fetch book data
-  const book = await Book.findById(bookId).populate('author', 'name');
+  const book = await Book.findById(bookId);
 
   if (!book) {
     throw new Error('Book not found');
   }
 
-  // Get author name with type safety
-  const authorName = (book.author as any)?.name || 'Unknown Author';
+  // Get author details separately (Supabase doesn't support populate)
+  const author = await User.findById(book.author);
+  const authorName = author?.name || 'Unknown Author';
 
   // Create PDF document
   const doc = new PDFDocument({
@@ -197,13 +199,15 @@ export async function generateBookPDF(bookId: string): Promise<PDFKit.PDFDocumen
  * Generate a simple preview PDF (first chapter only)
  */
 export async function generatePreviewPDF(bookId: string): Promise<PDFKit.PDFDocument> {
-  const book = await Book.findById(bookId).populate('author', 'name');
+  const book = await Book.findById(bookId);
 
   if (!book) {
     throw new Error('Book not found');
   }
 
-  const authorName = (book.author as any)?.name || 'Unknown Author';
+  // Get author details separately (Supabase doesn't support populate)
+  const author = await User.findById(book.author);
+  const authorName = author?.name || 'Unknown Author';
 
   const doc = new PDFDocument({
     size: 'A5',

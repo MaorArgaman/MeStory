@@ -77,25 +77,50 @@ export const startConversation = async (req: AuthRequest, res: Response): Promis
 
     if (!conversation) {
       // Create new conversation
+      const unreadCountObj: Record<string, number> = {};
+      unreadCountObj[req.user.id] = 0;
+      unreadCountObj[authorId] = 0;
+
       conversation = await Conversation.create({
         participants,
         book: bookId || null,
-        unreadCount: new Map([
-          [req.user.id, 0],
-          [authorId, 0],
-        ]),
+        unreadCount: unreadCountObj,
       });
     }
 
-    // Populate conversation data
-    await conversation.populate([
-      { path: 'participants', select: 'name profilePicture' },
-      { path: 'book', select: 'title coverImage' },
-    ]);
+    // Fetch participant and book details separately (Supabase doesn't support populate)
+    const participantDetails = await Promise.all(
+      conversation.participants.map(async (participantId: string) => {
+        const participant = await User.findById(participantId);
+        return participant ? {
+          id: participant.id,
+          name: participant.name,
+          profilePicture: participant.profile?.avatar,
+        } : null;
+      })
+    );
+
+    let bookDetails = null;
+    if (conversation.book) {
+      const book = await Book.findById(conversation.book);
+      if (book) {
+        bookDetails = {
+          id: book.id,
+          title: book.title,
+          coverImage: book.coverDesign?.front?.imageUrl,
+        };
+      }
+    }
 
     res.status(200).json({
       success: true,
-      data: { conversation },
+      data: {
+        conversation: {
+          ...conversation,
+          participants: participantDetails.filter(Boolean),
+          book: bookDetails,
+        },
+      },
     });
   } catch (error: any) {
     console.error('Start conversation error:', error);
@@ -166,12 +191,12 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
     // Increment unread count for other participant
     let bookTitle: string | undefined;
     if (otherParticipantId) {
-      const currentCount = conversation.unreadCount.get(otherParticipantId) || 0;
-      conversation.unreadCount.set(otherParticipantId, currentCount + 1);
+      const currentCount = conversation.unreadCount[otherParticipantId] || 0;
+      conversation.unreadCount[otherParticipantId] = currentCount + 1;
 
       // Get book title if conversation is about a specific book
       if (conversation.book) {
-        const book = await Book.findById(conversation.book).select('title');
+        const book = await Book.findById(conversation.book);
         bookTitle = book?.title;
       }
 
@@ -190,17 +215,25 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       lastMessage: {
         content: content.trim().substring(0, 100),
         sender: req.user.id,
-        sentAt: new Date(),
+        sentAt: new Date().toISOString(),
       },
       unreadCount: conversation.unreadCount,
     });
 
-    // Populate sender info
-    await message.populate('sender', 'name profilePicture');
+    // Fetch sender info separately (Supabase doesn't support populate)
+    const sender = await User.findById(req.user.id);
+    const messageWithSender = {
+      ...message,
+      sender: sender ? {
+        id: sender.id,
+        name: sender.name,
+        profilePicture: sender.profile?.avatar,
+      } : null,
+    };
 
     res.status(201).json({
       success: true,
-      data: { message },
+      data: { message: messageWithSender },
     });
   } catch (error: any) {
     console.error('Send message error:', error);
@@ -226,31 +259,59 @@ export const getConversations = async (req: AuthRequest, res: Response): Promise
     const limit = parseInt(req.query.limit as string) || 20;
     const skip = (page - 1) * limit;
 
-    const conversations = await Conversation.find({
-      participants: req.user.id,
-      isActive: true,
-    })
-      .populate('participants', 'name profilePicture')
-      .populate('book', 'title coverImage')
-      .sort({ updatedAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const total = await Conversation.countDocuments({
+    let conversations = await Conversation.find({
       participants: req.user.id,
       isActive: true,
     });
 
-    // Add unread count for current user to each conversation
-    const conversationsWithUnread = conversations.map((conv) => ({
-      ...conv.toObject(),
-      myUnreadCount: conv.unreadCount.get(req.user!.id) || 0,
-    }));
+    const total = conversations.length;
+
+    // Sort by updatedAt descending, then apply pagination
+    conversations = conversations
+      .sort((a: any, b: any) => new Date(b.updatedAt || b.updated_at).getTime() - new Date(a.updatedAt || a.updated_at).getTime())
+      .slice(skip, skip + limit);
+
+    // Fetch participant and book details for each conversation
+    const conversationsWithDetails = await Promise.all(
+      conversations.map(async (conv) => {
+        // Fetch participant details
+        const participantDetails = await Promise.all(
+          conv.participants.map(async (participantId: string) => {
+            const participant = await User.findById(participantId);
+            return participant ? {
+              id: participant.id,
+              name: participant.name,
+              profilePicture: participant.profile?.avatar,
+            } : null;
+          })
+        );
+
+        // Fetch book details if exists
+        let bookDetails = null;
+        if (conv.book) {
+          const book = await Book.findById(conv.book);
+          if (book) {
+            bookDetails = {
+              id: book.id,
+              title: book.title,
+              coverImage: book.coverDesign?.front?.imageUrl,
+            };
+          }
+        }
+
+        return {
+          ...conv,
+          participants: participantDetails.filter(Boolean),
+          book: bookDetails,
+          myUnreadCount: conv.unreadCount[req.user!.id] || 0,
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,
       data: {
-        conversations: conversationsWithUnread,
+        conversations: conversationsWithDetails,
         pagination: {
           page,
           limit,
@@ -301,26 +362,42 @@ export const getMessages = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    const messages = await Message.find({ conversation: conversationId })
-      .populate('sender', 'name profilePicture')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    let messages = await Message.find({ conversation: conversationId });
 
-    const total = await Message.countDocuments({ conversation: conversationId });
+    const total = messages.length;
 
-    // Mark messages as read
-    await Message.updateMany(
-      {
-        conversation: conversationId,
-        sender: { $ne: req.user.id },
-        readAt: null,
-      },
-      { readAt: new Date() }
+    // Sort by createdAt descending, then apply pagination
+    messages = messages
+      .sort((a: any, b: any) => new Date(b.createdAt || b.created_at).getTime() - new Date(a.createdAt || a.created_at).getTime())
+      .slice(skip, skip + limit);
+
+    // Fetch sender details for each message
+    const messagesWithSenders = await Promise.all(
+      messages.map(async (msg) => {
+        const sender = await User.findById(msg.sender);
+        return {
+          ...msg,
+          sender: sender ? {
+            id: sender.id,
+            name: sender.name,
+            profilePicture: sender.profile?.avatar,
+          } : null,
+        };
+      })
+    );
+
+    // Mark messages as read - update each unread message individually
+    const unreadMessages = messages.filter(
+      (msg) => msg.sender !== req.user!.id && !msg.readAt
+    );
+    await Promise.all(
+      unreadMessages.map((msg) =>
+        Message.findByIdAndUpdate(msg.id, { readAt: new Date().toISOString() })
+      )
     );
 
     // Reset unread count for current user
-    conversation.unreadCount.set(req.user.id, 0);
+    conversation.unreadCount[req.user.id] = 0;
     await Conversation.findByIdAndUpdate(conversationId, {
       unreadCount: conversation.unreadCount,
     });
@@ -328,7 +405,7 @@ export const getMessages = async (req: AuthRequest, res: Response): Promise<void
     res.status(200).json({
       success: true,
       data: {
-        messages: messages.reverse(), // Return in chronological order
+        messages: messagesWithSenders.reverse(), // Return in chronological order
         pagination: {
           page,
           limit,

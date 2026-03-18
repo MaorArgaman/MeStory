@@ -1,6 +1,7 @@
 import PDFDocument from 'pdfkit';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, PageBreak, AlignmentType, ImageRun, Header, Footer, PageNumber } from 'docx';
 import { Book, IChapter, ICharacter, IPageImage, IStoryContext } from '../models/Book';
+import { User } from '../models/User';
 import path from 'path';
 import fs from 'fs';
 import axios from 'axios';
@@ -296,10 +297,13 @@ function mmToTwips(mm: number): number {
  * Extract all book data for export
  */
 async function extractBookData(bookId: string): Promise<BookExportData> {
-  const book = await Book.findById(bookId).populate('author', 'name');
+  const book = await Book.findById(bookId);
   if (!book) {
     throw new Error('Book not found');
   }
+
+  // Get author details separately (Supabase doesn't support populate)
+  const author = await User.findById(book.author);
 
   // Extract cover design data
   const coverDesignData = book.coverDesign as any;
@@ -441,7 +445,7 @@ async function extractBookData(bookId: string): Promise<BookExportData> {
 
   return {
     title: book.title,
-    authorName: (book.author as any)?.name || 'מחבר לא ידוע',
+    authorName: author?.name || 'מחבר לא ידוע',
     genre: book.genre || 'סיפורת',
     description: book.description || '',
     synopsis: book.synopsis || coverDesignData?.back?.synopsis || '',

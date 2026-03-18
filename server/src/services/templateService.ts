@@ -195,7 +195,8 @@ export async function cloneTemplate(
     return null;
   }
 
-  const originalTemplate = await BookTemplate.findById(templateId).lean();
+  // Supabase already returns plain objects, no .lean() needed
+  const originalTemplate = await BookTemplate.findById(templateId);
 
   if (!originalTemplate) {
     return null;
@@ -295,8 +296,11 @@ export async function applyTemplateToBook(
     };
   }
 
-  // Increment template usage count
-  await BookTemplate.findByIdAndUpdate(templateId, { $inc: { usageCount: 1 } });
+  // Increment template usage count (Supabase doesn't support $inc)
+  const currentTemplate = await BookTemplate.findById(templateId);
+  if (currentTemplate) {
+    await BookTemplate.findByIdAndUpdate(templateId, { usageCount: (currentTemplate.usageCount || 0) + 1 });
+  }
 
   // Update book with template settings
   return Book.findByIdAndUpdate(

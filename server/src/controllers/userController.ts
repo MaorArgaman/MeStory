@@ -28,7 +28,7 @@ export const getEarnings = async (req: AuthRequest, res: Response): Promise<void
     const books = await Book.find({
       author: userId,
       'publishingStatus.status': 'published',
-    }).select('statistics publishingStatus title');
+    });
 
     // Calculate total earnings (50% of book sales revenue)
     let totalRevenue = 0;
@@ -62,7 +62,7 @@ export const getEarnings = async (req: AuthRequest, res: Response): Promise<void
     const authorEarnings = totalRevenue * 0.5;
 
     // Get user to check withdrawal history
-    const user = await User.findById(userId).select('profile');
+    const user = await User.findById(userId);
     const withdrawn = user?.profile?.earnings?.withdrawn || 0;
     const available = authorEarnings - withdrawn;
 
@@ -301,7 +301,7 @@ export const requestWithdrawal = async (req: AuthRequest, res: Response): Promis
     const books = await Book.find({
       author: req.user.id,
       'publishingStatus.status': 'published',
-    }).select('statistics');
+    });
 
     const totalRevenue = books.reduce(
       (sum, book) => sum + (book.statistics?.revenue || 0),
@@ -380,9 +380,9 @@ export const getUserProfile = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const user = await User.findById(id).select('-password -paypal');
+    const userResult = await User.findById(id);
 
-    if (!user) {
+    if (!userResult) {
       res.status(404).json({
         success: false,
         error: 'User not found',
@@ -390,12 +390,15 @@ export const getUserProfile = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
+    // Remove sensitive fields (Supabase returns full objects)
+    const { password, paypal, ...user } = userResult as any;
+
     // Get user's published books
     const books = await Book.find({
       author: id,
       'publishingStatus.status': 'published',
       'publishingStatus.isPublic': true,
-    }).select('title coverDesign genre qualityScore statistics publishingStatus created_at');
+    });
 
     // Calculate total reads (views)
     const totalReads = books.reduce((sum, book) => sum + (book.statistics?.views || 0), 0);

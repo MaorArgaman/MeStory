@@ -26,7 +26,7 @@ export const getStats = async (_req: AuthRequest, res: Response): Promise<void> 
     // Calculate total revenue (50% from all book sales)
     const books = await Book.find({
       'publishingStatus.status': 'published',
-    }).select('statistics');
+    });
 
     const totalBookRevenue = books.reduce((sum, book) => sum + (book.statistics?.revenue || 0), 0);
     const platformRevenue = totalBookRevenue * 0.5; // Platform gets 50%
@@ -48,7 +48,7 @@ export const getStats = async (_req: AuthRequest, res: Response): Promise<void> 
     // For Supabase, we need to fetch users and group in JavaScript
     const recentUsers = await User.find({
       createdAt: { $gte: thirtyDaysAgo },
-    }).select('createdAt');
+    });
 
     // Group by date in JavaScript
     const signupTrendMap = new Map<string, number>();
@@ -63,7 +63,7 @@ export const getStats = async (_req: AuthRequest, res: Response): Promise<void> 
     // Get top authors by revenue - fetch and aggregate in JavaScript for Supabase
     const publishedBooksWithAuthors = await Book.find({
       'publishingStatus.status': 'published',
-    }).select('author statistics');
+    });
 
     // Group by author
     const authorStatsMap = new Map<string, { totalRevenue: number; totalSales: number; bookCount: number }>();
@@ -84,7 +84,7 @@ export const getStats = async (_req: AuthRequest, res: Response): Promise<void> 
     // Fetch author details
     const topAuthors = await Promise.all(
       topAuthorIds.map(async ([authorId, stats]) => {
-        const author = await User.findById(authorId).select('name email');
+        const author = await User.findById(authorId);
         return {
           authorId,
           authorName: author?.name || 'Unknown',
@@ -160,18 +160,25 @@ export const getUsers = async (req: AuthRequest, res: Response): Promise<void> =
 
     const skip = (Number(page) - 1) * Number(limit);
 
-    const users = await User.find(query)
-      .select('-password')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit));
+    let users = await User.find(query);
 
-    const total = await User.count(query);
+    const total = users.length;
+
+    // Sort by createdAt descending, then apply pagination
+    users = users
+      .sort((a: any, b: any) => new Date(b.createdAt || b.created_at).getTime() - new Date(a.createdAt || a.created_at).getTime())
+      .slice(skip, skip + Number(limit));
+
+    // Remove password from response (Supabase returns full objects)
+    const usersWithoutPassword = users.map(user => {
+      const { password, ...userWithoutPassword } = user as any;
+      return userWithoutPassword;
+    });
 
     res.status(200).json({
       success: true,
       data: {
-        users,
+        users: usersWithoutPassword,
         pagination: {
           page: Number(page),
           limit: Number(limit),
@@ -345,19 +352,40 @@ export const deleteUser = async (req: AuthRequest, res: Response): Promise<void>
 export const getFlaggedBooks = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Get published books with low quality score (below 60)
-    const lowQualityBooks = await Book.find({
+    let lowQualityBooks = await Book.find({
       'publishingStatus.status': 'published',
       'qualityScore.overallScore': { $lt: 60, $gt: 0 },
-    })
-      .populate('author', 'name email')
-      .select('title author genre qualityScore statistics publishingStatus')
-      .sort({ 'qualityScore.overallScore': 1 })
-      .limit(50);
+    });
+
+    // Sort by quality score ascending and limit to 50
+    lowQualityBooks = lowQualityBooks
+      .sort((a: any, b: any) => (a.qualityScore?.overallScore || 0) - (b.qualityScore?.overallScore || 0))
+      .slice(0, 50);
+
+    // Fetch author details for each book
+    const booksWithAuthors = await Promise.all(
+      lowQualityBooks.map(async (book) => {
+        const author = await User.findById(book.author);
+        return {
+          id: book.id,
+          title: book.title,
+          author: author ? {
+            id: author.id,
+            name: author.name,
+            email: author.email,
+          } : null,
+          genre: book.genre,
+          qualityScore: book.qualityScore,
+          statistics: book.statistics,
+          publishingStatus: book.publishingStatus,
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,
       data: {
-        books: lowQualityBooks,
+        books: booksWithAuthors,
       },
     });
   } catch (error) {

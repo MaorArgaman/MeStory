@@ -151,7 +151,7 @@ export const narrateChapter = async (req: AuthRequest, res: Response): Promise<v
     }
 
     // Find book
-    const book = await Book.findById(bookId).select('chapters language');
+    const book = await Book.findById(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -248,7 +248,7 @@ export const prepareChapterText = async (req: AuthRequest, res: Response): Promi
     }
 
     // Find book
-    const book = await Book.findById(bookId).select('chapters language title');
+    const book = await Book.findById(bookId);
     if (!book) {
       res.status(404).json({
         success: false,

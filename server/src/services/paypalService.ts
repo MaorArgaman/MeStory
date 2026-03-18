@@ -121,10 +121,13 @@ export async function createBookPurchaseOrder(
 ): Promise<BookPurchaseResult> {
   try {
     // Get book details
-    const book = await Book.findById(bookId).populate('author', 'name email paypal');
+    const book = await Book.findById(bookId);
     if (!book) {
       return { success: false, error: 'Book not found' };
     }
+
+    // Get author details separately (Supabase doesn't support populate)
+    const author = await User.findById(book.author);
 
     // Check if book is published
     if (book.publishingStatus.status !== 'published') {
@@ -137,7 +140,7 @@ export async function createBookPurchaseOrder(
     }
 
     // Check if buyer is the author
-    if (book.author._id.toString() === buyerId) {
+    if (book.author.toString() === buyerId) {
       return { success: false, error: 'You cannot purchase your own book' };
     }
 
@@ -155,7 +158,7 @@ export async function createBookPurchaseOrder(
     }
 
     const price = book.publishingStatus.price;
-    const authorName = (book.author as any).name || 'Unknown Author';
+    const authorName = author?.name || 'Unknown Author';
 
     // Development/Mock Mode
     if (!isPayPalConfigured() || process.env.NODE_ENV === 'development') {
@@ -178,9 +181,9 @@ export async function createBookPurchaseOrder(
         orderId: mockOrderId,
         description: `Purchase: ${book.title}`,
         metadata: {
-          bookId: book._id,
+          bookId: book.id,
           bookTitle: book.title,
-          authorId: book.author._id,
+          authorId: book.author,
           authorName,
           authorShare: price * AUTHOR_SHARE_PERCENTAGE,
           platformShare: price * PLATFORM_SHARE_PERCENTAGE,
@@ -210,7 +213,7 @@ export async function createBookPurchaseOrder(
           custom_id: JSON.stringify({
             bookId,
             buyerId,
-            authorId: book.author._id.toString(),
+            authorId: book.author.toString(),
           }),
           amount: {
             currency_code: 'USD',
@@ -249,9 +252,9 @@ export async function createBookPurchaseOrder(
       orderId: response.data.id,
       description: `Purchase: ${book.title}`,
       metadata: {
-        bookId: book._id,
+        bookId: book.id,
         bookTitle: book.title,
-        authorId: book.author._id,
+        authorId: book.author,
         authorName,
         authorShare: price * AUTHOR_SHARE_PERCENTAGE,
         platformShare: price * PLATFORM_SHARE_PERCENTAGE,
@@ -626,14 +629,16 @@ export async function getAuthorEarnings(authorId: string) {
   };
 
   // Get recent sales from transactions
-  const recentSales = await Transaction.find({
+  const allSales = await Transaction.find({
     'metadata.authorId': authorId,
     'metadata.type': 'book_purchase',
     status: 'completed',
-  })
-    .sort({ createdAt: -1 })
-    .limit(20)
-    .lean();
+  });
+
+  // Sort in memory and limit (Supabase returns plain objects, no .lean() needed)
+  const recentSales = allSales
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 20);
 
   return {
     ...earnings,

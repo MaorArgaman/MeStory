@@ -352,11 +352,13 @@ export const getTransactionHistory = async (req: AuthRequest, res: Response): Pr
       return;
     }
 
-    const transactions = await Transaction.find({ userId: req.user.id })
-      .sort({ createdAt: -1 })
-      .limit(50)
-      .select('-__v')
-      .lean();
+    let transactions = await Transaction.find({ userId: req.user.id });
+
+    // Sort by createdAt descending and limit to 50
+    // Supabase already returns plain objects, no need for .lean()
+    transactions = transactions
+      .sort((a: any, b: any) => new Date(b.createdAt || b.created_at).getTime() - new Date(a.createdAt || a.created_at).getTime())
+      .slice(0, 50);
 
     res.status(200).json({
       success: true,

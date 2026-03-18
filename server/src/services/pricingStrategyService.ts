@@ -79,10 +79,15 @@ async function getAuthorStats(authorId: string): Promise<AuthorStats> {
  */
 async function analyzeMarket(genre: string): Promise<MarketAnalysis> {
   // Get all published books in the genre
-  const genreBooks = await Book.find({
-    genre: { $regex: new RegExp(genre, 'i') },
+  const allBooks = await Book.find({
     'publishingStatus.status': 'published',
-  }).limit(100);
+  });
+
+  // Filter by genre in memory (case-insensitive) and limit to 100
+  const genreLower = genre.toLowerCase();
+  const genreBooks = allBooks
+    .filter((b: any) => (b.genre || '').toLowerCase().includes(genreLower))
+    .slice(0, 100);
 
   // Calculate price statistics
   const prices = genreBooks
