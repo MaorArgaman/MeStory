@@ -559,7 +559,7 @@ export const updateReadingProgress = async (req: AuthRequest, res: Response): Pr
 
     // Find or create reading history entry
     const historyIndex = readingHistory.findIndex(
-      (item) => item.bookId.toString() === bookId
+      (item) => item.bookId === bookId
     );
 
     if (historyIndex === -1) {

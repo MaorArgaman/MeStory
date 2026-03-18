@@ -680,7 +680,7 @@ export const getDesignState = async (req: AuthRequest, res: Response): Promise<v
     }
 
     // Find book
-    const book = await Book.findById(bookId).select('aiDesignState author');
+    const book = await Book.findById(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -1155,8 +1155,8 @@ export const generateTemplateDesign = async (req: AuthRequest, res: Response): P
         return;
       }
 
-      const book = await Book.findById(bookId).select('author');
-      if (book && book.author.toString() !== req.user.id) {
+      const book = await Book.findById(bookId);
+      if (book && book.author !== req.user.id) {
         res.status(403).json({
           success: false,
           error: 'You do not have permission to design this book',

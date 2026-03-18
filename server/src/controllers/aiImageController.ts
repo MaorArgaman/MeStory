@@ -46,7 +46,7 @@ export const generateAIImage = async (req: AuthRequest, res: Response): Promise<
     // Add book context if bookId is provided
     if (bookId && isValidUUID(bookId)) {
       const book = await Book.findById(bookId);
-      if (book && book.author.toString() === req.user.id) {
+      if (book && book.author === req.user.id) {
         imageRequest.bookContext = {
           title: book.title,
           genre: book.genre,
@@ -68,7 +68,7 @@ export const generateAIImage = async (req: AuthRequest, res: Response): Promise<
     // If bookId and pageIndex are provided, save the image to the book
     if (bookId && pageIndex !== undefined && isValidUUID(bookId)) {
       const book = await Book.findById(bookId);
-      if (book && book.author.toString() === req.user.id) {
+      if (book && book.author === req.user.id) {
         // Add the generated image to existing pageImages
         const newImage = {
           pageIndex: parseInt(pageIndex, 10),
@@ -139,7 +139,7 @@ export const generateAIImageVariations = async (req: AuthRequest, res: Response)
     // Add book context if bookId is provided
     if (bookId && isValidUUID(bookId)) {
       const book = await Book.findById(bookId);
-      if (book && book.author.toString() === req.user.id) {
+      if (book && book.author === req.user.id) {
         imageRequest.bookContext = {
           title: book.title,
           genre: book.genre,
@@ -209,7 +209,7 @@ export const generateChapterIllustration = async (req: AuthRequest, res: Respons
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to access this book',
@@ -318,7 +318,7 @@ export const previewEnhancedPrompt = async (req: AuthRequest, res: Response): Pr
     // Add book context if bookId is provided
     if (bookId && isValidUUID(bookId)) {
       const book = await Book.findById(bookId);
-      if (book && book.author.toString() === req.user.id) {
+      if (book && book.author === req.user.id) {
         imageRequest.bookContext = {
           title: book.title,
           genre: book.genre,
