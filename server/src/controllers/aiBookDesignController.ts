@@ -1,8 +1,15 @@
 import { Response } from 'express';
 import { Book } from '../models/Book';
+import { User } from '../models/User';
 
 // UUID validation function for Supabase
 const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+// Helper to get author name from user ID
+const getAuthorName = async (authorId: string): Promise<string> => {
+  const user = await User.findById(authorId);
+  return user?.name || 'Unknown Author';
+};
 import { AuthRequest } from '../types';
 import {
   generateCompleteBookDesign,
@@ -44,7 +51,7 @@ export const generateBookDesign = async (req: AuthRequest, res: Response): Promi
     }
 
     // Find book with all data
-    const book = await Book.findById(bookId).populate('author', 'name');
+    const book = await Book.findById(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -54,7 +61,7 @@ export const generateBookDesign = async (req: AuthRequest, res: Response): Promi
     }
 
     // Ensure user owns this book
-    if (book.author.id !== req.user.id && (book.author as any).toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to design this book',
@@ -65,7 +72,7 @@ export const generateBookDesign = async (req: AuthRequest, res: Response): Promi
     // Prepare input for design generation
     const designInput: BookDesignInput = {
       title: book.title,
-      authorName: (book.author as any).name || 'Unknown Author',
+      authorName: await getAuthorName(book.author),
       genre: book.genre,
       language: book.language || 'en',
       synopsis: book.synopsis || book.description,
@@ -142,7 +149,7 @@ export const applyBookDesign = async (req: AuthRequest, res: Response): Promise<
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to update this book',
@@ -227,7 +234,7 @@ export const generateTypography = async (req: AuthRequest, res: Response): Promi
     }
 
     // Find book
-    const book = await Book.findById(bookId).populate('author', 'name');
+    const book = await Book.findById(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -237,7 +244,7 @@ export const generateTypography = async (req: AuthRequest, res: Response): Promi
     }
 
     // Ensure user owns this book
-    if (book.author.id !== req.user.id && (book.author as any).toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to access this book',
@@ -247,7 +254,7 @@ export const generateTypography = async (req: AuthRequest, res: Response): Promi
 
     const designInput: BookDesignInput = {
       title: book.title,
-      authorName: (book.author as any).name || 'Unknown Author',
+      authorName: await getAuthorName(book.author),
       genre: book.genre,
       language: book.language || 'en',
       synopsis: book.synopsis,
@@ -300,7 +307,7 @@ export const getImageSuggestions = async (req: AuthRequest, res: Response): Prom
     }
 
     // Find book
-    const book = await Book.findById(bookId).populate('author', 'name');
+    const book = await Book.findById(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -310,7 +317,7 @@ export const getImageSuggestions = async (req: AuthRequest, res: Response): Prom
     }
 
     // Ensure user owns this book
-    if (book.author.id !== req.user.id && (book.author as any).toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to access this book',
@@ -320,7 +327,7 @@ export const getImageSuggestions = async (req: AuthRequest, res: Response): Prom
 
     const designInput: BookDesignInput = {
       title: book.title,
-      authorName: (book.author as any).name || 'Unknown Author',
+      authorName: await getAuthorName(book.author),
       genre: book.genre,
       language: book.language || 'en',
       synopsis: book.synopsis,
@@ -390,7 +397,7 @@ export const generateContextualImage = async (req: AuthRequest, res: Response): 
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to access this book',
@@ -478,7 +485,7 @@ export const generateCompleteDesign = async (req: AuthRequest, res: Response): P
     }
 
     // Find book with all data
-    const book = await Book.findById(bookId).populate('author', 'name');
+    const book = await Book.findById(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -488,7 +495,7 @@ export const generateCompleteDesign = async (req: AuthRequest, res: Response): P
     }
 
     // Ensure user owns this book
-    if (book.author.id !== req.user.id && (book.author as any).toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to design this book',
@@ -512,7 +519,7 @@ export const generateCompleteDesign = async (req: AuthRequest, res: Response): P
     // Prepare input for design generation
     const designInput: BookDesignInput = {
       title: book.title,
-      authorName: (book.author as any).name || 'Unknown Author',
+      authorName: await getAuthorName(book.author),
       genre: book.genre,
       language: book.language || 'en',
       synopsis: book.synopsis || book.description,
@@ -600,7 +607,7 @@ export const getDesignPreview = async (req: AuthRequest, res: Response): Promise
     }
 
     // Find book
-    const book = await Book.findById(bookId).populate('author', 'name');
+    const book = await Book.findById(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -610,7 +617,7 @@ export const getDesignPreview = async (req: AuthRequest, res: Response): Promise
     }
 
     // Ensure user owns this book
-    if (book.author.id !== req.user.id && (book.author as any).toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to access this book',
@@ -620,7 +627,7 @@ export const getDesignPreview = async (req: AuthRequest, res: Response): Promise
 
     const designInput: BookDesignInput = {
       title: book.title,
-      authorName: (book.author as any).name || 'Unknown Author',
+      authorName: await getAuthorName(book.author),
       genre: book.genre,
       language: book.language || 'en',
       synopsis: book.synopsis || book.description,
@@ -683,7 +690,7 @@ export const getDesignState = async (req: AuthRequest, res: Response): Promise<v
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to access this book',
@@ -742,7 +749,7 @@ export const applyCompleteDesign = async (req: AuthRequest, res: Response): Prom
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to update this book',
@@ -906,7 +913,7 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     // Find book with all data
-    const book = await Book.findById(bookId).populate('author', 'name');
+    const book = await Book.findById(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -916,7 +923,7 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     // Ensure user owns this book
-    if (book.author.id !== req.user.id && (book.author as any).toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to design this book',
@@ -952,7 +959,7 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
     // Prepare design input
     const designInput: BookDesignInput = {
       title: book.title,
-      authorName: (book.author as any).name || 'Unknown Author',
+      authorName: await getAuthorName(book.author),
       genre: book.genre,
       language: book.language || 'en',
       synopsis: book.synopsis || book.description,
@@ -1039,7 +1046,7 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
             position: { x: 50, y: 40 },
           },
           authorName: {
-            text: (book.author as any).name || '',
+            text: await getAuthorName(book.author),
             font: design.typography?.bodyFont || 'Inter',
             size: coverData?.front?.author?.size || 18,
             color: coverData?.front?.author?.color || '#ffffff',
@@ -1053,7 +1060,7 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
         spine: {
           width: Math.ceil((book.statistics?.pageCount || 100) / 10) + 5,
           title: book.title,
-          author: (book.author as any).name || '',
+          author: await getAuthorName(book.author),
           backgroundColor: coverData?.spine?.backgroundColor || '#1a1a2e',
         },
       };

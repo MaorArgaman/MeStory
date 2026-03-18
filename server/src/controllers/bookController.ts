@@ -834,11 +834,14 @@ export const getPublicBooks = async (req: Request, res: Response): Promise<void>
       _limit: 100,
     });
 
-    // Populate author data for each book
+    // Fetch author names for each book
     const booksWithAuthors = await Promise.all(
       books.map(async (book) => {
-        const populated = await Book.populate(book, 'author');
-        return populated;
+        const author = await User.findById(book.author);
+        return {
+          ...book,
+          authorName: author?.name || 'Unknown Author',
+        };
       })
     );
 

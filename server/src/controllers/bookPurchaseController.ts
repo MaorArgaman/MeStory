@@ -361,35 +361,38 @@ export const getLibrary = async (req: AuthRequest, res: Response): Promise<void>
     const bookIds = readingHistory.map((item) => item.bookId);
 
     // Get full book details
-    const books = await Book.find({
-      id: { $in: bookIds },
-    })
-      .populate('author', 'name profile.avatar')
-      .select(
-        'title genre description synopsis coverDesign publishingStatus statistics qualityScore chapters pageImages pageLayout createdAt'
-      )
-      .lean();
+    const allBooks = await Book.find({});
+    const books = allBooks.filter(book => bookIds.includes(book.id));
 
-    // Merge with reading progress
-    const libraryBooks = books.map((book) => {
-      const historyItem = readingHistory.find(
-        (item) => item.bookId.toString() === (book as any).id
-      );
-      return {
-        ...book,
-        readingProgress: historyItem?.progress || 0,
-        lastRead: historyItem?.lastRead,
-      };
-    });
+    // Add author names and merge with reading progress
+    const libraryBooks = await Promise.all(
+      books.map(async (book) => {
+        const author = await User.findById(book.author);
+        const historyItem = readingHistory.find(
+          (item) => item.bookId === book.id
+        );
+        return {
+          ...book,
+          authorName: author?.name || 'Unknown Author',
+          authorAvatar: author?.profile?.avatar,
+          readingProgress: historyItem?.progress || 0,
+          lastRead: historyItem?.lastRead,
+        };
+      })
+    );
 
     // Also get user's own books
-    const ownBooks = await Book.find({ author: req.user.id })
-      .populate('author', 'name profile.avatar')
-      .select(
-        'title genre description synopsis coverDesign publishingStatus statistics qualityScore chapters pageImages pageLayout createdAt'
-      )
-      .sort({ createdAt: -1 })
-      .lean();
+    const allOwnBooks = await Book.find({ author: req.user.id });
+    const ownBooks = await Promise.all(
+      allOwnBooks.map(async (book) => {
+        const author = await User.findById(book.author);
+        return {
+          ...book,
+          authorName: author?.name || 'Unknown Author',
+          authorAvatar: author?.profile?.avatar,
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,
@@ -446,9 +449,7 @@ export const getBookForReading = async (req: AuthRequest, res: Response): Promis
     }
 
     // Get full book data
-    const book = await Book.findById(bookId)
-      .populate('author', 'name profile.avatar profile.bio')
-      .lean();
+    const book = await Book.findById(bookId);
 
     if (!book) {
       res.status(404).json({
@@ -457,6 +458,9 @@ export const getBookForReading = async (req: AuthRequest, res: Response): Promis
       });
       return;
     }
+
+    // Get author info
+    const author = await User.findById(book.author);
 
     // Increment view count (if not author)
     if (!access.isAuthor) {
@@ -468,14 +472,22 @@ export const getBookForReading = async (req: AuthRequest, res: Response): Promis
     // Get user's reading progress
     const user = await User.findById(req.user.id);
     const historyItem = user?.profile?.readingHistory?.find(
-      (item) => item.bookId.toString() === bookId
+      (item) => item.bookId === bookId
     );
+
+    // Attach author info to book
+    const bookWithAuthor = {
+      ...book,
+      authorName: author?.name || 'Unknown Author',
+      authorAvatar: author?.profile?.avatar,
+      authorBio: author?.profile?.bio,
+    };
 
     res.status(200).json({
       success: true,
       data: {
         book: {
-          ...book,
+          ...bookWithAuthor,
           // Include all content for reading
           chapters: book.chapters,
           characters: book.characters,
