@@ -54,23 +54,21 @@ export const configurePassport = () => {
           }
 
           // Check if user already exists
-          let user = await User.findOne({ email });
+          let user = await User.findByEmail(email);
 
           if (user) {
-            // User exists - update profile if needed
+            // User exists - update profile avatar if needed
             if (avatar && !user.profile?.avatar) {
-              if (!user.profile) {
-                user.profile = {};
-              }
-              user.profile.avatar = avatar;
-              await user.save();
+              const updatedProfile = { ...user.profile, avatar };
+              await User.findByIdAndUpdate(user.id, { profile: updatedProfile });
+              user.profile = updatedProfile;
             }
 
             return done(null, user as any);
           }
 
-          // User doesn't exist - create new user
-          user = new User({
+          // User doesn't exist - create new user using Supabase
+          const newUser = await User.create({
             name,
             email,
             password: Math.random().toString(36).slice(-8), // Random password (won't be used)
@@ -78,13 +76,13 @@ export const configurePassport = () => {
             credits: 100, // Free tier credits
             profile: {
               avatar,
+              bio: '',
+              language: 'en',
             },
           });
 
-          await user.save();
-
           console.log(`✅ New user created via Google OAuth: ${email}`);
-          return done(null, user as any);
+          return done(null, newUser as any);
         } catch (error) {
           console.error('Google OAuth error:', error);
           return done(error as Error, undefined);
@@ -95,7 +93,7 @@ export const configurePassport = () => {
 
   // Serialize user to session
   passport.serializeUser((user: any, done) => {
-    done(null, user._id);
+    done(null, user.id || user._id);
   });
 
   // Deserialize user from session
