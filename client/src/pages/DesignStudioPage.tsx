@@ -25,14 +25,11 @@ import {
   Menu,
   Settings,
   Eye,
-  Layout,
   ChevronDown,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import confetti from 'canvas-confetti';
 import Book3DPreview from '../components/design/Book3DPreview';
-import TemplateGallery from '../components/design/TemplateGallery';
-import { BookTemplate, bookTemplates } from '../data/bookTemplates';
 import { useLanguage } from '../contexts/LanguageContext';
 import { loadDesignFonts } from '../services/designApplicationService';
 import type { AICompleteDesign } from '../types/templates';
@@ -140,10 +137,7 @@ export default function DesignStudioPage() {
   const [textColor, setTextColor] = useState('#ffffff');
   const [fontFamily, setFontFamily] = useState(FONT_OPTIONS[0].value);
   const [imageUrl, setImageUrl] = useState<string>('');
-  const [currentTemplateId, setCurrentTemplateId] = useState<string | undefined>();
 
-  // Template gallery state
-  const [showTemplateGallery, setShowTemplateGallery] = useState(false);
 
   // Publish modal state
   const [showPublishModal, setShowPublishModal] = useState(false);
@@ -285,51 +279,6 @@ export default function DesignStudioPage() {
   const applyPreset = (preset: typeof COLOR_PRESETS[0]) => {
     setCoverColor(preset.cover);
     setTextColor(preset.text);
-  };
-
-  // Handle template selection
-  const handleTemplateSelect = async (template: BookTemplate) => {
-    // Apply template cover styles
-    const newCoverColor = template.coverStyle.backgroundColor || '#1a1a2e';
-    const newTextColor = template.coverStyle.titleColor || '#ffffff';
-    const newFontFamily = `"${template.fonts.title}", serif`;
-
-    console.log('Applying template:', template.name);
-    console.log('Cover color:', newCoverColor);
-    console.log('Text color:', newTextColor);
-    console.log('Font:', newFontFamily);
-
-    setCoverColor(newCoverColor);
-    setTextColor(newTextColor);
-    setFontFamily(newFontFamily);
-    setCurrentTemplateId(template.id);
-    setShowTemplateGallery(false);
-
-    // Auto-save after template selection
-    if (book) {
-      try {
-        const coverDesign: CoverDesign = {
-          coverColor: newCoverColor,
-          textColor: newTextColor,
-          fontFamily: newFontFamily,
-          imageUrl: imageUrl || undefined,
-        };
-
-        await api.put(`/books/${bookId}`, { coverDesign });
-        toast.success(
-          language === 'he'
-            ? `תבנית "${template.nameHe}" הוחלה ונשמרה!`
-            : `Template "${template.name}" applied and saved!`
-        );
-      } catch (error) {
-        console.error('Failed to save template:', error);
-        toast.success(
-          language === 'he'
-            ? `תבנית "${template.nameHe}" הוחלה! (לחץ שמור כדי לשמור)`
-            : `Template "${template.name}" applied! (Click save to persist)`
-        );
-      }
-    }
   };
 
   // AI Design Wizard progress state
@@ -869,22 +818,6 @@ export default function DesignStudioPage() {
                     : 'Colors, fonts & cover image in one click'}
                 </p>
 
-                {/* Template Gallery - Secondary Option */}
-                <button
-                  onClick={() => setShowTemplateGallery(true)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-gray-300 text-sm transition-all"
-                >
-                  <Layout className="w-4 h-4" />
-                  {language === 'he' ? 'או בחר תבנית ידנית' : 'Or choose template manually'}
-                </button>
-
-                {/* Current Template Indicator */}
-                {currentTemplateId && (
-                  <div className="text-xs text-center text-indigo-400 mt-1">
-                    {language === 'he' ? 'תבנית נוכחית: ' : 'Current: '}
-                    {bookTemplates.find(t => t.id === currentTemplateId)?.[language === 'he' ? 'nameHe' : 'name']}
-                  </div>
-                )}
               </div>
             </div>
 
@@ -1448,13 +1381,6 @@ export default function DesignStudioPage() {
         )}
       </AnimatePresence>
 
-      {/* Template Gallery Modal */}
-      <TemplateGallery
-        isOpen={showTemplateGallery}
-        onClose={() => setShowTemplateGallery(false)}
-        onSelect={handleTemplateSelect}
-        currentTemplateId={currentTemplateId}
-      />
     </div>
   );
 }
