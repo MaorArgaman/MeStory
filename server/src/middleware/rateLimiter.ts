@@ -6,7 +6,7 @@ import rateLimit from 'express-rate-limit';
  */
 export const apiLimiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000'), // 1 minute
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'), // 100 requests per minute
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '200'), // 200 requests per minute
   message: {
     success: false,
     error: 'Too many requests from this IP, please try again later',
@@ -37,7 +37,7 @@ export const authLimiter = rateLimit({
  */
 export const aiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 10, // 10 requests per minute
+  max: 30, // 30 requests per minute
   message: {
     success: false,
     error: 'AI request limit exceeded, please wait before trying again',
