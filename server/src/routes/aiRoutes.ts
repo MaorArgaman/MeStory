@@ -35,13 +35,15 @@ const router = Router();
 // Section 17.2: AI operations are resource-intensive
 const aiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 10, // 10 requests per minute per IP
+  max: 60, // 60 requests per minute per IP (increased for polling)
   message: {
     success: false,
     message: 'Too many AI requests, please try again later',
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // Skip rate limiting for GET requests (polling endpoints)
+  skip: (req) => req.method === 'GET',
 });
 
 // All AI routes require authentication
