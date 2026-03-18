@@ -81,13 +81,13 @@ export default function ImageEditToolbar({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full mb-2 z-50"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] max-w-[95vw]"
       style={{ direction: isHebrew ? 'rtl' : 'ltr' }}
     >
-      <div className="bg-gray-900/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700/50 overflow-hidden">
+      <div className="bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700/50 overflow-hidden max-h-[80vh] overflow-y-auto">
         {/* Header with tabs */}
         <div className="flex items-center border-b border-gray-700/50">
           {tabs.map((tab) => (
@@ -113,7 +113,7 @@ export default function ImageEditToolbar({
         </div>
 
         {/* Tab Content */}
-        <div className="p-4 min-w-[400px]">
+        <div className="p-4 w-[350px] max-w-[90vw]">
           <AnimatePresence mode="wait">
             {activeTab === 'style' && (
               <motion.div
