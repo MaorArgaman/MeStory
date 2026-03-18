@@ -441,7 +441,7 @@ export const getUnreadCount = async (req: AuthRequest, res: Response): Promise<v
 
     let totalUnread = 0;
     conversations.forEach((conv) => {
-      totalUnread += conv.unreadCount.get(req.user!.id) || 0;
+      totalUnread += conv.unreadCount[req.user!.id] || 0;
     });
 
     res.status(200).json({

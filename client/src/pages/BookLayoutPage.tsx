@@ -38,6 +38,7 @@ import {
   loadDesignFonts,
 } from '../services/designApplicationService';
 import type { AICompleteDesign } from '../types/templates';
+import ImageEditToolbar from '../components/layout/ImageEditToolbar';
 
 interface PageImage {
   id: string;
@@ -47,6 +48,20 @@ interface PageImage {
   width: number; // percentage of page width
   height: number; // percentage of page height
   rotation: number;
+  // New styling properties
+  opacity?: number;
+  borderRadius?: number;
+  fadeEdges?: boolean;
+  fadeAmount?: number;
+  textWrap?: 'none' | 'behind' | 'front' | 'wrap';
+  flipH?: boolean;
+  flipV?: boolean;
+  shadow?: boolean;
+  border?: {
+    width: number;
+    color: string;
+    style: 'solid' | 'dashed' | 'dotted';
+  };
 }
 
 // AI Design interfaces - matches server's TypographyDesign structure
@@ -147,6 +162,7 @@ interface PageContent {
   id: string;
   type: 'chapter' | 'blank' | 'toc' | 'title' | 'dedication' | 'summary';
   chapterIndex?: number;
+  pageIndex?: number;
   content: string;
   images: PageImage[];
 }
@@ -943,6 +959,24 @@ export default function BookLayoutPage() {
     setSelectedImageId(null);
   };
 
+  // Duplicate image
+  const duplicateImage = (pageIndex: number, imageId: string) => {
+    const updatedPages = [...pages];
+    const originalImage = updatedPages[pageIndex].images.find(img => img.id === imageId);
+    if (originalImage) {
+      const newImage: PageImage = {
+        ...originalImage,
+        id: `img-${Date.now()}`,
+        x: Math.min(originalImage.x + 5, 90),
+        y: Math.min(originalImage.y + 5, 90),
+      };
+      updatedPages[pageIndex].images.push(newImage);
+      setPages(updatedPages);
+      setSelectedImageId(newImage.id);
+      toast.success(language === 'he' ? 'התמונה שוכפלה' : 'Image duplicated');
+    }
+  };
+
   // Add page break / blank page
   const addBlankPage = (afterIndex: number) => {
     const newPage: PageContent = {
@@ -1416,6 +1450,10 @@ export default function BookLayoutPage() {
                     const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
                     if (idx !== -1) deleteImage(idx, imageId);
                   }}
+                  onImageDuplicate={(imageId) => {
+                    const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
+                    if (idx !== -1) duplicateImage(idx, imageId);
+                  }}
                   pageNumber={currentSpread > 0 ? (currentSpread - 1) * 2 + 1 : undefined}
                   bookTitle={book.title}
                   showHeader={aiDesign?.layout?.headerStyle !== 'none'}
@@ -1427,6 +1465,7 @@ export default function BookLayoutPage() {
                         )
                       : []
                   }
+                  language={language}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-300 text-sm">
@@ -1473,6 +1512,10 @@ export default function BookLayoutPage() {
                     const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
                     if (idx !== -1) deleteImage(idx, imageId);
                   }}
+                  onImageDuplicate={(imageId) => {
+                    const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
+                    if (idx !== -1) duplicateImage(idx, imageId);
+                  }}
                   pageNumber={currentSpread > 0 ? (currentSpread - 1) * 2 + 2 : undefined}
                   bookTitle={book.title}
                   showHeader={aiDesign?.layout?.headerStyle !== 'none'}
@@ -1484,6 +1527,7 @@ export default function BookLayoutPage() {
                         )
                       : []
                   }
+                  language={language}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-300 text-sm">
@@ -2415,11 +2459,13 @@ interface PageRendererProps {
   selectedImageId: string | null;
   onImageUpdate: (imageId: string, updates: Partial<PageImage>) => void;
   onImageDelete: (imageId: string) => void;
+  onImageDuplicate: (imageId: string) => void;
   pageNumber?: number;
   bookTitle?: string;
   showHeader?: boolean;
   headerStyle?: 'book-title' | 'chapter-title' | 'none';
   aiImagePlacements?: AIImagePlacementLocal[];
+  language?: string;
 }
 
 function PageRenderer({
@@ -2431,14 +2477,17 @@ function PageRenderer({
   selectedImageId,
   onImageUpdate,
   onImageDelete,
+  onImageDuplicate,
   pageNumber,
   bookTitle,
   showHeader = false,
   headerStyle = 'book-title',
   aiImagePlacements = [],
+  language = 'he',
 }: PageRendererProps) {
   const [_isDragging, setIsDragging] = useState(false);
   const [_isResizing, setIsResizing] = useState(false);
+  const [showEditToolbar, setShowEditToolbar] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   void _isDragging; void _isResizing; // For future visual feedback
 
@@ -2569,48 +2618,88 @@ function PageRenderer({
       )}
 
       {/* User-Added Images */}
-      {(page.images || []).map((image) => (
-        <div
-          key={image.id}
-          className={`absolute cursor-move ${
-            selectedImageId === image.id ? 'ring-2 ring-blue-500' : ''
-          }`}
-          style={{
-            left: `${image.x}%`,
-            top: `${image.y}%`,
-            width: `${image.width}%`,
-            height: `${image.height}%`,
-            transform: `rotate(${image.rotation}deg)`,
-          }}
-          onMouseDown={(e) => handleImageMouseDown(e, image, 'drag')}
-        >
-          <img
-            src={image.url}
-            alt=""
-            className="w-full h-full object-cover rounded"
-            draggable={false}
-          />
+      {(page.images || []).map((image) => {
+        // Calculate styles based on image properties
+        const imageStyles: React.CSSProperties = {
+          left: `${image.x}%`,
+          top: `${image.y}%`,
+          width: `${image.width}%`,
+          height: `${image.height}%`,
+          transform: `rotate(${image.rotation || 0}deg) ${image.flipH ? 'scaleX(-1)' : ''} ${image.flipV ? 'scaleY(-1)' : ''}`.trim(),
+          opacity: image.opacity ?? 1,
+          zIndex: image.textWrap === 'behind' ? 0 : image.textWrap === 'front' ? 20 : 10,
+        };
 
-          {/* Resize handle */}
-          {selectedImageId === image.id && (
-            <>
-              <div
-                className="absolute bottom-0 right-0 w-4 h-4 bg-blue-500 cursor-se-resize rounded-tl"
-                onMouseDown={(e) => handleImageMouseDown(e, image, 'resize')}
+        const imgStyles: React.CSSProperties = {
+          borderRadius: image.borderRadius ? `${image.borderRadius}%` : undefined,
+          boxShadow: image.shadow ? '0 4px 20px rgba(0,0,0,0.3)' : undefined,
+          border: image.border ? `${image.border.width}px ${image.border.style} ${image.border.color}` : undefined,
+          // Fade edges effect using mask
+          maskImage: image.fadeEdges
+            ? `radial-gradient(ellipse at center, black ${100 - (image.fadeAmount || 20)}%, transparent 100%)`
+            : undefined,
+          WebkitMaskImage: image.fadeEdges
+            ? `radial-gradient(ellipse at center, black ${100 - (image.fadeAmount || 20)}%, transparent 100%)`
+            : undefined,
+        };
+
+        return (
+          <div
+            key={image.id}
+            className={`absolute cursor-move transition-shadow ${
+              selectedImageId === image.id ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-transparent' : ''
+            }`}
+            style={imageStyles}
+            onMouseDown={(e) => handleImageMouseDown(e, image, 'drag')}
+            onDoubleClick={() => setShowEditToolbar(true)}
+          >
+            <img
+              src={image.url}
+              alt=""
+              className="w-full h-full object-cover"
+              style={imgStyles}
+              draggable={false}
+            />
+
+            {/* Edit Toolbar */}
+            {selectedImageId === image.id && showEditToolbar && (
+              <ImageEditToolbar
+                image={{ ...image, pageIndex: page.pageIndex || 0 }}
+                onUpdate={(updates) => onImageUpdate(image.id, updates)}
+                onDelete={() => onImageDelete(image.id)}
+                onDuplicate={() => onImageDuplicate(image.id)}
+                onClose={() => setShowEditToolbar(false)}
+                language={language}
               />
-              <button
-                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onImageDelete(image.id);
-                }}
-              >
-                <X className="w-4 h-4 text-white" />
-              </button>
-            </>
-          )}
-        </div>
-      ))}
+            )}
+
+            {/* Selection handles */}
+            {selectedImageId === image.id && (
+              <>
+                {/* Corner resize handles */}
+                <div
+                  className="absolute bottom-0 right-0 w-4 h-4 bg-amber-500 cursor-se-resize rounded-tl"
+                  onMouseDown={(e) => handleImageMouseDown(e, image, 'resize')}
+                />
+                <div className="absolute top-0 left-0 w-2 h-2 bg-amber-500 rounded-full cursor-nw-resize" />
+                <div className="absolute top-0 right-0 w-2 h-2 bg-amber-500 rounded-full cursor-ne-resize" />
+                <div className="absolute bottom-0 left-0 w-2 h-2 bg-amber-500 rounded-full cursor-sw-resize" />
+
+                {/* Edit button */}
+                <button
+                  className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-1 bg-amber-500 rounded text-xs text-white font-medium hover:bg-amber-600 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowEditToolbar(!showEditToolbar);
+                  }}
+                >
+                  {language === 'he' ? 'עריכה' : 'Edit'}
+                </button>
+              </>
+            )}
+          </div>
+        );
+      })}
 
       {/* Page Number Footer */}
       {settings.showPageNumbers && pageNumber !== undefined && page.type !== 'title' && (
