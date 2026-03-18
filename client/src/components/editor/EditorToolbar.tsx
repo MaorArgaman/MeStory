@@ -19,11 +19,39 @@ import {
   Undo,
   Redo,
   Type,
+  Palette,
+  Highlighter,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+
+// Predefined color palette
+const TEXT_COLORS = [
+  { color: '#000000', name: 'Black' },
+  { color: '#374151', name: 'Gray' },
+  { color: '#DC2626', name: 'Red' },
+  { color: '#EA580C', name: 'Orange' },
+  { color: '#D97706', name: 'Amber' },
+  { color: '#CA8A04', name: 'Yellow' },
+  { color: '#16A34A', name: 'Green' },
+  { color: '#0891B2', name: 'Cyan' },
+  { color: '#2563EB', name: 'Blue' },
+  { color: '#7C3AED', name: 'Purple' },
+  { color: '#DB2777', name: 'Pink' },
+  { color: '#FFFFFF', name: 'White' },
+];
+
+const HIGHLIGHT_COLORS = [
+  { color: 'transparent', name: 'None' },
+  { color: '#FEF08A', name: 'Yellow' },
+  { color: '#BBF7D0', name: 'Green' },
+  { color: '#BFDBFE', name: 'Blue' },
+  { color: '#FBCFE8', name: 'Pink' },
+  { color: '#FED7AA', name: 'Orange' },
+  { color: '#E9D5FF', name: 'Purple' },
+];
 
 interface EditorToolbarProps {
   editor: Editor | null;
@@ -34,9 +62,17 @@ type HeadingLevel = 1 | 2 | 3;
 export default function EditorToolbar({ editor }: EditorToolbarProps) {
   const { t } = useTranslation('common');
   const [showHeadingMenu, setShowHeadingMenu] = useState(false);
+  const [showColorMenu, setShowColorMenu] = useState(false);
+  const [showHighlightMenu, setShowHighlightMenu] = useState(false);
   const headingMenuRef = useRef<HTMLDivElement>(null);
+  const colorMenuRef = useRef<HTMLDivElement>(null);
+  const highlightMenuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const colorButtonRef = useRef<HTMLButtonElement>(null);
+  const highlightButtonRef = useRef<HTMLButtonElement>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const [colorMenuPosition, setColorMenuPosition] = useState({ top: 0, left: 0 });
+  const [highlightMenuPosition, setHighlightMenuPosition] = useState({ top: 0, left: 0 });
 
   // Calculate menu position when opening
   useEffect(() => {
@@ -49,6 +85,28 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
     }
   }, [showHeadingMenu]);
 
+  // Calculate color menu position
+  useEffect(() => {
+    if (showColorMenu && colorButtonRef.current) {
+      const rect = colorButtonRef.current.getBoundingClientRect();
+      setColorMenuPosition({
+        top: rect.bottom + 4,
+        left: Math.max(8, rect.left - 60),
+      });
+    }
+  }, [showColorMenu]);
+
+  // Calculate highlight menu position
+  useEffect(() => {
+    if (showHighlightMenu && highlightButtonRef.current) {
+      const rect = highlightButtonRef.current.getBoundingClientRect();
+      setHighlightMenuPosition({
+        top: rect.bottom + 4,
+        left: Math.max(8, rect.left - 40),
+      });
+    }
+  }, [showHighlightMenu]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -56,6 +114,18 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
       const isOutsideMenu = headingMenuRef.current && !headingMenuRef.current.contains(target);
       if (isOutsideButton && isOutsideMenu) {
         setShowHeadingMenu(false);
+      }
+      // Close color menu
+      const isOutsideColorButton = colorButtonRef.current && !colorButtonRef.current.contains(target);
+      const isOutsideColorMenu = colorMenuRef.current && !colorMenuRef.current.contains(target);
+      if (isOutsideColorButton && isOutsideColorMenu) {
+        setShowColorMenu(false);
+      }
+      // Close highlight menu
+      const isOutsideHighlightButton = highlightButtonRef.current && !highlightButtonRef.current.contains(target);
+      const isOutsideHighlightMenu = highlightMenuRef.current && !highlightMenuRef.current.contains(target);
+      if (isOutsideHighlightButton && isOutsideHighlightMenu) {
+        setShowHighlightMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -243,7 +313,126 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         >
           <Strikethrough className={iconClass} />
         </ToolbarButton>
+
+        {/* Text Color */}
+        <div className="relative">
+          <motion.button
+            ref={colorButtonRef}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              setShowColorMenu(!showColorMenu);
+              setShowHighlightMenu(false);
+            }}
+            title="Text Color"
+            className="p-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all relative"
+          >
+            <Palette className={iconClass} />
+            <div
+              className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-1 rounded-full"
+              style={{ backgroundColor: editor.getAttributes('textStyle').color || '#ffffff' }}
+            />
+          </motion.button>
+        </div>
+
+        {/* Highlight Color */}
+        <div className="relative">
+          <motion.button
+            ref={highlightButtonRef}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              setShowHighlightMenu(!showHighlightMenu);
+              setShowColorMenu(false);
+            }}
+            title="Highlight"
+            className="p-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all"
+          >
+            <Highlighter className={iconClass} />
+          </motion.button>
+        </div>
       </div>
+
+      {/* Color Picker Menu */}
+      {showColorMenu && createPortal(
+        <motion.div
+          ref={colorMenuRef}
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed bg-slate-800 border border-white/10 rounded-lg shadow-2xl p-3"
+          style={{
+            top: colorMenuPosition.top,
+            left: colorMenuPosition.left,
+            zIndex: 9999,
+          }}
+        >
+          <div className="text-xs text-gray-400 mb-2">צבע טקסט</div>
+          <div className="grid grid-cols-6 gap-1.5">
+            {TEXT_COLORS.map((item) => (
+              <button
+                key={item.color}
+                onClick={() => {
+                  editor.chain().focus().setColor(item.color).run();
+                  setShowColorMenu(false);
+                }}
+                title={item.name}
+                className="w-6 h-6 rounded-md border border-white/20 hover:scale-110 transition-transform"
+                style={{ backgroundColor: item.color }}
+              />
+            ))}
+          </div>
+          <button
+            onClick={() => {
+              editor.chain().focus().unsetColor().run();
+              setShowColorMenu(false);
+            }}
+            className="w-full mt-2 px-2 py-1 text-xs text-gray-400 hover:text-white hover:bg-white/10 rounded"
+          >
+            איפוס צבע
+          </button>
+        </motion.div>,
+        document.body
+      )}
+
+      {/* Highlight Picker Menu */}
+      {showHighlightMenu && createPortal(
+        <motion.div
+          ref={highlightMenuRef}
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed bg-slate-800 border border-white/10 rounded-lg shadow-2xl p-3"
+          style={{
+            top: highlightMenuPosition.top,
+            left: highlightMenuPosition.left,
+            zIndex: 9999,
+          }}
+        >
+          <div className="text-xs text-gray-400 mb-2">הדגשה</div>
+          <div className="grid grid-cols-4 gap-1.5">
+            {HIGHLIGHT_COLORS.map((item) => (
+              <button
+                key={item.color}
+                onClick={() => {
+                  if (item.color === 'transparent') {
+                    editor.chain().focus().unsetHighlight().run();
+                  } else {
+                    editor.chain().focus().toggleHighlight({ color: item.color }).run();
+                  }
+                  setShowHighlightMenu(false);
+                }}
+                title={item.name}
+                className={`w-6 h-6 rounded-md border hover:scale-110 transition-transform ${
+                  item.color === 'transparent' ? 'border-dashed border-gray-500' : 'border-white/20'
+                }`}
+                style={{ backgroundColor: item.color === 'transparent' ? 'transparent' : item.color }}
+              >
+                {item.color === 'transparent' && <span className="text-gray-500 text-xs">✕</span>}
+              </button>
+            ))}
+          </div>
+        </motion.div>,
+        document.body
+      )}
 
       <Divider />
 
