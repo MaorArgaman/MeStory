@@ -3,6 +3,12 @@ import { verifyToken } from '../utils/jwt';
 import { User, UserRole } from '../models/User';
 import { AuthRequest } from '../types';
 
+// UUID v4 regex pattern
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+// Check if string is a valid UUID
+const isValidUUID = (id: string): boolean => UUID_REGEX.test(id);
+
 /**
  * Authentication middleware
  * Verifies JWT token from Authorization header
@@ -30,6 +36,16 @@ export const authenticate = async (
 
     // Verify token
     const decoded = verifyToken(token);
+
+    // Validate that the user ID is a valid UUID (not old MongoDB ObjectId)
+    if (!isValidUUID(decoded.id)) {
+      res.status(401).json({
+        success: false,
+        error: 'Session expired. Please log out and log in again.',
+        code: 'INVALID_SESSION',
+      });
+      return;
+    }
 
     // Attach user info to request
     req.user = {
@@ -71,11 +87,15 @@ export const optionalAuth = async (
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
       const decoded = verifyToken(token);
-      req.user = {
-        id: decoded.id,
-        email: decoded.email,
-        role: decoded.role,
-      };
+
+      // Only attach user if ID is a valid UUID (skip old MongoDB ObjectIds)
+      if (isValidUUID(decoded.id)) {
+        req.user = {
+          id: decoded.id,
+          email: decoded.email,
+          role: decoded.role,
+        };
+      }
     }
     // Continue regardless of authentication status
     next();
