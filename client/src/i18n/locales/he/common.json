@@ -401,6 +401,12 @@
       "masterpiece": "יצירת מופת",
       "score": "ציון"
     },
+    "sections": {
+      "editors_choice": "בחירת העורכים",
+      "trending": "פופולרי עכשיו",
+      "continue_reading": "המשך קריאה",
+      "recommended": "מומלץ עבורך"
+    },
     "messages": {
       "load_failed": "נכשל בטעינת ספרי החנות"
     }

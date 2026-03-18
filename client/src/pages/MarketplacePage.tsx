@@ -55,20 +55,22 @@ interface BookItem {
   };
 }
 
-// Base categories for all languages
-const BASE_CATEGORIES = [
-  'All',
-  'Fantasy',
-  'Sci-Fi',
-  'Romance',
-  'Mystery',
-  'Thriller',
-  'Horror',
-  'Historical',
-  'Literary Fiction',
-  'Young Adult',
-  'Adventure',
-];
+// Base categories for all languages with translations
+const BASE_CATEGORIES: Record<string, Record<'en' | 'he', string>> = {
+  'All': { en: 'All', he: 'הכל' },
+  'Fantasy': { en: 'Fantasy', he: 'פנטזיה' },
+  'Sci-Fi': { en: 'Sci-Fi', he: 'מדע בדיוני' },
+  'Romance': { en: 'Romance', he: 'רומנטיקה' },
+  'Mystery': { en: 'Mystery', he: 'מסתורין' },
+  'Thriller': { en: 'Thriller', he: 'מותחן' },
+  'Horror': { en: 'Horror', he: 'אימה' },
+  'Historical': { en: 'Historical', he: 'היסטורי' },
+  'Literary Fiction': { en: 'Literary Fiction', he: 'ספרות יפה' },
+  'Young Adult': { en: 'Young Adult', he: 'נוער' },
+  'Adventure': { en: 'Adventure', he: 'הרפתקאות' },
+};
+
+const CATEGORY_KEYS = Object.keys(BASE_CATEGORIES);
 
 // Israeli-specific categories for Hebrew users (with trauma-informed design)
 const ISRAELI_CATEGORIES = [
@@ -319,18 +321,18 @@ export default function MarketplacePage() {
         {isAuthenticated() && (
           <div className="mb-8 sm:mb-12">
             {/* Continue Reading */}
-            <ContinueReading limit={4} />
+            <ContinueReading limit={4} title={t('dashboard.sections.continue_reading')} />
 
             {/* Recommended For You */}
-            <RecommendedForYou limit={8} showReasons={true} />
+            <RecommendedForYou limit={8} showReasons={true} title={t('dashboard.sections.recommended')} />
           </div>
         )}
 
         {/* Featured Books - Editor's Choice */}
-        <FeaturedBooks limit={4} />
+        <FeaturedBooks limit={4} title={t('marketplace.sections.editors_choice')} />
 
         {/* Trending Books */}
-        <TrendingBooks limit={6} />
+        <TrendingBooks limit={6} title={t('marketplace.sections.trending')} />
 
         {/* Glowing Category Tabs */}
         <motion.div
@@ -341,11 +343,11 @@ export default function MarketplacePage() {
         >
           {/* Base Categories */}
           <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-4 scrollbar-hide -mx-3 px-3 sm:mx-0 sm:px-0">
-            {BASE_CATEGORIES.map((category, index) => (
+            {CATEGORY_KEYS.map((categoryKey, index) => (
               <motion.button
-                key={category}
+                key={categoryKey}
                 onClick={() => {
-                  setSelectedCategory(category);
+                  setSelectedCategory(categoryKey);
                   setExpandedIsraeliCategory(null);
                 }}
                 initial={{ opacity: 0, x: -20 }}
@@ -354,7 +356,7 @@ export default function MarketplacePage() {
                 className="relative px-3 sm:px-5 py-2 sm:py-2.5 rounded-full font-medium whitespace-nowrap text-sm sm:text-base"
               >
                 {/* Sliding pill background for active tab */}
-                {selectedCategory === category && !expandedIsraeliCategory && (
+                {selectedCategory === categoryKey && !expandedIsraeliCategory && (
                   <motion.div
                     layoutId="activeCategoryIndicator"
                     className="absolute inset-0 bg-gradient-to-r from-purple-600/90 to-amber-500/90 rounded-full shadow-[0_0_20px_rgba(255,215,0,0.4)]"
@@ -368,7 +370,7 @@ export default function MarketplacePage() {
                 )}
 
                 {/* Hover glow effect for inactive tabs */}
-                {selectedCategory !== category && (
+                {selectedCategory !== categoryKey && (
                   <motion.div
                     className="absolute inset-0 rounded-full bg-white/0 hover:bg-white/10 transition-colors duration-200"
                     style={{ zIndex: 0 }}
@@ -380,13 +382,13 @@ export default function MarketplacePage() {
                 {/* Tab text - always on top */}
                 <span
                   className={`relative font-semibold transition-colors duration-200 ${
-                    selectedCategory === category && !expandedIsraeliCategory
+                    selectedCategory === categoryKey && !expandedIsraeliCategory
                       ? 'text-white drop-shadow-md'
                       : 'text-gray-400 hover:text-gray-200'
                   }`}
                   style={{ zIndex: 10 }}
                 >
-                  {category}
+                  {BASE_CATEGORIES[categoryKey][language]}
                 </span>
               </motion.button>
             ))}
