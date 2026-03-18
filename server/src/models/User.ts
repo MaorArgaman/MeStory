@@ -1,20 +1,24 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import { supabaseAdmin } from '../config/supabase';
+import crypto from 'crypto';
+
+// Use crypto.randomUUID() instead of uuid package (Node 14.17+)
+const uuidv4 = () => crypto.randomUUID();
 
 // User role enum
 export enum UserRole {
-  FREE = 'free',
-  STANDARD = 'standard',
-  PREMIUM = 'premium',
-  ADMIN = 'admin',
+  FREE = 'FREE',
+  STANDARD = 'STANDARD',
+  PREMIUM = 'PREMIUM',
+  ADMIN = 'ADMIN',
 }
 
 // Subscription interface
 export interface ISubscription {
-  tier: UserRole;
+  tier: string;
   price: number;
   credits: number;
-  startDate: Date;
-  endDate: Date;
+  startDate: string | null;
+  endDate: string | null;
   isActive: boolean;
   autoRenew?: boolean;
 }
@@ -29,13 +33,13 @@ export interface IProfile {
     publishedBooks: number;
     totalSales: number;
     rating: number;
-    followers: mongoose.Types.ObjectId[];
+    followers: string[];
   };
-  following?: mongoose.Types.ObjectId[];
+  following?: string[];
   readingHistory?: Array<{
-    bookId: mongoose.Types.ObjectId;
+    bookId: string;
     progress: number;
-    lastRead: Date;
+    lastRead: string;
   }>;
   writingStatistics?: {
     totalWords: number;
@@ -46,10 +50,10 @@ export interface IProfile {
     totalEarned: number;
     pendingPayout: number;
     withdrawn: number;
-    lastPayoutDate?: Date;
+    lastPayoutDate?: string;
     history: Array<{
       amount: number;
-      date: Date;
+      date: string;
       status: 'pending' | 'completed' | 'failed';
       paypalEmail: string;
     }>;
@@ -74,19 +78,21 @@ export interface IPayPal {
   email?: string;
   accountId?: string;
   isVerified: boolean;
-  connectedAt?: Date;
+  connectedAt?: string;
 }
 
 // Email verification interface
 export interface IEmailVerification {
   isVerified: boolean;
   verificationCode?: string;
-  verificationCodeExpires?: Date;
-  verifiedAt?: Date;
+  verificationCodeExpires?: string;
+  verifiedAt?: string;
 }
 
-// User interface extending Mongoose Document
-export interface IUser extends Document {
+// User interface
+export interface IUser {
+  id: string;
+  _id?: string; // Alias for compatibility
   name: string;
   email: string;
   password: string;
@@ -96,338 +102,334 @@ export interface IUser extends Document {
   profile?: IProfile;
   paypal?: IPayPal;
   emailVerification: IEmailVerification;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: string;
+  updated_at: string;
+  // Compatibility aliases
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-// Subscription schema
-const SubscriptionSchema = new Schema<ISubscription>(
-  {
-    tier: {
-      type: String,
-      enum: Object.values(UserRole),
-      required: true,
-      default: UserRole.FREE,
-    },
-    price: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
-    credits: {
-      type: Number,
-      required: true,
-      default: 100,
-    },
-    startDate: {
-      type: Date,
-      required: true,
-      default: Date.now,
-    },
-    endDate: {
-      type: Date,
-      required: true,
-    },
-    isActive: {
-      type: Boolean,
-      required: true,
-      default: true,
-    },
-    autoRenew: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  { _id: false }
-);
+// Database row type (snake_case from PostgreSQL)
+interface UserRow {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+  credits: number;
+  subscription: ISubscription | null;
+  profile: IProfile | null;
+  paypal: IPayPal | null;
+  email_verification: IEmailVerification | null;
+  created_at: string;
+  updated_at: string;
+}
 
-// Profile schema
-const ProfileSchema = new Schema<IProfile>(
-  {
-    bio: {
-      type: String,
-      maxlength: 500,
-    },
-    avatar: {
-      type: String,
-    },
-    headerImage: {
-      type: String,
-    },
-    language: {
-      type: String,
-      enum: ['en', 'he'],
-      default: 'en',
-    },
-    authorProfile: {
-      publishedBooks: {
-        type: Number,
-        default: 0,
-      },
-      totalSales: {
-        type: Number,
-        default: 0,
-      },
-      rating: {
-        type: Number,
-        min: 0,
-        max: 5,
-        default: 0,
-      },
-      followers: [
-        {
-          type: Schema.Types.ObjectId,
-          ref: 'User',
-        },
-      ],
-    },
-    following: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
-    readingHistory: [
-      {
-        bookId: {
-          type: Schema.Types.ObjectId,
-          ref: 'Book',
-        },
-        progress: {
-          type: Number,
-          min: 0,
-          max: 100,
-          default: 0,
-        },
-        lastRead: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
-    writingStatistics: {
-      totalWords: {
-        type: Number,
-        default: 0,
-      },
-      booksWritten: {
-        type: Number,
-        default: 0,
-      },
-      averageQualityScore: {
-        type: Number,
-        min: 0,
-        max: 100,
-      },
-    },
-    earnings: {
-      totalEarned: {
-        type: Number,
-        default: 0,
-      },
-      pendingPayout: {
-        type: Number,
-        default: 0,
-      },
-      withdrawn: {
-        type: Number,
-        default: 0,
-      },
-      lastPayoutDate: {
-        type: Date,
-      },
-      history: [
-        {
-          amount: Number,
-          date: Date,
-          status: {
-            type: String,
-            enum: ['pending', 'completed', 'failed'],
-          },
-          paypalEmail: String,
-        },
-      ],
-    },
-    notificationPreferences: {
-      writing: {
-        type: Boolean,
-        default: true,
-      },
-      publishing: {
-        type: Boolean,
-        default: true,
-      },
-      sales: {
-        type: Boolean,
-        default: true,
-      },
-      social: {
-        type: Boolean,
-        default: true,
-      },
-      system: {
-        type: Boolean,
-        default: true,
-      },
-      emailDigest: {
-        type: Boolean,
-        default: false,
-      },
-      quietHours: {
-        enabled: {
-          type: Boolean,
-          default: false,
-        },
-        start: {
-          type: String,
-        },
-        end: {
-          type: String,
-        },
-      },
-    },
-  },
-  { _id: false }
-);
+// Transform database row to IUser
+function rowToUser(row: UserRow): IUser {
+  return {
+    id: row.id,
+    _id: row.id,
+    name: row.name,
+    email: row.email,
+    password: row.password,
+    role: row.role as UserRole,
+    credits: row.credits,
+    subscription: row.subscription || undefined,
+    profile: row.profile || undefined,
+    paypal: row.paypal || undefined,
+    emailVerification: row.email_verification || { isVerified: false },
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
 
-// PayPal schema
-const PayPalSchema = new Schema<IPayPal>(
-  {
-    email: {
-      type: String,
-      lowercase: true,
-      trim: true,
-    },
-    accountId: {
-      type: String,
-    },
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
-    connectedAt: {
-      type: Date,
-    },
-  },
-  { _id: false }
-);
+// User Model class for Supabase operations
+export class User {
+  // Find user by ID
+  static async findById(id: string, includePassword = false): Promise<IUser | null> {
+    const columns = includePassword
+      ? '*'
+      : 'id, name, email, role, credits, subscription, profile, paypal, email_verification, created_at, updated_at';
 
-// Email verification schema
-const EmailVerificationSchema = new Schema<IEmailVerification>(
-  {
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
-    verificationCode: {
-      type: String,
-    },
-    verificationCodeExpires: {
-      type: Date,
-    },
-    verifiedAt: {
-      type: Date,
-    },
-  },
-  { _id: false }
-);
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select(columns)
+      .eq('id', id)
+      .single();
 
-// User schema
-const UserSchema = new Schema<IUser>(
-  {
-    name: {
-      type: String,
-      required: [true, 'Name is required'],
-      trim: true,
-      minlength: [2, 'Name must be at least 2 characters'],
-      maxlength: [100, 'Name must not exceed 100 characters'],
-    },
-    email: {
-      type: String,
-      required: [true, 'Email is required'],
-      unique: true,
-      lowercase: true,
-      trim: true,
-      match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address'],
-    },
-    password: {
-      type: String,
-      required: [true, 'Password is required'],
-      minlength: [8, 'Password must be at least 8 characters'],
-      select: false, // Don't include password in queries by default
-    },
-    role: {
-      type: String,
-      enum: Object.values(UserRole),
-      default: UserRole.FREE,
-      required: true,
-    },
-    credits: {
-      type: Number,
-      required: true,
-      default: 100, // Free tier starts with 100 credits
-      min: [0, 'Credits cannot be negative'],
-    },
-    subscription: {
-      type: SubscriptionSchema,
-    },
-    profile: {
-      type: ProfileSchema,
-      default: () => ({}),
-    },
-    paypal: {
-      type: PayPalSchema,
-    },
-    emailVerification: {
-      type: EmailVerificationSchema,
-      default: () => ({ isVerified: false }),
-    },
-  },
-  {
-    timestamps: true,
-    collection: 'users',
-  }
-);
+    if (error || !data) return null;
 
-// Indexes
-UserSchema.index({ email: 1 });
-UserSchema.index({ role: 1 });
-UserSchema.index({ 'subscription.tier': 1 });
-UserSchema.index({ createdAt: -1 });
-
-// Virtual for checking if user is premium
-UserSchema.virtual('isPremium').get(function (this: IUser) {
-  return this.role === UserRole.PREMIUM || this.role === UserRole.ADMIN;
-});
-
-// Virtual for checking if user has credits
-UserSchema.virtual('hasCredits').get(function (this: IUser) {
-  if (this.role === UserRole.PREMIUM || this.role === UserRole.ADMIN) {
-    return true; // Unlimited credits
-  }
-  return this.credits > 0;
-});
-
-// Method to deduct credits
-UserSchema.methods.deductCredits = async function (amount: number): Promise<boolean> {
-  if (this.role === UserRole.PREMIUM || this.role === UserRole.ADMIN) {
-    return true; // Premium users have unlimited credits
+    const user = rowToUser(data as UserRow);
+    if (!includePassword) {
+      user.password = '';
+    }
+    return user;
   }
 
-  if (this.credits >= amount) {
-    this.credits -= amount;
-    await this.save();
-    return true;
+  // Find user by email
+  static async findByEmail(email: string, includePassword = false): Promise<IUser | null> {
+    const columns = includePassword
+      ? '*'
+      : 'id, name, email, role, credits, subscription, profile, paypal, email_verification, created_at, updated_at';
+
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select(columns)
+      .eq('email', email.toLowerCase())
+      .single();
+
+    if (error || !data) return null;
+
+    const user = rowToUser(data as UserRow);
+    if (!includePassword) {
+      user.password = '';
+    }
+    return user;
   }
 
-  return false;
-};
+  // Find one user by query
+  static async findOne(query: Partial<{ email: string; _id: string; id: string }>, selectPassword = false): Promise<IUser | null> {
+    if (query.email) {
+      return this.findByEmail(query.email, selectPassword);
+    }
+    if (query._id || query.id) {
+      return this.findById(query._id || query.id!, selectPassword);
+    }
+    return null;
+  }
 
-// Method to add credits
-UserSchema.methods.addCredits = async function (amount: number): Promise<void> {
-  this.credits += amount;
-  await this.save();
-};
+  // Create new user
+  static async create(userData: Partial<IUser>): Promise<IUser> {
+    const id = uuidv4();
+    const now = new Date().toISOString();
 
-// Export the model
-export const User = mongoose.model<IUser>('User', UserSchema);
+    const insertData = {
+      id,
+      name: userData.name,
+      email: userData.email?.toLowerCase(),
+      password: userData.password,
+      role: userData.role || UserRole.FREE,
+      credits: userData.credits ?? 100,
+      subscription: userData.subscription || {
+        tier: 'free',
+        price: 0,
+        credits: 100,
+        startDate: now,
+        endDate: null,
+        isActive: true,
+        autoRenew: false,
+      },
+      profile: userData.profile || {
+        bio: '',
+        avatar: '',
+        headerImage: '',
+        language: 'en',
+        authorProfile: { publishedBooks: 0, totalSales: 0, rating: 0, followers: [] },
+        following: [],
+        readingHistory: [],
+        writingStatistics: { totalWords: 0, booksWritten: 0, averageQualityScore: 0 },
+        earnings: { totalEarned: 0, pendingPayout: 0, withdrawn: 0, history: [] },
+        notificationPreferences: {
+          writing: true,
+          publishing: true,
+          sales: true,
+          social: true,
+          system: true,
+          emailDigest: false,
+        },
+      },
+      paypal: userData.paypal || null,
+      email_verification: userData.emailVerification || { isVerified: false },
+      created_at: now,
+      updated_at: now,
+    };
+
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating user:', error);
+      throw new Error(error.message);
+    }
+
+    return rowToUser(data as UserRow);
+  }
+
+  // Update user by ID
+  static async findByIdAndUpdate(
+    id: string,
+    update: Partial<IUser> | { $set?: Partial<IUser>; $inc?: { credits?: number } },
+    options?: { new?: boolean }
+  ): Promise<IUser | null> {
+    // Handle $set and $inc operators for Mongoose compatibility
+    let updateData: Record<string, any> = {};
+
+    if ('$set' in update && update.$set) {
+      updateData = { ...update.$set };
+    } else if ('$inc' in update) {
+      // Handle increment - need to fetch current value first
+      const currentUser = await this.findById(id);
+      if (!currentUser) return null;
+
+      if (update.$inc?.credits) {
+        updateData.credits = currentUser.credits + update.$inc.credits;
+      }
+    } else {
+      updateData = { ...update };
+    }
+
+    // Convert camelCase to snake_case for specific fields
+    if (updateData.emailVerification) {
+      updateData.email_verification = updateData.emailVerification;
+      delete updateData.emailVerification;
+    }
+
+    updateData.updated_at = new Date().toISOString();
+
+    // Remove undefined values and id field
+    delete updateData.id;
+    delete updateData._id;
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
+
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating user:', error);
+      return null;
+    }
+
+    return rowToUser(data as UserRow);
+  }
+
+  // Delete user by ID
+  static async findByIdAndDelete(id: string): Promise<IUser | null> {
+    const user = await this.findById(id);
+    if (!user) return null;
+
+    const { error } = await supabaseAdmin
+      .from('users')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting user:', error);
+      return null;
+    }
+
+    return user;
+  }
+
+  // Find multiple users
+  static async find(query: Record<string, any> = {}): Promise<IUser[]> {
+    let queryBuilder = supabaseAdmin
+      .from('users')
+      .select('id, name, email, role, credits, subscription, profile, paypal, email_verification, created_at, updated_at');
+
+    // Apply filters
+    Object.entries(query).forEach(([key, value]) => {
+      if (key === '_id' || key === 'id') {
+        queryBuilder = queryBuilder.eq('id', value);
+      } else if (key === 'role') {
+        queryBuilder = queryBuilder.eq('role', value);
+      } else if (key === 'email') {
+        queryBuilder = queryBuilder.eq('email', value.toLowerCase());
+      }
+    });
+
+    const { data, error } = await queryBuilder;
+
+    if (error) {
+      console.error('Error finding users:', error);
+      return [];
+    }
+
+    return (data || []).map(row => rowToUser(row as UserRow));
+  }
+
+  // Count users
+  static async countDocuments(query: Record<string, any> = {}): Promise<number> {
+    let queryBuilder = supabaseAdmin
+      .from('users')
+      .select('id', { count: 'exact', head: true });
+
+    Object.entries(query).forEach(([key, value]) => {
+      if (key === 'role') {
+        queryBuilder = queryBuilder.eq('role', value);
+      }
+    });
+
+    const { count, error } = await queryBuilder;
+
+    if (error) {
+      console.error('Error counting users:', error);
+      return 0;
+    }
+
+    return count || 0;
+  }
+
+  // Helper: Deduct credits
+  static async deductCredits(userId: string, amount: number): Promise<boolean> {
+    const user = await this.findById(userId);
+    if (!user) return false;
+
+    // Premium/Admin users have unlimited credits
+    if (user.role === UserRole.PREMIUM || user.role === UserRole.ADMIN) {
+      return true;
+    }
+
+    if (user.credits < amount) {
+      return false;
+    }
+
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update({ credits: user.credits - amount })
+      .eq('id', userId);
+
+    return !error;
+  }
+
+  // Helper: Add credits
+  static async addCredits(userId: string, amount: number): Promise<boolean> {
+    const user = await this.findById(userId);
+    if (!user) return false;
+
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update({ credits: user.credits + amount })
+      .eq('id', userId);
+
+    return !error;
+  }
+
+  // Check if user is premium
+  static isPremium(user: IUser): boolean {
+    return user.role === UserRole.PREMIUM || user.role === UserRole.ADMIN;
+  }
+
+  // Check if user has credits
+  static hasCredits(user: IUser): boolean {
+    if (user.role === UserRole.PREMIUM || user.role === UserRole.ADMIN) {
+      return true;
+    }
+    return user.credits > 0;
+  }
+}
+
+export default User;

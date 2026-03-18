@@ -1,7 +1,9 @@
 // MeStory Server
+import dotenv from 'dotenv';
+dotenv.config(); // Load environment variables FIRST before any other imports
+
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
-import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -33,9 +35,6 @@ import templateRoutes from './routes/templateRoutes';
 import bookPurchaseRoutes from './routes/bookPurchaseRoutes';
 import { initializeDefaultTemplates } from './services/templateService';
 
-// Load environment variables
-dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 5001;
 
@@ -59,7 +58,7 @@ const initializeApp = async () => {
   if (initializationError) throw initializationError;
 
   try {
-    // Connect to MongoDB
+    // Connect to Supabase
     await connectDatabase();
 
     // Configure Passport strategies
@@ -178,18 +177,17 @@ app.use('/uploads', express.static(path.resolve(uploadDir)));
 // ============================================
 // Health Check (no init required)
 // ============================================
-app.get('/health', (_req, res) => {
-  const dbStatus = getDatabaseStatus();
-  const mongoUri = process.env.MONGODB_URI || '';
-  const isLocalMongo = mongoUri.includes('localhost') || mongoUri.includes('127.0.0.1');
+app.get('/health', async (_req, res) => {
+  const dbStatus = await getDatabaseStatus();
   const isVercelEnv = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
 
   // Check for configuration issues
   const configIssues: string[] = [];
-  if (!process.env.MONGODB_URI) {
-    configIssues.push('MONGODB_URI is not set');
-  } else if (isVercelEnv && isLocalMongo) {
-    configIssues.push('MONGODB_URI points to localhost but running on Vercel - update to MongoDB Atlas URI');
+  if (!process.env.SUPABASE_URL) {
+    configIssues.push('SUPABASE_URL is not set');
+  }
+  if (!process.env.SUPABASE_ANON_KEY) {
+    configIssues.push('SUPABASE_ANON_KEY is not set');
   }
   if (!process.env.GOOGLE_CLIENT_ID) {
     configIssues.push('GOOGLE_CLIENT_ID is not set');
@@ -212,8 +210,8 @@ app.get('/health', (_req, res) => {
     configIssues: configIssues.length > 0 ? configIssues : undefined,
     database: dbStatus,
     env: {
-      hasMongoUri: !!process.env.MONGODB_URI,
-      mongoUriType: isLocalMongo ? 'localhost' : 'remote',
+      hasSupabaseUrl: !!process.env.SUPABASE_URL,
+      hasSupabaseKey: !!process.env.SUPABASE_ANON_KEY,
       hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
       hasGoogleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
       hasGoogleCallbackUrl: !!process.env.GOOGLE_CALLBACK_URL,

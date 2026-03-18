@@ -5,6 +5,10 @@
 
 import { Response } from 'express';
 import { AuthRequest } from '../types';
+
+// UUID validation regex for Supabase IDs
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 import {
   createInterview,
   getInterview,
@@ -73,6 +77,15 @@ export const sendMessage = async (
     const { id } = req.params;
     const { message } = req.body;
 
+    // Validate UUID format
+    if (!UUID_REGEX.test(id)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid interview ID format',
+      });
+      return;
+    }
+
     if (!message || typeof message !== 'string') {
       res.status(400).json({
         success: false,
@@ -140,6 +153,15 @@ export const getInterviewState = async (
   try {
     const { id } = req.params;
 
+    // Validate UUID format
+    if (!UUID_REGEX.test(id)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid interview ID format',
+      });
+      return;
+    }
+
     const state = getInterview(id);
 
     if (!state) {
@@ -182,6 +204,15 @@ export const completeInterview = async (
   try {
     const { id } = req.params;
 
+    // Validate UUID format
+    if (!UUID_REGEX.test(id)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid interview ID format',
+      });
+      return;
+    }
+
     const state = getInterview(id);
 
     if (!state) {
@@ -221,6 +252,15 @@ export const cancelInterview = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
+
+    // Validate UUID format
+    if (!UUID_REGEX.test(id)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid interview ID format',
+      });
+      return;
+    }
 
     const state = getInterview(id);
 

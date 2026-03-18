@@ -1,6 +1,8 @@
 import { Response } from 'express';
-import mongoose from 'mongoose';
 import { Book } from '../models/Book';
+
+// UUID validation function for Supabase
+const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 import { AuthRequest } from '../types';
 import {
   generateImage,
@@ -42,7 +44,7 @@ export const generateAIImage = async (req: AuthRequest, res: Response): Promise<
     };
 
     // Add book context if bookId is provided
-    if (bookId && mongoose.Types.ObjectId.isValid(bookId)) {
+    if (bookId && isValidUUID(bookId)) {
       const book = await Book.findById(bookId);
       if (book && book.author.toString() === req.user.id) {
         imageRequest.bookContext = {
@@ -64,16 +66,11 @@ export const generateAIImage = async (req: AuthRequest, res: Response): Promise<
     }
 
     // If bookId and pageIndex are provided, save the image to the book
-    if (bookId && pageIndex !== undefined && mongoose.Types.ObjectId.isValid(bookId)) {
+    if (bookId && pageIndex !== undefined && isValidUUID(bookId)) {
       const book = await Book.findById(bookId);
       if (book && book.author.toString() === req.user.id) {
-        // Initialize pageImages array if it doesn't exist
-        if (!book.pageImages) {
-          book.pageImages = [];
-        }
-
-        // Add the generated image
-        book.pageImages.push({
+        // Add the generated image to existing pageImages
+        const newImage = {
           pageIndex: parseInt(pageIndex, 10),
           url: result.imageUrl!,
           x: 10,
@@ -84,9 +81,10 @@ export const generateAIImage = async (req: AuthRequest, res: Response): Promise<
           isAiGenerated: true,
           prompt: result.enhancedPrompt || prompt,
           createdAt: new Date(),
-        } as any);
+        };
 
-        await book.save();
+        const updatedPageImages = [...(book.pageImages || []), newImage];
+        await Book.findByIdAndUpdate(bookId, { pageImages: updatedPageImages });
       }
     }
 
@@ -139,7 +137,7 @@ export const generateAIImageVariations = async (req: AuthRequest, res: Response)
     };
 
     // Add book context if bookId is provided
-    if (bookId && mongoose.Types.ObjectId.isValid(bookId)) {
+    if (bookId && isValidUUID(bookId)) {
       const book = await Book.findById(bookId);
       if (book && book.author.toString() === req.user.id) {
         imageRequest.bookContext = {
@@ -192,7 +190,7 @@ export const generateChapterIllustration = async (req: AuthRequest, res: Respons
     const { style, pageIndex } = req.body;
 
     // Validate bookId
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -252,11 +250,7 @@ export const generateChapterIllustration = async (req: AuthRequest, res: Respons
 
     // Save image to book if pageIndex is provided
     if (pageIndex !== undefined) {
-      if (!book.pageImages) {
-        book.pageImages = [];
-      }
-
-      book.pageImages.push({
+      const newImage = {
         pageIndex: parseInt(pageIndex, 10),
         url: result.imageUrl!,
         x: 10,
@@ -267,9 +261,10 @@ export const generateChapterIllustration = async (req: AuthRequest, res: Respons
         isAiGenerated: true,
         prompt: result.enhancedPrompt || result.prompt,
         createdAt: new Date(),
-      } as any);
+      };
 
-      await book.save();
+      const updatedPageImages = [...(book.pageImages || []), newImage];
+      await Book.findByIdAndUpdate(bookId, { pageImages: updatedPageImages });
     }
 
     res.status(200).json({
@@ -321,7 +316,7 @@ export const previewEnhancedPrompt = async (req: AuthRequest, res: Response): Pr
     };
 
     // Add book context if bookId is provided
-    if (bookId && mongoose.Types.ObjectId.isValid(bookId)) {
+    if (bookId && isValidUUID(bookId)) {
       const book = await Book.findById(bookId);
       if (book && book.author.toString() === req.user.id) {
         imageRequest.bookContext = {

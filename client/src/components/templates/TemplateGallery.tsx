@@ -141,7 +141,7 @@ export default function TemplateGallery({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search templates..."
+              placeholder="חפש תבניות..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`w-full pl-10 pr-4 ${compact ? 'py-2' : 'py-2.5'} rounded-xl bg-white/5 border border-white/10
@@ -193,7 +193,7 @@ export default function TemplateGallery({
                 : 'bg-white/5 text-gray-300 hover:bg-white/10'
             }`}
           >
-            All
+            הכל
           </button>
           {TEMPLATE_CATEGORIES.map((cat) => (
             <button
@@ -206,7 +206,7 @@ export default function TemplateGallery({
               }`}
             >
               <span>{cat.icon}</span>
-              <span>{cat.name}</span>
+              <span>{cat.nameHe}</span>
             </button>
           ))}
         </div>
@@ -225,7 +225,7 @@ export default function TemplateGallery({
           <AlertCircle className="w-5 h-5" />
           <span>{error}</span>
           <button onClick={fetchTemplates} className="underline hover:no-underline">
-            Try again
+            נסה שוב
           </button>
         </div>
       )}
@@ -235,9 +235,9 @@ export default function TemplateGallery({
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-yellow-400" />
-            <h3 className="text-lg font-semibold text-white">Recommended for you</h3>
+            <h3 className="text-lg font-semibold text-white">מומלץ עבורך</h3>
             <span className="text-sm text-gray-400">
-              (Based on genre: {genre})
+              (מבוסס על ז'אנר: {genre})
             </span>
           </div>
           <div className={`grid gap-${compact ? '3' : '4'} ${
@@ -273,7 +273,7 @@ export default function TemplateGallery({
               className="text-center py-12 text-gray-400"
             >
               <Filter className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No templates found matching your search</p>
+              <p>לא נמצאו תבניות התואמות לחיפוש שלך</p>
               <button
                 onClick={() => {
                   setSearchQuery('');
@@ -281,7 +281,7 @@ export default function TemplateGallery({
                 }}
                 className="mt-2 text-yellow-400 hover:underline"
               >
-                Clear filter
+                נקה סינון
               </button>
             </motion.div>
           ) : selectedCategory === 'all' && !searchQuery ? (
@@ -297,7 +297,7 @@ export default function TemplateGallery({
                   <div key={category} className={`space-y-${compact ? '2' : '4'}`}>
                     <h3 className={`${compact ? 'text-base' : 'text-lg'} font-semibold text-white flex items-center gap-2`}>
                       <span>{categoryInfo?.icon}</span>
-                      <span>{categoryInfo?.name || category}</span>
+                      <span>{categoryInfo?.nameHe || category}</span>
                       <span className="text-sm text-gray-500 font-normal">
                         ({categoryTemplates.length})
                       </span>

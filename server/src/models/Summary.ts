@@ -1,11 +1,13 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import { supabaseAdmin } from '../config/supabase';
+import crypto from 'crypto';
+const uuidv4 = () => crypto.randomUUID();
 
-// Source type enum (Section 4.1)
+// Source type enum
 export enum SourceType {
-  INTERVIEW = 'interview',
-  FILE = 'file',
-  AUDIO = 'audio',
-  DIRECT = 'direct',
+  INTERVIEW = 'INTERVIEW',
+  FILE = 'FILE',
+  AUDIO = 'AUDIO',
+  DIRECT = 'DIRECT',
 }
 
 // Character definition for summary
@@ -26,9 +28,9 @@ export interface ISummaryPlotStructure {
   genre?: string;
   setting?: string;
   threeActStructure?: {
-    act1: string; // Setup
-    act2: string; // Confrontation
-    act3: string; // Resolution
+    act1: string;
+    act2: string;
+    act3: string;
   };
   plotPoints?: {
     incitingIncident?: string;
@@ -56,43 +58,43 @@ export interface ISummaryChapter {
   notes?: string;
 }
 
-// Interview metadata
+// Metadata interfaces
 export interface IInterviewMetadata {
   totalQuestions?: number;
   questionsAnswered?: number;
-  sessionDuration?: number; // in minutes
+  sessionDuration?: number;
   conversationId?: string;
   aiModel?: string;
 }
 
-// File upload metadata
 export interface IFileMetadata {
   originalFilename: string;
   fileType: string;
-  fileSize: number; // in bytes
-  uploadedAt: Date;
+  fileSize: number;
+  uploadedAt: string;
   extractedText?: string;
   pageCount?: number;
 }
 
-// Audio upload metadata
 export interface IAudioMetadata {
   originalFilename: string;
   audioFormat: string;
-  duration: number; // in seconds
-  fileSize: number; // in bytes
-  uploadedAt: Date;
+  duration: number;
+  fileSize: number;
+  uploadedAt: string;
   transcriptionModel?: string;
-  transcriptionDuration?: number; // in seconds
+  transcriptionDuration?: number;
 }
 
-// Summary interface extending Mongoose Document
-export interface ISummary extends Document {
-  userId: mongoose.Types.ObjectId;
-  bookId?: mongoose.Types.ObjectId; // Reference to created book (if converted)
+// Summary interface
+export interface ISummary {
+  id: string;
+  _id?: string;
+  userId: string;
+  bookId?: string;
   sourceType: SourceType;
-  content: string; // Original content (interview transcript, file text, or audio transcript)
-  summary: string; // AI-generated summary
+  content: string;
+  summary: string;
   characters: ISummaryCharacter[];
   plotStructure: ISummaryPlotStructure;
   chapters: ISummaryChapter[];
@@ -101,344 +103,263 @@ export interface ISummary extends Document {
   error?: string;
   aiCreditsUsed?: number;
   convertedToBook: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: string;
+  updated_at: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-// Character schema
-const SummaryCharacterSchema = new Schema<ISummaryCharacter>(
-  {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    role: {
-      type: String,
-      enum: ['protagonist', 'antagonist', 'supporting', 'minor'],
-      required: true,
-    },
-    description: {
-      type: String,
-    },
-    traits: {
-      type: [String],
-      default: [],
-    },
-    backstory: {
-      type: String,
-    },
-    goals: {
-      type: String,
-    },
-    arc: {
-      type: String,
-    },
-  },
-  { _id: false }
-);
+// Database row type
+interface SummaryRow {
+  id: string;
+  user_id: string;
+  book_id: string | null;
+  source_type: string;
+  content: string;
+  summary: string;
+  characters: ISummaryCharacter[];
+  plot_structure: ISummaryPlotStructure;
+  chapters: ISummaryChapter[];
+  metadata: any;
+  status: string;
+  error: string | null;
+  ai_credits_used: number;
+  converted_to_book: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
-// Plot structure schema
-const SummaryPlotStructureSchema = new Schema<ISummaryPlotStructure>(
-  {
-    premise: {
-      type: String,
-    },
-    theme: {
-      type: String,
-    },
-    genre: {
-      type: String,
-    },
-    setting: {
-      type: String,
-    },
-    threeActStructure: {
-      act1: {
-        type: String,
-      },
-      act2: {
-        type: String,
-      },
-      act3: {
-        type: String,
-      },
-    },
-    plotPoints: {
-      incitingIncident: {
-        type: String,
-      },
-      firstPlotPoint: {
-        type: String,
-      },
-      midpoint: {
-        type: String,
-      },
-      climax: {
-        type: String,
-      },
-      resolution: {
-        type: String,
-      },
-    },
-    conflict: {
-      type: {
-        type: String,
-      },
-      description: {
-        type: String,
-      },
-    },
-    tone: {
-      type: String,
-    },
-    targetAudience: {
-      type: String,
-    },
-  },
-  { _id: false }
-);
+// Transform database row to ISummary
+function rowToSummary(row: SummaryRow): ISummary {
+  return {
+    id: row.id,
+    _id: row.id,
+    userId: row.user_id,
+    bookId: row.book_id || undefined,
+    sourceType: row.source_type as SourceType,
+    content: row.content,
+    summary: row.summary,
+    characters: row.characters || [],
+    plotStructure: row.plot_structure || {},
+    chapters: row.chapters || [],
+    metadata: row.metadata || undefined,
+    status: row.status as ISummary['status'],
+    error: row.error || undefined,
+    aiCreditsUsed: row.ai_credits_used || 0,
+    convertedToBook: row.converted_to_book || false,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
 
-// Chapter outline schema
-const SummaryChapterSchema = new Schema<ISummaryChapter>(
-  {
-    chapterNumber: {
-      type: Number,
-      required: true,
-    },
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    summary: {
-      type: String,
-      required: true,
-    },
-    keyEvents: {
-      type: [String],
-      default: [],
-    },
-    characters: {
-      type: [String],
-      default: [],
-    },
-    estimatedWordCount: {
-      type: Number,
-    },
-    notes: {
-      type: String,
-    },
-  },
-  { _id: false }
-);
+// Summary Model class for Supabase operations
+export class Summary {
+  // Find summary by ID
+  static async findById(id: string): Promise<ISummary | null> {
+    const { data, error } = await supabaseAdmin
+      .from('summaries')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-// Interview metadata schema (reserved for future use)
-export const _InterviewMetadataSchema = new Schema(
-  {
-    totalQuestions: {
-      type: Number,
-    },
-    questionsAnswered: {
-      type: Number,
-    },
-    sessionDuration: {
-      type: Number,
-    },
-    conversationId: {
-      type: String,
-    },
-    aiModel: {
-      type: String,
-      default: 'gemini-2.5-flash',
-    },
-  },
-  { _id: false }
-);
-
-// File metadata schema (reserved for future use)
-export const _FileMetadataSchema = new Schema(
-  {
-    originalFilename: {
-      type: String,
-      required: true,
-    },
-    fileType: {
-      type: String,
-      required: true,
-    },
-    fileSize: {
-      type: Number,
-      required: true,
-    },
-    uploadedAt: {
-      type: Date,
-      default: Date.now,
-    },
-    extractedText: {
-      type: String,
-    },
-    pageCount: {
-      type: Number,
-    },
-  },
-  { _id: false }
-);
-
-// Audio metadata schema (reserved for future use)
-export const _AudioMetadataSchema = new Schema(
-  {
-    originalFilename: {
-      type: String,
-      required: true,
-    },
-    audioFormat: {
-      type: String,
-      required: true,
-    },
-    duration: {
-      type: Number,
-      required: true,
-    },
-    fileSize: {
-      type: Number,
-      required: true,
-    },
-    uploadedAt: {
-      type: Date,
-      default: Date.now,
-    },
-    transcriptionModel: {
-      type: String,
-      default: 'gemini-2.5-flash',
-    },
-    transcriptionDuration: {
-      type: Number,
-    },
-  },
-  { _id: false }
-);
-
-// Summary schema
-const SummarySchema = new Schema<ISummary>(
-  {
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'User ID is required'],
-      index: true,
-    },
-    bookId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Book',
-      index: true,
-    },
-    sourceType: {
-      type: String,
-      enum: Object.values(SourceType),
-      required: [true, 'Source type is required'],
-      index: true,
-    },
-    content: {
-      type: String,
-      required: [true, 'Content is required'],
-    },
-    summary: {
-      type: String,
-      required: true,
-    },
-    characters: {
-      type: [SummaryCharacterSchema],
-      default: [],
-    },
-    plotStructure: {
-      type: SummaryPlotStructureSchema,
-      required: true,
-    },
-    chapters: {
-      type: [SummaryChapterSchema],
-      default: [],
-    },
-    metadata: {
-      type: Schema.Types.Mixed,
-    },
-    status: {
-      type: String,
-      enum: ['pending', 'processing', 'completed', 'converted', 'failed'],
-      default: 'pending',
-      required: true,
-    },
-    error: {
-      type: String,
-    },
-    aiCreditsUsed: {
-      type: Number,
-      default: 0,
-    },
-    convertedToBook: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  {
-    timestamps: true,
-    collection: 'summaries',
-  }
-);
-
-// Indexes
-SummarySchema.index({ userId: 1 });
-SummarySchema.index({ bookId: 1 });
-SummarySchema.index({ sourceType: 1 });
-SummarySchema.index({ status: 1 });
-SummarySchema.index({ convertedToBook: 1 });
-SummarySchema.index({ createdAt: -1 });
-
-// Compound indexes
-SummarySchema.index({ userId: 1, status: 1 });
-SummarySchema.index({ userId: 1, convertedToBook: 1 });
-
-// Virtual for checking if summary is ready for conversion
-SummarySchema.virtual('isReadyForConversion').get(function (this: ISummary) {
-  return (
-    this.status === 'completed' &&
-    !this.convertedToBook &&
-    this.summary &&
-    this.plotStructure &&
-    this.characters.length > 0 &&
-    this.chapters.length > 0
-  );
-});
-
-// Virtual for total estimated word count
-SummarySchema.virtual('totalEstimatedWordCount').get(function (this: ISummary) {
-  return this.chapters.reduce((total, chapter) => total + (chapter.estimatedWordCount || 0), 0);
-});
-
-// Pre-save middleware to validate metadata based on source type
-SummarySchema.pre('save', function (next) {
-  if (this.sourceType === SourceType.INTERVIEW && this.metadata) {
-    // Validate interview metadata
-    const metadata = this.metadata as IInterviewMetadata;
-    if (!metadata.conversationId) {
-      return next(new Error('Interview metadata must include conversationId'));
-    }
-  } else if (this.sourceType === SourceType.FILE && this.metadata) {
-    // Validate file metadata
-    const metadata = this.metadata as IFileMetadata;
-    if (!metadata.originalFilename || !metadata.fileType) {
-      return next(new Error('File metadata must include originalFilename and fileType'));
-    }
-  } else if (this.sourceType === SourceType.AUDIO && this.metadata) {
-    // Validate audio metadata
-    const metadata = this.metadata as IAudioMetadata;
-    if (!metadata.originalFilename || !metadata.audioFormat || !metadata.duration) {
-      return next(new Error('Audio metadata must include originalFilename, audioFormat, and duration'));
-    }
+    if (error || !data) return null;
+    return rowToSummary(data as SummaryRow);
   }
 
-  next();
-});
+  // Find one summary by query
+  static async findOne(query: Record<string, any>): Promise<ISummary | null> {
+    let queryBuilder = supabaseAdmin.from('summaries').select('*');
 
-// Export the model
-export const Summary = mongoose.model<ISummary>('Summary', SummarySchema);
+    if (query._id || query.id) {
+      queryBuilder = queryBuilder.eq('id', query._id || query.id);
+    }
+    if (query.userId) {
+      queryBuilder = queryBuilder.eq('user_id', query.userId);
+    }
+    if (query.bookId) {
+      queryBuilder = queryBuilder.eq('book_id', query.bookId);
+    }
+
+    const { data, error } = await queryBuilder.limit(1).single();
+
+    if (error || !data) return null;
+    return rowToSummary(data as SummaryRow);
+  }
+
+  // Create new summary
+  static async create(summaryData: Partial<ISummary>): Promise<ISummary> {
+    const id = uuidv4();
+    const now = new Date().toISOString();
+
+    const insertData = {
+      id,
+      user_id: summaryData.userId,
+      book_id: summaryData.bookId || null,
+      source_type: summaryData.sourceType || SourceType.DIRECT,
+      content: summaryData.content || '',
+      summary: summaryData.summary || '',
+      characters: summaryData.characters || [],
+      plot_structure: summaryData.plotStructure || {},
+      chapters: summaryData.chapters || [],
+      metadata: summaryData.metadata || null,
+      status: summaryData.status || 'pending',
+      error: summaryData.error || null,
+      ai_credits_used: summaryData.aiCreditsUsed || 0,
+      converted_to_book: summaryData.convertedToBook || false,
+      created_at: now,
+      updated_at: now,
+    };
+
+    const { data, error } = await supabaseAdmin
+      .from('summaries')
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating summary:', error);
+      throw new Error(error.message);
+    }
+
+    return rowToSummary(data as SummaryRow);
+  }
+
+  // Update summary by ID
+  static async findByIdAndUpdate(
+    id: string,
+    update: Partial<ISummary> | { $set?: Partial<any> },
+    options?: { new?: boolean }
+  ): Promise<ISummary | null> {
+    let updateData: Record<string, any> = {};
+
+    if ('$set' in update && update.$set) {
+      const setData = update.$set;
+      Object.entries(setData).forEach(([key, value]) => {
+        updateData[camelToSnake(key)] = value;
+      });
+    } else {
+      Object.entries(update).forEach(([key, value]) => {
+        if (key !== 'id' && key !== '_id') {
+          updateData[camelToSnake(key)] = value;
+        }
+      });
+    }
+
+    updateData.updated_at = new Date().toISOString();
+    delete updateData.id;
+    delete updateData._id;
+
+    const { data, error } = await supabaseAdmin
+      .from('summaries')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating summary:', error);
+      return null;
+    }
+
+    return rowToSummary(data as SummaryRow);
+  }
+
+  // Delete summary by ID
+  static async findByIdAndDelete(id: string): Promise<ISummary | null> {
+    const summary = await this.findById(id);
+    if (!summary) return null;
+
+    const { error } = await supabaseAdmin
+      .from('summaries')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting summary:', error);
+      return null;
+    }
+
+    return summary;
+  }
+
+  // Find multiple summaries
+  static async find(query: Record<string, any> = {}): Promise<ISummary[]> {
+    let queryBuilder = supabaseAdmin.from('summaries').select('*');
+
+    if (query.userId) {
+      queryBuilder = queryBuilder.eq('user_id', query.userId);
+    }
+    if (query.bookId) {
+      queryBuilder = queryBuilder.eq('book_id', query.bookId);
+    }
+    if (query.sourceType) {
+      queryBuilder = queryBuilder.eq('source_type', query.sourceType);
+    }
+    if (query.status) {
+      queryBuilder = queryBuilder.eq('status', query.status);
+    }
+    if (query.convertedToBook !== undefined) {
+      queryBuilder = queryBuilder.eq('converted_to_book', query.convertedToBook);
+    }
+
+    queryBuilder = queryBuilder.order('created_at', { ascending: false });
+
+    const { data, error } = await queryBuilder;
+
+    if (error) {
+      console.error('Error finding summaries:', error);
+      return [];
+    }
+
+    return (data || []).map(row => rowToSummary(row as SummaryRow));
+  }
+
+  // Count summaries
+  static async countDocuments(query: Record<string, any> = {}): Promise<number> {
+    let queryBuilder = supabaseAdmin
+      .from('summaries')
+      .select('id', { count: 'exact', head: true });
+
+    if (query.userId) {
+      queryBuilder = queryBuilder.eq('user_id', query.userId);
+    }
+    if (query.status) {
+      queryBuilder = queryBuilder.eq('status', query.status);
+    }
+
+    const { count, error } = await queryBuilder;
+
+    if (error) {
+      console.error('Error counting summaries:', error);
+      return 0;
+    }
+
+    return count || 0;
+  }
+
+  // Check if summary is ready for conversion
+  static isReadyForConversion(summary: ISummary): boolean {
+    return (
+      summary.status === 'completed' &&
+      !summary.convertedToBook &&
+      !!summary.summary &&
+      !!summary.plotStructure &&
+      summary.characters.length > 0 &&
+      summary.chapters.length > 0
+    );
+  }
+
+  // Get total estimated word count
+  static totalEstimatedWordCount(summary: ISummary): number {
+    return summary.chapters.reduce((total, chapter) => total + (chapter.estimatedWordCount || 0), 0);
+  }
+}
+
+// Helper to convert camelCase to snake_case
+function camelToSnake(str: string): string {
+  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+}
+
+export default Summary;

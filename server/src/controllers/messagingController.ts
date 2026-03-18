@@ -4,12 +4,14 @@
  */
 
 import { Response } from 'express';
-import mongoose from 'mongoose';
 import { Message, Conversation } from '../models/Message';
 import { User } from '../models/User';
 import { Book } from '../models/Book';
 import { AuthRequest } from '../types';
 import { notifyNewMessage } from '../services/notificationService';
+
+// UUID validation regex for Supabase
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Start or get existing conversation with an author about a book
@@ -29,7 +31,7 @@ export const startConversation = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    if (!mongoose.Types.ObjectId.isValid(authorId)) {
+    if (!UUID_REGEX.test(authorId)) {
       res.status(400).json({ success: false, error: 'Invalid author ID' });
       return;
     }
@@ -49,7 +51,7 @@ export const startConversation = async (req: AuthRequest, res: Response): Promis
 
     // If bookId provided, verify it exists and belongs to the author
     if (bookId) {
-      if (!mongoose.Types.ObjectId.isValid(bookId)) {
+      if (!UUID_REGEX.test(bookId)) {
         res.status(400).json({ success: false, error: 'Invalid book ID' });
         return;
       }
@@ -60,7 +62,7 @@ export const startConversation = async (req: AuthRequest, res: Response): Promis
         return;
       }
 
-      if (book.author.toString() !== authorId) {
+      if (book.author !== authorId) {
         res.status(400).json({ success: false, error: 'Book does not belong to this author' });
         return;
       }
@@ -75,7 +77,7 @@ export const startConversation = async (req: AuthRequest, res: Response): Promis
 
     if (!conversation) {
       // Create new conversation
-      conversation = new Conversation({
+      conversation = await Conversation.create({
         participants,
         book: bookId || null,
         unreadCount: new Map([
@@ -83,7 +85,6 @@ export const startConversation = async (req: AuthRequest, res: Response): Promis
           [authorId, 0],
         ]),
       });
-      await conversation.save();
     }
 
     // Populate conversation data
@@ -123,7 +124,7 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+    if (!UUID_REGEX.test(conversationId)) {
       res.status(400).json({ success: false, error: 'Invalid conversation ID' });
       return;
     }
@@ -145,45 +146,38 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    if (!conversation.participants.some((p) => p.toString() === req.user!.id)) {
+    if (!conversation.participants.some((p: string) => p === req.user!.id)) {
       res.status(403).json({ success: false, error: 'Not a participant in this conversation' });
       return;
     }
 
     // Create message
-    const message = new Message({
+    const message = await Message.create({
       conversation: conversationId,
       sender: req.user.id,
       content: content.trim(),
     });
-    await message.save();
 
     // Update conversation's last message and unread count
     const otherParticipantId = conversation.participants.find(
-      (p) => p.toString() !== req.user!.id
+      (p: string) => p !== req.user!.id
     );
 
-    conversation.lastMessage = {
-      content: content.trim().substring(0, 100),
-      sender: new mongoose.Types.ObjectId(req.user.id),
-      sentAt: new Date(),
-    };
-
     // Increment unread count for other participant
+    let bookTitle: string | undefined;
     if (otherParticipantId) {
-      const currentCount = conversation.unreadCount.get(otherParticipantId.toString()) || 0;
-      conversation.unreadCount.set(otherParticipantId.toString(), currentCount + 1);
+      const currentCount = conversation.unreadCount.get(otherParticipantId) || 0;
+      conversation.unreadCount.set(otherParticipantId, currentCount + 1);
 
-      // Send notification to the other participant (async, don't wait)
       // Get book title if conversation is about a specific book
-      let bookTitle: string | undefined;
       if (conversation.book) {
         const book = await Book.findById(conversation.book).select('title');
         bookTitle = book?.title;
       }
 
+      // Send notification to the other participant (async, don't wait)
       notifyNewMessage(
-        otherParticipantId.toString(),
+        otherParticipantId,
         req.user!.id,
         conversationId,
         content.trim(),
@@ -191,7 +185,15 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       ).catch((err) => console.error('Failed to send message notification:', err));
     }
 
-    await conversation.save();
+    // Update conversation with lastMessage and unreadCount
+    await Conversation.findByIdAndUpdate(conversationId, {
+      lastMessage: {
+        content: content.trim().substring(0, 100),
+        sender: req.user.id,
+        sentAt: new Date(),
+      },
+      unreadCount: conversation.unreadCount,
+    });
 
     // Populate sender info
     await message.populate('sender', 'name profilePicture');
@@ -282,7 +284,7 @@ export const getMessages = async (req: AuthRequest, res: Response): Promise<void
     const limit = parseInt(req.query.limit as string) || 50;
     const skip = (page - 1) * limit;
 
-    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+    if (!UUID_REGEX.test(conversationId)) {
       res.status(400).json({ success: false, error: 'Invalid conversation ID' });
       return;
     }
@@ -294,7 +296,7 @@ export const getMessages = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    if (!conversation.participants.some((p) => p.toString() === req.user!.id)) {
+    if (!conversation.participants.some((p: string) => p === req.user!.id)) {
       res.status(403).json({ success: false, error: 'Not a participant in this conversation' });
       return;
     }
@@ -319,7 +321,9 @@ export const getMessages = async (req: AuthRequest, res: Response): Promise<void
 
     // Reset unread count for current user
     conversation.unreadCount.set(req.user.id, 0);
-    await conversation.save();
+    await Conversation.findByIdAndUpdate(conversationId, {
+      unreadCount: conversation.unreadCount,
+    });
 
     res.status(200).json({
       success: true,
@@ -389,7 +393,7 @@ export const deleteConversation = async (req: AuthRequest, res: Response): Promi
 
     const { conversationId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+    if (!UUID_REGEX.test(conversationId)) {
       res.status(400).json({ success: false, error: 'Invalid conversation ID' });
       return;
     }
@@ -400,14 +404,15 @@ export const deleteConversation = async (req: AuthRequest, res: Response): Promi
       return;
     }
 
-    if (!conversation.participants.some((p) => p.toString() === req.user!.id)) {
+    if (!conversation.participants.some((p: string) => p === req.user!.id)) {
       res.status(403).json({ success: false, error: 'Not a participant in this conversation' });
       return;
     }
 
     // Soft delete - mark as inactive
-    conversation.isActive = false;
-    await conversation.save();
+    await Conversation.findByIdAndUpdate(conversationId, {
+      isActive: false,
+    });
 
     res.status(200).json({
       success: true,

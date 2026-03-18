@@ -4,6 +4,9 @@ import { User } from '../models/User';
 import { Book } from '../models/Book';
 import { AuthRequest } from '../types';
 
+// UUID validation regex
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Get user earnings data
  * GET /api/user/earnings
@@ -89,7 +92,7 @@ export const getEarnings = async (req: AuthRequest, res: Response): Promise<void
           .sort((a, b) => (b.statistics?.revenue || 0) - (a.statistics?.revenue || 0))
           .slice(0, 5)
           .map((book) => ({
-            id: book._id,
+            id: book.id,
             title: book.title,
             sales: book.statistics?.purchases || 0,
             revenue: ((book.statistics?.revenue || 0) * 0.5).toFixed(2),
@@ -132,29 +135,40 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    // Initialize profile if it doesn't exist
-    if (!user.profile) {
-      user.profile = {};
+    // Build update object
+    const updateData: any = {};
+    if (name) updateData.name = name;
+
+    // Handle profile updates
+    const profileUpdates: any = { ...user.profile };
+    if (!profileUpdates) {
+      updateData.profile = {};
     }
+    if (bio !== undefined) profileUpdates.bio = bio;
+    if (avatar) profileUpdates.avatar = avatar;
+    updateData.profile = profileUpdates;
 
-    // Update fields
-    if (name) user.name = name;
-    if (bio !== undefined) user.profile.bio = bio;
-    if (avatar) user.profile.avatar = avatar;
+    const updatedUser = await User.findByIdAndUpdate(req.user.id, updateData);
 
-    await user.save();
+    if (!updatedUser) {
+      res.status(404).json({
+        success: false,
+        error: 'Failed to update user',
+      });
+      return;
+    }
 
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
       data: {
         user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          credits: user.credits,
-          profile: user.profile,
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          role: updatedUser.role,
+          credits: updatedUser.credits,
+          profile: updatedUser.profile,
         },
       },
     });
@@ -223,9 +237,9 @@ export const changePassword = async (req: AuthRequest, res: Response): Promise<v
 
     // Hash new password
     const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(newPassword, salt);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    await user.save();
+    await User.findByIdAndUpdate(req.user.id, { password: hashedPassword });
 
     res.status(200).json({
       success: true,
@@ -305,25 +319,29 @@ export const requestWithdrawal = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    // Initialize profile and earnings if they don't exist
-    if (!user.profile) {
-      user.profile = {};
-    }
-    if (!user.profile.earnings) {
-      user.profile.earnings = { totalEarned: 0, pendingPayout: 0, withdrawn: 0, history: [] };
-    }
+    // Build updated profile with earnings
+    const currentProfile = user.profile || {};
+    const currentEarnings = currentProfile.earnings || { totalEarned: 0, pendingPayout: 0, withdrawn: 0, history: [] };
+    const updatedEarnings = {
+      ...currentEarnings,
+      withdrawn: currentEarnings.withdrawn + amount,
+      history: [
+        ...currentEarnings.history,
+        {
+          amount,
+          date: new Date(),
+          status: 'pending',
+          paypalEmail: user.paypal?.email || '',
+        },
+      ],
+    };
 
-    // In production, integrate with PayPal Payouts API
-    // For now, just update the withdrawn amount
-    user.profile.earnings.withdrawn += amount;
-    user.profile.earnings.history.push({
-      amount,
-      date: new Date(),
-      status: 'pending',
-      paypalEmail: user.paypal?.email || '',
+    await User.findByIdAndUpdate(req.user.id, {
+      profile: {
+        ...currentProfile,
+        earnings: updatedEarnings,
+      },
     });
-
-    await user.save();
 
     res.status(200).json({
       success: true,
@@ -353,6 +371,15 @@ export const getUserProfile = async (req: AuthRequest, res: Response): Promise<v
   try {
     const { id } = req.params;
 
+    // Validate UUID format
+    if (!UUID_REGEX.test(id)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid user ID format',
+      });
+      return;
+    }
+
     const user = await User.findById(id).select('-password -paypal');
 
     if (!user) {
@@ -368,7 +395,7 @@ export const getUserProfile = async (req: AuthRequest, res: Response): Promise<v
       author: id,
       'publishingStatus.status': 'published',
       'publishingStatus.isPublic': true,
-    }).select('title coverDesign genre qualityScore statistics publishingStatus createdAt');
+    }).select('title coverDesign genre qualityScore statistics publishingStatus created_at');
 
     // Calculate total reads (views)
     const totalReads = books.reduce((sum, book) => sum + (book.statistics?.views || 0), 0);
@@ -379,7 +406,7 @@ export const getUserProfile = async (req: AuthRequest, res: Response): Promise<v
       const currentUser = await User.findById(req.user.id);
       if (currentUser && currentUser.profile?.following) {
         isFollowing = currentUser.profile.following.some(
-          (followingId) => followingId.toString() === id
+          (followingId) => followingId === id
         );
       }
     }
@@ -388,7 +415,7 @@ export const getUserProfile = async (req: AuthRequest, res: Response): Promise<v
       success: true,
       data: {
         user: {
-          id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
           bio: user.profile?.bio,
@@ -450,13 +477,14 @@ export const updateLanguage = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    // Initialize profile if it doesn't exist
-    if (!user.profile) {
-      user.profile = {};
-    }
-
-    user.profile.language = language;
-    await user.save();
+    // Build updated profile with language
+    const currentProfile = user.profile || {};
+    await User.findByIdAndUpdate(req.user.id, {
+      profile: {
+        ...currentProfile,
+        language,
+      },
+    });
 
     res.status(200).json({
       success: true,
@@ -490,6 +518,15 @@ export const followUser = async (req: AuthRequest, res: Response): Promise<void>
 
     const { id } = req.params;
 
+    // Validate UUID format
+    if (!UUID_REGEX.test(id)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid user ID format',
+      });
+      return;
+    }
+
     if (id === req.user.id) {
       res.status(400).json({
         success: false,
@@ -517,70 +554,92 @@ export const followUser = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    // Initialize profile structures if they don't exist
-    if (!currentUser.profile) {
-      currentUser.profile = {};
-    }
-    if (!currentUser.profile.following) {
-      currentUser.profile.following = [];
-    }
+    // Initialize profile structures
+    const currentUserProfile = currentUser.profile || {};
+    const currentUserFollowing = currentUserProfile.following || [];
 
-    if (!targetUser.profile) {
-      targetUser.profile = {};
-    }
-    if (!targetUser.profile.authorProfile) {
-      targetUser.profile.authorProfile = {
-        publishedBooks: 0,
-        totalSales: 0,
-        rating: 0,
-        followers: [],
-      };
-    }
+    const targetUserProfile = targetUser.profile || {};
+    const targetUserAuthorProfile = targetUserProfile.authorProfile || {
+      publishedBooks: 0,
+      totalSales: 0,
+      rating: 0,
+      followers: [],
+    };
 
-    const targetUserId = targetUser._id as any;
-    const currentUserId = currentUser._id as any;
+    const targetUserId = targetUser.id;
+    const currentUserId = currentUser.id;
 
     // Check if already following
-    const followingIndex = currentUser.profile.following.findIndex(
-      (followingId) => followingId.toString() === targetUserId.toString()
+    const followingIndex = currentUserFollowing.findIndex(
+      (followingId) => followingId === targetUserId
     );
 
     if (followingIndex > -1) {
       // Unfollow
-      currentUser.profile.following.splice(followingIndex, 1);
+      const updatedFollowing = [...currentUserFollowing];
+      updatedFollowing.splice(followingIndex, 1);
 
-      const followerIndex = targetUser.profile.authorProfile.followers.findIndex(
-        (followerId) => followerId.toString() === currentUserId.toString()
+      const followerIndex = targetUserAuthorProfile.followers.findIndex(
+        (followerId) => followerId === currentUserId
       );
+      const updatedFollowers = [...targetUserAuthorProfile.followers];
       if (followerIndex > -1) {
-        targetUser.profile.authorProfile.followers.splice(followerIndex, 1);
+        updatedFollowers.splice(followerIndex, 1);
       }
 
-      await currentUser.save();
-      await targetUser.save();
+      await User.findByIdAndUpdate(req.user.id, {
+        profile: {
+          ...currentUserProfile,
+          following: updatedFollowing,
+        },
+      });
+
+      await User.findByIdAndUpdate(id, {
+        profile: {
+          ...targetUserProfile,
+          authorProfile: {
+            ...targetUserAuthorProfile,
+            followers: updatedFollowers,
+          },
+        },
+      });
 
       res.status(200).json({
         success: true,
         message: 'User unfollowed successfully',
         data: {
           isFollowing: false,
-          followersCount: targetUser.profile.authorProfile.followers.length,
+          followersCount: updatedFollowers.length,
         },
       });
     } else {
       // Follow
-      currentUser.profile.following.push(targetUserId);
-      targetUser.profile.authorProfile.followers.push(currentUserId);
+      const updatedFollowing = [...currentUserFollowing, targetUserId];
+      const updatedFollowers = [...targetUserAuthorProfile.followers, currentUserId];
 
-      await currentUser.save();
-      await targetUser.save();
+      await User.findByIdAndUpdate(req.user.id, {
+        profile: {
+          ...currentUserProfile,
+          following: updatedFollowing,
+        },
+      });
+
+      await User.findByIdAndUpdate(id, {
+        profile: {
+          ...targetUserProfile,
+          authorProfile: {
+            ...targetUserAuthorProfile,
+            followers: updatedFollowers,
+          },
+        },
+      });
 
       res.status(200).json({
         success: true,
         message: 'User followed successfully',
         data: {
           isFollowing: true,
-          followersCount: targetUser.profile.authorProfile.followers.length,
+          followersCount: updatedFollowers.length,
         },
       });
     }

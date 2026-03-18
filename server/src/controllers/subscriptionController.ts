@@ -116,16 +116,12 @@ export const upgradeSubscription = async (
     const planDetails = PLANS[plan as keyof typeof PLANS];
     const previousRole = user.role;
 
-    // Update user role and credits
-    user.role = planDetails.tier;
-    user.credits = planDetails.credits === -1 ? 999999 : planDetails.credits;
-
     // Update subscription details
     const now = new Date();
     const endDate = new Date();
     endDate.setMonth(endDate.getMonth() + 1); // 1 month subscription
 
-    user.subscription = {
+    const subscription = {
       tier: planDetails.tier,
       price: planDetails.price,
       credits: planDetails.credits,
@@ -135,7 +131,12 @@ export const upgradeSubscription = async (
       autoRenew: true,
     };
 
-    await user.save();
+    // Update user with new subscription data
+    const updatedUser = await User.findByIdAndUpdate(req.user.id, {
+      role: planDetails.tier,
+      credits: planDetails.credits === -1 ? 999999 : planDetails.credits,
+      subscription,
+    });
 
     // Determine if this is an upgrade or downgrade
     const planLevels: Record<string, number> = {
@@ -156,12 +157,12 @@ export const upgradeSubscription = async (
       message: `Successfully upgraded to ${plan} plan!`,
       data: {
         user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          credits: user.credits,
-          subscription: user.subscription,
+          id: updatedUser?.id || user.id,
+          name: updatedUser?.name || user.name,
+          email: updatedUser?.email || user.email,
+          role: planDetails.tier,
+          credits: planDetails.credits === -1 ? 999999 : planDetails.credits,
+          subscription,
         },
         plan: {
           name: plan,
@@ -214,15 +215,20 @@ export const cancelSubscription = async (
     }
 
     // Don't immediately cancel - set autoRenew to false
-    user.subscription.autoRenew = false;
+    const updatedSubscription = {
+      ...user.subscription,
+      autoRenew: false,
+    };
 
-    await user.save();
+    await User.findByIdAndUpdate(req.user.id, {
+      subscription: updatedSubscription,
+    });
 
     res.status(200).json({
       success: true,
       message: 'Subscription will not renew after current period ends',
       data: {
-        subscription: user.subscription,
+        subscription: updatedSubscription,
       },
     });
   } catch (error) {

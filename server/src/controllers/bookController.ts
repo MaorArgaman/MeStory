@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
-import mongoose from 'mongoose';
 import fs from 'fs/promises';
+
+// UUID validation regex for Supabase
+const isValidUUID = (id: string): boolean =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 import path from 'path';
 // pdf-parse is temporarily disabled for Vercel serverless compatibility (DOMMatrix not defined)
 // import PDFParser from 'pdf-parse';
@@ -40,7 +43,7 @@ export const createBook = async (req: AuthRequest, res: Response): Promise<void>
     const { title, genre, description, language, storyContext, chapters } = req.body;
 
     // Create new book
-    const book = new Book({
+    const book = await Book.create({
       title,
       author: req.user.id,
       genre,
@@ -67,28 +70,26 @@ export const createBook = async (req: AuthRequest, res: Response): Promise<void>
       },
     });
 
-    await book.save();
-
     // Update user's writing statistics
     const user = await User.findById(req.user.id);
     if (user && user.profile) {
-      if (!user.profile.writingStatistics) {
-        user.profile.writingStatistics = {
-          totalWords: 0,
-          booksWritten: 0,
-        };
-      }
-      user.profile.writingStatistics.booksWritten += 1;
-      await user.save();
+      const writingStatistics = user.profile.writingStatistics || {
+        totalWords: 0,
+        booksWritten: 0,
+      };
+      writingStatistics.booksWritten += 1;
+      await User.findByIdAndUpdate(req.user.id, {
+        'profile.writingStatistics': writingStatistics,
+      });
     }
 
     res.status(201).json({
       success: true,
       message: 'Book created successfully',
       data: {
-        id: book._id,
+        id: book.id,
         book: {
-          id: book._id,
+          id: book.id,
           title: book.title,
           genre: book.genre,
           description: book.description,
@@ -96,7 +97,7 @@ export const createBook = async (req: AuthRequest, res: Response): Promise<void>
           storyContext: book.storyContext,
           publishingStatus: book.publishingStatus,
           statistics: book.statistics,
-          createdAt: book.createdAt,
+          createdAt: book.created_at,
         },
       },
     });
@@ -152,21 +153,18 @@ export const getBooks = async (req: AuthRequest, res: Response): Promise<void> =
       query.genre = genre;
     }
 
-    // Build sort object
-    const sortOrder = order === 'asc' ? 1 : -1;
-    const sort: any = {};
-    sort[sortBy as string] = sortOrder;
-
-    // Find books
-    const books = await Book.find(query)
-      .sort(sort)
-      .select('-chapters.content'); // Exclude chapter content for list view
+    // Find books with sorting
+    const books = await Book.find({
+      ...query,
+      _sort: sortBy as string,
+      _order: order as string,
+    });
 
     res.status(200).json({
       success: true,
       data: {
         books: books.map((book) => ({
-          id: book._id,
+          id: book.id,
           title: book.title,
           genre: book.genre,
           description: book.description,
@@ -174,8 +172,8 @@ export const getBooks = async (req: AuthRequest, res: Response): Promise<void> =
           statistics: book.statistics,
           qualityScore: book.qualityScore,
           coverDesign: book.coverDesign,
-          createdAt: book.createdAt,
-          updatedAt: book.updatedAt,
+          createdAt: book.created_at,
+          updatedAt: book.updated_at,
         })),
         count: books.length,
       },
@@ -205,8 +203,8 @@ export const getBookById = async (req: AuthRequest, res: Response): Promise<void
 
     const { id } = req.params;
 
-    // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validate UUID
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -226,7 +224,7 @@ export const getBookById = async (req: AuthRequest, res: Response): Promise<void
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to access this book',
@@ -238,7 +236,7 @@ export const getBookById = async (req: AuthRequest, res: Response): Promise<void
       success: true,
       data: {
         book: {
-          id: book._id,
+          id: book.id,
           title: book.title,
           genre: book.genre,
           description: book.description,
@@ -255,8 +253,8 @@ export const getBookById = async (req: AuthRequest, res: Response): Promise<void
           statistics: book.statistics,
           tags: book.tags,
           ageRating: book.ageRating,
-          createdAt: book.createdAt,
-          updatedAt: book.updatedAt,
+          createdAt: book.created_at,
+          updatedAt: book.updated_at,
         },
       },
     });
@@ -285,8 +283,8 @@ export const updateBook = async (req: AuthRequest, res: Response): Promise<void>
 
     const { id } = req.params;
 
-    // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validate UUID
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -306,7 +304,7 @@ export const updateBook = async (req: AuthRequest, res: Response): Promise<void>
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to update this book',
@@ -332,21 +330,30 @@ export const updateBook = async (req: AuthRequest, res: Response): Promise<void>
       'publishingStatus',
     ];
 
-    // Apply updates
+    // Build update object
+    const updateData: any = {};
     Object.keys(req.body).forEach((key) => {
       if (allowedUpdates.includes(key)) {
-        (book as any)[key] = req.body[key];
+        updateData[key] = req.body[key];
       }
     });
 
-    // Save book (pre-save middleware will update statistics)
-    await book.save();
+    // Update book
+    const updatedBook = await Book.findByIdAndUpdate(id, updateData);
+
+    if (!updatedBook) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update book',
+      });
+      return;
+    }
 
     // Update user's writing statistics
-    const user = await User.findById(req.user.id);
-    if (user && user.profile?.writingStatistics) {
-      user.profile.writingStatistics.totalWords = book.statistics.wordCount;
-      await user.save();
+    if (updatedBook.statistics?.wordCount) {
+      await User.findByIdAndUpdate(req.user.id, {
+        'profile.writingStatistics.totalWords': updatedBook.statistics.wordCount,
+      });
     }
 
     res.status(200).json({
@@ -354,15 +361,15 @@ export const updateBook = async (req: AuthRequest, res: Response): Promise<void>
       message: 'Book updated successfully',
       data: {
         book: {
-          id: book._id,
-          title: book.title,
-          genre: book.genre,
-          description: book.description,
-          synopsis: book.synopsis,
-          chapters: book.chapters,
-          characters: book.characters,
-          statistics: book.statistics,
-          updatedAt: book.updatedAt,
+          id: updatedBook.id,
+          title: updatedBook.title,
+          genre: updatedBook.genre,
+          description: updatedBook.description,
+          synopsis: updatedBook.synopsis,
+          chapters: updatedBook.chapters,
+          characters: updatedBook.characters,
+          statistics: updatedBook.statistics,
+          updatedAt: updatedBook.updated_at,
         },
       },
     });
@@ -395,8 +402,8 @@ export const deleteBook = async (req: AuthRequest, res: Response): Promise<void>
 
     const { id } = req.params;
 
-    // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validate UUID
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -416,7 +423,7 @@ export const deleteBook = async (req: AuthRequest, res: Response): Promise<void>
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to delete this book',
@@ -438,11 +445,10 @@ export const deleteBook = async (req: AuthRequest, res: Response): Promise<void>
     // Update user's writing statistics
     const user = await User.findById(req.user.id);
     if (user && user.profile?.writingStatistics) {
-      user.profile.writingStatistics.booksWritten = Math.max(
-        0,
-        user.profile.writingStatistics.booksWritten - 1
-      );
-      await user.save();
+      const newBooksWritten = Math.max(0, user.profile.writingStatistics.booksWritten - 1);
+      await User.findByIdAndUpdate(req.user.id, {
+        'profile.writingStatistics.booksWritten': newBooksWritten,
+      });
     }
 
     res.status(200).json({
@@ -475,8 +481,8 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
     const { id } = req.params;
     const { price, isFree } = req.body;
 
-    // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validate UUID
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -496,7 +502,7 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to publish this book',
@@ -542,19 +548,26 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
     }
 
     // Update publishing status
-    book.publishingStatus.status = 'published';
-    book.publishingStatus.isPublic = true;
-    book.publishingStatus.publishedAt = new Date();
-    book.publishingStatus.isFree = isFree || false;
-    book.publishingStatus.price = isFree ? 0 : price || 0;
+    const updatedPublishingStatus = {
+      ...book.publishingStatus,
+      status: 'published',
+      isPublic: true,
+      publishedAt: new Date(),
+      isFree: isFree || false,
+      price: isFree ? 0 : price || 0,
+    };
 
-    await book.save();
+    const updatedBook = await Book.findByIdAndUpdate(id, {
+      publishingStatus: updatedPublishingStatus,
+    });
 
     // Update user's author profile
     const user = await User.findById(req.user.id);
     if (user && user.profile?.authorProfile) {
-      user.profile.authorProfile.publishedBooks += 1;
-      await user.save();
+      const newPublishedBooks = user.profile.authorProfile.publishedBooks + 1;
+      await User.findByIdAndUpdate(req.user.id, {
+        'profile.authorProfile.publishedBooks': newPublishedBooks,
+      });
     }
 
     // Send notification to author about successful publication (async, don't wait)
@@ -567,9 +580,9 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
       message: 'Book published successfully',
       data: {
         book: {
-          id: book._id,
+          id: updatedBook?.id || book.id,
           title: book.title,
-          publishingStatus: book.publishingStatus,
+          publishingStatus: updatedPublishingStatus,
         },
       },
     });
@@ -598,8 +611,8 @@ export const purchaseBook = async (req: AuthRequest, res: Response): Promise<voi
 
     const { id } = req.params;
 
-    // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validate UUID
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -627,7 +640,7 @@ export const purchaseBook = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     // Check if user is trying to purchase their own book
-    if (book.author.toString() === req.user.id) {
+    if (book.author === req.user.id) {
       res.status(400).json({
         success: false,
         error: 'You cannot purchase your own book',
@@ -646,28 +659,25 @@ export const purchaseBook = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     // Initialize profile if needed
-    if (!user.profile) {
-      user.profile = {
-        bio: '',
-        notificationPreferences: {
-          writing: true,
-          publishing: true,
-          sales: true,
-          social: true,
-          system: true,
-          emailDigest: false,
-        },
-      };
-    }
+    const profile = user.profile || {
+      bio: '',
+      notificationPreferences: {
+        writing: true,
+        publishing: true,
+        sales: true,
+        social: true,
+        system: true,
+        emailDigest: false,
+      },
+      readingHistory: [],
+    };
 
     // Initialize readingHistory if needed
-    if (!user.profile.readingHistory) {
-      user.profile.readingHistory = [];
-    }
+    const readingHistory = profile.readingHistory || [];
 
     // Check if already purchased
-    const alreadyPurchased = user.profile.readingHistory.some(
-      (item) => item.bookId.toString() === id
+    const alreadyPurchased = readingHistory.some(
+      (item: any) => item.bookId === id
     );
 
     if (alreadyPurchased) {
@@ -679,46 +689,51 @@ export const purchaseBook = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     // Add to user's library
-    user.profile.readingHistory.push({
-      bookId: new mongoose.Types.ObjectId(id),
+    readingHistory.push({
+      bookId: id,
       progress: 0,
       lastRead: new Date(),
     });
 
-    await user.save();
+    await User.findByIdAndUpdate(req.user.id, {
+      'profile.readingHistory': readingHistory,
+    });
 
     // Update book statistics
-    book.statistics.purchases += 1;
-    book.statistics.revenue += book.publishingStatus.price;
-    await book.save();
+    const newStatistics = {
+      ...book.statistics,
+      purchases: book.statistics.purchases + 1,
+      revenue: book.statistics.revenue + book.publishingStatus.price,
+    };
+    await Book.findByIdAndUpdate(id, { statistics: newStatistics });
 
     // Update author's earnings
     const author = await User.findById(book.author);
     if (author && author.profile) {
-      if (!author.profile.earnings) {
-        author.profile.earnings = {
-          totalEarned: 0,
-          pendingPayout: 0,
-          withdrawn: 0,
-          history: [],
-        };
-      }
+      const earnings = author.profile.earnings || {
+        totalEarned: 0,
+        pendingPayout: 0,
+        withdrawn: 0,
+        history: [],
+      };
       const authorShare = book.publishingStatus.price * 0.5; // 50% split
-      author.profile.earnings.totalEarned += authorShare;
-      author.profile.earnings.pendingPayout += authorShare;
+      earnings.totalEarned += authorShare;
+      earnings.pendingPayout += authorShare;
 
-      if (author.profile.authorProfile) {
-        author.profile.authorProfile.totalSales += 1;
-      }
+      const authorProfile = author.profile.authorProfile || { totalSales: 0 };
+      authorProfile.totalSales += 1;
 
-      await author.save();
+      await User.findByIdAndUpdate(book.author, {
+        'profile.earnings': earnings,
+        'profile.authorProfile': authorProfile,
+      });
     }
 
     // Send notification to author about purchase (async, don't wait)
     notifyBookPurchase(
       id,
       req.user!.id,
-      book.author.toString(),
+      book.author,
       book.publishingStatus.price,
       'ILS'
     ).catch((err) => console.error('Failed to send purchase notification:', err));
@@ -751,10 +766,10 @@ export const purchaseBook = async (req: AuthRequest, res: Response): Promise<voi
       success: true,
       message: 'Book purchased successfully',
       data: {
-        bookId: book._id,
+        bookId: book.id,
         title: book.title,
         price: book.publishingStatus.price,
-        readUrl: `/read/${book._id}`,
+        readUrl: `/read/${book.id}`,
       },
     });
   } catch (error) {
@@ -811,19 +826,27 @@ export const getPublicBooks = async (req: Request, res: Response): Promise<void>
       sortOptions[sortBy as string] = order === 'asc' ? 1 : -1;
     }
 
-    // Fetch books
-    const books = await Book.find(query)
-      .populate('author', 'name')
-      .select('title genre description coverDesign publishingStatus qualityScore statistics author createdAt')
-      .sort(sortOptions)
-      .limit(100)
-      .lean();
+    // Fetch books with Supabase-compatible query
+    const books = await Book.find({
+      ...query,
+      _sort: sortBy as string,
+      _order: order as string,
+      _limit: 100,
+    });
+
+    // Populate author data for each book
+    const booksWithAuthors = await Promise.all(
+      books.map(async (book) => {
+        const populated = await Book.populate(book, 'author');
+        return populated;
+      })
+    );
 
     res.status(200).json({
       success: true,
       data: {
-        books,
-        count: books.length,
+        books: booksWithAuthors,
+        count: booksWithAuthors.length,
       },
     });
   } catch (error) {
@@ -852,8 +875,8 @@ export const exportBookPDF = async (req: AuthRequest, res: Response): Promise<vo
 
     const { id } = req.params;
 
-    // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validate UUID
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -873,7 +896,7 @@ export const exportBookPDF = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to export this book',
@@ -947,7 +970,7 @@ export const likeBook = async (req: AuthRequest, res: Response): Promise<void> =
 
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -966,33 +989,37 @@ export const likeBook = async (req: AuthRequest, res: Response): Promise<void> =
     }
 
     // Check if user already liked this book
-    const userId = new mongoose.Types.ObjectId(req.user.id);
-    const likedIndex = book.likedBy.findIndex(
-      (id) => id.toString() === userId.toString()
+    const userId = req.user.id;
+    const likedBy = book.likedBy || [];
+    const likedIndex = likedBy.findIndex(
+      (likedUserId: string) => likedUserId === userId
     );
+
+    let newLikes = book.likes || 0;
+    let newLikedBy = [...likedBy];
 
     if (likedIndex > -1) {
       // Unlike: remove user from likedBy array
-      book.likedBy.splice(likedIndex, 1);
-      book.likes = Math.max(0, book.likes - 1);
+      newLikedBy.splice(likedIndex, 1);
+      newLikes = Math.max(0, newLikes - 1);
     } else {
       // Like: add user to likedBy array
-      book.likedBy.push(userId);
-      book.likes += 1;
+      newLikedBy.push(userId);
+      newLikes += 1;
 
       // Send notification to author (async, don't wait)
-      notifyBookLike(id, req.user!.id, book.author.toString()).catch((err) =>
+      notifyBookLike(id, req.user!.id, book.author).catch((err) =>
         console.error('Failed to send like notification:', err)
       );
     }
 
-    await book.save();
+    await Book.findByIdAndUpdate(id, { likes: newLikes, likedBy: newLikedBy });
 
     res.status(200).json({
       success: true,
       message: likedIndex > -1 ? 'Book unliked' : 'Book liked',
       data: {
-        likes: book.likes,
+        likes: newLikes,
         isLiked: likedIndex === -1,
       },
     });
@@ -1047,7 +1074,7 @@ export const addReview = async (req: AuthRequest, res: Response): Promise<void> 
       return;
     }
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -1066,8 +1093,9 @@ export const addReview = async (req: AuthRequest, res: Response): Promise<void> 
     }
 
     // Check if user already reviewed this book
-    const existingReview = book.reviews.find(
-      (review) => review.user.toString() === req.user!.id
+    const reviews = book.reviews || [];
+    const existingReview = reviews.find(
+      (review: any) => review.user === req.user!.id
     );
 
     if (existingReview) {
@@ -1089,25 +1117,33 @@ export const addReview = async (req: AuthRequest, res: Response): Promise<void> 
     }
 
     // Add review
-    book.reviews.push({
-      user: new mongoose.Types.ObjectId(req.user.id),
+    const newReview = {
+      user: req.user.id,
       userName: user.name,
       rating,
       comment: comment.trim(),
       createdAt: new Date(),
-    });
+    };
+    const updatedReviews = [...reviews, newReview];
 
     // Update statistics
-    book.statistics.totalReviews = book.reviews.length;
+    const totalReviews = updatedReviews.length;
+    const totalRating = updatedReviews.reduce((sum: number, review: any) => sum + review.rating, 0);
+    const averageRating = totalRating / totalReviews;
 
-    // Calculate average rating
-    const totalRating = book.reviews.reduce((sum, review) => sum + review.rating, 0);
-    book.statistics.averageRating = totalRating / book.reviews.length;
+    const updatedStatistics = {
+      ...book.statistics,
+      totalReviews,
+      averageRating,
+    };
 
-    await book.save();
+    await Book.findByIdAndUpdate(id, {
+      reviews: updatedReviews,
+      statistics: updatedStatistics,
+    });
 
     // Send notification to author (async, don't wait)
-    notifyBookComment(id, req.user!.id, book.author.toString(), rating).catch((err) =>
+    notifyBookComment(id, req.user!.id, book.author, rating).catch((err) =>
       console.error('Failed to send comment notification:', err)
     );
 
@@ -1115,9 +1151,9 @@ export const addReview = async (req: AuthRequest, res: Response): Promise<void> 
       success: true,
       message: 'Review added successfully',
       data: {
-        review: book.reviews[book.reviews.length - 1],
-        averageRating: book.statistics.averageRating,
-        totalReviews: book.statistics.totalReviews,
+        review: newReview,
+        averageRating,
+        totalReviews,
       },
     });
   } catch (error) {
@@ -1137,7 +1173,7 @@ export const getBookReviews = async (req: Request, res: Response): Promise<void>
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -1145,7 +1181,7 @@ export const getBookReviews = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const book = await Book.findById(id).select('reviews statistics.averageRating statistics.totalReviews');
+    const book = await Book.findById(id);
 
     if (!book) {
       res.status(404).json({
@@ -1198,7 +1234,7 @@ export const uploadCoverImage = async (req: AuthRequest, res: Response): Promise
 
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -1216,7 +1252,7 @@ export const uploadCoverImage = async (req: AuthRequest, res: Response): Promise
     }
 
     // Check ownership
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to update this book',
@@ -1230,7 +1266,7 @@ export const uploadCoverImage = async (req: AuthRequest, res: Response): Promise
     let imageUrl: string;
 
     if (isVercel && req.file.buffer) {
-      // On Vercel: convert to base64 data URL for storage in MongoDB
+      // On Vercel: convert to base64 data URL for storage in database
       const mimeType = req.file.mimetype || 'image/jpeg';
       const base64Data = req.file.buffer.toString('base64');
       imageUrl = `data:${mimeType};base64,${base64Data}`;
@@ -1246,27 +1282,9 @@ export const uploadCoverImage = async (req: AuthRequest, res: Response): Promise
     }
 
     // Update book cover design with proper typing
-    if (!book.coverDesign) {
-      book.coverDesign = {
-        front: {
-          type: 'uploaded',
-          imageUrl,
-          title: {
-            text: book.title,
-            font: 'Arial',
-            size: 48,
-            color: '#ffffff',
-          },
-          authorName: {
-            text: '',
-            font: 'Arial',
-            size: 24,
-            color: '#ffffff',
-          },
-        },
-      } as any;
-    } else if (!book.coverDesign.front) {
-      book.coverDesign.front = {
+    let coverDesign = book.coverDesign || {};
+    if (!coverDesign.front) {
+      coverDesign.front = {
         type: 'uploaded',
         imageUrl,
         title: {
@@ -1283,11 +1301,11 @@ export const uploadCoverImage = async (req: AuthRequest, res: Response): Promise
         },
       } as any;
     } else {
-      book.coverDesign.front.imageUrl = imageUrl;
-      book.coverDesign.front.type = 'uploaded';
+      coverDesign.front.imageUrl = imageUrl;
+      coverDesign.front.type = 'uploaded';
     }
 
-    await book.save();
+    await Book.findByIdAndUpdate(id, { coverDesign });
 
     res.status(200).json({
       success: true,
@@ -1415,7 +1433,7 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
       const wordCount = extractedText.trim().split(/\s+/).length;
 
       // Create new book with extracted content
-      const book = new Book({
+      const book = await Book.create({
         title: title.trim(),
         author: req.user.id,
         genre,
@@ -1447,20 +1465,18 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
         },
       });
 
-      await book.save();
-
       // Update user's writing statistics
       const user = await User.findById(req.user.id);
       if (user && user.profile) {
-        if (!user.profile.writingStatistics) {
-          user.profile.writingStatistics = {
-            totalWords: 0,
-            booksWritten: 0,
-          };
-        }
-        user.profile.writingStatistics.booksWritten += 1;
-        user.profile.writingStatistics.totalWords += wordCount;
-        await user.save();
+        const writingStatistics = user.profile.writingStatistics || {
+          totalWords: 0,
+          booksWritten: 0,
+        };
+        writingStatistics.booksWritten += 1;
+        writingStatistics.totalWords += wordCount;
+        await User.findByIdAndUpdate(req.user.id, {
+          'profile.writingStatistics': writingStatistics,
+        });
       }
 
       res.status(201).json({
@@ -1468,11 +1484,11 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
         message: 'Manuscript uploaded and processed successfully',
         data: {
           book: {
-            id: book._id,
+            id: book.id,
             title: book.title,
             genre: book.genre,
             wordCount,
-            chapters: book.chapters.map((ch) => ({
+            chapters: book.chapters.map((ch: any) => ({
               title: ch.title,
               wordCount: ch.wordCount,
             })),
@@ -1622,7 +1638,7 @@ export const uploadAudio = async (req: AuthRequest, res: Response): Promise<void
         ? `תומלל מקובץ אודיו: ${req.file.originalname}`
         : `Transcribed from audio: ${req.file.originalname}`;
 
-      const book = new Book({
+      const book = await Book.create({
         title: title.trim(),
         author: req.user.id,
         genre,
@@ -1654,35 +1670,33 @@ export const uploadAudio = async (req: AuthRequest, res: Response): Promise<void
         },
       });
 
-      await book.save();
-
       // Update user's writing statistics
       const user = await User.findById(req.user.id);
       if (user && user.profile) {
-        if (!user.profile.writingStatistics) {
-          user.profile.writingStatistics = {
-            totalWords: 0,
-            booksWritten: 0,
-          };
-        }
-        user.profile.writingStatistics.booksWritten += 1;
-        user.profile.writingStatistics.totalWords += wordCount;
-        await user.save();
+        const writingStatistics = user.profile.writingStatistics || {
+          totalWords: 0,
+          booksWritten: 0,
+        };
+        writingStatistics.booksWritten += 1;
+        writingStatistics.totalWords += wordCount;
+        await User.findByIdAndUpdate(req.user.id, {
+          'profile.writingStatistics': writingStatistics,
+        });
       }
 
-      console.log(`✅ Audio transcription complete. Created book: ${book._id}`);
+      console.log(`✅ Audio transcription complete. Created book: ${book.id}`);
 
       res.status(201).json({
         success: true,
         message: 'Audio transcribed and book created successfully',
         data: {
           book: {
-            id: book._id,
+            id: book.id,
             title: book.title,
             genre: book.genre,
             language: detectedLanguage,
             wordCount,
-            chapters: book.chapters.map((ch) => ({
+            chapters: book.chapters.map((ch: any) => ({
               title: ch.title,
               wordCount: ch.wordCount,
             })),
@@ -1757,8 +1771,8 @@ export const getPricingStrategy = async (req: AuthRequest, res: Response): Promi
 
     const { id } = req.params;
 
-    // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validate UUID
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -1777,7 +1791,7 @@ export const getPricingStrategy = async (req: AuthRequest, res: Response): Promi
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to access this book',
@@ -1826,8 +1840,8 @@ export const exportBookToFormat = async (req: AuthRequest, res: Response): Promi
       return;
     }
 
-    // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validate UUID
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -1846,7 +1860,7 @@ export const exportBookToFormat = async (req: AuthRequest, res: Response): Promi
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to export this book',
@@ -1921,8 +1935,8 @@ export const uploadPageImage = async (req: AuthRequest, res: Response): Promise<
     const { id } = req.params;
     const { pageIndex, x, y, width, height, rotation } = req.body;
 
-    // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validate UUID
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -1950,7 +1964,7 @@ export const uploadPageImage = async (req: AuthRequest, res: Response): Promise<
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to update this book',
@@ -1964,7 +1978,7 @@ export const uploadPageImage = async (req: AuthRequest, res: Response): Promise<
     let imageUrl: string;
 
     if (isVercel && req.file.buffer) {
-      // On Vercel: convert to base64 data URL for storage in MongoDB
+      // On Vercel: convert to base64 data URL for storage in database
       const mimeType = req.file.mimetype || 'image/jpeg';
       const base64Data = req.file.buffer.toString('base64');
       imageUrl = `data:${mimeType};base64,${base64Data}`;
@@ -1980,12 +1994,11 @@ export const uploadPageImage = async (req: AuthRequest, res: Response): Promise<
     }
 
     // Initialize pageImages array if it doesn't exist
-    if (!book.pageImages) {
-      book.pageImages = [];
-    }
+    const pageImages = book.pageImages || [];
 
     // Create page image entry
     const pageImage = {
+      id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       pageIndex: parseInt(pageIndex, 10),
       url: imageUrl,
       x: parseFloat(x) || 10,
@@ -1997,11 +2010,11 @@ export const uploadPageImage = async (req: AuthRequest, res: Response): Promise<
       createdAt: new Date(),
     };
 
-    book.pageImages.push(pageImage as any);
-    await book.save();
+    pageImages.push(pageImage as any);
+    await Book.findByIdAndUpdate(id, { pageImages });
 
-    // Get the saved image with its _id
-    const savedImage = book.pageImages[book.pageImages.length - 1];
+    // Get the saved image
+    const savedImage = pageImage;
 
     res.status(201).json({
       success: true,
@@ -2036,19 +2049,11 @@ export const updatePageImage = async (req: AuthRequest, res: Response): Promise<
     const { id, imageId } = req.params;
     const { pageIndex, x, y, width, height, rotation } = req.body;
 
-    // Validate MongoDB IDs
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validate UUIDs
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
-      });
-      return;
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(imageId)) {
-      res.status(400).json({
-        success: false,
-        error: 'Invalid image ID',
       });
       return;
     }
@@ -2064,7 +2069,7 @@ export const updatePageImage = async (req: AuthRequest, res: Response): Promise<
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to update this book',
@@ -2073,7 +2078,8 @@ export const updatePageImage = async (req: AuthRequest, res: Response): Promise<
     }
 
     // Find the page image
-    if (!book.pageImages) {
+    const pageImages = book.pageImages || [];
+    if (pageImages.length === 0) {
       res.status(404).json({
         success: false,
         error: 'No page images found',
@@ -2081,8 +2087,8 @@ export const updatePageImage = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    const imageIndex = book.pageImages.findIndex(
-      (img: any) => img._id?.toString() === imageId
+    const imageIndex = pageImages.findIndex(
+      (img: any) => img.id === imageId || img._id === imageId
     );
 
     if (imageIndex === -1) {
@@ -2094,20 +2100,20 @@ export const updatePageImage = async (req: AuthRequest, res: Response): Promise<
     }
 
     // Update image properties
-    if (pageIndex !== undefined) book.pageImages[imageIndex].pageIndex = parseInt(pageIndex, 10);
-    if (x !== undefined) book.pageImages[imageIndex].x = parseFloat(x);
-    if (y !== undefined) book.pageImages[imageIndex].y = parseFloat(y);
-    if (width !== undefined) book.pageImages[imageIndex].width = parseFloat(width);
-    if (height !== undefined) book.pageImages[imageIndex].height = parseFloat(height);
-    if (rotation !== undefined) book.pageImages[imageIndex].rotation = parseFloat(rotation);
+    if (pageIndex !== undefined) pageImages[imageIndex].pageIndex = parseInt(pageIndex, 10);
+    if (x !== undefined) pageImages[imageIndex].x = parseFloat(x);
+    if (y !== undefined) pageImages[imageIndex].y = parseFloat(y);
+    if (width !== undefined) pageImages[imageIndex].width = parseFloat(width);
+    if (height !== undefined) pageImages[imageIndex].height = parseFloat(height);
+    if (rotation !== undefined) pageImages[imageIndex].rotation = parseFloat(rotation);
 
-    await book.save();
+    await Book.findByIdAndUpdate(id, { pageImages });
 
     res.status(200).json({
       success: true,
       message: 'Page image updated successfully',
       data: {
-        image: book.pageImages[imageIndex],
+        image: pageImages[imageIndex],
       },
     });
   } catch (error: any) {
@@ -2135,19 +2141,11 @@ export const deletePageImage = async (req: AuthRequest, res: Response): Promise<
 
     const { id, imageId } = req.params;
 
-    // Validate MongoDB IDs
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validate UUID
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
-      });
-      return;
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(imageId)) {
-      res.status(400).json({
-        success: false,
-        error: 'Invalid image ID',
       });
       return;
     }
@@ -2163,7 +2161,7 @@ export const deletePageImage = async (req: AuthRequest, res: Response): Promise<
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to update this book',
@@ -2172,7 +2170,8 @@ export const deletePageImage = async (req: AuthRequest, res: Response): Promise<
     }
 
     // Find and remove the page image
-    if (!book.pageImages) {
+    const pageImages = book.pageImages || [];
+    if (pageImages.length === 0) {
       res.status(404).json({
         success: false,
         error: 'No page images found',
@@ -2180,8 +2179,8 @@ export const deletePageImage = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    const imageIndex = book.pageImages.findIndex(
-      (img: any) => img._id?.toString() === imageId
+    const imageIndex = pageImages.findIndex(
+      (img: any) => img.id === imageId || img._id === imageId
     );
 
     if (imageIndex === -1) {
@@ -2193,11 +2192,11 @@ export const deletePageImage = async (req: AuthRequest, res: Response): Promise<
     }
 
     // Get the image URL before removing (for cleanup)
-    const imageUrl = book.pageImages[imageIndex].url;
+    const imageUrl = pageImages[imageIndex].url;
 
     // Remove from array
-    book.pageImages.splice(imageIndex, 1);
-    await book.save();
+    pageImages.splice(imageIndex, 1);
+    await Book.findByIdAndUpdate(id, { pageImages });
 
     // Try to delete the actual file (optional - don't fail if file doesn't exist)
     if (imageUrl && imageUrl.startsWith('/uploads/')) {
@@ -2239,8 +2238,8 @@ export const getPageImages = async (req: AuthRequest, res: Response): Promise<vo
 
     const { id } = req.params;
 
-    // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validate UUID
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -2249,7 +2248,7 @@ export const getPageImages = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     // Find book
-    const book = await Book.findById(id).select('pageImages author');
+    const book = await Book.findById(id);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -2259,7 +2258,7 @@ export const getPageImages = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to access this book',
@@ -2299,8 +2298,8 @@ export const updatePageImages = async (req: AuthRequest, res: Response): Promise
     const { id } = req.params;
     const { images } = req.body;
 
-    // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validate UUID
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -2319,7 +2318,7 @@ export const updatePageImages = async (req: AuthRequest, res: Response): Promise
     }
 
     // Ensure user owns this book
-    if (book.author.toString() !== req.user.id) {
+    if (book.author !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to update this book',
@@ -2328,31 +2327,33 @@ export const updatePageImages = async (req: AuthRequest, res: Response): Promise
     }
 
     // Update page images (only update positions, not add new ones)
-    if (Array.isArray(images) && book.pageImages) {
+    const pageImages = book.pageImages || [];
+    if (Array.isArray(images) && pageImages.length > 0) {
       images.forEach((update: any) => {
-        if (update._id) {
-          const existingIndex = book.pageImages!.findIndex(
-            (img: any) => img._id?.toString() === update._id
+        const updateId = update._id || update.id;
+        if (updateId) {
+          const existingIndex = pageImages.findIndex(
+            (img: any) => img.id === updateId || img._id === updateId
           );
           if (existingIndex !== -1) {
-            if (update.pageIndex !== undefined) book.pageImages![existingIndex].pageIndex = update.pageIndex;
-            if (update.x !== undefined) book.pageImages![existingIndex].x = update.x;
-            if (update.y !== undefined) book.pageImages![existingIndex].y = update.y;
-            if (update.width !== undefined) book.pageImages![existingIndex].width = update.width;
-            if (update.height !== undefined) book.pageImages![existingIndex].height = update.height;
-            if (update.rotation !== undefined) book.pageImages![existingIndex].rotation = update.rotation;
+            if (update.pageIndex !== undefined) pageImages[existingIndex].pageIndex = update.pageIndex;
+            if (update.x !== undefined) pageImages[existingIndex].x = update.x;
+            if (update.y !== undefined) pageImages[existingIndex].y = update.y;
+            if (update.width !== undefined) pageImages[existingIndex].width = update.width;
+            if (update.height !== undefined) pageImages[existingIndex].height = update.height;
+            if (update.rotation !== undefined) pageImages[existingIndex].rotation = update.rotation;
           }
         }
       });
     }
 
-    await book.save();
+    await Book.findByIdAndUpdate(id, { pageImages });
 
     res.status(200).json({
       success: true,
       message: 'Page images updated successfully',
       data: {
-        images: book.pageImages || [],
+        images: pageImages,
       },
     });
   } catch (error: any) {
@@ -2381,7 +2382,7 @@ export const shareBook = async (req: AuthRequest, res: Response): Promise<void> 
     const { id } = req.params;
     const { platform } = req.body; // 'whatsapp', 'twitter', 'facebook', 'copy', 'native'
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -2400,15 +2401,16 @@ export const shareBook = async (req: AuthRequest, res: Response): Promise<void> 
     }
 
     // Increment share count
-    if (!book.statistics.shares) {
-      book.statistics.shares = 0;
-    }
-    book.statistics.shares += 1;
+    const newShares = (book.statistics.shares || 0) + 1;
+    const updatedStatistics = {
+      ...book.statistics,
+      shares: newShares,
+    };
 
-    await book.save();
+    await Book.findByIdAndUpdate(id, { statistics: updatedStatistics });
 
     // Send notification to author (async, don't wait)
-    notifyBookShare(id, req.user!.id, book.author.toString(), platform).catch((err) =>
+    notifyBookShare(id, req.user!.id, book.author, platform).catch((err) =>
       console.error('Failed to send share notification:', err)
     );
 
@@ -2419,7 +2421,7 @@ export const shareBook = async (req: AuthRequest, res: Response): Promise<void> 
       success: true,
       message: 'Share tracked successfully',
       data: {
-        shares: book.statistics.shares,
+        shares: newShares,
         shareUrl,
         platform: platform || 'unknown',
       },
@@ -2441,7 +2443,7 @@ export const getBookSocialStats = async (req: Request, res: Response): Promise<v
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!isValidUUID(id)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -2449,9 +2451,7 @@ export const getBookSocialStats = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    const book = await Book.findById(id).select(
-      'likes likedBy statistics.shares statistics.totalReviews statistics.averageRating'
-    );
+    const book = await Book.findById(id);
 
     if (!book) {
       res.status(404).json({

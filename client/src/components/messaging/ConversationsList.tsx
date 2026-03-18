@@ -20,6 +20,7 @@ import {
   Conversation,
 } from '../../services/messagingApi';
 import ChatModal from './ChatModal';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface ConversationsListProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { language } = useLanguage();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,17 +84,18 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
       (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
     );
 
+    const locale = language === 'he' ? 'he-IL' : 'en-US';
     if (diffDays === 0) {
-      return date.toLocaleTimeString('en-US', {
+      return date.toLocaleTimeString(locale, {
         hour: '2-digit',
         minute: '2-digit',
       });
     } else if (diffDays === 1) {
-      return 'Yesterday';
+      return language === 'he' ? 'אתמול' : 'Yesterday';
     } else if (diffDays < 7) {
-      return date.toLocaleDateString('en-US', { weekday: 'short' });
+      return date.toLocaleDateString(locale, { weekday: 'short' });
     } else {
-      return date.toLocaleDateString('en-US', {
+      return date.toLocaleDateString(locale, {
         day: 'numeric',
         month: 'short',
       });
@@ -141,7 +144,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <MessageCircle className="w-5 h-5 text-purple-400" />
-                  Messages
+                  {language === 'he' ? 'הודעות' : 'Messages'}
                 </h2>
                 <button
                   onClick={onClose}
@@ -158,7 +161,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search conversations..."
+                  placeholder={language === 'he' ? 'חיפוש שיחות...' : 'Search conversations...'}
                   className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-2 pl-10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 transition-all"
                 />
               </div>
@@ -176,12 +179,14 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
                     <MessageCircle className="w-8 h-8 text-purple-400" />
                   </div>
                   <h4 className="text-lg font-medium text-white mb-2">
-                    {searchQuery ? 'No conversations found' : 'No messages yet'}
+                    {searchQuery
+                      ? (language === 'he' ? 'לא נמצאו שיחות' : 'No conversations found')
+                      : (language === 'he' ? 'אין הודעות עדיין' : 'No messages yet')}
                   </h4>
                   <p className="text-gray-400 text-sm max-w-[250px]">
                     {searchQuery
-                      ? 'Try searching for something else'
-                      : 'Start a conversation with an author from their book page'}
+                      ? (language === 'he' ? 'נסה לחפש משהו אחר' : 'Try searching for something else')
+                      : (language === 'he' ? 'התחל שיחה עם סופר מדף הספר שלו' : 'Start a conversation with an author from their book page')}
                   </p>
                 </div>
               ) : (

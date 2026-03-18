@@ -77,7 +77,7 @@ export const createBookValidation = [
  */
 export const updateBookValidation = [
   param('id')
-    .isMongoId()
+    .isUUID()
     .withMessage('Invalid book ID'),
 
   body('title')
@@ -136,10 +136,13 @@ export const updateBookValidation = [
 ];
 
 /**
- * Validation rules for MongoDB ID parameter
+ * Validation rules for UUID parameter (Supabase)
  */
-export const mongoIdValidation = [
+export const uuidValidation = [
   param('id')
-    .isMongoId()
+    .isUUID()
     .withMessage('Invalid ID format'),
 ];
+
+// Alias for backwards compatibility
+export const mongoIdValidation = uuidValidation;

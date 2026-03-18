@@ -3,10 +3,12 @@
  * CRUD operations for book templates
  */
 
-import mongoose from 'mongoose';
 import { BookTemplate, IBookTemplate, TemplateCategory } from '../models/BookTemplate';
 import { Book, IBook } from '../models/Book';
 import { defaultTemplates } from '../data/defaultTemplates';
+
+// UUID validation helper
+const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
 // Initialize default templates in database
 export async function initializeDefaultTemplates(): Promise<void> {
@@ -51,52 +53,62 @@ export async function getAllTemplates(options?: {
     query.isActive = options.isActive;
   }
 
-  let queryBuilder = BookTemplate.find(query)
-    .sort({ isSystem: -1, usageCount: -1, createdAt: -1 });
-
-  if (options?.skip) {
-    queryBuilder = queryBuilder.skip(options.skip);
-  }
-
   if (options?.limit) {
-    queryBuilder = queryBuilder.limit(options.limit);
+    query._limit = options.limit;
   }
 
-  return queryBuilder.exec();
+  let templates = await BookTemplate.find(query);
+
+  // Sort: system first, then by usage count, then by createdAt
+  templates.sort((a, b) => {
+    if (a.isSystem !== b.isSystem) return a.isSystem ? -1 : 1;
+    if (a.usageCount !== b.usageCount) return b.usageCount - a.usageCount;
+    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+  });
+
+  // Apply skip if needed
+  if (options?.skip) {
+    templates = templates.slice(options.skip);
+  }
+
+  return templates;
 }
 
 // Get template by ID
 export async function getTemplateById(templateId: string): Promise<IBookTemplate | null> {
-  if (!mongoose.Types.ObjectId.isValid(templateId)) {
+  if (!isValidUUID(templateId)) {
     return null;
   }
 
-  return BookTemplate.findById(templateId).exec();
+  return BookTemplate.findById(templateId);
 }
 
 // Get templates by category
 export async function getTemplatesByCategory(category: TemplateCategory): Promise<IBookTemplate[]> {
-  return BookTemplate.find({ category, isActive: true })
-    .sort({ usageCount: -1 })
-    .exec();
+  const templates = await BookTemplate.find({ category, isActive: true });
+  // Sort by usage count descending
+  templates.sort((a, b) => b.usageCount - a.usageCount);
+  return templates;
 }
 
 // Get system templates only
 export async function getSystemTemplates(): Promise<IBookTemplate[]> {
-  return BookTemplate.find({ isSystem: true, isActive: true })
-    .sort({ category: 1 })
-    .exec();
+  const templates = await BookTemplate.find({ isSystem: true, isActive: true });
+  // Sort by category
+  templates.sort((a, b) => (a.category || '').localeCompare(b.category || ''));
+  return templates;
 }
 
 // Get user's custom templates
 export async function getUserTemplates(userId: string): Promise<IBookTemplate[]> {
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
+  if (!isValidUUID(userId)) {
     return [];
   }
 
-  return BookTemplate.find({ createdBy: userId, isSystem: false })
-    .sort({ createdAt: -1 })
-    .exec();
+  const templates = await BookTemplate.find({ createdBy: userId, isSystem: false });
+  // Sort by createdAt descending
+  templates.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  return templates;
 }
 
 // Create a new template
@@ -104,15 +116,15 @@ export async function createTemplate(
   templateData: Partial<IBookTemplate>,
   userId?: string
 ): Promise<IBookTemplate> {
-  const template = new BookTemplate({
+  const template = await BookTemplate.create({
     ...templateData,
     isSystem: false,
-    createdBy: userId ? new mongoose.Types.ObjectId(userId) : undefined,
+    createdBy: userId || undefined,
     usageCount: 0,
     isActive: true,
   });
 
-  return template.save();
+  return template;
 }
 
 // Update a template
@@ -121,7 +133,7 @@ export async function updateTemplate(
   updates: Partial<IBookTemplate>,
   userId?: string
 ): Promise<IBookTemplate | null> {
-  if (!mongoose.Types.ObjectId.isValid(templateId)) {
+  if (!isValidUUID(templateId)) {
     return null;
   }
 
@@ -137,21 +149,19 @@ export async function updateTemplate(
   }
 
   // Prevent editing templates owned by other users
-  if (template.createdBy && userId && template.createdBy.toString() !== userId) {
+  if (template.createdBy && userId && template.createdBy !== userId) {
     throw new Error('Not authorized to modify this template');
   }
 
   // Remove protected fields from updates
-  const { _id, isSystem, createdBy, usageCount, createdAt, ...safeUpdates } = updates as any;
+  const { id, isSystem, createdBy, usageCount, createdAt, ...safeUpdates } = updates as any;
 
-  Object.assign(template, safeUpdates);
-
-  return template.save();
+  return BookTemplate.findByIdAndUpdate(templateId, safeUpdates, { new: true });
 }
 
 // Delete a template
 export async function deleteTemplate(templateId: string, userId?: string): Promise<boolean> {
-  if (!mongoose.Types.ObjectId.isValid(templateId)) {
+  if (!isValidUUID(templateId)) {
     return false;
   }
 
@@ -167,7 +177,7 @@ export async function deleteTemplate(templateId: string, userId?: string): Promi
   }
 
   // Prevent deleting templates owned by other users
-  if (template.createdBy && userId && template.createdBy.toString() !== userId) {
+  if (template.createdBy && userId && template.createdBy !== userId) {
     throw new Error('Not authorized to delete this template');
   }
 
@@ -181,7 +191,7 @@ export async function cloneTemplate(
   userId: string,
   newName?: string
 ): Promise<IBookTemplate | null> {
-  if (!mongoose.Types.ObjectId.isValid(templateId)) {
+  if (!isValidUUID(templateId)) {
     return null;
   }
 
@@ -191,20 +201,22 @@ export async function cloneTemplate(
     return null;
   }
 
+  // Remove id from original to let Supabase generate a new one
+  const { id, ...templateData } = originalTemplate as any;
+
   // Create a clone with modified properties
-  const clonedTemplate = new BookTemplate({
-    ...originalTemplate,
-    _id: new mongoose.Types.ObjectId(),
+  const clonedTemplate = await BookTemplate.create({
+    ...templateData,
     name: newName || `${originalTemplate.name} (Copy)`,
     nameHe: newName || `${originalTemplate.nameHe} (העתק)`,
     isSystem: false,
-    createdBy: new mongoose.Types.ObjectId(userId),
+    createdBy: userId,
     usageCount: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
   });
 
-  return clonedTemplate.save();
+  return clonedTemplate;
 }
 
 // Apply template to a book
@@ -213,7 +225,7 @@ export async function applyTemplateToBook(
   templateId: string,
   userId: string
 ): Promise<IBook | null> {
-  if (!mongoose.Types.ObjectId.isValid(bookId) || !mongoose.Types.ObjectId.isValid(templateId)) {
+  if (!isValidUUID(bookId) || !isValidUUID(templateId)) {
     return null;
   }
 
@@ -227,12 +239,12 @@ export async function applyTemplateToBook(
   }
 
   // Verify user owns the book
-  if (book.author.toString() !== userId) {
+  if (book.author !== userId) {
     throw new Error('Not authorized to modify this book');
   }
 
-  // Apply template settings to book
-  book.pageLayout = {
+  // Build update object
+  const pageLayout = {
     bodyFont: template.defaults.pageLayout.typography.bodyFont,
     fontSize: template.defaults.pageLayout.typography.bodyFontSize,
     lineHeight: template.defaults.pageLayout.typography.lineHeight,
@@ -248,9 +260,10 @@ export async function applyTemplateToBook(
     },
   };
 
-  // Apply cover defaults if no cover exists
+  // Build cover design if no cover exists
+  let coverDesign = book.coverDesign;
   if (!book.coverDesign || !book.coverDesign.front) {
-    book.coverDesign = {
+    coverDesign = {
       front: {
         type: 'gradient',
         backgroundColor: template.coverDefaults.frontCover.backgroundColor,
@@ -282,13 +295,15 @@ export async function applyTemplateToBook(
     };
   }
 
-  // Store template reference (add to book model if needed)
-  (book as any).templateId = new mongoose.Types.ObjectId(templateId);
-
   // Increment template usage count
   await BookTemplate.findByIdAndUpdate(templateId, { $inc: { usageCount: 1 } });
 
-  return book.save();
+  // Update book with template settings
+  return Book.findByIdAndUpdate(
+    bookId,
+    { pageLayout, coverDesign, templateId },
+    { new: true }
+  );
 }
 
 // Save book layout as custom template
@@ -299,7 +314,7 @@ export async function saveBookAsTemplate(
   templateNameHe: string,
   category: TemplateCategory = 'custom'
 ): Promise<IBookTemplate | null> {
-  if (!mongoose.Types.ObjectId.isValid(bookId)) {
+  if (!isValidUUID(bookId)) {
     return null;
   }
 
@@ -310,19 +325,19 @@ export async function saveBookAsTemplate(
   }
 
   // Verify user owns the book
-  if (book.author.toString() !== userId) {
+  if (book.author !== userId) {
     throw new Error('Not authorized to access this book');
   }
 
   // Create template from book layout
-  const template = new BookTemplate({
+  const template = await BookTemplate.create({
     name: templateName,
     nameHe: templateNameHe,
     category,
     description: `Custom template created from "${book.title}"`,
     descriptionHe: `תבנית מותאמת שנוצרה מ"${book.title}"`,
     isSystem: false,
-    createdBy: new mongoose.Types.ObjectId(userId),
+    createdBy: userId,
     defaults: {
       pageSize: book.pageLayout?.pageSize || 'A5',
       customPageSize: book.pageLayout?.customPageSize,
@@ -420,7 +435,7 @@ export async function saveBookAsTemplate(
     usageCount: 0,
   });
 
-  return template.save();
+  return template;
 }
 
 // Get template recommendations based on book metadata
@@ -456,14 +471,17 @@ export async function getTemplateRecommendations(
     categories.unshift('children');
   }
 
-  // Get templates from relevant categories
-  const templates = await BookTemplate.find({
-    category: { $in: categories },
-    isActive: true,
-  })
-    .sort({ usageCount: -1 })
-    .limit(5)
-    .exec();
+  // Get all active templates
+  const allTemplates = await BookTemplate.find({ isActive: true });
+
+  // Filter by categories
+  let templates = allTemplates.filter(t => categories.includes(t.category as TemplateCategory));
+
+  // Sort by usage count descending
+  templates.sort((a, b) => b.usageCount - a.usageCount);
+
+  // Limit to 5
+  templates = templates.slice(0, 5);
 
   // Always include custom template
   const customTemplate = await BookTemplate.findOne({ category: 'custom', isSystem: true });
@@ -482,23 +500,27 @@ export async function searchTemplates(
     limit?: number;
   }
 ): Promise<IBookTemplate[]> {
-  const searchQuery: any = {
-    isActive: true,
-    $or: [
-      { name: { $regex: query, $options: 'i' } },
-      { nameHe: { $regex: query, $options: 'i' } },
-      { description: { $regex: query, $options: 'i' } },
-      { descriptionHe: { $regex: query, $options: 'i' } },
-      { tags: { $in: [new RegExp(query, 'i')] } },
-    ],
-  };
+  // Get all active templates
+  let templates = await BookTemplate.find({ isActive: true });
 
+  // Filter by category if specified
   if (options?.category) {
-    searchQuery.category = options.category;
+    templates = templates.filter(t => t.category === options.category);
   }
 
-  return BookTemplate.find(searchQuery)
-    .sort({ usageCount: -1 })
-    .limit(options?.limit || 10)
-    .exec();
+  // Filter by search query (case insensitive)
+  const lowerQuery = query.toLowerCase();
+  templates = templates.filter(t =>
+    (t.name || '').toLowerCase().includes(lowerQuery) ||
+    (t.nameHe || '').toLowerCase().includes(lowerQuery) ||
+    (t.description || '').toLowerCase().includes(lowerQuery) ||
+    (t.descriptionHe || '').toLowerCase().includes(lowerQuery) ||
+    (t.tags || []).some(tag => tag.toLowerCase().includes(lowerQuery))
+  );
+
+  // Sort by usage count descending
+  templates.sort((a, b) => b.usageCount - a.usageCount);
+
+  // Limit results
+  return templates.slice(0, options?.limit || 10);
 }

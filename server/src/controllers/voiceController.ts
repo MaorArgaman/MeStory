@@ -9,6 +9,7 @@ import fsPromises from 'fs/promises';
 import path from 'path';
 import { AuthRequest } from '../types';
 import { transcribeAudio } from '../services/whisperService';
+import { Book } from '../models/Book';
 
 // Helper to get file path, handling Vercel memory storage
 async function getAudioFilePath(file: Express.Multer.File): Promise<{ filePath: string; tempFile: string | null }> {
@@ -429,12 +430,9 @@ export const saveInterviewToBook = async (req: AuthRequest, res: Response): Prom
 
     const { interviewId, bookId, summary, responses, duration } = req.body;
 
-    // Import Book model here to avoid circular dependencies
-    const { Book } = await import('../models/Book');
-
     // Find the book
     const book = await Book.findOne({
-      _id: bookId,
+      id: bookId,
       author: req.user.id,
     });
 
@@ -447,7 +445,7 @@ export const saveInterviewToBook = async (req: AuthRequest, res: Response): Prom
     }
 
     // Update book's storyContext with voice interview data
-    book.storyContext = {
+    const storyContextUpdate = {
       ...book.storyContext,
       theme: summary.theme.mainTheme,
       characters: summary.characters.map((c: any) => `${c.name} (${c.role}): ${c.description}`).join('\n'),
@@ -466,9 +464,9 @@ export const saveInterviewToBook = async (req: AuthRequest, res: Response): Prom
         })),
         summary,
       },
-    } as any;
+    };
 
-    await book.save();
+    await Book.findByIdAndUpdate(bookId, { storyContext: storyContextUpdate });
 
     // Clean up interview state
     if (interviewId && interviewStates.has(interviewId)) {
@@ -478,7 +476,7 @@ export const saveInterviewToBook = async (req: AuthRequest, res: Response): Prom
     res.status(200).json({
       success: true,
       data: {
-        bookId: book._id,
+        bookId: book.id,
         message: 'Interview saved to book successfully',
       },
     });

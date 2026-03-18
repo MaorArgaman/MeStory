@@ -3,10 +3,12 @@
  * Handles creating and managing notifications for all user events
  */
 
-import mongoose from 'mongoose';
 import { Notification, INotification, NotificationType } from '../models/Notification';
 import { User } from '../models/User';
 import { Book } from '../models/Book';
+
+// UUID validation helper
+const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
 // ==================== NOTIFICATION CREATION ====================
 
@@ -23,16 +25,15 @@ interface CreateNotificationParams {
  * Create a notification
  */
 export async function createNotification(params: CreateNotificationParams): Promise<INotification> {
-  const notification = new Notification({
-    recipient: new mongoose.Types.ObjectId(params.recipientId),
-    sender: params.senderId ? new mongoose.Types.ObjectId(params.senderId) : null,
+  const notification = await Notification.create({
+    recipient: params.recipientId,
+    sender: params.senderId || null,
     type: params.type,
     title: params.title,
     message: params.message,
     data: params.data,
   });
 
-  await notification.save();
   return notification;
 }
 
@@ -42,16 +43,20 @@ export async function createNotification(params: CreateNotificationParams): Prom
 export async function createBatchNotifications(
   notifications: CreateNotificationParams[]
 ): Promise<INotification[]> {
-  const docs = notifications.map((n) => ({
-    recipient: new mongoose.Types.ObjectId(n.recipientId),
-    sender: n.senderId ? new mongoose.Types.ObjectId(n.senderId) : null,
-    type: n.type,
-    title: n.title,
-    message: n.message,
-    data: n.data,
-  }));
-
-  return await Notification.insertMany(docs) as unknown as INotification[];
+  // Create notifications one by one since Supabase model doesn't have insertMany
+  const results: INotification[] = [];
+  for (const n of notifications) {
+    const notification = await Notification.create({
+      recipient: n.recipientId,
+      sender: n.senderId || undefined,
+      type: n.type,
+      title: n.title,
+      message: n.message,
+      data: n.data,
+    });
+    results.push(notification);
+  }
+  return results;
 }
 
 // ==================== SPECIFIC NOTIFICATION TYPES ====================
@@ -68,8 +73,8 @@ export async function notifyBookLike(
   if (likerId === authorId) return null;
 
   const [liker, book] = await Promise.all([
-    User.findById(likerId).select('name'),
-    Book.findById(bookId).select('title'),
+    User.findById(likerId),
+    Book.findById(bookId),
   ]);
 
   if (!liker || !book) return null;
@@ -81,7 +86,7 @@ export async function notifyBookLike(
     title: 'New like on your book!',
     message: `${liker.name} liked your book "${book.title}"`,
     data: {
-      bookId: new mongoose.Types.ObjectId(bookId),
+      bookId: bookId,
       bookTitle: book.title,
       link: `/reader/${bookId}`,
     },
@@ -100,8 +105,8 @@ export async function notifyBookComment(
   if (commenterId === authorId) return null;
 
   const [commenter, book] = await Promise.all([
-    User.findById(commenterId).select('name'),
-    Book.findById(bookId).select('title'),
+    User.findById(commenterId),
+    Book.findById(bookId),
   ]);
 
   if (!commenter || !book) return null;
@@ -115,7 +120,7 @@ export async function notifyBookComment(
     title: 'New comment on your book!',
     message: `${commenter.name} commented on "${book.title}"${ratingText}`,
     data: {
-      bookId: new mongoose.Types.ObjectId(bookId),
+      bookId: bookId,
       bookTitle: book.title,
       link: `/reader/${bookId}`,
     },
@@ -134,8 +139,8 @@ export async function notifyBookShare(
   if (sharerId === authorId) return null;
 
   const [sharer, book] = await Promise.all([
-    User.findById(sharerId).select('name'),
-    Book.findById(bookId).select('title'),
+    User.findById(sharerId),
+    Book.findById(bookId),
   ]);
 
   if (!sharer || !book) return null;
@@ -149,7 +154,7 @@ export async function notifyBookShare(
     title: 'Your book was shared!',
     message: `${sharer.name} shared your book "${book.title}"${platformText}`,
     data: {
-      bookId: new mongoose.Types.ObjectId(bookId),
+      bookId: bookId,
       bookTitle: book.title,
       link: `/reader/${bookId}`,
     },
@@ -169,8 +174,8 @@ export async function notifyBookPurchase(
   if (buyerId === authorId) return null;
 
   const [buyer, book] = await Promise.all([
-    User.findById(buyerId).select('name'),
-    Book.findById(bookId).select('title'),
+    User.findById(buyerId),
+    Book.findById(bookId),
   ]);
 
   if (!buyer || !book) return null;
@@ -182,7 +187,7 @@ export async function notifyBookPurchase(
     title: 'New sale!',
     message: `${buyer.name} purchased your book "${book.title}" for ${amount} ${currency}`,
     data: {
-      bookId: new mongoose.Types.ObjectId(bookId),
+      bookId: bookId,
       bookTitle: book.title,
       amount,
       currency,
@@ -201,7 +206,7 @@ export async function notifyNewMessage(
   messagePreview: string,
   bookTitle?: string
 ): Promise<INotification | null> {
-  const sender = await User.findById(senderId).select('name');
+  const sender = await User.findById(senderId);
   if (!sender) return null;
 
   const bookContext = bookTitle ? ` (about "${bookTitle}")` : '';
@@ -213,7 +218,7 @@ export async function notifyNewMessage(
     title: `New message from ${sender.name}`,
     message: `${messagePreview.substring(0, 100)}${messagePreview.length > 100 ? '...' : ''}${bookContext}`,
     data: {
-      conversationId: new mongoose.Types.ObjectId(conversationId),
+      conversationId: conversationId,
       bookTitle,
       link: `/messages/${conversationId}`,
     },
@@ -286,7 +291,7 @@ export async function notifyBookPublished(
     title: 'Your book is published!',
     message: `Your book "${bookTitle}" has been published and is now available for reading`,
     data: {
-      bookId: new mongoose.Types.ObjectId(bookId),
+      bookId: bookId,
       bookTitle,
       link: `/reader/${bookId}`,
     },
@@ -309,7 +314,7 @@ export async function notifyQualityScore(
     title: `ציון איכות לספר שלך: ${score}/100 ⭐`,
     message: `הספר "${bookTitle}" קיבל ציון איכות: ${ratingLabel} (${score}/100)`,
     data: {
-      bookId: new mongoose.Types.ObjectId(bookId),
+      bookId: bookId,
       bookTitle,
       qualityScore: score,
       link: `/book/${bookId}/layout`,
@@ -339,7 +344,7 @@ export async function notifyBookPromotion(
     title: `Your book ${typeText}!`,
     message: `Your book "${bookTitle}" ${typeText} and will receive additional exposure`,
     data: {
-      bookId: new mongoose.Types.ObjectId(bookId),
+      bookId: bookId,
       bookTitle,
       link: `/marketplace`,
     },
@@ -384,21 +389,15 @@ export async function getUserNotifications(
   unreadCount: number;
 }> {
   const { page = 1, limit = 20, type, unreadOnly = false, includeArchived = false } = options;
-  const skip = (page - 1) * limit;
 
-  const query: any = { recipient: userId };
+  const query: any = { recipient: userId, _limit: limit };
   if (type) query.type = type;
   if (unreadOnly) query.isRead = false;
   if (!includeArchived) query.isArchived = false;
 
   const [notifications, total, unreadCount] = await Promise.all([
-    Notification.find(query)
-      .populate('sender', 'name profilePicture')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
-    Notification.countDocuments(query),
+    Notification.find(query),
+    Notification.countDocuments({ recipient: userId, isArchived: includeArchived ? undefined : false }),
     Notification.countDocuments({
       recipient: userId,
       isRead: false,
@@ -406,51 +405,55 @@ export async function getUserNotifications(
     }),
   ]);
 
-  return { notifications: notifications as unknown as INotification[], total, unreadCount };
+  // Paginate in memory if needed
+  const startIndex = (page - 1) * limit;
+  const paginatedNotifications = notifications.slice(startIndex, startIndex + limit);
+
+  return { notifications: paginatedNotifications, total, unreadCount };
 }
 
 /**
  * Mark notification as read
  */
 export async function markAsRead(notificationId: string, userId: string): Promise<boolean> {
-  const result = await Notification.updateOne(
-    { _id: notificationId, recipient: userId },
-    { isRead: true, readAt: new Date() }
-  );
-  return result.modifiedCount > 0;
+  // First verify the notification belongs to this user
+  const notification = await Notification.findById(notificationId);
+  if (!notification || notification.recipient !== userId) return false;
+
+  const result = await Notification.findByIdAndUpdate(notificationId, { isRead: true });
+  return result !== null;
 }
 
 /**
  * Mark all notifications as read
  */
 export async function markAllAsRead(userId: string): Promise<number> {
-  const result = await Notification.updateMany(
-    { recipient: userId, isRead: false },
-    { isRead: true, readAt: new Date() }
-  );
-  return result.modifiedCount;
+  const result = await Notification.markAllAsRead(userId);
+  return result;
 }
 
 /**
  * Archive notification
  */
 export async function archiveNotification(notificationId: string, userId: string): Promise<boolean> {
-  const result = await Notification.updateOne(
-    { _id: notificationId, recipient: userId },
-    { isArchived: true }
-  );
-  return result.modifiedCount > 0;
+  // First verify the notification belongs to this user
+  const notification = await Notification.findById(notificationId);
+  if (!notification || notification.recipient !== userId) return false;
+
+  const result = await Notification.findByIdAndUpdate(notificationId, { isArchived: true });
+  return result !== null;
 }
 
 /**
  * Delete notification
  */
 export async function deleteNotification(notificationId: string, userId: string): Promise<boolean> {
-  const result = await Notification.deleteOne({
-    _id: notificationId,
-    recipient: userId,
-  });
-  return result.deletedCount > 0;
+  // First verify the notification belongs to this user
+  const notification = await Notification.findById(notificationId);
+  if (!notification || notification.recipient !== userId) return false;
+
+  const result = await Notification.findByIdAndDelete(notificationId);
+  return result !== null;
 }
 
 /**
@@ -472,19 +475,17 @@ export async function getNotificationSummary(userId: string): Promise<{
   unread: number;
   byType: Record<NotificationType, number>;
 }> {
-  const [total, unread, byTypeResult] = await Promise.all([
-    Notification.countDocuments({ recipient: userId, isArchived: false }),
-    Notification.countDocuments({ recipient: userId, isRead: false, isArchived: false }),
-    Notification.aggregate([
-      { $match: { recipient: new mongoose.Types.ObjectId(userId), isArchived: false } },
-      { $group: { _id: '$type', count: { $sum: 1 } } },
-    ]),
-  ]);
+  // Get all notifications for user to calculate summary
+  const notifications = await Notification.find({ recipient: userId, isArchived: false });
 
+  const total = notifications.length;
+  const unread = notifications.filter(n => !n.isRead).length;
+
+  // Group by type
   const byType: Record<string, number> = {};
-  byTypeResult.forEach((r: any) => {
-    byType[r._id] = r.count;
-  });
+  for (const n of notifications) {
+    byType[n.type] = (byType[n.type] || 0) + 1;
+  }
 
   return { total, unread, byType: byType as Record<NotificationType, number> };
 }

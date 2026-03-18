@@ -1,6 +1,8 @@
 import { Response } from 'express';
-import mongoose from 'mongoose';
 import { Book } from '../models/Book';
+
+// UUID validation function for Supabase
+const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 import { AuthRequest } from '../types';
 import {
   generateCompleteBookDesign,
@@ -33,7 +35,7 @@ export const generateBookDesign = async (req: AuthRequest, res: Response): Promi
     const { bookId } = req.params;
 
     // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -52,7 +54,7 @@ export const generateBookDesign = async (req: AuthRequest, res: Response): Promi
     }
 
     // Ensure user owns this book
-    if (book.author._id?.toString() !== req.user.id && (book.author as any).toString() !== req.user.id) {
+    if (book.author.id !== req.user.id && (book.author as any).toString() !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to design this book',
@@ -121,7 +123,7 @@ export const applyBookDesign = async (req: AuthRequest, res: Response): Promise<
     }
 
     // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -162,24 +164,31 @@ export const applyBookDesign = async (req: AuthRequest, res: Response): Promise<
     }
 
     // Store image suggestions for user to accept/place later
+    let pageLayoutUpdate = book.pageLayout || {};
     if (applyImageSuggestions && typedDesign.imagePlacements) {
       // Store in a way that the frontend can use
-      if (!book.pageLayout) {
-        book.pageLayout = {} as any;
-      }
-      (book.pageLayout as any).imageSuggestions = typedDesign.imagePlacements;
+      (pageLayoutUpdate as any).imageSuggestions = typedDesign.imagePlacements;
     }
 
-    await book.save();
+    // Build update object
+    const updateData: any = {};
+    if (applyTypography || applyLayout) {
+      updateData.pageLayout = pageLayoutUpdate;
+    }
+    if (applyCover) {
+      updateData.coverDesign = book.coverDesign;
+    }
+
+    const updatedBook = await Book.findByIdAndUpdate(bookId, updateData, { new: true });
 
     res.status(200).json({
       success: true,
       message: 'Design applied successfully',
       data: {
         book: {
-          id: book._id,
-          pageLayout: book.pageLayout,
-          coverDesign: book.coverDesign,
+          id: updatedBook?.id,
+          pageLayout: updatedBook?.pageLayout,
+          coverDesign: updatedBook?.coverDesign,
         },
       },
     });
@@ -209,7 +218,7 @@ export const generateTypography = async (req: AuthRequest, res: Response): Promi
     const { bookId } = req.params;
 
     // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -228,7 +237,7 @@ export const generateTypography = async (req: AuthRequest, res: Response): Promi
     }
 
     // Ensure user owns this book
-    if (book.author._id?.toString() !== req.user.id && (book.author as any).toString() !== req.user.id) {
+    if (book.author.id !== req.user.id && (book.author as any).toString() !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to access this book',
@@ -282,7 +291,7 @@ export const getImageSuggestions = async (req: AuthRequest, res: Response): Prom
     const { bookId } = req.params;
 
     // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -301,7 +310,7 @@ export const getImageSuggestions = async (req: AuthRequest, res: Response): Prom
     }
 
     // Ensure user owns this book
-    if (book.author._id?.toString() !== req.user.id && (book.author as any).toString() !== req.user.id) {
+    if (book.author.id !== req.user.id && (book.author as any).toString() !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to access this book',
@@ -362,7 +371,7 @@ export const generateContextualImage = async (req: AuthRequest, res: Response): 
     }
 
     // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -460,7 +469,7 @@ export const generateCompleteDesign = async (req: AuthRequest, res: Response): P
     const { generateImages = true } = req.body;
 
     // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -479,7 +488,7 @@ export const generateCompleteDesign = async (req: AuthRequest, res: Response): P
     }
 
     // Ensure user owns this book
-    if (book.author._id?.toString() !== req.user.id && (book.author as any).toString() !== req.user.id) {
+    if (book.author.id !== req.user.id && (book.author as any).toString() !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to design this book',
@@ -488,16 +497,17 @@ export const generateCompleteDesign = async (req: AuthRequest, res: Response): P
     }
 
     // Set AI design state to analyzing
-    book.aiDesignState = {
-      status: 'analyzing',
-      startedAt: new Date(),
-      progress: {
-        currentStep: 1,
-        totalSteps: generateImages ? 6 : 4,
-        stepName: 'Analyzing book...',
+    await Book.findByIdAndUpdate(bookId, {
+      aiDesignState: {
+        status: 'analyzing',
+        startedAt: new Date(),
+        progress: {
+          currentStep: 1,
+          totalSteps: generateImages ? 6 : 4,
+          stepName: 'Analyzing book...',
+        },
       },
-    };
-    await book.save();
+    });
 
     // Prepare input for design generation
     const designInput: BookDesignInput = {
@@ -519,20 +529,19 @@ export const generateCompleteDesign = async (req: AuthRequest, res: Response): P
       designInput,
       async (progress) => {
         // Update progress in database
-        book.aiDesignState = {
-          ...book.aiDesignState,
-          status: 'generating-design',
-          progress,
-        };
-        await book.save();
+        await Book.findByIdAndUpdate(bookId, {
+          aiDesignState: {
+            status: 'generating-design',
+            progress,
+          },
+        });
       },
       generateImages
     );
 
     // Convert design to book state format and save
     const designState = convertDesignToBookState(design);
-    book.aiDesignState = designState;
-    await book.save();
+    await Book.findByIdAndUpdate(bookId, { aiDesignState: designState });
 
     res.status(200).json({
       success: true,
@@ -582,7 +591,7 @@ export const getDesignPreview = async (req: AuthRequest, res: Response): Promise
     const { bookId } = req.params;
 
     // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -601,7 +610,7 @@ export const getDesignPreview = async (req: AuthRequest, res: Response): Promise
     }
 
     // Ensure user owns this book
-    if (book.author._id?.toString() !== req.user.id && (book.author as any).toString() !== req.user.id) {
+    if (book.author.id !== req.user.id && (book.author as any).toString() !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to access this book',
@@ -655,7 +664,7 @@ export const getDesignState = async (req: AuthRequest, res: Response): Promise<v
     const { bookId } = req.params;
 
     // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -714,7 +723,7 @@ export const applyCompleteDesign = async (req: AuthRequest, res: Response): Prom
     const { bookId } = req.params;
 
     // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -812,6 +821,7 @@ export const applyCompleteDesign = async (req: AuthRequest, res: Response): Prom
     }
 
     // Apply image placements to pageImages
+    let pageImagesUpdate = book.pageImages || [];
     if (design.imagePlacements && design.imagePlacements.length > 0) {
       const newPageImages = design.imagePlacements
         .filter((p: any) => p.generatedImageUrl)
@@ -828,20 +838,28 @@ export const applyCompleteDesign = async (req: AuthRequest, res: Response): Prom
           createdAt: new Date(),
         }));
 
-      book.pageImages = [...(book.pageImages || []), ...newPageImages];
+      pageImagesUpdate = [...pageImagesUpdate, ...newPageImages];
     }
 
-    await book.save();
+    const updatedBook = await Book.findByIdAndUpdate(
+      bookId,
+      {
+        pageLayout: book.pageLayout,
+        coverDesign: book.coverDesign,
+        pageImages: pageImagesUpdate,
+      },
+      { new: true }
+    );
 
     res.status(200).json({
       success: true,
       message: 'AI design applied successfully',
       data: {
         book: {
-          id: book._id,
-          pageLayout: book.pageLayout,
-          coverDesign: book.coverDesign,
-          pageImages: book.pageImages,
+          id: updatedBook?.id,
+          pageLayout: updatedBook?.pageLayout,
+          coverDesign: updatedBook?.coverDesign,
+          pageImages: updatedBook?.pageImages,
         },
       },
     });
@@ -879,7 +897,7 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
     const { generateInteriorImages = false } = req.body;
 
     // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -898,7 +916,7 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     // Ensure user owns this book
-    if (book.author._id?.toString() !== req.user.id && (book.author as any).toString() !== req.user.id) {
+    if (book.author.id !== req.user.id && (book.author as any).toString() !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to design this book',
@@ -919,16 +937,17 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
     ];
 
     // Initialize design state
-    book.aiDesignState = {
-      status: 'analyzing',
-      startedAt: new Date(),
-      progress: {
-        currentStep: 1,
-        totalSteps,
-        stepName: stepNames[0],
+    await Book.findByIdAndUpdate(bookId, {
+      aiDesignState: {
+        status: 'analyzing',
+        startedAt: new Date(),
+        progress: {
+          currentStep: 1,
+          totalSteps,
+          stepName: stepNames[0],
+        },
       },
-    };
-    await book.save();
+    });
 
     // Prepare design input
     const designInput: BookDesignInput = {
@@ -947,16 +966,16 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
 
     // Helper to update progress
     const updateProgress = async (step: number) => {
-      book.aiDesignState = {
-        ...book.aiDesignState,
-        status: step === totalSteps ? 'completed' : 'generating-design',
-        progress: {
-          currentStep: step,
-          totalSteps,
-          stepName: stepNames[step - 1] || 'Processing...',
+      await Book.findByIdAndUpdate(bookId, {
+        aiDesignState: {
+          status: step === totalSteps ? 'completed' : 'generating-design',
+          progress: {
+            currentStep: step,
+            totalSteps,
+            stepName: stepNames[step - 1] || 'Processing...',
+          },
         },
-      };
-      await book.save();
+      });
     };
 
     // Step 1: Analyze book
@@ -976,16 +995,7 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
     // Final step: Save completed design
     await updateProgress(totalSteps);
 
-    // Convert and save design state
-    const designState = convertDesignToBookState(design);
-    book.aiDesignState = {
-      ...designState,
-      status: 'completed',
-      completedAt: new Date(),
-    };
-
     console.log('🧙 Design Wizard: Converting design to book state...');
-    console.log(`🧙 aiDesignState.design.covers.front.generatedImageUrl: ${designState.design?.covers?.front?.generatedImageUrl ? 'SET' : 'UNDEFINED'}`);
 
     // Also apply design to book's coverDesign and pageLayout
     if (design.typography && design.layout) {
@@ -1052,17 +1062,33 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
       console.log(`🧙 Final book.coverDesign.front.type: ${book.coverDesign.front?.type}`);
     }
 
-    await book.save();
+    // Convert and save design state with all updates
+    const designState = convertDesignToBookState(design);
+    const finalAiDesignState = {
+      ...designState,
+      status: 'completed',
+      completedAt: new Date(),
+    };
+
+    const updatedBook = await Book.findByIdAndUpdate(
+      bookId,
+      {
+        aiDesignState: finalAiDesignState,
+        pageLayout: book.pageLayout,
+        coverDesign: book.coverDesign,
+      },
+      { new: true }
+    );
 
     res.status(200).json({
       success: true,
       message: 'AI Design Wizard completed successfully!',
       data: {
         bookId,
-        design: book.aiDesignState?.design,
-        coverDesign: book.coverDesign,
-        pageLayout: book.pageLayout,
-        completedAt: book.aiDesignState?.completedAt,
+        design: updatedBook?.aiDesignState?.design,
+        coverDesign: updatedBook?.coverDesign,
+        pageLayout: updatedBook?.pageLayout,
+        completedAt: updatedBook?.aiDesignState?.completedAt,
       },
     });
   } catch (error: any) {
@@ -1114,7 +1140,7 @@ export const generateTemplateDesign = async (req: AuthRequest, res: Response): P
 
     // If bookId provided, verify ownership
     if (bookId) {
-      if (!mongoose.Types.ObjectId.isValid(bookId)) {
+      if (!isValidUUID(bookId)) {
         res.status(400).json({
           success: false,
           error: 'Invalid book ID',

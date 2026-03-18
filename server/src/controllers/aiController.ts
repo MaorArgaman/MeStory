@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import { generateContinuations, analyzeTextQuality, generateBookTitles, generateSynopsis, generateCoverColorScheme, generateBookCover } from '../services/geminiService';
 import { Book } from '../models/Book';
 
+// UUID validation regex for Supabase IDs
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * POST /api/ai/suggestions
  * Generate writing continuation suggestions
@@ -144,6 +147,15 @@ export const generateBookSynopsis = async (req: Request, res: Response): Promise
       res.status(400).json({
         success: false,
         message: 'bookId is required',
+      });
+      return;
+    }
+
+    // Validate UUID format
+    if (!UUID_REGEX.test(bookId)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid bookId format',
       });
       return;
     }

@@ -3,6 +3,9 @@ import { User, UserRole } from '../models/User';
 import { Book } from '../models/Book';
 import { AuthRequest } from '../types';
 
+// UUID validation regex for Supabase
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Get platform statistics
  * GET /api/admin/stats
@@ -10,15 +13,15 @@ import { AuthRequest } from '../types';
 export const getStats = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Count users by role
-    const totalUsers = await User.countDocuments();
-    const freeUsers = await User.countDocuments({ role: UserRole.FREE });
-    const standardUsers = await User.countDocuments({ role: UserRole.STANDARD });
-    const premiumUsers = await User.countDocuments({ role: UserRole.PREMIUM });
+    const totalUsers = await User.count();
+    const freeUsers = await User.count({ role: UserRole.FREE });
+    const standardUsers = await User.count({ role: UserRole.STANDARD });
+    const premiumUsers = await User.count({ role: UserRole.PREMIUM });
 
     // Count books by status
-    const totalBooks = await Book.countDocuments();
-    const publishedBooks = await Book.countDocuments({ 'publishingStatus.status': 'published' });
-    const draftBooks = await Book.countDocuments({ 'publishingStatus.status': 'draft' });
+    const totalBooks = await Book.count();
+    const publishedBooks = await Book.count({ 'publishingStatus.status': 'published' });
+    const draftBooks = await Book.count({ 'publishingStatus.status': 'draft' });
 
     // Calculate total revenue (50% from all book sales)
     const books = await Book.find({
@@ -34,7 +37,7 @@ export const getStats = async (_req: AuthRequest, res: Response): Promise<void> 
     // Get recent signups (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const recentSignups = await User.countDocuments({
+    const recentSignups = await User.count({
       createdAt: { $gte: sevenDaysAgo },
     });
 
@@ -42,68 +45,56 @@ export const getStats = async (_req: AuthRequest, res: Response): Promise<void> 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const signupTrend = await User.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: thirtyDaysAgo },
-        },
-      },
-      {
-        $group: {
-          _id: {
-            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
-          },
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $sort: { _id: 1 },
-      },
-    ]);
+    // For Supabase, we need to fetch users and group in JavaScript
+    const recentUsers = await User.find({
+      createdAt: { $gte: thirtyDaysAgo },
+    }).select('createdAt');
 
-    // Get top authors by revenue
-    const topAuthors = await Book.aggregate([
-      {
-        $match: {
-          'publishingStatus.status': 'published',
-        },
-      },
-      {
-        $group: {
-          _id: '$author',
-          totalRevenue: { $sum: '$statistics.revenue' },
-          totalSales: { $sum: '$statistics.purchases' },
-          bookCount: { $sum: 1 },
-        },
-      },
-      {
-        $sort: { totalRevenue: -1 },
-      },
-      {
-        $limit: 10,
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'author',
-        },
-      },
-      {
-        $unwind: '$author',
-      },
-      {
-        $project: {
-          authorId: '$_id',
-          authorName: '$author.name',
-          authorEmail: '$author.email',
-          totalRevenue: 1,
-          totalSales: 1,
-          bookCount: 1,
-        },
-      },
-    ]);
+    // Group by date in JavaScript
+    const signupTrendMap = new Map<string, number>();
+    recentUsers.forEach(user => {
+      const dateStr = new Date(user.createdAt).toISOString().split('T')[0];
+      signupTrendMap.set(dateStr, (signupTrendMap.get(dateStr) || 0) + 1);
+    });
+    const signupTrend = Array.from(signupTrendMap.entries())
+      .map(([_id, count]) => ({ _id, count }))
+      .sort((a, b) => a._id.localeCompare(b._id));
+
+    // Get top authors by revenue - fetch and aggregate in JavaScript for Supabase
+    const publishedBooksWithAuthors = await Book.find({
+      'publishingStatus.status': 'published',
+    }).select('author statistics');
+
+    // Group by author
+    const authorStatsMap = new Map<string, { totalRevenue: number; totalSales: number; bookCount: number }>();
+    publishedBooksWithAuthors.forEach(book => {
+      const authorId = book.author;
+      const existing = authorStatsMap.get(authorId) || { totalRevenue: 0, totalSales: 0, bookCount: 0 };
+      existing.totalRevenue += book.statistics?.revenue || 0;
+      existing.totalSales += book.statistics?.purchases || 0;
+      existing.bookCount += 1;
+      authorStatsMap.set(authorId, existing);
+    });
+
+    // Sort by revenue and get top 10
+    const topAuthorIds = Array.from(authorStatsMap.entries())
+      .sort((a, b) => b[1].totalRevenue - a[1].totalRevenue)
+      .slice(0, 10);
+
+    // Fetch author details
+    const topAuthors = await Promise.all(
+      topAuthorIds.map(async ([authorId, stats]) => {
+        const author = await User.findById(authorId).select('name email');
+        return {
+          authorId,
+          authorName: author?.name || 'Unknown',
+          authorEmail: author?.email || 'Unknown',
+          totalRevenue: stats.totalRevenue,
+          totalSales: stats.totalSales,
+          bookCount: stats.bookCount,
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,
@@ -175,7 +166,7 @@ export const getUsers = async (req: AuthRequest, res: Response): Promise<void> =
       .skip(skip)
       .limit(Number(limit));
 
-    const total = await User.countDocuments(query);
+    const total = await User.count(query);
 
     res.status(200).json({
       success: true,
@@ -207,6 +198,15 @@ export const updateUser = async (req: AuthRequest, res: Response): Promise<void>
     const { id } = req.params;
     const { role, credits, action } = req.body;
 
+    // Validate UUID format
+    if (!UUID_REGEX.test(id)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid user ID format',
+      });
+      return;
+    }
+
     const user = await User.findById(id);
 
     if (!user) {
@@ -226,47 +226,51 @@ export const updateUser = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
+    // Build update object
+    const updateData: any = {};
+
     // Update role
     if (role && [UserRole.FREE, UserRole.STANDARD, UserRole.PREMIUM, UserRole.ADMIN].includes(role)) {
-      user.role = role;
+      updateData.role = role;
 
       // Set credits based on role
       if (role === UserRole.FREE) {
-        user.credits = 100;
+        updateData.credits = 100;
       } else if (role === UserRole.STANDARD) {
-        user.credits = 500;
+        updateData.credits = 500;
       } else if (role === UserRole.PREMIUM) {
-        user.credits = 999999;
+        updateData.credits = 999999;
       }
     }
 
     // Update credits directly
     if (credits !== undefined) {
-      user.credits = Number(credits);
+      updateData.credits = Number(credits);
     }
 
     // Handle specific actions
     if (action === 'ban') {
-      user.role = UserRole.FREE;
-      user.credits = 0;
+      updateData.role = UserRole.FREE;
+      updateData.credits = 0;
       // In production, add a 'banned' field
     } else if (action === 'reset-password') {
       // In production, send password reset email
       // For now, just return success
     }
 
-    await user.save();
+    // Use findByIdAndUpdate instead of save()
+    const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true });
 
     res.status(200).json({
       success: true,
       message: 'User updated successfully',
       data: {
         user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          credits: user.credits,
+          id: updatedUser!.id,
+          name: updatedUser!.name,
+          email: updatedUser!.email,
+          role: updatedUser!.role,
+          credits: updatedUser!.credits,
         },
       },
     });
@@ -286,6 +290,15 @@ export const updateUser = async (req: AuthRequest, res: Response): Promise<void>
 export const deleteUser = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+
+    // Validate UUID format
+    if (!UUID_REGEX.test(id)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid user ID format',
+      });
+      return;
+    }
 
     const user = await User.findById(id);
 
@@ -365,6 +378,15 @@ export const unpublishBook = async (req: AuthRequest, res: Response): Promise<vo
     const { id } = req.params;
     const { reason } = req.body;
 
+    // Validate UUID format
+    if (!UUID_REGEX.test(id)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid book ID format',
+      });
+      return;
+    }
+
     const book = await Book.findById(id);
 
     if (!book) {
@@ -375,17 +397,19 @@ export const unpublishBook = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    book.publishingStatus.status = 'draft';
-    book.publishingStatus.isPublic = false;
+    // Use findByIdAndUpdate instead of save()
+    await Book.findByIdAndUpdate(id, {
+      'publishingStatus.status': 'draft',
+      'publishingStatus.isPublic': false,
+    });
 
     // In production, notify the author with reason
-    await book.save();
 
     res.status(200).json({
       success: true,
       message: 'Book unpublished successfully',
       data: {
-        bookId: book._id,
+        bookId: book.id,
         reason,
       },
     });

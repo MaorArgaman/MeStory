@@ -1,19 +1,21 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import { supabaseAdmin } from '../config/supabase';
+import crypto from 'crypto';
+const uuidv4 = () => crypto.randomUUID();
 
 // Chapter interface
 export interface IChapter {
-  _id?: mongoose.Types.ObjectId;
+  _id?: string;
   title: string;
   content: string;
   order: number;
   wordCount: number;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Character interface
 export interface ICharacter {
-  _id?: mongoose.Types.ObjectId;
+  _id?: string;
   name: string;
   age?: number;
   description: string;
@@ -22,7 +24,7 @@ export interface ICharacter {
   goals?: string;
   motivations?: string;
   relationships?: Array<{
-    characterId: mongoose.Types.ObjectId | string;
+    characterId: string;
     characterName: string;
     relationship: string;
   }>;
@@ -32,32 +34,32 @@ export interface ICharacter {
 
 // Quality Score Category interface
 export interface IQualityCategory {
-  score: number; // 0-100
-  weight: number; // Percentage weight
+  score: number;
+  weight: number;
   feedback?: string;
   examples?: string[];
 }
 
-// Quality Score interface (Section 5.5)
+// Quality Score interface
 export interface IQualityScore {
-  overallScore: number; // 0-100
-  rating: number; // 1-5 stars
+  overallScore: number;
+  rating: number;
   ratingLabel: 'Masterpiece' | 'Excellent' | 'Good' | 'Fair' | 'Needs Work';
   categories: {
-    writingQuality: IQualityCategory; // 25%
-    plotStructure: IQualityCategory; // 20%
-    characterDevelopment: IQualityCategory; // 20%
-    dialogue: IQualityCategory; // 15%
-    setting: IQualityCategory; // 10%
-    originality: IQualityCategory; // 10%
+    writingQuality: IQualityCategory;
+    plotStructure: IQualityCategory;
+    characterDevelopment: IQualityCategory;
+    dialogue: IQualityCategory;
+    setting: IQualityCategory;
+    originality: IQualityCategory;
   };
   detailedFeedback?: string;
   suggestions?: string[];
-  evaluatedAt: Date;
+  evaluatedAt: string;
   evaluatedBy: 'ai' | 'admin';
 }
 
-// Cover Design interface (Section 6.1)
+// Cover Design interface
 export interface ICoverDesign {
   front?: {
     type: 'ai-generated' | 'uploaded' | 'gradient' | 'solid';
@@ -69,10 +71,7 @@ export interface ICoverDesign {
       font: string;
       size: number;
       color: string;
-      position: {
-        x: number;
-        y: number;
-      };
+      position: { x: number; y: number };
     };
     subtitle?: {
       text: string;
@@ -95,37 +94,33 @@ export interface ICoverDesign {
     authorPhoto?: string;
     barcodeArea?: {
       isbn?: string;
-      position: {
-        x: number;
-        y: number;
-      };
+      position: { x: number; y: number };
     };
   };
   spine?: {
-    width: number; // Auto-calculated based on page count
+    width: number;
     title: string;
     author: string;
     backgroundColor?: string;
   };
 }
 
-// Page Image interface (for Book Layout visualization)
+// Page Image interface
 export interface IPageImage {
-  _id?: mongoose.Types.ObjectId;
-  pageIndex: number; // Which page this image belongs to
+  _id?: string;
+  pageIndex: number;
   url: string;
-  x: number; // Percentage from left (0-100)
-  y: number; // Percentage from top (0-100)
-  width: number; // Percentage of page width (0-100)
-  height: number; // Percentage of page height (0-100)
-  rotation: number; // Rotation in degrees
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
   isAiGenerated: boolean;
-  prompt?: string; // If AI generated, the prompt used
-  createdAt: Date;
+  prompt?: string;
+  createdAt: string;
 }
 
-// Page Layout interface (Section 6.2)
-// Page content interface for storing generated pages
+// Page content interface
 export interface IPageContent {
   id: string;
   type: 'cover' | 'content' | 'chapter-start' | 'toc' | 'back-cover' | 'blank' | 'title' | 'chapter' | 'summary';
@@ -144,21 +139,14 @@ export interface IPageContent {
   }>;
 }
 
+// Page Layout interface
 export interface IPageLayout {
   bodyFont: string;
-  fontSize: number; // 10-16pt
-  lineHeight: number; // 1.2-2.0
+  fontSize: number;
+  lineHeight: number;
   pageSize: 'A4' | 'A5' | 'Letter' | 'Custom';
-  customPageSize?: {
-    width: number;
-    height: number;
-  };
-  margins: {
-    top: number;
-    bottom: number;
-    left: number;
-    right: number;
-  };
+  customPageSize?: { width: number; height: number };
+  margins: { top: number; bottom: number; left: number; right: number };
   includeTableOfContents: boolean;
   tableOfContentsStyle?: string;
   headerFooter?: {
@@ -167,7 +155,6 @@ export interface IPageLayout {
     includePageNumbers: boolean;
     pageNumberPosition: 'top' | 'bottom' | 'none';
   };
-  // Template-related fields
   textColor?: string;
   titleFont?: string;
   headerFont?: string;
@@ -176,39 +163,19 @@ export interface IPageLayout {
   columns?: 1 | 2 | 3 | 4;
   paragraphIndent?: number;
   paragraphSpacing?: number;
-  pageNumberPosition?: 'top-left' | 'top-right' | 'top-outer' | 'bottom-center' | 'bottom-outside' | 'bottom-outer' | 'none';
+  pageNumberPosition?: string;
   templateId?: string;
-  // Generated pages content
   pages?: IPageContent[];
-  // Nested settings (for client compatibility)
-  settings?: {
-    fontSize?: number;
-    lineHeight?: number;
-    fontFamily?: string;
-    margins?: { top: number; bottom: number; left: number; right: number };
-    showPageNumbers?: boolean;
-    includeToc?: boolean;
-    includeBackCover?: boolean;
-    textColor?: string;
-    titleFont?: string;
-    headerFont?: string;
-    accentColor?: string;
-    columns?: 1 | 2 | 3 | 4;
-    paragraphIndent?: number;
-    paragraphSpacing?: number;
-    pageNumberPosition?: string;
-    backgroundColor?: string;
-    templateId?: string;
-  };
+  settings?: Record<string, any>;
 }
 
-// Publishing Status interface (Section 9.1)
+// Publishing Status interface
 export interface IPublishingStatus {
   status: 'draft' | 'published' | 'unpublished';
-  publishedAt?: Date;
-  unpublishedAt?: Date;
-  price: number; // 0-25 USD
-  priceILS?: number; // 0-99 ILS
+  publishedAt?: string;
+  unpublishedAt?: string;
+  price: number;
+  priceILS?: number;
   isFree: boolean;
   isPublic: boolean;
   marketingStrategy?: {
@@ -216,7 +183,7 @@ export interface IPublishingStatus {
     description?: string;
     categories?: string[];
     tags?: string[];
-    launchDate?: Date;
+    launchDate?: string;
   };
 }
 
@@ -231,13 +198,13 @@ export interface IStatistics {
   revenue: number;
   averageRating?: number;
   totalReviews: number;
-  completionRate?: number; // Percentage of readers who finished
-  readingTime?: number; // Estimated reading time in minutes
-  shares: number; // Number of times the book was shared
-  comments: number; // Number of comments on the book
+  completionRate?: number;
+  readingTime?: number;
+  shares: number;
+  comments: number;
 }
 
-// Voice Interview Character Summary
+// Voice Interview interfaces
 export interface IVoiceInterviewCharacter {
   name: string;
   role: 'protagonist' | 'antagonist' | 'supporting' | 'minor';
@@ -245,7 +212,6 @@ export interface IVoiceInterviewCharacter {
   description: string;
 }
 
-// Voice Interview Summary
 export interface IVoiceInterviewSummary {
   theme: {
     mainTheme: string;
@@ -269,40 +235,38 @@ export interface IVoiceInterviewSummary {
   writingGuidelines: string[];
 }
 
-// Voice Interview Response
 export interface IVoiceInterviewResponse {
   topic: string;
   question: string;
   answer: string;
 }
 
-// Voice Interview Data
 export interface IVoiceInterview {
-  completedAt: Date;
-  duration: number; // seconds
+  completedAt: string;
+  duration: number;
   responses: IVoiceInterviewResponse[];
   summary: IVoiceInterviewSummary;
 }
 
-// Story Context interface (Deep Dive Interview - 8 Pillars)
+// Story Context interface
 export interface IStoryContext {
-  theme?: string; // Q1: Core theme/premise
-  characters?: string; // Q2: Main characters & protagonist
-  conflict?: string; // Q3: Central conflict/problem
-  climax?: string; // Q4: Planned climax
-  resolution?: string; // Q5: Resolution
-  setting?: string; // Q6: Setting/world description
-  keyPoints?: string; // Q7: Key plot points
-  narrativeArc?: string; // Q8: Desired narrative arc/tone
-  completedAt?: Date; // When the interview was completed
-  voiceInterview?: IVoiceInterview; // Voice interview data
+  theme?: string;
+  characters?: string;
+  conflict?: string;
+  climax?: string;
+  resolution?: string;
+  setting?: string;
+  keyPoints?: string;
+  narrativeArc?: string;
+  completedAt?: string;
+  voiceInterview?: IVoiceInterview;
 }
 
-// AI Design State interface - tracks AI design progress
+// AI Design State interface
 export interface IAIDesignState {
   status: 'idle' | 'analyzing' | 'generating-design' | 'generating-images' | 'completed' | 'error';
-  startedAt?: Date;
-  completedAt?: Date;
+  startedAt?: string;
+  completedAt?: string;
   error?: string;
   progress?: {
     currentStep: number;
@@ -310,71 +274,10 @@ export interface IAIDesignState {
     stepName: string;
   };
   design?: {
-    typography?: {
-      bodyFont: string;
-      headingFont: string;
-      titleFont: string;
-      fontSize: number;
-      lineHeight: number;
-      chapterTitleSize: number;
-      colors: {
-        text: string;
-        heading: string;
-        accent: string;
-        background: string;
-      };
-      formatting?: {
-        headingBold: boolean;
-        headingItalic: boolean;
-        firstParagraphDropCap: boolean;
-      };
-    };
-    layout?: {
-      columns: number;
-      columnGap: number;
-      margins: { top: number; bottom: number; inner: number; outer: number };
-      paragraphSpacing: number;
-      textAlign: string;
-      pageNumbers?: {
-        show: boolean;
-        position: string;
-        startFrom: number;
-        style: string;
-      };
-      headers?: {
-        show: boolean;
-        content: string;
-        position: string;
-      };
-    };
-    covers?: {
-      front?: {
-        backgroundColor: string;
-        gradientColors?: string[];
-        imagePrompt: string;
-        generatedImageUrl?: string;
-        title: { position: string; fontSize: number; color: string };
-        author: { position: string; fontSize: number; color: string };
-      };
-      back?: {
-        backgroundColor: string;
-        imagePrompt?: string;
-        generatedImageUrl?: string;
-      };
-      spine?: {
-        backgroundColor: string;
-        textColor: string;
-      };
-    };
-    imagePlacements?: Array<{
-      chapterIndex: number;
-      pagePosition: string;
-      imagePosition: string;
-      imageSize: string;
-      prompt: string;
-      generatedImageUrl?: string;
-      caption?: string;
-    }>;
+    typography?: any;
+    layout?: any;
+    covers?: any;
+    imagePlacements?: any[];
     reasoning?: string;
     moodDescription?: string;
   };
@@ -383,9 +286,9 @@ export interface IAIDesignState {
 // Plot Structure interface
 export interface IPlotStructure {
   threeActStructure?: {
-    act1: string; // Setup
-    act2: string; // Confrontation
-    act3: string; // Resolution
+    act1: string;
+    act2: string;
+    act3: string;
   };
   plotPoints?: {
     incitingIncident?: string;
@@ -408,25 +311,27 @@ export interface IPlotStructure {
 
 // Review interface
 export interface IReview {
-  _id?: mongoose.Types.ObjectId;
-  user: mongoose.Types.ObjectId;
+  _id?: string;
+  user: string;
   userName?: string;
-  rating: number; // 1-5 stars
+  rating: number;
   comment: string;
-  createdAt: Date;
-  updatedAt?: Date;
+  createdAt: string;
+  updatedAt?: string;
 }
 
-// Book interface extending Mongoose Document
-export interface IBook extends Document {
+// Book interface
+export interface IBook {
+  id: string;
+  _id?: string;
   title: string;
-  author: mongoose.Types.ObjectId;
+  author: string;
   genre: string;
   writingGoal?: 'short-story' | 'novella' | 'novel';
   targetAudience?: 'children' | 'young-adult' | 'adult' | 'all-ages';
   description?: string;
   synopsis?: string;
-  storyContext?: IStoryContext; // Deep Dive Interview data
+  storyContext?: IStoryContext;
   chapters: IChapter[];
   characters: ICharacter[];
   plotStructure?: IPlotStructure;
@@ -434,1024 +339,401 @@ export interface IBook extends Document {
   coverDesign?: ICoverDesign;
   pageLayout?: IPageLayout;
   pageImages?: IPageImage[];
-  templateId?: mongoose.Types.ObjectId; // Reference to applied template
-  aiDesignState?: IAIDesignState; // AI design progress and state
+  templateId?: string;
+  aiDesignState?: IAIDesignState;
   publishingStatus: IPublishingStatus;
   statistics: IStatistics;
   tags?: string[];
   language: string;
   ageRating?: 'G' | 'PG' | 'PG-13' | 'R' | '18+';
   likes: number;
-  likedBy: mongoose.Types.ObjectId[];
+  likedBy: string[];
   reviews: IReview[];
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: string;
+  updated_at: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-// Chapter schema
-const ChapterSchema = new Schema<IChapter>(
-  {
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    content: {
-      type: String,
-      default: '', // Allow empty content for draft chapters
-    },
-    order: {
-      type: Number,
-      required: true,
-    },
-    wordCount: {
-      type: Number,
-      default: 0,
-    },
-  },
-  { timestamps: true }
-);
+// Database row type
+interface BookRow {
+  id: string;
+  title: string;
+  author_id: string;
+  genre: string;
+  writing_goal: string | null;
+  target_audience: string | null;
+  description: string | null;
+  synopsis: string | null;
+  story_context: IStoryContext | null;
+  chapters: IChapter[];
+  characters: ICharacter[];
+  plot_structure: IPlotStructure | null;
+  quality_score: IQualityScore | null;
+  cover_design: ICoverDesign | null;
+  page_layout: IPageLayout | null;
+  page_images: IPageImage[];
+  ai_design_state: IAIDesignState | null;
+  publishing_status: IPublishingStatus;
+  statistics: IStatistics;
+  tags: string[];
+  language: string;
+  age_rating: string | null;
+  likes: number;
+  liked_by: string[];
+  reviews: IReview[];
+  created_at: string;
+  updated_at: string;
+}
 
-// Character schema
-const CharacterSchema = new Schema<ICharacter>(
-  {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    age: {
-      type: Number,
-      min: 0,
-    },
-    description: {
-      type: String,
-      required: true,
-    },
-    traits: {
-      type: [String],
-      default: [],
-    },
-    backstory: {
-      type: String,
-    },
-    goals: {
-      type: String,
-    },
-    motivations: {
-      type: String,
-    },
-    relationships: [
-      {
-        characterId: {
-          type: Schema.Types.Mixed, // Can be ObjectId or string
-        },
-        characterName: {
-          type: String,
-        },
-        relationship: {
-          type: String,
-        },
-      },
-    ],
-    arc: {
-      type: String,
-    },
-    notes: {
-      type: String,
-    },
-  },
-  { _id: true }
-);
+// Transform database row to IBook
+function rowToBook(row: BookRow): IBook {
+  return {
+    id: row.id,
+    _id: row.id,
+    title: row.title,
+    author: row.author_id,
+    genre: row.genre,
+    writingGoal: row.writing_goal as IBook['writingGoal'],
+    targetAudience: row.target_audience as IBook['targetAudience'],
+    description: row.description || undefined,
+    synopsis: row.synopsis || undefined,
+    storyContext: row.story_context || undefined,
+    chapters: row.chapters || [],
+    characters: row.characters || [],
+    plotStructure: row.plot_structure || undefined,
+    qualityScore: row.quality_score || undefined,
+    coverDesign: row.cover_design || undefined,
+    pageLayout: row.page_layout || undefined,
+    pageImages: row.page_images || [],
+    aiDesignState: row.ai_design_state || undefined,
+    publishingStatus: row.publishing_status || { status: 'draft', price: 0, isFree: true, isPublic: false },
+    statistics: row.statistics || { wordCount: 0, pageCount: 0, chapterCount: 0, characterCount: 0, views: 0, purchases: 0, revenue: 0, totalReviews: 0, shares: 0, comments: 0 },
+    tags: row.tags || [],
+    language: row.language || 'en',
+    ageRating: row.age_rating as IBook['ageRating'],
+    likes: row.likes || 0,
+    likedBy: row.liked_by || [],
+    reviews: row.reviews || [],
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
 
-// Quality Category schema
-const QualityCategorySchema = new Schema<IQualityCategory>(
-  {
-    score: {
-      type: Number,
-      required: true,
-      min: 0,
-      max: 100,
-    },
-    weight: {
-      type: Number,
-      required: true,
-      min: 0,
-      max: 100,
-    },
-    feedback: {
-      type: String,
-    },
-    examples: {
-      type: [String],
-    },
-  },
-  { _id: false }
-);
+// Book Model class for Supabase operations
+export class Book {
+  // Find book by ID
+  static async findById(id: string): Promise<IBook | null> {
+    const { data, error } = await supabaseAdmin
+      .from('books')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-// Quality Score schema (Section 5.5)
-const QualityScoreSchema = new Schema<IQualityScore>(
-  {
-    overallScore: {
-      type: Number,
-      required: true,
-      min: 0,
-      max: 100,
-    },
-    rating: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 5,
-    },
-    ratingLabel: {
-      type: String,
-      required: true,
-      enum: ['Masterpiece', 'Excellent', 'Good', 'Fair', 'Needs Work'],
-    },
-    categories: {
-      writingQuality: {
-        type: QualityCategorySchema,
-        required: true,
-        default: () => ({ score: 0, weight: 25 }),
-      },
-      plotStructure: {
-        type: QualityCategorySchema,
-        required: true,
-        default: () => ({ score: 0, weight: 20 }),
-      },
-      characterDevelopment: {
-        type: QualityCategorySchema,
-        required: true,
-        default: () => ({ score: 0, weight: 20 }),
-      },
-      dialogue: {
-        type: QualityCategorySchema,
-        required: true,
-        default: () => ({ score: 0, weight: 15 }),
-      },
-      setting: {
-        type: QualityCategorySchema,
-        required: true,
-        default: () => ({ score: 0, weight: 10 }),
-      },
-      originality: {
-        type: QualityCategorySchema,
-        required: true,
-        default: () => ({ score: 0, weight: 10 }),
-      },
-    },
-    detailedFeedback: {
-      type: String,
-    },
-    suggestions: {
-      type: [String],
-    },
-    evaluatedAt: {
-      type: Date,
-      default: Date.now,
-    },
-    evaluatedBy: {
-      type: String,
-      enum: ['ai', 'admin'],
-      default: 'ai',
-    },
-  },
-  { _id: false }
-);
-
-// Cover Design schema
-const CoverDesignSchema = new Schema<ICoverDesign>(
-  {
-    front: {
-      type: {
-        type: String,
-        enum: ['ai-generated', 'uploaded', 'gradient', 'solid'],
-      },
-      imageUrl: String,
-      backgroundColor: String,
-      gradientColors: [String],
-      title: {
-        text: String,
-        font: String,
-        size: Number,
-        color: String,
-        position: Schema.Types.Mixed, // Can be string ('top', 'center', 'bottom') or {x, y}
-        alignment: String,
-      },
-      subtitle: {
-        text: String,
-        font: String,
-        size: Number,
-        color: String,
-      },
-      authorName: {
-        text: String,
-        font: String,
-        size: Number,
-        color: String,
-      },
-    },
-    back: {
-      imageUrl: String,
-      backgroundColor: String,
-      synopsis: String,
-      authorBio: String,
-      authorPhoto: String,
-      barcodeArea: {
-        isbn: String,
-        position: Schema.Types.Mixed, // Can be string or {x, y}
-      },
-    },
-    spine: {
-      width: Number,
-      title: String,
-      author: String,
-      backgroundColor: String,
-    },
-  },
-  { _id: false }
-);
-
-// Page Image schema (for Book Layout visualization)
-const PageImageSchema = new Schema<IPageImage>(
-  {
-    pageIndex: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
-    url: {
-      type: String,
-      required: true,
-    },
-    x: {
-      type: Number,
-      required: true,
-      default: 10,
-      min: 0,
-      max: 100,
-    },
-    y: {
-      type: Number,
-      required: true,
-      default: 10,
-      min: 0,
-      max: 100,
-    },
-    width: {
-      type: Number,
-      required: true,
-      default: 30,
-      min: 5,
-      max: 100,
-    },
-    height: {
-      type: Number,
-      required: true,
-      default: 30,
-      min: 5,
-      max: 100,
-    },
-    rotation: {
-      type: Number,
-      default: 0,
-      min: -360,
-      max: 360,
-    },
-    isAiGenerated: {
-      type: Boolean,
-      default: false,
-    },
-    prompt: {
-      type: String,
-      maxlength: 1000,
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-  },
-  { _id: true }
-);
-
-// Page Layout schema
-const PageLayoutSchema = new Schema<IPageLayout>(
-  {
-    bodyFont: {
-      type: String,
-      default: 'Georgia',
-    },
-    fontSize: {
-      type: Number,
-      min: 10,
-      max: 16,
-      default: 12,
-    },
-    lineHeight: {
-      type: Number,
-      min: 1.2,
-      max: 2.0,
-      default: 1.6,
-    },
-    pageSize: {
-      type: String,
-      enum: ['A4', 'A5', 'Letter', 'Custom'],
-      default: 'A5',
-    },
-    customPageSize: {
-      width: Number,
-      height: Number,
-    },
-    margins: {
-      top: {
-        type: Number,
-        default: 25,
-      },
-      bottom: {
-        type: Number,
-        default: 25,
-      },
-      left: {
-        type: Number,
-        default: 25,
-      },
-      right: {
-        type: Number,
-        default: 25,
-      },
-    },
-    includeTableOfContents: {
-      type: Boolean,
-      default: true,
-    },
-    tableOfContentsStyle: {
-      type: String,
-    },
-    headerFooter: {
-      includeHeader: {
-        type: Boolean,
-        default: false,
-      },
-      includeFooter: {
-        type: Boolean,
-        default: true,
-      },
-      includePageNumbers: {
-        type: Boolean,
-        default: true,
-      },
-      pageNumberPosition: {
-        type: String,
-        enum: ['top', 'bottom', 'none'],
-        default: 'bottom',
-      },
-    },
-    // Template-related fields
-    textColor: {
-      type: String,
-      default: '#000000',
-    },
-    titleFont: {
-      type: String,
-    },
-    headerFont: {
-      type: String,
-    },
-    accentColor: {
-      type: String,
-    },
-    backgroundColor: {
-      type: String,
-      default: '#ffffff',
-    },
-    columns: {
-      type: Number,
-      enum: [1, 2, 3, 4],
-      default: 1,
-    },
-    paragraphIndent: {
-      type: Number,
-      default: 0,
-    },
-    paragraphSpacing: {
-      type: Number,
-      default: 12,
-    },
-    pageNumberPosition: {
-      type: String,
-      enum: ['top-left', 'top-right', 'top-outer', 'bottom-center', 'bottom-outside', 'bottom-outer', 'none'],
-      default: 'bottom-center',
-    },
-    templateId: {
-      type: String,
-    },
-    // Generated pages content
-    pages: {
-      type: [
-        {
-          id: String,
-          type: {
-            type: String,
-            enum: ['cover', 'content', 'chapter-start', 'toc', 'back-cover', 'blank', 'title', 'chapter', 'summary'],
-          },
-          chapterIndex: Number,
-          chapterTitle: String,
-          content: String,
-          pageNumber: Number,
-          images: [
-            {
-              id: String,
-              url: String,
-              x: Number,
-              y: Number,
-              width: Number,
-              height: Number,
-              rotation: Number,
-            },
-          ],
-        },
-      ],
-      default: [],
-    },
-    // Nested settings for client compatibility
-    settings: {
-      type: {
-        fontSize: Number,
-        lineHeight: Number,
-        fontFamily: String,
-        margins: {
-          top: Number,
-          bottom: Number,
-          left: Number,
-          right: Number,
-        },
-        showPageNumbers: Boolean,
-        includeToc: Boolean,
-        includeBackCover: Boolean,
-        textColor: String,
-        titleFont: String,
-        headerFont: String,
-        accentColor: String,
-        columns: {
-          type: Number,
-          enum: [1, 2, 3, 4],
-        },
-        paragraphIndent: Number,
-        paragraphSpacing: Number,
-        pageNumberPosition: String,
-        backgroundColor: String,
-        templateId: String,
-      },
-    },
-  },
-  { _id: false }
-);
-
-// Publishing Status schema
-const PublishingStatusSchema = new Schema<IPublishingStatus>(
-  {
-    status: {
-      type: String,
-      enum: ['draft', 'published', 'unpublished'],
-      default: 'draft',
-      required: true,
-    },
-    publishedAt: {
-      type: Date,
-    },
-    unpublishedAt: {
-      type: Date,
-    },
-    price: {
-      type: Number,
-      min: 0,
-      max: 25,
-      default: 0,
-    },
-    priceILS: {
-      type: Number,
-      min: 0,
-      max: 99,
-    },
-    isFree: {
-      type: Boolean,
-      default: true,
-    },
-    isPublic: {
-      type: Boolean,
-      default: false,
-    },
-    marketingStrategy: {
-      targetAudience: String,
-      description: String,
-      categories: [String],
-      tags: [String],
-      launchDate: Date,
-    },
-  },
-  { _id: false }
-);
-
-// Statistics schema
-const StatisticsSchema = new Schema<IStatistics>(
-  {
-    wordCount: {
-      type: Number,
-      default: 0,
-    },
-    pageCount: {
-      type: Number,
-      default: 0,
-    },
-    chapterCount: {
-      type: Number,
-      default: 0,
-    },
-    characterCount: {
-      type: Number,
-      default: 0,
-    },
-    views: {
-      type: Number,
-      default: 0,
-    },
-    purchases: {
-      type: Number,
-      default: 0,
-    },
-    revenue: {
-      type: Number,
-      default: 0,
-    },
-    averageRating: {
-      type: Number,
-      min: 0,
-      max: 5,
-    },
-    totalReviews: {
-      type: Number,
-      default: 0,
-    },
-    completionRate: {
-      type: Number,
-      min: 0,
-      max: 100,
-    },
-    readingTime: {
-      type: Number,
-    },
-    shares: {
-      type: Number,
-      default: 0,
-    },
-    comments: {
-      type: Number,
-      default: 0,
-    },
-  },
-  { _id: false }
-);
-
-// Voice Interview Response schema
-const VoiceInterviewResponseSchema = new Schema(
-  {
-    topic: { type: String, required: true },
-    question: { type: String, required: true },
-    answer: { type: String, required: true },
-  },
-  { _id: false }
-);
-
-// Voice Interview Character schema
-const VoiceInterviewCharacterSchema = new Schema(
-  {
-    name: { type: String, required: true },
-    role: {
-      type: String,
-      enum: ['protagonist', 'antagonist', 'supporting', 'minor'],
-      required: true,
-    },
-    traits: [String],
-    description: { type: String, required: true },
-  },
-  { _id: false }
-);
-
-// Voice Interview Summary schema
-const VoiceInterviewSummarySchema = new Schema(
-  {
-    theme: {
-      mainTheme: String,
-      subThemes: [String],
-      tone: String,
-      genre: String,
-    },
-    characters: [VoiceInterviewCharacterSchema],
-    plot: {
-      premise: String,
-      conflict: String,
-      stakes: String,
-      keyEvents: [String],
-    },
-    setting: {
-      world: String,
-      timePeriod: String,
-      atmosphere: String,
-      locations: [String],
-    },
-    writingGuidelines: [String],
-  },
-  { _id: false }
-);
-
-// Voice Interview schema
-const VoiceInterviewSchema = new Schema<IVoiceInterview>(
-  {
-    completedAt: { type: Date, default: Date.now },
-    duration: { type: Number, default: 0 },
-    responses: [VoiceInterviewResponseSchema],
-    summary: VoiceInterviewSummarySchema,
-  },
-  { _id: false }
-);
-
-// Story Context schema (Deep Dive Interview - 8 Pillars)
-const StoryContextSchema = new Schema<IStoryContext>(
-  {
-    theme: {
-      type: String,
-      maxlength: [5000, 'Theme must not exceed 5000 characters'],
-    },
-    characters: {
-      type: String,
-      maxlength: [5000, 'Characters description must not exceed 5000 characters'],
-    },
-    conflict: {
-      type: String,
-      maxlength: [5000, 'Conflict description must not exceed 5000 characters'],
-    },
-    climax: {
-      type: String,
-      maxlength: [5000, 'Climax description must not exceed 5000 characters'],
-    },
-    resolution: {
-      type: String,
-      maxlength: [5000, 'Resolution description must not exceed 5000 characters'],
-    },
-    setting: {
-      type: String,
-      maxlength: [5000, 'Setting description must not exceed 5000 characters'],
-    },
-    keyPoints: {
-      type: String,
-      maxlength: [5000, 'Key points must not exceed 5000 characters'],
-    },
-    narrativeArc: {
-      type: String,
-      maxlength: [5000, 'Narrative arc description must not exceed 5000 characters'],
-    },
-    completedAt: {
-      type: Date,
-      default: Date.now,
-    },
-    voiceInterview: {
-      type: VoiceInterviewSchema,
-    },
-  },
-  { _id: false }
-);
-
-// AI Design State schema
-const AIDesignStateSchema = new Schema<IAIDesignState>(
-  {
-    status: {
-      type: String,
-      enum: ['idle', 'analyzing', 'generating-design', 'generating-images', 'completed', 'error'],
-      default: 'idle',
-    },
-    startedAt: Date,
-    completedAt: Date,
-    error: String,
-    progress: {
-      currentStep: Number,
-      totalSteps: Number,
-      stepName: String,
-    },
-    design: {
-      typography: {
-        bodyFont: String,
-        headingFont: String,
-        titleFont: String,
-        fontSize: Number,
-        lineHeight: Number,
-        chapterTitleSize: Number,
-        colors: {
-          text: String,
-          heading: String,
-          accent: String,
-          background: String,
-        },
-        formatting: {
-          headingBold: Boolean,
-          headingItalic: Boolean,
-          firstParagraphDropCap: Boolean,
-        },
-      },
-      layout: {
-        columns: Number,
-        columnGap: Number,
-        margins: {
-          top: Number,
-          bottom: Number,
-          inner: Number,
-          outer: Number,
-        },
-        paragraphSpacing: Number,
-        textAlign: String,
-        pageNumbers: {
-          show: Boolean,
-          position: String,
-          startFrom: Number,
-          style: String,
-        },
-        headers: {
-          show: Boolean,
-          content: String,
-          position: String,
-        },
-      },
-      covers: {
-        front: {
-          backgroundColor: String,
-          gradientColors: [String],
-          imagePrompt: String,
-          generatedImageUrl: String,
-          title: {
-            position: String,
-            fontSize: Number,
-            color: String,
-          },
-          author: {
-            position: String,
-            fontSize: Number,
-            color: String,
-          },
-        },
-        back: {
-          backgroundColor: String,
-          imagePrompt: String,
-          generatedImageUrl: String,
-        },
-        spine: {
-          backgroundColor: String,
-          textColor: String,
-        },
-      },
-      imagePlacements: [{
-        chapterIndex: Number,
-        pagePosition: String,
-        imagePosition: String,
-        imageSize: String,
-        prompt: String,
-        generatedImageUrl: String,
-        caption: String,
-      }],
-      reasoning: String,
-      moodDescription: String,
-    },
-  },
-  { _id: false }
-);
-
-// Plot Structure schema
-const PlotStructureSchema = new Schema(
-  {
-    threeActStructure: {
-      act1: String,
-      act2: String,
-      act3: String,
-    },
-    plotPoints: {
-      incitingIncident: String,
-      firstPlotPoint: String,
-      midpoint: String,
-      secondPlotPoint: String,
-      climax: String,
-    },
-    subplots: [
-      {
-        title: String,
-        description: String,
-        status: {
-          type: String,
-          enum: ['planned', 'in-progress', 'completed'],
-          default: 'planned',
-        },
-      },
-    ],
-    timeline: [
-      {
-        event: String,
-        chapter: Number,
-        date: String,
-      },
-    ],
-  },
-  { _id: false }
-);
-
-// Review schema
-const ReviewSchema = new Schema<IReview>(
-  {
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    userName: {
-      type: String,
-    },
-    rating: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 5,
-    },
-    comment: {
-      type: String,
-      required: true,
-      maxlength: 1000,
-    },
-  },
-  { timestamps: true }
-);
-
-// Book schema
-const BookSchema = new Schema<IBook>(
-  {
-    title: {
-      type: String,
-      required: [true, 'Book title is required'],
-      trim: true,
-      minlength: [1, 'Title must be at least 1 character'],
-      maxlength: [200, 'Title must not exceed 200 characters'],
-    },
-    author: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'Author is required'],
-      index: true,
-    },
-    genre: {
-      type: String,
-      required: [true, 'Genre is required'],
-      trim: true,
-    },
-    writingGoal: {
-      type: String,
-      enum: ['short-story', 'novella', 'novel'],
-    },
-    targetAudience: {
-      type: String,
-      enum: ['children', 'young-adult', 'adult', 'all-ages'],
-    },
-    description: {
-      type: String,
-      maxlength: [2000, 'Description must not exceed 2000 characters'],
-    },
-    synopsis: {
-      type: String,
-      maxlength: [5000, 'Synopsis must not exceed 5000 characters'],
-    },
-    storyContext: {
-      type: StoryContextSchema,
-    },
-    chapters: {
-      type: [ChapterSchema],
-      default: [],
-    },
-    characters: {
-      type: [CharacterSchema],
-      default: [],
-    },
-    plotStructure: {
-      type: PlotStructureSchema,
-    },
-    qualityScore: {
-      type: QualityScoreSchema,
-    },
-    coverDesign: {
-      type: CoverDesignSchema,
-    },
-    pageLayout: {
-      type: PageLayoutSchema,
-      default: () => ({}),
-    },
-    pageImages: {
-      type: [PageImageSchema],
-      default: [],
-    },
-    templateId: {
-      type: Schema.Types.ObjectId,
-      ref: 'BookTemplate',
-    },
-    aiDesignState: {
-      type: AIDesignStateSchema,
-    },
-    publishingStatus: {
-      type: PublishingStatusSchema,
-      default: () => ({}),
-      required: true,
-    },
-    statistics: {
-      type: StatisticsSchema,
-      default: () => ({}),
-      required: true,
-    },
-    tags: {
-      type: [String],
-      default: [],
-    },
-    language: {
-      type: String,
-      default: 'en',
-    },
-    ageRating: {
-      type: String,
-      enum: ['G', 'PG', 'PG-13', 'R', '18+'],
-    },
-    likes: {
-      type: Number,
-      default: 0,
-    },
-    likedBy: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
-    reviews: {
-      type: [ReviewSchema],
-      default: [],
-    },
-  },
-  {
-    timestamps: true,
-    collection: 'books',
-  }
-);
-
-// Indexes
-BookSchema.index({ author: 1 });
-BookSchema.index({ genre: 1 });
-BookSchema.index({ 'publishingStatus.status': 1 });
-BookSchema.index({ 'publishingStatus.price': 1 });
-BookSchema.index({ 'qualityScore.overallScore': -1 });
-BookSchema.index({ 'statistics.views': -1 });
-BookSchema.index({ 'statistics.purchases': -1 });
-BookSchema.index({ createdAt: -1 });
-BookSchema.index({ tags: 1 });
-
-// Compound indexes
-BookSchema.index({ 'publishingStatus.status': 1, 'publishingStatus.isPublic': 1 });
-BookSchema.index({ genre: 1, 'qualityScore.overallScore': -1 });
-
-// Virtual for checking if book is published
-BookSchema.virtual('isPublished').get(function (this: IBook) {
-  return this.publishingStatus.status === 'published' && this.publishingStatus.isPublic;
-});
-
-// Virtual for formatted price
-BookSchema.virtual('formattedPrice').get(function (this: IBook) {
-  return this.publishingStatus.isFree ? 'Free' : `$${this.publishingStatus.price}`;
-});
-
-// Pre-save middleware to update statistics
-BookSchema.pre('save', function (next) {
-  // Update chapter count
-  this.statistics.chapterCount = this.chapters.length;
-
-  // Update character count
-  this.statistics.characterCount = this.characters.length;
-
-  // Update word count
-  this.statistics.wordCount = this.chapters.reduce((total, chapter) => total + chapter.wordCount, 0);
-
-  // Estimate page count (approximately 250 words per page)
-  this.statistics.pageCount = Math.ceil(this.statistics.wordCount / 250);
-
-  // Ensure page count is divisible by 4 for binding (Section 16.4)
-  const remainder = this.statistics.pageCount % 4;
-  if (remainder !== 0) {
-    this.statistics.pageCount += 4 - remainder;
+    if (error || !data) return null;
+    return rowToBook(data as BookRow);
   }
 
-  // Estimate reading time (approximately 250 words per minute)
-  this.statistics.readingTime = Math.ceil(this.statistics.wordCount / 250);
+  // Find one book by query
+  static async findOne(query: Record<string, any>): Promise<IBook | null> {
+    let queryBuilder = supabaseAdmin.from('books').select('*');
 
-  next();
-});
+    if (query._id || query.id) {
+      queryBuilder = queryBuilder.eq('id', query._id || query.id);
+    }
+    if (query.author) {
+      queryBuilder = queryBuilder.eq('author_id', query.author);
+    }
+    if (query.title) {
+      queryBuilder = queryBuilder.eq('title', query.title);
+    }
 
-// Export the model
-export const Book = mongoose.model<IBook>('Book', BookSchema);
+    const { data, error } = await queryBuilder.limit(1).single();
+
+    if (error || !data) return null;
+    return rowToBook(data as BookRow);
+  }
+
+  // Create new book
+  static async create(bookData: Partial<IBook>): Promise<IBook> {
+    const id = uuidv4();
+    const now = new Date().toISOString();
+
+    const insertData = {
+      id,
+      title: bookData.title,
+      author_id: bookData.author,
+      genre: bookData.genre || 'General',
+      writing_goal: bookData.writingGoal || null,
+      target_audience: bookData.targetAudience || null,
+      description: bookData.description || null,
+      synopsis: bookData.synopsis || null,
+      story_context: bookData.storyContext || null,
+      chapters: bookData.chapters || [],
+      characters: bookData.characters || [],
+      plot_structure: bookData.plotStructure || null,
+      quality_score: bookData.qualityScore || null,
+      cover_design: bookData.coverDesign || null,
+      page_layout: bookData.pageLayout || null,
+      page_images: bookData.pageImages || [],
+      ai_design_state: bookData.aiDesignState || null,
+      publishing_status: bookData.publishingStatus || { status: 'draft', price: 0, isFree: true, isPublic: false },
+      statistics: bookData.statistics || { wordCount: 0, pageCount: 0, chapterCount: 0, characterCount: 0, views: 0, purchases: 0, revenue: 0, totalReviews: 0, shares: 0, comments: 0 },
+      tags: bookData.tags || [],
+      language: bookData.language || 'en',
+      age_rating: bookData.ageRating || null,
+      likes: bookData.likes || 0,
+      liked_by: bookData.likedBy || [],
+      reviews: bookData.reviews || [],
+      created_at: now,
+      updated_at: now,
+    };
+
+    const { data, error } = await supabaseAdmin
+      .from('books')
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating book:', error);
+      throw new Error(error.message);
+    }
+
+    return rowToBook(data as BookRow);
+  }
+
+  // Update book by ID
+  static async findByIdAndUpdate(
+    id: string,
+    update: Partial<IBook> | { $set?: Partial<any>; $push?: any; $pull?: any; $inc?: any },
+    options?: { new?: boolean }
+  ): Promise<IBook | null> {
+    let updateData: Record<string, any> = {};
+
+    // Handle $set operator
+    if ('$set' in update && update.$set) {
+      const setData = update.$set;
+      Object.entries(setData).forEach(([key, value]) => {
+        const snakeKey = camelToSnake(key);
+        updateData[snakeKey] = value;
+      });
+    } else if ('$push' in update || '$pull' in update || '$inc' in update) {
+      // Handle array operations - need to fetch current data first
+      const currentBook = await this.findById(id);
+      if (!currentBook) return null;
+
+      if (update.$push) {
+        Object.entries(update.$push).forEach(([key, value]) => {
+          const currentArray = (currentBook as any)[key] || [];
+          updateData[camelToSnake(key)] = [...currentArray, value];
+        });
+      }
+
+      if (update.$pull) {
+        Object.entries(update.$pull).forEach(([key, condition]) => {
+          const currentArray = (currentBook as any)[key] || [];
+          // Simple filter - remove items matching condition
+          updateData[camelToSnake(key)] = currentArray.filter((item: any) => {
+            return !Object.entries(condition).every(([k, v]) => item[k] === v);
+          });
+        });
+      }
+
+      if (update.$inc) {
+        Object.entries(update.$inc).forEach(([key, value]) => {
+          // Handle nested keys like 'statistics.views'
+          if (key.includes('.')) {
+            const [parent, child] = key.split('.');
+            const parentData = (currentBook as any)[parent] || {};
+            parentData[child] = (parentData[child] || 0) + (value as number);
+            updateData[camelToSnake(parent)] = parentData;
+          } else {
+            updateData[camelToSnake(key)] = ((currentBook as any)[key] || 0) + (value as number);
+          }
+        });
+      }
+    } else {
+      // Direct update
+      Object.entries(update).forEach(([key, value]) => {
+        if (key !== 'id' && key !== '_id') {
+          updateData[camelToSnake(key)] = value;
+        }
+      });
+    }
+
+    updateData.updated_at = new Date().toISOString();
+
+    // Remove id fields
+    delete updateData.id;
+    delete updateData._id;
+
+    const { data, error } = await supabaseAdmin
+      .from('books')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating book:', error);
+      return null;
+    }
+
+    return rowToBook(data as BookRow);
+  }
+
+  // Delete book by ID
+  static async findByIdAndDelete(id: string): Promise<IBook | null> {
+    const book = await this.findById(id);
+    if (!book) return null;
+
+    const { error } = await supabaseAdmin
+      .from('books')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting book:', error);
+      return null;
+    }
+
+    return book;
+  }
+
+  // Find multiple books
+  static async find(query: Record<string, any> = {}): Promise<IBook[]> {
+    let queryBuilder = supabaseAdmin.from('books').select('*');
+
+    if (query.author) {
+      queryBuilder = queryBuilder.eq('author_id', query.author);
+    }
+    if (query.genre) {
+      queryBuilder = queryBuilder.eq('genre', query.genre);
+    }
+
+    // Handle JSONB queries for publishingStatus
+    if (query['publishingStatus.status']) {
+      queryBuilder = queryBuilder.filter('publishing_status->>status', 'eq', query['publishingStatus.status']);
+    }
+    if (query['publishingStatus.isPublic'] !== undefined) {
+      queryBuilder = queryBuilder.filter('publishing_status->>isPublic', 'eq', String(query['publishingStatus.isPublic']));
+    }
+
+    // Handle search (text search on title and description)
+    if (query.$or && Array.isArray(query.$or)) {
+      // Extract search term from $or query
+      const searchQuery = query.$or.find((q: any) => q.title?.$regex);
+      if (searchQuery) {
+        const searchTerm = searchQuery.title.$regex;
+        queryBuilder = queryBuilder.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+      }
+    }
+
+    // Handle sorting
+    if (query._sort) {
+      const sortField = camelToSnake(query._sort);
+      queryBuilder = queryBuilder.order(sortField, { ascending: query._order !== 'desc' });
+    } else {
+      queryBuilder = queryBuilder.order('created_at', { ascending: false });
+    }
+
+    // Handle pagination
+    if (query._limit) {
+      queryBuilder = queryBuilder.limit(query._limit);
+    }
+    if (query._skip) {
+      queryBuilder = queryBuilder.range(query._skip, query._skip + (query._limit || 10) - 1);
+    }
+
+    const { data, error } = await queryBuilder;
+
+    if (error) {
+      console.error('Error finding books:', error);
+      return [];
+    }
+
+    return (data || []).map(row => rowToBook(row as BookRow));
+  }
+
+  // Count books
+  static async countDocuments(query: Record<string, any> = {}): Promise<number> {
+    let queryBuilder = supabaseAdmin
+      .from('books')
+      .select('id', { count: 'exact', head: true });
+
+    if (query.author) {
+      queryBuilder = queryBuilder.eq('author_id', query.author);
+    }
+    if (query['publishingStatus.status']) {
+      queryBuilder = queryBuilder.filter('publishing_status->>status', 'eq', query['publishingStatus.status']);
+    }
+
+    const { count, error } = await queryBuilder;
+
+    if (error) {
+      console.error('Error counting books:', error);
+      return 0;
+    }
+
+    return count || 0;
+  }
+
+  // Populate author data
+  static async populate(book: IBook, field: string): Promise<IBook & { author: any }> {
+    if (field === 'author') {
+      const { data } = await supabaseAdmin
+        .from('users')
+        .select('id, name, email, profile')
+        .eq('id', book.author)
+        .single();
+
+      return {
+        ...book,
+        author: data || { id: book.author, name: 'Unknown' },
+      };
+    }
+    return book as any;
+  }
+
+  // Update statistics helper
+  static calculateStatistics(book: Partial<IBook>): Partial<IStatistics> {
+    const chapters = book.chapters || [];
+    const characters = book.characters || [];
+
+    const wordCount = chapters.reduce((total, chapter) => total + (chapter.wordCount || 0), 0);
+    let pageCount = Math.ceil(wordCount / 250);
+
+    // Ensure page count is divisible by 4 for binding
+    const remainder = pageCount % 4;
+    if (remainder !== 0) {
+      pageCount += 4 - remainder;
+    }
+
+    return {
+      chapterCount: chapters.length,
+      characterCount: characters.length,
+      wordCount,
+      pageCount,
+      readingTime: Math.ceil(wordCount / 250),
+    };
+  }
+
+  // Virtual getters
+  static isPublished(book: IBook): boolean {
+    return book.publishingStatus.status === 'published' && book.publishingStatus.isPublic;
+  }
+
+  static formattedPrice(book: IBook): string {
+    return book.publishingStatus.isFree ? 'Free' : `$${book.publishingStatus.price}`;
+  }
+}
+
+// Helper to convert camelCase to snake_case
+function camelToSnake(str: string): string {
+  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+}
+
+export default Book;

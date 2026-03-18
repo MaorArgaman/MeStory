@@ -1,7 +1,5 @@
-import mongoose from 'mongoose';
 import { Book, IBook } from '../models/Book';
 import { UserActivity } from '../models/UserActivity';
-// User kept for potential future use
 
 /**
  * ML-Enhanced Recommendation Service
@@ -10,6 +8,8 @@ import { UserActivity } from '../models/UserActivity';
  * - Content-Based Similarity
  * - Diversity Optimization
  * - Hybrid Scoring
+ *
+ * Simplified for Supabase (no MongoDB aggregations)
  */
 
 // ==================== INTERFACES ====================
@@ -78,9 +78,13 @@ export async function buildUserFeatureVector(userId: string): Promise<MLFeatureV
   let qualitySum = 0;
   let qualityCount = 0;
   if (userActivity.completedBooks.length > 0) {
-    const completedBooks = await Book.find({
-      _id: { $in: userActivity.completedBooks },
-    }).select('qualityScore.overallScore');
+    const allBooks = await Book.find({
+      'publishingStatus.status': 'published',
+    });
+
+    // Filter to completed books in memory
+    const completedBookIds = new Set(userActivity.completedBooks.map(id => id.toString()));
+    const completedBooks = allBooks.filter(b => completedBookIds.has(b.id));
 
     for (const book of completedBooks) {
       if (book.qualityScore?.overallScore) {
@@ -99,9 +103,13 @@ export async function buildUserFeatureVector(userId: string): Promise<MLFeatureV
       .map((h) => h.bookId);
 
     if (completedBookIds.length >= 3) {
-      const books = await Book.find({ _id: { $in: completedBookIds } }).select(
-        'statistics.wordCount'
-      );
+      const allBooks = await Book.find({
+        'publishingStatus.status': 'published',
+      });
+
+      const completedIdSet = new Set(completedBookIds.map(id => id.toString()));
+      const books = allBooks.filter(b => completedIdSet.has(b.id));
+
       const avgWordCount =
         books.reduce((sum, b) => sum + (b.statistics?.wordCount || 0), 0) / books.length;
 
@@ -159,10 +167,10 @@ export async function findSimilarUsers(
   const userBooksSet = new Set(userActivity.completedBooks.map((id) => id.toString()));
 
   // Get all users with completed books
-  const otherUsers = await UserActivity.find({
-    userId: { $ne: userId },
-    completedBooks: { $exists: true, $not: { $size: 0 } },
-  }).select('userId completedBooks');
+  const allActivities = await UserActivity.find({});
+  const otherUsers = allActivities.filter(
+    a => a.userId !== userId && a.completedBooks && a.completedBooks.length > 0
+  );
 
   const similarities: SimilarityResult[] = [];
 
@@ -234,9 +242,10 @@ export async function findSimilarBooks(
   limit: number = 10
 ): Promise<SimilarityResult[]> {
   // Find all users who completed this book
-  const usersWhoRead = await UserActivity.find({
-    completedBooks: new mongoose.Types.ObjectId(bookId),
-  }).select('completedBooks');
+  const allActivities = await UserActivity.find({});
+  const usersWhoRead = allActivities.filter(
+    a => a.completedBooks && a.completedBooks.some(id => id.toString() === bookId)
+  );
 
   if (usersWhoRead.length === 0) return [];
 
@@ -257,9 +266,9 @@ export async function findSimilarBooks(
   const similarities: SimilarityResult[] = [];
 
   for (const [otherId, coCount] of Object.entries(coCompletionCounts)) {
-    const otherReaders = await UserActivity.countDocuments({
-      completedBooks: new mongoose.Types.ObjectId(otherId),
-    });
+    const otherReaders = allActivities.filter(
+      a => a.completedBooks && a.completedBooks.some(id => id.toString() === otherId)
+    ).length;
 
     // Cosine-like similarity
     const similarity = coCount / Math.sqrt(totalReaders * otherReaders);
@@ -334,32 +343,34 @@ export async function getContentSimilarBooks(
   const sourceBook = await Book.findById(bookId);
   if (!sourceBook) return [];
 
-  // Get potential candidates (same genre or similar tags)
-  const candidates = await Book.find({
-    _id: { $ne: bookId },
+  // Get all published books
+  const allBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
-    $or: [
-      { genre: sourceBook.genre },
-      { tags: { $in: sourceBook.tags || [] } },
-    ],
-  })
-    .limit(100)
-    .lean();
+  });
+
+  // Filter candidates (same genre or similar tags) in memory
+  const sourceTags = new Set((sourceBook.tags || []).map(t => t.toLowerCase()));
+  const candidates = allBooks.filter(b => {
+    if (b.id === bookId) return false;
+    if (b.genre === sourceBook.genre) return true;
+    const bookTags = (b.tags || []).map(t => t.toLowerCase());
+    return bookTags.some(t => sourceTags.has(t));
+  }).slice(0, 100);
 
   // Score each candidate
-  const scored: Array<{ book: any; similarity: number }> = [];
+  const scored: Array<{ book: IBook; similarity: number }> = [];
   for (const candidate of candidates) {
     const similarity = await calculateContentSimilarity(
       sourceBook as unknown as IBook,
       candidate as unknown as IBook
     );
-    scored.push({ book: candidate, similarity });
+    scored.push({ book: candidate as unknown as IBook, similarity });
   }
 
   // Sort by similarity and return top results
   scored.sort((a, b) => b.similarity - a.similarity);
-  return scored.slice(0, limit).map((s) => s.book) as unknown as IBook[];
+  return scored.slice(0, limit).map((s) => s.book);
 }
 
 // ==================== DIVERSITY OPTIMIZATION ====================
@@ -407,18 +418,28 @@ export async function getExplorationRecommendations(
   count: number = 3
 ): Promise<IBook[]> {
   // Find genres user hasn't explored much
-  const knownGenres = Object.keys(userFeatures.genreAffinities);
+  const knownGenres = Object.keys(userFeatures.genreAffinities).map(g => g.toLowerCase());
 
-  const unexploredBooks = await Book.find({
+  const allBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
-    genre: { $nin: knownGenres.map((g) => new RegExp(g, 'i')) },
-    'qualityScore.overallScore': { $gte: 75 }, // Only high quality unexplored
-  })
-    .sort({ 'qualityScore.overallScore': -1, 'statistics.views': -1 })
-    .limit(count)
-    .populate('author', 'name profile.avatar')
-    .lean();
+  });
+
+  // Filter unexplored high-quality books in memory
+  const unexploredBooks = allBooks
+    .filter(b => {
+      const bookGenre = (b.genre || '').toLowerCase();
+      const isKnownGenre = knownGenres.some(g => bookGenre.includes(g) || g.includes(bookGenre));
+      const hasHighQuality = (b.qualityScore?.overallScore || 0) >= 75;
+      return !isKnownGenre && hasHighQuality;
+    })
+    .sort((a, b) => {
+      const qualityA = b.qualityScore?.overallScore || 0;
+      const qualityB = a.qualityScore?.overallScore || 0;
+      if (qualityA !== qualityB) return qualityB - qualityA;
+      return (b.statistics?.views || 0) - (a.statistics?.views || 0);
+    })
+    .slice(0, count);
 
   return unexploredBooks as unknown as IBook[];
 }
@@ -446,20 +467,21 @@ export async function getDiversifiedRecommendations(
   if (!userActivity) return [];
 
   // Get candidate books
-  const books = await Book.find({
+  const allBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
-    author: { $ne: userId },
-    _id: {
-      $nin: [
-        ...userActivity.completedBooks,
-        ...userActivity.currentlyReading,
-        ...userActivity.abandonedBooks,
-      ],
-    },
-  })
-    .populate('author', 'name profile.avatar')
-    .lean();
+  });
+
+  // Filter out user's own books and already-read books
+  const excludedBookIds = new Set([
+    ...userActivity.completedBooks.map(id => id.toString()),
+    ...userActivity.currentlyReading.map(id => id.toString()),
+    ...userActivity.abandonedBooks.map(id => id.toString()),
+  ]);
+
+  const books = allBooks.filter(
+    b => b.author !== userId && !excludedBookIds.has(b.id)
+  );
 
   const recommendations: RecommendationWithReason[] = [];
 
@@ -476,7 +498,7 @@ export async function getDiversifiedRecommendations(
     }
 
     // Author affinity (20%)
-    const authorKey = book.author?._id?.toString() || '';
+    const authorKey = book.author || '';
     const authorAffinity = userFeatures.authorAffinities[authorKey] || 0;
     score += authorAffinity * 0.2;
     if (authorAffinity > 0.4) {
@@ -492,7 +514,7 @@ export async function getDiversifiedRecommendations(
     }
 
     // Collaborative score (15%)
-    const collabScore = await calculateCollaborativeScore(userId, book._id.toString(), 5);
+    const collabScore = await calculateCollaborativeScore(userId, book.id, 5);
     score += collabScore * 0.15;
     if (collabScore > 0.5) {
       reasons.push('Loved by readers like you');
@@ -566,44 +588,42 @@ export async function getBecauseYouRead(
     .filter((h) => h.isCompleted)
     .sort((a, b) => new Date(b.lastReadAt).getTime() - new Date(a.lastReadAt).getTime())
     .slice(0, limit)
-    .map((h) => h.bookId);
+    .map((h) => h.bookId.toString());
 
-  const sourceBooks = await Book.find({
-    _id: { $in: recentlyCompleted },
-  })
-    .populate('author', 'name profile.avatar')
-    .lean();
+  const allBooks = await Book.find({
+    'publishingStatus.status': 'published',
+  });
+
+  const recentlyCompletedSet = new Set(recentlyCompleted);
+  const sourceBooks = allBooks.filter(b => recentlyCompletedSet.has(b.id));
 
   const results: Array<{ basedOn: IBook; recommendations: IBook[] }> = [];
 
   for (const source of sourceBooks) {
     // Get similar books (hybrid: content + collaborative)
-    const contentSimilar = await getContentSimilarBooks(source._id.toString(), booksPerSource);
-    const collabSimilar = await findSimilarBooks(source._id.toString(), booksPerSource);
+    const contentSimilar = await getContentSimilarBooks(source.id, booksPerSource);
+    const collabSimilar = await findSimilarBooks(source.id, booksPerSource);
 
     // Merge and dedupe
-    const collabBookIds = collabSimilar.map((s) => s.id);
-    const collabBooks = await Book.find({
-      _id: { $in: collabBookIds },
-      'publishingStatus.status': 'published',
-    })
-      .populate('author', 'name profile.avatar')
-      .lean();
+    const collabBookIds = new Set(collabSimilar.map((s) => s.id));
+    const collabBooks = allBooks.filter(
+      b => collabBookIds.has(b.id) && b.publishingStatus?.status === 'published'
+    );
 
     const allSimilar = [...contentSimilar, ...(collabBooks as unknown as IBook[])];
     const uniqueIds = new Set<string>();
     const unique = allSimilar.filter((b) => {
-      const id = b._id.toString();
-      if (uniqueIds.has(id)) return false;
-      uniqueIds.add(id);
+      const bookId = b.id;
+      if (uniqueIds.has(bookId)) return false;
+      uniqueIds.add(bookId);
       return true;
     });
 
     // Filter out books user has already interacted with
     const filtered = unique.filter(
       (b) =>
-        !userActivity.completedBooks.some((id) => id.toString() === b._id.toString()) &&
-        !userActivity.currentlyReading.some((id) => id.toString() === b._id.toString())
+        !userActivity.completedBooks.some((completedId) => completedId.toString() === b.id) &&
+        !userActivity.currentlyReading.some((readingId) => readingId.toString() === b.id)
     );
 
     if (filtered.length > 0) {
@@ -629,15 +649,17 @@ export async function getPersonalizedFeed(userId: string): Promise<PersonalizedF
   // Continue reading with progress
   let continueReading: Array<{ book: IBook; progress: number; lastReadAt: Date }> = [];
   if (userActivity && userActivity.currentlyReading.length > 0) {
-    const books = await Book.find({
-      _id: { $in: userActivity.currentlyReading },
-    })
-      .populate('author', 'name profile.avatar')
-      .lean();
+    const currentlyReadingIds = new Set(userActivity.currentlyReading.map(id => id.toString()));
+
+    const allBooks = await Book.find({
+      'publishingStatus.status': 'published',
+    });
+
+    const books = allBooks.filter(b => currentlyReadingIds.has(b.id));
 
     continueReading = books.map((book) => {
       const progress = userActivity.readingHistory.find(
-        (h) => h.bookId.toString() === book._id.toString()
+        (h) => h.bookId.toString() === book.id
       );
       return {
         book: book as unknown as IBook,
@@ -649,16 +671,16 @@ export async function getPersonalizedFeed(userId: string): Promise<PersonalizedF
   }
 
   // Continue writing
-  let continueWriting: Array<{ book: IBook; lastEditedAt: Date; wordCount: number }> = [];
   const drafts = await Book.find({
     author: userId,
     'publishingStatus.status': 'draft',
-  })
-    .sort({ updatedAt: -1 })
-    .limit(5)
-    .lean();
+  });
 
-  continueWriting = drafts.map((book) => ({
+  const sortedDrafts = drafts.sort((a, b) =>
+    new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()
+  ).slice(0, 5);
+
+  const continueWriting = sortedDrafts.map((book) => ({
     book: book as unknown as IBook,
     lastEditedAt: book.updatedAt || new Date(),
     wordCount: book.statistics?.wordCount || 0,
@@ -668,27 +690,35 @@ export async function getPersonalizedFeed(userId: string): Promise<PersonalizedF
   const becauseYouRead = await getBecauseYouRead(userId, 2, 4);
 
   // Trending
-  const trending = await Book.find({
+  const allPublishedBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
-  })
-    .sort({ 'statistics.views': -1, 'statistics.purchases': -1 })
-    .limit(8)
-    .populate('author', 'name profile.avatar')
-    .lean();
+  });
+
+  const trending = allPublishedBooks
+    .sort((a, b) => {
+      const viewsA = a.statistics?.views || 0;
+      const viewsB = b.statistics?.views || 0;
+      const purchasesA = a.statistics?.purchases || 0;
+      const purchasesB = b.statistics?.purchases || 0;
+      return (viewsB + purchasesB * 10) - (viewsA + purchasesA * 10);
+    })
+    .slice(0, 8);
 
   // New releases
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const newReleases = await Book.find({
-    'publishingStatus.status': 'published',
-    'publishingStatus.isPublic': true,
-    'publishingStatus.publishedAt': { $gte: thirtyDaysAgo },
-    'qualityScore.overallScore': { $gte: 65 },
-  })
-    .sort({ 'publishingStatus.publishedAt': -1 })
-    .limit(8)
-    .populate('author', 'name profile.avatar')
-    .lean();
+  const newReleases = allPublishedBooks
+    .filter(b => {
+      const publishedAt = b.publishingStatus?.publishedAt;
+      if (!publishedAt || new Date(publishedAt) < thirtyDaysAgo) return false;
+      return (b.qualityScore?.overallScore || 0) >= 65;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.publishingStatus?.publishedAt || 0);
+      const dateB = new Date(b.publishingStatus?.publishedAt || 0);
+      return dateB.getTime() - dateA.getTime();
+    })
+    .slice(0, 8);
 
   return {
     recommendedForYou,
@@ -713,13 +743,19 @@ async function getTrendingWithReasons(limit: number): Promise<RecommendationWith
   const books = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
-  })
-    .sort({ 'statistics.views': -1, 'statistics.purchases': -1 })
-    .limit(limit)
-    .populate('author', 'name profile.avatar')
-    .lean();
+  });
 
-  return books.map((book, index) => ({
+  const sorted = books
+    .sort((a, b) => {
+      const viewsA = a.statistics?.views || 0;
+      const viewsB = b.statistics?.views || 0;
+      const purchasesA = a.statistics?.purchases || 0;
+      const purchasesB = b.statistics?.purchases || 0;
+      return (viewsB + purchasesB * 10) - (viewsA + purchasesA * 10);
+    })
+    .slice(0, limit);
+
+  return sorted.map((book, index) => ({
     book: book as unknown as IBook,
     score: 1 - index * 0.05,
     reasons: ['Trending on MeStory'],

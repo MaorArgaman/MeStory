@@ -36,27 +36,27 @@ interface Genre {
 }
 
 const genres: Genre[] = [
-  { id: 'fantasy', name: 'Fantasy', icon: Sword, color: 'from-purple-500 to-pink-600' },
-  { id: 'sci-fi', name: 'Sci-Fi', icon: Rocket, color: 'from-cyan-500 to-blue-600' },
-  { id: 'romance', name: 'Romance', icon: Heart, color: 'from-rose-500 to-red-600' },
-  { id: 'mystery', name: 'Mystery', icon: Ghost, color: 'from-indigo-500 to-purple-600' },
-  { id: 'thriller', name: 'Thriller', icon: Drama, color: 'from-red-600 to-orange-600' },
-  { id: 'non-fiction', name: 'Non-Fiction', icon: Briefcase, color: 'from-green-500 to-emerald-600' },
-  { id: 'self-help', name: 'Self-Help', icon: Lightbulb, color: 'from-yellow-500 to-amber-600' },
-  { id: 'humor', name: 'Humor', icon: Smile, color: 'from-pink-500 to-rose-600' },
+  { id: 'fantasy', name: 'פנטזיה', icon: Sword, color: 'from-purple-500 to-pink-600' },
+  { id: 'sci-fi', name: 'מדע בדיוני', icon: Rocket, color: 'from-cyan-500 to-blue-600' },
+  { id: 'romance', name: 'רומנטיקה', icon: Heart, color: 'from-rose-500 to-red-600' },
+  { id: 'mystery', name: 'מסתורין', icon: Ghost, color: 'from-indigo-500 to-purple-600' },
+  { id: 'thriller', name: 'מותחן', icon: Drama, color: 'from-red-600 to-orange-600' },
+  { id: 'non-fiction', name: 'עיון', icon: Briefcase, color: 'from-green-500 to-emerald-600' },
+  { id: 'self-help', name: 'עזרה עצמית', icon: Lightbulb, color: 'from-yellow-500 to-amber-600' },
+  { id: 'humor', name: 'הומור', icon: Smile, color: 'from-pink-500 to-rose-600' },
 ];
 
 const writingGoals = [
-  { id: 'short-story', name: 'Short Story', description: '5,000 - 20,000 words', icon: Book },
-  { id: 'novella', name: 'Novella', description: '20,000 - 50,000 words', icon: BookOpen },
-  { id: 'novel', name: 'Novel', description: '50,000+ words', icon: TrendingUp },
+  { id: 'short-story', name: 'סיפור קצר', description: '5,000 - 20,000 מילים', icon: Book },
+  { id: 'novella', name: 'נובלה', description: '20,000 - 50,000 מילים', icon: BookOpen },
+  { id: 'novel', name: 'רומן', description: '50,000+ מילים', icon: TrendingUp },
 ];
 
 const targetAudiences = [
-  { id: 'children', name: 'Children', description: 'Ages 5-12' },
-  { id: 'young-adult', name: 'Young Adult', description: 'Ages 13-18' },
-  { id: 'adult', name: 'Adult', description: 'Ages 18+' },
-  { id: 'all-ages', name: 'All Ages', description: 'Universal appeal' },
+  { id: 'children', name: 'ילדים', description: 'גילאי 5-12' },
+  { id: 'young-adult', name: 'נוער', description: 'גילאי 13-18' },
+  { id: 'adult', name: 'מבוגרים', description: 'גילאי 18+' },
+  { id: 'all-ages', name: 'כל הגילאים', description: 'קהל אוניברסלי' },
 ];
 
 interface CreateBookWizardProps {
@@ -77,12 +77,12 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
 
   const handleSelectTemplate = (template: BookTemplate) => {
     setSelectedTemplate(template);
-    toast.success(`Template "${template.name}" selected!`);
+    toast.success(`התבנית "${template.name}" נבחרה!`);
   };
 
   const handleGenerateTitles = async () => {
     if (!selectedGenre) {
-      toast.error('Please select a genre first');
+      toast.error('אנא בחר ז׳אנר קודם');
       return;
     }
 
@@ -95,11 +95,11 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
 
       if (response.data.success) {
         setGeneratedTitles(response.data.data.titles);
-        toast.success('Title ideas generated!');
+        toast.success('רעיונות לכותרות נוצרו!');
       }
     } catch (error: any) {
       console.error('Failed to generate titles:', error);
-      toast.error(error.response?.data?.error || 'Failed to generate title ideas');
+      toast.error(error.response?.data?.error || 'יצירת רעיונות לכותרות נכשלה');
     } finally {
       setGeneratingTitles(false);
     }
@@ -107,25 +107,25 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
 
   const handleSelectGeneratedTitle = (generatedTitle: string) => {
     setTitle(generatedTitle);
-    toast.success('Title selected!');
+    toast.success('הכותרת נבחרה!');
   };
 
   const handleCreateBook = async () => {
     // Validation
     if (!title.trim()) {
-      toast.error('Please enter a title');
+      toast.error('אנא הכנס כותרת');
       return;
     }
     if (!selectedGenre) {
-      toast.error('Please select a genre');
+      toast.error('אנא בחר ז׳אנר');
       return;
     }
     if (!selectedWritingGoal) {
-      toast.error('Please select a writing goal');
+      toast.error('אנא בחר מטרת כתיבה');
       return;
     }
     if (!selectedAudience) {
-      toast.error('Please select target audience');
+      toast.error('אנא בחר קהל יעד');
       return;
     }
 
@@ -145,20 +145,20 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
         if (selectedTemplate) {
           try {
             await applyTemplateToBook(bookId, selectedTemplate._id);
-            toast.success('Book created and template applied successfully!');
+            toast.success('הספר נוצר והתבנית הוחלה בהצלחה!');
           } catch (templateError) {
             console.error('Failed to apply template:', templateError);
-            toast.success('Book created! (but template application failed)');
+            toast.success('הספר נוצר! (אך החלת התבנית נכשלה)');
           }
         } else {
-          toast.success('Book created successfully!');
+          toast.success('הספר נוצר בהצלחה!');
         }
 
         onSuccess(bookId);
       }
     } catch (error: any) {
       console.error('Failed to create book:', error);
-      toast.error(error.response?.data?.error || 'Failed to create book');
+      toast.error(error.response?.data?.error || 'יצירת הספר נכשלה');
     } finally {
       setCreating(false);
     }
@@ -190,9 +190,9 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
               <Sparkles className="w-8 h-8 text-deep-space" />
             </div>
             <h2 className="text-3xl font-display font-bold gradient-gold mb-2">
-              Create Your Masterpiece
+              צור את יצירת המופת שלך
             </h2>
-            <p className="text-gray-400">Let's bring your story to life in 4 easy steps</p>
+            <p className="text-gray-400">בואו נביא את הסיפור שלך לחיים ב-4 צעדים פשוטים</p>
           </div>
 
           {/* Progress Steps */}
@@ -233,21 +233,21 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
               >
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-display font-bold text-white mb-2">
-                    ✨ The Spark
+                    ✨ הניצוץ
                   </h3>
-                  <p className="text-gray-400">Every great story starts with an idea</p>
+                  <p className="text-gray-400">כל סיפור מעולה מתחיל ברעיון</p>
                 </div>
 
                 {/* Title Input */}
                 <div>
                   <label className="block text-sm font-semibold mb-2 text-gray-300">
-                    What's your book called?
+                    מה שם הספר שלך?
                   </label>
                   <input
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Enter your book title..."
+                    placeholder="הכנס את שם הספר שלך..."
                     className="input text-lg"
                     autoFocus
                   />
@@ -256,7 +256,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                 {/* Genre Selection */}
                 <div>
                   <label className="block text-sm font-semibold mb-4 text-gray-300">
-                    Choose your genre
+                    בחר את הז'אנר שלך
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {genres.map((genre) => {
@@ -302,8 +302,8 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     variant="gold"
                     size="lg"
                   >
-                    Next Step
-                    <ArrowRight className="w-5 h-5" />
+                    שלב הבא
+                    <ArrowLeft className="w-5 h-5" />
                   </GlowingButton>
                 </div>
               </motion.div>
@@ -320,24 +320,24 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
               >
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-display font-bold text-white mb-2">
-                    🎨 AI Brainstorm
+                    🎨 סיעור מוחות AI
                   </h3>
-                  <p className="text-gray-400">Let AI help you find the perfect title</p>
+                  <p className="text-gray-400">תן ל-AI לעזור לך למצוא את הכותרת המושלמת</p>
                 </div>
 
                 {/* Current Title */}
                 <div className="glass rounded-xl p-6 text-center">
-                  <p className="text-sm text-gray-400 mb-2">Your current title</p>
+                  <p className="text-sm text-gray-400 mb-2">הכותרת הנוכחית שלך</p>
                   <p className="text-2xl font-display font-bold gradient-gold">{title}</p>
                   <p className="text-sm text-cosmic-purple mt-2 capitalize">
-                    {selectedGenre} • Ready to write
+                    {selectedGenre} • מוכן לכתיבה
                   </p>
                 </div>
 
                 {/* Generate Titles Button */}
                 <div className="text-center">
                   <p className="text-gray-300 mb-4">
-                    Not sure about your title? Let our AI suggest some catchy alternatives!
+                    לא בטוח בכותרת? תן ל-AI שלנו להציע כמה חלופות קליטות!
                   </p>
                   <GlowingButton
                     onClick={handleGenerateTitles}
@@ -348,12 +348,12 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     {generatingTitles ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        Generating Ideas...
+                        מייצר רעיונות...
                       </>
                     ) : (
                       <>
                         <Wand2 className="w-5 h-5" />
-                        Generate Title Ideas
+                        הצע רעיונות לכותרת
                       </>
                     )}
                   </GlowingButton>
@@ -367,7 +367,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     className="space-y-3"
                   >
                     <p className="text-sm font-semibold text-gray-300 text-center">
-                      AI-Generated Suggestions
+                      הצעות מבוססות AI
                     </p>
                     {generatedTitles.map((genTitle, index) => (
                       <motion.button
@@ -402,8 +402,8 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     variant="cosmic"
                     size="lg"
                   >
-                    <ArrowLeft className="w-5 h-5" />
-                    Back
+                    <ArrowRight className="w-5 h-5" />
+                    חזור
                   </GlowingButton>
                   <GlowingButton
                     onClick={() => setStep(3)}
@@ -411,8 +411,8 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     variant="gold"
                     size="lg"
                   >
-                    Next Step
-                    <ArrowRight className="w-5 h-5" />
+                    שלב הבא
+                    <ArrowLeft className="w-5 h-5" />
                   </GlowingButton>
                 </div>
               </motion.div>
@@ -429,15 +429,15 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
               >
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-display font-bold text-white mb-2">
-                    🎯 The Setup
+                    🎯 ההגדרות
                   </h3>
-                  <p className="text-gray-400">Define your writing goals and audience</p>
+                  <p className="text-gray-400">הגדר את מטרות הכתיבה וקהל היעד שלך</p>
                 </div>
 
                 {/* Writing Goal */}
                 <div>
                   <label className="block text-sm font-semibold mb-4 text-gray-300">
-                    What's your writing goal?
+                    מה מטרת הכתיבה שלך?
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {writingGoals.map((goal) => {
@@ -468,7 +468,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                 {/* Target Audience */}
                 <div>
                   <label className="block text-sm font-semibold mb-4 text-gray-300">
-                    Who will read this book?
+                    מי יקרא את הספר הזה?
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {targetAudiences.map((audience) => {
@@ -509,7 +509,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
 
                 {/* Summary */}
                 <div className="glass rounded-xl p-6 space-y-2">
-                  <p className="text-sm text-gray-400 mb-3">Summary</p>
+                  <p className="text-sm text-gray-400 mb-3">סיכום</p>
                   <div className="flex items-center gap-2">
                     <Target className="w-4 h-4 text-magic-gold" />
                     <span className="text-white">
@@ -528,7 +528,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     <div className="flex items-center gap-2">
                       <Target className="w-4 h-4 text-green-400" />
                       <span className="text-gray-300">
-                        Target: {targetAudiences.find(a => a.id === selectedAudience)?.name}
+                        קהל יעד: {targetAudiences.find(a => a.id === selectedAudience)?.name}
                       </span>
                     </div>
                   )}
@@ -541,8 +541,8 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     variant="cosmic"
                     size="lg"
                   >
-                    <ArrowLeft className="w-5 h-5" />
-                    Back
+                    <ArrowRight className="w-5 h-5" />
+                    חזור
                   </GlowingButton>
                   <GlowingButton
                     onClick={() => setStep(4)}
@@ -550,8 +550,8 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     variant="gold"
                     size="lg"
                   >
-                    Next Step
-                    <ArrowRight className="w-5 h-5" />
+                    שלב הבא
+                    <ArrowLeft className="w-5 h-5" />
                   </GlowingButton>
                 </div>
               </motion.div>
@@ -568,9 +568,9 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
               >
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-display font-bold text-white mb-2">
-                    📐 Choose a Template
+                    📐 בחר תבנית
                   </h3>
-                  <p className="text-gray-400">Choose a ready template or start with a custom template</p>
+                  <p className="text-gray-400">בחר תבנית מוכנה או התחל עם תבנית מותאמת אישית</p>
                 </div>
 
                 {/* Template Gallery */}
@@ -592,7 +592,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     <div className="flex items-center gap-3">
                       <Layout className="w-5 h-5 text-magic-gold" />
                       <span className="text-white">
-                        Template selected: <span className="font-semibold text-magic-gold">{selectedTemplate.name}</span>
+                        תבנית נבחרה: <span className="font-semibold text-magic-gold">{selectedTemplate.name}</span>
                       </span>
                     </div>
                   </motion.div>
@@ -600,7 +600,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
 
                 {/* Summary */}
                 <div className="glass rounded-xl p-6 space-y-2">
-                  <p className="text-sm text-gray-400 mb-3">Summary</p>
+                  <p className="text-sm text-gray-400 mb-3">סיכום</p>
                   <div className="flex items-center gap-2">
                     <Target className="w-4 h-4 text-magic-gold" />
                     <span className="text-white">
@@ -623,7 +623,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     <div className="flex items-center gap-2">
                       <Layout className="w-4 h-4 text-magic-gold" />
                       <span className="text-gray-300">
-                        Template: {selectedTemplate.name}
+                        תבנית: {selectedTemplate.name}
                       </span>
                     </div>
                   )}
@@ -636,8 +636,8 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     variant="cosmic"
                     size="lg"
                   >
-                    <ArrowLeft className="w-5 h-5" />
-                    Back
+                    <ArrowRight className="w-5 h-5" />
+                    חזור
                   </GlowingButton>
                   <GlowingButton
                     onClick={handleCreateBook}
@@ -648,12 +648,12 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     {creating ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        Creating...
+                        יוצר...
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-5 h-5" />
-                        Create My Book
+                        צור את הספר שלי
                       </>
                     )}
                   </GlowingButton>

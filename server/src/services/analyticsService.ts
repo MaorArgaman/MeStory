@@ -1,4 +1,3 @@
-// mongoose kept for potential future use
 import { Book } from '../models/Book';
 import { User } from '../models/User';
 import { UserActivity } from '../models/UserActivity';
@@ -6,6 +5,7 @@ import { UserActivity } from '../models/UserActivity';
 /**
  * Analytics Service
  * Provides platform-wide analytics for admin dashboard
+ * Simplified for Supabase (no MongoDB aggregations)
  */
 
 export interface PlatformMetrics {
@@ -49,7 +49,7 @@ export interface GenreAnalytics {
   totalViews: number;
   totalPurchases: number;
   averageQuality: number;
-  growthRate: number; // % change from last month
+  growthRate: number;
 }
 
 export interface BookPerformance {
@@ -74,33 +74,32 @@ export async function getPlatformMetrics(): Promise<PlatformMetrics> {
   const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   // User metrics
-  const totalUsers = await User.countDocuments();
-  const activeUsers = await UserActivity.countDocuments({
-    lastActiveAt: { $gte: monthAgo },
-  });
-  const newUsersThisWeek = await User.countDocuments({
-    createdAt: { $gte: weekAgo },
-  });
+  const allUsers = await User.find({});
+  const totalUsers = allUsers.length;
+  const newUsersThisWeek = allUsers.filter(u => new Date(u.createdAt) >= weekAgo).length;
+
+  // Active users
+  const allActivities = await UserActivity.find({});
+  const activeUsers = allActivities.filter(a => new Date(a.lastActiveAt) >= monthAgo).length;
 
   // Book metrics
-  const totalBooks = await Book.countDocuments();
-  const publishedBooks = await Book.countDocuments({
-    'publishingStatus.status': 'published',
-  });
-  const newBooksThisWeek = await Book.countDocuments({
-    createdAt: { $gte: weekAgo },
-  });
+  const allBooks = await Book.find({});
+  const totalBooks = allBooks.length;
+  const publishedBooks = allBooks.filter(b => b.publishingStatus?.status === 'published').length;
+  const newBooksThisWeek = allBooks.filter(b => new Date(b.createdAt) >= weekAgo).length;
 
   // Revenue and quality
-  const revenueResult = await Book.aggregate([
-    {
-      $group: {
-        _id: null,
-        totalRevenue: { $sum: '$statistics.revenue' },
-        avgQuality: { $avg: '$qualityScore.overallScore' },
-      },
-    },
-  ]);
+  let totalRevenue = 0;
+  let totalQuality = 0;
+  let qualityCount = 0;
+
+  for (const book of allBooks) {
+    totalRevenue += book.statistics?.revenue || 0;
+    if (book.qualityScore?.overallScore) {
+      totalQuality += book.qualityScore.overallScore;
+      qualityCount++;
+    }
+  }
 
   return {
     totalUsers,
@@ -109,8 +108,8 @@ export async function getPlatformMetrics(): Promise<PlatformMetrics> {
     totalBooks,
     publishedBooks,
     newBooksThisWeek,
-    totalRevenue: revenueResult[0]?.totalRevenue || 0,
-    averageQualityScore: revenueResult[0]?.avgQuality || 0,
+    totalRevenue,
+    averageQualityScore: qualityCount > 0 ? totalQuality / qualityCount : 0,
   };
 }
 
@@ -123,28 +122,24 @@ export async function getChurnedUsers(
 ): Promise<UserChurnData[]> {
   const cutoffDate = new Date(Date.now() - daysInactive * 24 * 60 * 60 * 1000);
 
-  // Find users who were active but haven't been active recently
-  const churnedActivities = await UserActivity.find({
-    lastActiveAt: { $lt: cutoffDate },
-    totalBooksRead: { $gt: 0 }, // Had some activity
-  })
-    .sort({ lastActiveAt: -1 })
-    .limit(limit)
-    .lean();
+  const allActivities = await UserActivity.find({});
+  const churnedActivities = allActivities
+    .filter(a => new Date(a.lastActiveAt) < cutoffDate && a.totalBooksRead > 0)
+    .sort((a, b) => new Date(b.lastActiveAt).getTime() - new Date(a.lastActiveAt).getTime())
+    .slice(0, limit);
 
-  const userIds = churnedActivities.map((a) => a.userId);
-  const users = await User.find({ _id: { $in: userIds } }).lean();
+  const userIds = churnedActivities.map(a => a.userId);
+  const users = await Promise.all(userIds.map(id => User.findById(id)));
+  const userMap = new Map(users.filter(u => u).map(u => [u!.id, u!]));
 
-  const userMap = new Map(users.map((u) => [u._id.toString(), u]));
-
-  return churnedActivities.map((activity) => {
-    const user = userMap.get(activity.userId.toString());
+  return churnedActivities.map(activity => {
+    const user = userMap.get(activity.userId);
     const daysSinceActive = Math.floor(
       (Date.now() - new Date(activity.lastActiveAt).getTime()) / (1000 * 60 * 60 * 24)
     );
 
     return {
-      userId: activity.userId.toString(),
+      userId: activity.userId,
       name: user?.name || 'Unknown',
       email: user?.email || 'Unknown',
       lastActiveAt: activity.lastActiveAt,
@@ -165,30 +160,22 @@ export async function getNewUsersWithoutEngagement(
 ): Promise<any[]> {
   const cutoffDate = new Date(Date.now() - daysSinceRegistration * 24 * 60 * 60 * 1000);
 
-  // Get users registered recently
-  const recentUsers = await User.find({
-    createdAt: { $gte: cutoffDate },
-  }).lean();
+  const allUsers = await User.find({});
+  const recentUsers = allUsers.filter(u => new Date(u.createdAt) >= cutoffDate);
+  const recentUserIds = new Set(recentUsers.map(u => u.id));
 
-  const recentUserIds = recentUsers.map((u) => u._id.toString());
+  const allActivities = await UserActivity.find({});
+  const activeUserIds = new Set(
+    allActivities
+      .filter(a => recentUserIds.has(a.userId) && (a.totalBooksRead > 0 || a.totalBooksWritten > 0))
+      .map(a => a.userId)
+  );
 
-  // Find which ones have activity
-  const usersWithActivity = await UserActivity.find({
-    userId: { $in: recentUserIds },
-    $or: [
-      { totalBooksRead: { $gt: 0 } },
-      { totalBooksWritten: { $gt: 0 } },
-    ],
-  }).select('userId').lean();
-
-  const activeUserIds = new Set(usersWithActivity.map((a) => a.userId.toString()));
-
-  // Filter to users without engagement
   return recentUsers
-    .filter((u) => !activeUserIds.has(u._id.toString()))
+    .filter(u => !activeUserIds.has(u.id))
     .slice(0, limit)
-    .map((u) => ({
-      userId: u._id.toString(),
+    .map(u => ({
+      userId: u.id,
       name: u.name,
       email: u.email,
       registeredAt: u.createdAt,
@@ -202,60 +189,74 @@ export async function getNewUsersWithoutEngagement(
  * Get top performing authors
  */
 export async function getTopAuthors(limit: number = 20): Promise<TopAuthorData[]> {
-  const result = await Book.aggregate([
-    {
-      $match: {
-        'publishingStatus.status': 'published',
-      },
-    },
-    {
-      $group: {
-        _id: '$author',
-        totalBooks: { $sum: 1 },
-        totalViews: { $sum: '$statistics.views' },
-        totalPurchases: { $sum: '$statistics.purchases' },
-        totalRevenue: { $sum: '$statistics.revenue' },
-        avgQuality: { $avg: '$qualityScore.overallScore' },
-      },
-    },
-    {
-      $addFields: {
-        engagementScore: {
-          $add: [
-            { $multiply: ['$totalBooks', 10] },
-            { $multiply: ['$totalViews', 0.1] },
-            { $multiply: ['$totalPurchases', 5] },
-            { $multiply: [{ $ifNull: ['$avgQuality', 50] }, 0.5] },
-            { $multiply: ['$totalRevenue', 0.2] },
-          ],
-        },
-      },
-    },
-    { $sort: { engagementScore: -1 } },
-    { $limit: limit },
-    {
-      $lookup: {
-        from: 'users',
-        localField: '_id',
-        foreignField: '_id',
-        as: 'authorInfo',
-      },
-    },
-    { $unwind: '$authorInfo' },
-  ]);
+  const books = await Book.find({
+    'publishingStatus.status': 'published',
+  });
 
-  return result.map((r) => ({
-    authorId: r._id.toString(),
-    name: r.authorInfo.name,
-    email: r.authorInfo.email,
-    avatar: r.authorInfo.profile?.avatar,
-    totalBooks: r.totalBooks,
-    totalViews: r.totalViews,
-    totalPurchases: r.totalPurchases,
-    totalRevenue: r.totalRevenue,
-    averageQuality: r.avgQuality || 0,
-    engagementScore: r.engagementScore,
-  }));
+  // Group by author
+  const authorStats = new Map<string, {
+    totalBooks: number;
+    totalViews: number;
+    totalPurchases: number;
+    totalRevenue: number;
+    totalQuality: number;
+  }>();
+
+  for (const book of books) {
+    const authorId = book.author;
+    if (!authorStats.has(authorId)) {
+      authorStats.set(authorId, {
+        totalBooks: 0,
+        totalViews: 0,
+        totalPurchases: 0,
+        totalRevenue: 0,
+        totalQuality: 0,
+      });
+    }
+    const stats = authorStats.get(authorId)!;
+    stats.totalBooks++;
+    stats.totalViews += book.statistics?.views || 0;
+    stats.totalPurchases += book.statistics?.purchases || 0;
+    stats.totalRevenue += book.statistics?.revenue || 0;
+    stats.totalQuality += book.qualityScore?.overallScore || 50;
+  }
+
+  // Calculate scores and sort
+  const authorsWithScores = Array.from(authorStats.entries()).map(([authorId, stats]) => {
+    const avgQuality = stats.totalBooks > 0 ? stats.totalQuality / stats.totalBooks : 50;
+    const engagementScore =
+      stats.totalBooks * 10 +
+      stats.totalViews * 0.1 +
+      stats.totalPurchases * 5 +
+      avgQuality * 0.5 +
+      stats.totalRevenue * 0.2;
+
+    return { authorId, ...stats, avgQuality, engagementScore };
+  });
+
+  authorsWithScores.sort((a, b) => b.engagementScore - a.engagementScore);
+
+  // Fetch author details
+  const results: TopAuthorData[] = [];
+  for (const stats of authorsWithScores.slice(0, limit)) {
+    const author = await User.findById(stats.authorId);
+    if (author) {
+      results.push({
+        authorId: stats.authorId,
+        name: author.name,
+        email: author.email,
+        avatar: author.profile?.avatar,
+        totalBooks: stats.totalBooks,
+        totalViews: stats.totalViews,
+        totalPurchases: stats.totalPurchases,
+        totalRevenue: stats.totalRevenue,
+        averageQuality: stats.avgQuality,
+        engagementScore: stats.engagementScore,
+      });
+    }
+  }
+
+  return results;
 }
 
 /**
@@ -266,58 +267,58 @@ export async function getGenreAnalytics(): Promise<GenreAnalytics[]> {
   const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const twoMonthsAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
-  // Current month stats
-  const currentStats = await Book.aggregate([
-    {
-      $match: {
-        'publishingStatus.status': 'published',
-      },
-    },
-    {
-      $group: {
-        _id: '$genre',
-        bookCount: { $sum: 1 },
-        totalViews: { $sum: '$statistics.views' },
-        totalPurchases: { $sum: '$statistics.purchases' },
-        avgQuality: { $avg: '$qualityScore.overallScore' },
-      },
-    },
-    { $sort: { totalViews: -1 } },
-  ]);
-
-  // Last month stats for growth calculation
-  const lastMonthStats = await Book.aggregate([
-    {
-      $match: {
-        'publishingStatus.status': 'published',
-        createdAt: { $lt: monthAgo, $gte: twoMonthsAgo },
-      },
-    },
-    {
-      $group: {
-        _id: '$genre',
-        bookCount: { $sum: 1 },
-      },
-    },
-  ]);
-
-  const lastMonthMap = new Map(lastMonthStats.map((s) => [s._id, s.bookCount]));
-
-  return currentStats.map((stat) => {
-    const lastMonthCount = lastMonthMap.get(stat._id) || 0;
-    const growthRate = lastMonthCount > 0
-      ? ((stat.bookCount - lastMonthCount) / lastMonthCount) * 100
-      : 100;
-
-    return {
-      genre: stat._id,
-      bookCount: stat.bookCount,
-      totalViews: stat.totalViews,
-      totalPurchases: stat.totalPurchases,
-      averageQuality: stat.avgQuality || 0,
-      growthRate: Math.round(growthRate * 10) / 10,
-    };
+  const books = await Book.find({
+    'publishingStatus.status': 'published',
   });
+
+  // Group by genre
+  const genreStats = new Map<string, {
+    bookCount: number;
+    totalViews: number;
+    totalPurchases: number;
+    totalQuality: number;
+    lastMonthCount: number;
+  }>();
+
+  for (const book of books) {
+    const genre = book.genre || 'Unknown';
+    if (!genreStats.has(genre)) {
+      genreStats.set(genre, {
+        bookCount: 0,
+        totalViews: 0,
+        totalPurchases: 0,
+        totalQuality: 0,
+        lastMonthCount: 0,
+      });
+    }
+    const stats = genreStats.get(genre)!;
+    stats.bookCount++;
+    stats.totalViews += book.statistics?.views || 0;
+    stats.totalPurchases += book.statistics?.purchases || 0;
+    stats.totalQuality += book.qualityScore?.overallScore || 50;
+
+    const createdAt = new Date(book.createdAt);
+    if (createdAt >= twoMonthsAgo && createdAt < monthAgo) {
+      stats.lastMonthCount++;
+    }
+  }
+
+  return Array.from(genreStats.entries())
+    .map(([genre, stats]) => {
+      const growthRate = stats.lastMonthCount > 0
+        ? ((stats.bookCount - stats.lastMonthCount) / stats.lastMonthCount) * 100
+        : 100;
+
+      return {
+        genre,
+        bookCount: stats.bookCount,
+        totalViews: stats.totalViews,
+        totalPurchases: stats.totalPurchases,
+        averageQuality: stats.bookCount > 0 ? stats.totalQuality / stats.bookCount : 0,
+        growthRate: Math.round(growthRate * 10) / 10,
+      };
+    })
+    .sort((a, b) => b.totalViews - a.totalViews);
 }
 
 /**
@@ -327,36 +328,48 @@ export async function getTopBooks(
   limit: number = 20,
   sortBy: 'views' | 'purchases' | 'quality' | 'revenue' = 'views'
 ): Promise<BookPerformance[]> {
-  const sortField = {
-    views: 'statistics.views',
-    purchases: 'statistics.purchases',
-    quality: 'qualityScore.overallScore',
-    revenue: 'statistics.revenue',
-  }[sortBy];
-
   const books = await Book.find({
     'publishingStatus.status': 'published',
-  })
-    .sort({ [sortField]: -1 })
-    .limit(limit)
-    .populate('author', 'name')
-    .lean();
+  });
 
-  return books.map((book) => ({
-    bookId: book._id.toString(),
-    title: book.title,
-    author: (book.author as any).name || 'Unknown',
-    genre: book.genre,
-    views: book.statistics.views,
-    purchases: book.statistics.purchases,
-    revenue: book.statistics.revenue,
-    qualityScore: book.qualityScore?.overallScore || 0,
-    publishedAt: book.publishingStatus.publishedAt || book.createdAt,
-    performanceScore:
-      book.statistics.views * 0.1 +
-      book.statistics.purchases * 5 +
-      (book.qualityScore?.overallScore || 50) * 0.5,
-  }));
+  // Sort in memory
+  const sorted = books.sort((a, b) => {
+    switch (sortBy) {
+      case 'views':
+        return (b.statistics?.views || 0) - (a.statistics?.views || 0);
+      case 'purchases':
+        return (b.statistics?.purchases || 0) - (a.statistics?.purchases || 0);
+      case 'quality':
+        return (b.qualityScore?.overallScore || 0) - (a.qualityScore?.overallScore || 0);
+      case 'revenue':
+        return (b.statistics?.revenue || 0) - (a.statistics?.revenue || 0);
+      default:
+        return 0;
+    }
+  }).slice(0, limit);
+
+  // Fetch author names
+  const results: BookPerformance[] = [];
+  for (const book of sorted) {
+    const author = await User.findById(book.author);
+    results.push({
+      bookId: book.id,
+      title: book.title,
+      author: author?.name || 'Unknown',
+      genre: book.genre,
+      views: book.statistics?.views || 0,
+      purchases: book.statistics?.purchases || 0,
+      revenue: book.statistics?.revenue || 0,
+      qualityScore: book.qualityScore?.overallScore || 0,
+      publishedAt: book.publishingStatus?.publishedAt || book.createdAt,
+      performanceScore:
+        (book.statistics?.views || 0) * 0.1 +
+        (book.statistics?.purchases || 0) * 5 +
+        (book.qualityScore?.overallScore || 50) * 0.5,
+    });
+  }
+
+  return results;
 }
 
 /**
@@ -365,55 +378,32 @@ export async function getTopBooks(
 export async function getDailyActivityTrends(days: number = 30): Promise<any[]> {
   const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-  const trends = await UserActivity.aggregate([
-    {
-      $match: {
-        'interactionEvents.timestamp': { $gte: startDate },
-      },
-    },
-    { $unwind: '$interactionEvents' },
-    {
-      $match: {
-        'interactionEvents.timestamp': { $gte: startDate },
-      },
-    },
-    {
-      $group: {
-        _id: {
-          date: {
-            $dateToString: {
-              format: '%Y-%m-%d',
-              date: '$interactionEvents.timestamp',
-            },
-          },
-          type: '$interactionEvents.type',
-        },
-        count: { $sum: 1 },
-      },
-    },
-    {
-      $group: {
-        _id: '$_id.date',
-        interactions: {
-          $push: {
-            type: '$_id.type',
-            count: '$count',
-          },
-        },
-        totalInteractions: { $sum: '$count' },
-      },
-    },
-    { $sort: { _id: 1 } },
-  ]);
+  const allActivities = await UserActivity.find({});
 
-  return trends.map((t) => ({
-    date: t._id,
-    totalInteractions: t.totalInteractions,
-    breakdown: t.interactions.reduce((acc: any, curr: any) => {
-      acc[curr.type] = curr.count;
-      return acc;
-    }, {}),
-  }));
+  // Group events by date
+  const dateStats = new Map<string, Record<string, number>>();
+
+  for (const activity of allActivities) {
+    for (const event of activity.interactionEvents || []) {
+      const eventDate = new Date(event.timestamp);
+      if (eventDate < startDate) continue;
+
+      const dateKey = eventDate.toISOString().split('T')[0];
+      if (!dateStats.has(dateKey)) {
+        dateStats.set(dateKey, {});
+      }
+      const stats = dateStats.get(dateKey)!;
+      stats[event.type] = (stats[event.type] || 0) + 1;
+    }
+  }
+
+  return Array.from(dateStats.entries())
+    .map(([date, breakdown]) => ({
+      date,
+      totalInteractions: Object.values(breakdown).reduce((sum, count) => sum + count, 0),
+      breakdown,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 /**
@@ -422,50 +412,53 @@ export async function getDailyActivityTrends(days: number = 30): Promise<any[]> 
 export async function getBooksNeedingEvaluation(limit: number = 50): Promise<any[]> {
   const books = await Book.find({
     'publishingStatus.status': 'published',
-    $or: [
-      { qualityScore: { $exists: false } },
-      { 'qualityScore.overallScore': { $exists: false } },
-    ],
-  })
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .populate('author', 'name')
-    .lean();
+  });
 
-  return books.map((book) => ({
-    bookId: book._id.toString(),
-    title: book.title,
-    author: (book.author as any).name,
-    genre: book.genre,
-    wordCount: book.statistics.wordCount,
-    publishedAt: book.publishingStatus.publishedAt,
-  }));
+  const needsEval = books
+    .filter(b => !b.qualityScore?.overallScore)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, limit);
+
+  const results: any[] = [];
+  for (const book of needsEval) {
+    const author = await User.findById(book.author);
+    results.push({
+      bookId: book.id,
+      title: book.title,
+      author: author?.name || 'Unknown',
+      genre: book.genre,
+      wordCount: book.statistics?.wordCount || 0,
+      publishedAt: book.publishingStatus?.publishedAt,
+    });
+  }
+
+  return results;
 }
 
 /**
  * Get user engagement funnel
  */
 export async function getEngagementFunnel(): Promise<any> {
-  const totalUsers = await User.countDocuments();
+  const allUsers = await User.find({});
+  const totalUsers = allUsers.length;
 
-  const usersWithActivity = await UserActivity.countDocuments({
-    $or: [
-      { totalBooksRead: { $gt: 0 } },
-      { totalBooksWritten: { $gt: 0 } },
-    ],
-  });
+  const allActivities = await UserActivity.find({});
 
-  const usersWithPurchases = await UserActivity.countDocuments({
-    'interactionEvents.type': 'purchase',
-  });
+  const usersWithActivity = allActivities.filter(
+    a => a.totalBooksRead > 0 || a.totalBooksWritten > 0
+  ).length;
 
-  const usersCompleted = await UserActivity.countDocuments({
-    completedBooks: { $ne: [] },
-  });
+  const usersCompleted = allActivities.filter(
+    a => a.completedBooks && a.completedBooks.length > 0
+  ).length;
 
-  const usersWriting = await UserActivity.countDocuments({
-    totalBooksWritten: { $gt: 0 },
-  });
+  const usersWithPurchases = allActivities.filter(
+    a => a.interactionEvents?.some(e => e.type === 'purchase')
+  ).length;
+
+  const usersWriting = allActivities.filter(
+    a => a.totalBooksWritten > 0
+  ).length;
 
   return {
     registered: totalUsers,
@@ -491,48 +484,54 @@ export interface RetentionCohort {
 }
 
 /**
- * Get retention cohort analysis
- * Shows how users from each month retain over time
+ * Get retention cohort analysis (simplified)
  */
 export async function getRetentionCohorts(monthsBack: number = 6): Promise<RetentionCohort[]> {
   const cohorts: RetentionCohort[] = [];
   const now = new Date();
 
+  const allUsers = await User.find({});
+  const allActivities = await UserActivity.find({});
+  const activityByUser = new Map(allActivities.map(a => [a.userId, a]));
+
   for (let i = monthsBack - 1; i >= 0; i--) {
     const cohortStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const cohortEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
 
-    // Get users registered in this cohort
-    const cohortUsers = await User.find({
-      createdAt: { $gte: cohortStart, $lte: cohortEnd },
-    }).select('_id').lean();
+    const cohortUsers = allUsers.filter(u => {
+      const createdAt = new Date(u.createdAt);
+      return createdAt >= cohortStart && createdAt <= cohortEnd;
+    });
 
     const totalUsers = cohortUsers.length;
     if (totalUsers === 0) continue;
 
-    const userIds = cohortUsers.map((u) => u._id.toString());
     const retainedByWeek: number[] = [];
     const retentionRates: number[] = [];
-
-    // Check retention for each week after registration
     const weeksToCheck = Math.min(12, Math.floor((now.getTime() - cohortStart.getTime()) / (7 * 24 * 60 * 60 * 1000)));
 
     for (let week = 1; week <= weeksToCheck; week++) {
       const weekStart = new Date(cohortStart.getTime() + (week - 1) * 7 * 24 * 60 * 60 * 1000);
       const weekEnd = new Date(cohortStart.getTime() + week * 7 * 24 * 60 * 60 * 1000);
 
-      // Count users who were active in this week
-      const activeInWeek = await UserActivity.countDocuments({
-        userId: { $in: userIds },
-        'interactionEvents.timestamp': { $gte: weekStart, $lt: weekEnd },
-      });
+      let activeInWeek = 0;
+      for (const user of cohortUsers) {
+        const activity = activityByUser.get(user.id);
+        if (activity?.interactionEvents) {
+          const hasActivity = activity.interactionEvents.some(e => {
+            const timestamp = new Date(e.timestamp);
+            return timestamp >= weekStart && timestamp < weekEnd;
+          });
+          if (hasActivity) activeInWeek++;
+        }
+      }
 
       retainedByWeek.push(activeInWeek);
       retentionRates.push(Math.round((activeInWeek / totalUsers) * 100));
     }
 
     cohorts.push({
-      cohortMonth: cohortStart.toISOString().slice(0, 7), // YYYY-MM format
+      cohortMonth: cohortStart.toISOString().slice(0, 7),
       totalUsers,
       retainedByWeek,
       retentionRates,
@@ -558,17 +557,15 @@ export interface UserLTV {
  * Calculate lifetime value for a specific user
  */
 export async function calculateUserLTV(userId: string): Promise<UserLTV | null> {
-  const user = await User.findById(userId).lean();
+  const user = await User.findById(userId);
   if (!user) return null;
 
-  const userActivity = await UserActivity.findOne({ userId }).lean();
+  const userActivity = await UserActivity.findOne({ userId });
 
-  // Get purchase history from interactions
-  const purchaseEvents = userActivity?.interactionEvents.filter(
-    (e) => e.type === 'purchase'
+  const purchaseEvents = userActivity?.interactionEvents?.filter(
+    e => e.type === 'purchase'
   ) || [];
 
-  // Calculate total from book purchases
   let bookPurchasesTotal = 0;
   for (const event of purchaseEvents) {
     if (event.metadata?.amount) {
@@ -576,29 +573,23 @@ export async function calculateUserLTV(userId: string): Promise<UserLTV | null> 
     }
   }
 
-  // Calculate subscription value (simplified)
   const tier = user.subscription?.tier;
-  const subscriptionValue = tier === 'premium' ? 99 :
-    tier === 'standard' ? 49 : 0;
+  const subscriptionValue = tier === 'premium' ? 99 : tier === 'standard' ? 49 : 0;
 
-  // Days since registration
   const daysSinceRegistration = Math.max(1, Math.floor(
     (Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)
   ));
 
   const totalSpent = bookPurchasesTotal + subscriptionValue;
-
-  // Project LTV based on average spending rate
   const dailySpendRate = totalSpent / daysSinceRegistration;
-  const projectedLTV = dailySpendRate * 365; // 1 year projection
+  const projectedLTV = dailySpendRate * 365;
 
-  // Segment user
   let userSegment: 'high' | 'medium' | 'low' = 'low';
   if (projectedLTV > 200) userSegment = 'high';
   else if (projectedLTV > 50) userSegment = 'medium';
 
   return {
-    userId: user._id.toString(),
+    userId: user.id,
     name: user.name,
     totalSpent,
     subscriptionValue,
@@ -616,13 +607,13 @@ export async function getAverageLTVBySegment(): Promise<{
   byPlan: Record<string, number>;
   byEngagement: Record<string, number>;
 }> {
-  const users = await User.find().lean();
+  const users = await User.find({});
   const ltvData: number[] = [];
   const byPlan: Record<string, number[]> = { FREE: [], STANDARD: [], PREMIUM: [] };
   const byEngagement: Record<string, number[]> = { high: [], medium: [], low: [] };
 
-  for (const user of users.slice(0, 500)) { // Limit for performance
-    const ltv = await calculateUserLTV(user._id.toString());
+  for (const user of users.slice(0, 500)) {
+    const ltv = await calculateUserLTV(user.id);
     if (ltv) {
       ltvData.push(ltv.projectedLTV);
       byPlan[user.subscription?.tier?.toUpperCase() || 'FREE'].push(ltv.projectedLTV);
@@ -659,9 +650,6 @@ export interface ChurnPrediction {
   recommendedAction: string;
 }
 
-/**
- * Calculate churn probability for a user
- */
 function calculateChurnProbability(userActivity: any, user: any): {
   probability: number;
   riskFactors: string[];
@@ -669,7 +657,6 @@ function calculateChurnProbability(userActivity: any, user: any): {
   const riskFactors: string[] = [];
   let riskScore = 0;
 
-  // Days since last activity
   const daysSinceActive = Math.floor(
     (Date.now() - new Date(userActivity.lastActiveAt).getTime()) / (1000 * 60 * 60 * 24)
   );
@@ -682,7 +669,6 @@ function calculateChurnProbability(userActivity: any, user: any): {
     riskFactors.push('Inactive for 1+ month');
   }
 
-  // Abandoned books ratio
   const totalStarted =
     userActivity.currentlyReading.length +
     userActivity.completedBooks.length +
@@ -695,33 +681,16 @@ function calculateChurnProbability(userActivity: any, user: any): {
     }
   }
 
-  // Declining activity streak
   if (userActivity.currentStreak === 0 && userActivity.longestStreak > 7) {
     riskScore += 0.15;
     riskFactors.push('Broken activity streak');
   }
 
-  // Low engagement depth
   if (userActivity.totalBooksRead < 1 && userActivity.totalBooksWritten < 1) {
     riskScore += 0.15;
     riskFactors.push('No completed activities');
   }
 
-  // Recent interaction frequency decline
-  const recentEvents = userActivity.interactionEvents.filter((e: any) => {
-    const daysSince = (Date.now() - new Date(e.timestamp).getTime()) / (1000 * 60 * 60 * 24);
-    return daysSince <= 30;
-  });
-  const olderEvents = userActivity.interactionEvents.filter((e: any) => {
-    const daysSince = (Date.now() - new Date(e.timestamp).getTime()) / (1000 * 60 * 60 * 24);
-    return daysSince > 30 && daysSince <= 60;
-  });
-  if (olderEvents.length > 0 && recentEvents.length < olderEvents.length * 0.5) {
-    riskScore += 0.15;
-    riskFactors.push('Activity declining');
-  }
-
-  // Free tier without engagement
   if (user.subscription?.plan === 'FREE' && userActivity.totalBooksRead < 2) {
     riskScore += 0.1;
     riskFactors.push('Free tier with low engagement');
@@ -742,19 +711,13 @@ export async function getPredictedChurnUsers(
 ): Promise<ChurnPrediction[]> {
   const predictions: ChurnPrediction[] = [];
 
-  // Get active users (to predict potential churn)
-  const activities = await UserActivity.find({
-    lastActiveAt: { $exists: true },
-  })
-    .limit(500) // Limit for performance
-    .lean();
+  const activities = await UserActivity.find({});
+  const userIds = activities.map(a => a.userId);
+  const users = await Promise.all(userIds.map(id => User.findById(id)));
+  const userMap = new Map(users.filter(u => u).map(u => [u!.id, u!]));
 
-  const userIds = activities.map((a) => a.userId);
-  const users = await User.find({ _id: { $in: userIds } }).lean();
-  const userMap = new Map(users.map((u) => [u._id.toString(), u]));
-
-  for (const activity of activities) {
-    const user = userMap.get(activity.userId.toString());
+  for (const activity of activities.slice(0, 500)) {
+    const user = userMap.get(activity.userId);
     if (!user) continue;
 
     const { probability, riskFactors } = calculateChurnProbability(activity, user);
@@ -768,7 +731,7 @@ export async function getPredictedChurnUsers(
       }
 
       predictions.push({
-        userId: user._id.toString(),
+        userId: user.id,
         name: user.name,
         email: user.email,
         churnProbability: Math.round(probability * 100) / 100,
@@ -779,7 +742,6 @@ export async function getPredictedChurnUsers(
     }
   }
 
-  // Sort by probability descending
   predictions.sort((a, b) => b.churnProbability - a.churnProbability);
   return predictions.slice(0, limit);
 }
@@ -803,54 +765,41 @@ export async function getRealTimeActivity(): Promise<RealTimeActivity> {
   const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
 
-  // Active users in last 15 minutes
-  const activeNow = await UserActivity.countDocuments({
-    lastActiveAt: { $gte: fifteenMinutesAgo },
-  });
+  const allActivities = await UserActivity.find({});
+  const activeNow = allActivities.filter(a => new Date(a.lastActiveAt) >= fifteenMinutesAgo).length;
 
-  // Breakdown by recent activity type
-  const recentActivities = await UserActivity.aggregate([
-    { $unwind: '$interactionEvents' },
-    {
-      $match: {
-        'interactionEvents.timestamp': { $gte: fifteenMinutesAgo },
-      },
-    },
-    {
-      $group: {
-        _id: '$interactionEvents.type',
-        count: { $sum: 1 },
-      },
-    },
-  ]);
+  // Activity breakdown
+  let reading = 0;
+  let browsing = 0;
+  let recentPurchases = 0;
 
-  const activityMap = new Map(recentActivities.map((a) => [a._id, a.count]));
+  for (const activity of allActivities) {
+    for (const event of activity.interactionEvents || []) {
+      const timestamp = new Date(event.timestamp);
+      if (timestamp >= fifteenMinutesAgo) {
+        if (event.type === 'read') reading++;
+        if (event.type === 'view') browsing++;
+      }
+      if (timestamp >= oneHourAgo && event.type === 'purchase') {
+        recentPurchases++;
+      }
+    }
+  }
 
-  // Recent purchases (last hour)
-  const recentPurchases = await UserActivity.countDocuments({
-    'interactionEvents': {
-      $elemMatch: {
-        type: 'purchase',
-        timestamp: { $gte: oneHourAgo },
-      },
-    },
-  });
+  const allUsers = await User.find({});
+  const recentSignups = allUsers.filter(u => new Date(u.createdAt) >= oneHourAgo).length;
 
-  // Recent signups (last hour)
-  const recentSignups = await User.countDocuments({
-    createdAt: { $gte: oneHourAgo },
-  });
-
-  // Recently published books (last hour)
-  const recentPublished = await Book.countDocuments({
-    'publishingStatus.publishedAt': { $gte: oneHourAgo },
-  });
+  const allBooks = await Book.find({});
+  const recentPublished = allBooks.filter(b => {
+    const publishedAt = b.publishingStatus?.publishedAt;
+    return publishedAt && new Date(publishedAt) >= oneHourAgo;
+  }).length;
 
   return {
     activeNow,
-    reading: activityMap.get('read') || 0,
-    writing: 0, // Would need separate tracking
-    browsing: activityMap.get('view') || 0,
+    reading,
+    writing: 0,
+    browsing,
     recentPurchases,
     recentSignups,
     recentPublished,
@@ -876,113 +825,76 @@ export interface RevenueAnalytics {
 export async function getRevenueAnalytics(
   period: 'day' | 'week' | 'month' = 'month'
 ): Promise<RevenueAnalytics> {
-  const periodDays = period === 'day' ? 1 : period === 'week' ? 7 : 30;
-  const startDate = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
+  const books = await Book.find({
+    'publishingStatus.status': 'published',
+  });
 
   // Book sales revenue
-  const bookRevenue = await Book.aggregate([
-    {
-      $match: {
-        'publishingStatus.status': 'published',
-      },
-    },
-    {
-      $group: {
-        _id: null,
-        totalRevenue: { $sum: '$statistics.revenue' },
-      },
-    },
-  ]);
+  let bookSalesRevenue = 0;
+  const revenueByGenre = new Map<string, number>();
+  const revenueByAuthor = new Map<string, number>();
 
-  // Revenue by genre
-  const revenueByGenre = await Book.aggregate([
-    {
-      $match: {
-        'publishingStatus.status': 'published',
-        'statistics.revenue': { $gt: 0 },
-      },
-    },
-    {
-      $group: {
-        _id: '$genre',
-        revenue: { $sum: '$statistics.revenue' },
-      },
-    },
-    { $sort: { revenue: -1 } },
-    { $limit: 10 },
-  ]);
+  for (const book of books) {
+    const revenue = book.statistics?.revenue || 0;
+    bookSalesRevenue += revenue;
 
-  // Top earning authors
-  const topAuthors = await Book.aggregate([
-    {
-      $match: {
-        'publishingStatus.status': 'published',
-        'statistics.revenue': { $gt: 0 },
-      },
-    },
-    {
-      $group: {
-        _id: '$author',
-        revenue: { $sum: '$statistics.revenue' },
-      },
-    },
-    { $sort: { revenue: -1 } },
-    { $limit: 10 },
-    {
-      $lookup: {
-        from: 'users',
-        localField: '_id',
-        foreignField: '_id',
-        as: 'authorInfo',
-      },
-    },
-    { $unwind: '$authorInfo' },
-  ]);
+    const genre = book.genre || 'Unknown';
+    revenueByGenre.set(genre, (revenueByGenre.get(genre) || 0) + revenue);
 
-  // Calculate subscription revenue (simplified estimate)
-  const premiumUsers = await User.countDocuments({ 'subscription.plan': 'PREMIUM' });
-  const standardUsers = await User.countDocuments({ 'subscription.plan': 'STANDARD' });
+    const authorId = book.author;
+    revenueByAuthor.set(authorId, (revenueByAuthor.get(authorId) || 0) + revenue);
+  }
+
+  // Subscription revenue
+  const users = await User.find({});
+  const premiumUsers = users.filter(u => u.subscription?.plan === 'PREMIUM').length;
+  const standardUsers = users.filter(u => u.subscription?.plan === 'STANDARD').length;
+  const periodDays = period === 'day' ? 1 : period === 'week' ? 7 : 30;
   const subscriptionRevenue = (premiumUsers * 99 + standardUsers * 49) / 12 * (periodDays / 30);
 
-  const totalRevenue = (bookRevenue[0]?.totalRevenue || 0) + subscriptionRevenue;
+  const totalRevenue = bookSalesRevenue + subscriptionRevenue;
 
-  // Calculate growth (simplified)
-  const previousPeriodRevenue = totalRevenue * 0.9; // Placeholder
-  const revenueGrowth = previousPeriodRevenue > 0
-    ? ((totalRevenue - previousPeriodRevenue) / previousPeriodRevenue) * 100
-    : 0;
+  // Top genres
+  const sortedGenres = Array.from(revenueByGenre.entries())
+    .map(([genre, revenue]) => ({ genre, revenue: Math.round(revenue * 100) / 100 }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 10);
 
-  // Average order value (from purchases)
-  const purchaseCount = await UserActivity.aggregate([
-    { $unwind: '$interactionEvents' },
-    {
-      $match: {
-        'interactionEvents.type': 'purchase',
-        'interactionEvents.timestamp': { $gte: startDate },
-      },
-    },
-    { $count: 'total' },
-  ]);
+  // Top authors
+  const sortedAuthors = Array.from(revenueByAuthor.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
 
-  const totalPurchases = purchaseCount[0]?.total || 1;
-  const averageOrderValue = (bookRevenue[0]?.totalRevenue || 0) / totalPurchases;
+  const topEarningAuthors: Array<{ authorId: string; name: string; revenue: number }> = [];
+  for (const [authorId, revenue] of sortedAuthors) {
+    const author = await User.findById(authorId);
+    if (author) {
+      topEarningAuthors.push({
+        authorId,
+        name: author.name,
+        revenue: Math.round(revenue * 100) / 100,
+      });
+    }
+  }
+
+  // Purchase count for AOV
+  let purchaseCount = 0;
+  const allActivities = await UserActivity.find({});
+  for (const activity of allActivities) {
+    purchaseCount += (activity.interactionEvents || []).filter(e => e.type === 'purchase').length;
+  }
+
+  const averageOrderValue = purchaseCount > 0 ? bookSalesRevenue / purchaseCount : 0;
 
   return {
     period,
     totalRevenue: Math.round(totalRevenue * 100) / 100,
-    bookSalesRevenue: Math.round((bookRevenue[0]?.totalRevenue || 0) * 100) / 100,
+    bookSalesRevenue: Math.round(bookSalesRevenue * 100) / 100,
     subscriptionRevenue: Math.round(subscriptionRevenue * 100) / 100,
     averageOrderValue: Math.round(averageOrderValue * 100) / 100,
-    revenueByGenre: revenueByGenre.map((r) => ({
-      genre: r._id || 'Unknown',
-      revenue: Math.round(r.revenue * 100) / 100,
-    })),
-    topEarningAuthors: topAuthors.map((a) => ({
-      authorId: a._id.toString(),
-      name: a.authorInfo.name,
-      revenue: Math.round(a.revenue * 100) / 100,
-    })),
-    revenueGrowth: Math.round(revenueGrowth * 10) / 10,
+    revenueByGenre: sortedGenres,
+    topEarningAuthors,
+    revenueGrowth: 0, // Would need historical data
   };
 }
 
@@ -997,9 +909,57 @@ export interface SocialEngagementOverview {
   averageLikesPerBook: number;
   averageSharesPerBook: number;
   averageCommentsPerBook: number;
-  likesGrowth: number; // % change from previous period
+  likesGrowth: number;
   sharesGrowth: number;
   commentsGrowth: number;
+}
+
+/**
+ * Get social engagement overview metrics
+ */
+export async function getSocialEngagementOverview(): Promise<SocialEngagementOverview> {
+  const books = await Book.find({
+    'publishingStatus.status': 'published',
+  });
+
+  let totalLikes = 0;
+  let totalShares = 0;
+  let totalComments = 0;
+
+  for (const book of books) {
+    totalLikes += book.likes || 0;
+    totalShares += book.statistics?.shares || 0;
+    totalComments += book.statistics?.totalReviews || 0;
+  }
+
+  const bookCount = books.length || 1;
+
+  // Get messaging stats
+  let totalConversations = 0;
+  let totalMessages = 0;
+  try {
+    const { Conversation, Message } = await import('../models/Message');
+    const conversations = await Conversation.find({});
+    totalConversations = conversations.filter(c => c.isActive).length;
+    const messages = await Message.find({});
+    totalMessages = messages.length;
+  } catch {
+    // Message model might not exist
+  }
+
+  return {
+    totalLikes,
+    totalShares,
+    totalComments,
+    totalConversations,
+    totalMessages,
+    averageLikesPerBook: Math.round((totalLikes / bookCount) * 10) / 10,
+    averageSharesPerBook: Math.round((totalShares / bookCount) * 10) / 10,
+    averageCommentsPerBook: Math.round((totalComments / bookCount) * 10) / 10,
+    likesGrowth: 0,
+    sharesGrowth: 0,
+    commentsGrowth: 0,
+  };
 }
 
 export interface EngagedUser {
@@ -1016,6 +976,57 @@ export interface EngagedUser {
   joinedAt: Date;
 }
 
+/**
+ * Get most engaged users
+ */
+export async function getMostEngagedUsers(limit: number = 20): Promise<EngagedUser[]> {
+  const allActivities = await UserActivity.find({});
+  const userStats = new Map<string, {
+    likes: number;
+    shares: number;
+    comments: number;
+  }>();
+
+  for (const activity of allActivities) {
+    if (!userStats.has(activity.userId)) {
+      userStats.set(activity.userId, { likes: 0, shares: 0, comments: 0 });
+    }
+    const stats = userStats.get(activity.userId)!;
+
+    for (const event of activity.interactionEvents || []) {
+      if (event.type === 'like') stats.likes++;
+      if (event.type === 'share') stats.shares++;
+      if (event.type === 'comment' || event.type === 'review') stats.comments++;
+    }
+  }
+
+  const users: EngagedUser[] = [];
+  for (const [userId, stats] of userStats) {
+    const user = await User.findById(userId);
+    if (!user) continue;
+
+    const engagementScore = stats.likes * 1 + stats.shares * 5 + stats.comments * 3;
+
+    users.push({
+      userId,
+      name: user.name,
+      email: user.email,
+      avatar: user.profile?.avatar,
+      totalLikes: stats.likes,
+      totalShares: stats.shares,
+      totalComments: stats.comments,
+      conversationsStarted: 0,
+      messagesSent: 0,
+      engagementScore: Math.round(engagementScore * 10) / 10,
+      joinedAt: user.createdAt,
+    });
+  }
+
+  return users
+    .sort((a, b) => b.engagementScore - a.engagementScore)
+    .slice(0, limit);
+}
+
 export interface TopEngagedBook {
   bookId: string;
   title: string;
@@ -1024,178 +1035,7 @@ export interface TopEngagedBook {
   shares: number;
   comments: number;
   engagementScore: number;
-  socialVelocity: number; // Engagement growth rate
-}
-
-/**
- * Get social engagement overview metrics
- */
-export async function getSocialEngagementOverview(): Promise<SocialEngagementOverview> {
-  // Get current totals
-  const bookStats = await Book.aggregate([
-    {
-      $match: { 'publishingStatus.status': 'published' },
-    },
-    {
-      $group: {
-        _id: null,
-        totalLikes: { $sum: '$likes' },
-        totalShares: { $sum: '$statistics.shares' },
-        totalComments: { $sum: '$statistics.totalReviews' },
-        bookCount: { $sum: 1 },
-      },
-    },
-  ]);
-
-  // Get messaging stats (if Message model exists)
-  let totalConversations = 0;
-  let totalMessages = 0;
-  try {
-    const { Conversation, Message } = await import('../models/Message');
-    totalConversations = await Conversation.countDocuments({ isActive: true });
-    totalMessages = await Message.countDocuments();
-  } catch {
-    // Message model might not exist
-  }
-
-  // Calculate previous period stats for growth calculation
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const previousPeriodStats = await UserActivity.aggregate([
-    { $unwind: '$interactionEvents' },
-    {
-      $match: {
-        'interactionEvents.timestamp': { $lt: thirtyDaysAgo },
-        'interactionEvents.type': { $in: ['like', 'share', 'comment'] },
-      },
-    },
-    {
-      $group: {
-        _id: '$interactionEvents.type',
-        count: { $sum: 1 },
-      },
-    },
-  ]);
-
-  const prevStats = new Map(previousPeriodStats.map((s) => [s._id, s.count]));
-  const currentStats = bookStats[0] || { totalLikes: 0, totalShares: 0, totalComments: 0, bookCount: 1 };
-
-  // Calculate growth rates
-  const calcGrowth = (current: number, previous: number) => {
-    if (previous === 0) return current > 0 ? 100 : 0;
-    return Math.round(((current - previous) / previous) * 100 * 10) / 10;
-  };
-
-  return {
-    totalLikes: currentStats.totalLikes,
-    totalShares: currentStats.totalShares,
-    totalComments: currentStats.totalComments,
-    totalConversations,
-    totalMessages,
-    averageLikesPerBook: Math.round((currentStats.totalLikes / currentStats.bookCount) * 10) / 10,
-    averageSharesPerBook: Math.round((currentStats.totalShares / currentStats.bookCount) * 10) / 10,
-    averageCommentsPerBook: Math.round((currentStats.totalComments / currentStats.bookCount) * 10) / 10,
-    likesGrowth: calcGrowth(currentStats.totalLikes, prevStats.get('like') || 0),
-    sharesGrowth: calcGrowth(currentStats.totalShares, prevStats.get('share') || 0),
-    commentsGrowth: calcGrowth(currentStats.totalComments, prevStats.get('comment') || 0),
-  };
-}
-
-/**
- * Get most engaged users
- */
-export async function getMostEngagedUsers(limit: number = 20): Promise<EngagedUser[]> {
-  // Get messaging stats
-  let conversationsByUser: Map<string, number> = new Map();
-  let messagesByUser: Map<string, number> = new Map();
-
-  try {
-    const { Conversation, Message } = await import('../models/Message');
-
-    const convStats = await Conversation.aggregate([
-      { $unwind: '$participants' },
-      { $group: { _id: '$participants', count: { $sum: 1 } } },
-    ]);
-    conversationsByUser = new Map(convStats.map((s) => [s._id.toString(), s.count]));
-
-    const msgStats = await Message.aggregate([
-      { $group: { _id: '$sender', count: { $sum: 1 } } },
-    ]);
-    messagesByUser = new Map(msgStats.map((s) => [s._id.toString(), s.count]));
-  } catch {
-    // Ignore if models don't exist
-  }
-
-  // Get interaction stats from UserActivity
-  const engagementStats = await UserActivity.aggregate([
-    { $unwind: '$interactionEvents' },
-    {
-      $match: {
-        'interactionEvents.type': { $in: ['like', 'share', 'comment', 'review'] },
-      },
-    },
-    {
-      $group: {
-        _id: {
-          userId: '$userId',
-          type: '$interactionEvents.type',
-        },
-        count: { $sum: 1 },
-      },
-    },
-    {
-      $group: {
-        _id: '$_id.userId',
-        interactions: {
-          $push: { type: '$_id.type', count: '$count' },
-        },
-      },
-    },
-    {
-      $lookup: {
-        from: 'users',
-        localField: '_id',
-        foreignField: '_id',
-        as: 'userInfo',
-      },
-    },
-    { $unwind: '$userInfo' },
-  ]);
-
-  const users: EngagedUser[] = engagementStats.map((stat) => {
-    const interactionMap = new Map(stat.interactions.map((i: any) => [i.type, i.count]));
-    const likes = Number(interactionMap.get('like') || 0);
-    const shares = Number(interactionMap.get('share') || 0);
-    const comments = Number(interactionMap.get('comment') || 0) + Number(interactionMap.get('review') || 0);
-    const conversations = conversationsByUser.get(stat._id.toString()) || 0;
-    const messages = messagesByUser.get(stat._id.toString()) || 0;
-
-    // Calculate engagement score
-    const engagementScore =
-      likes * 1 +
-      shares * 5 +
-      comments * 3 +
-      conversations * 2 +
-      messages * 0.5;
-
-    return {
-      userId: stat._id.toString(),
-      name: stat.userInfo.name,
-      email: stat.userInfo.email,
-      avatar: stat.userInfo.profile?.avatar,
-      totalLikes: likes,
-      totalShares: shares,
-      totalComments: comments,
-      conversationsStarted: conversations,
-      messagesSent: messages,
-      engagementScore: Math.round(engagementScore * 10) / 10,
-      joinedAt: stat.userInfo.createdAt,
-    };
-  });
-
-  // Sort by engagement score and return top users
-  return users
-    .sort((a, b) => b.engagementScore - a.engagementScore)
-    .slice(0, limit);
+  socialVelocity: number;
 }
 
 /**
@@ -1204,53 +1044,32 @@ export async function getMostEngagedUsers(limit: number = 20): Promise<EngagedUs
 export async function getTopEngagedBooks(limit: number = 20): Promise<TopEngagedBook[]> {
   const books = await Book.find({
     'publishingStatus.status': 'published',
-    $or: [
-      { likes: { $gt: 0 } },
-      { 'statistics.shares': { $gt: 0 } },
-      { 'statistics.totalReviews': { $gt: 0 } },
-    ],
-  })
-    .sort({ likes: -1 })
-    .limit(limit * 2) // Get extra for scoring
-    .populate('author', 'name')
-    .lean();
-
-  const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  });
 
   const results: TopEngagedBook[] = [];
 
   for (const book of books) {
-    // Calculate recent engagement for velocity
-    const recentEngagement = await UserActivity.countDocuments({
-      'interactionEvents.bookId': book._id,
-      'interactionEvents.type': { $in: ['like', 'share', 'comment'] },
-      'interactionEvents.timestamp': { $gte: weekAgo },
-    });
-
     const likes = book.likes || 0;
     const shares = book.statistics?.shares || 0;
     const comments = book.statistics?.totalReviews || 0;
 
-    // Calculate engagement score with weighted components
-    const engagementScore =
-      likes * 1 +
-      shares * 5 + // Shares are valuable (viral)
-      comments * 3; // Comments indicate deep engagement
+    if (likes === 0 && shares === 0 && comments === 0) continue;
+
+    const author = await User.findById(book.author);
+    const engagementScore = likes * 1 + shares * 5 + comments * 3;
 
     results.push({
-      bookId: book._id.toString(),
+      bookId: book.id,
       title: book.title,
-      authorName: (book.author as any)?.name || 'Unknown',
+      authorName: author?.name || 'Unknown',
       likes,
       shares,
       comments,
       engagementScore,
-      socialVelocity: recentEngagement, // How active this week
+      socialVelocity: 0,
     });
   }
 
-  // Sort by engagement score
   return results
     .sort((a, b) => b.engagementScore - a.engagementScore)
     .slice(0, limit);
@@ -1262,51 +1081,34 @@ export async function getTopEngagedBooks(limit: number = 20): Promise<TopEngaged
 export async function getSocialEngagementTrends(days: number = 30): Promise<any[]> {
   const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-  const trends = await UserActivity.aggregate([
-    { $unwind: '$interactionEvents' },
-    {
-      $match: {
-        'interactionEvents.timestamp': { $gte: startDate },
-        'interactionEvents.type': { $in: ['like', 'share', 'comment', 'review'] },
-      },
-    },
-    {
-      $group: {
-        _id: {
-          date: {
-            $dateToString: {
-              format: '%Y-%m-%d',
-              date: '$interactionEvents.timestamp',
-            },
-          },
-          type: '$interactionEvents.type',
-        },
-        count: { $sum: 1 },
-      },
-    },
-    {
-      $group: {
-        _id: '$_id.date',
-        metrics: {
-          $push: { type: '$_id.type', count: '$count' },
-        },
-      },
-    },
-    { $sort: { _id: 1 } },
-  ]);
+  const allActivities = await UserActivity.find({});
+  const dateStats = new Map<string, { likes: number; shares: number; comments: number }>();
 
-  return trends.map((t) => {
-    const metricsMap = new Map(t.metrics.map((m: any) => [m.type, m.count]));
-    const likes = Number(metricsMap.get('like') || 0);
-    const shares = Number(metricsMap.get('share') || 0);
-    const commentCount = Number(metricsMap.get('comment') || 0);
-    const reviewCount = Number(metricsMap.get('review') || 0);
-    return {
-      date: t._id,
-      likes,
-      shares,
-      comments: commentCount + reviewCount,
-      total: likes + shares + commentCount + reviewCount,
-    };
-  });
+  for (const activity of allActivities) {
+    for (const event of activity.interactionEvents || []) {
+      const timestamp = new Date(event.timestamp);
+      if (timestamp < startDate) continue;
+      if (!['like', 'share', 'comment', 'review'].includes(event.type)) continue;
+
+      const dateKey = timestamp.toISOString().split('T')[0];
+      if (!dateStats.has(dateKey)) {
+        dateStats.set(dateKey, { likes: 0, shares: 0, comments: 0 });
+      }
+      const stats = dateStats.get(dateKey)!;
+
+      if (event.type === 'like') stats.likes++;
+      if (event.type === 'share') stats.shares++;
+      if (event.type === 'comment' || event.type === 'review') stats.comments++;
+    }
+  }
+
+  return Array.from(dateStats.entries())
+    .map(([date, stats]) => ({
+      date,
+      likes: stats.likes,
+      shares: stats.shares,
+      comments: stats.comments,
+      total: stats.likes + stats.shares + stats.comments,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 }

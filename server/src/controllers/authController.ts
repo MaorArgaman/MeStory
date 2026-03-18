@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import { User, UserRole } from '../models/User';
+import { User, UserRole, IUser } from '../models/User';
 import { generateToken } from '../utils/jwt';
 import { AuthRequest } from '../types';
 import {
@@ -33,21 +33,21 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     // Generate verification code
     const verificationCode = generateVerificationCode();
-    const verificationCodeExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    const verificationCodeExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes
 
     // Create new user with free tier defaults
-    const user = new User({
+    const user = await User.create({
       name,
       email: email.toLowerCase(),
       password: hashedPassword,
       role: UserRole.FREE,
       credits: 100, // Free tier starts with 100 credits
       subscription: {
-        tier: UserRole.FREE,
+        tier: 'free',
         price: 0,
         credits: 100,
-        startDate: new Date(),
-        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year
         isActive: true,
       },
       emailVerification: {
@@ -57,8 +57,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       },
     });
 
-    await user.save();
-
     // Send verification email (async, don't block)
     sendVerificationEmail(user.email, user.name, verificationCode).catch((err) =>
       console.error('Failed to send verification email:', err)
@@ -66,7 +64,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     // Generate JWT token (60-day expiry as per Section 17.1)
     const token = generateToken({
-      id: user._id.toString(),
+      id: user.id,
       email: user.email,
       role: user.role,
     });
@@ -77,7 +75,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       message: 'User registered successfully. Please check your email for verification code.',
       data: {
         user: {
-          id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
           role: user.role,
@@ -109,7 +107,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
 
     // Find user by email (include password field)
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    const user = await User.findOne({ email: email.toLowerCase() }, true);
 
     if (!user) {
       res.status(401).json({
@@ -132,7 +130,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     // Generate JWT token
     const token = generateToken({
-      id: user._id.toString(),
+      id: user.id,
       email: user.email,
       role: user.role,
     });
@@ -143,7 +141,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       message: 'Login successful',
       data: {
         user: {
-          id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
           role: user.role,
@@ -222,7 +220,7 @@ export const verifyEmail = async (req: AuthRequest, res: Response): Promise<void
     // Check if code has expired
     if (
       user.emailVerification?.verificationCodeExpires &&
-      user.emailVerification.verificationCodeExpires < new Date()
+      new Date(user.emailVerification.verificationCodeExpires) < new Date()
     ) {
       res.status(400).json({
         success: false,
@@ -232,14 +230,15 @@ export const verifyEmail = async (req: AuthRequest, res: Response): Promise<void
     }
 
     // Mark email as verified
-    user.emailVerification = {
-      isVerified: true,
-      verifiedAt: new Date(),
-      verificationCode: undefined,
-      verificationCodeExpires: undefined,
-    };
-
-    await user.save();
+    const verifiedAt = new Date().toISOString();
+    await User.findByIdAndUpdate(user.id, {
+      emailVerification: {
+        isVerified: true,
+        verifiedAt,
+        verificationCode: undefined,
+        verificationCodeExpires: undefined,
+      },
+    });
 
     // Send welcome email (async)
     sendWelcomeEmail(user.email, user.name).catch((err) =>
@@ -252,7 +251,7 @@ export const verifyEmail = async (req: AuthRequest, res: Response): Promise<void
       data: {
         emailVerification: {
           isVerified: true,
-          verifiedAt: user.emailVerification.verifiedAt,
+          verifiedAt,
         },
       },
     });
@@ -300,16 +299,15 @@ export const resendVerificationCode = async (req: AuthRequest, res: Response): P
 
     // Generate new verification code
     const verificationCode = generateVerificationCode();
-    const verificationCodeExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    const verificationCodeExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes
 
-    user.emailVerification = {
-      ...user.emailVerification,
-      isVerified: false,
-      verificationCode,
-      verificationCodeExpires,
-    };
-
-    await user.save();
+    await User.findByIdAndUpdate(user.id, {
+      emailVerification: {
+        isVerified: false,
+        verificationCode,
+        verificationCodeExpires,
+      },
+    });
 
     // Send verification email
     const sent = await sendVerificationEmail(user.email, user.name, verificationCode);
@@ -349,8 +347,8 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
       return;
     }
 
-    // Find user by ID (exclude password)
-    const user = await User.findById(req.user.id).select('-password');
+    // Find user by ID (password not included by default)
+    const user = await User.findById(req.user.id);
 
     if (!user) {
       res.status(404).json({
@@ -364,7 +362,7 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
       success: true,
       data: {
         user: {
-          id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
           role: user.role,
@@ -376,8 +374,8 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
             isVerified: user.emailVerification?.isVerified || false,
             verifiedAt: user.emailVerification?.verifiedAt,
           },
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
+          createdAt: user.created_at,
+          updatedAt: user.updated_at,
         },
       },
     });
@@ -416,29 +414,29 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    // Update basic fields
-    if (name) user.name = name;
+    // Build update object
+    const updateData: Partial<IUser> = {};
+    if (name) updateData.name = name;
 
     // Update profile fields
-    if (!user.profile) {
-      user.profile = {};
-    }
-    if (bio !== undefined) user.profile.bio = bio;
-    if (avatar !== undefined) user.profile.avatar = avatar;
+    const updatedProfile = { ...user.profile };
+    if (bio !== undefined) updatedProfile.bio = bio;
+    if (avatar !== undefined) updatedProfile.avatar = avatar;
+    updateData.profile = updatedProfile;
 
-    await user.save();
+    const updatedUser = await User.findByIdAndUpdate(user.id, updateData, { new: true });
 
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
       data: {
         user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          credits: user.credits,
-          profile: user.profile,
+          id: updatedUser?.id,
+          name: updatedUser?.name,
+          email: updatedUser?.email,
+          role: updatedUser?.role,
+          credits: updatedUser?.credits,
+          profile: updatedUser?.profile,
         },
       },
     });

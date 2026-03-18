@@ -4,8 +4,10 @@
  */
 
 import { Response } from 'express';
-import mongoose from 'mongoose';
 import { Book } from '../models/Book';
+
+// UUID validation function for Supabase
+const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 import { AuthRequest } from '../types';
 import {
   generateSpeech,
@@ -131,7 +133,7 @@ export const narrateChapter = async (req: AuthRequest, res: Response): Promise<v
     const { voice, speed = 1.0, provider = 'browser' } = req.body;
 
     // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -228,7 +230,7 @@ export const prepareChapterText = async (req: AuthRequest, res: Response): Promi
     const { bookId, chapterIndex } = req.params;
 
     // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',

@@ -4,10 +4,12 @@
  */
 
 import { Response } from 'express';
-import mongoose from 'mongoose';
 import { AuthRequest } from '../types';
 import * as notificationService from '../services/notificationService';
 import { NotificationType } from '../models/Notification';
+
+// UUID validation regex for Supabase
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Get user notifications
@@ -121,7 +123,7 @@ export const markAsRead = async (req: AuthRequest, res: Response): Promise<void>
 
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!UUID_REGEX.test(id)) {
       res.status(400).json({ success: false, error: 'Invalid notification ID' });
       return;
     }
@@ -186,7 +188,7 @@ export const archiveNotification = async (req: AuthRequest, res: Response): Prom
 
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!UUID_REGEX.test(id)) {
       res.status(400).json({ success: false, error: 'Invalid notification ID' });
       return;
     }
@@ -224,7 +226,7 @@ export const deleteNotification = async (req: AuthRequest, res: Response): Promi
 
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!UUID_REGEX.test(id)) {
       res.status(400).json({ success: false, error: 'Invalid notification ID' });
       return;
     }

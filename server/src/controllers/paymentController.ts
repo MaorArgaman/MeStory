@@ -90,8 +90,8 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
       console.log(`💳 [MOCK ORDER ID] ${mockOrderId}`);
 
       // Create pending transaction
-      const transaction = new Transaction({
-        userId: user._id,
+      const transaction = await Transaction.create({
+        userId: user.id,
         amount: planDetails.price,
         currency: 'USD',
         plan: planType,
@@ -104,8 +104,6 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
           creditsToAdd: planDetails.credits,
         },
       });
-
-      await transaction.save();
 
       res.status(200).json({
         success: true,
@@ -170,7 +168,7 @@ export const captureOrder = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     // Verify transaction belongs to user
-    if (transaction.userId.toString() !== req.user.id) {
+    if (transaction.userId !== req.user.id) {
       res.status(403).json({
         success: false,
         error: 'Unauthorized access to this transaction',
@@ -205,54 +203,57 @@ export const captureOrder = async (req: AuthRequest, res: Response): Promise<voi
       const previousPlan = user.role;
       const previousCredits = user.credits;
 
-      // Update user subscription
-      user.role = planDetails.tier;
-      user.credits = planDetails.credits === -1 ? 999999 : planDetails.credits;
-
       const now = new Date();
       const endDate = new Date(now);
       endDate.setMonth(endDate.getMonth() + 1); // 1 month subscription
 
-      user.subscription = {
-        tier: planDetails.tier,
-        price: planDetails.price,
-        credits: planDetails.credits,
-        startDate: now,
-        endDate: endDate,
-        isActive: true,
-        autoRenew: true,
-      };
+      const newRole = planDetails.tier;
+      const newCredits = planDetails.credits === -1 ? 999999 : planDetails.credits;
 
-      await user.save();
+      // Update user subscription
+      const updatedUser = await User.findByIdAndUpdate(user.id, {
+        role: newRole,
+        credits: newCredits,
+        subscription: {
+          tier: planDetails.tier,
+          price: planDetails.price,
+          credits: planDetails.credits,
+          startDate: now,
+          endDate: endDate,
+          isActive: true,
+          autoRenew: true,
+        },
+      });
 
       // Update transaction status
-      transaction.status = 'completed';
-      transaction.paypalCaptureId = `MOCK-CAPTURE-${Date.now()}`;
-      transaction.metadata = {
-        ...transaction.metadata,
-        previousPlan,
-        previousCredits,
-        newPlan: user.role,
-        newCredits: user.credits,
-        capturedAt: now,
-      };
-      await transaction.save();
+      const updatedTransaction = await Transaction.findByIdAndUpdate(transaction.id, {
+        status: 'completed',
+        paypalCaptureId: `MOCK-CAPTURE-${Date.now()}`,
+        metadata: {
+          ...transaction.metadata,
+          previousPlan,
+          previousCredits,
+          newPlan: newRole,
+          newCredits: newCredits,
+          capturedAt: now,
+        },
+      });
 
       console.log(`✅ [MOCK MODE] Order captured successfully`);
-      console.log(`✅ User upgraded: ${previousPlan} → ${user.role}`);
-      console.log(`✅ Credits updated: ${previousCredits} → ${user.credits}`);
+      console.log(`✅ User upgraded: ${previousPlan} → ${newRole}`);
+      console.log(`✅ Credits updated: ${previousCredits} → ${newCredits}`);
 
       // Send payment and subscription notifications (async, don't wait)
       const planLabel = transaction.plan.charAt(0).toUpperCase() + transaction.plan.slice(1);
       const isUpgrade = previousPlan === UserRole.FREE ||
         (previousPlan === UserRole.STANDARD && transaction.plan === 'premium');
 
-      const userId = (req as any).user?.id || user._id.toString();
+      const userId = (req as any).user?.id || user.id;
       notifyPaymentReceived(
         userId,
         transaction.amount,
         'USD',
-        transaction.orderId || transaction._id.toString(),
+        transaction.orderId || transaction.id,
         `שדרוג לחבילת ${planLabel}`
       ).catch((err) => console.error('Failed to send payment notification:', err));
 
@@ -291,7 +292,7 @@ export const captureOrder = async (req: AuthRequest, res: Response): Promise<voi
       sendPayPalReceiptEmail(
         user.email,
         user.name,
-        transaction.orderId || transaction._id.toString(),
+        transaction.orderId || transaction.id,
         `שדרוג לחבילת ${planLabel}`,
         transaction.amount,
         'USD'
@@ -302,14 +303,14 @@ export const captureOrder = async (req: AuthRequest, res: Response): Promise<voi
         message: 'Payment captured successfully (Mock Mode)',
         data: {
           transaction: {
-            id: transaction._id,
+            id: transaction.id,
             orderId: transaction.orderId,
             amount: transaction.amount,
             plan: transaction.plan,
             status: transaction.status,
           },
           user: {
-            id: user._id,
+            id: user.id,
             name: user.name,
             email: user.email,
             role: user.role,

@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import { Book, IBook } from '../models/Book';
 import { UserActivity, IUserActivity } from '../models/UserActivity';
 import { User } from '../models/User';
@@ -51,7 +50,7 @@ function calculateNegativeSignalPenalty(
 
   // Penalty for low ratings given to this author
   const authorPref = userActivity.authorPreferences.find(
-    (a) => a.authorId.toString() === book.author?._id?.toString()
+    (a) => a.authorId === book.author?.id
   );
   if (authorPref && authorPref.averageRating > 0 && authorPref.averageRating < 2.5 && authorPref.booksRead > 0) {
     penalty += 0.2;
@@ -180,12 +179,10 @@ function hasUserInteracted(
   userActivity: IUserActivity,
   bookId: string
 ): boolean {
-  const bookIdStr = bookId.toString();
-
   return (
-    userActivity.completedBooks.some((id) => id.toString() === bookIdStr) ||
-    userActivity.currentlyReading.some((id) => id.toString() === bookIdStr) ||
-    userActivity.abandonedBooks.some((id) => id.toString() === bookIdStr)
+    userActivity.completedBooks.some((id) => id === bookId) ||
+    userActivity.currentlyReading.some((id) => id === bookId) ||
+    userActivity.abandonedBooks.some((id) => id === bookId)
   );
 }
 
@@ -202,29 +199,28 @@ export async function getPersonalizedRecommendations(
 
     if (!userActivity) {
       // New user - create profile and return popular books
-      userActivity = new UserActivity({ userId });
-      await userActivity.save();
+      userActivity = await UserActivity.create({ userId });
       return getTrendingBooks(limit);
     }
 
     // Get all published books
-    const books = await Book.find({
+    const allBooks = await Book.find({
       'publishingStatus.status': 'published',
       'publishingStatus.isPublic': true,
-      author: { $ne: userId }, // Exclude user's own books
-    })
-      .populate('author', 'name profile.avatar')
-      .lean();
+    });
+
+    // Filter out user's own books in memory
+    const books = allBooks.filter(b => b.author !== userId);
 
     // Calculate scores for each book
     const scoredBooks: RecommendationScore[] = books
-      .filter((book) => !hasUserInteracted(userActivity!, book._id.toString()))
+      .filter((book) => !hasUserInteracted(userActivity!, book.id))
       .map((book) => {
         const reasons: string[] = [];
 
         // Calculate individual scores
         const genreScore = calculateGenreScore(userActivity!, book.genre);
-        const authorScore = calculateAuthorScore(userActivity!, book.author._id.toString());
+        const authorScore = calculateAuthorScore(userActivity!, book.author?.id || book.author);
         const qualityScore = calculateQualityScore(book as unknown as IBook);
         const popularityScore = calculatePopularityScore(book as unknown as IBook);
         const freshnessScore = calculateFreshnessScore(book as unknown as IBook);
@@ -250,7 +246,7 @@ export async function getPersonalizedRecommendations(
         const finalScore = Math.max(0, baseScore - negativePenalty);
 
         return {
-          bookId: book._id.toString(),
+          bookId: book.id,
           score: finalScore,
           reasons: reasons.length > 0 ? reasons : ['Recommended for you'],
         };
@@ -258,14 +254,10 @@ export async function getPersonalizedRecommendations(
 
     // Sort by score and take top results
     scoredBooks.sort((a, b) => b.score - a.score);
-    const topBookIds = scoredBooks.slice(0, limit).map((s) => s.bookId);
+    const topBookIds = new Set(scoredBooks.slice(0, limit).map((s) => s.bookId));
 
-    // Get full book objects
-    const recommendedBooks = await Book.find({
-      _id: { $in: topBookIds },
-    })
-      .populate('author', 'name profile.avatar')
-      .lean();
+    // Get full book objects from already-fetched books
+    const recommendedBooks = books.filter(b => topBookIds.has(b.id));
 
     // Create reasons map
     const reasonsMap = new Map<string, string[]>();
@@ -273,8 +265,8 @@ export async function getPersonalizedRecommendations(
 
     // Sort books by their recommendation score
     const sortedBooks = recommendedBooks.sort((a, b) => {
-      const scoreA = scoredBooks.find((s) => s.bookId === a._id.toString())?.score || 0;
-      const scoreB = scoredBooks.find((s) => s.bookId === b._id.toString())?.score || 0;
+      const scoreA = scoredBooks.find((s) => s.bookId === a.id)?.score || 0;
+      const scoreB = scoredBooks.find((s) => s.bookId === b.id)?.score || 0;
       return scoreB - scoreA;
     });
 
@@ -292,26 +284,25 @@ export async function getPersonalizedRecommendations(
  * Get trending/popular books (fallback for new users)
  */
 export async function getTrendingBooks(limit: number = 20): Promise<RecommendationResult> {
-  const books = await Book.find({
+  const allBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
-  })
-    .sort({
-      'statistics.views': -1,
-      'statistics.purchases': -1,
-      'qualityScore.overallScore': -1,
-    })
-    .limit(limit)
-    .populate('author', 'name profile.avatar')
-    .lean();
+  });
+
+  // Sort by engagement in memory
+  const sorted = allBooks.sort((a, b) => {
+    const scoreA = (a.statistics?.views || 0) + (a.statistics?.purchases || 0) * 10 + (a.qualityScore?.overallScore || 0);
+    const scoreB = (b.statistics?.views || 0) + (b.statistics?.purchases || 0) * 10 + (b.qualityScore?.overallScore || 0);
+    return scoreB - scoreA;
+  }).slice(0, limit);
 
   const reasonsMap = new Map<string, string[]>();
-  books.forEach((book) => {
-    reasonsMap.set(book._id.toString(), ['Trending on MeStory']);
+  sorted.forEach((book) => {
+    reasonsMap.set(book.id, ['Trending on MeStory']);
   });
 
   return {
-    books: books as unknown as IBook[],
+    books: sorted as unknown as IBook[],
     reasons: reasonsMap,
   };
 }
@@ -325,21 +316,28 @@ export async function getNewReleases(
 ): Promise<IBook[]> {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const books = await Book.find({
+  const allBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
-    'publishingStatus.publishedAt': { $gte: thirtyDaysAgo },
-    $or: [
-      { 'qualityScore.overallScore': { $gte: minQualityScore } },
-      { qualityScore: { $exists: false } }, // Include unscored new books
-    ],
-  })
-    .sort({ 'publishingStatus.publishedAt': -1 })
-    .limit(limit)
-    .populate('author', 'name profile.avatar')
-    .lean();
+  });
 
-  return books as unknown as IBook[];
+  // Filter and sort in memory
+  const filtered = allBooks.filter(b => {
+    const publishedAt = b.publishingStatus?.publishedAt;
+    if (!publishedAt || new Date(publishedAt) < thirtyDaysAgo) return false;
+
+    // Include unscored new books or those meeting quality threshold
+    const quality = b.qualityScore?.overallScore;
+    return quality === undefined || quality >= minQualityScore;
+  });
+
+  const sorted = filtered.sort((a, b) => {
+    const dateA = new Date(a.publishingStatus?.publishedAt || 0);
+    const dateB = new Date(b.publishingStatus?.publishedAt || 0);
+    return dateB.getTime() - dateA.getTime();
+  }).slice(0, limit);
+
+  return sorted as unknown as IBook[];
 }
 
 /**
@@ -349,20 +347,26 @@ export async function getBooksByGenre(
   genre: string,
   limit: number = 20
 ): Promise<IBook[]> {
-  const books = await Book.find({
+  const allBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
-    genre: { $regex: new RegExp(genre, 'i') },
-  })
-    .sort({
-      'qualityScore.overallScore': -1,
-      'statistics.views': -1,
-    })
-    .limit(limit)
-    .populate('author', 'name profile.avatar')
-    .lean();
+  });
 
-  return books as unknown as IBook[];
+  // Filter by genre (case-insensitive) in memory
+  const genreLower = genre.toLowerCase();
+  const filtered = allBooks.filter(b =>
+    (b.genre || '').toLowerCase().includes(genreLower)
+  );
+
+  // Sort by quality and views
+  const sorted = filtered.sort((a, b) => {
+    const qualityA = a.qualityScore?.overallScore || 0;
+    const qualityB = b.qualityScore?.overallScore || 0;
+    if (qualityA !== qualityB) return qualityB - qualityA;
+    return (b.statistics?.views || 0) - (a.statistics?.views || 0);
+  }).slice(0, limit);
+
+  return sorted as unknown as IBook[];
 }
 
 /**
@@ -375,11 +379,13 @@ export async function getContinueReading(userId: string): Promise<IBook[]> {
     return [];
   }
 
-  const books = await Book.find({
-    _id: { $in: userActivity.currentlyReading },
-  })
-    .populate('author', 'name profile.avatar')
-    .lean();
+  const currentlyReadingIds = new Set(userActivity.currentlyReading.map(id => id.toString()));
+
+  const allBooks = await Book.find({
+    'publishingStatus.status': 'published',
+  });
+
+  const books = allBooks.filter(b => currentlyReadingIds.has(b.id));
 
   // Sort by last read date
   const progressMap = new Map<string, Date>();
@@ -388,8 +394,8 @@ export async function getContinueReading(userId: string): Promise<IBook[]> {
   });
 
   books.sort((a, b) => {
-    const dateA = progressMap.get(a._id.toString()) || new Date(0);
-    const dateB = progressMap.get(b._id.toString()) || new Date(0);
+    const dateA = progressMap.get(a.id) || new Date(0);
+    const dateB = progressMap.get(b.id) || new Date(0);
     return dateB.getTime() - dateA.getTime();
   });
 
@@ -404,11 +410,14 @@ export async function getContinueWriting(userId: string): Promise<IBook[]> {
   const draftBooks = await Book.find({
     author: userId,
     'publishingStatus.status': 'draft',
-  })
-    .sort({ updatedAt: -1 })
-    .lean();
+  });
 
-  return draftBooks as unknown as IBook[];
+  // Sort by updatedAt in memory
+  const sorted = draftBooks.sort((a, b) =>
+    new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()
+  );
+
+  return sorted as unknown as IBook[];
 }
 
 /**
@@ -421,81 +430,99 @@ export async function getSimilarBooks(
   const book = await Book.findById(bookId);
   if (!book) return [];
 
-  // Find books with same genre and similar quality
-  const books = await Book.find({
-    _id: { $ne: bookId },
+  // Find all published books
+  const allBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
-    genre: book.genre,
-  })
-    .sort({
-      'qualityScore.overallScore': -1,
-      'statistics.views': -1,
-    })
-    .limit(limit)
-    .populate('author', 'name profile.avatar')
-    .lean();
+  });
 
-  return books as unknown as IBook[];
+  // Filter same genre, exclude source book in memory
+  const filtered = allBooks.filter(b =>
+    b.id !== bookId && b.genre === book.genre
+  );
+
+  // Sort by quality and views
+  const sorted = filtered.sort((a, b) => {
+    const qualityA = a.qualityScore?.overallScore || 0;
+    const qualityB = b.qualityScore?.overallScore || 0;
+    if (qualityA !== qualityB) return qualityB - qualityA;
+    return (b.statistics?.views || 0) - (a.statistics?.views || 0);
+  }).slice(0, limit);
+
+  return sorted as unknown as IBook[];
 }
 
 /**
  * Get top authors with most engagement
  */
 export async function getTopAuthors(limit: number = 10): Promise<any[]> {
-  const result = await Book.aggregate([
-    {
-      $match: {
-        'publishingStatus.status': 'published',
-        'publishingStatus.isPublic': true,
-      },
-    },
-    {
-      $group: {
-        _id: '$author',
-        totalBooks: { $sum: 1 },
-        totalViews: { $sum: '$statistics.views' },
-        totalPurchases: { $sum: '$statistics.purchases' },
-        avgQuality: { $avg: '$qualityScore.overallScore' },
-        totalRevenue: { $sum: '$statistics.revenue' },
-      },
-    },
-    {
-      $addFields: {
-        engagementScore: {
-          $add: [
-            { $multiply: ['$totalBooks', 10] },
-            { $multiply: ['$totalViews', 0.1] },
-            { $multiply: ['$totalPurchases', 5] },
-            { $multiply: [{ $ifNull: ['$avgQuality', 50] }, 0.5] },
-          ],
-        },
-      },
-    },
-    { $sort: { engagementScore: -1 } },
-    { $limit: limit },
-    {
-      $lookup: {
-        from: 'users',
-        localField: '_id',
-        foreignField: '_id',
-        as: 'authorInfo',
-      },
-    },
-    { $unwind: '$authorInfo' },
-    {
-      $project: {
-        authorId: '$_id',
-        name: '$authorInfo.name',
-        avatar: '$authorInfo.profile.avatar',
-        totalBooks: 1,
-        totalViews: 1,
-        totalPurchases: 1,
-        avgQuality: 1,
-        engagementScore: 1,
-      },
-    },
-  ]);
+  // Get all published books
+  const books = await Book.find({
+    'publishingStatus.status': 'published',
+    'publishingStatus.isPublic': true,
+  });
+
+  // Group by author in memory
+  const authorMap = new Map<string, {
+    totalBooks: number;
+    totalViews: number;
+    totalPurchases: number;
+    totalQuality: number;
+    totalRevenue: number;
+  }>();
+
+  for (const book of books) {
+    const authorId = book.author;
+    if (!authorMap.has(authorId)) {
+      authorMap.set(authorId, {
+        totalBooks: 0,
+        totalViews: 0,
+        totalPurchases: 0,
+        totalQuality: 0,
+        totalRevenue: 0,
+      });
+    }
+    const stats = authorMap.get(authorId)!;
+    stats.totalBooks += 1;
+    stats.totalViews += book.statistics?.views || 0;
+    stats.totalPurchases += book.statistics?.purchases || 0;
+    stats.totalQuality += book.qualityScore?.overallScore || 50;
+    stats.totalRevenue += book.statistics?.revenue || 0;
+  }
+
+  // Calculate engagement scores and sort
+  const authorStats = Array.from(authorMap.entries()).map(([authorId, stats]) => ({
+    authorId,
+    ...stats,
+    avgQuality: stats.totalQuality / stats.totalBooks,
+    engagementScore:
+      stats.totalBooks * 10 +
+      stats.totalViews * 0.1 +
+      stats.totalPurchases * 5 +
+      (stats.totalQuality / stats.totalBooks) * 0.5,
+  }));
+
+  authorStats.sort((a, b) => b.engagementScore - a.engagementScore);
+
+  // Get author info for top authors
+  const topAuthors = authorStats.slice(0, limit);
+  const result = [];
+
+  for (const stat of topAuthors) {
+    const author = await User.findById(stat.authorId);
+    if (author) {
+      result.push({
+        authorId: stat.authorId,
+        name: author.name,
+        avatar: author.profile?.avatar,
+        totalBooks: stat.totalBooks,
+        totalViews: stat.totalViews,
+        totalPurchases: stat.totalPurchases,
+        avgQuality: stat.avgQuality,
+        engagementScore: stat.engagementScore,
+      });
+    }
+  }
 
   return result;
 }
@@ -517,13 +544,13 @@ export async function recordInteraction(
     let userActivity = await UserActivity.findOne({ userId });
 
     if (!userActivity) {
-      userActivity = new UserActivity({ userId });
+      userActivity = await UserActivity.create({ userId });
     }
 
     // Add interaction event
     userActivity.interactionEvents.push({
       type: interactionType,
-      bookId: new mongoose.Types.ObjectId(bookId),
+      bookId: bookId,
       genre: book.genre,
       authorId: book.author,
       duration,
@@ -565,11 +592,11 @@ export async function recordInteraction(
     }
 
     // Update author preferences
-    const authorIdStr = book.author.toString();
+    const authorIdStr = book.author;
     const author = await User.findById(book.author);
 
     const authorPrefIndex = userActivity.authorPreferences.findIndex(
-      (a) => a.authorId.toString() === authorIdStr
+      (a) => a.authorId === authorIdStr
     );
 
     if (authorPrefIndex === -1 && interactionType !== 'view') {
@@ -601,26 +628,24 @@ export async function recordInteraction(
     }
 
     // Update reading lists
-    const bookIdObj = new mongoose.Types.ObjectId(bookId);
-
     if (interactionType === 'read' || interactionType === 'view') {
-      if (!userActivity.currentlyReading.some((id) => id.toString() === bookId)) {
-        userActivity.currentlyReading.push(bookIdObj);
+      if (!userActivity.currentlyReading.some((id) => id === bookId)) {
+        userActivity.currentlyReading.push(bookId);
       }
     } else if (interactionType === 'complete') {
       userActivity.currentlyReading = userActivity.currentlyReading.filter(
-        (id) => id.toString() !== bookId
+        (id) => id !== bookId
       );
-      if (!userActivity.completedBooks.some((id) => id.toString() === bookId)) {
-        userActivity.completedBooks.push(bookIdObj);
+      if (!userActivity.completedBooks.some((id) => id === bookId)) {
+        userActivity.completedBooks.push(bookId);
         userActivity.totalBooksRead += 1;
       }
     } else if (interactionType === 'abandon') {
       userActivity.currentlyReading = userActivity.currentlyReading.filter(
-        (id) => id.toString() !== bookId
+        (id) => id !== bookId
       );
-      if (!userActivity.abandonedBooks.some((id) => id.toString() === bookId)) {
-        userActivity.abandonedBooks.push(bookIdObj);
+      if (!userActivity.abandonedBooks.some((id) => id === bookId)) {
+        userActivity.abandonedBooks.push(bookId);
       }
     }
 
@@ -630,7 +655,7 @@ export async function recordInteraction(
       userActivity.totalReadingTime += duration;
     }
 
-    await userActivity.save();
+    await UserActivity.findByIdAndUpdate(userActivity.id, userActivity);
   } catch (error) {
     console.error('Error recording interaction:', error);
   }
@@ -649,7 +674,7 @@ export async function recordWritingActivity(
     let userActivity = await UserActivity.findOne({ userId });
 
     if (!userActivity) {
-      userActivity = new UserActivity({ userId });
+      userActivity = await UserActivity.create({ userId });
     }
 
     // Update genre preferences with writtenCount
@@ -676,18 +701,17 @@ export async function recordWritingActivity(
     }
 
     // Update writing progress
-    const bookIdObj = new mongoose.Types.ObjectId(bookId);
-    if (!userActivity.completedWriting.some((id) => id.toString() === bookId)) {
-      userActivity.completedWriting.push(bookIdObj);
+    if (!userActivity.completedWriting.some((id) => id === bookId)) {
+      userActivity.completedWriting.push(bookId);
     }
     userActivity.currentlyWriting = userActivity.currentlyWriting.filter(
-      (id) => id.toString() !== bookId
+      (id) => id !== bookId
     );
 
     userActivity.totalBooksWritten += 1;
     userActivity.lastActiveAt = new Date();
 
-    await userActivity.save();
+    await UserActivity.findByIdAndUpdate(userActivity.id, userActivity);
   } catch (error) {
     console.error('Error recording writing activity:', error);
   }
@@ -707,16 +731,16 @@ export async function updateReadingProgress(
     let userActivity = await UserActivity.findOne({ userId });
 
     if (!userActivity) {
-      userActivity = new UserActivity({ userId });
+      userActivity = await UserActivity.create({ userId });
     }
 
     const progressIndex = userActivity.readingHistory.findIndex(
-      (p) => p.bookId.toString() === bookId
+      (p) => p.bookId === bookId
     );
 
     if (progressIndex === -1) {
       userActivity.readingHistory.push({
-        bookId: new mongoose.Types.ObjectId(bookId),
+        bookId: bookId,
         lastChapterRead: chapterNumber,
         percentageComplete,
         totalReadingTime: readingTime,
@@ -731,7 +755,7 @@ export async function updateReadingProgress(
       userActivity.readingHistory[progressIndex].isCompleted = percentageComplete >= 100;
     }
 
-    await userActivity.save();
+    await UserActivity.findByIdAndUpdate(userActivity.id, userActivity);
 
     // Record interaction
     if (percentageComplete >= 100) {

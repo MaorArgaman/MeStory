@@ -4,8 +4,10 @@
  */
 
 import { Response } from 'express';
-import mongoose from 'mongoose';
 import { AuthRequest } from '../types';
+
+// UUID validation function for Supabase
+const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 import { Book } from '../models/Book';
 import { User } from '../models/User';
 import {
@@ -41,7 +43,7 @@ export const createPurchaseOrder = async (req: AuthRequest, res: Response): Prom
     const { id: bookId } = req.params;
 
     // Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -187,7 +189,7 @@ export const checkAccess = async (req: AuthRequest, res: Response): Promise<void
 
     const { id: bookId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -360,7 +362,7 @@ export const getLibrary = async (req: AuthRequest, res: Response): Promise<void>
 
     // Get full book details
     const books = await Book.find({
-      _id: { $in: bookIds },
+      id: { $in: bookIds },
     })
       .populate('author', 'name profile.avatar')
       .select(
@@ -371,7 +373,7 @@ export const getLibrary = async (req: AuthRequest, res: Response): Promise<void>
     // Merge with reading progress
     const libraryBooks = books.map((book) => {
       const historyItem = readingHistory.find(
-        (item) => item.bookId.toString() === book._id.toString()
+        (item) => item.bookId.toString() === (book as any).id
       );
       return {
         ...book,
@@ -423,7 +425,7 @@ export const getBookForReading = async (req: AuthRequest, res: Response): Promis
 
     const { id: bookId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -514,7 +516,7 @@ export const updateReadingProgress = async (req: AuthRequest, res: Response): Pr
     const { id: bookId } = req.params;
     const { progress } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+    if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
         error: 'Invalid book ID',
@@ -540,32 +542,30 @@ export const updateReadingProgress = async (req: AuthRequest, res: Response): Pr
     }
 
     // Initialize reading history if needed
-    if (!user.profile) {
-      user.profile = {};
-    }
-    if (!user.profile.readingHistory) {
-      user.profile.readingHistory = [];
-    }
+    const profile = user.profile || {};
+    const readingHistory = profile.readingHistory || [];
 
     // Find or create reading history entry
-    const historyIndex = user.profile.readingHistory.findIndex(
+    const historyIndex = readingHistory.findIndex(
       (item) => item.bookId.toString() === bookId
     );
 
     if (historyIndex === -1) {
-      // Add new entry
-      user.profile.readingHistory.push({
-        bookId: new mongoose.Types.ObjectId(bookId),
+      // Add new entry - use bookId directly as string for Supabase
+      readingHistory.push({
+        bookId: bookId as any,
         progress,
         lastRead: new Date(),
       });
     } else {
       // Update existing entry
-      user.profile.readingHistory[historyIndex].progress = progress;
-      user.profile.readingHistory[historyIndex].lastRead = new Date();
+      readingHistory[historyIndex].progress = progress;
+      readingHistory[historyIndex].lastRead = new Date();
     }
 
-    await user.save();
+    await User.findByIdAndUpdate(req.user.id, {
+      'profile.readingHistory': readingHistory,
+    });
 
     // Update book completion rate if progress is 100%
     if (progress === 100) {
@@ -576,8 +576,9 @@ export const updateReadingProgress = async (req: AuthRequest, res: Response): Pr
         const previousCompletions = (book.statistics.completionRate || 0) * totalReaders / 100;
         const newCompletionRate = ((previousCompletions + 1) / totalReaders) * 100;
 
-        book.statistics.completionRate = Math.min(100, newCompletionRate);
-        await book.save();
+        await Book.findByIdAndUpdate(bookId, {
+          'statistics.completionRate': Math.min(100, newCompletionRate),
+        });
       }
     }
 
