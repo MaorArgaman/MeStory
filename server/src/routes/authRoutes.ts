@@ -128,9 +128,9 @@ router.get(
       // User is attached to req.user by passport
       const user = req.user as any;
 
-      // Generate JWT token
+      // Generate JWT token (use user.id for Supabase, fallback to _id for compatibility)
       const token = generateToken({
-        id: user._id.toString(),
+        id: (user.id || user._id).toString(),
         email: user.email,
         role: user.role,
       });
