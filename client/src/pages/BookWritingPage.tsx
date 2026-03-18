@@ -39,6 +39,7 @@ import PlotStructurePanel from '../components/analysis/PlotStructurePanel';
 import TensionArcChart from '../components/analysis/TensionArcChart';
 import WritingTechniquesCard from '../components/analysis/WritingTechniquesCard';
 import WritingGuidanceAlert, { useWritingGuidance } from '../components/analysis/WritingGuidanceAlert';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Chapter {
   _id?: string;
@@ -63,6 +64,8 @@ export default function BookWritingPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation('common');
+  const { language } = useLanguage();
+  const isHebrew = language === 'he';
   const [book, setBook] = useState<BookData | null>(null);
   const [selectedChapterIndex, setSelectedChapterIndex] = useState(0);
   const [content, setContent] = useState('');
@@ -383,7 +386,7 @@ export default function BookWritingPage() {
               className="btn-ghost flex items-center gap-1 sm:gap-2 p-2 sm:px-3 sm:py-2"
             >
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Back</span>
+              <span className="hidden sm:inline">{isHebrew ? 'חזרה' : 'Back'}</span>
             </button>
             <div className="hidden sm:block h-6 w-px bg-gray-700" />
             <h1 className="text-sm sm:text-xl font-semibold text-white truncate max-w-[120px] sm:max-w-none">{book.title}</h1>
@@ -396,15 +399,15 @@ export default function BookWritingPage() {
               {saving ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                  <span className="text-gray-400">Saving...</span>
+                  <span className="text-gray-400">{isHebrew ? 'שומר...' : 'Saving...'}</span>
                 </>
               ) : saved ? (
                 <>
                   <Check className="w-4 h-4 text-green-400" />
-                  <span className="text-green-400">Saved</span>
+                  <span className="text-green-400">{isHebrew ? 'נשמר' : 'Saved'}</span>
                 </>
               ) : (
-                <span className="text-yellow-400">Unsaved changes</span>
+                <span className="text-yellow-400">{isHebrew ? 'שינויים לא שמורים' : 'Unsaved changes'}</span>
               )}
             </div>
 
@@ -414,7 +417,7 @@ export default function BookWritingPage() {
               className="btn-secondary flex items-center gap-2"
             >
               <Palette className="w-4 h-4" />
-              Design Cover
+              {isHebrew ? 'עיצוב כריכה' : 'Design Cover'}
             </button>
 
             {/* Book Layout Button */}
@@ -423,7 +426,7 @@ export default function BookWritingPage() {
               className="btn-secondary flex items-center gap-2"
             >
               <LayoutGrid className="w-4 h-4" />
-              Page Layout
+              {isHebrew ? 'פריסת עמודים' : 'Page Layout'}
             </button>
 
             {/* Save Button */}
@@ -433,7 +436,7 @@ export default function BookWritingPage() {
               className="btn-primary flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
-              Save
+              {isHebrew ? 'שמור' : 'Save'}
             </button>
           </div>
 
@@ -480,7 +483,7 @@ export default function BookWritingPage() {
               className="w-full btn-secondary flex items-center justify-center gap-2 py-2"
             >
               <Palette className="w-4 h-4" />
-              Design Cover
+              {isHebrew ? 'עיצוב כריכה' : 'Design Cover'}
             </button>
             <button
               onClick={() => {
@@ -490,7 +493,7 @@ export default function BookWritingPage() {
               className="w-full btn-secondary flex items-center justify-center gap-2 py-2"
             >
               <LayoutGrid className="w-4 h-4" />
-              Page Layout
+              {isHebrew ? 'פריסת עמודים' : 'Page Layout'}
             </button>
           </div>
         )}

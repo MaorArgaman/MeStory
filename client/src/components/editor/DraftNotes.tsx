@@ -119,14 +119,14 @@ export default function DraftNotes({
   return (
     <div
       ref={containerRef}
-      className={`fixed ${isHebrew ? 'left-0' : 'right-0'} top-20 bottom-20 z-40 transition-all duration-300 ${
+      className={`fixed ${isHebrew ? 'left-0' : 'right-0'} top-32 bottom-20 z-30 transition-all duration-300 ${
         isExpanded ? 'w-72' : 'w-10'
       }`}
     >
       {/* Toggle Button */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className={`absolute top-4 ${isHebrew ? 'right-0 translate-x-full rounded-r-lg' : 'left-0 -translate-x-full rounded-l-lg'} bg-amber-500 hover:bg-amber-600 text-white p-2 shadow-lg transition-colors`}
+        className={`absolute top-0 ${isHebrew ? 'right-0 translate-x-full rounded-r-lg' : 'left-0 -translate-x-full rounded-l-lg'} bg-amber-500 hover:bg-amber-600 text-white p-2 shadow-lg transition-colors`}
         title={isHebrew ? 'טיוטות' : 'Draft Notes'}
       >
         {isExpanded ? (
