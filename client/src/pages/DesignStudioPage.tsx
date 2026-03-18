@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 import {
@@ -25,7 +26,7 @@ import {
   Settings,
   Eye,
   Layout,
-  Wand2,
+  ChevronDown,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import confetti from 'canvas-confetti';
@@ -128,6 +129,7 @@ const COLOR_PRESETS = [
 export default function DesignStudioPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
   const { language } = useLanguage();
   const [book, setBook] = useState<BookData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -142,7 +144,6 @@ export default function DesignStudioPage() {
 
   // Template gallery state
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
-  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   // Publish modal state
   const [showPublishModal, setShowPublishModal] = useState(false);
@@ -245,19 +246,37 @@ export default function DesignStudioPage() {
         textColor,
         fontFamily,
         imageUrl: imageUrl || undefined,
+        front: {
+          type: 'uploaded',
+          imageUrl: imageUrl || undefined,
+          backgroundColor: coverColor,
+          title: {
+            text: book.title,
+            font: fontFamily,
+            size: 32,
+            color: textColor,
+          },
+          authorName: {
+            text: book.author?.name || '',
+            font: fontFamily,
+            size: 18,
+            color: textColor,
+          },
+        },
       };
 
       const response = await api.put(`/books/${bookId}`, {
+        title: book.title,
         coverDesign,
       });
 
       if (response.data.success) {
-        toast.success('Design saved successfully!');
+        toast.success(t('design_studio.messages.design_saved'));
         setBook(response.data.data.book);
       }
     } catch (error) {
       console.error('Failed to save design:', error);
-      toast.error('Failed to save design');
+      toast.error(t('design_studio.messages.save_failed'));
     } finally {
       setSaving(false);
     }
@@ -325,50 +344,6 @@ export default function DesignStudioPage() {
     totalSteps: 6,
     stepName: '',
   });
-
-  // Handle quick AI design generation (existing)
-  const handleAIDesign = async () => {
-    if (!book) return;
-
-    setIsGeneratingAI(true);
-    try {
-      const response = await api.post('/ai/design/complete', {
-        bookId,
-        bookTitle: book.title,
-        bookGenre: book.genre || 'fiction',
-        bookSynopsis: book.synopsis || book.description,
-        language,
-      });
-
-      if (response.data.success) {
-        const { templateId, coverImageUrl } = response.data.data;
-        const template = bookTemplates.find(t => t.id === templateId);
-
-        if (template) {
-          handleTemplateSelect(template);
-        }
-
-        if (coverImageUrl) {
-          setImageUrl(coverImageUrl);
-        }
-
-        toast.success(
-          language === 'he'
-            ? 'עיצוב AI הוחל בהצלחה!'
-            : 'AI Design applied successfully!'
-        );
-      }
-    } catch (error) {
-      console.error('AI Design failed:', error);
-      toast.error(
-        language === 'he'
-          ? 'יצירת עיצוב AI נכשלה'
-          : 'Failed to generate AI design'
-      );
-    } finally {
-      setIsGeneratingAI(false);
-    }
-  };
 
   // Handle AI Design Wizard (complete design with all images)
   const handleAIDesignWizard = async () => {
@@ -471,15 +446,21 @@ export default function DesignStudioPage() {
       });
 
       if (response.data.success) {
-        // Construct the full URL from the API base URL
-        // Remove /api from the API URL to get the server base URL
-        const apiUrl = import.meta.env.VITE_API_URL ||
-          (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
-        const serverBaseUrl = apiUrl.replace('/api', '');
         const imageUrlPath = response.data.data.imageUrl;
-        // If imageUrl is already absolute (starts with http), use it directly
-        // Otherwise, construct the full URL with the server base
-        const fullImageUrl = imageUrlPath.startsWith('http') ? imageUrlPath : `${serverBaseUrl}${imageUrlPath}`;
+
+        // Handle different URL types:
+        // - Base64 data URLs (data:image/...) - use directly
+        // - Absolute URLs (http/https) - use directly
+        // - Relative paths (/uploads/...) - prepend server base URL
+        let fullImageUrl: string;
+        if (imageUrlPath.startsWith('data:') || imageUrlPath.startsWith('http')) {
+          fullImageUrl = imageUrlPath;
+        } else {
+          const apiUrl = import.meta.env.VITE_API_URL ||
+            (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
+          const serverBaseUrl = apiUrl.replace('/api', '');
+          fullImageUrl = `${serverBaseUrl}${imageUrlPath}`;
+        }
         setImageUrl(fullImageUrl);
 
         // Auto-save the cover design with the new image
@@ -500,90 +481,6 @@ export default function DesignStudioPage() {
     } catch (error: any) {
       console.error('Upload error:', error);
       toast.error(error.response?.data?.error || 'Failed to upload image', { id: 'upload' });
-    }
-  };
-
-  const handleAIColorGeneration = async () => {
-    if (!book) return;
-
-    try {
-      toast.loading('Generating AI color scheme...', { id: 'ai-colors' });
-
-      const response = await api.post('/ai/generate-cover-colors', {
-        title: book.title,
-        genre: book.genre || book.author?.name || 'Fiction',
-      });
-
-      if (response.data.success) {
-        const colorScheme = response.data.data;
-        setCoverColor(colorScheme.backgroundColor);
-        setTextColor(colorScheme.titleColor);
-        toast.success(`AI Suggestion: ${colorScheme.suggestion}`, {
-          id: 'ai-colors',
-          duration: 5000,
-        });
-      }
-    } catch (error: any) {
-      console.error('AI color error:', error);
-      toast.error(error.response?.data?.message || 'Failed to generate colors', {
-        id: 'ai-colors',
-      });
-    }
-  };
-
-  const handleAICoverGeneration = async () => {
-    if (!book) return;
-
-    // Generate a synopsis from book content if not available
-    let synopsis = book.synopsis || book.description || '';
-
-    if (!synopsis && book.chapters && book.chapters.length > 0) {
-      // Extract first 500 characters from first chapter as synopsis
-      const firstChapterContent = book.chapters[0]?.content || '';
-      synopsis = firstChapterContent.slice(0, 500);
-    }
-
-    if (!synopsis || synopsis.length < 50) {
-      toast.error('Please add some content or a description to your book first');
-      return;
-    }
-
-    try {
-      toast.loading('AI is designing your book cover...', { id: 'ai-cover' });
-
-      const response = await api.post('/ai/generate-cover', {
-        synopsis,
-        genre: book.genre || 'Fiction',
-        title: book.title,
-      });
-
-      if (response.data.success) {
-        const coverDesign = response.data.data;
-
-        // Apply the generated design
-        setCoverColor(coverDesign.backgroundColor);
-
-        if (coverDesign.type === 'gradient' && coverDesign.gradientColors) {
-          // Create a gradient background
-          const gradientCSS = `linear-gradient(135deg, ${coverDesign.gradientColors.join(', ')})`;
-          setCoverColor(gradientCSS.includes('#') ? coverDesign.backgroundColor : gradientCSS);
-        }
-
-        // Apply overlay if specified
-        if (coverDesign.overlayOpacity) {
-          setTextColor('#ffffff'); // Ensure text is readable
-        }
-
-        toast.success(`AI Cover Created! ${coverDesign.suggestion}`, {
-          id: 'ai-cover',
-          duration: 6000,
-        });
-      }
-    } catch (error: any) {
-      console.error('AI cover error:', error);
-      toast.error(error.response?.data?.message || 'Failed to generate cover design', {
-        id: 'ai-cover',
-      });
     }
   };
 
@@ -765,12 +662,12 @@ export default function DesignStudioPage() {
               className="btn-ghost flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
             >
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Back to Editor</span>
+              <span className="hidden sm:inline">{t('design_studio.back_to_editor')}</span>
             </button>
             <div className="hidden sm:block h-6 w-px bg-gray-700" />
             <h1 className="text-sm sm:text-lg lg:text-xl font-semibold text-white truncate max-w-[120px] sm:max-w-none">
-              <span className="hidden sm:inline">Cover Design Studio</span>
-              <span className="sm:hidden">Design</span>
+              <span className="hidden sm:inline">{t('design_studio.title')}</span>
+              <span className="sm:hidden">{t('design_studio.design')}</span>
             </h1>
           </div>
 
@@ -785,12 +682,12 @@ export default function DesignStudioPage() {
               {saving ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Saving...
+                  {t('design_studio.saving')}
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  Save Design
+                  {t('design_studio.save_design')}
                 </>
               )}
             </button>
@@ -801,7 +698,7 @@ export default function DesignStudioPage() {
               className="btn-secondary flex items-center gap-2"
             >
               <LayoutGrid className="w-4 h-4" />
-              Page Design
+              {t('design_studio.page_design')}
             </button>
 
             {/* Export Button */}
@@ -810,7 +707,7 @@ export default function DesignStudioPage() {
               className="btn-secondary flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
-              Export to File
+              {t('design_studio.export_to_file')}
             </button>
 
             {/* Publish Button */}
@@ -819,7 +716,7 @@ export default function DesignStudioPage() {
               className="btn-gold flex items-center gap-2 shadow-glow-gold"
             >
               <Rocket className="w-4 h-4" />
-              Publish to Store
+              {t('design_studio.publish_to_store')}
             </button>
           </div>
 
@@ -855,21 +752,21 @@ export default function DesignStudioPage() {
                 className="w-full btn-secondary flex items-center justify-center gap-2 py-3"
               >
                 <LayoutGrid className="w-4 h-4" />
-                Page Design
+                {t('design_studio.page_design')}
               </button>
               <button
                 onClick={() => { setShowExportModal(true); setShowMobileActions(false); }}
                 className="w-full btn-secondary flex items-center justify-center gap-2 py-3"
               >
                 <Download className="w-4 h-4" />
-                Export to File
+                {t('design_studio.export_to_file')}
               </button>
               <button
                 onClick={() => { openPublishModal(); setShowMobileActions(false); }}
                 className="w-full btn-gold flex items-center justify-center gap-2 py-3 shadow-glow-gold"
               >
                 <Rocket className="w-4 h-4" />
-                Publish to Store
+                {t('design_studio.publish_to_store')}
               </button>
             </motion.div>
           )}
@@ -906,7 +803,7 @@ export default function DesignStudioPage() {
         `}>
           {/* Mobile Close Button */}
           <div className="lg:hidden flex items-center justify-between mb-4">
-            <span className="text-sm font-semibold text-gray-300">Design Controls</span>
+            <span className="text-sm font-semibold text-gray-300">{t('design_studio.design_controls')}</span>
             <button onClick={() => setShowMobileControls(false)} className="btn-ghost p-2">
               <X className="w-4 h-4" />
             </button>
@@ -916,79 +813,69 @@ export default function DesignStudioPage() {
             <div>
               <h2 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
                 <Type className="w-4 h-4" />
-                BOOK INFORMATION
+                {t('design_studio.book_info')}
               </h2>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Title</label>
+                  <label className="block text-xs text-gray-400 mb-1">{t('design_studio.title_label')}</label>
                   <input
                     type="text"
                     value={book.title}
-                    disabled
-                    className="input bg-white/5 cursor-not-allowed"
+                    onChange={(e) => setBook({ ...book, title: e.target.value })}
+                    className="input bg-white/5"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Author</label>
+                  <label className="block text-xs text-gray-400 mb-1">{t('design_studio.author_label')}</label>
                   <input
                     type="text"
-                    value={book.author?.name || 'Unknown Author'}
-                    disabled
-                    className="input bg-white/5 cursor-not-allowed"
+                    value={book.author?.name || ''}
+                    onChange={(e) => setBook({ ...book, author: { ...book.author, name: e.target.value } })}
+                    className="input bg-white/5"
+                    placeholder={t('design_studio.unknown_author')}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Design Templates & AI */}
+            {/* AI Design - One Button for Everything */}
             <div>
               <h2 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-                <Layout className="w-4 h-4" />
-                {language === 'he' ? 'תבניות עיצוב' : 'DESIGN TEMPLATES'}
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                {language === 'he' ? 'עיצוב אוטומטי' : 'AI DESIGN'}
               </h2>
-              <div className="space-y-2">
-                {/* Template Gallery Button */}
-                <button
-                  onClick={() => setShowTemplateGallery(true)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 hover:from-indigo-600/30 hover:to-purple-600/30 border border-indigo-500/30 hover:border-indigo-500/50 rounded-xl text-white font-medium transition-all"
-                >
-                  <Layout className="w-4 h-4" />
-                  {language === 'he' ? 'בחר תבנית' : 'Choose Template'}
-                </button>
-
-                {/* AI Design Wizard Button - Main One-Click Design */}
+              <div className="space-y-3">
+                {/* Main AI Design Button */}
                 <button
                   onClick={handleAIDesignWizard}
-                  disabled={wizardProgress.show || isGeneratingAI}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 hover:from-amber-400 hover:via-orange-400 hover:to-pink-400 rounded-xl text-white font-bold text-lg shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed animate-pulse hover:animate-none"
+                  disabled={wizardProgress.show}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 hover:from-amber-400 hover:via-orange-400 hover:to-pink-400 rounded-xl text-white font-bold text-lg shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Sparkles className="w-5 h-5" />
-                  {language === 'he' ? 'אשף עיצוב AI' : 'AI Design Wizard'}
-                  <Sparkles className="w-5 h-5" />
-                </button>
-                <p className="text-xs text-center text-gray-400 mt-1">
-                  {language === 'he'
-                    ? 'לחיצה אחת ליצירת עיצוב מקצועי מלא'
-                    : 'One click to create a complete professional design'}
-                </p>
-
-                {/* Quick AI Design Button */}
-                <button
-                  onClick={handleAIDesign}
-                  disabled={isGeneratingAI || wizardProgress.show}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600/60 to-indigo-600/60 hover:from-purple-600 hover:to-indigo-600 border border-purple-500/30 rounded-xl text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isGeneratingAI ? (
+                  {wizardProgress.show ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      {language === 'he' ? 'יוצר עיצוב...' : 'Generating...'}
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      {language === 'he' ? 'מעצב...' : 'Designing...'}
                     </>
                   ) : (
                     <>
-                      <Wand2 className="w-4 h-4" />
-                      {language === 'he' ? 'עיצוב מהיר' : 'Quick Design'}
+                      <Sparkles className="w-5 h-5" />
+                      {language === 'he' ? 'עצב לי הכל' : 'Design Everything'}
                     </>
                   )}
+                </button>
+                <p className="text-xs text-center text-gray-400">
+                  {language === 'he'
+                    ? 'צבעים, גופנים ותמונת עטיפה בלחיצה אחת'
+                    : 'Colors, fonts & cover image in one click'}
+                </p>
+
+                {/* Template Gallery - Secondary Option */}
+                <button
+                  onClick={() => setShowTemplateGallery(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-gray-300 text-sm transition-all"
+                >
+                  <Layout className="w-4 h-4" />
+                  {language === 'he' ? 'או בחר תבנית ידנית' : 'Or choose template manually'}
                 </button>
 
                 {/* Current Template Indicator */}
@@ -1001,127 +888,78 @@ export default function DesignStudioPage() {
               </div>
             </div>
 
-            {/* Color Presets */}
-            <div>
-              <h2 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+            {/* Manual Customization - Collapsible */}
+            <details className="group">
+              <summary className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-gray-300 mb-3 hover:text-white transition-colors">
                 <Palette className="w-4 h-4" />
-                {language === 'he' ? 'ערכות צבע' : 'COLOR PRESETS'}
-              </h2>
-              <div className="grid grid-cols-3 gap-2">
-                {COLOR_PRESETS.map((preset) => (
-                  <button
-                    key={preset.name}
-                    onClick={() => applyPreset(preset)}
-                    className="flex flex-col items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-500/50 transition-all group"
-                  >
-                    <div
-                      className="w-12 h-12 rounded-lg shadow-lg"
+                {language === 'he' ? 'התאמה ידנית' : 'Manual Customization'}
+                <ChevronDown className="w-4 h-4 ml-auto transition-transform group-open:rotate-180" />
+              </summary>
+
+              {/* Color Presets - Compact */}
+              <div className="mb-4">
+                <p className="text-xs text-gray-500 mb-2">{language === 'he' ? 'ערכות צבע מהירות' : 'Quick color presets'}</p>
+                <div className="grid grid-cols-6 gap-1.5">
+                  {COLOR_PRESETS.map((preset) => (
+                    <button
+                      key={preset.name}
+                      onClick={() => applyPreset(preset)}
+                      title={preset.name}
+                      className="w-full aspect-square rounded-lg shadow-lg hover:ring-2 hover:ring-indigo-500 transition-all"
                       style={{ background: preset.cover }}
                     />
-                    <span className="text-xs text-gray-400 group-hover:text-white">
-                      {preset.name}
-                    </span>
-                  </button>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Custom Colors */}
-            <div>
-              <h2 className="text-sm font-semibold text-gray-300 mb-3">CUSTOM COLORS</h2>
+              {/* Custom Colors - Compact */}
               <div className="space-y-3">
-                <div>
-                  <label className="block text-xs text-gray-400 mb-2">Cover Color</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={coverColor}
-                      onChange={(e) => setCoverColor(e.target.value)}
-                      className="w-12 h-12 rounded-lg cursor-pointer border-2 border-white/10"
-                    />
-                    <input
-                      type="text"
-                      value={coverColor}
-                      onChange={(e) => setCoverColor(e.target.value)}
-                      className="input flex-1"
-                      placeholder="#1a1a2e"
-                    />
-                  </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={coverColor}
+                    onChange={(e) => setCoverColor(e.target.value)}
+                    className="w-8 h-8 rounded cursor-pointer border border-white/10"
+                  />
+                  <span className="text-xs text-gray-400 flex-1">{language === 'he' ? 'רקע' : 'Background'}</span>
+                  <input
+                    type="color"
+                    value={textColor}
+                    onChange={(e) => setTextColor(e.target.value)}
+                    className="w-8 h-8 rounded cursor-pointer border border-white/10"
+                  />
+                  <span className="text-xs text-gray-400">{language === 'he' ? 'טקסט' : 'Text'}</span>
                 </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-2">Text Color</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={textColor}
-                      onChange={(e) => setTextColor(e.target.value)}
-                      className="w-12 h-12 rounded-lg cursor-pointer border-2 border-white/10"
-                    />
-                    <input
-                      type="text"
-                      value={textColor}
-                      onChange={(e) => setTextColor(e.target.value)}
-                      className="input flex-1"
-                      placeholder="#ffffff"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Font Selection */}
-            <div>
-              <h2 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-                <Type className="w-4 h-4" />
-                FONT FAMILY
-              </h2>
-              <div className="space-y-2">
-                {FONT_OPTIONS.map((font) => (
-                  <button
-                    key={font.value}
-                    onClick={() => setFontFamily(font.value)}
-                    className={`w-full text-left p-3 rounded-lg border transition-all ${
-                      fontFamily === font.value
-                        ? 'bg-indigo-500/20 border-indigo-500'
-                        : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-indigo-500/50'
-                    }`}
+                {/* Font Selection - Compact */}
+                <div>
+                  <p className="text-xs text-gray-500 mb-2">{language === 'he' ? 'גופן' : 'Font'}</p>
+                  <select
+                    value={fontFamily}
+                    onChange={(e) => setFontFamily(e.target.value)}
+                    className="input w-full text-sm"
+                    style={{ fontFamily: fontFamily }}
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p
-                          className="text-white font-semibold"
-                          style={{ fontFamily: font.value }}
-                        >
-                          {font.name}
-                        </p>
-                        <p className="text-xs text-gray-400">{font.category}</p>
-                      </div>
-                      {fontFamily === font.value && (
-                        <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                      )}
-                    </div>
-                  </button>
-                ))}
+                    {FONT_OPTIONS.map((font) => (
+                      <option key={font.value} value={font.value} style={{ fontFamily: font.value }}>
+                        {font.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            </div>
+            </details>
 
-            {/* Cover Image */}
+            {/* Cover Image - Manual Upload Only */}
             <div>
               <h2 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
                 <ImageIcon className="w-4 h-4" />
-                COVER IMAGE
+                {language === 'he' ? 'תמונת עטיפה (ידנית)' : 'Cover Image (Manual)'}
               </h2>
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  className="input"
-                  placeholder="Enter image URL or upload..."
-                />
+              <div className="space-y-2">
                 <label className="btn-secondary w-full flex items-center justify-center gap-2 cursor-pointer">
                   <ImageIcon className="w-4 h-4" />
-                  Upload
+                  {t('design_studio.upload_image')}
                   <input
                     type="file"
                     accept="image/*"
@@ -1129,22 +967,22 @@ export default function DesignStudioPage() {
                     onChange={handleImageUpload}
                   />
                 </label>
-                {/* AI Cover Generation Button */}
-                <button
-                  className="btn-gold w-full flex items-center justify-center gap-2 shadow-glow-gold"
-                  onClick={handleAICoverGeneration}
-                >
-                  <Sparkles className="w-4 h-4" />
-                  Generate Cover with AI
-                </button>
                 {imageUrl && (
-                  <button
-                    onClick={() => setImageUrl('')}
-                    className="text-xs text-gray-400 hover:text-white"
-                  >
-                    Clear Image
-                  </button>
+                  <div className="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                    <span className="text-xs text-green-400 truncate flex-1">
+                      {language === 'he' ? 'תמונה נטענה' : 'Image loaded'}
+                    </span>
+                    <button
+                      onClick={() => setImageUrl('')}
+                      className="text-xs text-red-400 hover:text-red-300 ml-2"
+                    >
+                      {language === 'he' ? 'הסר' : 'Remove'}
+                    </button>
+                  </div>
                 )}
+                <p className="text-xs text-gray-500 text-center">
+                  {language === 'he' ? 'או השתמש בעיצוב אוטומטי למעלה' : 'Or use AI Design above'}
+                </p>
               </div>
             </div>
           </div>
@@ -1181,7 +1019,7 @@ export default function DesignStudioPage() {
             <div className="transform scale-75 sm:scale-90 lg:scale-100">
               <Book3DPreview
                 title={book.title}
-                author={book.author?.name || 'Unknown Author'}
+                author={book.author?.name || t('design_studio.unknown_author')}
                 coverColor={coverColor}
                 textColor={textColor}
                 fontFamily={fontFamily}
@@ -1195,7 +1033,7 @@ export default function DesignStudioPage() {
           {/* Info overlay */}
           <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 text-center px-4">
             <p className="text-xs sm:text-sm text-gray-400">
-              Real-time preview - Changes update automatically
+              {t('design_studio.preview_hint')}
             </p>
           </div>
         </div>
@@ -1287,7 +1125,7 @@ export default function DesignStudioPage() {
                     <Rocket className="w-5 h-5 sm:w-6 sm:h-6 text-deep-space" />
                   </div>
                   <div className="min-w-0">
-                    <h2 className="text-lg sm:text-2xl font-bold gradient-gold">Publish to Store</h2>
+                    <h2 className="text-lg sm:text-2xl font-bold gradient-gold">{t('design_studio.publish_modal.title')}</h2>
                     <p className="text-gray-400 text-xs sm:text-sm truncate">{book.title}</p>
                   </div>
                 </div>
@@ -1302,7 +1140,7 @@ export default function DesignStudioPage() {
               {loadingStrategy ? (
                 <div className="text-center py-12">
                   <Loader2 className="w-12 h-12 animate-spin text-magic-gold mx-auto mb-4" />
-                  <p className="text-gray-300">Analyzing pricing strategy...</p>
+                  <p className="text-gray-300">{t('design_studio.publish_modal.analyzing')}</p>
                 </div>
               ) : pricingStrategy ? (
                 <div className="space-y-6">
@@ -1311,7 +1149,7 @@ export default function DesignStudioPage() {
                     <div className="flex items-start gap-3">
                       <Sparkles className="w-6 h-6 text-magic-gold flex-shrink-0 mt-1" />
                       <div>
-                        <h3 className="font-bold text-white mb-1">AI Recommendation</h3>
+                        <h3 className="font-bold text-white mb-1">{t('design_studio.publish_modal.ai_recommendation')}</h3>
                         <p className="text-gray-300 text-sm">{pricingStrategy.reasoning}</p>
                       </div>
                     </div>
@@ -1322,28 +1160,28 @@ export default function DesignStudioPage() {
                     <div className="glass rounded-lg p-3 text-center">
                       <BookOpen className="w-5 h-5 text-magic-gold mx-auto mb-1" />
                       <p className="text-2xl font-bold text-white">{pricingStrategy.authorStats.publishedBooks}</p>
-                      <p className="text-xs text-gray-400">Published Books</p>
+                      <p className="text-xs text-gray-400">{t('design_studio.publish_modal.published_books')}</p>
                     </div>
                     <div className="glass rounded-lg p-3 text-center">
                       <DollarSign className="w-5 h-5 text-green-400 mx-auto mb-1" />
                       <p className="text-2xl font-bold text-white">{pricingStrategy.authorStats.totalSales}</p>
-                      <p className="text-xs text-gray-400">Sales</p>
+                      <p className="text-xs text-gray-400">{t('design_studio.publish_modal.sales')}</p>
                     </div>
                     <div className="glass rounded-lg p-3 text-center">
                       <TrendingUp className="w-5 h-5 text-purple-400 mx-auto mb-1" />
                       <p className="text-2xl font-bold text-white">${pricingStrategy.marketAnalysis.genreAveragePrice}</p>
-                      <p className="text-xs text-gray-400">Genre Average Price</p>
+                      <p className="text-xs text-gray-400">{t('design_studio.publish_modal.genre_avg_price')}</p>
                     </div>
                     <div className="glass rounded-lg p-3 text-center">
                       <Sparkles className="w-5 h-5 text-yellow-400 mx-auto mb-1" />
                       <p className="text-2xl font-bold text-white capitalize">{pricingStrategy.marketAnalysis.demandLevel}</p>
-                      <p className="text-xs text-gray-400">Demand Level</p>
+                      <p className="text-xs text-gray-400">{t('design_studio.publish_modal.demand_level')}</p>
                     </div>
                   </div>
 
                   {/* Pricing Selection */}
                   <div>
-                    <h3 className="font-semibold text-white mb-3">Select Pricing</h3>
+                    <h3 className="font-semibold text-white mb-3">{t('design_studio.publish_modal.select_pricing')}</h3>
                     <div className="flex gap-3 mb-4">
                       <button
                         onClick={() => {
@@ -1356,9 +1194,9 @@ export default function DesignStudioPage() {
                             : 'border-gray-700 text-gray-400 hover:border-gray-600'
                         }`}
                       >
-                        <span className="text-lg font-bold">Free</span>
+                        <span className="text-lg font-bold">{t('design_studio.publish_modal.free')}</span>
                         {pricingStrategy.recommendFree && (
-                          <span className="block text-xs text-magic-gold mt-1">Recommended by AI</span>
+                          <span className="block text-xs text-magic-gold mt-1">{t('design_studio.publish_modal.recommended_by_ai')}</span>
                         )}
                       </button>
                       <button
@@ -1372,9 +1210,9 @@ export default function DesignStudioPage() {
                             : 'border-gray-700 text-gray-400 hover:border-gray-600'
                         }`}
                       >
-                        <span className="text-lg font-bold">Paid</span>
+                        <span className="text-lg font-bold">{t('design_studio.publish_modal.paid')}</span>
                         {!pricingStrategy.recommendFree && (
-                          <span className="block text-xs text-magic-gold mt-1">Recommended by AI</span>
+                          <span className="block text-xs text-magic-gold mt-1">{t('design_studio.publish_modal.recommended_by_ai')}</span>
                         )}
                       </button>
                     </div>
@@ -1410,7 +1248,7 @@ export default function DesignStudioPage() {
                           ))}
                         </div>
                         <p className="text-xs text-gray-400">
-                          Genre price range: ${pricingStrategy.marketAnalysis.competitorPriceRange.min} - ${pricingStrategy.marketAnalysis.competitorPriceRange.max}
+                          {t('design_studio.publish_modal.genre_price_range')}: ${pricingStrategy.marketAnalysis.competitorPriceRange.min} - ${pricingStrategy.marketAnalysis.competitorPriceRange.max}
                         </p>
                       </div>
                     )}
@@ -1418,7 +1256,7 @@ export default function DesignStudioPage() {
 
                   {/* Strategy Tips */}
                   <div>
-                    <h3 className="font-semibold text-white mb-3">Strategy Tips</h3>
+                    <h3 className="font-semibold text-white mb-3">{t('design_studio.publish_modal.strategy_tips')}</h3>
                     <div className="space-y-2">
                       {pricingStrategy.strategyTips.map((tip, index) => (
                         <div key={index} className="flex items-start gap-2 text-sm text-gray-300">
@@ -1434,9 +1272,9 @@ export default function DesignStudioPage() {
                     <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
                       <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-red-300 font-medium">Low Quality Score</p>
+                        <p className="text-red-300 font-medium">{t('design_studio.publish_modal.low_quality_title')}</p>
                         <p className="text-sm text-red-400/80">
-                          A quality score of at least 70 is required for publishing. Run quality analysis in the editor.
+                          {t('design_studio.publish_modal.low_quality_desc')}
                         </p>
                       </div>
                     </div>
@@ -1451,12 +1289,12 @@ export default function DesignStudioPage() {
                     {publishing ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        Publishing...
+                        {t('design_studio.publish_modal.publishing')}
                       </>
                     ) : (
                       <>
                         <Rocket className="w-5 h-5" />
-                        Publish Book {isFree ? 'for Free' : `for $${selectedPrice}`}
+                        {isFree ? t('design_studio.publish_modal.publish_free') : `${t('design_studio.publish_modal.publish_for')}$${selectedPrice}`}
                       </>
                     )}
                   </button>
@@ -1491,7 +1329,7 @@ export default function DesignStudioPage() {
                     <Download className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-white">Export to File</h2>
+                    <h2 className="text-2xl font-bold text-white">{t('design_studio.export_modal.title')}</h2>
                     <p className="text-gray-400 text-sm">{book.title}</p>
                   </div>
                 </div>
@@ -1505,7 +1343,7 @@ export default function DesignStudioPage() {
 
               {/* Format Selection */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-white">Select Format</h3>
+                <h3 className="font-semibold text-white">{t('design_studio.export_modal.select_format')}</h3>
 
                 <button
                   onClick={() => setExportFormat('pdf')}
@@ -1524,7 +1362,7 @@ export default function DesignStudioPage() {
                     <div className="flex-1">
                       <p className="font-bold text-white">PDF</p>
                       <p className="text-sm text-gray-400">
-                        Perfect for printing and digital sharing. Preserves all design and images.
+                        {t('design_studio.export_modal.pdf_desc')}
                       </p>
                     </div>
                     {exportFormat === 'pdf' && (
@@ -1548,9 +1386,9 @@ export default function DesignStudioPage() {
                       <FileType className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-white">Word (DOCX)</p>
+                      <p className="font-bold text-white">{t('design_studio.export_modal.docx_title')}</p>
                       <p className="text-sm text-gray-400">
-                        Editable format. Suitable for editors and publishers.
+                        {t('design_studio.export_modal.docx_desc')}
                       </p>
                     </div>
                     {exportFormat === 'docx' && (
@@ -1561,27 +1399,27 @@ export default function DesignStudioPage() {
 
                 {/* Export includes */}
                 <div className="p-4 bg-white/5 rounded-xl">
-                  <h4 className="font-semibold text-white mb-3">The file will include:</h4>
+                  <h4 className="font-semibold text-white mb-3">{t('design_studio.export_modal.includes_title')}</h4>
                   <div className="space-y-2 text-sm text-gray-300">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-green-400" />
-                      <span>Designed cover (front and back)</span>
+                      <span>{t('design_studio.export_modal.includes_cover_front_back')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-green-400" />
-                      <span>All chapters and content</span>
+                      <span>{t('design_studio.export_modal.includes_all_chapters')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-green-400" />
-                      <span>Design, fonts, and images</span>
+                      <span>{t('design_studio.export_modal.includes_design_fonts')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-green-400" />
-                      <span>Synopsis on back cover</span>
+                      <span>{t('design_studio.export_modal.includes_synopsis')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-green-400" />
-                      <span>Print-ready quality</span>
+                      <span>{t('design_studio.export_modal.includes_print_quality')}</span>
                     </div>
                   </div>
                 </div>
@@ -1595,12 +1433,12 @@ export default function DesignStudioPage() {
                   {exporting ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Creating file...
+                      {t('design_studio.export_modal.exporting')}
                     </>
                   ) : (
                     <>
                       <Download className="w-5 h-5" />
-                      Download {exportFormat.toUpperCase()}
+                      {t('design_studio.export_modal.download')} {exportFormat.toUpperCase()}
                     </>
                   )}
                 </button>

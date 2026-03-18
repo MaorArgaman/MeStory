@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 import {
@@ -9,7 +10,6 @@ import {
   Loader2,
   Image as ImageIcon,
   Sparkles,
-  Type,
   List,
   Plus,
   Minus,
@@ -20,11 +20,6 @@ import {
   Settings,
   CheckCircle2,
   X,
-  Wand2,
-  LayoutTemplate,
-  BookOpenCheck,
-  Check,
-  RefreshCw,
   Layout,
   Palette,
   Layers,
@@ -328,7 +323,8 @@ const defaultSettings = {
 export default function BookLayoutPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
-  const { isRTL: isUIRTL } = useLanguage();
+  const { t } = useTranslation('common');
+  const { isRTL: isUIRTL, language } = useLanguage();
   const [book, setBook] = useState<BookData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -349,18 +345,8 @@ export default function BookLayoutPage() {
   const [generatingImage, setGeneratingImage] = useState(false);
   const [imagePrompt, setImagePrompt] = useState('');
 
-  // AI Design state
-  const [showAIDesignModal, setShowAIDesignModal] = useState(false);
-  const [generatingDesign, setGeneratingDesign] = useState(false);
+  // AI Design state (for applying stored designs)
   const [aiDesign, setAiDesign] = useState<CompleteBookDesign | null>(null);
-  const [aiDesignTab, setAiDesignTab] = useState<'typography' | 'layout' | 'cover' | 'images'>('typography');
-  const [selectedDesignElements, setSelectedDesignElements] = useState({
-    typography: true,
-    layout: true,
-    cover: true,
-    images: true,
-  });
-  const [generatingCoverImage, setGeneratingCoverImage] = useState(false);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
 
   // Mobile UI state
@@ -1052,148 +1038,6 @@ export default function BookLayoutPage() {
     };
   };
 
-  // Generate AI Design
-  const generateAIDesign = async () => {
-    if (!book) return;
-
-    setGeneratingDesign(true);
-    setAiDesign(null);
-    setCoverImageUrl(null);
-
-    try {
-      toast.loading('Generating complete AI design...', { id: 'ai-design' });
-
-      const response = await api.post(`/ai/design-book/${bookId}`);
-
-      if (response.data.success) {
-        setAiDesign(response.data.data.design);
-        toast.success('Design generated successfully!', { id: 'ai-design' });
-      }
-    } catch (error: any) {
-      console.error('AI Design error:', error);
-      toast.error(error.response?.data?.error || 'Error generating design', { id: 'ai-design' });
-    } finally {
-      setGeneratingDesign(false);
-    }
-  };
-
-  // Generate cover image from AI design
-  const generateCoverImage = async () => {
-    if (!book || !aiDesign) return;
-
-    setGeneratingCoverImage(true);
-
-    try {
-      toast.loading('Generating cover image...', { id: 'cover-image' });
-
-      const response = await api.post('/ai/generate-cover', {
-        synopsis: book.synopsis || book.description || '',
-        genre: book.genre,
-        title: book.title,
-      });
-
-      if (response.data.success) {
-        setCoverImageUrl(response.data.data.imageUrl);
-        toast.success('Cover image generated successfully!', { id: 'cover-image' });
-      }
-    } catch (error: any) {
-      console.error('Cover image error:', error);
-      toast.error(error.response?.data?.error || 'Error generating cover image', { id: 'cover-image' });
-    } finally {
-      setGeneratingCoverImage(false);
-    }
-  };
-
-  // Apply selected AI design elements
-  const applyAIDesign = async () => {
-    if (!book || !aiDesign) return;
-
-    setSaving(true);
-
-    try {
-      toast.loading('Applying design...', { id: 'apply-design' });
-
-      const response = await api.post(`/ai/apply-design/${bookId}`, {
-        design: aiDesign,
-        applyTypography: selectedDesignElements.typography,
-        applyLayout: selectedDesignElements.layout,
-        applyCover: selectedDesignElements.cover,
-        applyImageSuggestions: selectedDesignElements.images,
-      });
-
-      if (response.data.success) {
-        // Update local state with applied design
-        if (selectedDesignElements.typography || selectedDesignElements.layout) {
-          const newSettings = { ...settings };
-          if (selectedDesignElements.typography) {
-            newSettings.fontFamily = aiDesign.typography.bodyFont;
-            newSettings.fontSize = aiDesign.typography.fontSize;
-            newSettings.lineHeight = aiDesign.typography.lineHeight;
-          }
-          if (selectedDesignElements.layout) {
-            newSettings.margins = {
-              top: aiDesign.layout.margins.top,
-              bottom: aiDesign.layout.margins.bottom,
-              left: aiDesign.layout.margins.inner,
-              right: aiDesign.layout.margins.outer,
-            };
-          }
-          setSettings(newSettings);
-        }
-
-        if (selectedDesignElements.cover && coverImageUrl) {
-          // Update book cover
-          setBook({
-            ...book,
-            coverDesign: {
-              ...book.coverDesign,
-              coverColor: aiDesign.cover.front.colorPalette?.[0] || '#1a1a2e',
-              textColor: aiDesign.typography.colors.heading,
-              fontFamily: aiDesign.typography.titleFont,
-              imageUrl: coverImageUrl,
-            },
-          });
-        }
-
-        toast.success('Design applied successfully!', { id: 'apply-design' });
-        setShowAIDesignModal(false);
-
-        // Reload book to get updated data
-        loadBook();
-      }
-    } catch (error: any) {
-      console.error('Apply design error:', error);
-      toast.error(error.response?.data?.error || 'Error applying design', { id: 'apply-design' });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Generate contextual image for a specific placement suggestion
-  const generateContextualImage = async (suggestion: ImagePlacementSuggestion) => {
-    if (!book) return;
-
-    try {
-      toast.loading('Generating image...', { id: `img-${suggestion.chapterIndex}` });
-
-      const response = await api.post('/ai/generate-contextual-image', {
-        bookId,
-        chapterIndex: suggestion.chapterIndex,
-        customPrompt: suggestion.suggestedPrompt,
-      });
-
-      if (response.data.success) {
-        toast.success('Image generated successfully!', { id: `img-${suggestion.chapterIndex}` });
-        // The image URL can be used to add to a page
-        return response.data.data.imageUrl;
-      }
-    } catch (error: any) {
-      console.error('Contextual image error:', error);
-      toast.error(error.response?.data?.error || 'Error generating image', { id: `img-${suggestion.chapterIndex}` });
-    }
-    return null;
-  };
-
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1250,12 +1094,12 @@ export default function BookLayoutPage() {
               className="btn-ghost flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
             >
               {isUIRTL ? <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" /> : <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />}
-              <span className="hidden sm:inline">Back to Editor</span>
+              <span className="hidden sm:inline">{t('editor.toolbar.back')}</span>
             </button>
             <div className="hidden sm:block h-6 w-px bg-gray-700" />
             <h1 className="hidden md:block text-lg sm:text-xl font-semibold text-white truncate max-w-[200px]">{book.title}</h1>
             <span className="hidden lg:inline px-2 py-1 rounded bg-magic-gold/20 text-magic-gold text-xs font-medium">
-              {isBookRTL ? 'Hebrew (RTL)' : 'English (LTR)'}
+              {isBookRTL ? t('book_layout.hebrew_rtl') : t('book_layout.english_ltr')}
             </span>
           </div>
 
@@ -1265,29 +1109,15 @@ export default function BookLayoutPage() {
               {saving ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Saving...</span>
+                  <span>{t('book_layout.saving')}</span>
                 </>
               ) : lastSaved ? (
                 <>
                   <CheckCircle2 className="w-4 h-4 text-green-400" />
-                  <span className="hidden lg:inline">Saved {lastSaved.toLocaleTimeString('en-US')}</span>
+                  <span className="hidden lg:inline">{t('book_layout.saved')} {lastSaved.toLocaleTimeString()}</span>
                 </>
               ) : null}
             </div>
-
-            {/* AI Design Button */}
-            <button
-              onClick={() => {
-                setShowAIDesignModal(true);
-                if (!aiDesign) {
-                  generateAIDesign();
-                }
-              }}
-              className="btn-gold flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2"
-            >
-              <Wand2 className="w-4 h-4" />
-              <span className="hidden sm:inline">AI Design</span>
-            </button>
 
             {/* Settings Button */}
             <button
@@ -1304,7 +1134,7 @@ export default function BookLayoutPage() {
               className="btn-primary flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2"
             >
               <Save className="w-4 h-4" />
-              <span className="hidden sm:inline">Save</span>
+              <span className="hidden sm:inline">{t('book_layout.save')}</span>
             </button>
           </div>
         </div>
@@ -1385,7 +1215,7 @@ export default function BookLayoutPage() {
               className="w-full btn-secondary text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-2"
             >
               <List className="w-4 h-4" />
-              <span className="truncate">{settings.includeToc ? 'Remove TOC' : 'Add TOC'}</span>
+              <span className="truncate">{settings.includeToc ? t('book_layout.remove_toc') : t('book_layout.add_toc')}</span>
             </button>
           </div>
         </div>
@@ -1402,7 +1232,7 @@ export default function BookLayoutPage() {
               <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
             <span className="text-gray-400 text-xs sm:text-sm">
-              {currentSpread === 0 ? 'Cover' : `${(currentSpread - 1) * 2 + 1}-${(currentSpread - 1) * 2 + 2}`}
+              {currentSpread === 0 ? t('book_layout.cover') : `${(currentSpread - 1) * 2 + 1}-${(currentSpread - 1) * 2 + 2}`}
             </span>
             <button
               onClick={isBookRTL ? goToPrevSpread : goToNextSpread}
@@ -1469,7 +1299,7 @@ export default function BookLayoutPage() {
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-300 text-sm">
-                  {currentSpread === 0 ? '' : 'Blank page'}
+                  {currentSpread === 0 ? '' : t('book_layout.blank_page')}
                 </div>
               )}
             </div>
@@ -1899,532 +1729,6 @@ export default function BookLayoutPage() {
                   )}
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* AI Design Modal */}
-      <AnimatePresence>
-        {showAIDesignModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm"
-            onClick={() => setShowAIDesignModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="glass-strong rounded-xl sm:rounded-2xl w-full max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Modal Header */}
-              <div className="flex items-center justify-between p-3 sm:p-6 border-b border-white/10">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-1.5 sm:p-2 bg-magic-gold/20 rounded-lg">
-                    <Wand2 className="w-5 h-5 sm:w-6 sm:h-6 text-magic-gold" />
-                  </div>
-                  <div>
-                    <h2 className="text-base sm:text-xl font-bold text-white">AI Design</h2>
-                    <p className="hidden sm:block text-sm text-gray-400">Automatic design of typography, layout and cover</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowAIDesignModal(false)}
-                  className="btn-ghost p-1.5 sm:p-2"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Loading State */}
-              {generatingDesign && (
-                <div className="flex-1 flex flex-col items-center justify-center p-12">
-                  <div className="relative w-24 h-24 mb-6">
-                    <div className="absolute inset-0 rounded-full border-4 border-magic-gold/20" />
-                    <div className="absolute inset-0 rounded-full border-4 border-magic-gold border-t-transparent animate-spin" />
-                    <Wand2 className="absolute inset-0 m-auto w-10 h-10 text-magic-gold animate-pulse" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">Generating custom design...</h3>
-                  <p className="text-sm text-gray-400 text-center max-w-md">
-                    AI is analyzing your book and creating a professional design including typography, page layout, cover and image recommendations
-                  </p>
-                </div>
-              )}
-
-              {/* Design Preview */}
-              {!generatingDesign && aiDesign && (
-                <>
-                  {/* Tabs */}
-                  <div className="flex border-b border-white/10 overflow-x-auto scrollbar-hide">
-                    {[
-                      { id: 'typography', label: 'Typography', shortLabel: 'Type', icon: Type },
-                      { id: 'layout', label: 'Layout', shortLabel: 'Layout', icon: LayoutTemplate },
-                      { id: 'cover', label: 'Cover', shortLabel: 'Cover', icon: BookOpenCheck },
-                      { id: 'images', label: 'Images', shortLabel: 'Images', icon: ImageIcon },
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setAiDesignTab(tab.id as any)}
-                        className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
-                          aiDesignTab === tab.id
-                            ? 'text-magic-gold border-b-2 border-magic-gold bg-magic-gold/10'
-                            : 'text-gray-400 hover:text-white'
-                        }`}
-                      >
-                        <tab.icon className="w-3 h-3 sm:w-4 sm:h-4" />
-                        <span className="hidden sm:inline">{tab.label}</span>
-                        <span className="sm:hidden">{tab.shortLabel}</span>
-                        <label className="flex items-center ml-1 sm:ml-2">
-                          <input
-                            type="checkbox"
-                            checked={selectedDesignElements[tab.id as keyof typeof selectedDesignElements]}
-                            onChange={(e) => setSelectedDesignElements({
-                              ...selectedDesignElements,
-                              [tab.id]: e.target.checked,
-                            })}
-                            onClick={(e) => e.stopPropagation()}
-                            className="w-3 h-3 sm:w-4 sm:h-4 rounded border-gray-600 bg-white/10"
-                          />
-                        </label>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Tab Content */}
-                  <div className="flex-1 overflow-y-auto p-3 sm:p-6">
-                    {/* Typography Tab */}
-                    {aiDesignTab === 'typography' && (
-                      <div className="space-y-4 sm:space-y-6">
-                        <div className="bg-white/5 rounded-xl p-4 sm:p-6">
-                          <h3 className="text-base sm:text-lg font-semibold text-white mb-2 sm:mb-4">Overall Style</h3>
-                          <p className="text-sm sm:text-base text-gray-300">{aiDesign.overallStyle}</p>
-                          <p className="text-xs sm:text-sm text-gray-400 mt-2">{aiDesign.moodDescription}</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                          <div className="bg-white/5 rounded-xl p-6">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-3">Title Font</h4>
-                            <div
-                              className="p-4 bg-white rounded-lg mb-3"
-                              style={{
-                                fontFamily: aiDesign.typography.titleFont,
-                                fontSize: '28px',
-                                fontWeight: 'bold',
-                                color: aiDesign.typography.colors.heading,
-                              }}
-                            >
-                              {book?.title || 'Book Title'}
-                            </div>
-                            <div className="text-xs text-gray-400 space-y-1">
-                              <p>Family: {aiDesign.typography.titleFont}</p>
-                              <p>Color: {aiDesign.typography.colors.heading}</p>
-                            </div>
-                          </div>
-
-                          <div className="bg-white/5 rounded-xl p-6">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-3">Body Text Font</h4>
-                            <div
-                              className="p-4 bg-white rounded-lg mb-3"
-                              style={{
-                                fontFamily: aiDesign.typography.bodyFont,
-                                fontSize: `${aiDesign.typography.fontSize}px`,
-                                fontWeight: 'normal',
-                                color: aiDesign.typography.colors.text,
-                                lineHeight: aiDesign.typography.lineHeight,
-                              }}
-                            >
-                              This is sample text demonstrating the body font selected for the book. The font was carefully chosen to match the genre and mood.
-                            </div>
-                            <div className="text-xs text-gray-400 space-y-1">
-                              <p>Family: {aiDesign.typography.bodyFont}</p>
-                              <p>Size: {aiDesign.typography.fontSize}px</p>
-                              <p>Line Height: {aiDesign.typography.lineHeight}</p>
-                            </div>
-                          </div>
-
-                          <div className="bg-white/5 rounded-xl p-6">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-3">Chapter Title Font</h4>
-                            <div
-                              className="p-4 bg-white rounded-lg mb-3"
-                              style={{
-                                fontFamily: aiDesign.typography.headingFont,
-                                fontSize: `${Math.min(aiDesign.typography.chapterTitleSize, 24)}px`,
-                                fontWeight: 'bold',
-                                color: aiDesign.typography.colors.heading,
-                              }}
-                            >
-                              Chapter One
-                            </div>
-                            <div className="text-xs text-gray-400 space-y-1">
-                              <p>Family: {aiDesign.typography.headingFont}</p>
-                              <p>Size: {aiDesign.typography.chapterTitleSize}px</p>
-                            </div>
-                          </div>
-
-                          <div className="bg-white/5 rounded-xl p-6">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-3">Subheading Font</h4>
-                            <div
-                              className="p-4 bg-white rounded-lg mb-3"
-                              style={{
-                                fontFamily: aiDesign.typography.headingFont,
-                                fontSize: '18px',
-                                fontWeight: '600',
-                                color: aiDesign.typography.colors.heading,
-                              }}
-                            >
-                              Subheading
-                            </div>
-                            <div className="text-xs text-gray-400 space-y-1">
-                              <p>Family: {aiDesign.typography.headingFont}</p>
-                              <p>Color: {aiDesign.typography.colors.heading}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Layout Tab */}
-                    {aiDesignTab === 'layout' && (
-                      <div className="space-y-4 sm:space-y-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                          <div className="bg-white/5 rounded-xl p-6">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-4">Margins</h4>
-                            <div className="relative bg-white rounded-lg aspect-[3/4] max-w-[200px] mx-auto">
-                              <div
-                                className="absolute bg-gray-200 rounded"
-                                style={{
-                                  top: `${aiDesign.layout.margins.top / 2}px`,
-                                  bottom: `${aiDesign.layout.margins.bottom / 2}px`,
-                                  left: `${aiDesign.layout.margins.inner / 2}px`,
-                                  right: `${aiDesign.layout.margins.outer / 2}px`,
-                                }}
-                              >
-                                <div className="absolute inset-2 flex items-center justify-center text-xs text-gray-500">
-                                  Content Area
-                                </div>
-                              </div>
-                            </div>
-                            <div className="mt-4 text-xs text-gray-400 space-y-1 text-center">
-                              <p>Top: {aiDesign.layout.margins.top}px | Bottom: {aiDesign.layout.margins.bottom}px</p>
-                              <p>Inner: {aiDesign.layout.margins.inner}px | Outer: {aiDesign.layout.margins.outer}px</p>
-                            </div>
-                          </div>
-
-                          <div className="bg-white/5 rounded-xl p-6">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-4">Additional Settings</h4>
-                            <div className="space-y-4">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-300">Page Numbers</span>
-                                <span className="text-sm text-white">{
-                                  aiDesign.layout.pageNumberPosition === 'bottom-center' ? 'Bottom Center' :
-                                  aiDesign.layout.pageNumberPosition === 'bottom-outer' ? 'Bottom Outer' :
-                                  aiDesign.layout.pageNumberPosition === 'top-outer' ? 'Top Outer' : 'None'
-                                }</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-300">Chapter Start</span>
-                                <span className="text-sm text-white">{
-                                  aiDesign.layout.chapterStartStyle === 'new-page' ? 'New Page' :
-                                  aiDesign.layout.chapterStartStyle === 'new-page-centered' ? 'New Page (Centered)' : 'Same Page'
-                                }</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-300">Header Style</span>
-                                <span className="text-sm text-white">{
-                                  aiDesign.layout.headerStyle === 'book-title' ? 'Book Title' :
-                                  aiDesign.layout.headerStyle === 'chapter-title' ? 'Chapter Title' :
-                                  aiDesign.layout.headerStyle === 'author-name' ? 'Author Name' : 'None'
-                                }</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-300">Drop Caps</span>
-                                <span className="text-sm text-white">{aiDesign.layout.dropCaps ? 'Yes' : 'No'}</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-300">Ornaments</span>
-                                <span className="text-sm text-white">{aiDesign.layout.ornaments ? 'Yes' : 'No'}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Cover Tab */}
-                    {aiDesignTab === 'cover' && (
-                      <div className="space-y-4 sm:space-y-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-                          {/* Front Cover */}
-                          <div className="bg-white/5 rounded-xl p-4">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-3">Front Cover</h4>
-                            <div
-                              className="aspect-[2/3] rounded-lg relative overflow-hidden flex flex-col items-center justify-center"
-                              style={{
-                                background: aiDesign.cover.front.colorPalette?.[0] || '#1a1a2e',
-                              }}
-                            >
-                              {coverImageUrl && (
-                                <img
-                                  src={coverImageUrl}
-                                  alt="Cover"
-                                  className="absolute inset-0 w-full h-full object-cover"
-                                />
-                              )}
-                              <div className="relative z-10 p-4 text-center">
-                                <h3
-                                  className="font-bold mb-2 drop-shadow-lg"
-                                  style={{
-                                    fontFamily: aiDesign.typography.titleFont,
-                                    color: aiDesign.cover.front.title.color,
-                                    fontSize: '18px',
-                                  }}
-                                >
-                                  {book?.title}
-                                </h3>
-                                <p
-                                  className="drop-shadow-lg"
-                                  style={{
-                                    fontFamily: aiDesign.typography.bodyFont,
-                                    color: aiDesign.cover.front.author.color,
-                                    fontSize: '12px',
-                                  }}
-                                >
-                                  {book?.author?.name}
-                                </p>
-                              </div>
-                            </div>
-                            <button
-                              onClick={generateCoverImage}
-                              disabled={generatingCoverImage}
-                              className="w-full mt-3 btn-secondary text-sm flex items-center justify-center gap-2"
-                            >
-                              {generatingCoverImage ? (
-                                <>
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                  Generating...
-                                </>
-                              ) : coverImageUrl ? (
-                                <>
-                                  <RefreshCw className="w-4 h-4" />
-                                  Generate New Image
-                                </>
-                              ) : (
-                                <>
-                                  <Sparkles className="w-4 h-4" />
-                                  Generate Cover Image
-                                </>
-                              )}
-                            </button>
-                          </div>
-
-                          {/* Spine */}
-                          <div className="bg-white/5 rounded-xl p-4">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-3">Spine</h4>
-                            <div
-                              className="w-12 mx-auto aspect-[1/6] rounded flex items-center justify-center"
-                              style={{ background: aiDesign.cover.spine.backgroundColor }}
-                            >
-                              <span
-                                className="transform -rotate-90 whitespace-nowrap text-xs font-medium"
-                                style={{
-                                  fontFamily: aiDesign.cover.spine.font,
-                                  color: aiDesign.cover.spine.color,
-                                }}
-                              >
-                                {book?.title}
-                              </span>
-                            </div>
-                            <div className="mt-3 text-xs text-gray-400 text-center">
-                              <p>Font: {aiDesign.cover.spine.font}</p>
-                              <p>Author: {aiDesign.cover.spine.author || book?.author?.name}</p>
-                            </div>
-                          </div>
-
-                          {/* Back Cover */}
-                          <div className="bg-white/5 rounded-xl p-4">
-                            <h4 className="text-sm font-semibold text-gray-400 mb-3">Back Cover</h4>
-                            <div
-                              className="aspect-[2/3] rounded-lg relative overflow-hidden flex flex-col p-4"
-                              style={{
-                                background: coverImageUrl
-                                  ? `url(${coverImageUrl})`
-                                  : aiDesign.cover.back.backgroundColor,
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                              }}
-                            >
-                              {coverImageUrl && (
-                                <div className="absolute inset-0 backdrop-blur-md bg-black/40" />
-                              )}
-                              <div className="relative z-10 flex-1 flex flex-col">
-                                <p
-                                  className="text-xs leading-relaxed flex-1 overflow-hidden"
-                                  style={{
-                                    fontFamily: aiDesign.cover.back.synopsis.font,
-                                    color: aiDesign.cover.back.synopsis.color,
-                                  }}
-                                >
-                                  {(book?.synopsis || book?.description || '').slice(0, 200)}...
-                                </p>
-                                <div className="mt-auto pt-4 border-t border-white/20">
-                                  <p className="text-xs" style={{ color: aiDesign.cover.back.author.color }}>{book?.author?.name}</p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Images Tab */}
-                    {aiDesignTab === 'images' && (
-                      <div className="space-y-4">
-                        <div className="bg-white/5 rounded-xl p-4">
-                          <h4 className="text-sm font-semibold text-gray-400 mb-2">Image Placement Recommendations</h4>
-                          <p className="text-xs text-gray-500">AI found recommended locations for adding images to the book</p>
-                        </div>
-
-                        {aiDesign.imagePlacements.length === 0 ? (
-                          <div className="text-center py-12 text-gray-400">
-                            <ImageIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                            <p>No image placement recommendations found</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            {aiDesign.imagePlacements.map((suggestion, index) => (
-                              <div
-                                key={index}
-                                className="bg-white/5 rounded-xl p-4 border border-white/10 hover:border-magic-gold/50 transition"
-                              >
-                                <div className="flex items-start justify-between mb-3">
-                                  <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                        suggestion.importance === 'high' ? 'bg-red-500/20 text-red-400' :
-                                        suggestion.importance === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                                        'bg-blue-500/20 text-blue-400'
-                                      }`}>
-                                        {suggestion.importance === 'high' ? 'High Priority' :
-                                         suggestion.importance === 'medium' ? 'Medium Priority' : 'Low Priority'}
-                                      </span>
-                                      <span className="text-xs text-gray-500">
-                                        Chapter {suggestion.chapterIndex + 1}
-                                        {book?.chapters[suggestion.chapterIndex]?.title && ` - ${book.chapters[suggestion.chapterIndex].title}`}
-                                      </span>
-                                    </div>
-                                    <p className="text-sm text-white">{suggestion.reasoning}</p>
-                                  </div>
-                                  <span className="text-xs text-gray-400 whitespace-nowrap">
-                                    {suggestion.position === 'chapter-start' ? 'Chapter Start' :
-                                     suggestion.position === 'mid-chapter' ? 'Mid Chapter' : 'Chapter End'}
-                                  </span>
-                                </div>
-                                <div className="bg-black/30 rounded-lg p-3 mb-3">
-                                  <p className="text-xs text-gray-300 italic">"{suggestion.suggestedPrompt}"</p>
-                                </div>
-                                <button
-                                  onClick={async () => {
-                                    const imageUrl = await generateContextualImage(suggestion);
-                                    if (imageUrl) {
-                                      // Find the page for this chapter
-                                      const pageIndex = pages.findIndex(
-                                        p => p.type === 'chapter' && p.chapterIndex === suggestion.chapterIndex
-                                      );
-                                      if (pageIndex !== -1) {
-                                        const newImage: PageImage = {
-                                          id: `img-${Date.now()}`,
-                                          url: imageUrl,
-                                          x: 10,
-                                          y: suggestion.position === 'chapter-start' ? 10 : 50,
-                                          width: 40,
-                                          height: 30,
-                                          rotation: 0,
-                                        };
-                                        const updatedPages = [...pages];
-                                        if (!updatedPages[pageIndex].images) {
-                                          updatedPages[pageIndex].images = [];
-                                        }
-                                        updatedPages[pageIndex].images.push(newImage);
-                                        setPages(updatedPages);
-                                      }
-                                    }
-                                  }}
-                                  className="btn-secondary text-sm flex items-center gap-2"
-                                >
-                                  <Sparkles className="w-4 h-4" />
-                                  Generate and Add Image
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Modal Footer */}
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0 p-3 sm:p-6 border-t border-white/10 bg-white/5">
-                    <button
-                      onClick={generateAIDesign}
-                      disabled={generatingDesign}
-                      className="btn-secondary flex items-center justify-center gap-2 text-xs sm:text-sm order-2 sm:order-1"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                      <span className="hidden sm:inline">Generate New Design</span>
-                      <span className="sm:hidden">Regenerate</span>
-                    </button>
-
-                    <div className="flex items-center gap-2 sm:gap-3 order-1 sm:order-2">
-                      <button
-                        onClick={() => setShowAIDesignModal(false)}
-                        className="btn-ghost text-xs sm:text-sm flex-1 sm:flex-none"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={applyAIDesign}
-                        disabled={saving || !Object.values(selectedDesignElements).some(v => v)}
-                        className="btn-gold flex items-center justify-center gap-2 text-xs sm:text-sm flex-1 sm:flex-none"
-                      >
-                        {saving ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span className="hidden sm:inline">Applying...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Check className="w-4 h-4" />
-                            <span className="hidden sm:inline">Apply Design</span>
-                            <span className="sm:hidden">Apply</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Empty State */}
-              {!generatingDesign && !aiDesign && (
-                <div className="flex-1 flex flex-col items-center justify-center p-12">
-                  <Wand2 className="w-16 h-16 text-gray-600 mb-4" />
-                  <h3 className="text-lg font-semibold text-white mb-2">No design generated yet</h3>
-                  <p className="text-sm text-gray-400 text-center mb-6">
-                    Click the button below to create a custom design for your book
-                  </p>
-                  <button
-                    onClick={generateAIDesign}
-                    className="btn-gold flex items-center gap-2"
-                  >
-                    <Sparkles className="w-5 h-5" />
-                    Generate AI Design
-                  </button>
-                </div>
-              )}
             </motion.div>
           </motion.div>
         )}

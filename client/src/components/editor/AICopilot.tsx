@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, BarChart3, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { getAiSuggestions, getQualityAnalysis, QualityAnalysis } from '../../services/aiApi';
@@ -19,6 +20,7 @@ export default function AICopilot({
   chapterTitle,
   onInsertText,
 }: AICopilotProps) {
+  const { t } = useTranslation('common');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [analysis, setAnalysis] = useState<QualityAnalysis | null>(null);
@@ -26,7 +28,7 @@ export default function AICopilot({
 
   const handleGetSuggestions = async () => {
     if (!currentText || currentText.length < 50) {
-      toast.error('Write at least 50 characters to get suggestions');
+      toast.error(t('editor.ai_copilot.min_chars_error'));
       return;
     }
 
@@ -41,10 +43,10 @@ export default function AICopilot({
         },
       });
       setSuggestions(result.suggestions);
-      toast.success('Got 3 suggestions for you!');
+      toast.success(t('editor.ai_copilot.suggestions_success'));
     } catch (error) {
       console.error('Failed to get suggestions:', error);
-      toast.error('Failed to get suggestions. Please try again.');
+      toast.error(t('editor.ai_copilot.suggestions_failed'));
     } finally {
       setLoadingSuggestions(false);
     }
@@ -52,7 +54,7 @@ export default function AICopilot({
 
   const handleAnalyze = async () => {
     if (!currentText || currentText.length < 100) {
-      toast.error('Write at least 100 characters to analyze');
+      toast.error(t('editor.ai_copilot.min_chars_error'));
       return;
     }
 
@@ -60,10 +62,10 @@ export default function AICopilot({
     try {
       const result = await getQualityAnalysis({ text: currentText });
       setAnalysis(result);
-      toast.success('Analysis complete!');
+      toast.success(t('editor.ai_copilot.suggestions_success'));
     } catch (error) {
       console.error('Failed to analyze:', error);
-      toast.error('Failed to analyze text. Please try again.');
+      toast.error(t('editor.ai_copilot.analysis_failed'));
     } finally {
       setLoadingAnalysis(false);
     }
@@ -96,7 +98,7 @@ export default function AICopilot({
       <div>
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="w-5 h-5 text-indigo-400" />
-          <h2 className="text-sm font-semibold text-gray-300">AI CO-PILOT</h2>
+          <h2 className="text-sm font-semibold text-gray-300">{t('editor.ai_copilot.title')}</h2>
         </div>
 
         <div className="card p-4 space-y-4">
@@ -108,12 +110,12 @@ export default function AICopilot({
             {loadingSuggestions ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Thinking...
+                {t('editor.ai_copilot.thinking')}
               </>
             ) : (
               <>
                 <Sparkles className="w-4 h-4" />
-                Inspire Me
+                {t('editor.ai_copilot.inspire_me')}
               </>
             )}
           </button>
@@ -127,7 +129,7 @@ export default function AICopilot({
                 className="space-y-3"
               >
                 <p className="text-xs text-gray-400 uppercase tracking-wide">
-                  Pick a continuation:
+                  {t('editor.ai_copilot.pick_continuation')}
                 </p>
                 {suggestions.map((suggestion, index) => (
                   <motion.button
@@ -143,7 +145,7 @@ export default function AICopilot({
                     </p>
                     <div className="mt-2 flex items-center gap-1 text-xs text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">
                       <CheckCircle className="w-3 h-3" />
-                      Click to insert
+                      {t('editor.ai_copilot.click_to_insert')}
                     </div>
                   </motion.button>
                 ))}
@@ -154,7 +156,7 @@ export default function AICopilot({
           {!suggestions.length && !loadingSuggestions && (
             <div className="text-center py-4 text-gray-500 text-sm">
               <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p>Get AI suggestions to continue your story</p>
+              <p>{t('editor.ai_copilot.get_suggestions')}</p>
             </div>
           )}
         </div>
@@ -164,7 +166,7 @@ export default function AICopilot({
       <div>
         <div className="flex items-center gap-2 mb-3">
           <BarChart3 className="w-5 h-5 text-purple-400" />
-          <h2 className="text-sm font-semibold text-gray-300">QUALITY ANALYSIS</h2>
+          <h2 className="text-sm font-semibold text-gray-300">{t('editor.ai_copilot.quality_analysis')}</h2>
         </div>
 
         <div className="card p-4 space-y-4">
@@ -176,12 +178,12 @@ export default function AICopilot({
             {loadingAnalysis ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Analyzing...
+                {t('editor.ai_copilot.analyzing')}
               </>
             ) : (
               <>
                 <BarChart3 className="w-4 h-4" />
-                Analyze Chapter
+                {t('editor.ai_copilot.analyze_chapter')}
               </>
             )}
           </button>
@@ -268,7 +270,7 @@ export default function AICopilot({
 
               {/* Score Breakdown */}
               <div className="space-y-3">
-                <p className="text-xs text-gray-400 uppercase tracking-wide">Breakdown:</p>
+                <p className="text-xs text-gray-400 uppercase tracking-wide">{t('editor.ai_copilot.breakdown')}</p>
                 {Object.entries(analysis.scores).map(([key, value]) => (
                   <div key={key}>
                     <div className="flex items-center justify-between mb-1">
@@ -301,7 +303,7 @@ export default function AICopilot({
               {analysis.suggestions && analysis.suggestions.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs text-gray-400 uppercase tracking-wide">
-                    Improvement Tips:
+                    {t('editor.ai_copilot.improvement_tips')}
                   </p>
                   <ul className="space-y-1">
                     {analysis.suggestions.map((suggestion, index) => (
@@ -317,7 +319,7 @@ export default function AICopilot({
           ) : (
             <div className="text-center py-8 text-gray-500 text-sm">
               <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p>Analyze your chapter to see quality scores</p>
+              <p>{t('editor.ai_copilot.analyze_placeholder')}</p>
             </div>
           )}
         </div>

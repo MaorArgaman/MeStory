@@ -25,11 +25,13 @@ import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import CharacterCount from '@tiptap/extension-character-count';
-import TextStyle from '@tiptap/extension-text-style';
-import Color from '@tiptap/extension-color';
-import Highlight from '@tiptap/extension-highlight';
+// TODO: Install these packages: npm install @tiptap/extension-text-style @tiptap/extension-color @tiptap/extension-highlight
+// import TextStyle from '@tiptap/extension-text-style';
+// import Color from '@tiptap/extension-color';
+// import Highlight from '@tiptap/extension-highlight';
 import AICopilot from '../components/editor/AICopilot';
 import EditorToolbar from '../components/editor/EditorToolbar';
+import DraftNotes from '../components/editor/DraftNotes';
 import AIFloatingToolbar, { AIEnhancePreview } from '../components/editor/AIFloatingToolbar';
 import { enhanceText } from '../services/analysisApi';
 import { EnhanceAction, EnhanceResult, AnalysisTab } from '../types/analysis';
@@ -120,11 +122,11 @@ export default function BookWritingPage() {
         alignments: ['left', 'center', 'right', 'justify'],
       }),
       CharacterCount,
-      TextStyle,
-      Color,
-      Highlight.configure({
-        multicolor: true,
-      }),
+      // TextStyle,
+      // Color,
+      // Highlight.configure({
+      //   multicolor: true,
+      // }),
     ],
     content: '',
     editorProps: {
@@ -831,6 +833,20 @@ export default function BookWritingPage() {
         onCancel={handleCancelEnhancement}
         isApplying={false}
       />
+
+      {/* Draft Notes Sidebar */}
+      {bookId && (
+        <DraftNotes
+          bookId={bookId}
+          chapterIndex={selectedChapterIndex ?? 0}
+          onInsertText={(text) => {
+            if (editor) {
+              editor.chain().focus().insertContent(text).run();
+            }
+          }}
+          language={book.language || 'he'}
+        />
+      )}
     </div>
   );
 }
