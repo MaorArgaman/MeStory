@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Crop,
@@ -79,15 +80,15 @@ export default function ImageEditToolbar({
     { value: 'dotted', labelHe: 'נקודות', labelEn: 'Dotted' },
   ];
 
-  return (
+  return createPortal(
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] max-w-[95vw]"
+      className="fixed top-20 left-1/2 -translate-x-1/2 z-[9999] max-w-[95vw]"
       style={{ direction: isHebrew ? 'rtl' : 'ltr' }}
     >
-      <div className="bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700/50 overflow-hidden max-h-[80vh] overflow-y-auto">
+      <div className="bg-gray-900 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden max-h-[70vh] overflow-y-auto">
         {/* Header with tabs */}
         <div className="flex items-center border-b border-gray-700/50">
           {tabs.map((tab) => (
@@ -535,6 +536,7 @@ export default function ImageEditToolbar({
           </button>
         </div>
       </div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
