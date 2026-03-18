@@ -1119,25 +1119,16 @@ export default function DesignStudioPage() {
                   className="input"
                   placeholder="Enter image URL or upload..."
                 />
-                <div className="flex gap-2">
-                  <label className="btn-secondary flex-1 flex items-center justify-center gap-2 cursor-pointer">
-                    <ImageIcon className="w-4 h-4" />
-                    Upload
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageUpload}
-                    />
-                  </label>
-                  <button
-                    className="btn-primary flex-1 flex items-center justify-center gap-2"
-                    onClick={handleAIColorGeneration}
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    AI Colors
-                  </button>
-                </div>
+                <label className="btn-secondary w-full flex items-center justify-center gap-2 cursor-pointer">
+                  <ImageIcon className="w-4 h-4" />
+                  Upload
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                </label>
                 {/* AI Cover Generation Button */}
                 <button
                   className="btn-gold w-full flex items-center justify-center gap-2 shadow-glow-gold"
