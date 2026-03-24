@@ -23,7 +23,6 @@ import {
   AlertTriangle,
   Globe,
   FileDown,
-  Upload,
   Camera,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
