@@ -858,7 +858,11 @@
       "language_english": "Language changed to English",
       "language_failed": "Failed to change language",
       "export_success": "Your data has been exported successfully",
-      "export_failed": "Failed to export data. Please try again."
+      "export_failed": "Failed to export data. Please try again.",
+      "avatar_uploaded": "Profile picture uploaded",
+      "avatar_failed": "Failed to upload profile picture",
+      "invalid_image_type": "Please upload a valid image (JPG, PNG, WebP, GIF)",
+      "image_too_large": "Image must be less than 5MB"
     },
     "profile": {
       "title": "Profile Information",
@@ -870,8 +874,9 @@
       "email_help": "Email cannot be changed",
       "bio": "Bio",
       "bio_placeholder": "Tell readers about yourself...",
-      "avatar": "Avatar URL",
-      "avatar_placeholder": "https://...",
+      "avatar": "Profile Picture",
+      "upload_avatar": "Upload Picture",
+      "avatar_hint": "JPG, PNG, WebP or GIF. Max 5MB.",
       "save": "Save Changes"
     },
     "security": {

@@ -13,6 +13,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { api } from '../../services/api';
+import { useModal } from '../../hooks/useModal';
 import toast from 'react-hot-toast';
 
 // Social media icons
@@ -57,6 +58,9 @@ const ShareModal: React.FC<ShareModalProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [sharing, setSharing] = useState(false);
+
+  // ESC key handling and scroll lock
+  useModal(isOpen, onClose);
 
   const shareUrl = `${window.location.origin}/reader/${bookId}`;
   const shareText = `I read "${bookTitle}" by ${authorName} and highly recommend it! 📚`;
@@ -143,6 +147,8 @@ const ShareModal: React.FC<ShareModalProps> = ({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl w-full max-w-sm p-4 sm:p-6 shadow-2xl border border-purple-500/20"
+          role="dialog"
+          aria-modal="true"
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-4 sm:mb-6">

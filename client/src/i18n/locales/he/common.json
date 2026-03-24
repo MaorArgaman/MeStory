@@ -928,7 +928,11 @@
       "language_english": "Language changed to English",
       "language_failed": "שינוי השפה נכשל",
       "export_success": "הנתונים שלך יוצאו בהצלחה",
-      "export_failed": "ייצוא הנתונים נכשל. נסה שוב."
+      "export_failed": "ייצוא הנתונים נכשל. נסה שוב.",
+      "avatar_uploaded": "תמונת הפרופיל הועלתה",
+      "avatar_failed": "העלאת תמונת הפרופיל נכשלה",
+      "invalid_image_type": "אנא העלה תמונה תקינה (JPG, PNG, WebP, GIF)",
+      "image_too_large": "התמונה חייבת להיות קטנה מ-5MB"
     },
     "profile": {
       "title": "פרטי פרופיל",
@@ -940,8 +944,9 @@
       "email_help": "לא ניתן לשנות את האימייל",
       "bio": "אודות",
       "bio_placeholder": "ספר לקוראים על עצמך...",
-      "avatar": "כתובת תמונה",
-      "avatar_placeholder": "https://...",
+      "avatar": "תמונת פרופיל",
+      "upload_avatar": "העלאת תמונה",
+      "avatar_hint": "JPG, PNG, WebP או GIF. עד 5MB.",
       "save": "שמור שינויים"
     },
     "security": {

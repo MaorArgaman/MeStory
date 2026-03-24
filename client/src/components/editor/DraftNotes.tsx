@@ -132,7 +132,7 @@ export default function DraftNotes({
   return (
     <div
       ref={containerRef}
-      className={`fixed ${isHebrew ? 'left-0' : 'right-0'} top-32 bottom-20 z-30 transition-all duration-500 ease-in-out ${
+      className={`fixed ${isHebrew ? 'left-0' : 'right-0'} top-32 bottom-[max(5rem,env(safe-area-inset-bottom))] z-30 transition-all duration-500 ease-in-out ${
         isExpanded ? 'w-72 max-w-[90vw]' : 'w-10'
       }`}
       style={{
@@ -143,7 +143,7 @@ export default function DraftNotes({
       {/* Toggle Button */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className={`absolute top-0 ${isHebrew ? 'right-0 translate-x-full rounded-r-lg' : 'left-0 -translate-x-full rounded-l-lg'} bg-amber-500 hover:bg-amber-600 text-white p-2 shadow-lg transition-colors`}
+        className={`absolute top-0 ${isHebrew ? 'right-0 translate-x-full rounded-r-lg' : 'left-0 -translate-x-full rounded-l-lg'} bg-amber-500 hover:bg-amber-600 text-white p-3 sm:p-2 min-h-[44px] min-w-[44px] shadow-lg transition-colors flex items-center justify-center`}
         title={t('draft_notes.title')}
       >
         {isExpanded ? (
@@ -171,7 +171,7 @@ export default function DraftNotes({
               </h3>
               <button
                 onClick={addNote}
-                className="p-1.5 bg-amber-500/20 hover:bg-amber-500/30 rounded-lg text-amber-400 transition-colors"
+                className="p-2 sm:p-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 bg-amber-500/20 hover:bg-amber-500/30 rounded-lg text-amber-400 transition-colors flex items-center justify-center"
                 title={t('draft_notes.add_note')}
               >
                 <Plus className="w-4 h-4" />

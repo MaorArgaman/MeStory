@@ -97,6 +97,7 @@ export default function LandingPage() {
             {/* CTA Buttons */}
             <div className="flex items-center gap-2 sm:gap-4">
               <button
+                type="button"
                 onClick={() => navigate('/login')}
                 className="px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-gray-300 hover:text-white hover:bg-white/5 font-semibold transition-all text-sm sm:text-base"
               >
@@ -439,22 +440,22 @@ export default function LandingPage() {
               <h3 className="font-display font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">{t('landing.footer.platform')}</h3>
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
-                  <a href="#" className="hover:text-magic-gold transition-colors">
+                  <a href="/features" className="hover:text-magic-gold transition-colors" aria-label="View platform features">
                     {t('landing.footer.features')}
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-magic-gold transition-colors">
+                  <a href="/pricing" className="hover:text-magic-gold transition-colors" aria-label="View pricing plans">
                     {t('landing.footer.pricing')}
                   </a>
                 </li>
                 <li>
-                  <a href="/marketplace" className="hover:text-magic-gold transition-colors">
+                  <a href="/marketplace" className="hover:text-magic-gold transition-colors" aria-label="Browse the marketplace">
                     {t('landing.footer.marketplace')}
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-magic-gold transition-colors">
+                  <a href="/api-docs" className="hover:text-magic-gold transition-colors" aria-label="View API documentation">
                     {t('landing.footer.api')}
                   </a>
                 </li>
@@ -466,22 +467,22 @@ export default function LandingPage() {
               <h3 className="font-display font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">{t('landing.footer.legal')}</h3>
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
-                  <a href="/terms" className="hover:text-magic-gold transition-colors">
+                  <a href="/terms" className="hover:text-magic-gold transition-colors" aria-label="Read terms of service">
                     {t('footer.terms')}
                   </a>
                 </li>
                 <li>
-                  <a href="/privacy" className="hover:text-magic-gold transition-colors">
+                  <a href="/privacy" className="hover:text-magic-gold transition-colors" aria-label="Read privacy policy">
                     {t('footer.privacy')}
                   </a>
                 </li>
                 <li>
-                  <a href="/library" className="hover:text-magic-gold transition-colors">
+                  <a href="/library" className="hover:text-magic-gold transition-colors" aria-label="View your library">
                     {t('nav.library')}
                   </a>
                 </li>
                 <li>
-                  <a href="mailto:support@mestory.com" className="hover:text-magic-gold transition-colors">
+                  <a href="mailto:support@mestory.com" className="hover:text-magic-gold transition-colors" aria-label="Contact support via email">
                     {t('footer.contact')}
                   </a>
                 </li>
@@ -495,13 +496,31 @@ export default function LandingPage() {
               {t('landing.footer.copyright')}
             </p>
             <div className="flex items-center gap-4 sm:gap-6 text-sm">
-              <a href="#" className="text-gray-400 hover:text-magic-gold transition-colors">
+              <a
+                href="https://twitter.com/mestory"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-magic-gold transition-colors"
+                aria-label="Follow MeStory on Twitter"
+              >
                 Twitter
               </a>
-              <a href="#" className="text-gray-400 hover:text-magic-gold transition-colors">
+              <a
+                href="https://linkedin.com/company/mestory"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-magic-gold transition-colors"
+                aria-label="Connect with MeStory on LinkedIn"
+              >
                 LinkedIn
               </a>
-              <a href="#" className="text-gray-400 hover:text-magic-gold transition-colors">
+              <a
+                href="https://github.com/mestory"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-magic-gold transition-colors"
+                aria-label="View MeStory on GitHub"
+              >
                 GitHub
               </a>
             </div>

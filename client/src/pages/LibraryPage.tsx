@@ -694,7 +694,7 @@ export default function LibraryPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex justify-start sm:justify-center gap-2 sm:gap-4 mb-8 sm:mb-12 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 scrollbar-hide"
+          className="flex flex-wrap justify-start sm:justify-center gap-2 sm:gap-4 mb-8 sm:mb-12 pb-2 -mx-3 px-3 sm:mx-0 sm:px-0"
         >
           {tabs.map((tab) => (
             <button

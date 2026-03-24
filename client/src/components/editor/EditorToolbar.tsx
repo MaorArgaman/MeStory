@@ -156,7 +156,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
       disabled={disabled}
       title={title}
       className={`
-        p-2 rounded-lg transition-all duration-200
+        p-3 sm:p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-lg transition-all duration-200 flex items-center justify-center
         ${disabled ? 'opacity-40 cursor-not-allowed' : ''}
         ${
           isActive
@@ -325,7 +325,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               setShowHighlightMenu(false);
             }}
             title="Text Color"
-            className="p-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all relative"
+            className="p-3 sm:p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all relative flex items-center justify-center"
           >
             <Palette className={iconClass} />
             <div
@@ -346,7 +346,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               setShowColorMenu(false);
             }}
             title="Highlight"
-            className="p-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all"
+            className="p-3 sm:p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center"
           >
             <Highlighter className={iconClass} />
           </motion.button>

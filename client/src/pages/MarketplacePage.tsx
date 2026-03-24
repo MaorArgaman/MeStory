@@ -27,6 +27,9 @@ interface BookItem {
   author: {
     _id: string;
     name: string;
+    profile?: {
+      avatar?: string;
+    };
   };
   coverDesign?: {
     front?: {
@@ -299,6 +302,8 @@ export default function MarketplacePage() {
                 placeholder={t('marketplace.search.placeholder')}
                 glowColor="gold"
                 icon={<Search className="w-5 h-5" />}
+                showClearButton={true}
+                onClear={() => setSearchQuery('')}
                 className="flex-1"
               />
               <GlowingButton
@@ -342,7 +347,7 @@ export default function MarketplacePage() {
           className="mb-8 sm:mb-12"
         >
           {/* Base Categories */}
-          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-4 scrollbar-hide -mx-3 px-3 sm:mx-0 sm:px-0">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pb-4 -mx-3 px-3 sm:mx-0 sm:px-0">
             {CATEGORY_KEYS.map((categoryKey, index) => (
               <motion.button
                 key={categoryKey}
@@ -1189,7 +1194,17 @@ export default function MarketplacePage() {
                   <div className="flex-1 flex flex-col">
                     {/* Author */}
                     <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">
-                      <User className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-magic-gold/30 to-yellow-600/30 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {book.author.profile?.avatar ? (
+                          <img
+                            src={book.author.profile.avatar}
+                            alt={book.author.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-magic-gold/70" />
+                        )}
+                      </div>
                       <span className="truncate">{book.author.name}</span>
                     </div>
 

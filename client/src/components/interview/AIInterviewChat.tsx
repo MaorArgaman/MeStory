@@ -6,6 +6,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useModal } from '../../hooks/useModal';
 import {
   X,
   Send,
@@ -45,6 +46,9 @@ export default function AIInterviewChat({
   genre,
   targetAudience,
 }: AIInterviewChatProps) {
+  // Use modal hook for ESC key and scroll lock
+  useModal(true, onClose);
+
   // Language
   const { t } = useTranslation();
   const { language, isRTL } = useLanguage();
@@ -253,6 +257,9 @@ export default function AIInterviewChat({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ai-interview-chat-title"
     >
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
@@ -265,7 +272,7 @@ export default function AIInterviewChat({
           <div className="flex items-center gap-4">
             <AIAvatar state={avatarState} size="sm" />
             <div>
-              <h2 className="text-lg font-bold text-white">{t('interview.deepDiveInterview')}</h2>
+              <h2 id="ai-interview-chat-title" className="text-lg font-bold text-white">{t('interview.deepDiveInterview')}</h2>
               <div className="flex items-center gap-2 text-sm text-gray-400">
                 <span>{topicNames[interviewState?.currentTopic || 'theme']}</span>
                 <span className="text-gray-600">|</span>

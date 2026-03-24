@@ -350,6 +350,7 @@ export default function AdminDashboard() {
             const Icon = tab.icon;
             return (
               <button
+                type="button"
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`relative px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 ${
@@ -636,6 +637,7 @@ export default function AdminDashboard() {
                           <div className="flex items-center justify-end gap-2">
                             {user.role !== 'premium' && user.role !== 'admin' && (
                               <button
+                                type="button"
                                 onClick={() => handlePromoteUser(user._id, 'premium')}
                                 className="p-2 rounded-lg bg-magic-gold/20 text-magic-gold hover:bg-magic-gold/30 transition"
                                 title="Promote to Premium"
@@ -646,6 +648,7 @@ export default function AdminDashboard() {
                             {user.role !== 'admin' && (
                               <>
                                 <button
+                                  type="button"
                                   onClick={() => handleBanUser(user._id)}
                                   className="p-2 rounded-lg bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition"
                                   title="Ban User"
@@ -653,6 +656,7 @@ export default function AdminDashboard() {
                                   <UserX className="w-4 h-4" />
                                 </button>
                                 <button
+                                  type="button"
                                   onClick={() => handleDeleteUser(user._id)}
                                   className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"
                                   title="Delete User"

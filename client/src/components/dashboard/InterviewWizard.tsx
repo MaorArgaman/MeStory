@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, X, Sparkles, Edit2, ChevronLeft, Loader2 } from 'lucide-react';
+import { useModal } from '../../hooks/useModal';
 import toast from 'react-hot-toast';
 import { api } from '../../services/api';
 import AIInterviewChat from '../interview/AIInterviewChat';
@@ -20,6 +21,9 @@ interface InterviewWizardProps {
 type WizardStep = 'interview' | 'summary' | 'creating';
 
 export default function InterviewWizard({ onClose, onSuccess }: InterviewWizardProps) {
+  // Use modal hook for ESC key and scroll lock (active when not in interview step)
+  useModal(true, onClose);
+
   const [step, setStep] = useState<WizardStep>('interview');
   const [editedSummary, setEditedSummary] = useState<InterviewSummary | null>(null);
   const [bookTitle, setBookTitle] = useState('');
@@ -128,6 +132,9 @@ export default function InterviewWizard({ onClose, onSuccess }: InterviewWizardP
       exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="interview-summary-title"
     >
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
@@ -150,7 +157,7 @@ export default function InterviewWizard({ onClose, onSuccess }: InterviewWizardP
                 <Check className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold gradient-gold" style={{ fontFamily: "'Cinzel', serif" }}>
+                <h2 id="interview-summary-title" className="text-2xl font-bold gradient-gold" style={{ fontFamily: "'Cinzel', serif" }}>
                   Interview Complete!
                 </h2>
                 <p className="text-sm text-gray-400">

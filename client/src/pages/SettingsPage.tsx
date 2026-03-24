@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { api } from '../services/api';
+import { api, uploadAvatar } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage, Language } from '../contexts/LanguageContext';
+import { useTabKeyboardNavigation } from '../hooks/useModal';
 import {
   User,
   DollarSign,
@@ -22,6 +23,8 @@ import {
   AlertTriangle,
   Globe,
   FileDown,
+  Upload,
+  Camera,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -56,6 +59,10 @@ export default function SettingsPage() {
   const { language, setLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [loading, setLoading] = useState(false);
+
+  // Tab keys for keyboard navigation
+  const tabKeys: Tab[] = ['profile', 'security', 'earnings', 'billing', 'notifications'];
+  const handleTabKeyDown = useTabKeyboardNavigation(tabKeys, activeTab, setActiveTab);
   const [languageLoading, setLanguageLoading] = useState(false);
 
   // Profile state
@@ -63,6 +70,8 @@ export default function SettingsPage() {
   const [email] = useState(user?.email || '');
   const [bio, setBio] = useState(user?.profile?.bio || '');
   const [avatar, setAvatar] = useState(user?.profile?.avatar || '');
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Earnings state
   const [earningsData, setEarningsData] = useState<EarningsData | null>(null);
@@ -123,6 +132,41 @@ export default function SettingsPage() {
       toast.error(error.response?.data?.error || t('settings.toast.profile_failed'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      toast.error(t('settings.toast.invalid_image_type', 'Please upload a valid image (JPG, PNG, WebP, GIF)'));
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(t('settings.toast.image_too_large', 'Image must be less than 5MB'));
+      return;
+    }
+
+    try {
+      setAvatarUploading(true);
+      const avatarUrl = await uploadAvatar(file);
+      setAvatar(avatarUrl);
+      toast.success(t('settings.toast.avatar_uploaded', 'Profile picture uploaded'));
+      await refreshUser();
+    } catch (error: any) {
+      console.error('Failed to upload avatar:', error);
+      toast.error(error.message || t('settings.toast.avatar_failed', 'Failed to upload profile picture'));
+    } finally {
+      setAvatarUploading(false);
+      // Reset input
+      if (avatarInputRef.current) {
+        avatarInputRef.current.value = '';
+      }
     }
   };
 
@@ -262,13 +306,18 @@ export default function SettingsPage() {
           {/* Sidebar Tabs - Horizontal scroll on mobile */}
           <div className="lg:w-64 flex-shrink-0">
             <div className="glass-strong rounded-xl p-2 sm:p-4 lg:sticky lg:top-8 overflow-x-auto">
-              <div className="flex lg:flex-col gap-1 sm:gap-2 min-w-max lg:min-w-0">
+              <div className="flex lg:flex-col gap-1 sm:gap-2 min-w-max lg:min-w-0" role="tablist">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
                   return (
                     <button
+                      type="button"
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
+                      onKeyDown={handleTabKeyDown}
+                      role="tab"
+                      aria-selected={activeTab === tab.id}
+                      tabIndex={activeTab === tab.id ? 0 : -1}
                       className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-all whitespace-nowrap ${
                         activeTab === tab.id
                           ? 'bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border border-indigo-500/50 text-white'
@@ -309,6 +358,7 @@ export default function SettingsPage() {
                       </label>
                       <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                         <button
+                          type="button"
                           onClick={() => handleLanguageChange('en')}
                           disabled={languageLoading}
                           className={`flex-1 flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl border transition-all ${
@@ -328,6 +378,7 @@ export default function SettingsPage() {
                           )}
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleLanguageChange('he')}
                           disabled={languageLoading}
                           className={`flex-1 flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl border transition-all ${
@@ -397,18 +448,62 @@ export default function SettingsPage() {
                       />
                     </div>
 
-                    {/* Avatar URL */}
+                    {/* Avatar Upload */}
                     <div>
                       <label className="block text-sm font-medium mb-2">
                         {t('settings.profile.avatar')}
                       </label>
-                      <input
-                        type="url"
-                        value={avatar}
-                        onChange={(e) => setAvatar(e.target.value)}
-                        className="input"
-                        placeholder="https://..."
-                      />
+                      <div className="flex items-center gap-4">
+                        {/* Avatar Preview */}
+                        <div className="relative">
+                          <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-magic-gold/20 to-purple-500/20 border-2 border-white/10 flex items-center justify-center">
+                            {avatar ? (
+                              <img
+                                src={avatar}
+                                alt={t('settings.profile.avatar')}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <User className="w-10 h-10 text-gray-400" />
+                            )}
+                          </div>
+                          {avatarUploading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                              <Loader2 className="w-6 h-6 animate-spin text-white" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Upload Button */}
+                        <div className="flex-1">
+                          <input
+                            ref={avatarInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            onChange={handleAvatarUpload}
+                            className="hidden"
+                            id="avatar-upload"
+                          />
+                          <label
+                            htmlFor="avatar-upload"
+                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all
+                              ${avatarUploading
+                                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                : 'bg-white/10 hover:bg-white/20 text-white border border-white/10 hover:border-white/20'
+                              }`}
+                          >
+                            {avatarUploading ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Camera className="w-4 h-4" />
+                            )}
+                            <span>{t('settings.profile.upload_avatar', 'Upload Picture')}</span>
+                          </label>
+                          <p className="mt-2 text-xs text-gray-400">
+                            {t('settings.profile.avatar_hint', 'JPG, PNG, WebP or GIF. Max 5MB.')}
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Save Button */}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Layout, Check, Sparkles } from 'lucide-react';
+import { useModal } from '../../hooks/useModal';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { bookTemplates, templateCategories, BookTemplate } from '../../data/bookTemplates';
 
@@ -17,6 +18,9 @@ export default function TemplateGallery({
   onSelect,
   currentTemplateId,
 }: TemplateGalleryProps) {
+  // Use modal hook for ESC key and scroll lock
+  useModal(isOpen, onClose);
+
   const { language } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -49,6 +53,9 @@ export default function TemplateGallery({
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', duration: 0.5 }}
             className="fixed inset-4 md:inset-10 z-50 flex items-center justify-center"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="template-gallery-title"
           >
             <div className="w-full max-w-6xl max-h-full bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col">
               {/* Header */}
@@ -58,7 +65,7 @@ export default function TemplateGallery({
                     <Layout className="w-5 h-5 text-indigo-400" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">
+                    <h2 id="template-gallery-title" className="text-xl font-bold text-white">
                       {language === 'he' ? 'בחר תבנית עיצוב' : 'Choose Design Template'}
                     </h2>
                     <p className="text-sm text-white/60">
@@ -157,7 +164,7 @@ export default function TemplateGallery({
 
                         {/* Custom badge */}
                         {template.category === 'custom' && (
-                          <div className="absolute top-2 left-2 px-2 py-0.5 bg-purple-500 rounded text-[10px] font-bold text-white flex items-center gap-1">
+                          <div className="absolute top-2 left-2 px-2 py-0.5 bg-purple-500 rounded text-xs font-bold text-white flex items-center gap-1">
                             <Sparkles className="w-2.5 h-2.5" />
                             {language === 'he' ? 'מותאם' : 'Custom'}
                           </div>
@@ -187,11 +194,11 @@ export default function TemplateGallery({
                           {language === 'he' ? template.descriptionHe : template.description}
                         </p>
                         <div className="flex items-center gap-2 mt-2">
-                          <span className="text-[10px] px-1.5 py-0.5 bg-white/10 rounded text-white/60">
+                          <span className="text-xs px-1.5 py-0.5 bg-white/10 rounded text-white/60">
                             {template.columns} {language === 'he' ? 'עמודות' : 'col'}
                           </span>
                           <span
-                            className="text-[10px] px-1.5 py-0.5 rounded"
+                            className="text-xs px-1.5 py-0.5 rounded"
                             style={{
                               backgroundColor: `${template.accentColor}20`,
                               color: template.accentColor,

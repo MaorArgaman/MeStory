@@ -70,7 +70,7 @@ export default function Book3DPreview({
           repeat: Infinity,
           ease: 'easeInOut',
         }}
-        className="absolute w-96 h-96 rounded-full blur-3xl"
+        className="absolute w-48 h-48 sm:w-64 sm:h-64 md:w-96 md:h-96 rounded-full blur-3xl"
         style={{
           background: `radial-gradient(circle, ${coverColor}80, transparent)`,
         }}

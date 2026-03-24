@@ -635,3 +635,31 @@ BEGIN
     DELETE FROM notifications WHERE created_at < NOW() - INTERVAL '90 days';
 END;
 $$ LANGUAGE plpgsql;
+
+-- =====================================================
+-- STORAGE BUCKETS
+-- =====================================================
+
+-- Note: Storage buckets must be created through the Supabase Dashboard
+-- or via the Supabase CLI. The following SQL shows the policy setup.
+
+-- Create avatars bucket (run in Supabase Dashboard > Storage)
+-- INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', true);
+
+-- Allow public read access to avatars
+-- CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id = 'avatars');
+
+-- Allow authenticated users to upload their own avatars
+-- CREATE POLICY "Avatar Upload" ON storage.objects FOR INSERT WITH CHECK (
+--   bucket_id = 'avatars' AND auth.role() = 'service_role'
+-- );
+
+-- Allow authenticated users to update their own avatars
+-- CREATE POLICY "Avatar Update" ON storage.objects FOR UPDATE USING (
+--   bucket_id = 'avatars' AND auth.role() = 'service_role'
+-- );
+
+-- Allow authenticated users to delete their own avatars
+-- CREATE POLICY "Avatar Delete" ON storage.objects FOR DELETE USING (
+--   bucket_id = 'avatars' AND auth.role() = 'service_role'
+-- );

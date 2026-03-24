@@ -1,11 +1,14 @@
 import { motion } from 'framer-motion';
 import { InputHTMLAttributes, forwardRef, useState } from 'react';
+import { X } from 'lucide-react';
 
 interface NeonInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   icon?: React.ReactNode;
   glowColor?: 'gold' | 'purple' | 'blue';
+  showClearButton?: boolean;
+  onClear?: () => void;
 }
 
 /**
@@ -29,7 +32,7 @@ interface NeonInputProps extends InputHTMLAttributes<HTMLInputElement> {
  * />
  */
 const NeonInput = forwardRef<HTMLInputElement, NeonInputProps>(
-  ({ label, error, icon, glowColor = 'gold', className = '', ...props }, ref) => {
+  ({ label, error, icon, glowColor = 'gold', showClearButton, onClear, className = '', ...props }, ref) => {
     const [isFocused, setIsFocused] = useState(false);
 
     const glowColors = {
@@ -89,6 +92,7 @@ const NeonInput = forwardRef<HTMLInputElement, NeonInputProps>(
               transition-all duration-300
               focus:outline-none focus:bg-white/10
               ${icon ? 'pl-12' : ''}
+              ${showClearButton && props.value ? 'pr-10' : ''}
               ${error ? 'border-red-500' : ''}
             `}
             style={{
@@ -99,6 +103,18 @@ const NeonInput = forwardRef<HTMLInputElement, NeonInputProps>(
             onBlur={() => setIsFocused(false)}
             {...props}
           />
+
+          {/* Clear Button */}
+          {showClearButton && props.value && (
+            <button
+              type="button"
+              onClick={onClear}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+              aria-label="Clear search"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
 
           {/* Animated bottom border glow */}
           <motion.div

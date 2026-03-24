@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useModal } from '../../hooks/useModal';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -48,6 +49,9 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
   onClose,
   onUnreadCountChange,
 }) => {
+  // Use modal hook for ESC key and scroll lock
+  useModal(isOpen, onClose);
+
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -230,6 +234,9 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
         onClick={(e) => e.target === e.currentTarget && onClose()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="notification-center-title"
       >
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
@@ -249,7 +256,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     </span>
                   )}
                 </div>
-                <h2 className="text-xl font-bold text-white">{t('notifications.title')}</h2>
+                <h2 id="notification-center-title" className="text-xl font-bold text-white">{t('notifications.title')}</h2>
               </div>
 
               <div className="flex items-center gap-2">
@@ -282,7 +289,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 <button
                   key={option.value}
                   onClick={() => setFilter(option.value)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-2 sm:py-1.5 min-h-[44px] sm:min-h-0 rounded-full text-sm whitespace-nowrap transition-all ${
                     filter === option.value
                       ? 'bg-purple-500/30 text-purple-300 border border-purple-500/50'
                       : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-transparent'
@@ -298,7 +305,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
             <div className="flex items-center gap-2 mt-3">
               <button
                 onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${
+                className={`flex items-center gap-2 px-3 py-2 sm:py-1.5 min-h-[44px] sm:min-h-0 rounded-lg text-sm transition-all ${
                   showUnreadOnly
                     ? 'bg-pink-500/20 text-pink-300'
                     : 'bg-white/5 text-gray-400 hover:bg-white/10'

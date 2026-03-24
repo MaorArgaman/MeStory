@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useModal } from '../../hooks/useModal';
 import {
   Mic,
   MicOff,
@@ -49,6 +50,9 @@ export default function VoiceInterviewWizard({
   onComplete,
   onCancel,
 }: VoiceInterviewWizardProps) {
+  // Use modal hook for ESC key and scroll lock
+  useModal(true, onCancel);
+
   // State
   const [step, setStep] = useState<WizardStep>('intro');
   const [interviewId, setInterviewId] = useState<string | null>(null);
@@ -201,7 +205,7 @@ export default function VoiceInterviewWizard({
     >
       <AIAvatar state="idle" size="lg" className="mb-8" />
 
-      <h2 className="text-2xl font-bold text-white mb-4">AI Voice Interview</h2>
+      <h2 id="voice-interview-wizard-title" className="text-2xl font-bold text-white mb-4">AI Voice Interview</h2>
 
       <p className="text-gray-300 mb-6 max-w-md">
         I'll ask you questions about the book you want to write. Answer by voice or text, and at the end we'll get a comprehensive summary to help you with your writing.
@@ -562,7 +566,12 @@ export default function VoiceInterviewWizard({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-deep-space/95 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-deep-space/95 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="voice-interview-wizard-title"
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}

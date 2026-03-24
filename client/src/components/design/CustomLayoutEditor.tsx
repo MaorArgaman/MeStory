@@ -260,7 +260,7 @@ export default function CustomLayoutEditor({
               </h3>
 
               {/* Body Font */}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 md:gap-6">
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">
                     {isHebrew ? 'גופן גוף' : 'Body Font'}
@@ -299,7 +299,7 @@ export default function CustomLayoutEditor({
               </div>
 
               {/* Font Sizes */}
-              <div className="grid grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 md:gap-6">
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">
                     {isHebrew ? 'גודל טקסט' : 'Body Size'} ({design.typography.bodySize}pt)
@@ -345,7 +345,7 @@ export default function CustomLayoutEditor({
               </div>
 
               {/* Colors */}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 md:gap-6">
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">
                     {isHebrew ? 'צבע טקסט' : 'Text Color'}
@@ -465,7 +465,7 @@ export default function CustomLayoutEditor({
                 <label className="block text-sm text-gray-400 mb-2">
                   {isHebrew ? 'שוליים (מ"מ)' : 'Margins (mm)'}
                 </label>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
                   {[
                     { key: 'top', label: isHebrew ? 'עליון' : 'Top' },
                     { key: 'bottom', label: isHebrew ? 'תחתון' : 'Bottom' },
@@ -490,7 +490,7 @@ export default function CustomLayoutEditor({
               </div>
 
               {/* Spacing */}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 md:gap-6">
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">
                     {isHebrew ? 'ריווח פסקאות' : 'Paragraph Spacing'} ({design.layout.paragraphSpacing}pt)
@@ -529,7 +529,7 @@ export default function CustomLayoutEditor({
                 {isHebrew ? 'סכמת צבעים' : 'Color Scheme'}
               </h3>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 md:gap-6">
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">
                     {isHebrew ? 'צבע רקע' : 'Background Color'}
@@ -576,7 +576,7 @@ export default function CustomLayoutEditor({
                 <label className="block text-sm text-gray-400 mb-2">
                   {isHebrew ? 'פלטות מוכנות' : 'Color Presets'}
                 </label>
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
                   {[
                     { bg: '#FFFFFF', accent: '#8B5CF6', name: 'Classic' },
                     { bg: '#FEF3C7', accent: '#D97706', name: 'Warm' },
@@ -628,7 +628,7 @@ export default function CustomLayoutEditor({
               </p>
 
               {/* Image Placement Templates */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
                 {[
                   {
                     id: 'top',
@@ -765,7 +765,7 @@ export default function CustomLayoutEditor({
                       </select>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
                       <div>
                         <label className="block text-sm text-gray-400 mb-2">
                           {isHebrew ? 'התחל מ-' : 'Start From'}

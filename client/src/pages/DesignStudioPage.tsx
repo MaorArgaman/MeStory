@@ -1511,18 +1511,18 @@ export default function DesignStudioPage() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="glass-strong rounded-2xl p-6 max-w-md w-full"
+              className="glass-strong rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-md w-full mx-2"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cosmic-purple to-purple-600 flex items-center justify-center">
-                    <Download className="w-6 h-6 text-white" />
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-cosmic-purple to-purple-600 flex items-center justify-center flex-shrink-0">
+                    <Download className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-white">{t('design_studio.export_modal.title')}</h2>
-                    <p className="text-gray-400 text-sm">{book.title}</p>
+                  <div className="min-w-0">
+                    <h2 className="text-lg sm:text-2xl font-bold text-white truncate">{t('design_studio.export_modal.title')}</h2>
+                    <p className="text-gray-400 text-xs sm:text-sm truncate">{book.title}</p>
                   </div>
                 </div>
                 <button

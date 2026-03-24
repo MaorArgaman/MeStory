@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useModal } from '../../hooks/useModal';
 import {
   Sparkles,
   BookOpen,
@@ -65,6 +66,9 @@ interface CreateBookWizardProps {
 }
 
 export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizardProps) {
+  // Use modal hook for ESC key and scroll lock
+  useModal(true, onClose);
+
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState('');
   const [selectedGenre, setSelectedGenre] = useState<string>('');
@@ -168,7 +172,12 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
   const canProceedToStep3 = canProceedToStep2;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-book-wizard-title"
+    >
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -189,7 +198,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center mx-auto mb-4 shadow-glow-gold">
               <Sparkles className="w-8 h-8 text-deep-space" />
             </div>
-            <h2 className="text-3xl font-display font-bold gradient-gold mb-2">
+            <h2 id="create-book-wizard-title" className="text-3xl font-display font-bold gradient-gold mb-2">
               צור את יצירת המופת שלך
             </h2>
             <p className="text-gray-400">בואו נביא את הסיפור שלך לחיים ב-4 צעדים פשוטים</p>
@@ -258,7 +267,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                   <label className="block text-sm font-semibold mb-4 text-gray-300">
                     בחר את הז'אנר שלך
                   </label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
                     {genres.map((genre) => {
                       const Icon = genre.icon;
                       const isSelected = selectedGenre === genre.id;
@@ -439,7 +448,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                   <label className="block text-sm font-semibold mb-4 text-gray-300">
                     מה מטרת הכתיבה שלך?
                   </label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-4">
                     {writingGoals.map((goal) => {
                       const Icon = goal.icon;
                       const isSelected = selectedWritingGoal === goal.id;
@@ -470,7 +479,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                   <label className="block text-sm font-semibold mb-4 text-gray-300">
                     מי יקרא את הספר הזה?
                   </label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4">
                     {targetAudiences.map((audience) => {
                       const isSelected = selectedAudience === audience.id;
 

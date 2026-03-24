@@ -8,6 +8,7 @@ import { Notification } from '../models/Notification';
 import { UserActivity } from '../models/UserActivity';
 import { AuthRequest } from '../types';
 import { supabaseAdmin } from '../config/supabase';
+import path from 'path';
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -715,6 +716,124 @@ export const followUser = async (req: AuthRequest, res: Response): Promise<void>
     res.status(500).json({
       success: false,
       error: 'Failed to follow user',
+    });
+  }
+};
+
+/**
+ * Upload user avatar
+ * POST /api/user/avatar
+ */
+export const uploadAvatar = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: 'Authentication required',
+      });
+      return;
+    }
+
+    if (!req.file) {
+      res.status(400).json({
+        success: false,
+        error: 'No file uploaded',
+      });
+      return;
+    }
+
+    const userId = req.user.id;
+    const file = req.file;
+
+    // Generate unique filename
+    const fileExt = path.extname(file.originalname).toLowerCase();
+    const fileName = `avatar-${userId}-${Date.now()}${fileExt}`;
+    const filePath = `avatars/${fileName}`;
+
+    // Get file buffer (works with both memory and disk storage)
+    let fileBuffer: Buffer;
+    if (file.buffer) {
+      fileBuffer = file.buffer;
+    } else if (file.path) {
+      const fs = await import('fs');
+      fileBuffer = fs.readFileSync(file.path);
+      // Clean up temp file
+      fs.unlinkSync(file.path);
+    } else {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid file data',
+      });
+      return;
+    }
+
+    // Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+      .from('avatars')
+      .upload(filePath, fileBuffer, {
+        contentType: file.mimetype,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error('Supabase storage upload error:', uploadError);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to upload avatar',
+      });
+      return;
+    }
+
+    // Get public URL
+    const { data: urlData } = supabaseAdmin.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+
+    const avatarUrl = urlData.publicUrl;
+
+    // Update user profile with new avatar URL
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: 'User not found',
+      });
+      return;
+    }
+
+    const currentProfile = user.profile || {};
+
+    // Delete old avatar if exists
+    if (currentProfile.avatar && currentProfile.avatar.includes('supabase')) {
+      try {
+        const oldPath = currentProfile.avatar.split('/avatars/')[1];
+        if (oldPath) {
+          await supabaseAdmin.storage.from('avatars').remove([`avatars/${oldPath}`]);
+        }
+      } catch (err) {
+        console.warn('Failed to delete old avatar:', err);
+      }
+    }
+
+    await User.findByIdAndUpdate(userId, {
+      profile: {
+        ...currentProfile,
+        avatar: avatarUrl,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Avatar uploaded successfully',
+      data: {
+        avatarUrl,
+      },
+    });
+  } catch (error) {
+    console.error('Upload avatar error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to upload avatar',
     });
   }
 };

@@ -7,6 +7,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, RefreshCw, CheckCircle, X, AlertCircle } from 'lucide-react';
 import { verifyEmail, resendVerificationCode } from '../../services/authApi';
+import { useModal } from '../../hooks/useModal';
 import toast from 'react-hot-toast';
 
 interface EmailVerificationModalProps {
@@ -28,6 +29,9 @@ export default function EmailVerificationModal({
   const [countdown, setCountdown] = useState(0);
   const [error, setError] = useState('');
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // ESC key handling and scroll lock
+  useModal(isOpen, onClose);
 
   // Countdown timer for resend
   useEffect(() => {
@@ -148,9 +152,11 @@ export default function EmailVerificationModal({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           className="w-full max-w-md glass-strong rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
+          role="dialog"
+          aria-modal="true"
         >
           {/* Header */}
-          <div className="relative p-6 bg-gradient-to-br from-magic-gold/20 to-yellow-500/10 border-b border-white/10">
+          <div className="relative p-2 sm:p-6 bg-gradient-to-br from-magic-gold/20 to-yellow-500/10 border-b border-white/10">
             <button
               onClick={onClose}
               className="absolute top-4 left-4 p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
@@ -170,7 +176,7 @@ export default function EmailVerificationModal({
           </div>
 
           {/* Content */}
-          <div className="p-6">
+          <div className="p-2 sm:p-6">
             {/* Code Input */}
             <div className="mb-6">
               <label className="block text-gray-300 text-sm mb-3 text-center">

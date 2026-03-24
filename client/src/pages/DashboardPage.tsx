@@ -48,6 +48,8 @@ export default function DashboardPage() {
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [showVoiceInterviewWizard, setShowVoiceInterviewWizard] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const [creating, setCreating] = useState(false);
   const [quickTitle, setQuickTitle] = useState('');
   const [quickGenre, setQuickGenre] = useState('Fiction');
@@ -137,6 +139,7 @@ export default function DashboardPage() {
     }
 
     setUploading(true);
+    setUploadProgress(0);
     try {
       const formData = new FormData();
       formData.append('manuscript', file);
@@ -146,6 +149,12 @@ export default function DashboardPage() {
       const response = await api.post('/books/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = progressEvent.total
+            ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            : 0;
+          setUploadProgress(percentCompleted);
         },
       });
 
@@ -159,9 +168,39 @@ export default function DashboardPage() {
       toast.error(error.response?.data?.error || t('dashboard.messages.upload_failed'));
     } finally {
       setUploading(false);
+      setUploadProgress(0);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    }
+  };
+
+  // Handle drag and drop for file upload
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+      // Create a synthetic event to reuse handleFileUpload
+      const syntheticEvent = {
+        target: { files: [file] },
+      } as unknown as React.ChangeEvent<HTMLInputElement>;
+      handleFileUpload(syntheticEvent);
     }
   };
 
@@ -309,6 +348,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           {/* Card 1: Start from Scratch */}
           <motion.button
+            type="button"
             onClick={() => setShowQuickCreateModal(true)}
             whileHover={{ scale: 1.02, y: -8 }}
             whileTap={{ scale: 0.98 }}
@@ -340,6 +380,7 @@ export default function DashboardPage() {
 
           {/* Card 2: Deep Dive Interview */}
           <motion.button
+            type="button"
             onClick={() => setShowInterviewModal(true)}
             whileHover={{ scale: 1.02, y: -8 }}
             whileTap={{ scale: 0.98 }}
@@ -371,6 +412,7 @@ export default function DashboardPage() {
 
           {/* Card 3: Voice Dictation */}
           <motion.button
+            type="button"
             onClick={() => setShowVoiceModal(true)}
             whileHover={{ scale: 1.02, y: -8 }}
             whileTap={{ scale: 0.98 }}
@@ -402,6 +444,7 @@ export default function DashboardPage() {
 
           {/* Card 4: Import Manuscript */}
           <motion.button
+            type="button"
             onClick={() => setShowUploadModal(true)}
             whileHover={{ scale: 1.02, y: -8 }}
             whileTap={{ scale: 0.98 }}
@@ -492,6 +535,7 @@ export default function DashboardPage() {
               {t('dashboard.empty.subtitle')}
             </p>
             <motion.button
+              type="button"
               onClick={openWizard}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -505,6 +549,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Create New Book Card */}
             <motion.button
+              type="button"
               onClick={openWizard}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -667,6 +712,46 @@ export default function DashboardPage() {
                   className="hidden"
                   disabled={uploading}
                 />
+
+                {/* Drag and Drop Zone */}
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => !uploading && fileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-xl p-6 mb-4 cursor-pointer transition-all duration-300 ${
+                    isDragging
+                      ? 'border-purple-500 bg-purple-500/20 scale-[1.02]'
+                      : 'border-gray-600 hover:border-purple-500/50 hover:bg-white/5'
+                  } ${uploading ? 'pointer-events-none opacity-50' : ''}`}
+                >
+                  <div className="flex flex-col items-center gap-3">
+                    <Upload className={`w-8 h-8 ${isDragging ? 'text-purple-400' : 'text-gray-400'}`} />
+                    <p className="text-sm text-gray-300">
+                      {isDragging
+                        ? t('dashboard.modals.upload.drop_here', 'Drop file here')
+                        : t('dashboard.modals.upload.drag_drop', 'Drag & drop your file here, or click to browse')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                {uploading && (
+                  <div className="mb-4">
+                    <div className="flex justify-between text-sm text-gray-400 mb-2">
+                      <span>{t('dashboard.modals.upload.uploading', 'Uploading...')}</span>
+                      <span>{uploadProgress}%</span>
+                    </div>
+                    <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${uploadProgress}%` }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Upload Button */}
                 <button

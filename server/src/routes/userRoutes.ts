@@ -9,8 +9,10 @@ import {
   followUser,
   updateLanguage,
   exportUserData,
+  uploadAvatar,
 } from '../controllers/userController';
 import { authenticate } from '../middleware/auth';
+import { uploadImage, handleUploadError } from '../middleware/uploadMiddleware';
 
 const router = Router();
 
@@ -46,6 +48,9 @@ router.get('/export-data', exportUserData as any);
 
 // PUT /api/user/profile - Update user profile
 router.put('/profile', updateProfile as any);
+
+// POST /api/user/avatar - Upload user avatar
+router.post('/avatar', uploadImage.single('avatar'), handleUploadError as any, uploadAvatar as any);
 
 // PUT /api/user/language - Update language preference
 router.put('/language', updateLanguage as any);

@@ -224,6 +224,7 @@ export default function BookDesignPage() {
         <div className="text-center">
           <p className="text-gray-400">{isHebrew ? 'הספר לא נמצא' : 'Book not found'}</p>
           <button
+            type="button"
             onClick={() => navigate('/dashboard')}
             className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg"
           >
@@ -243,6 +244,7 @@ export default function BookDesignPage() {
             {/* Left side */}
             <div className="flex items-center gap-2 sm:gap-4">
               <button
+                type="button"
                 onClick={goToEditor}
                 className="p-1.5 sm:p-2 hover:bg-gray-700 rounded-lg transition-colors"
                 title={isHebrew ? 'חזור לעורך' : 'Back to Editor'}
@@ -274,6 +276,7 @@ export default function BookDesignPage() {
               )}
 
               <button
+                type="button"
                 onClick={goToDetailedLayout}
                 className="p-2 sm:px-3 sm:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center gap-2 transition-colors"
               >
@@ -284,6 +287,7 @@ export default function BookDesignPage() {
               </button>
 
               <button
+                type="button"
                 onClick={saveDesign}
                 disabled={saving}
                 className="p-2 sm:px-4 sm:py-2 bg-purple-600 hover:bg-purple-700 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
@@ -325,6 +329,7 @@ export default function BookDesignPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-12">
               {/* AI Design */}
               <motion.button
+                type="button"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleSelectPath('ai')}
@@ -352,6 +357,7 @@ export default function BookDesignPage() {
 
               {/* Template Selection */}
               <motion.button
+                type="button"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleSelectPath('template')}
@@ -372,6 +378,7 @@ export default function BookDesignPage() {
 
               {/* Custom Design */}
               <motion.button
+                type="button"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleSelectPath('custom')}
@@ -401,6 +408,7 @@ export default function BookDesignPage() {
           >
             <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
               <button
+                type="button"
                 onClick={() => setDesignPath(null)}
                 className="p-1.5 sm:p-2 hover:bg-gray-700 rounded-lg transition-colors"
               >
@@ -438,12 +446,14 @@ export default function BookDesignPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <button
+                type="button"
                 onClick={() => setDesignPath(null)}
                 className="w-full sm:w-auto px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
               >
                 {isHebrew ? 'חזור' : 'Back'}
               </button>
               <button
+                type="button"
                 onClick={goToDetailedLayout}
                 className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 hover:bg-purple-700 rounded-lg flex items-center justify-center gap-2 transition-colors"
               >
@@ -463,6 +473,7 @@ export default function BookDesignPage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6">
               <div className="flex items-center gap-2 sm:gap-3">
                 <button
+                  type="button"
                   onClick={() => {
                     setDesignPath(null);
                     setSelectedTemplate(null);
@@ -478,6 +489,7 @@ export default function BookDesignPage() {
 
               <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                 <button
+                  type="button"
                   onClick={goToDetailedLayout}
                   className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm sm:text-base"
                 >
@@ -485,6 +497,7 @@ export default function BookDesignPage() {
                   {isHebrew ? 'ערוך' : 'Edit'}
                 </button>
                 <button
+                  type="button"
                   onClick={saveDesign}
                   disabled={saving}
                   className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm sm:text-base"

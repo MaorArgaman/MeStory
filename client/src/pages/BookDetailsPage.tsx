@@ -23,6 +23,9 @@ interface Book {
   author: {
     _id: string;
     name: string;
+    profile?: {
+      avatar?: string;
+    };
   };
   genre: string;
   synopsis?: string;
@@ -221,7 +224,7 @@ export default function BookDetailsPage() {
     <div className="min-h-screen pt-32 pb-20">
       <div className="max-w-7xl mx-auto px-6">
         {/* Hero Section */}
-        <div className="grid lg:grid-cols-2 gap-12 mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12 lg:mb-16">
           {/* Book Cover */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -232,7 +235,7 @@ export default function BookDetailsPage() {
               <motion.div
                 whileHover={{ scale: 1.05, rotateY: 5 }}
                 transition={{ duration: 0.3 }}
-                className="w-96 h-[576px] rounded-2xl shadow-2xl overflow-hidden"
+                className="w-64 sm:w-80 md:w-96 h-[384px] sm:h-[480px] md:h-[576px] rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden"
                 style={{
                   background: coverImage ? `url(${coverImage})` : coverBg,
                   backgroundSize: 'cover',
@@ -252,13 +255,13 @@ export default function BookDetailsPage() {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.3, type: 'spring' }}
-                  className="absolute -top-4 -right-4"
+                  className="absolute -top-2 -right-2 sm:-top-4 sm:-right-4"
                 >
                   <div className="relative">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold">
                       <div className="text-center">
-                        <Sparkles className="w-8 h-8 text-deep-space mx-auto mb-1" />
-                        <p className="text-xs font-bold text-deep-space">
+                        <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-deep-space mx-auto mb-1" />
+                        <p className="text-[10px] sm:text-xs font-bold text-deep-space">
                           {book.qualityScore.ratingLabel}
                         </p>
                       </div>
@@ -283,7 +286,7 @@ export default function BookDetailsPage() {
             </div>
 
             {/* Title */}
-            <h1 className="text-6xl font-display font-bold gradient-gold mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold gradient-gold mb-4">
               {book.title}
             </h1>
 
@@ -292,8 +295,16 @@ export default function BookDetailsPage() {
               to={`/profile/${book.author._id}`}
               className="flex items-center gap-3 mb-6 group w-fit"
             >
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold">
-                <User className="w-6 h-6 text-deep-space" />
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold overflow-hidden">
+                {book.author.profile?.avatar ? (
+                  <img
+                    src={book.author.profile.avatar}
+                    alt={book.author.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-6 h-6 text-deep-space" />
+                )}
               </div>
               <div>
                 <p className="text-sm text-gray-400">{t('book_details.written_by')}</p>
@@ -304,7 +315,7 @@ export default function BookDetailsPage() {
             </Link>
 
             {/* Stats Row */}
-            <div className="flex flex-wrap gap-6 mb-8">
+            <div className="flex flex-wrap gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
               {/* Rating */}
               {book.statistics.averageRating && (
                 <div className="flex items-center gap-2">
@@ -334,7 +345,7 @@ export default function BookDetailsPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
               {/* Read/Buy Button */}
               <GlowingButton
                 variant="gold"

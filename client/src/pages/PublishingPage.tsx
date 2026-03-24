@@ -409,8 +409,8 @@ export default function PublishingPage() {
                       <input
                         type="number"
                         min="0"
-                        max="25"
-                        step="0.50"
+                        max="999"
+                        step="0.01"
                         value={price}
                         onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
                         className="input pl-8"
@@ -444,6 +444,7 @@ export default function PublishingPage() {
                     onChange={(e) => setDescription(e.target.value)}
                     className="input min-h-[100px] resize-none"
                     placeholder={t('publishing.pricing.description_placeholder')}
+                    maxLength={2000}
                   />
                 </div>
 

@@ -224,8 +224,11 @@ export const getBookById = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    // Ensure user owns this book
-    if (book.author !== req.user.id) {
+    // Check if user owns this book OR if book is publicly published
+    const isOwner = book.author === req.user.id;
+    const isPubliclyPublished = book.publishingStatus?.status === 'published' && book.publishingStatus?.isPublic;
+
+    if (!isOwner && !isPubliclyPublished) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to access this book',
@@ -233,30 +236,74 @@ export const getBookById = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
+    // If owner, return full book data
+    if (isOwner) {
+      res.status(200).json({
+        success: true,
+        data: {
+          book: {
+            id: book.id,
+            title: book.title,
+            genre: book.genre,
+            description: book.description,
+            synopsis: book.synopsis,
+            language: book.language,
+            chapters: book.chapters,
+            characters: book.characters,
+            plotStructure: book.plotStructure,
+            qualityScore: book.qualityScore,
+            coverDesign: book.coverDesign,
+            pageLayout: book.pageLayout,
+            pageImages: book.pageImages || [],
+            publishingStatus: book.publishingStatus,
+            statistics: book.statistics,
+            tags: book.tags,
+            ageRating: book.ageRating,
+            createdAt: book.created_at,
+            updatedAt: book.updated_at,
+          },
+        },
+      });
+      return;
+    }
+
+    // For public books, return limited data with author info
+    const author = await User.findById(book.author);
     res.status(200).json({
       success: true,
       data: {
-        book: {
-          id: book.id,
-          title: book.title,
-          genre: book.genre,
-          description: book.description,
-          synopsis: book.synopsis,
-          language: book.language,
-          chapters: book.chapters,
-          characters: book.characters,
-          plotStructure: book.plotStructure,
-          qualityScore: book.qualityScore,
-          coverDesign: book.coverDesign,
-          pageLayout: book.pageLayout,
-          pageImages: book.pageImages || [],
-          publishingStatus: book.publishingStatus,
-          statistics: book.statistics,
-          tags: book.tags,
-          ageRating: book.ageRating,
-          createdAt: book.created_at,
-          updatedAt: book.updated_at,
+        _id: book.id,
+        id: book.id,
+        title: book.title,
+        genre: book.genre,
+        synopsis: book.synopsis,
+        description: book.description,
+        coverDesign: book.coverDesign,
+        qualityScore: book.qualityScore,
+        publishingStatus: {
+          price: book.publishingStatus?.price || 0,
+          isFree: book.publishingStatus?.isFree || true,
         },
+        statistics: {
+          wordCount: book.statistics?.wordCount || 0,
+          pageCount: book.statistics?.pageCount || 0,
+          views: book.statistics?.views || 0,
+          averageRating: book.statistics?.averageRating || 0,
+          totalReviews: book.statistics?.totalReviews || 0,
+        },
+        likes: book.likes || 0,
+        likedBy: book.likedBy || [],
+        reviews: book.reviews || [],
+        author: {
+          _id: author?.id || book.author,
+          id: author?.id || book.author,
+          name: author?.name || 'Unknown Author',
+          profile: {
+            avatar: author?.profile?.avatar || null,
+            bio: author?.profile?.bio || null,
+          },
+        },
+        createdAt: book.created_at,
       },
     });
   } catch (error) {
@@ -912,13 +959,21 @@ export const getPublicBooks = async (req: Request, res: Response): Promise<void>
       _limit: 100,
     });
 
-    // Fetch author names for each book
+    // Fetch author info for each book
     const booksWithAuthors = await Promise.all(
       books.map(async (book) => {
         const author = await User.findById(book.author);
         return {
           ...book,
           authorName: author?.name || 'Unknown Author',
+          author: {
+            id: author?.id || book.author,
+            name: author?.name || 'Unknown Author',
+            profile: {
+              avatar: author?.profile?.avatar || null,
+              bio: author?.profile?.bio || null,
+            },
+          },
         };
       })
     );

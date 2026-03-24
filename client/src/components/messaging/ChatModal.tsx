@@ -20,6 +20,7 @@ import {
   Message,
   Conversation,
 } from '../../services/messagingApi';
+import { useModal } from '../../hooks/useModal';
 
 interface ChatModalProps {
   isOpen: boolean;
@@ -51,6 +52,9 @@ const ChatModal: React.FC<ChatModalProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // ESC key handling and scroll lock
+  useModal(isOpen, onClose);
 
   const currentUserId = (() => {
     try {
@@ -212,6 +216,8 @@ const ChatModal: React.FC<ChatModalProps> = ({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl w-full max-w-lg h-[85vh] sm:h-[600px] max-h-[90vh] flex flex-col shadow-2xl border border-purple-500/20 overflow-hidden"
+          role="dialog"
+          aria-modal="true"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-3 sm:p-4 border-b border-white/10 bg-black/20">

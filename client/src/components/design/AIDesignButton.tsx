@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Loader2, Check, X, Wand2, RefreshCw } from 'lucide-react';
+import { useModal } from '../../hooks/useModal';
 import { useLanguage } from '../../contexts/LanguageContext';
 import toast from 'react-hot-toast';
 import { api } from '../../services/api';
@@ -39,6 +40,9 @@ export default function AIDesignButton({
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [result, setResult] = useState<AIDesignResult | null>(null);
+
+  // Use modal hook for ESC key and scroll lock
+  useModal(showPreview, () => setShowPreview(false));
 
   const generateDesign = async () => {
     setIsGenerating(true);
@@ -156,6 +160,9 @@ export default function AIDesignButton({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="fixed inset-4 md:inset-10 z-50 flex items-center justify-center"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="ai-design-preview-title"
             >
               <div className="w-full max-w-3xl max-h-full bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col">
                 {/* Header */}
@@ -165,7 +172,7 @@ export default function AIDesignButton({
                       <Wand2 className="w-5 h-5 text-purple-400" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-white">
+                      <h2 id="ai-design-preview-title" className="text-xl font-bold text-white">
                         {language === 'he' ? 'עיצוב AI מומלץ' : 'AI Design Recommendation'}
                       </h2>
                       <p className="text-sm text-white/60">

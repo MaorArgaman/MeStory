@@ -17,6 +17,7 @@ import {
   Type,
   Image as ImageIcon,
 } from 'lucide-react';
+import { useTabKeyboardNavigation } from '../../hooks/useModal';
 
 interface ImageEditToolbarProps {
   image: {
@@ -59,6 +60,10 @@ export default function ImageEditToolbar({
 }: ImageEditToolbarProps) {
   const isHebrew = language === 'he';
   const [activeTab, setActiveTab] = useState<'style' | 'position' | 'effects'>('position');
+
+  // Tab keys for keyboard navigation
+  const tabKeys: ('style' | 'position' | 'effects')[] = ['style', 'position', 'effects'];
+  const handleTabKeyDown = useTabKeyboardNavigation(tabKeys, activeTab, setActiveTab);
 
   // Debug wrapper for onUpdate
   const handleUpdate = (updates: Partial<ImageEditToolbarProps['image']>) => {
@@ -103,13 +108,17 @@ export default function ImageEditToolbar({
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
     >
-      <div className="bg-gray-900 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden max-h-[70vh] overflow-y-auto w-full max-w-[min(400px,95vw)]">
+      <div className="bg-gray-900 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden max-h-[85vh] sm:max-h-[70vh] overflow-y-auto w-full max-w-[min(400px,95vw)]">
         {/* Header with tabs */}
-        <div className="flex items-center border-b border-gray-700/50">
+        <div className="flex items-center border-b border-gray-700/50" role="tablist">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
+              onKeyDown={handleTabKeyDown}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              tabIndex={activeTab === tab.id ? 0 : -1}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'bg-amber-500/20 text-amber-400 border-b-2 border-amber-400'

@@ -18,6 +18,7 @@ import {
   Star,
 } from 'lucide-react';
 import { BookTemplate, getCategoryInfo } from '../../types/templates';
+import { useModal, useTabKeyboardNavigation } from '../../hooks/useModal';
 
 interface TemplatePreviewModalProps {
   template: BookTemplate | null;
@@ -34,6 +35,13 @@ export default function TemplatePreviewModal({
 }: TemplatePreviewModalProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'typography' | 'layout' | 'ai'>('overview');
   const [currentPreviewIndex, setCurrentPreviewIndex] = useState(0);
+
+  // Tab keys for keyboard navigation
+  const tabKeys: ('overview' | 'typography' | 'layout' | 'ai')[] = ['overview', 'typography', 'layout', 'ai'];
+  const handleTabKeyDown = useTabKeyboardNavigation(tabKeys, activeTab, setActiveTab);
+
+  // ESC key handling and scroll lock
+  useModal(isOpen, onClose);
 
   if (!template) return null;
 
@@ -74,9 +82,11 @@ export default function TemplatePreviewModal({
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full max-w-4xl max-h-[85vh] bg-gray-900 rounded-2xl
               border border-white/10 shadow-2xl overflow-hidden"
+            role="dialog"
+            aria-modal="true"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-white/10">
+            <div className="flex items-center justify-between p-2 sm:p-4 border-b border-white/10">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{categoryInfo?.icon}</span>
                 <div>
@@ -99,13 +109,17 @@ export default function TemplatePreviewModal({
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-white/10 px-4">
+            <div className="flex border-b border-white/10 px-2 sm:px-4" role="tablist">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key as any)}
+                    onKeyDown={handleTabKeyDown}
+                    role="tab"
+                    aria-selected={activeTab === tab.key}
+                    tabIndex={activeTab === tab.key ? 0 : -1}
                     className={`
                       flex items-center gap-2 px-4 py-3 text-sm font-medium
                       border-b-2 transition-colors
@@ -123,7 +137,7 @@ export default function TemplatePreviewModal({
             </div>
 
             {/* Content */}
-            <div className="overflow-y-auto p-6" style={{ maxHeight: 'calc(85vh - 180px)' }}>
+            <div className="overflow-y-auto p-2 sm:p-6" style={{ maxHeight: 'calc(85vh - 180px)' }}>
               {/* Overview Tab */}
               {activeTab === 'overview' && (
                 <div className="grid grid-cols-2 gap-6">
@@ -451,7 +465,7 @@ export default function TemplatePreviewModal({
             </div>
 
             {/* Footer Actions */}
-            <div className="flex items-center justify-between p-4 border-t border-white/10 bg-black/20">
+            <div className="flex items-center justify-between p-2 sm:p-4 border-t border-white/10 bg-black/20">
               <button
                 onClick={onClose}
                 className="px-4 py-2 text-gray-400 hover:text-white transition-colors"

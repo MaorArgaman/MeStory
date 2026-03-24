@@ -155,24 +155,24 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen p-4 sm:p-6 md:p-8">
+      <div className="max-w-7xl mx-auto pt-16 sm:pt-20">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="text-center mb-8 sm:mb-12"
         >
-          <h1 className="text-5xl font-bold gradient-text mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4">
             Choose Your Writing Journey
           </h1>
-          <p className="text-xl text-gray-300">
+          <p className="text-base sm:text-lg md:text-xl text-gray-300 px-4">
             Unlock powerful AI tools to bring your stories to life
           </p>
         </motion.div>
 
         {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-6xl mx-auto">
           {plans.map((plan, index) => {
             const premium = isPremiumPlan(plan.id);
             const current = isCurrentPlan(plan.tier);
@@ -198,7 +198,7 @@ export default function SubscriptionPage() {
                 )}
 
                 <div
-                  className={`glass-strong rounded-2xl p-8 h-full flex flex-col transition-all duration-300 ${
+                  className={`glass-strong rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 h-full flex flex-col transition-all duration-300 ${
                     premium
                       ? 'border-2 border-yellow-500/50 shadow-2xl shadow-yellow-500/20'
                       : 'border border-white/10'
@@ -208,7 +208,7 @@ export default function SubscriptionPage() {
                 >
                   {/* Plan Icon */}
                   <div
-                    className={`w-16 h-16 rounded-xl flex items-center justify-center mb-6 ${
+                    className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-lg sm:rounded-xl flex items-center justify-center mb-4 sm:mb-6 ${
                       premium
                         ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-gray-900 shadow-lg shadow-yellow-500/30'
                         : plan.id === 'standard'
@@ -221,7 +221,7 @@ export default function SubscriptionPage() {
 
                   {/* Plan Name */}
                   <h3
-                    className={`text-2xl font-bold mb-2 capitalize ${
+                    className={`text-xl sm:text-2xl font-bold mb-2 capitalize ${
                       premium ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent' : 'text-white'
                     }`}
                   >
@@ -229,12 +229,12 @@ export default function SubscriptionPage() {
                   </h3>
 
                   {/* Price */}
-                  <div className="mb-6">
+                  <div className="mb-4 sm:mb-6">
                     {plan.price === 0 ? (
-                      <div className="text-4xl font-bold text-white">Free</div>
+                      <div className="text-3xl sm:text-4xl font-bold text-white">Free</div>
                     ) : (
                       <div className="flex items-baseline gap-2">
-                        <span className={`text-4xl font-bold ${premium ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent' : 'text-white'}`}>
+                        <span className={`text-3xl sm:text-4xl font-bold ${premium ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent' : 'text-white'}`}>
                           ${plan.price}
                         </span>
                         <span className="text-gray-400">/month</span>
@@ -248,14 +248,14 @@ export default function SubscriptionPage() {
                   </div>
 
                   {/* Credits */}
-                  <div className="mb-6">
-                    <div className={`text-sm font-semibold ${premium ? 'text-yellow-400' : 'text-indigo-400'}`}>
+                  <div className="mb-4 sm:mb-6">
+                    <div className={`text-xs sm:text-sm font-semibold ${premium ? 'text-yellow-400' : 'text-indigo-400'}`}>
                       {plan.credits === -1 ? 'Unlimited Credits' : `${plan.credits} Credits/Month`}
                     </div>
                   </div>
 
                   {/* Features */}
-                  <ul className="flex-1 space-y-3 mb-8">
+                  <ul className="flex-1 space-y-2 sm:space-y-3 mb-6 sm:mb-8">
                     {plan.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-3">
                         <Check
@@ -274,7 +274,7 @@ export default function SubscriptionPage() {
                       disabled
                       aria-disabled="true"
                       aria-label="Current Plan - already subscribed"
-                      className="w-full py-4 bg-gray-700 text-gray-400 rounded-xl font-semibold cursor-not-allowed"
+                      className="w-full py-3 sm:py-4 bg-gray-700 text-gray-400 rounded-lg sm:rounded-xl font-semibold cursor-not-allowed text-sm sm:text-base"
                     >
                       Current Plan
                     </button>
@@ -284,7 +284,7 @@ export default function SubscriptionPage() {
                       disabled={upgrading === 'free'}
                       aria-disabled={upgrading === 'free'}
                       aria-label={upgrading === 'free' ? 'Downgrading to Free plan' : 'Downgrade to Free plan'}
-                      className="w-full py-4 btn-secondary font-semibold text-base"
+                      className="w-full py-3 sm:py-4 btn-secondary font-semibold text-sm sm:text-base"
                     >
                       {upgrading === 'free' ? (
                         <Loader2 className="w-5 h-5 animate-spin mx-auto" />
@@ -298,7 +298,7 @@ export default function SubscriptionPage() {
                       disabled={upgrading === plan.id}
                       aria-disabled={upgrading === plan.id}
                       aria-label={upgrading === plan.id ? `Upgrading to ${plan.tier} plan` : `Upgrade to ${plan.tier} plan`}
-                      className={`w-full py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all ${
+                      className={`w-full py-3 sm:py-4 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all ${
                         premium
                           ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 hover:from-yellow-500 hover:to-yellow-700 shadow-lg shadow-yellow-500/30 hover:shadow-xl hover:shadow-yellow-500/40'
                           : 'btn-primary'

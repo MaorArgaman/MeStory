@@ -51,7 +51,7 @@ export default function Navbar() {
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false);
       }
@@ -61,7 +61,11 @@ export default function Navbar() {
     }
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   // Close mobile menu on route change
@@ -150,7 +154,7 @@ export default function Navbar() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="lg:hidden p-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300"
+                className="lg:hidden p-2 min-h-[44px] min-w-[44px] rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300 flex items-center justify-center"
               >
                 {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </motion.button>
@@ -178,7 +182,7 @@ export default function Navbar() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setShowNotifications(true)}
-                    className="relative p-2 sm:p-2.5 rounded-lg sm:rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300"
+                    className="relative p-2 sm:p-2.5 min-h-[44px] min-w-[44px] rounded-lg sm:rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300 flex items-center justify-center"
                     title={t('nav.notifications')}
                   >
                     <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -194,7 +198,7 @@ export default function Navbar() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowMessages(true)}
-                className="relative p-2 sm:p-2.5 rounded-lg sm:rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300"
+                className="relative p-2 sm:p-2.5 min-h-[44px] min-w-[44px] rounded-lg sm:rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300 flex items-center justify-center"
                 title={t('nav.messages')}
               >
                 <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -215,8 +219,16 @@ export default function Navbar() {
                 >
                   {/* Avatar with Gold Glow */}
                   <div className="relative">
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold ring-2 ring-magic-gold/30">
-                      <User className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-deep-space" />
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold ring-2 ring-magic-gold/30 overflow-hidden">
+                      {user?.profile?.avatar ? (
+                        <img
+                          src={user.profile.avatar}
+                          alt={user.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-deep-space" />
+                      )}
                     </div>
                     {/* Premium Badge */}
                     {user?.role === 'premium' && (

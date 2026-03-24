@@ -136,7 +136,7 @@ export default function AuthorProfilePage() {
     <div className="min-h-screen">
       {/* Header Section */}
       <div
-        className="h-96 relative"
+        className="h-48 sm:h-64 md:h-80 lg:h-96 relative"
         style={{
           background: author.headerImage
             ? `url(${author.headerImage})`
@@ -149,18 +149,18 @@ export default function AuthorProfilePage() {
       </div>
 
       {/* Profile Info Section */}
-      <div className="relative -mt-32 px-6 pb-20">
+      <div className="relative -mt-16 sm:-mt-24 md:-mt-32 px-4 sm:px-6 pb-12 sm:pb-20">
         <div className="max-w-7xl mx-auto">
-          <GlassCard className="mb-8">
-            <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
+          <GlassCard className="mb-6 sm:mb-8">
+            <div className="flex flex-col md:flex-row items-center md:items-end gap-4 sm:gap-6">
               {/* Avatar */}
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', damping: 15 }}
-                className="relative -mt-20 md:-mt-24"
+                className="relative -mt-12 sm:-mt-16 md:-mt-24"
               >
-                <div className="w-40 h-40 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold ring-4 ring-deep-space">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold ring-4 ring-deep-space">
                   {author.avatar ? (
                     <img
                       src={author.avatar}
@@ -168,26 +168,26 @@ export default function AuthorProfilePage() {
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
-                    <User className="w-20 h-20 text-deep-space" />
+                    <User className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 text-deep-space" />
                   )}
                 </div>
 
                 {/* Premium Badge */}
                 {author.role === 'premium' && (
-                  <div className="absolute -bottom-2 -right-2 w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center border-4 border-deep-space shadow-glow-gold">
-                    <Crown className="w-6 h-6 text-deep-space" />
+                  <div className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center border-2 sm:border-4 border-deep-space shadow-glow-gold">
+                    <Crown className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-deep-space" />
                   </div>
                 )}
               </motion.div>
 
               {/* Info */}
               <div className="flex-1 text-center md:text-left">
-                <h1 className="text-5xl font-display font-bold gradient-gold mb-2">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-bold gradient-gold mb-2">
                   {author.name}
                 </h1>
 
                 {/* Stats */}
-                <div className="flex flex-wrap justify-center md:justify-start gap-6 mb-4">
+                <div className="flex flex-wrap justify-center md:justify-start gap-3 sm:gap-4 md:gap-6 mb-4">
                   <div className="flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-magic-gold" />
                     <span className="text-white font-semibold">
@@ -251,10 +251,11 @@ export default function AuthorProfilePage() {
           </GlassCard>
 
           {/* Tabs */}
-          <div className="flex gap-4 mb-8">
+          <div className="flex flex-wrap gap-2 sm:gap-4 mb-6 sm:mb-8">
             <button
+              type="button"
               onClick={() => setActiveTab('books')}
-              className={`relative px-6 py-3 rounded-xl font-semibold transition-all ${
+              className={`relative px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all text-sm sm:text-base ${
                 activeTab === 'books'
                   ? 'text-white'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -270,8 +271,9 @@ export default function AuthorProfilePage() {
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab('about')}
-              className={`relative px-6 py-3 rounded-xl font-semibold transition-all ${
+              className={`relative px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all text-sm sm:text-base ${
                 activeTab === 'about'
                   ? 'text-white'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'

@@ -181,7 +181,7 @@ export default function PageLayoutEditor({
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Editor Panel */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Columns Section */}
@@ -557,7 +557,7 @@ export default function PageLayoutEditor({
 
         {/* Preview Panel */}
         {showPreview && (
-          <div className="w-80 border-r border-white/10 p-4 overflow-y-auto">
+          <div className="w-full lg:w-80 border-r border-white/10 p-4 overflow-y-auto">
             <h3 className="text-sm font-medium text-gray-400 mb-4">Preview</h3>
             <PagePreview layout={layout} isRTL={isRTL} />
           </div>

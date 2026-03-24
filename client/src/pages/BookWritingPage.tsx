@@ -624,6 +624,7 @@ export default function BookWritingPage() {
                   {/* Chapter Title Input */}
                   <input
                     type="text"
+                    name="chapterTitle"
                     value={currentChapter.title}
                     onChange={(e) => {
                       const updated = [...book.chapters];
