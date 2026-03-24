@@ -2053,25 +2053,23 @@ export default function BookLayoutPage() {
                   </button>
                 </div>
 
-                {/* AI Complete Design - Special Premium Button */}
+                {/* AI Complete Design - One Button for Everything */}
                 <div className="mb-4">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setShowAIDesignWizard(true)}
-                    className="w-full relative overflow-hidden rounded-xl p-4 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 text-white shadow-lg shadow-purple-500/25"
+                    className="w-full relative overflow-hidden rounded-xl p-4 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 text-white shadow-lg shadow-orange-500/25"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-pink-400/20 to-indigo-400/20 animate-pulse" />
-                    <div className="relative flex items-center justify-center gap-3">
-                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                        <Sparkles className="w-5 h-5" />
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold text-lg">
-                          {language === 'he' ? 'עיצוב AI מלא' : 'Complete AI Design'}
+                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-pink-400/20 animate-pulse" />
+                    <div className="relative flex flex-col items-center justify-center gap-2">
+                      <Sparkles className="w-8 h-8" />
+                      <div className="text-center">
+                        <div className="font-bold text-xl">
+                          {language === 'he' ? 'עצב לי הכל' : 'Design Everything'}
                         </div>
-                        <div className="text-xs text-white/80">
-                          {language === 'he' ? 'כריכה + פריסה + טיפוגרפיה + תמונות' : 'Cover + Layout + Typography + Images'}
+                        <div className="text-xs text-white/80 mt-1">
+                          {language === 'he' ? 'צבעים, גופנים ותמונות עטיפה בלחיצה אחת' : 'Colors, fonts and cover images in one click'}
                         </div>
                       </div>
                     </div>
