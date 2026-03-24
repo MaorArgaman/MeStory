@@ -93,7 +93,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Logo - Left Side */}
-            <Link to="/dashboard" className="flex items-center group flex-shrink-0 -my-1">
+            <Link to="/dashboard" className="flex items-center group flex-shrink-0">
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.2 }}
@@ -101,7 +101,7 @@ export default function Navbar() {
                 <img
                   src={logoIcon}
                   alt="MeStory"
-                  className="h-16 sm:h-[72px] lg:h-20 w-auto object-contain drop-shadow-[0_2px_20px_rgba(255,215,0,0.5)]"
+                  className="h-10 sm:h-11 lg:h-12 w-auto object-contain drop-shadow-[0_2px_12px_rgba(255,215,0,0.4)]"
                 />
               </motion.div>
             </Link>

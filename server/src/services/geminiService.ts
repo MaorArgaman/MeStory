@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import { SupportedLanguage, getLanguageInstruction, detectLanguage, getLocalizedRatingLabel } from '../utils/languageHelper';
 
 // Lazy-initialize Gemini AI client (only when API key is available)
 let genAIClient: GoogleGenerativeAI | null = null;
@@ -81,8 +82,11 @@ export async function generateContinuations(
         summary?: VoiceInterviewContext;
       };
     };
-  }
+  },
+  language?: SupportedLanguage
 ): Promise<WritingSuggestion> {
+  // Auto-detect language from text if not provided
+  const lang = language || detectLanguage(currentText);
   try {
     // Build voice interview context if available
     let voiceInterviewPrompt = '';
@@ -111,7 +115,10 @@ ${sc.characters ? `Characters: ${sc.characters}` : ''}
 `;
     }
 
+    const langInstruction = getLanguageInstruction(lang);
+
     const prompt = `You are a professional ${genre} author and writing assistant.
+${langInstruction}
 
 CONTEXT:
 ${context?.bookTitle ? `Book: "${context.bookTitle}"` : ''}
@@ -129,6 +136,7 @@ Each option should:
 - Be a natural continuation
 - Offer different narrative directions
 - Stay true to the ${genre} genre
+- Be written in the SAME LANGUAGE as the current text
 ${context?.storyContext?.voiceInterview ? '- Align with the story background from the author interview' : ''}
 
 Respond ONLY with a JSON array of 3 strings, nothing else:
@@ -180,9 +188,14 @@ Respond ONLY with a JSON array of 3 strings, nothing else:
  * Analyze text quality using Gemini AI
  * Section 5.5: Quality Scoring System
  */
-export async function analyzeTextQuality(text: string): Promise<QualityAnalysis> {
+export async function analyzeTextQuality(text: string, language?: SupportedLanguage): Promise<QualityAnalysis> {
   try {
+    // Auto-detect language from text if not provided
+    const lang = language || detectLanguage(text);
+    const langInstruction = getLanguageInstruction(lang);
+
     const prompt = `You are a professional literary critic and editor. Analyze the following text and provide a comprehensive quality assessment.
+${langInstruction}
 
 TEXT TO ANALYZE:
 ${text}
@@ -336,10 +349,17 @@ export async function enhanceText(
  */
 export async function generateBookTitles(
   genre: string,
-  count: number = 5
+  count: number = 5,
+  language: SupportedLanguage = 'en'
 ): Promise<string[]> {
   try {
+    const langInstruction = getLanguageInstruction(language);
+    const titleLangNote = language === 'he'
+      ? '- כל הכותרות חייבות להיות בעברית'
+      : '- All titles must be in English';
+
     const prompt = `You are a creative book title generator specialized in ${genre} books.
+${langInstruction}
 
 Generate ${count} creative, catchy, and marketable book titles for a ${genre} book.
 
@@ -348,6 +368,7 @@ Requirements:
 - Titles should be appropriate for the ${genre} genre
 - Mix of short punchy titles and longer descriptive ones
 - Titles should sound professional and publishable
+${titleLangNote}
 - No explanations, just the titles
 
 Format: Return only the titles, one per line, numbered 1-${count}.`;
