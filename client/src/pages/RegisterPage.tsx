@@ -226,9 +226,14 @@ export default function RegisterPage() {
           </div>
 
           {/* Google Sign-In Button */}
-          <a
-            href="https://me-story-server-7wdx.vercel.app/api/auth/google"
-            rel="noopener noreferrer"
+          <div
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              window.location.assign('https://me-story-server-7wdx.vercel.app/api/auth/google');
+            }}
+            role="button"
+            tabIndex={0}
             className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white hover:bg-gray-100 text-gray-900 font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -250,7 +255,7 @@ export default function RegisterPage() {
               />
             </svg>
             {t('register.google_register')}
-          </a>
+          </div>
 
           {/* Login Link */}
           <div className="mt-6 text-center text-sm text-gray-400">
