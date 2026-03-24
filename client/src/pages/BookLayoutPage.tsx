@@ -2770,13 +2770,14 @@ function PageRenderer({
             ref={editableRef}
             contentEditable
             suppressContentEditableWarning
-            className="h-full overflow-auto book-page-content prose prose-sm max-w-none outline-none focus:ring-2 focus:ring-magic-gold/50 rounded"
+            className="h-full overflow-auto book-page-content prose prose-sm max-w-none outline-none focus:ring-2 focus:ring-magic-gold/50 rounded relative"
             dangerouslySetInnerHTML={{ __html: editingContent }}
             style={{
               color: settings.textColor || '#000000',
               direction: isRTL ? 'rtl' : 'ltr',
               paddingTop: showHeader ? '15px' : '0',
               paddingBottom: settings.showPageNumbers ? '20px' : '0',
+              zIndex: 5,
             }}
           />
           {/* Editing controls */}
@@ -2799,13 +2800,14 @@ function PageRenderer({
         // View mode with edit button for chapter pages
         <div className="relative h-full group">
           <div
-            className="h-full overflow-hidden book-page-content prose prose-sm max-w-none"
+            className="h-full overflow-hidden book-page-content prose prose-sm max-w-none relative"
             dangerouslySetInnerHTML={{ __html: page.content }}
             style={{
               color: settings.textColor || '#000000',
               direction: isRTL ? 'rtl' : 'ltr',
               paddingTop: showHeader ? '15px' : '0',
               paddingBottom: settings.showPageNumbers ? '20px' : '0',
+              zIndex: 5,
             }}
           />
           {/* Edit button for chapter pages */}

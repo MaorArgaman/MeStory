@@ -125,13 +125,18 @@ Respond ONLY with the enhanced prompt text in English, nothing else.`;
  */
 export async function generateImage(request: ImageGenerationRequest): Promise<ImageGenerationResult> {
   try {
-    // Enhance the prompt using Gemini
+    console.log('🖼️ Image generation started');
+    console.log('🖼️ Original prompt:', request.prompt?.slice(0, 100));
+
+    // Enhance the prompt using Gemini (translates to English if needed)
     const enhancedPrompt = await generateEnhancedPrompt(request);
+    console.log('🖼️ Enhanced prompt:', enhancedPrompt?.slice(0, 100));
 
     // For now, use a placeholder image service
     // In production, replace this with actual AI image generation API
     // Default to nano-banana for AI-generated images (uses Gemini + Pollinations)
     const placeholderService = process.env.IMAGE_GENERATION_SERVICE || 'nano-banana';
+    console.log('🖼️ Using service:', placeholderService);
 
     let imageUrl: string;
 
@@ -564,9 +569,12 @@ async function generateWithPollinationsEnhanced(prompt: string, aspectRatio?: st
       height = 1024;
   }
 
-  // Truncate and sanitize prompt to avoid URL issues (max 500 chars)
+  // Truncate prompt but keep all characters (URL encoding handles special chars)
+  // Don't remove Hebrew/Arabic/etc. characters - they work fine when URL encoded
   let sanitizedPrompt = prompt
-    .replace(/[^\w\s,.-]/g, '') // Remove special characters except basic punctuation
+    .replace(/[\r\n\t]+/g, ' ') // Replace newlines/tabs with spaces
+    .replace(/\s+/g, ' ') // Collapse multiple spaces
+    .trim()
     .slice(0, 400); // Limit length for URL safety
 
   // Enhanced prompt for professional quality
