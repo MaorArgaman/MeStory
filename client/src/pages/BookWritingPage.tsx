@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
@@ -77,6 +77,31 @@ export default function BookWritingPage() {
   const [showLeftSidebar, setShowLeftSidebar] = useState(false);
   const [showRightSidebar, setShowRightSidebar] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  // Refs for sidebar focus management
+  const leftSidebarRef = useRef<HTMLDivElement>(null);
+  const rightSidebarRef = useRef<HTMLDivElement>(null);
+
+  // Focus management for sidebars (accessibility)
+  useEffect(() => {
+    if (showLeftSidebar && leftSidebarRef.current) {
+      // Focus the first focusable element in the left sidebar
+      const focusableElement = leftSidebarRef.current.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      focusableElement?.focus();
+    }
+  }, [showLeftSidebar]);
+
+  useEffect(() => {
+    if (showRightSidebar && rightSidebarRef.current) {
+      // Focus the first focusable element in the right sidebar
+      const focusableElement = rightSidebarRef.current.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      focusableElement?.focus();
+    }
+  }, [showRightSidebar]);
 
   // AI Enhancement state
   const [enhancing, setEnhancing] = useState(false);
@@ -528,7 +553,11 @@ export default function BookWritingPage() {
         )}
 
         {/* Left Sidebar - Chapters */}
-        <div className={`
+        <div
+          ref={leftSidebarRef}
+          role="region"
+          aria-label="Chapters sidebar"
+          className={`
           ${showLeftSidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           fixed lg:relative z-50 lg:z-auto
           w-64 sm:w-72 lg:w-64 h-full
@@ -670,7 +699,11 @@ export default function BookWritingPage() {
         )}
 
         {/* Right Panel - AI & Analysis */}
-        <div className={`
+        <div
+          ref={rightSidebarRef}
+          role="region"
+          aria-label="AI and Analysis sidebar"
+          className={`
           ${showRightSidebar ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
           fixed lg:relative right-0 z-50 lg:z-auto
           w-[85%] sm:w-80 lg:w-80 h-full

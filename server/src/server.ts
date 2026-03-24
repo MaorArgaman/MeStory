@@ -141,8 +141,12 @@ app.use(cors({
     }
 
     console.warn(`CORS request from origin: ${origin}`);
-    // Allow all origins in development, be stricter in production if needed
-    callback(null, true);
+    // SEC-009 FIX: Only allow unknown origins in development
+    if (process.env.NODE_ENV === 'production') {
+      callback(new Error('Not allowed by CORS'));
+    } else {
+      callback(null, true);
+    }
   },
   credentials: true,
 }));
@@ -152,16 +156,48 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
+// SEC-003 FIX: Validate JWT_SECRET in production
+const sessionSecret = process.env.JWT_SECRET;
+if (process.env.NODE_ENV === 'production' && !sessionSecret) {
+  console.error('CRITICAL: JWT_SECRET environment variable is required in production!');
+  process.exit(1);
+}
+
+// ============================================
+// CSRF Protection (BUG-006)
+// ============================================
+// This application uses multiple layers of CSRF protection:
+//
+// 1. SameSite Cookies: Session cookies use 'strict' in production,
+//    preventing them from being sent with cross-origin requests.
+//
+// 2. CORS Configuration: Only whitelisted origins can make requests.
+//    Unknown origins are rejected in production mode.
+//
+// 3. JWT Authentication: API endpoints require valid JWT tokens in
+//    the Authorization header. Attackers cannot forge these tokens.
+//
+// 4. Secure Cookie Settings: httpOnly prevents JavaScript access,
+//    secure ensures HTTPS-only transmission in production.
+//
+// Traditional CSRF tokens (like csurf) are not needed because:
+// - All state-changing APIs require JWT authentication
+// - JWTs are not automatically sent by the browser (unlike cookies)
+// - SameSite=strict prevents cross-site cookie sending
+// - CORS blocks cross-origin requests from untrusted domains
+// ============================================
+
 // Session middleware for Passport
 app.use(
   session({
-    secret: process.env.JWT_SECRET || 'fallback-secret-key',
+    secret: sessionSecret || 'dev-only-fallback-key-not-for-production',
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
     },
   })
 );

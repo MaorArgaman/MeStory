@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage, Language } from '../contexts/LanguageContext';
@@ -49,6 +50,7 @@ interface EarningsData {
 }
 
 export default function SettingsPage() {
+  const { t } = useTranslation('common');
   const { user, refreshUser } = useAuth();
   const { language, setLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
@@ -95,7 +97,7 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error('Failed to load earnings:', error);
-      toast.error(language === 'he' ? 'טעינת נתוני רווחים נכשלה' : 'Failed to load earnings data');
+      toast.error(t('settings.toast.load_earnings_failed'));
     } finally {
       setLoadingEarnings(false);
     }
@@ -111,12 +113,12 @@ export default function SettingsPage() {
       });
 
       if (response.data.success) {
-        toast.success(language === 'he' ? 'הפרופיל עודכן בהצלחה' : 'Profile updated successfully');
+        toast.success(t('settings.toast.profile_updated'));
         await refreshUser();
       }
     } catch (error: any) {
       console.error('Failed to update profile:', error);
-      toast.error(error.response?.data?.error || (language === 'he' ? 'עדכון הפרופיל נכשל' : 'Failed to update profile'));
+      toast.error(error.response?.data?.error || t('settings.toast.profile_failed'));
     } finally {
       setLoading(false);
     }
@@ -126,7 +128,7 @@ export default function SettingsPage() {
     const amount = parseFloat(withdrawAmount);
 
     if (!amount || amount < 10) {
-      toast.error(language === 'he' ? 'סכום מינימלי למשיכה הוא $10' : 'Minimum withdrawal amount is $10');
+      toast.error(t('settings.toast.min_withdrawal'));
       return;
     }
 
@@ -135,13 +137,13 @@ export default function SettingsPage() {
       const response = await api.post('/user/withdraw', { amount });
 
       if (response.data.success) {
-        toast.success(language === 'he' ? 'בקשת המשיכה הוגשה בהצלחה' : 'Withdrawal request submitted successfully');
+        toast.success(t('settings.toast.withdrawal_submitted'));
         setWithdrawAmount('');
         loadEarnings();
       }
     } catch (error: any) {
       console.error('Failed to request withdrawal:', error);
-      toast.error(error.response?.data?.error || (language === 'he' ? 'בקשת המשיכה נכשלה' : 'Failed to request withdrawal'));
+      toast.error(error.response?.data?.error || t('settings.toast.withdrawal_failed'));
     } finally {
       setLoading(false);
     }
@@ -150,17 +152,17 @@ export default function SettingsPage() {
   const handleChangePassword = async () => {
     // Validation
     if (!oldPassword || !newPassword || !confirmPassword) {
-      toast.error(language === 'he' ? 'נא למלא את כל שדות הסיסמה' : 'Please fill in all password fields');
+      toast.error(t('settings.toast.fill_passwords'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error(language === 'he' ? 'הסיסמאות החדשות אינן תואמות' : 'New passwords do not match');
+      toast.error(t('settings.toast.passwords_mismatch'));
       return;
     }
 
     if (newPassword.length < 6) {
-      toast.error(language === 'he' ? 'הסיסמה חייבת להכיל לפחות 6 תווים' : 'Password must be at least 6 characters');
+      toast.error(t('settings.toast.password_min_length'));
       return;
     }
 
@@ -172,14 +174,14 @@ export default function SettingsPage() {
       });
 
       if (response.data.success) {
-        toast.success(language === 'he' ? 'הסיסמה שונתה בהצלחה' : 'Password changed successfully');
+        toast.success(t('settings.toast.password_changed'));
         setOldPassword('');
         setNewPassword('');
         setConfirmPassword('');
       }
     } catch (error: any) {
       console.error('Failed to change password:', error);
-      toast.error(error.response?.data?.error || (language === 'he' ? 'שינוי הסיסמה נכשל' : 'Failed to change password'));
+      toast.error(error.response?.data?.error || t('settings.toast.password_failed'));
     } finally {
       setLoading(false);
     }
@@ -190,28 +192,28 @@ export default function SettingsPage() {
       ...prev,
       [key]: !prev[key],
     }));
-    toast.success(language === 'he' ? 'העדפות ההתראות עודכנו' : 'Notification preferences updated');
+    toast.success(t('settings.toast.notification_updated'));
   };
 
   const handleLanguageChange = async (newLanguage: Language) => {
     try {
       setLanguageLoading(true);
       await setLanguage(newLanguage);
-      toast.success(newLanguage === 'he' ? 'השפה שונתה לעברית' : 'Language changed to English');
+      toast.success(newLanguage === 'he' ? t('settings.toast.language_hebrew') : t('settings.toast.language_english'));
     } catch (error) {
       console.error('Failed to change language:', error);
-      toast.error(language === 'he' ? 'שינוי השפה נכשל' : 'Failed to change language');
+      toast.error(t('settings.toast.language_failed'));
     } finally {
       setLanguageLoading(false);
     }
   };
 
   const tabs = [
-    { id: 'profile' as Tab, label: language === 'he' ? 'פרופיל' : 'Profile', icon: User },
-    { id: 'security' as Tab, label: language === 'he' ? 'אבטחה' : 'Security', icon: Shield },
-    { id: 'earnings' as Tab, label: language === 'he' ? 'רווחים' : 'Earnings', icon: DollarSign },
-    { id: 'billing' as Tab, label: language === 'he' ? 'חיובים' : 'Billing', icon: CreditCard },
-    { id: 'notifications' as Tab, label: language === 'he' ? 'התראות' : 'Notifications', icon: Bell },
+    { id: 'profile' as Tab, label: t('settings.tabs.profile'), icon: User },
+    { id: 'security' as Tab, label: t('settings.tabs.security'), icon: Shield },
+    { id: 'earnings' as Tab, label: t('settings.tabs.earnings'), icon: DollarSign },
+    { id: 'billing' as Tab, label: t('settings.tabs.billing'), icon: CreditCard },
+    { id: 'notifications' as Tab, label: t('settings.tabs.notifications'), icon: Bell },
   ];
 
   return (
@@ -220,10 +222,10 @@ export default function SettingsPage() {
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-1 sm:mb-2">
-            {language === 'he' ? 'הגדרות' : 'Settings'}
+            {t('settings.title')}
           </h1>
           <p className="text-sm sm:text-base text-gray-400">
-            {language === 'he' ? 'ניהול החשבון וההעדפות שלך' : 'Manage your account and preferences'}
+            {t('settings.subtitle')}
           </p>
         </div>
 
@@ -266,7 +268,7 @@ export default function SettingsPage() {
                   className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8"
                 >
                   <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-                    {language === 'he' ? 'פרטי פרופיל' : 'Profile Information'}
+                    {t('settings.profile.title')}
                   </h2>
 
                   <div className="space-y-4 sm:space-y-6">
@@ -274,7 +276,7 @@ export default function SettingsPage() {
                     <div className="p-3 sm:p-4 rounded-xl bg-gradient-to-r from-indigo-600/10 to-purple-600/10 border border-indigo-500/30">
                       <label className="block text-sm font-medium mb-2 sm:mb-3 flex items-center gap-2">
                         <Globe className="w-4 h-4 text-indigo-400" />
-                        {language === 'he' ? 'שפת המערכת' : 'System Language'}
+                        {t('settings.profile.language')}
                       </label>
                       <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                         <button
@@ -317,9 +319,7 @@ export default function SettingsPage() {
                         </button>
                       </div>
                       <p className="text-xs text-gray-500 mt-2">
-                        {language === 'he'
-                          ? 'שינוי השפה ישפיע על כל האפליקציה כולל תגובות ה-AI'
-                          : 'This will change the language of the entire application including AI responses'}
+                        {t('settings.profile.language_help')}
                       </p>
                     </div>
 
@@ -327,14 +327,14 @@ export default function SettingsPage() {
                     <div>
                       <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                         <User className="w-4 h-4" />
-                        {language === 'he' ? 'שם מלא' : 'Full Name'}
+                        {t('settings.profile.name')}
                       </label>
                       <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="input"
-                        placeholder={language === 'he' ? 'השם שלך' : 'Your name'}
+                        placeholder={t('settings.profile.name_placeholder')}
                       />
                     </div>
 
@@ -342,7 +342,7 @@ export default function SettingsPage() {
                     <div>
                       <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                         <Mail className="w-4 h-4" />
-                        {language === 'he' ? 'כתובת אימייל' : 'Email Address'}
+                        {t('settings.profile.email')}
                       </label>
                       <input
                         type="email"
@@ -351,27 +351,27 @@ export default function SettingsPage() {
                         className="input opacity-50 cursor-not-allowed"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        {language === 'he' ? 'לא ניתן לשנות את האימייל' : 'Email cannot be changed'}
+                        {t('settings.profile.email_help')}
                       </p>
                     </div>
 
                     {/* Bio */}
                     <div>
                       <label className="block text-sm font-medium mb-2">
-                        {language === 'he' ? 'אודות' : 'Bio'}
+                        {t('settings.profile.bio')}
                       </label>
                       <textarea
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
                         className="input min-h-[100px] resize-none"
-                        placeholder={language === 'he' ? 'ספר לקוראים על עצמך...' : 'Tell readers about yourself...'}
+                        placeholder={t('settings.profile.bio_placeholder')}
                       />
                     </div>
 
                     {/* Avatar URL */}
                     <div>
                       <label className="block text-sm font-medium mb-2">
-                        {language === 'he' ? 'כתובת תמונת פרופיל' : 'Avatar URL'}
+                        {t('settings.profile.avatar')}
                       </label>
                       <input
                         type="url"
@@ -393,7 +393,7 @@ export default function SettingsPage() {
                       ) : (
                         <Save className="w-5 h-5" />
                       )}
-                      {language === 'he' ? 'שמור שינויים' : 'Save Changes'}
+                      {t('settings.profile.save')}
                     </button>
                   </div>
                 </motion.div>
@@ -410,13 +410,13 @@ export default function SettingsPage() {
                   <div className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
                       <h2 className="text-xl sm:text-2xl font-bold">
-                        {language === 'he' ? 'לוח בקרת רווחים' : 'Earnings Dashboard'}
+                        {t('settings.earnings_tab.title')}
                       </h2>
                       <button
                         onClick={loadEarnings}
                         className="btn-secondary text-sm py-2 px-4"
                       >
-                        {language === 'he' ? 'רענן' : 'Refresh'}
+                        {t('settings.earnings_tab.refresh')}
                       </button>
                     </div>
 
@@ -433,7 +433,7 @@ export default function SettingsPage() {
                             <div className="flex items-center gap-2 mb-1 sm:mb-2">
                               <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
                               <span className="text-xs sm:text-sm text-gray-400">
-                                {language === 'he' ? 'סה״כ רווחים' : 'Total Earnings'}
+                                {t('settings.earnings_tab.total_earnings')}
                               </span>
                             </div>
                             <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
@@ -446,7 +446,7 @@ export default function SettingsPage() {
                             <div className="flex items-center gap-2 mb-1 sm:mb-2">
                               <Download className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" />
                               <span className="text-xs sm:text-sm text-gray-400">
-                                {language === 'he' ? 'זמין למשיכה' : 'Available'}
+                                {t('settings.earnings_tab.available')}
                               </span>
                             </div>
                             <div className="text-2xl sm:text-3xl font-bold text-white">
@@ -459,7 +459,7 @@ export default function SettingsPage() {
                             <div className="flex items-center gap-2 mb-1 sm:mb-2">
                               <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
                               <span className="text-xs sm:text-sm text-gray-400">
-                                {language === 'he' ? 'סה״כ מכירות' : 'Total Sales'}
+                                {t('settings.earnings_tab.total_sales')}
                               </span>
                             </div>
                             <div className="text-2xl sm:text-3xl font-bold text-white">
@@ -471,7 +471,7 @@ export default function SettingsPage() {
                         {/* Simple Chart (SVG visualization) */}
                         <div className="glass rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
                           <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
-                            {language === 'he' ? 'מגמת הכנסות' : 'Revenue Trend'}
+                            {t('settings.earnings_tab.revenue_trend')}
                           </h3>
                           <div className="h-36 sm:h-48 flex items-end justify-between gap-1 sm:gap-2">
                             {earningsData.monthlySales.slice(-6).map((month, index) => {
@@ -499,7 +499,7 @@ export default function SettingsPage() {
                         {/* Top Books */}
                         <div className="glass rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
                           <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
-                            {language === 'he' ? 'הספרים המרוויחים ביותר' : 'Top Earning Books'}
+                            {t('settings.earnings_tab.top_books')}
                           </h3>
                           <div className="space-y-2 sm:space-y-3">
                             {earningsData.topBooks.map((book) => (
@@ -510,7 +510,7 @@ export default function SettingsPage() {
                                 <div className="flex-1 min-w-0">
                                   <div className="font-medium text-white text-sm sm:text-base truncate">{book.title}</div>
                                   <div className="text-xs sm:text-sm text-gray-400">
-                                    {book.sales} {language === 'he' ? 'מכירות' : 'sales'} • ${book.price}
+                                    {t('settings.earnings_tab.sales_format', { sales: book.sales, amount: book.price })}
                                   </div>
                                 </div>
                                 <div className="text-base sm:text-lg font-bold text-green-400 ml-2">
@@ -524,7 +524,7 @@ export default function SettingsPage() {
                         {/* Withdrawal Section */}
                         <div className="glass rounded-xl p-4 sm:p-6">
                           <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
-                            {language === 'he' ? 'משיכת כספים' : 'Withdraw Funds'}
+                            {t('settings.earnings_tab.withdraw_title')}
                           </h3>
                           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                             <div className="flex-1">
@@ -533,7 +533,7 @@ export default function SettingsPage() {
                                 value={withdrawAmount}
                                 onChange={(e) => setWithdrawAmount(e.target.value)}
                                 className="input"
-                                placeholder={language === 'he' ? 'סכום (מינימום $10)' : 'Amount (min $10)'}
+                                placeholder={t('settings.earnings_tab.withdraw_placeholder')}
                                 min="10"
                                 step="0.01"
                               />
@@ -546,21 +546,19 @@ export default function SettingsPage() {
                               {loading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
                               ) : (
-                                language === 'he' ? 'משוך כספים' : 'Withdraw'
+                                t('settings.earnings_tab.withdraw_button')
                               )}
                             </button>
                           </div>
                           <p className="text-xs text-gray-400 mt-2">
-                            {language === 'he'
-                              ? 'הכספים יועברו לחשבון ה-PayPal המקושר שלך תוך 3-5 ימי עסקים'
-                              : 'Funds will be sent to your connected PayPal account within 3-5 business days'}
+                            {t('settings.earnings_tab.withdraw_help')}
                           </p>
                         </div>
                       </>
                     ) : (
                       <div className="text-center py-20">
                         <p className="text-gray-400">
-                          {language === 'he' ? 'אין נתוני רווחים זמינים' : 'No earnings data available'}
+                          {t('settings.earnings_tab.no_data')}
                         </p>
                       </div>
                     )}
@@ -578,7 +576,7 @@ export default function SettingsPage() {
                   className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8"
                 >
                   <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-                    {language === 'he' ? 'מנוי וחיובים' : 'Subscription & Billing'}
+                    {t('settings.billing.title')}
                   </h2>
 
                   {/* Current Plan */}
@@ -592,13 +590,13 @@ export default function SettingsPage() {
                         )}
                         <div>
                           <h3 className="text-base sm:text-lg font-semibold capitalize">
-                            {language === 'he' ? `תוכנית ${user?.role}` : `${user?.role} Plan`}
+                            {t('settings.billing.plan')}: {user?.role}
                           </h3>
                           <p className="text-xs sm:text-sm text-gray-400">
                             {user?.credits === 999999
-                              ? (language === 'he' ? 'ללא הגבלה' : 'Unlimited')
+                              ? t('settings.billing.unlimited')
                               : user?.credits.toLocaleString()}{' '}
-                            {language === 'he' ? 'קרדיטים' : 'credits'}
+                            {t('user.credits')}
                           </p>
                         </div>
                       </div>
@@ -606,7 +604,7 @@ export default function SettingsPage() {
                         onClick={() => window.location.href = '/subscription'}
                         className="btn-secondary px-4 sm:px-6 py-2 text-sm w-full sm:w-auto"
                       >
-                        {language === 'he' ? 'שנה תוכנית' : 'Change Plan'}
+                        {t('settings.billing.change_plan')}
                       </button>
                     </div>
                   </div>
@@ -614,22 +612,22 @@ export default function SettingsPage() {
                   {/* Subscription Details */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between py-3 border-b border-white/10">
-                      <span className="text-gray-400">{language === 'he' ? 'סטטוס' : 'Status'}</span>
+                      <span className="text-gray-400">{t('settings.billing.status')}</span>
                       <span className="flex items-center gap-2 text-green-400">
                         <Check className="w-4 h-4" />
-                        {language === 'he' ? 'פעיל' : 'Active'}
+                        {t('settings.billing.active')}
                       </span>
                     </div>
 
                     {user?.subscription && (
                       <>
                         <div className="flex items-center justify-between py-3 border-b border-white/10">
-                          <span className="text-gray-400">{language === 'he' ? 'מחזור חיוב' : 'Billing Cycle'}</span>
-                          <span className="text-white">{language === 'he' ? 'חודשי' : 'Monthly'}</span>
+                          <span className="text-gray-400">{t('settings.billing.billing_cycle')}</span>
+                          <span className="text-white">{t('settings.billing.monthly')}</span>
                         </div>
 
                         <div className="flex items-center justify-between py-3 border-b border-white/10">
-                          <span className="text-gray-400">{language === 'he' ? 'תאריך חיוב הבא' : 'Next Billing Date'}</span>
+                          <span className="text-gray-400">{t('settings.billing.next_billing')}</span>
                           <span className="text-white">
                             {new Date(user.subscription.endDate).toLocaleDateString()}
                           </span>
@@ -656,10 +654,10 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <h2 className="text-xl sm:text-2xl font-bold">
-                          {language === 'he' ? 'שינוי סיסמה' : 'Change Password'}
+                          {t('settings.security.password_title')}
                         </h2>
                         <p className="text-gray-400 text-xs sm:text-sm">
-                          {language === 'he' ? 'עדכן את הסיסמה שלך לשמירה על אבטחת החשבון' : 'Update your password to keep your account secure'}
+                          {t('settings.security.password_subtitle')}
                         </p>
                       </div>
                     </div>
@@ -667,40 +665,40 @@ export default function SettingsPage() {
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium mb-2">
-                          {language === 'he' ? 'סיסמה נוכחית' : 'Current Password'}
+                          {t('settings.security.current_password')}
                         </label>
                         <input
                           type="password"
                           value={oldPassword}
                           onChange={(e) => setOldPassword(e.target.value)}
                           className="input"
-                          placeholder={language === 'he' ? 'הזן את הסיסמה הנוכחית' : 'Enter your current password'}
+                          placeholder={t('settings.security.current_password_placeholder')}
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium mb-2">
-                          {language === 'he' ? 'סיסמה חדשה' : 'New Password'}
+                          {t('settings.security.new_password')}
                         </label>
                         <input
                           type="password"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                           className="input"
-                          placeholder={language === 'he' ? 'הזן סיסמה חדשה (מינימום 6 תווים)' : 'Enter new password (min 6 characters)'}
+                          placeholder={t('settings.security.new_password_placeholder')}
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium mb-2">
-                          {language === 'he' ? 'אישור סיסמה חדשה' : 'Confirm New Password'}
+                          {t('settings.security.confirm_password')}
                         </label>
                         <input
                           type="password"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           className="input"
-                          placeholder={language === 'he' ? 'אשר את הסיסמה החדשה' : 'Confirm your new password'}
+                          placeholder={t('settings.security.confirm_password_placeholder')}
                         />
                       </div>
 
@@ -714,7 +712,7 @@ export default function SettingsPage() {
                         ) : (
                           <Lock className="w-5 h-5" />
                         )}
-                        {language === 'he' ? 'עדכן סיסמה' : 'Update Password'}
+                        {t('settings.security.update_password')}
                       </button>
                     </div>
                   </div>
@@ -727,10 +725,10 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <h2 className="text-xl sm:text-2xl font-bold">
-                          {language === 'he' ? 'הפעלות פעילות' : 'Active Sessions'}
+                          {t('settings.security.sessions_title')}
                         </h2>
                         <p className="text-gray-400 text-xs sm:text-sm">
-                          {language === 'he' ? 'נהל מכשירים שמחוברים לחשבון שלך' : 'Manage devices that are logged into your account'}
+                          {t('settings.security.sessions_subtitle')}
                         </p>
                       </div>
                     </div>
@@ -745,14 +743,14 @@ export default function SettingsPage() {
                               <div className="font-semibold text-white flex items-center gap-2">
                                 Windows PC - Chrome
                                 <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400">
-                                  {language === 'he' ? 'נוכחי' : 'Current'}
+                                  {t('settings.security.current')}
                                 </span>
                               </div>
                               <div className="text-sm text-gray-400 mt-1">
-                                {language === 'he' ? 'פעילות אחרונה: עכשיו' : 'Last active: Just now'}
+                                {t('settings.security.last_active', { time: t('notifications.time.just_now') })}
                               </div>
                               <div className="text-sm text-gray-500">
-                                {language === 'he' ? 'תל אביב, ישראל • IP: 192.168.1.1' : 'IP: 192.168.1.1 • Location: Tel Aviv, Israel'}
+                                IP: 192.168.1.1 • Tel Aviv, Israel
                               </div>
                             </div>
                           </div>
@@ -769,15 +767,15 @@ export default function SettingsPage() {
                                 iPhone 13 - Safari
                               </div>
                               <div className="text-sm text-gray-400 mt-1">
-                                {language === 'he' ? 'פעילות אחרונה: לפני יומיים' : 'Last active: 2 days ago'}
+                                {t('settings.security.last_active', { time: t('notifications.time.days_ago', { count: 2 }) })}
                               </div>
                               <div className="text-sm text-gray-500">
-                                {language === 'he' ? 'תל אביב, ישראל • IP: 192.168.1.15' : 'IP: 192.168.1.15 • Location: Tel Aviv, Israel'}
+                                IP: 192.168.1.15 • Tel Aviv, Israel
                               </div>
                             </div>
                           </div>
                           <button className="text-sm text-red-400 hover:text-red-300 transition">
-                            {language === 'he' ? 'בטל' : 'Revoke'}
+                            {t('settings.security.revoke')}
                           </button>
                         </div>
                       </div>
@@ -785,9 +783,7 @@ export default function SettingsPage() {
                       <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                         <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0" />
                         <p className="text-sm text-yellow-200">
-                          {language === 'he'
-                            ? 'אם אתה רואה הפעלות שאינך מזהה, בטל אותן מיידית ושנה את הסיסמה שלך.'
-                            : 'If you see any sessions you don\'t recognize, revoke them immediately and change your password.'}
+                          {t('settings.security.security_warning')}
                         </p>
                       </div>
                     </div>
@@ -810,10 +806,10 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <h2 className="text-xl sm:text-2xl font-bold">
-                        {language === 'he' ? 'העדפות התראות' : 'Notification Preferences'}
+                        {t('settings.notifications_tab.title')}
                       </h2>
                       <p className="text-gray-400 text-xs sm:text-sm">
-                        {language === 'he' ? 'בחר אילו עדכונים תרצה לקבל' : 'Choose what updates you want to receive'}
+                        {t('settings.notifications_tab.subtitle')}
                       </p>
                     </div>
                   </div>
@@ -823,7 +819,7 @@ export default function SettingsPage() {
                     <div>
                       <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                         <Mail className="w-5 h-5 text-indigo-400" />
-                        {language === 'he' ? 'התראות באימייל' : 'Email Notifications'}
+                        {t('settings.notifications_tab.email_title')}
                       </h3>
 
                       <div className="space-y-4">
@@ -831,10 +827,10 @@ export default function SettingsPage() {
                         <div className="flex items-center justify-between p-4 glass rounded-lg">
                           <div>
                             <div className="font-medium text-white">
-                              {language === 'he' ? 'ביקורת חדשה' : 'New Review'}
+                              {t('settings.notifications_tab.new_review')}
                             </div>
                             <div className="text-sm text-gray-400">
-                              {language === 'he' ? 'קבל התראה כשמישהו כותב ביקורת על הספר שלך' : 'Get notified when someone reviews your book'}
+                              {t('settings.notifications_tab.new_review_desc')}
                             </div>
                           </div>
                           <button
@@ -857,10 +853,10 @@ export default function SettingsPage() {
                         <div className="flex items-center justify-between p-4 glass rounded-lg">
                           <div>
                             <div className="font-medium text-white">
-                              {language === 'he' ? 'עוקב חדש' : 'New Follower'}
+                              {t('settings.notifications_tab.new_follower')}
                             </div>
                             <div className="text-sm text-gray-400">
-                              {language === 'he' ? 'קבל התראה כשמישהו עוקב אחריך' : 'Get notified when someone follows you'}
+                              {t('settings.notifications_tab.new_follower_desc')}
                             </div>
                           </div>
                           <button
@@ -883,10 +879,10 @@ export default function SettingsPage() {
                         <div className="flex items-center justify-between p-4 glass rounded-lg">
                           <div>
                             <div className="font-medium text-white">
-                              {language === 'he' ? 'מכירה חדשה' : 'New Sale'}
+                              {t('settings.notifications_tab.new_sale')}
                             </div>
                             <div className="text-sm text-gray-400">
-                              {language === 'he' ? 'קבל התראה כשהספר שלך נרכש' : 'Get notified when your book is purchased'}
+                              {t('settings.notifications_tab.new_sale_desc')}
                             </div>
                           </div>
                           <button
@@ -909,10 +905,10 @@ export default function SettingsPage() {
                         <div className="flex items-center justify-between p-4 glass rounded-lg">
                           <div>
                             <div className="font-medium text-white">
-                              {language === 'he' ? 'עדכוני מערכת' : 'System Updates'}
+                              {t('settings.notifications_tab.system_updates')}
                             </div>
                             <div className="text-sm text-gray-400">
-                              {language === 'he' ? 'קבל התראות על עדכונים והודעות מהפלטפורמה' : 'Get notified about platform updates and announcements'}
+                              {t('settings.notifications_tab.system_updates_desc')}
                             </div>
                           </div>
                           <button
@@ -935,10 +931,10 @@ export default function SettingsPage() {
                         <div className="flex items-center justify-between p-4 glass rounded-lg">
                           <div>
                             <div className="font-medium text-white">
-                              {language === 'he' ? 'סיכום שבועי' : 'Weekly Digest'}
+                              {t('settings.notifications_tab.weekly_digest')}
                             </div>
                             <div className="text-sm text-gray-400">
-                              {language === 'he' ? 'קבל סיכום שבועי של הפעילות והסטטיסטיקות שלך' : 'Receive a weekly summary of your activity and stats'}
+                              {t('settings.notifications_tab.weekly_digest_desc')}
                             </div>
                           </div>
                           <button

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 import confetti from 'canvas-confetti';
@@ -63,6 +64,7 @@ const GENRE_CATEGORIES = [
 ];
 
 export default function PublishingPage() {
+  const { t } = useTranslation();
   const { bookId } = useParams();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -79,33 +81,50 @@ export default function PublishingPage() {
   const [tags, setTags] = useState('');
 
   useEffect(() => {
-    loadBook();
-  }, [bookId]);
+    const abortController = new AbortController();
 
-  const loadBook = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get(`/books/${bookId}`);
-      if (response.data.success) {
-        const bookData = response.data.data.book;
-        setBook(bookData);
+    const loadBook = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get(`/books/${bookId}`, {
+          signal: abortController.signal,
+        });
+        if (response.data.success) {
+          const bookData = response.data.data.book;
+          setBook(bookData);
 
-        // Pre-fill form with existing data
-        setPrice(bookData.publishingStatus.price || 0);
-        setIsFree(bookData.publishingStatus.isFree);
-        setTargetAudience(bookData.publishingStatus.marketingStrategy?.targetAudience || '');
-        setDescription(bookData.publishingStatus.marketingStrategy?.description || bookData.description || '');
-        setSelectedCategories(bookData.publishingStatus.marketingStrategy?.categories || [bookData.genre]);
-        setTags(bookData.publishingStatus.marketingStrategy?.tags?.join(', ') || '');
+          // Pre-fill form with existing data
+          setPrice(bookData.publishingStatus.price || 0);
+          setIsFree(bookData.publishingStatus.isFree);
+          setTargetAudience(bookData.publishingStatus.marketingStrategy?.targetAudience || '');
+          setDescription(bookData.publishingStatus.marketingStrategy?.description || bookData.description || '');
+          setSelectedCategories(bookData.publishingStatus.marketingStrategy?.categories || [bookData.genre]);
+          setTags(bookData.publishingStatus.marketingStrategy?.tags?.join(', ') || '');
+        }
+      } catch (error: unknown) {
+        // Ignore abort errors
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
+        if (error && typeof error === 'object' && 'code' in error && (error as { code?: string }).code === 'ERR_CANCELED') {
+          return;
+        }
+        console.error('Failed to load book:', error);
+        toast.error('Failed to load book');
+        navigate('/dashboard');
+      } finally {
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
       }
-    } catch (error) {
-      console.error('Failed to load book:', error);
-      toast.error('Failed to load book');
-      navigate('/dashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadBook();
+
+    return () => {
+      abortController.abort();
+    };
+  }, [bookId, navigate]);
 
   const handlePublish = async () => {
     try {
@@ -197,7 +216,7 @@ export default function PublishingPage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-1 sm:mb-2">Publish Your Book</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-1 sm:mb-2">{t('publishing.title')}</h1>
           <p className="text-sm sm:text-base text-gray-400 truncate">{book.title}</p>
         </div>
 
@@ -238,7 +257,7 @@ export default function PublishingPage() {
             >
               <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
                 <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-400" />
-                <h2 className="text-xl sm:text-2xl font-bold">Quality Check</h2>
+                <h2 className="text-xl sm:text-2xl font-bold">{t('publishing.qualityCheck')}</h2>
               </div>
 
               {book.qualityScore ? (
@@ -295,9 +314,9 @@ export default function PublishingPage() {
                     <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-green-500/10 border border-green-500/30 rounded-lg mb-4 sm:mb-6">
                       <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-400 flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-sm sm:text-base text-green-300 font-medium">Ready to Publish!</p>
+                        <p className="text-sm sm:text-base text-green-300 font-medium">{t('publishing.readyToPublish')}</p>
                         <p className="text-xs sm:text-sm text-green-400/80">
-                          Your book meets the quality standards required for publication.
+                          {t('publishing.meetsQualityStandards')}
                         </p>
                       </div>
                     </div>
@@ -305,10 +324,9 @@ export default function PublishingPage() {
                     <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-red-500/10 border border-red-500/30 rounded-lg mb-4 sm:mb-6">
                       <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-sm sm:text-base text-red-300 font-medium">Quality Score Too Low</p>
+                        <p className="text-sm sm:text-base text-red-300 font-medium">{t('publishing.qualityTooLow')}</p>
                         <p className="text-xs sm:text-sm text-red-400/80">
-                          Your book needs a quality score of at least 70 to publish. Consider improving
-                          your content using the AI writing assistant.
+                          {t('publishing.qualityTooLowDesc')}
                         </p>
                       </div>
                     </div>
@@ -318,9 +336,9 @@ export default function PublishingPage() {
                 <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg mb-4 sm:mb-6">
                   <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm sm:text-base text-yellow-300 font-medium">No Quality Score Yet</p>
+                    <p className="text-sm sm:text-base text-yellow-300 font-medium">{t('publishing.noQualityScore')}</p>
                     <p className="text-xs sm:text-sm text-yellow-400/80">
-                      Run the AI quality analysis in the editor to get your quality score.
+                      {t('publishing.noQualityScoreDesc')}
                     </p>
                   </div>
                 </div>
@@ -329,15 +347,15 @@ export default function PublishingPage() {
               <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 sm:gap-4">
                 <button onClick={() => navigate('/dashboard')} className="btn-secondary text-sm sm:text-base">
                   <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Back to Dashboard</span>
-                  <span className="sm:hidden">Back</span>
+                  <span className="hidden sm:inline">{t('publishing.backToDashboard')}</span>
+                  <span className="sm:hidden">{t('buttons.back')}</span>
                 </button>
                 <button
                   onClick={() => setStep(2)}
                   disabled={!canProceedFromStep1}
                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
                 >
-                  Continue
+                  {t('buttons.continue')}
                   <ArrowRight className="w-4 h-4 ml-1 sm:ml-2" />
                 </button>
               </div>
@@ -355,13 +373,13 @@ export default function PublishingPage() {
             >
               <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
                 <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-400" />
-                <h2 className="text-xl sm:text-2xl font-bold">Pricing & Strategy</h2>
+                <h2 className="text-xl sm:text-2xl font-bold">{t('publishing.pricingStrategy')}</h2>
               </div>
 
               <div className="space-y-4 sm:space-y-6">
                 {/* Pricing */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Pricing</label>
+                  <label className="block text-sm font-medium mb-2">{t('publishing.pricing')}</label>
                   <div className="flex items-center gap-4 mb-3">
                     <button
                       onClick={() => setIsFree(true)}
@@ -371,7 +389,7 @@ export default function PublishingPage() {
                           : 'border-gray-700 text-gray-400 hover:border-gray-600'
                       }`}
                     >
-                      Free
+                      {t('publishing.free')}
                     </button>
                     <button
                       onClick={() => setIsFree(false)}
@@ -381,7 +399,7 @@ export default function PublishingPage() {
                           : 'border-gray-700 text-gray-400 hover:border-gray-600'
                       }`}
                     >
-                      Paid
+                      {t('publishing.paid')}
                     </button>
                   </div>
 
@@ -398,7 +416,7 @@ export default function PublishingPage() {
                         className="input pl-8"
                         placeholder="0.00"
                       />
-                      <p className="text-xs text-gray-400 mt-2">Recommended: $2.99 - $9.99</p>
+                      <p className="text-xs text-gray-400 mt-2">{t('publishing.recommendedPrice')}</p>
                     </div>
                   )}
                 </div>
@@ -435,7 +453,7 @@ export default function PublishingPage() {
                     <Tag className="w-4 h-4" />
                     Categories (select up to 3)
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" role="group" aria-label="Book categories">
                     {GENRE_CATEGORIES.map((category) => (
                       <button
                         key={category}
@@ -443,6 +461,8 @@ export default function PublishingPage() {
                         disabled={
                           !selectedCategories.includes(category) && selectedCategories.length >= 3
                         }
+                        aria-pressed={selectedCategories.includes(category)}
+                        aria-label={`${category} category${selectedCategories.includes(category) ? ', selected' : ''}`}
                         className={`py-2 px-2 sm:px-3 rounded-lg border transition-all text-xs sm:text-sm ${
                           selectedCategories.includes(category)
                             ? 'border-indigo-500 bg-indigo-500/20 text-white'

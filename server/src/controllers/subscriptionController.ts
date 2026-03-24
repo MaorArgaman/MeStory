@@ -138,6 +138,15 @@ export const upgradeSubscription = async (
       subscription,
     });
 
+    // BUG-007: Verify subscription update succeeded
+    if (!updatedUser) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update subscription. Please try again.',
+      });
+      return;
+    }
+
     // Determine if this is an upgrade or downgrade
     const planLevels: Record<string, number> = {
       [UserRole.FREE]: 0,

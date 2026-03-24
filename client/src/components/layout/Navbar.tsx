@@ -241,7 +241,7 @@ export default function Navbar() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute right-0 mt-3 w-72 glass-strong rounded-xl border border-white/10 shadow-2xl shadow-black/50 overflow-hidden"
+                      className="absolute right-0 mt-3 w-72 max-w-[90vw] glass-strong rounded-xl border border-white/10 shadow-2xl shadow-black/50 overflow-hidden"
                     >
                       {/* User Info */}
                       <div className="px-5 py-4 border-b border-white/10 bg-gradient-to-br from-white/5 to-transparent">

@@ -11,6 +11,7 @@ import {
   Edit3,
   Check,
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface DraftNote {
   id: string;
@@ -42,6 +43,7 @@ export default function DraftNotes({
   onInsertText,
   language = 'he',
 }: DraftNotesProps) {
+  const { user } = useAuth();
   const isHebrew = language === 'he';
   const [isExpanded, setIsExpanded] = useState(false);
   const [notes, setNotes] = useState<DraftNote[]>([]);
@@ -49,9 +51,12 @@ export default function DraftNotes({
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // FUNC-008 FIX: Include userId in localStorage key to isolate notes per user
+  const getStorageKey = () => `draft-notes-${user?.id || 'anon'}-${bookId}-${chapterIndex}`;
+
   // Load notes from localStorage
   useEffect(() => {
-    const key = `draft-notes-${bookId}-${chapterIndex}`;
+    const key = getStorageKey();
     const saved = localStorage.getItem(key);
     if (saved) {
       try {
@@ -60,13 +65,13 @@ export default function DraftNotes({
         console.error('Failed to load draft notes:', e);
       }
     }
-  }, [bookId, chapterIndex]);
+  }, [bookId, chapterIndex, user?.id]);
 
   // Save notes to localStorage
   useEffect(() => {
-    const key = `draft-notes-${bookId}-${chapterIndex}`;
+    const key = getStorageKey();
     localStorage.setItem(key, JSON.stringify(notes));
-  }, [notes, bookId, chapterIndex]);
+  }, [notes, bookId, chapterIndex, user?.id]);
 
   const addNote = () => {
     const newNote: DraftNote = {
@@ -107,6 +112,12 @@ export default function DraftNotes({
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     const clampedY = Math.max(5, Math.min(85, y));
 
+    // RTL-aware x position calculation (for future horizontal positioning)
+    // In RTL mode, x position is calculated from the right side
+    const x = isHebrew
+      ? ((rect.right - e.clientX) / rect.width) * 100
+      : ((e.clientX - rect.left) / rect.width) * 100;
+
     setNotes(notes.map(note =>
       note.id === id ? { ...note, position: clampedY } : note
     ));
@@ -119,9 +130,13 @@ export default function DraftNotes({
   return (
     <div
       ref={containerRef}
-      className={`fixed ${isHebrew ? 'left-0' : 'right-0'} top-32 bottom-20 z-30 transition-all duration-300 ${
-        isExpanded ? 'w-72' : 'w-10'
+      className={`fixed ${isHebrew ? 'left-0' : 'right-0'} top-32 bottom-20 z-30 transition-all duration-500 ease-in-out ${
+        isExpanded ? 'w-72 max-w-[90vw]' : 'w-10'
       }`}
+      style={{
+        transform: isExpanded ? 'translateX(0)' : undefined,
+        willChange: 'width, transform'
+      }}
     >
       {/* Toggle Button */}
       <button

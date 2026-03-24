@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { User } from '../models/User';
 import { Book } from '../models/Book';
 import { AuthRequest } from '../types';
+import { supabaseAdmin } from '../config/supabase';
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -257,6 +258,7 @@ export const changePassword = async (req: AuthRequest, res: Response): Promise<v
 /**
  * Request withdrawal of earnings
  * POST /api/user/withdraw
+ * BUG-003 FIX: Added optimistic locking to prevent race conditions
  */
 export const requestWithdrawal = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -319,29 +321,87 @@ export const requestWithdrawal = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
+    // BUG-003 FIX: Use optimistic locking with atomic update
+
     // Build updated profile with earnings
     const currentProfile = user.profile || {};
     const currentEarnings = currentProfile.earnings || { totalEarned: 0, pendingPayout: 0, withdrawn: 0, history: [] };
+    const newWithdrawnAmount = currentEarnings.withdrawn + amount;
     const updatedEarnings = {
       ...currentEarnings,
-      withdrawn: currentEarnings.withdrawn + amount,
+      withdrawn: newWithdrawnAmount,
       history: [
         ...currentEarnings.history,
         {
           amount,
-          date: new Date(),
+          date: new Date().toISOString(),
           status: 'pending',
           paypalEmail: user.paypal?.email || '',
         },
       ],
     };
 
-    await User.findByIdAndUpdate(req.user.id, {
-      profile: {
-        ...currentProfile,
-        earnings: updatedEarnings,
-      },
-    });
+    const updatedProfile = {
+      ...currentProfile,
+      earnings: updatedEarnings,
+    };
+
+    // BUG-003 FIX: Atomic update with version check (optimistic locking)
+    // Re-fetch user and verify balance hasn't changed before updating
+    const { data: freshUser, error: fetchError } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('id', req.user.id)
+      .single();
+
+    if (fetchError || !freshUser) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to verify user data',
+      });
+      return;
+    }
+
+    // Re-validate the balance with fresh data
+    const freshWithdrawn = freshUser.profile?.earnings?.withdrawn || 0;
+    const freshAvailable = authorEarnings - freshWithdrawn;
+
+    if (amount > freshAvailable) {
+      res.status(409).json({
+        success: false,
+        error: `Balance has changed. Available: $${freshAvailable.toFixed(2)}`,
+      });
+      return;
+    }
+
+    // Perform atomic update with version check using updated_at as version field
+    const { data: updateResult, error: updateError } = await supabaseAdmin
+      .from('users')
+      .update({
+        profile: updatedProfile,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', req.user.id)
+      .eq('updated_at', freshUser.updated_at) // Optimistic lock check
+      .select();
+
+    if (updateError) {
+      console.error('Withdrawal update error:', updateError);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to process withdrawal request',
+      });
+      return;
+    }
+
+    // Check if the update affected any rows (optimistic lock succeeded)
+    if (!updateResult || updateResult.length === 0) {
+      res.status(409).json({
+        success: false,
+        error: 'Concurrent modification detected. Please try again.',
+      });
+      return;
+    }
 
     res.status(200).json({
       success: true,

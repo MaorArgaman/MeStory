@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { Mail, Lock, User, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import logoIcon from '../assets/images/logo-icon.png';
 
 export default function RegisterPage() {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,17 +23,17 @@ export default function RegisterPage() {
 
     // Password validation
     if (password.length < 8) {
-      setError('Password must be at least 8 characters long');
+      setError(t('auth.validation.password_length'));
       return;
     }
 
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      setError('Password must contain uppercase, lowercase, and numbers');
+      setError(t('auth.validation.password_complexity'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth.validation.passwords_mismatch'));
       return;
     }
 
@@ -71,12 +73,12 @@ export default function RegisterPage() {
             />
           </motion.div>
           <h1 className="text-4xl font-bold gradient-text mb-2">MeStory</h1>
-          <p className="text-gray-400">Start your writing journey</p>
+          <p className="text-gray-400">{t('auth.register.subtitle')}</p>
         </div>
 
         {/* Register Card */}
         <div className="card glow">
-          <h2 className="text-2xl font-bold text-white mb-6">Create Account</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">{t('auth.register.title')}</h2>
 
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-red-500/20 border border-red-500/50 text-red-300 text-sm">
@@ -88,7 +90,7 @@ export default function RegisterPage() {
             {/* Name Input */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-                Full Name
+                {t('auth.register.name')}
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -98,7 +100,7 @@ export default function RegisterPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="input pl-11"
-                  placeholder="John Doe"
+                  placeholder={t('auth.register.name_placeholder')}
                   required
                   disabled={loading}
                   minLength={2}
@@ -109,7 +111,7 @@ export default function RegisterPage() {
             {/* Email Input */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                Email
+                {t('auth.register.email')}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -119,7 +121,7 @@ export default function RegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="input pl-11"
-                  placeholder="you@example.com"
+                  placeholder={t('auth.register.email_placeholder')}
                   required
                   disabled={loading}
                 />
@@ -129,7 +131,7 @@ export default function RegisterPage() {
             {/* Password Input */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                Password
+                {t('auth.register.password')}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -146,14 +148,14 @@ export default function RegisterPage() {
                 />
               </div>
               <p className="mt-1 text-xs text-gray-500">
-                Must be 8+ characters with uppercase, lowercase, and numbers
+                {t('auth.register.password_hint')}
               </p>
             </div>
 
             {/* Confirm Password Input */}
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
-                Confirm Password
+                {t('auth.register.confirm_password')}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -179,10 +181,10 @@ export default function RegisterPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Creating account...
+                  {t('auth.register.submitting')}
                 </>
               ) : (
-                'Create Account'
+                t('auth.register.submit')
               )}
             </button>
           </form>
@@ -193,7 +195,7 @@ export default function RegisterPage() {
               <div className="w-full border-t border-gray-700"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-dark-card text-gray-400">OR</span>
+              <span className="px-2 bg-dark-card text-gray-400">{t('auth.register.or')}</span>
             </div>
           </div>
 
@@ -220,21 +222,21 @@ export default function RegisterPage() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Continue with Google
+            {t('auth.register.google_register')}
           </a>
 
           {/* Login Link */}
           <div className="mt-6 text-center text-sm text-gray-400">
-            Already have an account?{' '}
+            {t('auth.register.have_account')}{' '}
             <Link to="/login" className="text-indigo-400 hover:text-indigo-300 font-medium">
-              Sign in
+              {t('auth.register.sign_in')}
             </Link>
           </div>
         </div>
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-600 mt-8">
-          By continuing, you agree to MeStory's Terms of Service and Privacy Policy
+          {t('auth.register.footer')}
         </p>
       </motion.div>
     </div>

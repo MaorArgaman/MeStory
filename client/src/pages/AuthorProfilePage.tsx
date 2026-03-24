@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
   User,
@@ -60,6 +61,7 @@ interface AuthorData {
 }
 
 export default function AuthorProfilePage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -117,7 +119,7 @@ export default function AuthorProfilePage() {
       <div className="min-h-screen pt-32 flex items-center justify-center">
         <div className="text-center">
           <User className="w-16 h-16 text-magic-gold mx-auto mb-4 animate-pulse" />
-          <p className="text-gray-300 text-lg">Loading profile...</p>
+          <p className="text-gray-300 text-lg">{t('authorProfile.loading')}</p>
         </div>
       </div>
     );
@@ -191,7 +193,7 @@ export default function AuthorProfilePage() {
                     <span className="text-white font-semibold">
                       {author.stats.publishedBooks}
                     </span>
-                    <span className="text-gray-400">Books</span>
+                    <span className="text-gray-400">{t('authorProfile.books')}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -199,13 +201,13 @@ export default function AuthorProfilePage() {
                     <span className="text-white font-semibold">
                       {author.stats.totalReads.toLocaleString()}
                     </span>
-                    <span className="text-gray-400">Total Reads</span>
+                    <span className="text-gray-400">{t('authorProfile.totalReads')}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <User className="w-5 h-5 text-magic-gold" />
                     <span className="text-white font-semibold">{followersCount}</span>
-                    <span className="text-gray-400">Followers</span>
+                    <span className="text-gray-400">{t('authorProfile.followers')}</span>
                   </div>
 
                   {author.stats.rating > 0 && (
@@ -214,7 +216,7 @@ export default function AuthorProfilePage() {
                       <span className="text-white font-semibold">
                         {author.stats.rating.toFixed(1)}
                       </span>
-                      <span className="text-gray-400">Rating</span>
+                      <span className="text-gray-400">{t('authorProfile.rating')}</span>
                     </div>
                   )}
                 </div>
@@ -235,12 +237,12 @@ export default function AuthorProfilePage() {
                   {isFollowing ? (
                     <>
                       <UserMinus className="w-5 h-5" />
-                      Following
+                      {t('authorProfile.following')}
                     </>
                   ) : (
                     <>
                       <UserPlus className="w-5 h-5" />
-                      Follow
+                      {t('authorProfile.follow')}
                     </>
                   )}
                 </GlowingButton>
@@ -264,7 +266,7 @@ export default function AuthorProfilePage() {
                   className="absolute inset-0 bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 border border-magic-gold/30 rounded-xl shadow-glow-gold"
                 />
               )}
-              <span className="relative z-10">Published Books ({books.length})</span>
+              <span className="relative z-10">{t('authorProfile.publishedBooks')} ({books.length})</span>
             </button>
 
             <button
@@ -281,7 +283,7 @@ export default function AuthorProfilePage() {
                   className="absolute inset-0 bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 border border-magic-gold/30 rounded-xl shadow-glow-gold"
                 />
               )}
-              <span className="relative z-10">About</span>
+              <span className="relative z-10">{t('authorProfile.about')}</span>
             </button>
           </div>
 
@@ -291,7 +293,7 @@ export default function AuthorProfilePage() {
               {books.length === 0 ? (
                 <div className="col-span-full text-center py-12">
                   <BookOpen className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-400">No published books yet</p>
+                  <p className="text-gray-400">{t('authorProfile.noBooks')}</p>
                 </div>
               ) : (
                 books.map((book) => (
@@ -366,7 +368,7 @@ export default function AuthorProfilePage() {
                         {/* Price */}
                         <div className="text-magic-gold font-bold">
                           {book.publishingStatus.isFree
-                            ? 'Free'
+                            ? t('authorProfile.free')
                             : `$${book.publishingStatus.price}`}
                         </div>
                       </GlassCard>
@@ -380,7 +382,7 @@ export default function AuthorProfilePage() {
           {activeTab === 'about' && (
             <GlassCard>
               <h2 className="text-3xl font-display font-bold text-magic-gold mb-6">
-                About {author.name}
+                {t('authorProfile.aboutAuthor', { name: author.name })}
               </h2>
 
               {author.bio ? (
@@ -390,38 +392,38 @@ export default function AuthorProfilePage() {
               ) : (
                 <div className="text-center py-12">
                   <User className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-400">No bio available</p>
+                  <p className="text-gray-400">{t('authorProfile.noBio')}</p>
                 </div>
               )}
 
               {/* Additional Stats */}
               <div className="mt-8 pt-8 border-t border-white/10">
                 <h3 className="text-xl font-display font-semibold text-white mb-4">
-                  Author Statistics
+                  {t('authorProfile.authorStatistics')}
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                   <div className="text-center">
                     <p className="text-3xl font-bold gradient-gold">
                       {author.stats.publishedBooks}
                     </p>
-                    <p className="text-gray-400 text-sm mt-1">Books Published</p>
+                    <p className="text-gray-400 text-sm mt-1">{t('authorProfile.booksPublished')}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-3xl font-bold gradient-gold">
                       {author.stats.totalReads.toLocaleString()}
                     </p>
-                    <p className="text-gray-400 text-sm mt-1">Total Reads</p>
+                    <p className="text-gray-400 text-sm mt-1">{t('authorProfile.totalReads')}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-3xl font-bold gradient-gold">{followersCount}</p>
-                    <p className="text-gray-400 text-sm mt-1">Followers</p>
+                    <p className="text-gray-400 text-sm mt-1">{t('authorProfile.followers')}</p>
                   </div>
                   {author.stats.rating > 0 && (
                     <div className="text-center">
                       <p className="text-3xl font-bold gradient-gold">
                         {author.stats.rating.toFixed(1)}
                       </p>
-                      <p className="text-gray-400 text-sm mt-1">Average Rating</p>
+                      <p className="text-gray-400 text-sm mt-1">{t('authorProfile.averageRating')}</p>
                     </div>
                   )}
                 </div>

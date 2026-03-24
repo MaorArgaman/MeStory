@@ -31,13 +31,26 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ) => {
+  // SEC-010 FIX: Sanitize sensitive data before logging
+  const sanitizeBody = (body: any): any => {
+    if (!body || typeof body !== 'object') return body;
+    const sensitiveFields = ['password', 'token', 'secret', 'apiKey', 'creditCard', 'cvv'];
+    const sanitized = { ...body };
+    for (const field of sensitiveFields) {
+      if (field in sanitized) {
+        sanitized[field] = '[REDACTED]';
+      }
+    }
+    return sanitized;
+  };
+
   // Log error for debugging
   console.error('❌ Error occurred:', {
     message: err.message,
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     path: req.path,
     method: req.method,
-    body: req.body,
+    body: process.env.NODE_ENV === 'development' ? sanitizeBody(req.body) : undefined,
   });
 
   // Determine status code

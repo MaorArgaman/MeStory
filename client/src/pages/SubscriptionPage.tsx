@@ -31,23 +31,40 @@ export default function SubscriptionPage() {
   const [upgrading, setUpgrading] = useState<string | null>(null);
 
   useEffect(() => {
-    loadPlans();
-  }, []);
+    const abortController = new AbortController();
 
-  const loadPlans = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get('/subscription/plans');
-      if (response.data.success) {
-        setPlans(response.data.data.plans);
+    const loadPlans = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get('/subscription/plans', {
+          signal: abortController.signal,
+        });
+        if (response.data.success) {
+          setPlans(response.data.data.plans);
+        }
+      } catch (error: unknown) {
+        // Ignore abort errors
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
+        if (error && typeof error === 'object' && 'code' in error && (error as { code?: string }).code === 'ERR_CANCELED') {
+          return;
+        }
+        console.error('Failed to load plans:', error);
+        toast.error('Failed to load subscription plans');
+      } finally {
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
       }
-    } catch (error) {
-      console.error('Failed to load plans:', error);
-      toast.error('Failed to load subscription plans');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadPlans();
+
+    return () => {
+      abortController.abort();
+    };
+  }, []);
 
   const handleUpgrade = async (planId: string) => {
     try {
@@ -255,6 +272,8 @@ export default function SubscriptionPage() {
                   {current ? (
                     <button
                       disabled
+                      aria-disabled="true"
+                      aria-label="Current Plan - already subscribed"
                       className="w-full py-4 bg-gray-700 text-gray-400 rounded-xl font-semibold cursor-not-allowed"
                     >
                       Current Plan
@@ -263,6 +282,8 @@ export default function SubscriptionPage() {
                     <button
                       onClick={() => handleUpgrade('free')}
                       disabled={upgrading === 'free'}
+                      aria-disabled={upgrading === 'free'}
+                      aria-label={upgrading === 'free' ? 'Downgrading to Free plan' : 'Downgrade to Free plan'}
                       className="w-full py-4 btn-secondary font-semibold text-base"
                     >
                       {upgrading === 'free' ? (
@@ -275,6 +296,8 @@ export default function SubscriptionPage() {
                     <button
                       onClick={() => handleUpgrade(plan.id)}
                       disabled={upgrading === plan.id}
+                      aria-disabled={upgrading === plan.id}
+                      aria-label={upgrading === plan.id ? `Upgrading to ${plan.tier} plan` : `Upgrade to ${plan.tier} plan`}
                       className={`w-full py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all ${
                         premium
                           ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 hover:from-yellow-500 hover:to-yellow-700 shadow-lg shadow-yellow-500/30 hover:shadow-xl hover:shadow-yellow-500/40'

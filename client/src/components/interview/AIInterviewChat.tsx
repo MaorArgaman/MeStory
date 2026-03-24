@@ -3,7 +3,7 @@
  * Chat-style AI interview for story development
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -64,17 +64,33 @@ export default function AIInterviewChat({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize interview
+  // Track if TTS is enabled at initialization time
+  const ttsEnabledRef = useRef(ttsEnabled);
   useEffect(() => {
-    initializeInterview();
+    ttsEnabledRef.current = ttsEnabled;
+  }, [ttsEnabled]);
+
+  const scrollToBottom = useCallback(() => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   }, []);
 
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  const speakText = useCallback(async (text: string) => {
+    if (!ttsEnabledRef.current || !('speechSynthesis' in window)) return;
 
-  const initializeInterview = async () => {
+    return new Promise<void>((resolve) => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'he-IL';
+      utterance.rate = 0.9;
+      utterance.onend = () => resolve();
+      utterance.onerror = () => resolve();
+      speechSynthesis.speak(utterance);
+    });
+  }, []);
+
+  // BUG-050 FIX: Memoize initializeInterview with useCallback to properly handle dependencies
+  const initializeInterview = useCallback(async () => {
     setIsLoading(true);
     setAvatarState('thinking');
 
@@ -85,7 +101,7 @@ export default function AIInterviewChat({
       setAvatarState('speaking');
 
       // TTS for first message
-      if (ttsEnabled) {
+      if (ttsEnabledRef.current) {
         await speakText(firstMessage.content);
       }
 
@@ -97,26 +113,17 @@ export default function AIInterviewChat({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [genre, targetAudience, language, onClose, speakText]);
 
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  };
+  // Initialize interview
+  useEffect(() => {
+    initializeInterview();
+  }, [initializeInterview]);
 
-  const speakText = async (text: string) => {
-    if (!ttsEnabled || !('speechSynthesis' in window)) return;
-
-    return new Promise<void>((resolve) => {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'he-IL';
-      utterance.rate = 0.9;
-      utterance.onend = () => resolve();
-      utterance.onerror = () => resolve();
-      speechSynthesis.speak(utterance);
-    });
-  };
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
 
   const handleSendMessage = async (text: string) => {
     if (!text.trim() || !interviewState || isSending) return;

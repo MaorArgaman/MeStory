@@ -10,6 +10,7 @@ import { AuthRequest } from '../types';
 const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 import { Book } from '../models/Book';
 import { User } from '../models/User';
+import { supabaseAdmin } from '../config/supabase';
 import {
   createBookPurchaseOrder,
   captureBookPayment,
@@ -337,6 +338,7 @@ export const connectPayPal = async (req: AuthRequest, res: Response): Promise<vo
 /**
  * Get user's purchased books (library)
  * GET /api/book-purchases/library
+ * BUG-008 FIX: Batch fetch all authors in one query to avoid N+1 problem
  */
 export const getLibrary = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -364,35 +366,55 @@ export const getLibrary = async (req: AuthRequest, res: Response): Promise<void>
     const allBooks = await Book.find({});
     const books = allBooks.filter(book => bookIds.includes(book.id));
 
-    // Add author names and merge with reading progress
-    const libraryBooks = await Promise.all(
-      books.map(async (book) => {
-        const author = await User.findById(book.author);
-        const historyItem = readingHistory.find(
-          (item) => item.bookId === book.id
-        );
-        return {
-          ...book,
-          authorName: author?.name || 'Unknown Author',
-          authorAvatar: author?.profile?.avatar,
-          readingProgress: historyItem?.progress || 0,
-          lastRead: historyItem?.lastRead,
-        };
-      })
-    );
-
     // Also get user's own books
     const allOwnBooks = await Book.find({ author: req.user.id });
-    const ownBooks = await Promise.all(
-      allOwnBooks.map(async (book) => {
-        const author = await User.findById(book.author);
-        return {
-          ...book,
-          authorName: author?.name || 'Unknown Author',
-          authorAvatar: author?.profile?.avatar,
-        };
-      })
-    );
+
+    // BUG-008 FIX: Collect all unique author IDs and batch fetch them
+    const authorIds = new Set<string>();
+    books.forEach(book => authorIds.add(book.author));
+    allOwnBooks.forEach(book => authorIds.add(book.author));
+
+    // Batch fetch all authors in a single query using Supabase's 'in' filter
+    const authorIdsArray = Array.from(authorIds);
+    let authors: any[] = [];
+    if (authorIdsArray.length > 0) {
+      const { data: authorsData } = await supabaseAdmin
+        .from('users')
+        .select('id, name, profile')
+        .in('id', authorIdsArray);
+      authors = authorsData || [];
+    }
+
+    // Create a map for quick author lookup
+    const authorMap = new Map<string, any>();
+    authors.forEach(author => {
+      authorMap.set(author.id, author);
+    });
+
+    // Add author names and merge with reading progress (no more N+1 queries)
+    const libraryBooks = books.map((book) => {
+      const author = authorMap.get(book.author);
+      const historyItem = readingHistory.find(
+        (item) => item.bookId === book.id
+      );
+      return {
+        ...book,
+        authorName: author?.name || 'Unknown Author',
+        authorAvatar: author?.profile?.avatar,
+        readingProgress: historyItem?.progress || 0,
+        lastRead: historyItem?.lastRead,
+      };
+    });
+
+    // Map own books with author info (no more N+1 queries)
+    const ownBooks = allOwnBooks.map((book) => {
+      const author = authorMap.get(book.author);
+      return {
+        ...book,
+        authorName: author?.name || 'Unknown Author',
+        authorAvatar: author?.profile?.avatar,
+      };
+    });
 
     res.status(200).json({
       success: true,

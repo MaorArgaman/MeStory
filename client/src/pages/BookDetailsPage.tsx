@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart,
@@ -61,6 +62,7 @@ interface Book {
 }
 
 export default function BookDetailsPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -75,34 +77,69 @@ export default function BookDetailsPage() {
   const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
-    loadBook();
-  }, [id]);
+    const abortController = new AbortController();
 
-  const loadBook = async () => {
+    const loadBook = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get(`/books/${id}`, {
+          signal: abortController.signal,
+        });
+        if (response.data.success) {
+          const bookData = response.data.data;
+          setBook(bookData);
+          setLocalLikes(bookData.likes || 0);
+
+          // Check if user has liked this book
+          if (user && bookData.likedBy) {
+            setIsLiked(bookData.likedBy.includes(user._id));
+          }
+
+          // Increment view count
+          await api.post(`/books/${id}/view`).catch(() => {});
+        }
+      } catch (error: unknown) {
+        // Ignore abort errors
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
+        // Check for axios cancel
+        if (error && typeof error === 'object' && 'code' in error && (error as { code?: string }).code === 'ERR_CANCELED') {
+          return;
+        }
+        console.error('Failed to load book:', error);
+        toast.error('Failed to load book details');
+        navigate('/marketplace');
+      } finally {
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadBook();
+
+    return () => {
+      abortController.abort();
+    };
+  }, [id, user, navigate]);
+
+  // Separate reload function for use after submitting reviews
+  const reloadBook = useCallback(async () => {
     try {
-      setLoading(true);
       const response = await api.get(`/books/${id}`);
       if (response.data.success) {
         const bookData = response.data.data;
         setBook(bookData);
         setLocalLikes(bookData.likes || 0);
-
-        // Check if user has liked this book
         if (user && bookData.likedBy) {
           setIsLiked(bookData.likedBy.includes(user._id));
         }
-
-        // Increment view count
-        await api.post(`/books/${id}/view`).catch(() => {});
       }
     } catch (error) {
-      console.error('Failed to load book:', error);
-      toast.error('Failed to load book details');
-      navigate('/marketplace');
-    } finally {
-      setLoading(false);
+      console.error('Failed to reload book:', error);
     }
-  };
+  }, [id, user]);
 
   const handleLike = async () => {
     if (!user) {
@@ -152,7 +189,7 @@ export default function BookDetailsPage() {
         setShowReviewForm(false);
         setReviewRating(0);
         setReviewComment('');
-        loadBook(); // Reload to show new review
+        reloadBook(); // Reload to show new review
       }
     } catch (error: any) {
       console.error('Failed to submit review:', error);
@@ -167,7 +204,7 @@ export default function BookDetailsPage() {
       <div className="min-h-screen pt-32 flex items-center justify-center">
         <div className="text-center">
           <BookOpen className="w-16 h-16 text-magic-gold mx-auto mb-4 animate-pulse" />
-          <p className="text-gray-300 text-lg">Loading book details...</p>
+          <p className="text-gray-300 text-lg">{t('bookDetails.loading')}</p>
         </div>
       </div>
     );
@@ -259,7 +296,7 @@ export default function BookDetailsPage() {
                 <User className="w-6 h-6 text-deep-space" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Written by</p>
+                <p className="text-sm text-gray-400">{t('bookDetails.writtenBy')}</p>
                 <p className="text-xl font-semibold text-white group-hover:text-magic-gold transition-colors">
                   {book.author.name}
                 </p>
@@ -276,7 +313,7 @@ export default function BookDetailsPage() {
                     {book.statistics.averageRating.toFixed(1)}
                   </span>
                   <span className="text-gray-400 text-sm">
-                    ({book.statistics.totalReviews} reviews)
+                    ({t('bookDetails.reviewsCount', { count: book.statistics.totalReviews })})
                   </span>
                 </div>
               )}
@@ -284,14 +321,14 @@ export default function BookDetailsPage() {
               {/* Views */}
               <div className="flex items-center gap-2">
                 <Eye className="w-5 h-5 text-gray-400" />
-                <span className="text-gray-300">{book.statistics.views} views</span>
+                <span className="text-gray-300">{t('bookDetails.viewsCount', { count: book.statistics.views })}</span>
               </div>
 
               {/* Word Count */}
               <div className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-gray-400" />
                 <span className="text-gray-300">
-                  {book.statistics.wordCount.toLocaleString()} words
+                  {t('bookDetails.wordsCount', { count: book.statistics.wordCount.toLocaleString() })}
                 </span>
               </div>
             </div>
@@ -328,14 +365,16 @@ export default function BookDetailsPage() {
               >
                 <BookOpen className="w-5 h-5" />
                 {book.publishingStatus.isFree
-                  ? 'Read Now'
-                  : `Buy for $${book.publishingStatus.price}`}
+                  ? t('bookDetails.readNow')
+                  : t('bookDetails.buyFor', { price: book.publishingStatus.price })}
               </GlowingButton>
 
               {/* Like Button */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={handleLike}
+                aria-label={isLiked ? 'Unlike this book' : 'Like this book'}
+                aria-pressed={isLiked}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
                   isLiked
                     ? 'bg-red-600 text-white shadow-glow-gold'
@@ -358,10 +397,12 @@ export default function BookDetailsPage() {
             <div className="flex items-center gap-2 text-gray-400 text-sm">
               <Calendar className="w-4 h-4" />
               <span>
-                Published {new Date(book.createdAt).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
+                {t('bookDetails.publishedOn', {
+                  date: new Date(book.createdAt).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })
                 })}
               </span>
             </div>
@@ -378,7 +419,7 @@ export default function BookDetailsPage() {
           >
             <GlassCard>
               <h2 className="text-3xl font-display font-bold text-magic-gold mb-6">
-                Synopsis
+                {t('bookDetails.synopsis')}
               </h2>
               <p className="text-gray-300 text-lg leading-relaxed whitespace-pre-line">
                 {book.synopsis}
@@ -397,7 +438,7 @@ export default function BookDetailsPage() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-3xl font-display font-bold text-magic-gold flex items-center gap-3">
                 <MessageCircle className="w-8 h-8" />
-                Reviews ({book.statistics.totalReviews})
+                {t('bookDetails.reviews')} ({book.statistics.totalReviews})
               </h2>
 
               {user && !book.reviews.some((r) => r.user === user._id) && (
@@ -406,7 +447,7 @@ export default function BookDetailsPage() {
                   size="md"
                   onClick={() => setShowReviewForm(!showReviewForm)}
                 >
-                  Write a Review
+                  {t('bookDetails.writeReview')}
                 </GlowingButton>
               )}
             </div>
@@ -422,20 +463,23 @@ export default function BookDetailsPage() {
                 >
                   <div className="bg-white/5 rounded-xl p-6">
                     <h3 className="font-display font-semibold text-white mb-4">
-                      Your Review
+                      {t('bookDetails.yourReview')}
                     </h3>
 
                     {/* Star Rating */}
                     <div className="mb-4">
-                      <p className="text-sm text-gray-400 mb-2">Rating</p>
-                      <div className="flex gap-2">
+                      <p className="text-sm text-gray-400 mb-2" id="rating-label">{t('bookDetails.rating')}</p>
+                      <div className="flex gap-2" role="radiogroup" aria-labelledby="rating-label">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <motion.button
                             key={star}
                             whileHover={{ scale: 1.2 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setReviewRating(star)}
-                            className="focus:outline-none"
+                            className="focus:outline-none focus:ring-2 focus:ring-magic-gold focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
+                            aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                            aria-checked={reviewRating === star}
+                            role="radio"
                           >
                             <Star
                               className={`w-8 h-8 transition-all ${
@@ -451,16 +495,16 @@ export default function BookDetailsPage() {
 
                     {/* Comment */}
                     <div className="mb-4">
-                      <p className="text-sm text-gray-400 mb-2">Comment</p>
+                      <p className="text-sm text-gray-400 mb-2">{t('bookDetails.comment')}</p>
                       <textarea
                         value={reviewComment}
                         onChange={(e) => setReviewComment(e.target.value)}
-                        placeholder="Share your thoughts about this book..."
+                        placeholder={t('bookDetails.commentPlaceholder')}
                         className="w-full h-32 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-magic-gold/50 focus:shadow-glow-gold transition-all resize-none"
                         maxLength={1000}
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        {reviewComment.length} / 1000 characters
+                        {t('bookDetails.charactersCount', { current: reviewComment.length, max: 1000 })}
                       </p>
                     </div>
 
@@ -472,14 +516,14 @@ export default function BookDetailsPage() {
                         onClick={handleSubmitReview}
                         disabled={submittingReview}
                       >
-                        {submittingReview ? 'Submitting...' : 'Submit Review'}
+                        {submittingReview ? t('bookDetails.submitting') : t('bookDetails.submitReview')}
                       </GlowingButton>
                       <GlowingButton
                         variant="cosmic"
                         size="md"
                         onClick={() => setShowReviewForm(false)}
                       >
-                        Cancel
+                        {t('buttons.cancel')}
                       </GlowingButton>
                     </div>
                   </div>
@@ -493,7 +537,7 @@ export default function BookDetailsPage() {
                 <div className="text-center py-12">
                   <MessageCircle className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                   <p className="text-gray-400">
-                    No reviews yet. Be the first to review this book!
+                    {t('bookDetails.noReviews')}
                   </p>
                 </div>
               ) : (

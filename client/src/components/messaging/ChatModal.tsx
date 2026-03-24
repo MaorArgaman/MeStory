@@ -52,7 +52,16 @@ const ChatModal: React.FC<ChatModalProps> = ({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const currentUserId = JSON.parse(localStorage.getItem('user') || '{}')?.id;
+  const currentUserId = (() => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) return null;
+      const parsed = JSON.parse(userStr);
+      return parsed?.id ?? null;
+    } catch {
+      return null;
+    }
+  })();
 
   // Initialize conversation when modal opens
   useEffect(() => {

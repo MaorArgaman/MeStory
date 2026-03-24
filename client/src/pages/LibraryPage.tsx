@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -100,37 +100,75 @@ export default function LibraryPage() {
   const [requestingPayout, setRequestingPayout] = useState(false);
 
   useEffect(() => {
+    const abortController = new AbortController();
+
+    const loadLibrary = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get('/book-purchases/library', {
+          signal: abortController.signal,
+        });
+
+        if (response.data.success) {
+          setPurchasedBooks(response.data.data.purchasedBooks || []);
+          setOwnBooks(response.data.data.ownBooks || []);
+        }
+      } catch (error: unknown) {
+        // Ignore abort errors
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
+        if (error && typeof error === 'object' && 'code' in error && (error as { code?: string }).code === 'ERR_CANCELED') {
+          return;
+        }
+        console.error('Failed to load library:', error);
+        toast.error(t('messages.loading_failed'));
+      } finally {
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    const loadEarnings = async () => {
+      try {
+        const response = await api.get('/book-purchases/earnings', {
+          signal: abortController.signal,
+        });
+        if (response.data.success) {
+          setEarnings(response.data.data);
+        }
+      } catch (error: unknown) {
+        // Ignore abort errors
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
+        if (error && typeof error === 'object' && 'code' in error && (error as { code?: string }).code === 'ERR_CANCELED') {
+          return;
+        }
+        console.error('Failed to load earnings:', error);
+      }
+    };
+
     loadLibrary();
     loadEarnings();
-  }, []);
 
-  const loadLibrary = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get('/book-purchases/library');
+    return () => {
+      abortController.abort();
+    };
+  }, [t]);
 
-      if (response.data.success) {
-        setPurchasedBooks(response.data.data.purchasedBooks || []);
-        setOwnBooks(response.data.data.ownBooks || []);
-      }
-    } catch (error) {
-      console.error('Failed to load library:', error);
-      toast.error(t('messages.loading_failed'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadEarnings = async () => {
+  // Separate reload function for use after PayPal operations
+  const reloadEarnings = useCallback(async () => {
     try {
       const response = await api.get('/book-purchases/earnings');
       if (response.data.success) {
         setEarnings(response.data.data);
       }
     } catch (error) {
-      console.error('Failed to load earnings:', error);
+      console.error('Failed to reload earnings:', error);
     }
-  };
+  }, []);
 
   const handleConnectPayPal = async () => {
     if (!paypalEmail) {
@@ -146,7 +184,7 @@ export default function LibraryPage() {
 
       if (response.data.success) {
         toast.success(t('messages.paypal_connected_success'));
-        loadEarnings();
+        reloadEarnings();
         setPaypalEmail('');
       }
     } catch (error: any) {
@@ -163,7 +201,7 @@ export default function LibraryPage() {
 
       if (response.data.success) {
         toast.success(`${t('messages.payout_success')} $${response.data.data.amount?.toFixed(2)}`);
-        loadEarnings();
+        reloadEarnings();
       }
     } catch (error: any) {
       toast.error(error.response?.data?.error || t('messages.payout_failed'));

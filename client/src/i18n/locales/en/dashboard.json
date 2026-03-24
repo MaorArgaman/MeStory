@@ -62,5 +62,6 @@
     "new_book": "New Book",
     "continue_writing": "Continue Writing",
     "view_marketplace": "View Marketplace"
-  }
+  },
+  "default_chapter_title": "Chapter 1"
 }

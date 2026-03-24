@@ -89,6 +89,18 @@ router.post(
  * Section 14.2: Google OAuth Routes
  */
 
+// GET /api/auth/token - Get token from HTTP-only cookie (for OAuth flow)
+router.get('/token', (req: Request, res: Response) => {
+  const token = req.cookies?.auth_token;
+  if (token) {
+    // Clear the cookie after reading
+    res.clearCookie('auth_token', { path: '/' });
+    res.json({ success: true, token });
+  } else {
+    res.status(404).json({ success: false, error: 'No token found' });
+  }
+});
+
 // GET /api/auth/google/status - Check if Google OAuth is available
 router.get('/google/status', (_req: Request, res: Response) => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -135,8 +147,18 @@ router.get(
         role: user.role,
       });
 
-      // Redirect to client with token in URL
-      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth-success?token=${token}`);
+      // SEC-002 FIX: Set token in HTTP-only cookie instead of URL
+      const isProduction = process.env.NODE_ENV === 'production';
+      res.cookie('auth_token', token, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'strict' : 'lax',
+        maxAge: 60 * 24 * 60 * 60 * 1000, // 60 days
+        path: '/',
+      });
+
+      // Redirect to client - token will be read from cookie
+      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth-success`);
     } catch (error) {
       console.error('Google OAuth callback error:', error);
       res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/login?error=oauth_error`);

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { Sparkles, Mail, Lock, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -7,6 +8,7 @@ import loginSideImage from '../assets/images/login-side-image.png';
 import logoIcon from '../assets/images/logo-icon.png';
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -46,12 +48,12 @@ export default function LoginPage() {
             transition={{ duration: 0.8, delay: 0.3 }}
           >
             <h2 className="text-5xl font-bold text-white mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
-              Your Story
+              {t('auth.login.side_title_1')}
               <br />
-              <span className="gradient-gold">Awaits</span>
+              <span className="gradient-gold">{t('auth.login.side_title_2')}</span>
             </h2>
             <p className="text-xl text-gray-300 max-w-md">
-              Join thousands of authors crafting their masterpieces with the power of AI.
+              {t('auth.login.side_description')}
             </p>
           </motion.div>
 
@@ -102,18 +104,18 @@ export default function LoginPage() {
               />
             </motion.div>
             <h1 className="text-4xl font-bold gradient-text mb-2">MeStory</h1>
-            <p className="text-gray-400">Write your story with AI</p>
+            <p className="text-gray-400">{t('auth.login.tagline')}</p>
           </div>
 
           {/* Login Card */}
           <div className="card glow">
-            <h2 className="text-2xl font-bold text-white mb-6">Welcome Back</h2>
+            <h2 className="text-2xl font-bold text-white mb-6">{t('auth.login.title')}</h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email Input */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                  Email
+                  {t('auth.login.email')}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -123,7 +125,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="input pl-11"
-                    placeholder="you@example.com"
+                    placeholder={t('auth.login.email_placeholder')}
                     required
                     disabled={loading}
                   />
@@ -133,7 +135,7 @@ export default function LoginPage() {
               {/* Password Input */}
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                  Password
+                  {t('auth.login.password')}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -159,10 +161,10 @@ export default function LoginPage() {
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Signing in...
+                    {t('auth.login.submitting')}
                   </>
                 ) : (
-                  'Sign In'
+                  t('auth.login.submit')
                 )}
               </button>
             </form>
@@ -173,7 +175,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-700"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-dark-card text-gray-400">OR</span>
+                <span className="px-2 bg-dark-card text-gray-400">{t('auth.login.or')}</span>
               </div>
             </div>
 
@@ -200,21 +202,21 @@ export default function LoginPage() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Continue with Google
+              {t('auth.login.google_login')}
             </a>
 
             {/* Register Link */}
             <div className="mt-6 text-center text-sm text-gray-400">
-              Don't have an account?{' '}
+              {t('auth.login.no_account')}{' '}
               <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-medium">
-                Create one
+                {t('auth.login.create_account')}
               </Link>
             </div>
           </div>
 
           {/* Footer */}
           <p className="text-center text-xs text-gray-600 mt-8">
-            By continuing, you agree to MeStory's Terms of Service and Privacy Policy
+            {t('auth.login.footer')}
           </p>
         </motion.div>
       </div>

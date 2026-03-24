@@ -24,6 +24,7 @@ import {
   AlertCircle,
   Zap,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { TensionAnalysis, ChapterTension } from '../../types/analysis';
 import { analyzeTension } from '../../services/analysisApi';
 
@@ -33,14 +34,6 @@ interface TensionArcChartProps {
   currentChapterIndex?: number;
   onChapterClick?: (index: number) => void;
 }
-
-const arcLabels: Record<string, string> = {
-  classic: 'Classic',
-  episodic: 'Episodic',
-  building: 'Building',
-  flat: 'Flat',
-  irregular: 'Irregular',
-};
 
 const typeColors: Record<string, string> = {
   rising: '#22c55e',
@@ -56,6 +49,7 @@ export default function TensionArcChart({
   currentChapterIndex,
   onChapterClick,
 }: TensionArcChartProps) {
+  const { t } = useTranslation('common');
   const [analysis, setAnalysis] = useState<TensionAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +65,7 @@ export default function TensionArcChart({
       setAnalysis(result);
     } catch (err) {
       console.error('Failed to analyze tension:', err);
-      setError('Error analyzing tension levels');
+      setError(t('analysis.tension_arc.error_analyzing'));
     } finally {
       setLoading(false);
     }
@@ -85,7 +79,7 @@ export default function TensionArcChart({
 
   // Prepare chart data
   const chartData = analysis?.chapters.map((ch) => ({
-    name: `Chapter ${ch.chapterIndex + 1}`,
+    name: `${t('analysis.tension_arc.chapter')} ${ch.chapterIndex + 1}`,
     shortName: `${ch.chapterIndex + 1}`,
     tension: ch.tensionLevel,
     type: ch.type,
@@ -101,13 +95,13 @@ export default function TensionArcChart({
       return (
         <div className="bg-gray-800 border border-white/20 rounded-lg p-3 shadow-xl">
           <p className="text-white font-medium text-sm">{data.title}</p>
-          <p className="text-gray-400 text-xs">Chapter {data.chapterIndex + 1}</p>
+          <p className="text-gray-400 text-xs">{t('analysis.tension_arc.chapter')} {data.chapterIndex + 1}</p>
           <div className="mt-2 flex items-center gap-2">
             <div
               className="w-3 h-3 rounded-full"
               style={{ backgroundColor: data.color }}
             />
-            <span className="text-white text-sm">Tension: {data.tension}</span>
+            <span className="text-white text-sm">{t('analysis.tension_arc.tension')}: {data.tension}</span>
           </div>
         </div>
       );
@@ -126,7 +120,7 @@ export default function TensionArcChart({
     return (
       <div className="text-center py-8 text-gray-500 text-sm">
         <Zap className="w-8 h-8 mx-auto mb-2 opacity-50" />
-        <p>Write at least one chapter to see the tension arc</p>
+        <p>{t('analysis.tension_arc.write_chapter_first')}</p>
       </div>
     );
   }
@@ -137,7 +131,7 @@ export default function TensionArcChart({
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-orange-400" />
-          Tension Arc
+          {t('analysis.tension_arc.title')}
         </h3>
         <button
           onClick={fetchAnalysis}
@@ -168,9 +162,9 @@ export default function TensionArcChart({
         <div className="space-y-4">
           {/* Arc Type Badge */}
           <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10">
-            <span className="text-xs text-gray-400">Arc Type:</span>
+            <span className="text-xs text-gray-400">{t('analysis.tension_arc.arc_type')}:</span>
             <span className="text-xs font-medium text-orange-400">
-              {arcLabels[analysis.overallArc] || analysis.overallArc}
+              {t(`analysis.tension_arc.${analysis.overallArc}`)}
             </span>
           </div>
 
@@ -256,11 +250,7 @@ export default function TensionArcChart({
                   style={{ backgroundColor: color }}
                 />
                 <span className="text-xs text-gray-400">
-                  {type === 'rising' && 'Rising'}
-                  {type === 'falling' && 'Falling'}
-                  {type === 'peak' && 'Peak'}
-                  {type === 'valley' && 'Valley'}
-                  {type === 'stable' && 'Stable'}
+                  {t(`analysis.tension_arc.${type}`)}
                 </span>
               </div>
             ))}
@@ -268,13 +258,13 @@ export default function TensionArcChart({
 
           {/* Click hint */}
           <p className="text-xs text-gray-500 text-center">
-            Click on a point to navigate to chapter
+            {t('analysis.tension_arc.click_to_navigate')}
           </p>
 
           {/* Suggestions */}
           {analysis.suggestions.length > 0 && (
             <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/30">
-              <p className="text-xs font-medium text-orange-300 mb-2">Improvement Suggestions:</p>
+              <p className="text-xs font-medium text-orange-300 mb-2">{t('analysis.tension_arc.improvement_suggestions')}:</p>
               <ul className="text-xs text-gray-300 space-y-1">
                 {analysis.suggestions.map((sug, idx) => (
                   <li key={idx} className="flex items-start gap-1">

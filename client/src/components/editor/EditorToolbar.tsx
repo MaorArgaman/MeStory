@@ -27,30 +27,30 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
-// Predefined color palette
+// Predefined color palette - keys are used for translation
 const TEXT_COLORS = [
-  { color: '#000000', name: 'Black' },
-  { color: '#374151', name: 'Gray' },
-  { color: '#DC2626', name: 'Red' },
-  { color: '#EA580C', name: 'Orange' },
-  { color: '#D97706', name: 'Amber' },
-  { color: '#CA8A04', name: 'Yellow' },
-  { color: '#16A34A', name: 'Green' },
-  { color: '#0891B2', name: 'Cyan' },
-  { color: '#2563EB', name: 'Blue' },
-  { color: '#7C3AED', name: 'Purple' },
-  { color: '#DB2777', name: 'Pink' },
-  { color: '#FFFFFF', name: 'White' },
+  { color: '#000000', nameKey: 'black' },
+  { color: '#374151', nameKey: 'gray' },
+  { color: '#DC2626', nameKey: 'red' },
+  { color: '#EA580C', nameKey: 'orange' },
+  { color: '#D97706', nameKey: 'amber' },
+  { color: '#CA8A04', nameKey: 'yellow' },
+  { color: '#16A34A', nameKey: 'green' },
+  { color: '#0891B2', nameKey: 'cyan' },
+  { color: '#2563EB', nameKey: 'blue' },
+  { color: '#7C3AED', nameKey: 'purple' },
+  { color: '#DB2777', nameKey: 'pink' },
+  { color: '#FFFFFF', nameKey: 'white' },
 ];
 
 const HIGHLIGHT_COLORS = [
-  { color: 'transparent', name: 'None' },
-  { color: '#FEF08A', name: 'Yellow' },
-  { color: '#BBF7D0', name: 'Green' },
-  { color: '#BFDBFE', name: 'Blue' },
-  { color: '#FBCFE8', name: 'Pink' },
-  { color: '#FED7AA', name: 'Orange' },
-  { color: '#E9D5FF', name: 'Purple' },
+  { color: 'transparent', nameKey: 'none' },
+  { color: '#FEF08A', nameKey: 'yellow' },
+  { color: '#BBF7D0', nameKey: 'green' },
+  { color: '#BFDBFE', nameKey: 'blue' },
+  { color: '#FBCFE8', nameKey: 'pink' },
+  { color: '#FED7AA', nameKey: 'orange' },
+  { color: '#E9D5FF', nameKey: 'purple' },
 ];
 
 interface EditorToolbarProps {
@@ -366,7 +366,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             zIndex: 9999,
           }}
         >
-          <div className="text-xs text-gray-400 mb-2">צבע טקסט</div>
+          <div className="text-xs text-gray-400 mb-2">{t('colors.text_color')}</div>
           <div className="grid grid-cols-6 gap-1.5">
             {TEXT_COLORS.map((item) => (
               <button
@@ -386,7 +386,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
                   }
                   setShowColorMenu(false);
                 }}
-                title={item.name}
+                title={t(`colors.${item.nameKey}`)}
                 className="w-6 h-6 rounded-md border border-white/20 hover:scale-110 transition-transform"
                 style={{ backgroundColor: item.color }}
               />
@@ -406,7 +406,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             }}
             className="w-full mt-2 px-2 py-1 text-xs text-gray-400 hover:text-white hover:bg-white/10 rounded"
           >
-            איפוס צבע
+            {t('colors.reset_color')}
           </button>
         </motion.div>,
         document.body
@@ -425,7 +425,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             zIndex: 9999,
           }}
         >
-          <div className="text-xs text-gray-400 mb-2">הדגשה</div>
+          <div className="text-xs text-gray-400 mb-2">{t('colors.highlight')}</div>
           <div className="grid grid-cols-4 gap-1.5">
             {HIGHLIGHT_COLORS.map((item) => (
               <button
@@ -447,7 +447,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
                   }
                   setShowHighlightMenu(false);
                 }}
-                title={item.name}
+                title={t(`colors.${item.nameKey}`)}
                 className={`w-6 h-6 rounded-md border hover:scale-110 transition-transform ${
                   item.color === 'transparent' ? 'border-dashed border-gray-500' : 'border-white/20'
                 }`}

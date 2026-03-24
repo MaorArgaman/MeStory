@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { User, UserRole } from '../models/User';
 import { Book } from '../models/Book';
 import { AuthRequest } from '../types';
+import { supabaseAdmin } from '../config/supabase';
 
 // UUID validation regex for Supabase
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -10,8 +11,17 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
  * Get platform statistics
  * GET /api/admin/stats
  */
-export const getStats = async (_req: AuthRequest, res: Response): Promise<void> => {
+export const getStats = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // BUG-001: Admin role verification
+    if (!req.user || req.user.role !== UserRole.ADMIN) {
+      res.status(403).json({
+        success: false,
+        error: 'Access denied. Admin privileges required.',
+      });
+      return;
+    }
+
     // Count users by role
     const totalUsers = await User.count();
     const freeUsers = await User.count({ role: UserRole.FREE });
@@ -138,40 +148,59 @@ export const getStats = async (_req: AuthRequest, res: Response): Promise<void> 
 /**
  * Get all users with filters
  * GET /api/admin/users
+ * BUG-054 FIX: Implement proper database-level pagination with total count
  */
 export const getUsers = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { role, search, page = 1, limit = 20 } = req.query;
 
-    const query: any = {};
+    // SEC-007 FIX: Validate pagination parameters
+    const pageNum = Math.max(1, parseInt(String(page)) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(String(limit)) || 20));
+    const offset = (pageNum - 1) * limitNum;
+
+    // BUG-054 FIX: Use database-level pagination with Supabase
+    // Build the query with count
+    let queryBuilder = supabaseAdmin
+      .from('users')
+      .select('id, name, email, role, credits, subscription, profile, paypal, email_verification, created_at, updated_at', { count: 'exact' });
 
     // Filter by role
     if (role && role !== 'all') {
-      query.role = role;
+      queryBuilder = queryBuilder.eq('role', role);
     }
 
-    // Search by name or email
+    // SEC-006 FIX: Search with ILIKE for case-insensitive partial matching
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-      ];
+      const searchStr = String(search).slice(0, 100); // Limit length
+      // Escape special characters for LIKE pattern
+      const escapedSearch = searchStr.replace(/[%_\\]/g, '\\$&');
+      // Use OR filter for name or email containing search term
+      queryBuilder = queryBuilder.or(`name.ilike.%${escapedSearch}%,email.ilike.%${escapedSearch}%`);
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
+    // Apply sorting and pagination at database level
+    queryBuilder = queryBuilder
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limitNum - 1);
 
-    let users = await User.find(query);
+    const { data: users, error, count } = await queryBuilder;
 
-    const total = users.length;
+    if (error) {
+      console.error('Database query error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get users',
+      });
+      return;
+    }
 
-    // Sort by createdAt descending, then apply pagination
-    users = users
-      .sort((a: any, b: any) => new Date(b.createdAt || b.created_at).getTime() - new Date(a.createdAt || a.created_at).getTime())
-      .slice(skip, skip + Number(limit));
+    // Total count from database
+    const total = count || 0;
 
     // Remove password from response (Supabase returns full objects)
-    const usersWithoutPassword = users.map(user => {
-      const { password, ...userWithoutPassword } = user as any;
+    const usersWithoutPassword = (users || []).map((user: any) => {
+      const { password, ...userWithoutPassword } = user;
       return userWithoutPassword;
     });
 
@@ -180,10 +209,10 @@ export const getUsers = async (req: AuthRequest, res: Response): Promise<void> =
       data: {
         users: usersWithoutPassword,
         pagination: {
-          page: Number(page),
-          limit: Number(limit),
+          page: pageNum,
+          limit: limitNum,
           total,
-          pages: Math.ceil(total / Number(limit)),
+          pages: Math.ceil(total / limitNum),
         },
       },
     });
@@ -250,9 +279,18 @@ export const updateUser = async (req: AuthRequest, res: Response): Promise<void>
       }
     }
 
-    // Update credits directly
+    // SEC-004 FIX: Update credits with validation
     if (credits !== undefined) {
-      updateData.credits = Number(credits);
+      const numCredits = Number(credits);
+      if (isNaN(numCredits)) {
+        res.status(400).json({
+          success: false,
+          error: 'Credits must be a valid number',
+        });
+        return;
+      }
+      // Validate range: 0 to 999999
+      updateData.credits = Math.max(0, Math.min(999999, numCredits));
     }
 
     // Handle specific actions

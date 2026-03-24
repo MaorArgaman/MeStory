@@ -178,7 +178,7 @@ export default function DashboardPage() {
         genre: quickGenre,
         chapters: [
           {
-            title: 'Chapter 1',
+            title: t('dashboard.default_chapter_title'),
             content: '',
             order: 0,
             wordCount: 0,
@@ -259,11 +259,11 @@ export default function DashboardPage() {
     try {
       // Create a new book first
       const response = await api.post('/books', {
-        title: summary.theme.mainTheme.slice(0, 50) || 'Untitled Book',
+        title: summary.theme.mainTheme.slice(0, 50) || t('dashboard.untitled_book', 'Untitled Book'),
         genre: summary.theme.genre || 'Fiction',
         chapters: [
           {
-            title: 'Chapter 1',
+            title: t('dashboard.default_chapter_title'),
             content: '',
             order: 0,
             wordCount: 0,

@@ -38,9 +38,18 @@ export default function EmailVerificationModal({
   }, [countdown]);
 
   // Focus first input on open
+  // BUG-028 FIX: Use requestAnimationFrame for more reliable focus timing
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => inputRefs.current[0]?.focus(), 100);
+      // Use requestAnimationFrame to wait for the next paint cycle
+      // This is more reliable than arbitrary setTimeout delays
+      const rafId = requestAnimationFrame(() => {
+        // Double RAF ensures the DOM is fully painted
+        requestAnimationFrame(() => {
+          inputRefs.current[0]?.focus();
+        });
+      });
+      return () => cancelAnimationFrame(rafId);
     }
   }, [isOpen]);
 

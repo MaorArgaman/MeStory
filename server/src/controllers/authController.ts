@@ -165,6 +165,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+// BUG-033: Track verification attempts per user
+const verificationAttempts = new Map<string, { count: number; lastAttempt: Date }>();
+const MAX_VERIFICATION_ATTEMPTS = 5;
+const VERIFICATION_LOCKOUT_MINUTES = 30;
+
 /**
  * Verify email with code
  * POST /api/auth/verify-email
@@ -189,6 +194,28 @@ export const verifyEmail = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
+    // BUG-033: Check verification attempt limits
+    const userId = req.user.id;
+    const attemptData = verificationAttempts.get(userId);
+    const now = new Date();
+
+    if (attemptData) {
+      const timeSinceLastAttempt = now.getTime() - attemptData.lastAttempt.getTime();
+      const lockoutMs = VERIFICATION_LOCKOUT_MINUTES * 60 * 1000;
+
+      // Reset attempts if lockout period has passed
+      if (timeSinceLastAttempt > lockoutMs) {
+        verificationAttempts.delete(userId);
+      } else if (attemptData.count >= MAX_VERIFICATION_ATTEMPTS) {
+        const remainingMinutes = Math.ceil((lockoutMs - timeSinceLastAttempt) / 60000);
+        res.status(429).json({
+          success: false,
+          error: `Too many verification attempts. Please try again in ${remainingMinutes} minutes.`,
+        });
+        return;
+      }
+    }
+
     const user = await User.findById(req.user.id);
 
     if (!user) {
@@ -210,9 +237,17 @@ export const verifyEmail = async (req: AuthRequest, res: Response): Promise<void
 
     // Check if code is valid
     if (user.emailVerification?.verificationCode !== code) {
+      // BUG-033: Increment failed attempt counter
+      const currentAttempts = verificationAttempts.get(userId);
+      verificationAttempts.set(userId, {
+        count: (currentAttempts?.count || 0) + 1,
+        lastAttempt: now,
+      });
+
+      const attemptsLeft = MAX_VERIFICATION_ATTEMPTS - ((currentAttempts?.count || 0) + 1);
       res.status(400).json({
         success: false,
-        error: 'Invalid verification code',
+        error: `Invalid verification code. ${attemptsLeft > 0 ? `${attemptsLeft} attempts remaining.` : 'Account temporarily locked.'}`,
       });
       return;
     }
@@ -239,6 +274,9 @@ export const verifyEmail = async (req: AuthRequest, res: Response): Promise<void
         verificationCodeExpires: undefined,
       },
     });
+
+    // BUG-033: Clear verification attempts on successful verification
+    verificationAttempts.delete(userId);
 
     // Send welcome email (async)
     sendWelcomeEmail(user.email, user.name).catch((err) =>
@@ -404,6 +442,42 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
 
     const { name, bio, avatar } = req.body;
 
+    // SEC-005 FIX: Validate input fields
+    if (name !== undefined) {
+      if (typeof name !== 'string' || name.length < 2 || name.length > 100) {
+        res.status(400).json({
+          success: false,
+          error: 'Name must be between 2 and 100 characters',
+        });
+        return;
+      }
+    }
+
+    if (bio !== undefined) {
+      if (typeof bio !== 'string' || bio.length > 500) {
+        res.status(400).json({
+          success: false,
+          error: 'Bio must be 500 characters or less',
+        });
+        return;
+      }
+    }
+
+    if (avatar !== undefined && avatar !== '') {
+      try {
+        const url = new URL(avatar);
+        if (!['http:', 'https:'].includes(url.protocol)) {
+          throw new Error('Invalid protocol');
+        }
+      } catch {
+        res.status(400).json({
+          success: false,
+          error: 'Avatar must be a valid URL',
+        });
+        return;
+      }
+    }
+
     const user = await User.findById(req.user.id);
 
     if (!user) {
@@ -416,7 +490,7 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
 
     // Build update object
     const updateData: Partial<IUser> = {};
-    if (name) updateData.name = name;
+    if (name) updateData.name = name.trim();
 
     // Update profile fields
     const updatedProfile = { ...user.profile };

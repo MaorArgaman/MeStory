@@ -16,6 +16,7 @@ import {
   TrendingDown,
   Minus,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { TechniquesAnalysis, TechniqueScore } from '../../types/analysis';
 import { analyzeWritingTechniques } from '../../services/analysisApi';
 
@@ -24,19 +25,29 @@ interface WritingTechniquesCardProps {
   chapterCount: number;
 }
 
-const techniqueLabels: Record<string, { name: string; icon: string }> = {
-  tensionCreation: { name: 'Tension Creation', icon: '⚡' },
-  problemResolution: { name: 'Problem Resolution', icon: '🎯' },
-  characterDevelopment: { name: 'Character Development', icon: '👤' },
-  motifsThemes: { name: 'Motifs & Themes', icon: '🔄' },
-  dialogueQuality: { name: 'Dialogue Quality', icon: '💬' },
-  pacing: { name: 'Pacing', icon: '⏱️' },
+const techniqueIcons: Record<string, string> = {
+  tensionCreation: '⚡',
+  problemResolution: '🎯',
+  characterDevelopment: '👤',
+  motifsThemes: '🔄',
+  dialogueQuality: '💬',
+  pacing: '⏱️',
+};
+
+const techniqueTranslationKeys: Record<string, string> = {
+  tensionCreation: 'tension_creation',
+  problemResolution: 'problem_resolution',
+  characterDevelopment: 'character_development',
+  motifsThemes: 'motifs_themes',
+  dialogueQuality: 'dialogue_quality',
+  pacing: 'pacing',
 };
 
 export default function WritingTechniquesCard({
   bookId,
   chapterCount,
 }: WritingTechniquesCardProps) {
+  const { t } = useTranslation('common');
   const [analysis, setAnalysis] = useState<TechniquesAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +64,7 @@ export default function WritingTechniquesCard({
       setAnalysis(result);
     } catch (err) {
       console.error('Failed to analyze techniques:', err);
-      setError('Error analyzing writing techniques');
+      setError(t('analysis.writing_techniques.error_analyzing'));
     } finally {
       setLoading(false);
     }
@@ -85,9 +96,9 @@ export default function WritingTechniquesCard({
 
   const getTrendLabel = (trend: string) => {
     switch (trend) {
-      case 'improving': return 'Improving';
-      case 'declining': return 'Declining';
-      default: return 'Stable';
+      case 'improving': return t('analysis.writing_techniques.improving');
+      case 'declining': return t('analysis.writing_techniques.declining');
+      default: return t('analysis.writing_techniques.stable');
     }
   };
 
@@ -95,7 +106,7 @@ export default function WritingTechniquesCard({
     return (
       <div className="text-center py-8 text-gray-500 text-sm">
         <PenTool className="w-8 h-8 mx-auto mb-2 opacity-50" />
-        <p>Write at least one chapter to analyze writing techniques</p>
+        <p>{t('analysis.writing_techniques.write_chapter_first')}</p>
       </div>
     );
   }
@@ -106,7 +117,7 @@ export default function WritingTechniquesCard({
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
           <PenTool className="w-4 h-4 text-purple-400" />
-          Writing Techniques
+          {t('analysis.writing_techniques.title')}
         </h3>
         <button
           onClick={fetchAnalysis}
@@ -138,7 +149,7 @@ export default function WritingTechniquesCard({
           {/* Overall Score */}
           <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-300">Overall Score</span>
+              <span className="text-sm text-gray-300">{t('analysis.writing_techniques.overall_score')}</span>
               <span className={`text-2xl font-bold ${
                 analysis.overallScore >= 80 ? 'text-green-400' :
                 analysis.overallScore >= 60 ? 'text-blue-400' :
@@ -161,8 +172,9 @@ export default function WritingTechniquesCard({
           {/* Techniques List */}
           <div className="space-y-2">
             {(Object.entries(analysis.techniques) as [string, TechniqueScore][]).map(([key, technique]) => {
-              const label = techniqueLabels[key];
-              if (!label) return null;
+              const translationKey = techniqueTranslationKeys[key];
+              const icon = techniqueIcons[key];
+              if (!translationKey) return null;
 
               const isExpanded = expandedTechnique === key;
 
@@ -174,8 +186,8 @@ export default function WritingTechniquesCard({
                     className="w-full p-3 flex items-center justify-between hover:bg-white/5 transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">{label.icon}</span>
-                      <span className="text-sm text-gray-300">{label.name}</span>
+                      <span className="text-lg">{icon}</span>
+                      <span className="text-sm text-gray-300">{t(`analysis.writing_techniques.${translationKey}`)}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1">
@@ -223,7 +235,7 @@ export default function WritingTechniquesCard({
                           {/* Examples */}
                           {technique.examples.length > 0 && (
                             <div>
-                              <p className="text-xs text-gray-400 mb-2">Examples from text:</p>
+                              <p className="text-xs text-gray-400 mb-2">{t('analysis.writing_techniques.examples_from_text')}:</p>
                               <div className="space-y-2">
                                 {technique.examples.slice(0, 2).map((ex, idx) => (
                                   <div
@@ -235,7 +247,7 @@ export default function WritingTechniquesCard({
                                     }`}
                                   >
                                     <p className="text-gray-300 italic">"{ex.excerpt}"</p>
-                                    <p className="text-gray-500 mt-1">Chapter {ex.chapterIndex + 1} - {ex.analysis}</p>
+                                    <p className="text-gray-500 mt-1">{t('analysis.tension_arc.chapter')} {ex.chapterIndex + 1} - {ex.analysis}</p>
                                   </div>
                                 ))}
                               </div>
@@ -245,7 +257,7 @@ export default function WritingTechniquesCard({
                           {/* Suggestions */}
                           {technique.suggestions.length > 0 && (
                             <div>
-                              <p className="text-xs text-gray-400 mb-1">Improvement suggestions:</p>
+                              <p className="text-xs text-gray-400 mb-1">{t('analysis.writing_techniques.improvement_suggestions')}:</p>
                               <ul className="text-xs text-gray-300 space-y-0.5">
                                 {technique.suggestions.map((sug, idx) => (
                                   <li key={idx} className="flex items-start gap-1">
@@ -268,7 +280,7 @@ export default function WritingTechniquesCard({
           {/* General Improvements */}
           {analysis.improvements.length > 0 && (
             <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
-              <p className="text-xs font-medium text-purple-300 mb-2">General Suggestions:</p>
+              <p className="text-xs font-medium text-purple-300 mb-2">{t('analysis.writing_techniques.general_suggestions')}:</p>
               <ul className="text-xs text-gray-300 space-y-1">
                 {analysis.improvements.map((imp, idx) => (
                   <li key={idx} className="flex items-start gap-1">

@@ -7,6 +7,7 @@ import {
   sendSubscriptionUpgradeEmail,
   sendPayPalReceiptEmail,
 } from '../services/emailService';
+import { supabaseAdmin } from '../config/supabase';
 
 /**
  * Payment Controller
@@ -82,8 +83,11 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    // DEVELOPMENT MODE: Mock payment
-    if (process.env.NODE_ENV === 'development') {
+    // SEC-001 FIX: Mock payment only when explicitly enabled AND not in production
+    const isMockEnabled = process.env.ENABLE_MOCK_PAYMENTS === 'true';
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    if (isMockEnabled && !isProduction) {
       const mockOrderId = `MOCK-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       console.log(`💳 [MOCK MODE] Created order for ${planType} plan ($${planDetails.price})`);
@@ -195,8 +199,11 @@ export const captureOrder = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    // DEVELOPMENT MODE: Mock capture
-    if (process.env.NODE_ENV === 'development') {
+    // SEC-001 FIX: Mock capture only when explicitly enabled AND not in production
+    const isMockEnabled = process.env.ENABLE_MOCK_PAYMENTS === 'true';
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    if (isMockEnabled && !isProduction) {
       console.log(`💳 [MOCK MODE] Capturing order ${orderId}`);
 
       const planDetails = PLANS[transaction.plan as 'standard' | 'premium'];
@@ -210,34 +217,88 @@ export const captureOrder = async (req: AuthRequest, res: Response): Promise<voi
       const newRole = planDetails.tier;
       const newCredits = planDetails.credits === -1 ? 999999 : planDetails.credits;
 
-      // Update user subscription
-      const updatedUser = await User.findByIdAndUpdate(user.id, {
-        role: newRole,
-        credits: newCredits,
-        subscription: {
-          tier: planDetails.tier,
-          price: planDetails.price,
-          credits: planDetails.credits,
-          startDate: now,
-          endDate: endDate,
-          isActive: true,
-          autoRenew: true,
-        },
-      });
+      // BUG-002 FIX: Use database transaction for atomicity
+      // Wrap user update and transaction update in a single transaction
 
-      // Update transaction status
-      const updatedTransaction = await Transaction.findByIdAndUpdate(transaction.id, {
-        status: 'completed',
-        paypalCaptureId: `MOCK-CAPTURE-${Date.now()}`,
-        metadata: {
-          ...transaction.metadata,
-          previousPlan,
-          previousCredits,
-          newPlan: newRole,
-          newCredits: newCredits,
-          capturedAt: now,
-        },
-      });
+      try {
+        // Start transaction using Supabase RPC or manual rollback pattern
+        // Since Supabase JS client doesn't support native transactions,
+        // we use a try-catch pattern with manual rollback on failure
+
+        // First, update the transaction status
+        const transactionUpdateData = {
+          status: 'completed',
+          paypal_capture_id: `MOCK-CAPTURE-${Date.now()}`,
+          metadata: {
+            ...transaction.metadata,
+            previousPlan,
+            previousCredits,
+            newPlan: newRole,
+            newCredits: newCredits,
+            capturedAt: now.toISOString(),
+          },
+          updated_at: now.toISOString(),
+        };
+
+        const { data: txData, error: txError } = await supabaseAdmin
+          .from('transactions')
+          .update(transactionUpdateData)
+          .eq('id', transaction.id)
+          .select()
+          .single();
+
+        if (txError) {
+          throw new Error(`Transaction update failed: ${txError.message}`);
+        }
+        // Transaction updated successfully
+
+        // Then, update the user subscription
+        const userUpdateData = {
+          role: newRole,
+          credits: newCredits,
+          subscription: {
+            tier: planDetails.tier,
+            price: planDetails.price,
+            credits: planDetails.credits,
+            startDate: now.toISOString(),
+            endDate: endDate.toISOString(),
+            isActive: true,
+            autoRenew: true,
+          },
+          updated_at: now.toISOString(),
+        };
+
+        const { data: userData, error: userError } = await supabaseAdmin
+          .from('users')
+          .update(userUpdateData)
+          .eq('id', user.id)
+          .select()
+          .single();
+
+        if (userError) {
+          // Rollback: revert transaction status to pending
+          await supabaseAdmin
+            .from('transactions')
+            .update({
+              status: 'pending',
+              paypal_capture_id: null,
+              metadata: transaction.metadata,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', transaction.id);
+
+          throw new Error(`User update failed: ${userError.message}`);
+        }
+        // User updated successfully
+
+      } catch (atomicError: any) {
+        console.error('Payment capture atomic operation failed:', atomicError);
+        res.status(500).json({
+          success: false,
+          error: 'Payment capture failed. Please try again.',
+        });
+        return;
+      }
 
       console.log(`✅ [MOCK MODE] Order captured successfully`);
       console.log(`✅ User upgraded: ${previousPlan} → ${newRole}`);

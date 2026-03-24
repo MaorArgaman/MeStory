@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
   BookOpen,
@@ -19,6 +20,7 @@ import heroBg from '../assets/images/hero-bg.jpg';
 import logoIcon from '../assets/images/logo-icon.png';
 
 export default function LandingPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [booksPublishedToday, setBooksPublishedToday] = useState(127);
   const { scrollY } = useScroll();
@@ -38,35 +40,32 @@ export default function LandingPage() {
   const features = [
     {
       icon: Zap,
-      title: 'AI Co-Pilot',
-      description:
-        'Never face writer\'s block again. Our Gemini-powered AI assists you with plot development, character creation, and real-time writing suggestions.',
+      titleKey: 'landing.features.ai_copilot.title',
+      descriptionKey: 'landing.features.ai_copilot.description',
       color: 'from-yellow-400 to-yellow-600',
       glow: 'shadow-glow-gold',
     },
     {
       icon: Palette,
-      title: '3D Cover Studio',
-      description:
-        'Transform your manuscript into a professional book with AI-generated covers, customizable layouts, and print-ready export capabilities.',
+      titleKey: 'landing.features.cover_studio.title',
+      descriptionKey: 'landing.features.cover_studio.description',
       color: 'from-purple-400 to-purple-600',
       glow: 'shadow-glow-cosmic',
     },
     {
       icon: Globe,
-      title: 'Global Marketplace',
-      description:
-        'Publish and sell your books to readers worldwide. Set your own price, earn 50% revenue share, and build your author brand with our social features.',
+      titleKey: 'landing.features.marketplace.title',
+      descriptionKey: 'landing.features.marketplace.description',
       color: 'from-blue-400 to-blue-600',
       glow: 'shadow-lg',
     },
   ];
 
   const stats = [
-    { icon: Users, value: '50K+', label: 'Active Authors' },
-    { icon: BookOpen, value: '200K+', label: 'Books Published' },
-    { icon: Star, value: '4.9/5', label: 'Average Rating' },
-    { icon: TrendingUp, value: '$2M+', label: 'Author Earnings' },
+    { icon: Users, value: '50K+', labelKey: 'landing.stats.active_authors' },
+    { icon: BookOpen, value: '200K+', labelKey: 'landing.stats.books_published' },
+    { icon: Star, value: '4.9/5', labelKey: 'landing.stats.average_rating' },
+    { icon: TrendingUp, value: '$2M+', labelKey: 'landing.stats.author_earnings' },
   ];
 
   return (
@@ -101,11 +100,11 @@ export default function LandingPage() {
                 onClick={() => navigate('/login')}
                 className="px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-gray-300 hover:text-white hover:bg-white/5 font-semibold transition-all text-sm sm:text-base"
               >
-                Login
+                {t('nav.login')}
               </button>
               <GlowingButton variant="gold" size="md" onClick={() => navigate('/register')} className="text-sm sm:text-base px-3 sm:px-4">
-                <span className="hidden sm:inline">Get Started</span>
-                <span className="sm:hidden">Start</span>
+                <span className="hidden sm:inline">{t('nav.register')}</span>
+                <span className="sm:hidden">{t('nav.register')}</span>
                 <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
               </GlowingButton>
             </div>
@@ -177,7 +176,7 @@ export default function LandingPage() {
                 backgroundClip: 'text',
               }}
             >
-              Unleash Your Inner Author
+              {t('landing.hero.title')}
             </motion.h1>
 
             <motion.p
@@ -186,8 +185,7 @@ export default function LandingPage() {
               transition={{ delay: 0.3, duration: 0.8 }}
               className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed px-2"
             >
-              Write, design, and publish professional books with AI assistance. Join thousands of
-              authors earning from their stories on the world's most magical publishing platform.
+              {t('landing.hero.subtitle')}
             </motion.p>
 
             <motion.div
@@ -203,7 +201,7 @@ export default function LandingPage() {
                 className="px-6 sm:px-8 lg:px-12 py-3 sm:py-4 lg:py-5 text-sm sm:text-base lg:text-xl w-full sm:w-auto"
               >
                 <Feather className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
-                Start Writing for Free
+                {t('landing.hero.cta_primary')}
               </GlowingButton>
 
               <GlowingButton
@@ -213,7 +211,7 @@ export default function LandingPage() {
                 className="px-6 sm:px-8 lg:px-12 py-3 sm:py-4 lg:py-5 text-sm sm:text-base lg:text-xl w-full sm:w-auto"
               >
                 <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
-                Explore Books
+                {t('landing.hero.cta_secondary')}
               </GlowingButton>
             </motion.div>
 
@@ -226,15 +224,15 @@ export default function LandingPage() {
             >
               <div className="flex items-center gap-2">
                 <Award className="w-4 h-4 sm:w-5 sm:h-5 text-magic-gold" />
-                <span>No Credit Card Required</span>
+                <span>{t('landing.trust.no_credit_card')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-magic-gold" />
-                <span>100 Free AI Credits</span>
+                <span>{t('landing.trust.free_credits')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 sm:w-5 sm:h-5 text-magic-gold" />
-                <span>50,000+ Authors Trust Us</span>
+                <span>{t('landing.trust.authors_trust')}</span>
               </div>
             </motion.div>
           </motion.div>
@@ -274,20 +272,19 @@ export default function LandingPage() {
               <div className="flex items-center gap-3">
                 <Sparkles className="w-5 h-5 text-magic-gold" />
                 <span className="text-white font-semibold">
-                  <span className="text-magic-gold">{booksPublishedToday}</span> books published
-                  today
+                  <span className="text-magic-gold">{booksPublishedToday}</span> {t('landing.ticker.books_today')}
                 </span>
               </div>
               <div className="flex items-center gap-3">
                 <TrendingUp className="w-5 h-5 text-green-400" />
                 <span className="text-white font-semibold">
-                  Authors earned <span className="text-green-400">$47,823</span> this week
+                  {t('landing.ticker.authors_earned')} <span className="text-green-400">$47,823</span> {t('landing.ticker.this_week')}
                 </span>
               </div>
               <div className="flex items-center gap-3">
                 <Star className="w-5 h-5 text-yellow-400" />
                 <span className="text-white font-semibold">
-                  <span className="text-yellow-400">342</span> 5-star reviews today
+                  <span className="text-yellow-400">342</span> {t('landing.ticker.reviews_today')}
                 </span>
               </div>
             </div>
@@ -306,18 +303,17 @@ export default function LandingPage() {
             className="text-center mb-10 sm:mb-16 lg:mb-20"
           >
             <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold gradient-gold mb-4 sm:mb-6">
-              Everything You Need to Succeed
+              {t('landing.features.title')}
             </h2>
             <p className="text-sm sm:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto px-2">
-              From your first word to your first sale, MeStory provides professional-grade tools
-              that make book publishing accessible to everyone.
+              {t('landing.features.subtitle')}
             </p>
           </motion.div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {features.map((feature, index) => (
               <motion.div
-                key={feature.title}
+                key={feature.titleKey}
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -331,16 +327,16 @@ export default function LandingPage() {
                   </div>
 
                   <h3 className="text-lg sm:text-xl lg:text-2xl font-display font-bold text-white mb-2 sm:mb-4">
-                    {feature.title}
+                    {t(feature.titleKey)}
                   </h3>
 
-                  <p className="text-sm sm:text-base text-gray-300 leading-relaxed">{feature.description}</p>
+                  <p className="text-sm sm:text-base text-gray-300 leading-relaxed">{t(feature.descriptionKey)}</p>
 
                   <motion.div
                     whileHover={{ x: 5 }}
                     className="mt-4 sm:mt-6 flex items-center gap-2 text-magic-gold font-semibold cursor-pointer text-sm sm:text-base"
                   >
-                    Learn More
+                    {t('landing.features.learn_more')}
                     <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
                   </motion.div>
                 </GlassCard>
@@ -361,18 +357,17 @@ export default function LandingPage() {
             className="text-center mb-10 sm:mb-16 lg:mb-20"
           >
             <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold gradient-gold mb-4 sm:mb-6">
-              Join a Thriving Community
+              {t('landing.community.title')}
             </h2>
             <p className="text-sm sm:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto px-2">
-              Writers from around the world are already creating, publishing, and earning with
-              MeStory.
+              {t('landing.community.subtitle')}
             </p>
           </motion.div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8">
             {stats.map((stat, index) => (
               <motion.div
-                key={stat.label}
+                key={stat.labelKey}
                 initial={{ opacity: 0, scale: 0.8 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
@@ -383,7 +378,7 @@ export default function LandingPage() {
                     <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-magic-gold" />
                   </div>
                   <div className="text-xl sm:text-2xl lg:text-4xl font-bold gradient-gold mb-1 sm:mb-2">{stat.value}</div>
-                  <div className="text-gray-400 text-xs sm:text-sm">{stat.label}</div>
+                  <div className="text-gray-400 text-xs sm:text-sm">{t(stat.labelKey)}</div>
                 </GlassCard>
               </motion.div>
             ))}
@@ -403,10 +398,10 @@ export default function LandingPage() {
             <GlassCard glow="gold" className="text-center p-6 sm:p-8 lg:p-12">
               <Sparkles className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 text-magic-gold mx-auto mb-4 sm:mb-6" />
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-bold gradient-gold mb-4 sm:mb-6">
-                Ready to Write Your Story?
+                {t('landing.cta.title')}
               </h2>
               <p className="text-sm sm:text-lg lg:text-xl text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto">
-                Start writing today with 100 free AI credits. No credit card required.
+                {t('landing.cta.subtitle')}
               </p>
               <GlowingButton
                 variant="gold"
@@ -415,7 +410,7 @@ export default function LandingPage() {
                 className="px-6 sm:px-8 lg:px-12 py-3 sm:py-4 lg:py-5 text-sm sm:text-base lg:text-xl w-full sm:w-auto"
               >
                 <Feather className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
-                Create Your Free Account
+                {t('landing.cta.button')}
               </GlowingButton>
             </GlassCard>
           </motion.div>
@@ -435,33 +430,32 @@ export default function LandingPage() {
                 <span className="text-xl sm:text-2xl lg:text-3xl font-display font-bold gradient-gold">MeStory</span>
               </div>
               <p className="text-gray-400 text-sm sm:text-base max-w-md">
-                The world's most magical AI-powered book writing and publishing platform.
-                Democratizing storytelling for everyone.
+                {t('landing.footer.description')}
               </p>
             </div>
 
             {/* Platform */}
             <div>
-              <h3 className="font-display font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">Platform</h3>
+              <h3 className="font-display font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">{t('landing.footer.platform')}</h3>
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
                   <a href="#" className="hover:text-magic-gold transition-colors">
-                    Features
+                    {t('landing.footer.features')}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-magic-gold transition-colors">
-                    Pricing
+                    {t('landing.footer.pricing')}
                   </a>
                 </li>
                 <li>
                   <a href="/marketplace" className="hover:text-magic-gold transition-colors">
-                    Marketplace
+                    {t('landing.footer.marketplace')}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-magic-gold transition-colors">
-                    API
+                    {t('landing.footer.api')}
                   </a>
                 </li>
               </ul>
@@ -469,26 +463,26 @@ export default function LandingPage() {
 
             {/* Legal */}
             <div>
-              <h3 className="font-display font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">Legal</h3>
+              <h3 className="font-display font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">{t('landing.footer.legal')}</h3>
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
                   <a href="/terms" className="hover:text-magic-gold transition-colors">
-                    Terms of Service
+                    {t('footer.terms')}
                   </a>
                 </li>
                 <li>
                   <a href="/privacy" className="hover:text-magic-gold transition-colors">
-                    Privacy Policy
+                    {t('footer.privacy')}
                   </a>
                 </li>
                 <li>
                   <a href="/library" className="hover:text-magic-gold transition-colors">
-                    My Library
+                    {t('nav.library')}
                   </a>
                 </li>
                 <li>
                   <a href="mailto:support@mestory.com" className="hover:text-magic-gold transition-colors">
-                    Contact Us
+                    {t('footer.contact')}
                   </a>
                 </li>
               </ul>
@@ -498,7 +492,7 @@ export default function LandingPage() {
           {/* Bottom Bar */}
           <div className="pt-6 sm:pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-gray-400 text-xs sm:text-sm text-center md:text-left">
-              © 2026 MeStory. All rights reserved. Powered by Google Gemini 2.5 Flash.
+              {t('landing.footer.copyright')}
             </p>
             <div className="flex items-center gap-4 sm:gap-6 text-sm">
               <a href="#" className="text-gray-400 hover:text-magic-gold transition-colors">

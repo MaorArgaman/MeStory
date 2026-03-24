@@ -14,6 +14,7 @@ import {
   Layout,
   Image as ImageLucide,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../services/api';
 import {
   AIDesignState,
@@ -31,49 +32,13 @@ interface AIDesignWizardProps {
 
 type WizardStep = 'intro' | 'analyzing' | 'generating' | 'images' | 'preview' | 'error';
 
-const STEP_INFO = {
-  intro: {
-    icon: Wand2,
-    titleEn: 'AI Design Wizard',
-    titleHe: 'אשף עיצוב AI',
-    descEn: 'Let AI analyze your book and create a perfect design',
-    descHe: 'תן ל-AI לנתח את הספר שלך וליצור עיצוב מושלם',
-  },
-  analyzing: {
-    icon: BookOpen,
-    titleEn: 'Analyzing Your Book',
-    titleHe: 'מנתח את הספר שלך',
-    descEn: 'Reading chapters and understanding your story...',
-    descHe: 'קורא פרקים ומבין את הסיפור שלך...',
-  },
-  generating: {
-    icon: Palette,
-    titleEn: 'Generating Design',
-    titleHe: 'מייצר עיצוב',
-    descEn: 'Creating typography, layout, and color scheme...',
-    descHe: 'יוצר טיפוגרפיה, פריסה וסכמת צבעים...',
-  },
-  images: {
-    icon: ImageIcon,
-    titleEn: 'Creating Images',
-    titleHe: 'יוצר תמונות',
-    descEn: 'Generating cover and interior images with AI...',
-    descHe: 'מייצר כריכה ותמונות פנימיות עם AI...',
-  },
-  preview: {
-    icon: Check,
-    titleEn: 'Design Ready!',
-    titleHe: 'העיצוב מוכן!',
-    descEn: 'Review your AI-generated design',
-    descHe: 'סקור את העיצוב שנוצר',
-  },
-  error: {
-    icon: X,
-    titleEn: 'Error Occurred',
-    titleHe: 'אירעה שגיאה',
-    descEn: 'Something went wrong during design generation',
-    descHe: 'משהו השתבש במהלך יצירת העיצוב',
-  },
+const STEP_ICONS = {
+  intro: Wand2,
+  analyzing: BookOpen,
+  generating: Palette,
+  images: ImageIcon,
+  preview: Check,
+  error: X,
 };
 
 export default function AIDesignWizard({
@@ -81,9 +46,8 @@ export default function AIDesignWizard({
   book,
   onComplete,
   onClose,
-  language = 'en',
 }: AIDesignWizardProps) {
-  const isHebrew = language === 'he';
+  const { t } = useTranslation('common');
 
   const [step, setStep] = useState<WizardStep>('intro');
   const [progress, setProgress] = useState<AIDesignProgress | null>(null);
@@ -178,8 +142,25 @@ export default function AIDesignWizard({
     }
   };
 
-  const stepInfo = STEP_INFO[step];
-  const StepIcon = stepInfo.icon;
+  const StepIcon = STEP_ICONS[step];
+
+  // Get step title and description from translations
+  const getStepInfo = (stepKey: WizardStep) => {
+    const stepTranslationKeys: Record<WizardStep, { title: string; desc: string }> = {
+      intro: { title: 'ai_design_wizard.title', desc: 'ai_design_wizard.desc' },
+      analyzing: { title: 'ai_design_wizard.analyzing_title', desc: 'ai_design_wizard.analyzing_desc' },
+      generating: { title: 'ai_design_wizard.generating_title', desc: 'ai_design_wizard.generating_desc' },
+      images: { title: 'ai_design_wizard.images_title', desc: 'ai_design_wizard.images_desc' },
+      preview: { title: 'ai_design_wizard.preview_title', desc: 'ai_design_wizard.preview_desc' },
+      error: { title: 'ai_design_wizard.error_title', desc: 'ai_design_wizard.error_desc' },
+    };
+    return {
+      title: t(stepTranslationKeys[stepKey].title),
+      desc: t(stepTranslationKeys[stepKey].desc),
+    };
+  };
+
+  const stepInfo = getStepInfo(step);
 
   return (
     <motion.div
@@ -205,10 +186,10 @@ export default function AIDesignWizard({
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">
-                  {isHebrew ? stepInfo.titleHe : stepInfo.titleEn}
+                  {stepInfo.title}
                 </h2>
                 <p className="text-white/80 text-sm">
-                  {isHebrew ? stepInfo.descHe : stepInfo.descEn}
+                  {stepInfo.desc}
                 </p>
               </div>
             </div>
@@ -259,8 +240,8 @@ export default function AIDesignWizard({
                   <div>
                     <h3 className="font-bold text-lg">{book?.title || 'Your Book'}</h3>
                     <p className="text-gray-400 text-sm">
-                      {book?.chapters?.length || 0} {isHebrew ? 'פרקים' : 'chapters'} •
-                      {book?.genre || (isHebrew ? 'כללי' : 'General')}
+                      {book?.chapters?.length || 0} {t('ai_design_wizard.chapters')} •
+                      {book?.genre || t('ai_design_wizard.general')}
                     </p>
                   </div>
                 </div>
@@ -268,41 +249,29 @@ export default function AIDesignWizard({
                 {/* What AI Will Do */}
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg">
-                    {isHebrew ? 'מה ה-AI יעשה:' : 'What AI will do:'}
+                    {t('ai_design_wizard.what_ai_will_do')}
                   </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FeatureCard
                       icon={Type}
-                      title={isHebrew ? 'טיפוגרפיה' : 'Typography'}
-                      description={isHebrew
-                        ? 'בחירת גופנים, גדלים וצבעים מתאימים'
-                        : 'Select matching fonts, sizes, and colors'
-                      }
+                      title={t('ai_design_wizard.typography')}
+                      description={t('ai_design_wizard.typography_desc')}
                     />
                     <FeatureCard
                       icon={Layout}
-                      title={isHebrew ? 'פריסה' : 'Layout'}
-                      description={isHebrew
-                        ? 'שוליים, עמודות, מספרי עמודים'
-                        : 'Margins, columns, page numbers'
-                      }
+                      title={t('ai_design_wizard.layout')}
+                      description={t('ai_design_wizard.layout_desc')}
                     />
                     <FeatureCard
                       icon={Palette}
-                      title={isHebrew ? 'כריכה' : 'Cover'}
-                      description={isHebrew
-                        ? 'עיצוב כריכה קדמית, אחורית ושדרה'
-                        : 'Front, back, and spine design'
-                      }
+                      title={t('ai_design_wizard.cover')}
+                      description={t('ai_design_wizard.cover_desc')}
                     />
                     <FeatureCard
                       icon={ImageLucide}
-                      title={isHebrew ? 'תמונות' : 'Images'}
-                      description={isHebrew
-                        ? 'הצעות למיקום ויצירת תמונות AI'
-                        : 'Placement suggestions and AI generation'
-                      }
+                      title={t('ai_design_wizard.images')}
+                      description={t('ai_design_wizard.images_desc')}
                     />
                   </div>
                 </div>
@@ -318,13 +287,10 @@ export default function AIDesignWizard({
                     />
                     <div>
                       <span className="font-medium">
-                        {isHebrew ? 'צור תמונות עם AI' : 'Generate images with AI'}
+                        {t('ai_design_wizard.generate_images')}
                       </span>
                       <p className="text-sm text-gray-400">
-                        {isHebrew
-                          ? 'Nano Banana Pro ייצור תמונות כריכה ופנים הספר'
-                          : 'Nano Banana Pro will create cover and interior images'
-                        }
+                        {t('ai_design_wizard.generate_images_desc')}
                       </p>
                     </div>
                   </label>
@@ -336,7 +302,7 @@ export default function AIDesignWizard({
                   className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all"
                 >
                   <Sparkles className="w-6 h-6" />
-                  {isHebrew ? 'התחל עיצוב AI' : 'Start AI Design'}
+                  {t('ai_design_wizard.start_ai_design')}
                 </button>
               </motion.div>
             )}
@@ -362,22 +328,13 @@ export default function AIDesignWizard({
                 </div>
 
                 <h3 className="mt-8 text-xl font-semibold">
-                  {progress?.stepName || (isHebrew ? 'מעבד...' : 'Processing...')}
+                  {progress?.stepName || t('ai_design_wizard.processing')}
                 </h3>
 
                 <p className="mt-2 text-gray-400 text-center max-w-md">
-                  {step === 'analyzing' && (isHebrew
-                    ? 'קורא את תוכן הספר ומנתח את הסגנון, הז\'אנר והטון...'
-                    : 'Reading book content and analyzing style, genre, and tone...'
-                  )}
-                  {step === 'generating' && (isHebrew
-                    ? 'יוצר טיפוגרפיה, פריסה וסכמת צבעים מותאמת...'
-                    : 'Creating custom typography, layout, and color scheme...'
-                  )}
-                  {step === 'images' && (isHebrew
-                    ? 'מייצר תמונות כריכה ותמונות פנימיות עם Nano Banana Pro...'
-                    : 'Generating cover and interior images with Nano Banana Pro...'
-                  )}
+                  {step === 'analyzing' && t('ai_design_wizard.reading_content')}
+                  {step === 'generating' && t('ai_design_wizard.creating_design')}
+                  {step === 'images' && t('ai_design_wizard.generating_images')}
                 </p>
 
                 {/* Step Indicators */}
@@ -412,7 +369,7 @@ export default function AIDesignWizard({
                   <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl p-4 border border-purple-500/30">
                     <h4 className="font-medium mb-2 flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-purple-400" />
-                      {isHebrew ? 'אווירת העיצוב' : 'Design Mood'}
+                      {t('ai_design_wizard.design_mood')}
                     </h4>
                     <p className="text-gray-300">{design.moodDescription}</p>
                   </div>
@@ -421,10 +378,10 @@ export default function AIDesignWizard({
                 {/* Preview Tabs */}
                 <div className="flex gap-2 border-b border-gray-700 pb-2">
                   {[
-                    { key: 'typography', icon: Type, labelEn: 'Typography', labelHe: 'טיפוגרפיה' },
-                    { key: 'layout', icon: Layout, labelEn: 'Layout', labelHe: 'פריסה' },
-                    { key: 'covers', icon: Palette, labelEn: 'Covers', labelHe: 'כריכות' },
-                    { key: 'images', icon: ImageLucide, labelEn: 'Images', labelHe: 'תמונות' },
+                    { key: 'typography', icon: Type, label: t('ai_design_wizard.typography') },
+                    { key: 'layout', icon: Layout, label: t('ai_design_wizard.layout') },
+                    { key: 'covers', icon: Palette, label: t('ai_design_wizard.cover') },
+                    { key: 'images', icon: ImageLucide, label: t('ai_design_wizard.images') },
                   ].map((tab) => (
                     <button
                       key={tab.key}
@@ -436,7 +393,7 @@ export default function AIDesignWizard({
                       }`}
                     >
                       <tab.icon className="w-4 h-4" />
-                      {isHebrew ? tab.labelHe : tab.labelEn}
+                      {tab.label}
                     </button>
                   ))}
                 </div>
@@ -448,25 +405,25 @@ export default function AIDesignWizard({
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="text-sm text-gray-400">
-                            {isHebrew ? 'גופן גוף' : 'Body Font'}
+                            {t('ai_design_wizard.body_font')}
                           </label>
                           <p className="font-medium">{design.typography.bodyFont}</p>
                         </div>
                         <div>
                           <label className="text-sm text-gray-400">
-                            {isHebrew ? 'גופן כותרות' : 'Heading Font'}
+                            {t('ai_design_wizard.heading_font')}
                           </label>
                           <p className="font-medium">{design.typography.headingFont}</p>
                         </div>
                         <div>
                           <label className="text-sm text-gray-400">
-                            {isHebrew ? 'גודל טקסט' : 'Font Size'}
+                            {t('ai_design_wizard.font_size')}
                           </label>
                           <p className="font-medium">{design.typography.fontSize}px</p>
                         </div>
                         <div>
                           <label className="text-sm text-gray-400">
-                            {isHebrew ? 'גובה שורה' : 'Line Height'}
+                            {t('ai_design_wizard.line_height')}
                           </label>
                           <p className="font-medium">{design.typography.lineHeight}</p>
                         </div>
@@ -493,13 +450,13 @@ export default function AIDesignWizard({
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="text-sm text-gray-400">
-                            {isHebrew ? 'עמודות' : 'Columns'}
+                            {t('ai_design_wizard.columns')}
                           </label>
                           <p className="font-medium">{design.layout.columns}</p>
                         </div>
                         <div>
                           <label className="text-sm text-gray-400">
-                            {isHebrew ? 'יישור טקסט' : 'Text Align'}
+                            {t('ai_design_wizard.text_align')}
                           </label>
                           <p className="font-medium">{design.layout.textAlign}</p>
                         </div>
@@ -508,7 +465,7 @@ export default function AIDesignWizard({
                       {design.layout.margins && (
                         <div>
                           <label className="text-sm text-gray-400">
-                            {isHebrew ? 'שוליים' : 'Margins'}
+                            {t('ai_design_wizard.margins')}
                           </label>
                           <p className="font-medium">
                             {Object.entries(design.layout.margins).map(([k, v]) => `${k}: ${v}mm`).join(' | ')}
@@ -523,7 +480,7 @@ export default function AIDesignWizard({
                       {design.covers.front && (
                         <div>
                           <h4 className="font-medium mb-2">
-                            {isHebrew ? 'כריכה קדמית' : 'Front Cover'}
+                            {t('ai_design_wizard.front_cover')}
                           </h4>
                           {design.covers.front.generatedImageUrl ? (
                             <img
@@ -537,7 +494,7 @@ export default function AIDesignWizard({
                               style={{ backgroundColor: design.covers.front.backgroundColor }}
                             >
                               <span className="text-sm text-gray-400">
-                                {isHebrew ? 'תמונה תיווצר' : 'Image will be generated'}
+                                {t('ai_design_wizard.image_will_be_generated')}
                               </span>
                             </div>
                           )}
@@ -564,7 +521,7 @@ export default function AIDesignWizard({
                                 </div>
                               )}
                               <p className="text-sm text-gray-400 mt-2 line-clamp-2">
-                                {isHebrew ? `פרק ${img.chapterIndex + 1}` : `Chapter ${img.chapterIndex + 1}`}
+                                {t('ai_design_wizard.chapter_num', { num: img.chapterIndex + 1 })}
                                 {' - '}{img.pagePosition}
                               </p>
                             </div>
@@ -572,7 +529,7 @@ export default function AIDesignWizard({
                         </div>
                       ) : (
                         <p className="text-gray-400 text-center py-8">
-                          {isHebrew ? 'לא נבחרו תמונות פנימיות' : 'No interior images selected'}
+                          {t('ai_design_wizard.no_interior_images')}
                         </p>
                       )}
                     </div>
@@ -589,14 +546,14 @@ export default function AIDesignWizard({
                     className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl flex items-center justify-center gap-2 transition-colors"
                   >
                     <RefreshCw className="w-5 h-5" />
-                    {isHebrew ? 'צור מחדש' : 'Regenerate'}
+                    {t('ai_design_wizard.regenerate')}
                   </button>
                   <button
                     onClick={handleApplyDesign}
                     className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl flex items-center justify-center gap-2 transition-all"
                   >
                     <Check className="w-5 h-5" />
-                    {isHebrew ? 'החל עיצוב' : 'Apply Design'}
+                    {t('ai_design_wizard.apply_design')}
                   </button>
                 </div>
               </motion.div>
@@ -616,11 +573,11 @@ export default function AIDesignWizard({
                 </div>
 
                 <h3 className="mt-6 text-xl font-semibold text-red-400">
-                  {isHebrew ? 'שגיאה ביצירת העיצוב' : 'Design Generation Failed'}
+                  {t('ai_design_wizard.design_failed')}
                 </h3>
 
                 <p className="mt-2 text-gray-400 text-center max-w-md">
-                  {error || (isHebrew ? 'אירעה שגיאה לא צפויה' : 'An unexpected error occurred')}
+                  {error || t('ai_design_wizard.unexpected_error')}
                 </p>
 
                 <button
@@ -631,7 +588,7 @@ export default function AIDesignWizard({
                   className="mt-6 px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl flex items-center gap-2 transition-colors"
                 >
                   <RefreshCw className="w-5 h-5" />
-                  {isHebrew ? 'נסה שוב' : 'Try Again'}
+                  {t('ai_design_wizard.try_again')}
                 </button>
               </motion.div>
             )}

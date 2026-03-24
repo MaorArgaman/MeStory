@@ -91,12 +91,19 @@ export default function ImageEditToolbar({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="fixed top-20 left-1/2 -translate-x-1/2 z-[9999] max-w-[95vw]"
-      style={{ direction: isHebrew ? 'rtl' : 'ltr' }}
+      className="fixed top-20 z-[9999] max-w-[95vw] px-2 sm:px-0"
+      style={{
+        direction: isHebrew ? 'rtl' : 'ltr',
+        // RTL-aware positioning using inset-inline-start equivalent
+        left: '50%',
+        transform: 'translateX(-50%)',
+        insetInlineStart: isHebrew ? 'auto' : undefined,
+        insetInlineEnd: isHebrew ? 'auto' : undefined,
+      }}
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
     >
-      <div className="bg-gray-900 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden max-h-[70vh] overflow-y-auto">
+      <div className="bg-gray-900 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden max-h-[70vh] overflow-y-auto w-full max-w-[min(400px,95vw)]">
         {/* Header with tabs */}
         <div className="flex items-center border-b border-gray-700/50">
           {tabs.map((tab) => (
@@ -122,7 +129,7 @@ export default function ImageEditToolbar({
         </div>
 
         {/* Tab Content */}
-        <div className="p-4 w-[350px] max-w-[90vw]">
+        <div className="p-4 w-full sm:w-[350px] max-w-full">
           <AnimatePresence mode="wait">
             {activeTab === 'style' && (
               <motion.div

@@ -14,6 +14,22 @@ import { notifyNewMessage } from '../services/notificationService';
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
+ * BUG-005: HTML escape function to prevent XSS attacks
+ * Escapes dangerous HTML characters in user input
+ */
+const escapeHtml = (text: string): string => {
+  const htmlEscapes: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#x27;',
+    '/': '&#x2F;',
+  };
+  return text.replace(/[&<>"'/]/g, (char) => htmlEscapes[char]);
+};
+
+/**
  * Start or get existing conversation with an author about a book
  * POST /api/messages/conversation
  */
@@ -176,11 +192,14 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
+    // BUG-005: Sanitize content to prevent XSS attacks
+    const sanitizedContent = escapeHtml(content.trim());
+
     // Create message
     const message = await Message.create({
       conversation: conversationId,
       sender: req.user.id,
-      content: content.trim(),
+      content: sanitizedContent,
     });
 
     // Update conversation's last message and unread count
@@ -205,7 +224,7 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
         otherParticipantId,
         req.user!.id,
         conversationId,
-        content.trim(),
+        sanitizedContent,
         bookTitle
       ).catch((err) => console.error('Failed to send message notification:', err));
     }
@@ -213,7 +232,7 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
     // Update conversation with lastMessage and unreadCount
     await Conversation.findByIdAndUpdate(conversationId, {
       lastMessage: {
-        content: content.trim().substring(0, 100),
+        content: sanitizedContent.substring(0, 100),
         sender: req.user.id,
         sentAt: new Date().toISOString(),
       },
@@ -255,8 +274,9 @@ export const getConversations = async (req: AuthRequest, res: Response): Promise
       return;
     }
 
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
+    // SEC-007 FIX: Validate pagination parameters
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
     const skip = (page - 1) * limit;
 
     let conversations = await Conversation.find({

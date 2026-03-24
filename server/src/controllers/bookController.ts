@@ -25,6 +25,7 @@ import {
   sendBookPurchaseEmail,
   sendSaleNotificationToAuthor,
 } from '../services/emailService';
+import { supabaseAdmin } from '../config/supabase';
 
 /**
  * Create a new book
@@ -423,7 +424,8 @@ export const deleteBook = async (req: AuthRequest, res: Response): Promise<void>
     }
 
     // Ensure user owns this book
-    if (book.author !== req.user.id) {
+    // BUG-004: Fix type mismatch by converting both to strings
+    if (book.author.toString() !== req.user.id.toString()) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to delete this book',
@@ -438,6 +440,82 @@ export const deleteBook = async (req: AuthRequest, res: Response): Promise<void>
         error: 'Cannot delete a published book. Unpublish it first.',
       });
       return;
+    }
+
+    // BUG-051 FIX: Cascade delete - delete related records before deleting the book
+    try {
+      // Delete related summaries
+      await supabaseAdmin
+        .from('summaries')
+        .delete()
+        .eq('book_id', id);
+
+      // Delete related conversations linked to this book
+      await supabaseAdmin
+        .from('conversations')
+        .delete()
+        .eq('book_id', id);
+
+      // Delete related notifications referencing this book
+      // Notifications have book_id in their data JSON field, so we need to handle this differently
+      // For now, we'll delete notifications that have this book in their data
+      const { data: notifications } = await supabaseAdmin
+        .from('notifications')
+        .select('id, data')
+        .not('data', 'is', null);
+
+      if (notifications && notifications.length > 0) {
+        const notificationIdsToDelete = notifications
+          .filter((n: any) => n.data?.bookId === id)
+          .map((n: any) => n.id);
+
+        if (notificationIdsToDelete.length > 0) {
+          await supabaseAdmin
+            .from('notifications')
+            .delete()
+            .in('id', notificationIdsToDelete);
+        }
+      }
+
+      // Delete related transactions for this book (book purchases)
+      await supabaseAdmin
+        .from('transactions')
+        .delete()
+        .eq('metadata->>bookId', id);
+
+      // Remove book from users' reading history
+      // This is stored in the user's profile JSON, so we need to update each affected user
+      const { data: usersWithBook } = await supabaseAdmin
+        .from('users')
+        .select('id, profile')
+        .not('profile', 'is', null);
+
+      if (usersWithBook && usersWithBook.length > 0) {
+        for (const userData of usersWithBook) {
+          const profile = userData.profile;
+          if (profile?.readingHistory && Array.isArray(profile.readingHistory)) {
+            const filteredHistory = profile.readingHistory.filter(
+              (item: any) => item.bookId !== id
+            );
+            if (filteredHistory.length !== profile.readingHistory.length) {
+              await supabaseAdmin
+                .from('users')
+                .update({
+                  profile: {
+                    ...profile,
+                    readingHistory: filteredHistory,
+                  },
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', userData.id);
+            }
+          }
+        }
+      }
+
+    } catch (cascadeError) {
+      console.error('Error during cascade delete, continuing with book deletion:', cascadeError);
+      // Continue with book deletion even if cascade operations fail
     }
 
     await Book.findByIdAndDelete(id);

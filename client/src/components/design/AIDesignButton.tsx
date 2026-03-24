@@ -58,7 +58,12 @@ export default function AIDesignButton({
         // Get the template from our local templates
         const template = getTemplateById(data.templateId);
         if (!template) {
-          throw new Error('Invalid template returned from AI');
+          toast.error(
+            language === 'he'
+              ? 'תבנית לא נמצאה. נסה שוב.'
+              : 'Template not found. Please try again.'
+          );
+          return;
         }
 
         // Apply template to current settings

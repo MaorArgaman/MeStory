@@ -62,5 +62,6 @@
     "new_book": "ספר חדש",
     "continue_writing": "המשך לכתוב",
     "view_marketplace": "צפה בחנות"
-  }
+  },
+  "default_chapter_title": "פרק 1"
 }
