@@ -1027,7 +1027,7 @@ export const recordBookView = async (req: Request, res: Response): Promise<void>
     // Increment view count
     const currentStats = book.statistics || { views: 0, purchases: 0, revenue: 0, ratings: [], averageRating: 0 };
     const newViewCount = (currentStats.views || 0) + 1;
-    await Book.update(id, {
+    await Book.findByIdAndUpdate(id, {
       statistics: {
         ...currentStats,
         views: newViewCount,
