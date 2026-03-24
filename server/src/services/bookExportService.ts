@@ -1275,7 +1275,7 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
     new Paragraph({
       children: [
         new TextRun({
-          text: 'כל הזכויות שמורות',
+          text: labels.allRightsReserved,
           size: 20,
           font: bodyFont,
           color: '666666',
@@ -1287,7 +1287,7 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
     new Paragraph({
       children: [
         new TextRun({
-          text: 'נוצר באמצעות MeStory',
+          text: labels.createdWith,
           size: 18,
           font: bodyFont,
           color: '999999',
@@ -1306,7 +1306,7 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
       new Paragraph({
         children: [
           new TextRun({
-            text: 'תוכן עניינים',
+            text: labels.tableOfContents,
             bold: true,
             size: 48,
             font: headingFont,
@@ -1382,7 +1382,7 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
       new Paragraph({
         children: [
           new TextRun({
-            text: `פרק ${chapterIndex + 1}`,
+            text: `${labels.chapter} ${chapterIndex + 1}`,
             size: 28,
             font: bodyFont,
             color: '666666',
@@ -1800,11 +1800,12 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
   // Statistics
   const wordCount = bookData.statistics?.wordCount || 0;
   const chapterCount = bookData.statistics?.chapterCount || bookData.chapters.length;
+  const statsLocale = bookData.language === 'he' ? 'he-IL' : 'en-US';
   backMatter.push(
     new Paragraph({
       children: [
         new TextRun({
-          text: `${wordCount.toLocaleString('he-IL')} מילים • ${chapterCount} פרקים`,
+          text: `${wordCount.toLocaleString(statsLocale)} ${labels.words} • ${chapterCount} ${labels.chapters}`,
           size: 20,
           italics: true,
           font: bodyFont,
@@ -1818,7 +1819,7 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
     new Paragraph({
       children: [
         new TextRun({
-          text: 'נוצר באמצעות MeStory',
+          text: labels.createdWith,
           size: 18,
           font: bodyFont,
           color: '999999',

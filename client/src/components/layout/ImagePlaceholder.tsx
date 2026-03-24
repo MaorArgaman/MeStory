@@ -58,12 +58,13 @@ export default function ImagePlaceholder({
   onImageAdded,
   bookId,
   chapterIndex,
-  pageIndex,
+  pageIndex: _pageIndex,
   bookContext,
   label,
   isRTL = false,
 }: ImagePlaceholderProps) {
   const { t } = useTranslation('common');
+  void _pageIndex; // Reserved for future use
   const [showMenu, setShowMenu] = useState(false);
   const [showAIPrompt, setShowAIPrompt] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);

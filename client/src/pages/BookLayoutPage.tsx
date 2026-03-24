@@ -1280,6 +1280,42 @@ export default function BookLayoutPage() {
     }
   };
 
+  // Handle image added from placeholder
+  const handleImageFromPlaceholder = (pageIndex: number, imageUrl: string, imageData: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    isAiGenerated: boolean;
+    prompt?: string;
+  }) => {
+    if (!pages || pages.length === 0 || !pages[pageIndex]) {
+      console.error('Invalid page index');
+      return;
+    }
+
+    const newImage: PageImage = {
+      id: `img-${Date.now()}`,
+      url: imageUrl,
+      x: imageData.x,
+      y: imageData.y,
+      width: imageData.width,
+      height: imageData.height,
+      rotation: 0,
+    };
+
+    const updatedPages = [...pages];
+    if (!updatedPages[pageIndex].images) {
+      updatedPages[pageIndex].images = [];
+    }
+    updatedPages[pageIndex].images.push(newImage);
+    setPages(updatedPages);
+    setSelectedImageId(newImage.id);
+
+    // Auto-save after adding image
+    saveLayout(true);
+  };
+
   // Add page break / blank page
   const addBlankPage = (afterIndex: number) => {
     // Handle empty pages array
@@ -1686,6 +1722,18 @@ export default function BookLayoutPage() {
                   onStartEditing={handleStartEditing}
                   onFinishEditing={handleFinishEditing}
                   onCancelEditing={handleCancelEditing}
+                  onImageAdded={(imageUrl, imageData) => {
+                    const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
+                    if (idx !== -1) handleImageFromPlaceholder(idx, imageUrl, imageData);
+                  }}
+                  bookId={bookId}
+                  bookContext={book ? {
+                    title: book.title,
+                    genre: book.genre,
+                    chapterTitle: spreadPages.left?.chapterIndex !== undefined
+                      ? book.chapters[spreadPages.left.chapterIndex]?.title
+                      : undefined,
+                  } : undefined}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-300 text-sm">
@@ -1761,6 +1809,18 @@ export default function BookLayoutPage() {
                   onStartEditing={handleStartEditing}
                   onFinishEditing={handleFinishEditing}
                   onCancelEditing={handleCancelEditing}
+                  onImageAdded={(imageUrl, imageData) => {
+                    const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
+                    if (idx !== -1) handleImageFromPlaceholder(idx, imageUrl, imageData);
+                  }}
+                  bookId={bookId}
+                  bookContext={book ? {
+                    title: book.title,
+                    genre: book.genre,
+                    chapterTitle: spreadPages.right?.chapterIndex !== undefined
+                      ? book.chapters[spreadPages.right.chapterIndex]?.title
+                      : undefined,
+                  } : undefined}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-300 text-sm">
