@@ -137,19 +137,52 @@ Respond with ONLY the enhanced prompt:`;
  * Generate image using a placeholder service (can be replaced with actual AI image generation)
  * For production, integrate with DALL-E, Stability AI, Midjourney, etc.
  */
+/**
+ * Simple translation of Hebrew prompt to English (preserves meaning exactly)
+ */
+async function translatePromptToEnglish(prompt: string): Promise<string> {
+  // Check if prompt contains Hebrew characters
+  const hasHebrew = /[\u0590-\u05FF]/.test(prompt);
+
+  if (!hasHebrew) {
+    console.log('🌐 Prompt is already in English');
+    return prompt;
+  }
+
+  console.log('🌐 Translating Hebrew prompt to English...');
+
+  try {
+    const translationPrompt = `Translate this Hebrew text to English.
+IMPORTANT: Translate EXACTLY - do not add, remove, or change anything. Just translate word for word.
+
+Hebrew text: "${prompt}"
+
+Reply with ONLY the English translation, nothing else:`;
+
+    const result = await getGeminiModel().generateContent(translationPrompt);
+    const translated = result.response.text().trim();
+
+    console.log('🌐 Translation result:', translated);
+    return translated;
+  } catch (error) {
+    console.error('🌐 Translation failed, using original:', error);
+    return prompt; // Fallback to original if translation fails
+  }
+}
+
 export async function generateImage(request: ImageGenerationRequest): Promise<ImageGenerationResult> {
   try {
     console.log('🖼️ ====== IMAGE GENERATION STARTED ======');
-    console.log('🖼️ Original prompt (full):', request.prompt);
-    console.log('🖼️ Book context:', JSON.stringify(request.bookContext));
+    console.log('🖼️ Original prompt:', request.prompt);
     console.log('🖼️ Style:', request.style);
     console.log('🖼️ Aspect ratio:', request.aspectRatio);
 
-    // Use user's prompt directly - Pollinations handles Hebrew fine
-    // Only add style modifiers, don't transform the core meaning
-    const userPrompt = request.prompt;
+    // Translate Hebrew to English if needed (simple translation, no enhancement)
+    const translatedPrompt = await translatePromptToEnglish(request.prompt);
+
+    // Add style modifiers without changing the core meaning
     const styleModifier = request.style ? `, ${request.style} style` : ', illustration style';
-    const enhancedPrompt = `${userPrompt}${styleModifier}, high quality, detailed`;
+    const enhancedPrompt = `${translatedPrompt}${styleModifier}, high quality, detailed`;
     console.log('🖼️ Final prompt for image generation:', enhancedPrompt);
 
     // For now, use a placeholder image service
