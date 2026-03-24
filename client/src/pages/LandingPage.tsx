@@ -18,7 +18,7 @@ import {
 import { GlassCard, GlowingButton } from '../components/ui';
 // Use new realistic images from public folder
 const heroBg = '/img/landing-hero-new.png';
-const logoIcon = '/img/logo-horizontal.png';
+const logoIcon = '/img/MeStory-Logo.jpeg';
 
 export default function LandingPage() {
   const { t } = useTranslation();

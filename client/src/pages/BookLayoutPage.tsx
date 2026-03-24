@@ -1620,7 +1620,7 @@ export default function BookLayoutPage() {
               className="hidden sm:flex items-center hover:opacity-80 transition-opacity"
             >
               <img
-                src="/img/logo-horizontal.png"
+                src="/img/MeStory-Logo.jpeg"
                 alt="MeStory"
                 className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.3)]"
               />

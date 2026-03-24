@@ -10,7 +10,7 @@ import _logoIconLegacy from '../assets/images/logo-icon.png';
 
 // Use new realistic images from public folder
 const registerSideImage = '/img/register-hero.png';
-const logoIcon = '/img/logo-stacked.png';
+const logoIcon = '/img/MeStory-Logo.jpeg';
 
 export default function RegisterPage() {
   const { t } = useTranslation('auth');

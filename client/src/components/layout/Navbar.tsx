@@ -9,8 +9,8 @@ import { getUnreadCount as getMessagesUnreadCount } from '../../services/messagi
 import { getUnreadCount as getNotificationsUnreadCount } from '../../services/notificationApi';
 import ConversationsList from '../messaging/ConversationsList';
 import NotificationCenter from '../notifications/NotificationCenter';
-// Use new logo from public folder
-const logoIcon = '/img/logo-horizontal.png';
+// MeStory Logo
+const logoIcon = '/img/MeStory-Logo.jpeg';
 
 export default function Navbar() {
   const { t } = useTranslation('common');
