@@ -145,9 +145,12 @@ export async function generateImage(request: ImageGenerationRequest): Promise<Im
     console.log('🖼️ Style:', request.style);
     console.log('🖼️ Aspect ratio:', request.aspectRatio);
 
-    // Enhance the prompt using Gemini (translates to English if needed)
-    const enhancedPrompt = await generateEnhancedPrompt(request);
-    console.log('🖼️ Enhanced prompt (full):', enhancedPrompt);
+    // Use user's prompt directly - Pollinations handles Hebrew fine
+    // Only add style modifiers, don't transform the core meaning
+    const userPrompt = request.prompt;
+    const styleModifier = request.style ? `, ${request.style} style` : ', illustration style';
+    const enhancedPrompt = `${userPrompt}${styleModifier}, high quality, detailed`;
+    console.log('🖼️ Final prompt for image generation:', enhancedPrompt);
 
     // For now, use a placeholder image service
     // In production, replace this with actual AI image generation API
@@ -598,14 +601,19 @@ async function generateWithPollinationsEnhanced(prompt: string, aspectRatio?: st
   const enhancedPrompt = `${sanitizedPrompt}, professional quality, high resolution, sharp details, no text, no watermarks`;
   const encodedPrompt = encodeURIComponent(enhancedPrompt);
 
-  console.log(`🎨 Pollinations Enhanced: generating with prompt length ${enhancedPrompt.length}`);
+  console.log(`🎨 Pollinations Enhanced: generating with prompt: "${enhancedPrompt.slice(0, 100)}..."`);
+  console.log(`🎨 Encoded prompt length: ${encodedPrompt.length}`);
+
+  // Use unique seed based on prompt hash + timestamp to ensure fresh images
+  const promptHash = prompt.split('').reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) | 0, 0);
+  const baseSeed = Math.abs(promptHash) + Date.now();
 
   // Retry logic with different seeds
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    const seed = Date.now() + attempt * 12345;
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true&enhance=true&model=flux`;
+    const seed = baseSeed + attempt * 12345;
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true&model=flux`;
 
-    console.log(`🎨 Attempt ${attempt}/${maxRetries} generating image (seed: ${seed})`);
+    console.log(`🎨 Attempt ${attempt}/${maxRetries} - Full URL: ${imageUrl.slice(0, 200)}...`);
 
     // Check if running on Vercel - if so, return direct URL (no local storage in serverless)
     const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
