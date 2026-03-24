@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   X,
   ChevronLeft,
@@ -66,6 +67,7 @@ const themes = {
 };
 
 export default function ReaderPage() {
+  const { t } = useTranslation();
   const { bookId } = useParams<{ bookId: string }>();
   const navigate = useNavigate();
 
@@ -211,7 +213,7 @@ export default function ReaderPage() {
   // Start narration
   const startNarration = () => {
     if (!window.speechSynthesis || sentences.length === 0) {
-      toast.error('Narration is not supported in this browser');
+      toast.error(t('reader.narration_not_supported'));
       return;
     }
 
@@ -234,14 +236,14 @@ export default function ReaderPage() {
 
       // Auto-advance to next chapter if available
       if (book?.chapters?.length && currentChapterIndex < book.chapters.length - 1) {
-        toast.success('Chapter finished. Moving to next chapter...');
+        toast.success(t('reader.chapter_finished'));
         setTimeout(() => {
           nextChapter();
           // Will auto-start narration on next chapter
           setTimeout(() => startNarration(), 1000);
         }, 1500);
       } else {
-        toast.success('Narration finished');
+        toast.success(t('reader.narration_finished'));
       }
       return;
     }
@@ -269,7 +271,7 @@ export default function ReaderPage() {
     utterance.onerror = (event) => {
       console.error('Speech error:', event);
       if (event.error !== 'interrupted') {
-        toast.error('Narration error');
+        toast.error(t('reader.narration_error'));
         stopNarration();
       }
     };
@@ -343,7 +345,7 @@ export default function ReaderPage() {
       }
     } catch (error) {
       console.error('Failed to load book:', error);
-      toast.error('Failed to load book');
+      toast.error(t('reader.failed_load_book'));
       navigate('/marketplace');
     } finally {
       setLoading(false);
@@ -371,28 +373,28 @@ export default function ReaderPage() {
   const handleShare = async () => {
     try {
       await navigator.clipboard.writeText(selectedText);
-      toast.success('Text copied to clipboard!');
+      toast.success(t('reader.text_copied'));
       setShowShareButton(false);
       window.getSelection()?.removeAllRanges();
     } catch (error) {
-      toast.error('Failed to copy text');
+      toast.error(t('reader.failed_copy'));
     }
   };
 
   const handleSubmitReview = async () => {
     if (rating === 0) {
-      toast.error('Please select a rating');
+      toast.error(t('reader.select_rating'));
       return;
     }
 
     try {
       // Mock API call
-      toast.success('Thank you for your review!');
+      toast.success(t('reader.thank_you_review'));
       setShowReviewCard(false);
       setRating(0);
       setReviewText('');
     } catch (error) {
-      toast.error('Failed to submit review');
+      toast.error(t('reader.failed_submit_review'));
     }
   };
 
@@ -419,7 +421,7 @@ export default function ReaderPage() {
       <div className="fixed inset-0 flex items-center justify-center bg-deep-space">
         <div className="text-center">
           <BookOpen className="w-16 h-16 text-magic-gold mx-auto mb-4 animate-pulse" />
-          <p className="text-gray-300 text-lg">Loading book...</p>
+          <p className="text-gray-300 text-lg">{t('reader.loading')}</p>
         </div>
       </div>
     );
@@ -554,7 +556,7 @@ export default function ReaderPage() {
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <Palette className="w-5 h-5 text-magic-gold" />
-                  <h3 className="font-display font-semibold text-white">Theme</h3>
+                  <h3 className="font-display font-semibold text-white">{t('reader.theme')}</h3>
                 </div>
                 <div className="space-y-2">
                   <button
@@ -566,7 +568,7 @@ export default function ReaderPage() {
                     }`}
                   >
                     <Moon className="w-5 h-5" />
-                    <span className="font-medium">Dark Space</span>
+                    <span className="font-medium">{t('reader.dark_space')}</span>
                   </button>
                   <button
                     onClick={() => setTheme('old-paper')}
@@ -577,7 +579,7 @@ export default function ReaderPage() {
                     }`}
                   >
                     <Sun className="w-5 h-5" />
-                    <span className="font-medium">Old Paper</span>
+                    <span className="font-medium">{t('reader.old_paper')}</span>
                   </button>
                 </div>
               </div>
@@ -586,7 +588,7 @@ export default function ReaderPage() {
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <Type className="w-5 h-5 text-magic-gold" />
-                  <h3 className="font-display font-semibold text-white">Font</h3>
+                  <h3 className="font-display font-semibold text-white">{t('reader.font')}</h3>
                 </div>
                 <div className="space-y-2">
                   <button
@@ -617,7 +619,7 @@ export default function ReaderPage() {
               {/* Font Size */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-display font-semibold text-white">Font Size</h3>
+                  <h3 className="font-display font-semibold text-white">{t('reader.font_size')}</h3>
                   <span className="text-magic-gold font-bold">{fontSize}px</span>
                 </div>
                 <input
@@ -629,18 +631,18 @@ export default function ReaderPage() {
                   className="w-full accent-magic-gold"
                 />
                 <div className="flex justify-between text-xs text-gray-400 mt-1">
-                  <span>Small</span>
-                  <span>Large</span>
+                  <span>{t('reader.small')}</span>
+                  <span>{t('reader.large')}</span>
                 </div>
               </div>
 
               {/* Chapter Navigation */}
               <div>
                 <h3 className="font-display font-semibold text-white mb-3">
-                  Chapter {currentChapterIndex + 1} of {book.chapters?.length || 0}
+                  {t('reader.chapter_of', { current: currentChapterIndex + 1, total: book.chapters?.length || 0 })}
                 </h3>
                 <div className="text-sm text-gray-400">
-                  {Math.round(progress)}% Complete
+                  {t('reader.complete', { percent: Math.round(progress) })}
                 </div>
               </div>
 
@@ -648,7 +650,7 @@ export default function ReaderPage() {
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <Mic2 className="w-5 h-5 text-magic-gold" />
-                  <h3 className="font-display font-semibold text-white">Narration</h3>
+                  <h3 className="font-display font-semibold text-white">{t('reader.narration')}</h3>
                 </div>
                 {!isNarrating ? (
                   <button
@@ -656,7 +658,7 @@ export default function ReaderPage() {
                     className="w-full px-4 py-3 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium flex items-center justify-center gap-2 hover:from-green-500 hover:to-emerald-500 transition-all"
                   >
                     <Volume2 className="w-5 h-5" />
-                    Start Narration
+                    {t('reader.start_narration')}
                   </button>
                 ) : (
                   <div className="space-y-2">
@@ -667,7 +669,7 @@ export default function ReaderPage() {
                           className="flex-1 px-3 py-2 rounded-lg bg-green-600 text-white flex items-center justify-center gap-1"
                         >
                           <Play className="w-4 h-4" />
-                          Resume
+                          {t('reader.resume')}
                         </button>
                       ) : (
                         <button
@@ -675,7 +677,7 @@ export default function ReaderPage() {
                           className="flex-1 px-3 py-2 rounded-lg bg-yellow-600 text-white flex items-center justify-center gap-1"
                         >
                           <Pause className="w-4 h-4" />
-                          Pause
+                          {t('reader.pause')}
                         </button>
                       )}
                       <button
@@ -686,7 +688,7 @@ export default function ReaderPage() {
                       </button>
                     </div>
                     <div className="text-xs text-gray-400 text-center">
-                      {currentSentenceIndex + 1} / {sentences.length} sentences
+                      {t('reader.sentences', { current: currentSentenceIndex + 1, total: sentences.length })}
                     </div>
                   </div>
                 )}
@@ -716,10 +718,10 @@ export default function ReaderPage() {
               </div>
 
               {/* Playback controls */}
-              <div className="flex items-center justify-center gap-4 mb-4">
+              <div className="flex items-center justify-center gap-2 sm:gap-4 mb-4">
                 <button
                   onClick={skipBackward}
-                  className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                  className="p-3 sm:p-2 rounded-full hover:bg-white/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                   disabled={currentSentenceIndex <= 0}
                 >
                   <SkipBack className="w-5 h-5 text-white" />
@@ -728,14 +730,14 @@ export default function ReaderPage() {
                 {isPaused ? (
                   <button
                     onClick={resumeNarration}
-                    className="p-3 rounded-full bg-green-500 hover:bg-green-600 transition-colors"
+                    className="p-3 rounded-full bg-green-500 hover:bg-green-600 transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center"
                   >
                     <Play className="w-6 h-6 text-white" />
                   </button>
                 ) : (
                   <button
                     onClick={pauseNarration}
-                    className="p-3 rounded-full bg-yellow-500 hover:bg-yellow-600 transition-colors"
+                    className="p-3 rounded-full bg-yellow-500 hover:bg-yellow-600 transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center"
                   >
                     <Pause className="w-6 h-6 text-white" />
                   </button>
@@ -743,14 +745,14 @@ export default function ReaderPage() {
 
                 <button
                   onClick={stopNarration}
-                  className="p-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors"
+                  className="p-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 >
                   <Square className="w-5 h-5 text-white" />
                 </button>
 
                 <button
                   onClick={skipForward}
-                  className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                  className="p-3 sm:p-2 rounded-full hover:bg-white/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                   disabled={currentSentenceIndex >= sentences.length - 1}
                 >
                   <SkipForward className="w-5 h-5 text-white" />
@@ -758,14 +760,14 @@ export default function ReaderPage() {
               </div>
 
               {/* Speed control */}
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-xs text-gray-400">Speed:</span>
-                <div className="flex gap-1">
+              <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+                <span className="text-xs text-gray-400">{t('reader.speed')}</span>
+                <div className="flex gap-1 flex-wrap justify-center">
                   {[0.5, 0.75, 1.0, 1.25, 1.5, 2.0].map((speed) => (
                     <button
                       key={speed}
                       onClick={() => setNarrationSpeed(speed)}
-                      className={`px-2 py-1 text-xs rounded transition-colors ${
+                      className={`min-w-[40px] min-h-[40px] sm:min-w-0 sm:min-h-0 px-2 sm:px-2 py-2 sm:py-1 text-xs rounded transition-colors ${
                         narrationSpeed === speed
                           ? 'bg-magic-gold text-black font-bold'
                           : 'bg-white/10 text-gray-300 hover:bg-white/20'
@@ -780,11 +782,11 @@ export default function ReaderPage() {
               {/* Voice selection */}
               {availableVoices.length > 0 && (
                 <div className="mt-3 flex items-center justify-center gap-2">
-                  <span className="text-xs text-gray-400">Voice:</span>
+                  <span className="text-xs text-gray-400">{t('reader.voice')}</span>
                   <select
                     value={selectedVoice}
                     onChange={(e) => setSelectedVoice(e.target.value)}
-                    className="text-xs bg-white/10 border border-white/20 rounded px-2 py-1 text-white max-w-[150px]"
+                    className="text-xs bg-white/10 border border-white/20 rounded px-2 py-2 sm:py-1 text-white max-w-[150px] min-h-[40px] sm:min-h-0"
                   >
                     {availableVoices.map((voice) => (
                       <option key={voice.name} value={voice.name} className="bg-gray-800">
@@ -798,7 +800,7 @@ export default function ReaderPage() {
               {/* Current sentence indicator */}
               <div className="mt-3 text-center">
                 <span className="text-xs text-gray-400">
-                  Sentence {currentSentenceIndex + 1} of {sentences.length}
+                  {t('reader.sentence_of', { current: currentSentenceIndex + 1, total: sentences.length })}
                 </span>
               </div>
             </GlassCard>
@@ -869,7 +871,7 @@ export default function ReaderPage() {
                   style={{ borderColor: `${currentTheme.accent}40` }}
                 >
                   <p className="text-center text-sm opacity-50" style={{ color: currentTheme.text }}>
-                    End of Chapter {currentChapterIndex + 1}
+                    {t('reader.end_of_chapter', { chapter: currentChapterIndex + 1 })}
                   </p>
                 </motion.div>
 
