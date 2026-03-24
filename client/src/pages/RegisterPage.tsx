@@ -2,9 +2,15 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import { Mail, Lock, User, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, Loader2, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
-import logoIcon from '../assets/images/logo-icon.png';
+// Legacy imports - keeping for fallback
+import _registerSideImageLegacy from '../assets/images/login-side-image.png';
+import _logoIconLegacy from '../assets/images/logo-icon.png';
+
+// Use new realistic images from public folder
+const registerSideImage = '/img/register-side.png';
+const logoIcon = '/img/logo-stacked.png';
 
 export default function RegisterPage() {
   const { t } = useTranslation('auth');
@@ -53,30 +59,80 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+      {/* Left Column - Side Image (hidden on mobile) */}
+      <div
+        className="hidden lg:block relative bg-cover bg-center"
+        style={{ backgroundImage: `url(${registerSideImage})` }}
       >
-        {/* Logo/Title */}
-        <div className="text-center mb-8">
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-deep-space/80 via-deep-space/40 to-transparent" />
+
+        {/* Decorative Content */}
+        <div className="absolute inset-0 flex flex-col justify-center p-12">
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-            className="inline-block mb-4"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
           >
-            <img
-              src={logoIcon}
-              alt="MeStory"
-              className="h-20 w-auto object-contain drop-shadow-lg"
-            />
+            <h2 className="text-5xl font-bold text-white mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
+              {t('register.side_title_1', 'Start Your')}
+              <br />
+              <span className="gradient-gold">{t('register.side_title_2', 'Writing Journey')}</span>
+            </h2>
+            <p className="text-xl text-gray-300 max-w-md">
+              {t('register.side_description', 'Join thousands of authors who turned their ideas into published books')}
+            </p>
           </motion.div>
-          <h1 className="text-4xl font-bold gradient-text mb-2">MeStory</h1>
-          <p className="text-gray-400">{t('register.subtitle')}</p>
+
+          {/* Floating Sparkles */}
+          <div className="absolute bottom-20 left-12">
+            {[...Array(3)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute"
+                style={{ left: `${i * 40}px` }}
+                animate={{
+                  y: [0, -15, 0],
+                  opacity: [0.5, 1, 0.5],
+                }}
+                transition={{
+                  duration: 2 + i * 0.5,
+                  repeat: Infinity,
+                  delay: i * 0.3,
+                }}
+              >
+                <Sparkles className="w-6 h-6 text-magic-gold" />
+              </motion.div>
+            ))}
+          </div>
         </div>
+      </div>
+
+      {/* Right Column - Register Form */}
+      <div className="flex flex-col justify-center items-center p-8 bg-deep-space overflow-y-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md"
+        >
+          {/* Logo/Title */}
+          <div className="text-center mb-6">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+              className="inline-block mb-4"
+            >
+              <img
+                src={logoIcon}
+                alt="MeStory"
+                className="h-16 w-auto object-contain drop-shadow-lg"
+              />
+            </motion.div>
+            <p className="text-gray-400">{t('register.subtitle')}</p>
+          </div>
 
         {/* Register Card */}
         <div className="card glow">
@@ -260,11 +316,12 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-xs text-gray-600 mt-8">
-          {t('register.footer')}
-        </p>
-      </motion.div>
+          {/* Footer */}
+          <p className="text-center text-xs text-gray-600 mt-6">
+            {t('register.footer')}
+          </p>
+        </motion.div>
+      </div>
     </div>
   );
 }

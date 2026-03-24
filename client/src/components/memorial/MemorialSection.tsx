@@ -48,6 +48,10 @@ function CategoryCard({ title, description, icon, onClick, subcategories }: Cate
   );
 }
 
+// Memorial images from public folder
+const memorialHeroImage = '/img/memorial-hero.png';
+const memorialFamilyImage = '/img/memorial-family.png';
+
 export default function MemorialSection() {
   const { t } = useTranslation('memorial');
   const navigate = useNavigate();
@@ -60,6 +64,22 @@ export default function MemorialSection() {
 
   return (
     <section className="memorial-theme py-12">
+      {/* Hero Image */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="mb-8 rounded-2xl overflow-hidden max-w-4xl mx-auto"
+      >
+        <div className="relative h-48 sm:h-64">
+          <img
+            src={memorialHeroImage}
+            alt="Preserving Memories"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/50 to-transparent" />
+        </div>
+      </motion.div>
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

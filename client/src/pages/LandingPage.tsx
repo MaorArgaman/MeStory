@@ -16,8 +16,9 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { GlassCard, GlowingButton } from '../components/ui';
-import heroBg from '../assets/images/hero-bg.jpg';
-import logoIcon from '../assets/images/logo-icon.png';
+// Use new realistic images from public folder
+const heroBg = '/img/hero-writing.png';
+const logoIcon = '/img/logo-horizontal.png';
 
 export default function LandingPage() {
   const { t } = useTranslation();

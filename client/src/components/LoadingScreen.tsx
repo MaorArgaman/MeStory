@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import logoIcon from '../assets/images/logo-icon.png';
+// Use new logo from public folder
+const logoIcon = '/img/logo-stacked.png';
 
 /**
  * Loading Screen Component

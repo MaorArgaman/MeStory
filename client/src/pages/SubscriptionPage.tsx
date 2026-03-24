@@ -130,6 +130,13 @@ export default function SubscriptionPage() {
     }
   };
 
+  // Tier images from public folder
+  const tierImages: Record<string, string> = {
+    free: '/img/tier-free.png',
+    standard: '/img/tier-standard.png',
+    premium: '/img/tier-premium.png',
+  };
+
   const getPlanIcon = (planId: string) => {
     switch (planId) {
       case 'free':
@@ -142,6 +149,8 @@ export default function SubscriptionPage() {
         return <Star className="w-8 h-8" />;
     }
   };
+
+  const getPlanImage = (planId: string) => tierImages[planId] || tierImages.free;
 
   const isPremiumPlan = (planId: string) => planId === 'premium';
   const isCurrentPlan = (tier: string) => user?.role === tier;
@@ -198,7 +207,7 @@ export default function SubscriptionPage() {
                 )}
 
                 <div
-                  className={`glass-strong rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 h-full flex flex-col transition-all duration-300 ${
+                  className={`glass-strong rounded-xl sm:rounded-2xl overflow-hidden h-full flex flex-col transition-all duration-300 ${
                     premium
                       ? 'border-2 border-yellow-500/50 shadow-2xl shadow-yellow-500/20'
                       : 'border border-white/10'
@@ -206,18 +215,29 @@ export default function SubscriptionPage() {
                     current ? 'ring-2 ring-indigo-500' : ''
                   }`}
                 >
-                  {/* Plan Icon */}
-                  <div
-                    className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-lg sm:rounded-xl flex items-center justify-center mb-4 sm:mb-6 ${
-                      premium
-                        ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-gray-900 shadow-lg shadow-yellow-500/30'
-                        : plan.id === 'standard'
-                        ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white'
-                        : 'bg-gray-700 text-gray-300'
-                    }`}
-                  >
-                    {getPlanIcon(plan.id)}
+                  {/* Plan Image */}
+                  <div className="relative h-32 sm:h-40 overflow-hidden">
+                    <img
+                      src={getPlanImage(plan.id)}
+                      alt={plan.id}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-transparent to-transparent" />
+                    {/* Plan Icon Overlay */}
+                    <div
+                      className={`absolute bottom-3 left-4 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center ${
+                        premium
+                          ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-gray-900 shadow-lg shadow-yellow-500/30'
+                          : plan.id === 'standard'
+                          ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white'
+                          : 'bg-gray-700 text-gray-300'
+                      }`}
+                    >
+                      {getPlanIcon(plan.id)}
+                    </div>
                   </div>
+
+                  <div className="p-4 sm:p-6 flex-1 flex flex-col">
 
                   {/* Plan Name */}
                   <h3
@@ -314,6 +334,7 @@ export default function SubscriptionPage() {
                       )}
                     </button>
                   )}
+                  </div>
                 </div>
               </motion.div>
             );

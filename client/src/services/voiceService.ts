@@ -4,6 +4,7 @@
  */
 
 import api from './api';
+import { compressAudio, needsCompression } from '../utils/audioCompression';
 
 // Types
 export interface InterviewResponse {
@@ -118,7 +119,13 @@ export async function processInterviewResponse(
   formData.append('interviewId', interviewId);
 
   if (options.audioBlob) {
-    formData.append('audio', options.audioBlob, 'recording.webm');
+    // Compress audio if needed before upload
+    let audioToUpload = options.audioBlob;
+    if (needsCompression(options.audioBlob)) {
+      console.log('Compressing audio before upload...');
+      audioToUpload = await compressAudio(options.audioBlob);
+    }
+    formData.append('audio', audioToUpload, 'recording.wav');
   }
 
   if (options.textResponse) {
@@ -195,8 +202,15 @@ export async function cancelInterview(interviewId: string): Promise<void> {
  * Transcribe audio file only (no interview processing)
  */
 export async function transcribeAudio(audioBlob: Blob): Promise<TranscribeResult> {
+  // Compress audio if needed before upload
+  let audioToUpload = audioBlob;
+  if (needsCompression(audioBlob)) {
+    console.log('Compressing audio before transcription...');
+    audioToUpload = await compressAudio(audioBlob);
+  }
+
   const formData = new FormData();
-  formData.append('audio', audioBlob, 'recording.webm');
+  formData.append('audio', audioToUpload, 'recording.wav');
 
   const response = await api.post('/voice/transcribe', formData, {
     headers: {

@@ -11,14 +11,16 @@ import CreateBookWizard from '../components/dashboard/CreateBookWizard';
 import InterviewWizard from '../components/dashboard/InterviewWizard';
 import VoiceInterviewWizard from '../components/interview/VoiceInterviewWizard';
 import { saveInterviewToBook, InterviewSummary, InterviewResponse } from '../services/voiceService';
+import { compressAudio, needsCompression, formatFileSize } from '../utils/audioCompression';
 import {
   ContinueReading,
   ContinueWriting,
   RecommendedForYou,
 } from '../components/recommendations';
-import emptyDashboard from '../assets/images/empty-dashboard.png';
 import MemorialSection from '../components/memorial/MemorialSection';
-// Dashboard branded images
+
+// Realistic dashboard images
+import emptyDashboard from '../assets/images/empty-dashboard.png';
 import dashboardIconScratch from '../assets/images/dashboard-icon-scratch.png';
 import dashboardIconInterview from '../assets/images/dashboard-icon-interview.png';
 import dashboardIconVoice from '../assets/images/dashboard-icon-voice.png';
@@ -263,8 +265,18 @@ export default function DashboardPage() {
     try {
       toast.loading(t('dashboard.messages.transcribing_audio'), { id: 'audio-transcribe' });
 
+      // Compress audio if needed (Vercel has 4.5MB limit)
+      let audioToUpload: Blob = file;
+      if (needsCompression(file)) {
+        toast.loading('Compressing audio...', { id: 'audio-transcribe' });
+        console.log(`Compressing audio: ${formatFileSize(file.size)}`);
+        audioToUpload = await compressAudio(file);
+        console.log(`Compressed to: ${formatFileSize(audioToUpload.size)}`);
+        toast.loading(t('dashboard.messages.transcribing_audio'), { id: 'audio-transcribe' });
+      }
+
       const formData = new FormData();
-      formData.append('audio', file);
+      formData.append('audio', audioToUpload, 'recording.wav');
       formData.append('title', file.name.replace(/\.[^/.]+$/, '')); // Remove extension
       formData.append('genre', 'Fiction'); // Default genre
 

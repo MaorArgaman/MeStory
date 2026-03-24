@@ -4,8 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { Sparkles, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
-import loginSideImage from '../assets/images/login-side-image.png';
-import logoIcon from '../assets/images/logo-icon.png';
+// Legacy imports - keeping for fallback
+import _loginSideImageLegacy from '../assets/images/login-side-image.png';
+import _logoIconLegacy from '../assets/images/logo-icon.png';
+
+// Use new realistic images from public folder
+const loginSideImage = '/img/login-side.png';
+const logoIcon = '/img/logo-stacked.png';
 
 export default function LoginPage() {
   const { t } = useTranslation('auth');

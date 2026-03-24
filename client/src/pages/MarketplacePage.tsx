@@ -12,9 +12,21 @@ import {
   TrendingBooks,
   FeaturedBooks,
 } from '../components/recommendations';
+// Use images from public folder - old banners kept as fallback
 import fantasyBanner from '../assets/images/fantasy-banner.png';
 import scifiBanner from '../assets/images/marketplace-banner-scifi.png';
 import mysteryBanner from '../assets/images/marketplace-banner-mystery.png';
+
+// New realistic genre banners
+const genreBanners: Record<string, string> = {
+  'Romance': '/img/genre-romance.png',
+  'Children': '/img/genre-children.png',
+  'Biography': '/img/genre-biography.png',
+  'Self-Help': '/img/genre-selfhelp.png',
+  'Fantasy': fantasyBanner,
+  'Sci-Fi': scifiBanner,
+  'Mystery': mysteryBanner,
+};
 
 // Check if user is logged in
 const isAuthenticated = () => !!localStorage.getItem('token');

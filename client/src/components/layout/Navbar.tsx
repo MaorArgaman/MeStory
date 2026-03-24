@@ -9,7 +9,8 @@ import { getUnreadCount as getMessagesUnreadCount } from '../../services/messagi
 import { getUnreadCount as getNotificationsUnreadCount } from '../../services/notificationApi';
 import ConversationsList from '../messaging/ConversationsList';
 import NotificationCenter from '../notifications/NotificationCenter';
-import logoIcon from '../../assets/images/logo-icon.png';
+// Use new logo from public folder
+const logoIcon = '/img/logo-horizontal.png';
 
 export default function Navbar() {
   const { t } = useTranslation('common');
