@@ -24,6 +24,7 @@ import {
   updatePageImages,
   shareBook,
   getBookSocialStats,
+  recordBookView,
 } from '../controllers/bookController';
 import { upload, uploadImage, uploadAudio as uploadAudioMiddleware } from '../middleware/uploadMiddleware';
 import { authenticate } from '../middleware/auth';
@@ -46,6 +47,9 @@ router.get('/public', getPublicBooks as any);
 
 // GET /api/books/:id/reviews - Get all reviews for a book
 router.get('/:id/reviews', runValidation(mongoIdValidation), getBookReviews as any);
+
+// POST /api/books/:id/view - Record a book view (public)
+router.post('/:id/view', runValidation(mongoIdValidation), recordBookView as any);
 
 // Apply authentication to all remaining book routes
 router.use(authenticate as any);

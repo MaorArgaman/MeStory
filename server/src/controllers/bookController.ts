@@ -996,6 +996,59 @@ export const getPublicBooks = async (req: Request, res: Response): Promise<void>
 };
 
 /**
+ * Record a book view
+ * POST /api/books/:id/view
+ * Section 8: Marketplace - View tracking
+ */
+export const recordBookView = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    // Validate UUID
+    if (!isValidUUID(id)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid book ID',
+      });
+      return;
+    }
+
+    // Find book
+    const book = await Book.findById(id);
+
+    if (!book) {
+      res.status(404).json({
+        success: false,
+        error: 'Book not found',
+      });
+      return;
+    }
+
+    // Increment view count
+    const newViewCount = (book.statistics?.views || 0) + 1;
+    await Book.update(id, {
+      statistics: {
+        ...book.statistics,
+        views: newViewCount,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        views: newViewCount,
+      },
+    });
+  } catch (error) {
+    console.error('Record view error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to record view',
+    });
+  }
+};
+
+/**
  * Export book as PDF
  * GET /api/books/:id/export
  * Section 16.1: PDF Export (Legacy endpoint - redirects to new format)
