@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { GlassCard, GlowingButton } from '../components/ui';
 // Use new realistic images from public folder
-const heroBg = '/img/hero-writing.png';
+const heroBg = '/img/landing-hero.png';
 const logoIcon = '/img/logo-horizontal.png';
 
 export default function LandingPage() {
@@ -41,7 +41,7 @@ export default function LandingPage() {
   const features = [
     {
       icon: Zap,
-      image: '/img/hero-writing.png',
+      image: '/img/writing-process.png',
       titleKey: 'landing.features.ai_copilot.title',
       descriptionKey: 'landing.features.ai_copilot.description',
       color: 'from-yellow-400 to-yellow-600',
@@ -49,7 +49,7 @@ export default function LandingPage() {
     },
     {
       icon: Palette,
-      image: '/img/feature-cover-design.png',
+      image: '/img/feature-cover-studio.png',
       titleKey: 'landing.features.cover_studio.title',
       descriptionKey: 'landing.features.cover_studio.description',
       color: 'from-purple-400 to-purple-600',
@@ -57,7 +57,7 @@ export default function LandingPage() {
     },
     {
       icon: Globe,
-      image: '/img/feature-marketplace.png',
+      image: '/img/young-writers.png',
       titleKey: 'landing.features.marketplace.title',
       descriptionKey: 'landing.features.marketplace.description',
       color: 'from-blue-400 to-blue-600',
@@ -68,21 +68,27 @@ export default function LandingPage() {
   // Success stories with real images
   const successStories = [
     {
-      image: '/img/success-author1.png',
-      name: 'Sarah Jenkins',
-      book: 'Midnight Tides',
-      quote: 'MeStory helped me publish my first novel in just 3 months!',
+      image: '/img/grandmother-author.png',
+      name: 'מרגרט לוי',
+      book: 'המסע שלי',
+      quote: 'בגיל 68 הגשמתי חלום - פרסמתי את סיפור חיי. אם אני יכולה, גם אתם יכולים!',
     },
     {
-      image: '/img/success-journey.png',
-      name: 'The Writing Journey',
-      book: 'From Draft to Published',
-      quote: 'See how ideas transform into published books.',
+      image: '/img/author-portrait.png',
+      name: 'רות כהן',
+      book: 'שירי החזית',
+      quote: 'כתבתי את סיפור המשפחה שלי ועכשיו הנכדים קוראים אותו. רגע מרגש!',
+    },
+    {
+      image: '/img/launch-day.png',
+      name: 'שרה ג׳נקינס',
+      book: 'הנתיב המפותל',
+      quote: 'מהרעיון הראשון ועד למחסן מלא בספרים - היום הספר שלי זמין בכל העולם!',
     },
   ];
 
   // Community image
-  const communityImage = '/img/community-writers.png';
+  const communityImage = '/img/community-group.png';
 
   const stats = [
     { icon: Users, value: '50K+', labelKey: 'landing.stats.active_authors' },
