@@ -363,6 +363,22 @@ export default function ReaderPage() {
     }
   };
 
+  // Get current chapter (original or translated)
+  const getCurrentChapter = () => {
+    if (showTranslation && translatedBook) {
+      return translatedBook.chapters[currentChapterIndex];
+    }
+    return book?.chapters?.[currentChapterIndex];
+  };
+
+  // Get current book title (original or translated)
+  const getCurrentTitle = () => {
+    if (showTranslation && translatedBook) {
+      return translatedBook.title;
+    }
+    return book?.title || '';
+  };
+
   const currentChapter = getCurrentChapter();
   const displayTitle = getCurrentTitle();
   const progress = book?.chapters?.length ? ((currentChapterIndex + 1) / book.chapters.length) * 100 : 0;
@@ -465,22 +481,6 @@ export default function ReaderPage() {
     } finally {
       setIsTranslating(false);
     }
-  };
-
-  // Get current chapter (original or translated)
-  const getCurrentChapter = () => {
-    if (showTranslation && translatedBook) {
-      return translatedBook.chapters[currentChapterIndex];
-    }
-    return book?.chapters?.[currentChapterIndex];
-  };
-
-  // Get current book title (original or translated)
-  const getCurrentTitle = () => {
-    if (showTranslation && translatedBook) {
-      return translatedBook.title;
-    }
-    return book?.title || '';
   };
 
   const pageVariants = {
