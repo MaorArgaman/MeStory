@@ -194,10 +194,10 @@ export default function LoginPage() {
 
             {/* Google Sign-In Button */}
             <div
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                window.location.assign('https://me-story-server-7wdx.vercel.app/api/auth/google');
+              onClick={() => {
+                console.log('Google button clicked!');
+                alert('Redirecting to Google...');
+                window.location.href = 'https://me-story-server-7wdx.vercel.app/api/auth/google';
               }}
               role="button"
               tabIndex={0}
