@@ -128,7 +128,7 @@ export default function RegisterPage() {
               <img
                 src={logoIcon}
                 alt="MeStory"
-                className="h-24 sm:h-28 w-auto object-contain drop-shadow-[0_4px_20px_rgba(255,215,0,0.4)] mix-blend-lighten"
+                className="h-24 sm:h-28 w-auto object-contain drop-shadow-[0_4px_20px_rgba(255,215,0,0.4)] "
               />
             </motion.div>
             <p className="text-gray-400">{t('register.subtitle')}</p>

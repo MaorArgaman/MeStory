@@ -101,7 +101,7 @@ export default function Navbar() {
                 <img
                   src={logoIcon}
                   alt="MeStory"
-                  className="h-10 sm:h-11 lg:h-12 w-auto object-contain drop-shadow-[0_2px_12px_rgba(255,215,0,0.4)] mix-blend-lighten"
+                  className="h-10 sm:h-11 lg:h-12 w-auto object-contain drop-shadow-[0_2px_12px_rgba(255,215,0,0.4)] "
                 />
               </motion.div>
             </Link>

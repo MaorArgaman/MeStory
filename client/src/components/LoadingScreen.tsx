@@ -23,7 +23,7 @@ export default function LoadingScreen() {
             <img
               src={logoIcon}
               alt="MeStory"
-              className="w-full h-full object-contain drop-shadow-[0_4px_30px_rgba(255,215,0,0.5)] mix-blend-lighten"
+              className="w-full h-full object-contain drop-shadow-[0_4px_30px_rgba(255,215,0,0.5)] "
             />
           </div>
         </motion.div>
