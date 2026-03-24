@@ -21,6 +21,9 @@ import {
 import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton } from '../components/ui';
 
+// Library hero image - bookshelf
+const libraryHero = '/img/library-hero.png';
+
 interface BookItem {
   _id: string;
   title: string;
@@ -661,8 +664,13 @@ export default function LibraryPage() {
 
   return (
     <div className="min-h-screen relative">
-      {/* Header */}
+      {/* Header with Hero Image */}
       <div className="relative overflow-hidden py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
+        {/* Hero Background Image */}
+        <div className="absolute inset-0">
+          <img src={libraryHero} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-deep-space/70 via-deep-space/80 to-deep-space" />
+        </div>
         <div
           className="absolute inset-0 opacity-20"
           style={{

@@ -238,11 +238,24 @@ export default function BookDesignPage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white" dir={isHebrew ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <header className="bg-gray-800/80 backdrop-blur-sm border-b border-gray-700 sticky top-0 z-50">
+      <header className="glass-strong border-b border-magic-gold/20 sticky top-0 z-50">
         <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between">
             {/* Left side */}
             <div className="flex items-center gap-2 sm:gap-4">
+              {/* Logo */}
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center hover:opacity-80 transition-opacity"
+              >
+                <img
+                  src="/img/logo-horizontal.png"
+                  alt="MeStory"
+                  className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.3)]"
+                />
+              </button>
+              <div className="hidden sm:block h-6 w-px bg-magic-gold/30" />
               <button
                 type="button"
                 onClick={goToEditor}

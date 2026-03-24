@@ -14,6 +14,9 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+// Pricing hero image showing Investment → Work → Return
+const pricingHero = '/img/subscription-hero.png';
+
 interface Plan {
   id: string;
   tier: string;
@@ -164,21 +167,32 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 md:p-8">
-      <div className="max-w-7xl mx-auto pt-16 sm:pt-20">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8 sm:mb-12"
-        >
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4">
-            Choose Your Writing Journey
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl text-gray-300 px-4">
-            Unlock powerful AI tools to bring your stories to life
-          </p>
-        </motion.div>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden pt-20 pb-8 sm:pt-24 sm:pb-12">
+        <div className="absolute inset-0">
+          <img src={pricingHero} alt="" className="w-full h-full object-cover object-top" />
+          <div className="absolute inset-0 bg-gradient-to-b from-deep-space/60 via-deep-space/80 to-deep-space" />
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-8 sm:mb-12"
+          >
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4">
+              Choose Your Writing Journey
+            </h1>
+            <p className="text-base sm:text-lg md:text-xl text-gray-300 px-4">
+              Unlock powerful AI tools to bring your stories to life
+            </p>
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="p-4 sm:p-6 md:p-8">
+      <div className="max-w-7xl mx-auto">
 
         {/* Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-6xl mx-auto">
@@ -355,6 +369,7 @@ export default function SubscriptionPage() {
             Cancel anytime • No long-term commitments • Secure payment
           </p>
         </motion.div>
+      </div>
       </div>
     </div>
   );

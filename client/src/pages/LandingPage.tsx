@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { GlassCard, GlowingButton } from '../components/ui';
 // Use new realistic images from public folder
-const heroBg = '/img/landing-hero.png';
+const heroBg = '/img/landing-hero-new.png';
 const logoIcon = '/img/logo-horizontal.png';
 
 export default function LandingPage() {
@@ -68,10 +68,10 @@ export default function LandingPage() {
   // Success stories with real images
   const successStories = [
     {
-      image: '/img/grandmother-author.png',
-      name: 'מרגרט לוי',
-      book: 'המסע שלי',
-      quote: 'בגיל 68 הגשמתי חלום - פרסמתי את סיפור חיי. אם אני יכולה, גם אתם יכולים!',
+      image: '/img/success-author.png',
+      name: 'Sarah Jenkins',
+      book: 'The Whispering Oak',
+      quote: 'From first draft to bookstore shelf - my book now stands in the Local Authors section. MeStory made it possible!',
     },
     {
       image: '/img/author-portrait.png',
@@ -81,9 +81,9 @@ export default function LandingPage() {
     },
     {
       image: '/img/launch-day.png',
-      name: 'שרה ג׳נקינס',
-      book: 'הנתיב המפותל',
-      quote: 'מהרעיון הראשון ועד למחסן מלא בספרים - היום הספר שלי זמין בכל העולם!',
+      name: 'מרגרט לוי',
+      book: 'המסע שלי',
+      quote: 'בגיל 68 הגשמתי חלום - פרסמתי את סיפור חיי. אם אני יכולה, גם אתם יכולים!',
     },
   ];
 
@@ -105,22 +105,20 @@ export default function LandingPage() {
         animate={{ y: 0, opacity: 1 }}
         className="fixed top-0 left-0 right-0 z-50 w-full"
       >
-        <div className="glass-strong border-b border-white/10 shadow-lg shadow-black/30 backdrop-blur-2xl">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between">
+        <div className="glass-strong border-b-2 border-magic-gold/30 shadow-lg shadow-magic-gold/10 backdrop-blur-2xl bg-gradient-to-r from-[#0a0a12] via-[#0d0d18] to-[#0a0a12]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             {/* Logo */}
             <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-2 sm:gap-3 cursor-pointer"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+              className="cursor-pointer -my-1"
               onClick={() => navigate('/')}
             >
               <img
                 src={logoIcon}
                 alt="MeStory"
-                className="h-8 sm:h-10 lg:h-12 w-auto object-contain drop-shadow-lg"
+                className="h-16 sm:h-[72px] lg:h-20 w-auto object-contain drop-shadow-[0_2px_20px_rgba(255,215,0,0.5)]"
               />
-              <span className="text-lg sm:text-xl lg:text-2xl font-bold gradient-gold" style={{ fontFamily: "'Cinzel', serif" }}>
-                MeStory
-              </span>
             </motion.div>
 
             {/* CTA Buttons */}

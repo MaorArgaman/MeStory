@@ -106,10 +106,9 @@ export default function LoginPage() {
               <img
                 src={logoIcon}
                 alt="MeStory"
-                className="h-20 w-auto object-contain drop-shadow-lg"
+                className="h-28 sm:h-32 w-auto object-contain drop-shadow-[0_4px_20px_rgba(255,215,0,0.4)]"
               />
             </motion.div>
-            <h1 className="text-4xl font-bold gradient-text mb-2">MeStory</h1>
             <p className="text-gray-400">{t('login.tagline')}</p>
           </div>
 

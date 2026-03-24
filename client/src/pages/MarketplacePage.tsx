@@ -25,9 +25,10 @@ const genreBanners: Record<string, string> = {
   'Historical': '/img/genre-biography.png',
   'Thriller': '/img/genre-mystery.png',
   'Horror': '/img/genre-mystery.png',
-  'Literary Fiction': '/img/genre-selfhelp.png',
+  'Literary Fiction': '/img/genre-classic.png',
   'Adventure': '/img/genre-fantasy.png',
 };
+const marketplaceHero = '/img/marketplace-hero.png';
 
 // Check if user is logged in
 const isAuthenticated = () => !!localStorage.getItem('token');
@@ -243,8 +244,13 @@ export default function MarketplacePage() {
 
   return (
     <div className="min-h-screen relative">
-      {/* Hero Section with Animated Background */}
+      {/* Hero Section with Background Image */}
       <div className="relative overflow-hidden py-16 sm:py-24 md:py-32 px-4 sm:px-6 md:px-8">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img src={marketplaceHero} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-deep-space/80 via-deep-space/70 to-deep-space" />
+        </div>
         {/* Floating Book Icons Background - hide some on mobile */}
         <div className="absolute inset-0 pointer-events-none hidden sm:block">
           {[...Array(8)].map((_, i) => (

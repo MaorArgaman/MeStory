@@ -19,31 +19,21 @@ export default function LoadingScreen() {
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <div className="w-28 h-28 mx-auto rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/50">
+          <div className="w-48 h-48 mx-auto flex items-center justify-center">
             <img
               src={logoIcon}
               alt="MeStory"
-              className="w-full h-full object-contain drop-shadow-2xl"
+              className="w-full h-full object-contain drop-shadow-[0_4px_30px_rgba(255,215,0,0.5)]"
             />
           </div>
         </motion.div>
-
-        {/* App Name */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="text-4xl font-bold gradient-text mb-4"
-        >
-          MeStory
-        </motion.h1>
 
         {/* Tagline */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="text-gray-300 mb-8"
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="text-gray-300 mb-8 text-lg"
         >
           AI-Powered Book Writing Platform
         </motion.p>

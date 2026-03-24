@@ -392,8 +392,8 @@
   },
   "landing": {
     "hero": {
-      "title": "Unleash Your Inner Author",
-      "subtitle": "Write, design, and publish professional books with AI assistance. Join thousands of authors earning from their stories on the world's most magical publishing platform.",
+      "title": "Your Story Deserves to Be Heard",
+      "subtitle": "Write, publish, and earn from your story. Digital books for instant sales + export to mass printing at publishing houses. Everyone has a story - now everyone can tell it.",
       "cta_primary": "Start Writing for Free",
       "cta_secondary": "Explore Books"
     },
@@ -403,19 +403,19 @@
       "authors_trust": "50,000+ Authors Trust Us"
     },
     "features": {
-      "title": "Everything You Need to Succeed",
-      "subtitle": "From your first word to your first sale, MeStory provides professional-grade tools that make book publishing accessible to everyone.",
+      "title": "From Idea to Digital & Printed Book",
+      "subtitle": "Write with AI assistance, publish to the digital store, and export for mass printing. Sales pay back your subscription cost - and beyond.",
       "ai_copilot": {
         "title": "AI Co-Pilot",
         "description": "Never face writer's block again. Our Gemini-powered AI assists you with plot development, character creation, and real-time writing suggestions."
       },
       "cover_studio": {
-        "title": "3D Cover Studio",
-        "description": "Transform your manuscript into a professional book with AI-generated covers, customizable layouts, and print-ready export capabilities."
+        "title": "Digital + Print Studio",
+        "description": "Create digital books for online sales AND export print-ready files for mass production at any publishing house or print shop."
       },
       "marketplace": {
-        "title": "Global Marketplace",
-        "description": "Publish and sell your books to readers worldwide. Set your own price, earn 50% revenue share, and build your author brand with our social features."
+        "title": "Sell & Earn Back",
+        "description": "Sell your digital books in our marketplace and earn back your subscription cost - and more. Set your price, keep 50% of every sale."
       },
       "learn_more": "Learn More"
     },
@@ -426,8 +426,8 @@
       "author_earnings": "Author Earnings"
     },
     "community": {
-      "title": "Join a Thriving Community",
-      "subtitle": "Writers from around the world are already creating, publishing, and earning with MeStory."
+      "title": "Everyone Has a Story",
+      "subtitle": "Grandmothers sharing life stories, survivors preserving memories, young creators building new worlds. Your voice matters."
     },
     "cta": {
       "title": "Ready to Write Your Story?",
@@ -435,7 +435,7 @@
       "button": "Create Your Free Account"
     },
     "footer": {
-      "description": "The world's most magical AI-powered book writing and publishing platform. Democratizing storytelling for everyone.",
+      "description": "Digital + Print publishing for everyone. Write your story, sell it online, export for mass printing. Your voice deserves to be heard.",
       "platform": "Platform",
       "features": "Features",
       "pricing": "Pricing",
@@ -671,6 +671,10 @@
       "chapters": "Chapters",
       "current_chapter": "Current Chapter",
       "words_unit": "words"
+    },
+    "chapters": {
+      "delete": "Delete Chapter",
+      "delete_confirm": "Are you sure you want to delete this chapter? This action cannot be undone."
     }
   },
   "design_studio": {
@@ -1218,11 +1222,6 @@
     "previous": "Previous",
     "next": "Next",
     "page_of": "Page {{current}} of {{total}}"
-  },
-  "editor": {
-    "chapters": {
-      "delete_confirm": "Are you sure you want to delete this chapter? This action cannot be undone."
-    }
   },
   "reader": {
     "loading": "Loading book...",

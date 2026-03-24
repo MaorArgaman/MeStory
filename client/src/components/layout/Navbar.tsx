@@ -89,23 +89,20 @@ export default function Navbar() {
       className="fixed top-0 left-0 right-0 z-50 w-full"
       ref={mobileMenuRef}
     >
-      <div className="glass-strong border-b border-white/10 shadow-lg shadow-black/30 backdrop-blur-2xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+      <div className="glass-strong border-b-2 border-magic-gold/30 shadow-lg shadow-magic-gold/10 backdrop-blur-2xl bg-gradient-to-r from-[#0a0a12] via-[#0d0d18] to-[#0a0a12]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Logo - Left Side */}
-            <Link to="/dashboard" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0">
+            <Link to="/dashboard" className="flex items-center group flex-shrink-0 -my-1">
               <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="h-8 sm:h-10 lg:h-12 flex items-center gap-2 sm:gap-3"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
               >
                 <img
                   src={logoIcon}
                   alt="MeStory"
-                  className="h-8 sm:h-10 lg:h-12 w-auto object-contain drop-shadow-lg"
+                  className="h-16 sm:h-[72px] lg:h-20 w-auto object-contain drop-shadow-[0_2px_20px_rgba(255,215,0,0.5)]"
                 />
-                <span className="text-lg sm:text-xl lg:text-2xl font-bold gradient-gold hidden sm:block" style={{ fontFamily: "'Cinzel', serif" }}>
-                  MeStory
-                </span>
               </motion.div>
             </Link>
 

@@ -20,11 +20,12 @@ import {
 import MemorialSection from '../components/memorial/MemorialSection';
 
 // Realistic dashboard images from public folder
-const emptyDashboard = '/img/empty-start.png';
-const dashboardIconScratch = '/img/dashboard-scratch.png';
-const dashboardIconInterview = '/img/dashboard-interview.png';
-const dashboardIconVoice = '/img/dashboard-voice.png';
-const dashboardIconImport = '/img/dashboard-import.png';
+const emptyDashboard = '/img/empty-notebook.png';
+const dashboardHero = '/img/dashboard-hero.png';
+const dashboardIconScratch = '/img/empty-notebook.png';
+const dashboardIconInterview = '/img/interview-speaker.png';
+const dashboardIconVoice = '/img/voice-interview.png';
+const dashboardIconImport = '/img/editing-desk.png';
 
 interface BookItem {
   id: string;
@@ -339,15 +340,22 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
-      {/* Header */}
-      <div className="max-w-7xl mx-auto mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-1 sm:mb-2">{t('dashboard.title')}</h1>
-        <p className="text-sm sm:text-base text-gray-400">
-          {t('dashboard.welcome', { name: user?.name, credits: user?.credits })}
-        </p>
+    <div className="min-h-screen">
+      {/* Hero Header with Background Image */}
+      <div className="relative overflow-hidden pt-20 pb-8 sm:pt-24 sm:pb-12 px-4 sm:px-6 lg:px-8">
+        <div className="absolute inset-0">
+          <img src={dashboardHero} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-deep-space/60 via-deep-space/80 to-deep-space" />
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto">
+          <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-1 sm:mb-2">{t('dashboard.title')}</h1>
+          <p className="text-sm sm:text-base text-gray-400">
+            {t('dashboard.welcome', { name: user?.name, credits: user?.credits })}
+          </p>
+        </div>
       </div>
 
+      <div className="p-4 sm:p-6 lg:p-8">
       {/* Hero Section - Begin Your Next Masterpiece */}
       <div className="max-w-7xl mx-auto mb-8 sm:mb-12 lg:mb-16">
         <div className="text-center mb-6 sm:mb-8 lg:mb-10">
@@ -984,6 +992,7 @@ export default function DashboardPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }

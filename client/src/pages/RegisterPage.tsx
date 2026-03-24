@@ -9,7 +9,7 @@ import _registerSideImageLegacy from '../assets/images/login-side-image.png';
 import _logoIconLegacy from '../assets/images/logo-icon.png';
 
 // Use new realistic images from public folder
-const registerSideImage = '/img/register-side.png';
+const registerSideImage = '/img/register-hero.png';
 const logoIcon = '/img/logo-stacked.png';
 
 export default function RegisterPage() {
@@ -128,7 +128,7 @@ export default function RegisterPage() {
               <img
                 src={logoIcon}
                 alt="MeStory"
-                className="h-16 w-auto object-contain drop-shadow-lg"
+                className="h-24 sm:h-28 w-auto object-contain drop-shadow-[0_4px_20px_rgba(255,215,0,0.4)]"
               />
             </motion.div>
             <p className="text-gray-400">{t('register.subtitle')}</p>

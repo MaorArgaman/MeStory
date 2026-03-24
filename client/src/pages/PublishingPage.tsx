@@ -18,6 +18,9 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+// Launch day celebration image - warehouse with books + "NOW LIVE"
+const launchDayImage = '/img/launch-day.png';
+
 interface QualityScore {
   overallScore: number;
   rating: number;
