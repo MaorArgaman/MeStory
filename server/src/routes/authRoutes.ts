@@ -158,8 +158,8 @@ router.get(
         path: '/',
       });
 
-      // Redirect to client - token will be read from cookie
-      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth-success`);
+      // Redirect to client with token in URL (cross-domain cookies don't work reliably)
+      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth-success?token=${token}`);
     } catch (error) {
       console.error('Google OAuth callback error:', error);
       res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/login?error=oauth_error`);

@@ -193,14 +193,8 @@ export default function LoginPage() {
             </div>
 
             {/* Google Sign-In Button */}
-            <div
-              onClick={() => {
-                console.log('Google button clicked!');
-                alert('Redirecting to Google...');
-                window.location.href = 'https://me-story-server-7wdx.vercel.app/api/auth/google';
-              }}
-              role="button"
-              tabIndex={0}
+            <a
+              href="https://me-story-server-7wdx.vercel.app/api/auth/google"
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white hover:bg-gray-100 text-gray-900 font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -222,7 +216,7 @@ export default function LoginPage() {
                 />
               </svg>
               {t('login.google_login')}
-            </div>
+            </a>
 
             {/* Register Link */}
             <div className="mt-6 text-center text-sm text-gray-400">

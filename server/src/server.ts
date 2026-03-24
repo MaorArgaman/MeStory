@@ -115,7 +115,7 @@ if (isVercel) {
   console.log('🌐 Running in Vercel serverless mode');
   initializationPromise = initializeApp().catch((err) => {
     console.error('Initialization error:', err);
-    initializationError = err;
+    lastInitError = err;
   });
 }
 
