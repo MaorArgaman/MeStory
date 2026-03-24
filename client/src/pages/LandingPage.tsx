@@ -41,7 +41,7 @@ export default function LandingPage() {
   const features = [
     {
       icon: Zap,
-      image: '/img/writing-process.png',
+      image: '/img/feature-ai-writing.png',
       titleKey: 'landing.features.ai_copilot.title',
       descriptionKey: 'landing.features.ai_copilot.description',
       color: 'from-yellow-400 to-yellow-600',
