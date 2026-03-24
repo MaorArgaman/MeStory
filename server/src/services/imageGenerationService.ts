@@ -185,20 +185,36 @@ export async function generateImage(request: ImageGenerationRequest): Promise<Im
     const enhancedPrompt = `${translatedPrompt}${styleModifier}, high quality, detailed`;
     console.log('🖼️ Final prompt for image generation:', enhancedPrompt);
 
-    // For now, use a placeholder image service
-    // In production, replace this with actual AI image generation API
-    // Default to nano-banana for AI-generated images (uses Gemini + Pollinations)
-    const placeholderService = process.env.IMAGE_GENERATION_SERVICE || 'nano-banana';
-    console.log('🖼️ Using service:', placeholderService);
+    // Use DALL-E as primary service (OpenAI API key required)
+    // Fallback to Pollinations if DALL-E fails
+    const configuredService = process.env.IMAGE_GENERATION_SERVICE || 'dalle';
+    console.log('🖼️ Configured service:', configuredService);
 
     let imageUrl: string;
 
-    switch (placeholderService) {
+    // Try DALL-E first if OpenAI key is available
+    if (process.env.OPENAI_API_KEY) {
+      try {
+        console.log('🎨 Using DALL-E 3 for image generation...');
+        imageUrl = await generateWithDallE(enhancedPrompt, request.aspectRatio);
+        return {
+          success: true,
+          imageUrl,
+          prompt: request.prompt,
+          enhancedPrompt,
+        };
+      } catch (dalleError: any) {
+        console.error('❌ DALL-E failed:', dalleError.message);
+        console.log('🔄 Falling back to alternative service...');
+      }
+    }
+
+    // Fallback based on configured service
+    switch (configuredService) {
       case 'dalle':
       case 'openai':
-        // DALL-E 3 via OpenAI (high quality, reliable)
-        imageUrl = await generateWithDallE(enhancedPrompt, request.aspectRatio);
-        break;
+        // Already tried above, throw error
+        throw new Error('DALL-E generation failed and no fallback available');
 
       case 'pollinations':
         // Free AI image generation via Pollinations.ai
@@ -250,7 +266,7 @@ export async function generateImage(request: ImageGenerationRequest): Promise<Im
  */
 async function generateWithPollinations(prompt: string, aspectRatio?: string): Promise<string> {
   // Pollinations.ai provides free AI image generation
-  // URL format: https://image.pollinations.ai/prompt/{encoded_prompt}
+  // URL format: https://pollinations.ai/p/{encoded_prompt}
   const encodedPrompt = encodeURIComponent(prompt);
 
   // Determine dimensions based on aspect ratio
@@ -280,7 +296,7 @@ async function generateWithPollinations(prompt: string, aspectRatio?: string): P
       height = 512;
   }
 
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${Date.now()}&nologo=true`;
+  const imageUrl = `https://pollinations.ai/p/${encodedPrompt}?width=${width}&height=${height}&seed=${Date.now()}&nologo=true`;
 
   // Check if running on Vercel - if so, return direct URL (no local storage in serverless)
   const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
@@ -644,7 +660,7 @@ async function generateWithPollinationsEnhanced(prompt: string, aspectRatio?: st
   // Retry logic with different seeds
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     const seed = baseSeed + attempt * 12345;
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true&model=flux`;
+    const imageUrl = `https://pollinations.ai/p/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true&model=flux`;
 
     console.log(`🎨 Attempt ${attempt}/${maxRetries} - Full URL: ${imageUrl.slice(0, 200)}...`);
 
@@ -689,7 +705,7 @@ async function generateWithPollinationsEnhanced(prompt: string, aspectRatio?: st
 
   // Fallback - return direct URL
   const seed = Date.now();
-  return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true&enhance=true&model=flux`;
+  return `https://pollinations.ai/p/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true&enhance=true&model=flux`;
 }
 
 /**
