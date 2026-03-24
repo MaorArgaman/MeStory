@@ -97,7 +97,8 @@ router.get('/token', (req: Request, res: Response) => {
     res.clearCookie('auth_token', { path: '/' });
     res.json({ success: true, token });
   } else {
-    res.status(404).json({ success: false, error: 'No token found' });
+    // Return 200 with success: false to avoid console errors
+    res.json({ success: false, error: 'No token found' });
   }
 });
 
