@@ -949,7 +949,7 @@ export default function DesignStudioPage() {
               <img
                 src="/img/MeStory-Logo.png"
                 alt="MeStory"
-                className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.3)]"
+                className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.3)] mix-blend-lighten"
               />
             </button>
             <div className="hidden sm:block h-6 w-px bg-magic-gold/30" />

@@ -235,9 +235,9 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   };
 
   return (
-    <div className="bg-slate-800/90 backdrop-blur-md rounded-xl p-1.5 sm:p-2 mb-3 flex items-center gap-1 border border-white/10 shadow-lg overflow-x-auto">
-      {/* Undo/Redo - Always visible */}
-      <div className="flex gap-0.5 items-center flex-shrink-0">
+    <div className="bg-slate-800/90 backdrop-blur-md rounded-xl p-1.5 sm:p-2 mb-3 flex items-center gap-1 border border-white/10 shadow-lg">
+      {/* Undo/Redo - Hidden on mobile, visible on sm+ */}
+      <div className="hidden sm:flex gap-0.5 items-center flex-shrink-0">
         <ToolbarButton
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
@@ -256,7 +256,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         </ToolbarButton>
       </div>
 
-      <div className="w-px h-5 bg-white/10 mx-0.5 flex-shrink-0" />
+      <div className="hidden sm:block w-px h-5 bg-white/10 mx-0.5 flex-shrink-0" />
 
       {/* Paragraph/Heading Dropdown - Compact */}
       <div className="relative flex-shrink-0">
@@ -264,10 +264,10 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           ref={buttonRef}
           whileHover={{ scale: 1.02 }}
           onClick={() => setShowHeadingMenu(!showHeadingMenu)}
-          className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all text-xs font-medium"
+          className="flex items-center gap-1 px-1.5 sm:px-2 py-1.5 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all text-xs font-medium"
         >
           <Type className="w-3.5 h-3.5" />
-          <span>{getCurrentHeading()}</span>
+          <span className="hidden xs:inline">{getCurrentHeading()}</span>
           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
@@ -466,14 +466,14 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         </ToolbarButton>
       </div>
 
-      {/* More Button - Mobile & Tablet */}
+      {/* More Button - Always visible on mobile, hidden on lg+ */}
       <div className="lg:hidden relative flex-shrink-0">
         <motion.button
           ref={moreButtonRef}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setShowMoreMenu(!showMoreMenu)}
-          className={`p-2 rounded-lg transition-all flex items-center justify-center ${
+          className={`p-1.5 sm:p-2 rounded-lg transition-all flex items-center justify-center ${
             showMoreMenu ? 'bg-indigo-600 text-white' : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
           }`}
         >
@@ -489,13 +489,36 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}
-            className="fixed bg-slate-800 border border-white/10 rounded-xl shadow-2xl p-3 w-[280px]"
+            className="fixed bg-slate-800 border border-white/10 rounded-xl shadow-2xl p-3 w-[260px] sm:w-[280px]"
             style={{
               top: moreMenuPosition.top,
-              ...(isRTL ? { right: moreMenuPosition.left } : { left: Math.min(moreMenuPosition.left, window.innerWidth - 290) }),
+              ...(isRTL ? { right: Math.max(8, moreMenuPosition.left) } : { left: Math.min(moreMenuPosition.left, window.innerWidth - 270) }),
               zIndex: 9999,
             }}
           >
+            {/* Mobile only: Undo/Redo */}
+            <div className="sm:hidden mb-3">
+              <div className="text-xs text-gray-400 mb-2">{isRTL ? 'היסטוריה' : 'History'}</div>
+              <div className="flex gap-1">
+                <ToolbarButton
+                  onClick={() => { editor.chain().focus().undo().run(); }}
+                  disabled={!editor.can().undo()}
+                  title={`${t('editor.toolbar.undo')} (Ctrl+Z)`}
+                  size="small"
+                >
+                  <Undo className={smallIconClass} />
+                </ToolbarButton>
+                <ToolbarButton
+                  onClick={() => { editor.chain().focus().redo().run(); }}
+                  disabled={!editor.can().redo()}
+                  title={`${t('editor.toolbar.redo')} (Ctrl+Y)`}
+                  size="small"
+                >
+                  <Redo className={smallIconClass} />
+                </ToolbarButton>
+              </div>
+            </div>
+
             {/* Mobile: Strikethrough, Colors */}
             <div className="sm:hidden mb-3">
               <div className="text-xs text-gray-400 mb-2">{t('editor.toolbar.formatting', 'Formatting')}</div>
@@ -713,7 +736,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
       )}
 
       {/* Word Count - Right aligned */}
-      <div className={`${isRTL ? 'mr-auto' : 'ml-auto'} flex items-center text-xs text-gray-400 px-2 flex-shrink-0`}>
+      <div className={`${isRTL ? 'mr-auto' : 'ml-auto'} flex items-center text-[10px] sm:text-xs text-gray-400 px-1 sm:px-2 flex-shrink-0`}>
         <span>{editor.storage.characterCount?.words() || 0}</span>
       </div>
     </div>

@@ -259,7 +259,15 @@
       0 1px 3px rgba(0, 0, 0, 0.12),
       0 8px 24px rgba(0, 0, 0, 0.2),
       0 24px 48px rgba(0, 0, 0, 0.15);
-    min-height: calc(100vh - 200px);
+    min-height: calc(100vh - 280px);
+  }
+
+  /* Mobile adjustments for editor */
+  @media (max-width: 640px) {
+    .editor-paper {
+      min-height: auto;
+      margin-bottom: 80px;
+    }
   }
 
   .editor-content {
@@ -271,23 +279,38 @@
 
   /* TipTap Editor Styles - Clean Google Docs typography */
   .ProseMirror {
-    @apply bg-transparent text-gray-800 px-6 py-8 md:px-12 md:py-10 focus:outline-none min-h-full;
+    @apply bg-transparent text-gray-800 px-4 py-6 sm:px-6 sm:py-8 md:px-12 md:py-10 focus:outline-none;
     font-family: 'Merriweather', 'Crimson Text', Georgia, serif;
-    font-size: 18px;
+    font-size: 16px;
     line-height: 1.85;
     color: #1f2937;
     caret-color: #4f46e5;
+    min-height: 300px;
+  }
+
+  @media (min-width: 640px) {
+    .ProseMirror {
+      font-size: 18px;
+      min-height: 400px;
+    }
   }
 
   .ProseMirror p {
-    @apply mb-4;
-    font-size: 18px;
-    line-height: 1.85;
+    @apply mb-3 sm:mb-4;
+    font-size: 16px;
+    line-height: 1.75;
     color: #374151;
   }
 
+  @media (min-width: 640px) {
+    .ProseMirror p {
+      font-size: 18px;
+      line-height: 1.85;
+    }
+  }
+
   .ProseMirror h1 {
-    @apply text-4xl font-bold mb-6 mt-8 pb-3;
+    @apply text-2xl sm:text-4xl font-bold mb-4 sm:mb-6 mt-6 sm:mt-8 pb-2 sm:pb-3;
     font-family: 'Merriweather', Georgia, serif;
     color: #111827;
     border-bottom: 2px solid #e5e7eb;
@@ -295,14 +318,14 @@
   }
 
   .ProseMirror h2 {
-    @apply text-3xl font-bold mb-5 mt-7;
+    @apply text-xl sm:text-3xl font-bold mb-4 sm:mb-5 mt-5 sm:mt-7;
     font-family: 'Merriweather', Georgia, serif;
     color: #1f2937;
     line-height: 1.35;
   }
 
   .ProseMirror h3 {
-    @apply text-2xl font-semibold mb-4 mt-6;
+    @apply text-lg sm:text-2xl font-semibold mb-3 sm:mb-4 mt-4 sm:mt-6;
     font-family: 'Merriweather', Georgia, serif;
     color: #374151;
     line-height: 1.4;
