@@ -138,7 +138,7 @@ export default function ReaderPage() {
   // Check if on last chapter and scrolled to bottom
   useEffect(() => {
     const handleScroll = () => {
-      if (contentRef.current && book && currentChapterIndex === book.chapters.length - 1) {
+      if (contentRef.current && book?.chapters?.length && currentChapterIndex === book.chapters.length - 1) {
         const { scrollTop, scrollHeight, clientHeight } = contentRef.current;
         const scrolledToBottom = scrollTop + clientHeight >= scrollHeight - 100;
 
@@ -233,7 +233,7 @@ export default function ReaderPage() {
       setNarrationProgress(100);
 
       // Auto-advance to next chapter if available
-      if (book && currentChapterIndex < book.chapters.length - 1) {
+      if (book?.chapters?.length && currentChapterIndex < book.chapters.length - 1) {
         toast.success('Chapter finished. Moving to next chapter...');
         setTimeout(() => {
           nextChapter();
@@ -348,11 +348,11 @@ export default function ReaderPage() {
     }
   };
 
-  const currentChapter = book?.chapters[currentChapterIndex];
-  const progress = book ? ((currentChapterIndex + 1) / book.chapters.length) * 100 : 0;
+  const currentChapter = book?.chapters?.[currentChapterIndex];
+  const progress = book?.chapters?.length ? ((currentChapterIndex + 1) / book.chapters.length) * 100 : 0;
 
   const nextChapter = () => {
-    if (book && currentChapterIndex < book.chapters.length - 1) {
+    if (book?.chapters?.length && currentChapterIndex < book.chapters.length - 1) {
       setPageDirection('next');
       setCurrentChapterIndex(currentChapterIndex + 1);
     }
@@ -635,7 +635,7 @@ export default function ReaderPage() {
               {/* Chapter Navigation */}
               <div>
                 <h3 className="font-display font-semibold text-white mb-3">
-                  Chapter {currentChapterIndex + 1} of {book.chapters.length}
+                  Chapter {currentChapterIndex + 1} of {book.chapters?.length || 0}
                 </h3>
                 <div className="text-sm text-gray-400">
                   {Math.round(progress)}% Complete
@@ -997,15 +997,15 @@ export default function ReaderPage() {
 
         <div className="glass rounded-full px-3 sm:px-6 py-2 sm:py-3 backdrop-blur-md">
           <p className="text-xs sm:text-sm font-medium" style={{ color: currentTheme.accent }}>
-            {currentChapterIndex + 1} / {book.chapters.length}
+            {currentChapterIndex + 1} / {book.chapters?.length || 0}
           </p>
         </div>
 
         <button
           onClick={nextChapter}
-          disabled={currentChapterIndex === book.chapters.length - 1}
+          disabled={currentChapterIndex === (book.chapters?.length || 1) - 1}
           className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-full backdrop-blur-md transition-all text-sm sm:text-base ${
-            currentChapterIndex === book.chapters.length - 1 ? 'opacity-50 cursor-not-allowed bg-gray-600/50' : 'bg-magic-gold/20 hover:bg-magic-gold/30 border border-magic-gold/50'
+            currentChapterIndex === (book.chapters?.length || 1) - 1 ? 'opacity-50 cursor-not-allowed bg-gray-600/50' : 'bg-magic-gold/20 hover:bg-magic-gold/30 border border-magic-gold/50'
           }`}
           style={{ color: currentTheme.accent }}
         >

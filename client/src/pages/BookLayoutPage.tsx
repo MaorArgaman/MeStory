@@ -1574,7 +1574,7 @@ export default function BookLayoutPage() {
           lg:translate-x-0
           fixed lg:relative z-50 lg:z-auto
           ${isUIRTL ? 'right-0 lg:right-auto' : 'left-0 lg:left-auto'}
-          w-[200px] sm:w-48 h-full
+          w-[180px] sm:w-48 h-full max-h-screen
           glass-strong ${isUIRTL ? 'border-l' : 'border-r'} border-white/10 p-3 sm:p-4 overflow-y-auto
           transition-transform duration-300 ease-in-out
         `}>
@@ -1582,9 +1582,9 @@ export default function BookLayoutPage() {
             <h3 className="text-sm font-semibold text-gray-300">Pages</h3>
             <button
               onClick={() => setShowMobilePages(false)}
-              className="lg:hidden btn-ghost p-1"
+              className="lg:hidden btn-ghost p-3 min-w-[44px] min-h-[44px]"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
           <div className="space-y-2">
@@ -1885,16 +1885,16 @@ export default function BookLayoutPage() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: isUIRTL ? '-100%' : '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className={`fixed lg:relative ${isUIRTL ? 'left-0' : 'right-0'} top-0 lg:top-auto h-full z-50 lg:z-auto glass-strong ${isUIRTL ? 'border-r' : 'border-l'} border-white/10 overflow-hidden w-[85%] sm:w-80`}
+              className={`fixed lg:relative ${isUIRTL ? 'left-0' : 'right-0'} top-0 lg:top-auto h-full z-50 lg:z-auto glass-strong ${isUIRTL ? 'border-r' : 'border-l'} border-white/10 overflow-hidden w-4/5 max-w-[320px] sm:w-80`}
             >
-              <div className="p-4 sm:p-6 w-full sm:w-80 h-full overflow-y-auto">
+              <div className="p-4 sm:p-6 w-full h-full overflow-y-auto">
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
                   <h3 className="text-base sm:text-lg font-semibold text-white">
                     {language === 'he' ? 'הגדרות פריסה' : 'Layout Settings'}
                   </h3>
                   <button
                     onClick={() => setShowSettings(false)}
-                    className="lg:hidden btn-ghost p-1"
+                    className="lg:hidden btn-ghost p-3 min-w-[44px] min-h-[44px]"
                   >
                     <X className="w-5 h-5" />
                   </button>
