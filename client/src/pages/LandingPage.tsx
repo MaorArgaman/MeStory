@@ -158,34 +158,20 @@ export default function LandingPage() {
         {/* Dark Overlay for Text Readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-deep-space/90 via-deep-space/70 to-deep-space/95" />
 
-        {/* Floating Book Elements - Hidden on small mobile for performance */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1] hidden sm:block">
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute"
-              initial={{
-                opacity: 0.1,
-              }}
-              animate={{
-                y: [0, -40, 0],
-                rotate: [0, 10, -10, 0],
-                opacity: [0.1, 0.3, 0.1],
-              }}
-              transition={{
-                duration: 8 + i * 0.5,
-                repeat: Infinity,
-                delay: i * 0.3,
-              }}
-              style={{
-                left: `${(i * 12) % 100}%`,
-                top: `${(i * 15) % 80}%`,
-              }}
-            >
-              <BookOpen className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 text-magic-gold" />
-            </motion.div>
-          ))}
-        </div>
+        {/* Floating Logo Watermark - Subtle background decoration */}
+        <motion.div
+          className="absolute inset-0 overflow-hidden pointer-events-none z-[1] hidden lg:flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.03 }}
+          transition={{ duration: 2 }}
+        >
+          <img
+            src={logoIcon}
+            alt=""
+            className="w-[800px] h-auto object-contain"
+            style={{ filter: 'grayscale(100%) brightness(2)' }}
+          />
+        </motion.div>
 
         {/* Hero Content */}
         <div className="relative z-20 text-center max-w-5xl px-2">
@@ -544,7 +530,15 @@ export default function LandingPage() {
             transition={{ duration: 0.8 }}
           >
             <GlassCard glow="gold" className="text-center p-6 sm:p-8 lg:p-12">
-              <Sparkles className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 text-magic-gold mx-auto mb-4 sm:mb-6" />
+              <img
+                src={logoIcon}
+                alt="MeStory"
+                className="h-16 sm:h-20 lg:h-24 w-auto mx-auto mb-4 sm:mb-6 object-cover opacity-90"
+                style={{
+                  clipPath: 'inset(15% 5% 15% 5%)',
+                  transform: 'scale(1.4)',
+                }}
+              />
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-bold gradient-gold mb-4 sm:mb-6">
                 {t('landing.cta.title')}
               </h2>
@@ -572,10 +566,15 @@ export default function LandingPage() {
             {/* Brand */}
             <div className="col-span-2 sm:col-span-2 lg:col-span-2">
               <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold">
-                  <Sparkles className="w-5 h-5 sm:w-7 sm:h-7 text-deep-space" />
-                </div>
-                <span className="text-xl sm:text-2xl lg:text-3xl font-display font-bold gradient-gold">MeStory</span>
+                <img
+                  src={logoIcon}
+                  alt="MeStory"
+                  className="h-14 sm:h-16 w-auto object-cover"
+                  style={{
+                    clipPath: 'inset(10% 3% 10% 3%)',
+                    transform: 'scale(1.25)',
+                  }}
+                />
               </div>
               <p className="text-gray-400 text-sm sm:text-base max-w-md">
                 {t('landing.footer.description')}
