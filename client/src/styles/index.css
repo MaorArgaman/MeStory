@@ -490,6 +490,56 @@
     padding-inline-end: 0;
   }
 
+  /* Image-text flow support */
+  .book-page-content .image-wrap-left {
+    float: left;
+    margin: 0 16px 16px 0;
+    shape-outside: margin-box;
+    clear: left;
+  }
+
+  .book-page-content .image-wrap-right {
+    float: right;
+    margin: 0 0 16px 16px;
+    shape-outside: margin-box;
+    clear: right;
+  }
+
+  [dir="rtl"] .book-page-content .image-wrap-left {
+    float: right;
+    margin: 0 0 16px 16px;
+    clear: right;
+  }
+
+  [dir="rtl"] .book-page-content .image-wrap-right {
+    float: left;
+    margin: 0 16px 16px 0;
+    clear: left;
+  }
+
+  /* Clear floats after content */
+  .book-page-content::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+
+  /* Image placeholder styling */
+  .book-page-content .image-placeholder {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
+    border: 2px dashed rgba(139, 92, 246, 0.4);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+
+  .book-page-content .image-placeholder:hover {
+    border-color: rgba(139, 92, 246, 0.8);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.15));
+  }
+
   /* Sidebar */
   .sidebar-item {
     @apply px-4 py-3 rounded-lg hover:bg-white/10 transition-all duration-300 cursor-pointer text-gray-300 hover:text-white;

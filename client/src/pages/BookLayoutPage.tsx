@@ -2673,6 +2673,56 @@ function PageRenderer({
   const containerRef = useRef<HTMLDivElement>(null);
   void _isDragging; void _isResizing; // For future visual feedback
 
+  // Calculate content layout adjustments based on image/placeholder positions
+  const getContentLayoutStyle = (): React.CSSProperties => {
+    const allImages = page.images || [];
+    const placeholders = settings.imagePlaceholders || [];
+    const style: React.CSSProperties = {};
+
+    // Check for images/placeholders at different positions
+    const topImages = [...allImages, ...placeholders].filter(img => img.y < 30);
+    const bottomImages = [...allImages, ...placeholders].filter(img => img.y > 60);
+    const leftImages = [...allImages, ...placeholders].filter(img => img.x < 30 && img.y >= 30 && img.y <= 60);
+    const rightImages = [...allImages, ...placeholders].filter(img => img.x > 60 && img.y >= 30 && img.y <= 60);
+
+    // Reserve space for images at top
+    if (topImages.length > 0) {
+      const maxHeight = Math.max(...topImages.map(img => (img.y + img.height)));
+      style.paddingTop = `${Math.max(maxHeight + 5, 0)}%`;
+    }
+
+    // Reserve space for images at bottom
+    if (bottomImages.length > 0) {
+      const minTop = Math.min(...bottomImages.map(img => img.y));
+      const reserveSpace = 100 - minTop;
+      style.paddingBottom = `${Math.max(reserveSpace + 5, 0)}%`;
+    }
+
+    return style;
+  };
+
+  // Generate floating elements for side images
+  const getFloatingImageElements = () => {
+    const allImages = page.images || [];
+    const placeholders = (settings.imagePlaceholders || []).filter(p => {
+      // Don't show placeholder if image already exists at that position
+      return !allImages.some(img =>
+        Math.abs(img.x - p.x) < 10 && Math.abs(img.y - p.y) < 10
+      );
+    });
+
+    return [...allImages, ...placeholders].filter(img => {
+      // Side images (for text wrapping)
+      const isSideImage = (img.x < 35 || img.x > 55) && img.y >= 20 && img.y <= 70;
+      const shouldWrap = (img as any).textWrap === 'wrap' || isSideImage;
+      return shouldWrap && !(img as any).url; // Only for placeholders
+    }).map((img, idx) => ({
+      ...img,
+      float: img.x < 50 ? (isRTL ? 'right' : 'left') : (isRTL ? 'left' : 'right'),
+      key: `float-${idx}`,
+    }));
+  };
+
   const handleImageMouseDown = (e: React.MouseEvent, image: PageImage, action: 'drag' | 'resize') => {
     e.preventDefault();
     e.stopPropagation();
@@ -2801,15 +2851,30 @@ function PageRenderer({
         <div className="relative h-full group">
           <div
             className="h-full overflow-hidden book-page-content prose prose-sm max-w-none relative"
-            dangerouslySetInnerHTML={{ __html: page.content }}
             style={{
               color: settings.textColor || '#000000',
               direction: isRTL ? 'rtl' : 'ltr',
               paddingTop: showHeader ? '15px' : '0',
               paddingBottom: settings.showPageNumbers ? '20px' : '0',
               zIndex: 5,
+              ...getContentLayoutStyle(),
             }}
-          />
+          >
+            {/* Floating elements for side images/placeholders */}
+            {getFloatingImageElements().map((floatEl) => (
+              <div
+                key={floatEl.key}
+                style={{
+                  float: floatEl.float as 'left' | 'right',
+                  width: `${floatEl.width}%`,
+                  height: `${floatEl.height}%`,
+                  margin: floatEl.float === 'left' ? '0 12px 12px 0' : '0 0 12px 12px',
+                  shapeOutside: 'margin-box',
+                }}
+              />
+            ))}
+            <div dangerouslySetInnerHTML={{ __html: page.content }} />
+          </div>
           {/* Edit button for chapter pages */}
           {page.type === 'chapter' && (
             <button

@@ -663,21 +663,27 @@ export default function BookWritingPage() {
           className={`
           ${showLeftSidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           fixed lg:relative z-50 lg:z-auto
-          w-64 sm:w-72 lg:w-64 h-full
-          glass-strong border-r border-white/10 p-3 sm:p-4 overflow-y-auto
+          w-full sm:w-80 lg:w-64 h-full
+          glass-strong border-r border-white/10 p-4 sm:p-5 overflow-y-auto
           transition-transform duration-300 ease-in-out
         `}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs sm:text-sm font-semibold text-gray-300">{t('editor.sidebar.chapters')}</h2>
-            <div className="flex items-center gap-2">
-              <button onClick={addChapter} className="btn-ghost p-2">
-                <Plus className="w-4 h-4" />
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between mb-6 lg:mb-4">
+            <h2 className="text-base sm:text-sm font-semibold text-white lg:text-gray-300">
+              {t('editor.sidebar.chapters')}
+            </h2>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={addChapter}
+                className="btn-ghost p-2.5 lg:p-2 bg-indigo-500/20 lg:bg-transparent rounded-lg"
+              >
+                <Plus className="w-5 h-5 lg:w-4 lg:h-4" />
               </button>
               <button
                 onClick={() => setShowLeftSidebar(false)}
-                className="lg:hidden btn-ghost p-2"
+                className="lg:hidden btn-ghost p-2.5 bg-white/10 rounded-lg"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
