@@ -888,28 +888,28 @@ export default function ReaderPage() {
                       <GlassCard glow="gold" className="max-w-2xl mx-auto">
                         <div className="text-center mb-6">
                           <h3
-                            className="font-display text-3xl font-bold mb-2"
+                            className="font-display text-2xl sm:text-3xl font-bold mb-2"
                             style={{ color: currentTheme.accent }}
                           >
-                            You've Reached the End!
+                            {t('reader.reached_the_end')}
                           </h3>
                           <p className="text-gray-400">
-                            Share your thoughts about "{book.title}"
+                            {t('reader.share_thoughts', { title: book.title })}
                           </p>
                         </div>
 
                         {/* Star Rating */}
-                        <div className="flex justify-center gap-2 mb-6">
+                        <div className="flex justify-center gap-1 sm:gap-2 mb-6">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <motion.button
                               key={star}
                               whileHover={{ scale: 1.2 }}
                               whileTap={{ scale: 0.9 }}
                               onClick={() => setRating(star)}
-                              className="focus:outline-none"
+                              className="focus:outline-none p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
                             >
                               <Star
-                                className={`w-10 h-10 transition-all ${
+                                className={`w-8 h-8 sm:w-10 sm:h-10 transition-all ${
                                   star <= rating
                                     ? 'fill-magic-gold text-magic-gold drop-shadow-glow-gold'
                                     : 'text-gray-600 hover:text-gray-400'
@@ -924,7 +924,7 @@ export default function ReaderPage() {
                           <textarea
                             value={reviewText}
                             onChange={(e) => setReviewText(e.target.value)}
-                            placeholder="Write your review here... (optional)"
+                            placeholder={t('reader.write_review_placeholder')}
                             className="w-full h-32 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-magic-gold/50 focus:shadow-glow-gold transition-all resize-none"
                             style={{
                               fontFamily:
@@ -934,21 +934,21 @@ export default function ReaderPage() {
                             }}
                           />
                           <p className="text-xs text-gray-500 mt-2">
-                            {reviewText.length} / 500 characters
+                            {t('reader.characters', { count: reviewText.length })}
                           </p>
                         </div>
 
                         {/* Submit Button */}
-                        <div className="flex justify-center gap-4">
+                        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
                           <GlowingButton
                             variant="cosmic"
                             size="lg"
                             onClick={() => setShowReviewCard(false)}
                           >
-                            Maybe Later
+                            {t('reader.maybe_later')}
                           </GlowingButton>
                           <GlowingButton variant="gold" size="lg" onClick={handleSubmitReview}>
-                            Submit Review
+                            {t('reader.submit_review')}
                           </GlowingButton>
                         </div>
                       </GlassCard>
@@ -969,7 +969,7 @@ export default function ReaderPage() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 10 }}
             onClick={handleShare}
-            className="fixed z-50 flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md transition-all hover:shadow-glow-gold"
+            className="fixed z-50 flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md transition-all hover:shadow-glow-gold min-h-[44px]"
             style={{
               left: shareButtonPos.x,
               top: shareButtonPos.y,
@@ -980,7 +980,7 @@ export default function ReaderPage() {
             }}
           >
             <Share2 className="w-4 h-4" />
-            <span className="text-sm font-semibold">Share</span>
+            <span className="text-sm font-semibold">{t('reader.share')}</span>
           </motion.button>
         )}
       </AnimatePresence>
@@ -990,16 +990,16 @@ export default function ReaderPage() {
         <button
           onClick={prevChapter}
           disabled={currentChapterIndex === 0}
-          className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-full backdrop-blur-md transition-all text-sm sm:text-base ${
+          className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-full backdrop-blur-md transition-all text-sm sm:text-base min-h-[44px] ${
             currentChapterIndex === 0 ? 'opacity-50 cursor-not-allowed bg-gray-600/50' : 'bg-magic-gold/20 hover:bg-magic-gold/30 border border-magic-gold/50'
           }`}
           style={{ color: currentTheme.accent }}
         >
           <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="hidden sm:inline">Previous</span>
+          <span className="hidden sm:inline">{t('reader.previous')}</span>
         </button>
 
-        <div className="glass rounded-full px-3 sm:px-6 py-2 sm:py-3 backdrop-blur-md">
+        <div className="glass rounded-full px-3 sm:px-6 py-2 sm:py-3 backdrop-blur-md min-h-[44px] flex items-center">
           <p className="text-xs sm:text-sm font-medium" style={{ color: currentTheme.accent }}>
             {currentChapterIndex + 1} / {book.chapters?.length || 0}
           </p>
@@ -1008,12 +1008,12 @@ export default function ReaderPage() {
         <button
           onClick={nextChapter}
           disabled={currentChapterIndex === (book.chapters?.length || 1) - 1}
-          className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-full backdrop-blur-md transition-all text-sm sm:text-base ${
+          className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-full backdrop-blur-md transition-all text-sm sm:text-base min-h-[44px] ${
             currentChapterIndex === (book.chapters?.length || 1) - 1 ? 'opacity-50 cursor-not-allowed bg-gray-600/50' : 'bg-magic-gold/20 hover:bg-magic-gold/30 border border-magic-gold/50'
           }`}
           style={{ color: currentTheme.accent }}
         >
-          <span className="hidden sm:inline">Next</span>
+          <span className="hidden sm:inline">{t('reader.next')}</span>
           <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
@@ -1029,7 +1029,7 @@ export default function ReaderPage() {
             {book.title}
           </p>
           <p className="text-xs opacity-60 truncate" style={{ color: currentTheme.text }}>
-            by {book.author.name}
+            {t('reader.by_author', { author: book.author.name })}
           </p>
         </div>
       </motion.div>
