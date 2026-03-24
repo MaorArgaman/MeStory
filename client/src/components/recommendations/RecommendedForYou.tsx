@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Sparkles, ChevronRight, Star, Eye } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import GlassCard from '../ui/GlassCard';
 
@@ -38,8 +39,10 @@ interface RecommendedForYouProps {
 export default function RecommendedForYou({
   limit = 8,
   showReasons = true,
-  title = 'Recommended For You',
+  title,
 }: RecommendedForYouProps) {
+  const { t } = useTranslation('common');
+  const displayTitle = title || t('recommendations.recommendedForYou');
   const [recommendations, setRecommendations] = useState<RecommendationWithReason[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +95,7 @@ export default function RecommendedForYou({
       <div className="py-8">
         <div className="flex items-center gap-2 mb-6">
           <Sparkles className="w-6 h-6 text-amber-400" />
-          <h2 className="text-2xl font-bold text-white">{title}</h2>
+          <h2 className="text-2xl font-bold text-white">{displayTitle}</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -115,13 +118,13 @@ export default function RecommendedForYou({
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Sparkles className="w-6 h-6 text-amber-400" />
-          <h2 className="text-2xl font-bold text-white">{title}</h2>
+          <h2 className="text-2xl font-bold text-white">{displayTitle}</h2>
         </div>
         <Link
           to="/marketplace"
           className="flex items-center gap-1 text-amber-400 hover:text-amber-300 transition-colors text-sm"
         >
-          View All
+          {t('recommendations.viewAll')}
           <ChevronRight className="w-4 h-4" />
         </Link>
       </div>
@@ -158,7 +161,7 @@ export default function RecommendedForYou({
                   {/* Quality Badge */}
                   {rec.book.qualityScore && rec.book.qualityScore.overallScore >= 80 && (
                     <div className="absolute top-2 right-2 bg-amber-500/90 text-black text-xs font-bold px-2 py-1 rounded">
-                      {rec.book.qualityScore.overallScore >= 90 ? 'MASTERPIECE' : 'EXCELLENT'}
+                      {rec.book.qualityScore.overallScore >= 90 ? t('recommendations.masterpiece') : t('recommendations.excellent')}
                     </div>
                   )}
 

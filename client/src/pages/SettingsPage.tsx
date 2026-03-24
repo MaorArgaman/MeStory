@@ -21,6 +21,7 @@ import {
   Smartphone,
   AlertTriangle,
   Globe,
+  FileDown,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -72,6 +73,7 @@ export default function SettingsPage() {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [exportingData, setExportingData] = useState(false);
 
   // Notifications state
   const [notifications, setNotifications] = useState({
@@ -205,6 +207,33 @@ export default function SettingsPage() {
       toast.error(t('settings.toast.language_failed'));
     } finally {
       setLanguageLoading(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    try {
+      setExportingData(true);
+      const response = await api.get('/user/export-data', {
+        responseType: 'blob',
+      });
+
+      // Create a blob from the response and trigger download
+      const blob = new Blob([response.data], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `mestory-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success(t('settings.toast.export_success'));
+    } catch (error: any) {
+      console.error('Failed to export data:', error);
+      toast.error(error.response?.data?.error || t('settings.toast.export_failed'));
+    } finally {
+      setExportingData(false);
     }
   };
 
@@ -786,6 +815,50 @@ export default function SettingsPage() {
                           {t('settings.security.security_warning')}
                         </p>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Data Export Section (GDPR) */}
+                  <div className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8 mt-4 sm:mt-6">
+                    <div className="flex items-start sm:items-center gap-3 mb-4 sm:mb-6">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center flex-shrink-0">
+                        <FileDown className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl sm:text-2xl font-bold">
+                          {t('settings.security.export_title')}
+                        </h2>
+                        <p className="text-gray-400 text-xs sm:text-sm">
+                          {t('settings.security.export_subtitle')}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-sm text-gray-300">
+                        {t('settings.security.export_description')}
+                      </p>
+
+                      <ul className="text-sm text-gray-400 space-y-1 list-disc list-inside">
+                        <li>{t('settings.security.export_includes_profile')}</li>
+                        <li>{t('settings.security.export_includes_books')}</li>
+                        <li>{t('settings.security.export_includes_summaries')}</li>
+                        <li>{t('settings.security.export_includes_transactions')}</li>
+                        <li>{t('settings.security.export_includes_activity')}</li>
+                      </ul>
+
+                      <button
+                        onClick={handleExportData}
+                        disabled={exportingData}
+                        className="btn-primary px-8 py-3 flex items-center gap-2"
+                      >
+                        {exportingData ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <FileDown className="w-5 h-5" />
+                        )}
+                        {t('settings.security.export_button')}
+                      </button>
                     </div>
                   </div>
                 </motion.div>

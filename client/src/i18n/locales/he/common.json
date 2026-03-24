@@ -1134,5 +1134,52 @@
     "transcribing": "מתמלל...",
     "recordVoice": "הקלט קול",
     "typeYourAnswer": "הקלד את תשובתך..."
+  },
+  "voiceRecorder": {
+    "notSupported": "הקלטת קול אינה נתמכת בדפדפן שלך",
+    "typeAnswerPlaceholder": "הקלד את תשובתך כאן...",
+    "sendAnswer": "שלח תשובה",
+    "processingRecording": "מעבד הקלטה...",
+    "pressSendWhenDone": "לחץ על שלח כשסיימת",
+    "pressToRecord": "לחץ להקלטה",
+    "orTypeYourAnswer": "או הקלד את תשובתך",
+    "sendTextAnswer": "שלח תשובת טקסט"
+  },
+  "recommendations": {
+    "recommendedForYou": "מומלץ עבורך",
+    "viewAll": "צפה בהכל",
+    "masterpiece": "יצירת מופת",
+    "excellent": "מצוין",
+    "continueReading": "המשך קריאה",
+    "continueWriting": "המשך כתיבה",
+    "today": "היום",
+    "yesterday": "אתמול",
+    "daysAgo": "לפני {{count}} ימים",
+    "minutesAgo": "לפני {{count}} דקות",
+    "hoursAgo": "לפני {{count}} שעות",
+    "noBooksInProgress": "אין ספרים בתהליך",
+    "discoverNewBooks": "גלה ספרים חדשים",
+    "percentCompleted": "{{percent}}% הושלמו",
+    "continueReadingButton": "המשך קריאה",
+    "noActiveDrafts": "אין טיוטות פעילות",
+    "startNewBook": "התחל ספר חדש",
+    "draft": "טיוטה",
+    "words": "מילים",
+    "continueWritingButton": "המשך כתיבה"
+  },
+  "templates": {
+    "all": "הכל",
+    "searchPlaceholder": "חפש תבנית...",
+    "noTemplatesFound": "לא נמצאו תבניות",
+    "recommended": "מומלץ",
+    "preview": "תצוגה מקדימה",
+    "features": "מאפיינים",
+    "matchedFonts": "גופנים מותאמים",
+    "optimalPageLayout": "פריסת עמודים אופטימלית",
+    "hebrewEnglishSupport": "תמיכה בעברית ואנגלית",
+    "preDefinedImageZones": "אזורי תמונות מוכנים",
+    "aiSuggestions": "הצעות AI",
+    "close": "סגור",
+    "selectTemplate": "בחר תבנית זו"
   }
 }

@@ -6,6 +6,7 @@ import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import RequireAuth from './components/RequireAuth';
 import Layout from './components/layout/Layout';
 import LoadingScreen from './components/LoadingScreen';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Initialize i18n
 import './i18n';
@@ -60,12 +61,13 @@ function AppContent() {
       />
 
       <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-        {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/auth-success" element={<AuthSuccessPage />} />
+        <ErrorBoundary>
+          <Routes location={location} key={location.pathname}>
+          {/* Public Routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/auth-success" element={<AuthSuccessPage />} />
 
         {/* Protected Routes with Layout */}
         <Route
@@ -231,9 +233,10 @@ function AppContent() {
           }
         />
 
-        {/* Catch all - redirect to landing page */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+          {/* Catch all - redirect to landing page */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </ErrorBoundary>
       </AnimatePresence>
     </div>
   );

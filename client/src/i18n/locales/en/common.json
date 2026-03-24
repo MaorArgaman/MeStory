@@ -1064,5 +1064,52 @@
     "transcribing": "Transcribing...",
     "recordVoice": "Record voice",
     "typeYourAnswer": "Type your answer..."
+  },
+  "voiceRecorder": {
+    "notSupported": "Voice recording is not supported by your browser",
+    "typeAnswerPlaceholder": "Type your answer here...",
+    "sendAnswer": "Send answer",
+    "processingRecording": "Processing recording...",
+    "pressSendWhenDone": "Press send when done",
+    "pressToRecord": "Press to record",
+    "orTypeYourAnswer": "or type your answer",
+    "sendTextAnswer": "Send text answer"
+  },
+  "recommendations": {
+    "recommendedForYou": "Recommended For You",
+    "viewAll": "View All",
+    "masterpiece": "MASTERPIECE",
+    "excellent": "EXCELLENT",
+    "continueReading": "Continue Reading",
+    "continueWriting": "Continue Writing",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "{{count}} days ago",
+    "minutesAgo": "{{count}} minutes ago",
+    "hoursAgo": "{{count}} hours ago",
+    "noBooksInProgress": "No books in progress",
+    "discoverNewBooks": "Discover new books",
+    "percentCompleted": "{{percent}}% completed",
+    "continueReadingButton": "Continue Reading",
+    "noActiveDrafts": "No active drafts",
+    "startNewBook": "Start a new book",
+    "draft": "Draft",
+    "words": "words",
+    "continueWritingButton": "Continue Writing"
+  },
+  "templates": {
+    "all": "All",
+    "searchPlaceholder": "Search templates...",
+    "noTemplatesFound": "No templates found",
+    "recommended": "Recommended",
+    "preview": "Preview",
+    "features": "Features",
+    "matchedFonts": "Matched fonts",
+    "optimalPageLayout": "Optimal page layout",
+    "hebrewEnglishSupport": "Hebrew & English support",
+    "preDefinedImageZones": "Pre-defined image zones",
+    "aiSuggestions": "AI Suggestions",
+    "close": "Close",
+    "selectTemplate": "Select Template"
   }
 }

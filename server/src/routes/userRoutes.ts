@@ -8,6 +8,7 @@ import {
   getUserProfile,
   followUser,
   updateLanguage,
+  exportUserData,
 } from '../controllers/userController';
 import { authenticate } from '../middleware/auth';
 
@@ -38,6 +39,10 @@ router.use(authenticate as any);
 
 // GET /api/user/earnings - Get earnings data
 router.get('/earnings', getEarnings as any);
+
+// GET /api/user/export-data - Export all user data (GDPR compliance)
+// BUG-009: GDPR data export functionality
+router.get('/export-data', exportUserData as any);
 
 // PUT /api/user/profile - Update user profile
 router.put('/profile', updateProfile as any);

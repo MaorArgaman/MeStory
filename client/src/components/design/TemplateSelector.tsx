@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2, Check, BookOpen, Sparkles, Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../services/api';
 import {
   TemplateCategory,
@@ -36,6 +37,7 @@ export default function TemplateSelector({
   bookGenre,
   language = 'en',
 }: TemplateSelectorProps) {
+  const { t } = useTranslation('common');
   const isHebrew = language === 'he';
 
   const [templates, setTemplates] = useState<BookTemplate[]>([]);
@@ -118,7 +120,7 @@ export default function TemplateSelector({
               : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
           }`}
         >
-          {isHebrew ? 'הכל' : 'All'}
+          {t('templates.all')}
         </button>
         {TEMPLATE_CATEGORIES.map((cat) => (
           <button
@@ -146,7 +148,7 @@ export default function TemplateSelector({
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder={isHebrew ? 'חפש תבנית...' : 'Search templates...'}
+          placeholder={t('templates.searchPlaceholder')}
           className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
       </div>
@@ -169,7 +171,7 @@ export default function TemplateSelector({
       {filteredTemplates.length === 0 && (
         <div className="text-center py-12 text-gray-400">
           <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>{isHebrew ? 'לא נמצאו תבניות' : 'No templates found'}</p>
+          <p>{t('templates.noTemplatesFound')}</p>
         </div>
       )}
 
@@ -207,6 +209,7 @@ function TemplateCard({
   onPreview,
   language,
 }: TemplateCardProps) {
+  const { t } = useTranslation('common');
   const isHebrew = language === 'he';
   const name = isHebrew ? template.nameHe : template.name;
   const description = isHebrew ? template.descriptionHe : template.description;
@@ -239,7 +242,7 @@ function TemplateCard({
         {isRecommended && (
           <div className="absolute top-2 right-2 bg-purple-600 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
             <Sparkles className="w-3 h-3" />
-            {isHebrew ? 'מומלץ' : 'Recommended'}
+            {t('templates.recommended')}
           </div>
         )}
 
@@ -258,7 +261,7 @@ function TemplateCard({
           }}
           className="absolute bottom-2 right-2 px-2 py-1 bg-black/50 hover:bg-black/70 rounded text-xs text-white transition-colors"
         >
-          {isHebrew ? 'תצוגה מקדימה' : 'Preview'}
+          {t('templates.preview')}
         </button>
       </div>
 
@@ -288,6 +291,7 @@ function TemplatePreviewModal({
   onSelect,
   language,
 }: TemplatePreviewModalProps) {
+  const { t } = useTranslation('common');
   const isHebrew = language === 'he';
   const name = isHebrew ? template.nameHe : template.name;
   const description = isHebrew ? template.descriptionHe : template.description;
@@ -332,13 +336,13 @@ function TemplatePreviewModal({
             <div className="space-y-4 flex-1">
               <div>
                 <h3 className="font-medium mb-2">
-                  {isHebrew ? 'מאפיינים' : 'Features'}
+                  {t('templates.features')}
                 </h3>
                 <ul className="text-sm text-gray-400 space-y-1">
-                  <li>• {isHebrew ? 'גופנים מותאמים' : 'Matched fonts'}</li>
-                  <li>• {isHebrew ? 'פריסת עמודים אופטימלית' : 'Optimal page layout'}</li>
-                  <li>• {isHebrew ? 'תמיכה בעברית ואנגלית' : 'Hebrew & English support'}</li>
-                  <li>• {isHebrew ? 'אזורי תמונות מוכנים' : 'Pre-defined image zones'}</li>
+                  <li>• {t('templates.matchedFonts')}</li>
+                  <li>• {t('templates.optimalPageLayout')}</li>
+                  <li>• {t('templates.hebrewEnglishSupport')}</li>
+                  <li>• {t('templates.preDefinedImageZones')}</li>
                 </ul>
               </div>
 
@@ -346,7 +350,7 @@ function TemplatePreviewModal({
               {template.aiSettings && (
                 <div>
                   <h3 className="font-medium mb-2">
-                    {isHebrew ? 'הצעות AI' : 'AI Suggestions'}
+                    {t('templates.aiSuggestions')}
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {template.aiSettings.suggestedFonts?.slice(0, 4).map((font) => (
@@ -368,14 +372,14 @@ function TemplatePreviewModal({
                 onClick={onClose}
                 className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
               >
-                {isHebrew ? 'סגור' : 'Close'}
+                {t('templates.close')}
               </button>
               <button
                 onClick={onSelect}
                 className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors flex items-center justify-center gap-2"
               >
                 <Check className="w-5 h-5" />
-                {isHebrew ? 'בחר תבנית זו' : 'Select Template'}
+                {t('templates.selectTemplate')}
               </button>
             </div>
           </div>

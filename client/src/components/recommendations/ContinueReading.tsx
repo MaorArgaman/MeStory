@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { BookOpen, Clock, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import GlassCard from '../ui/GlassCard';
 
@@ -34,9 +35,11 @@ interface ContinueReadingProps {
 
 export default function ContinueReading({
   limit = 4,
-  title = 'Continue Reading',
+  title,
   showIfEmpty = false,
 }: ContinueReadingProps) {
+  const { t } = useTranslation('common');
+  const displayTitle = title || t('recommendations.continueReading');
   const [books, setBooks] = useState<ReadingProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,10 +90,10 @@ export default function ContinueReading({
     const now = new Date();
     const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return date.toLocaleDateString('en-US');
+    if (diffDays === 0) return t('recommendations.today');
+    if (diffDays === 1) return t('recommendations.yesterday');
+    if (diffDays < 7) return t('recommendations.daysAgo', { count: diffDays });
+    return date.toLocaleDateString();
   };
 
   if (loading) {
@@ -98,7 +101,7 @@ export default function ContinueReading({
       <div className="py-6">
         <div className="flex items-center gap-2 mb-4">
           <BookOpen className="w-5 h-5 text-purple-400" />
-          <h2 className="text-xl font-bold text-white">{title}</h2>
+          <h2 className="text-xl font-bold text-white">{displayTitle}</h2>
         </div>
         <div className="flex gap-4 overflow-x-auto pb-2">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -121,14 +124,14 @@ export default function ContinueReading({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-purple-400" />
-          <h2 className="text-xl font-bold text-white">{title}</h2>
+          <h2 className="text-xl font-bold text-white">{displayTitle}</h2>
         </div>
         {books.length > limit && (
           <Link
             to="/library"
             className="flex items-center gap-1 text-purple-400 hover:text-purple-300 transition-colors text-sm"
           >
-            View All
+            {t('recommendations.viewAll')}
             <ChevronRight className="w-4 h-4" />
           </Link>
         )}
@@ -137,12 +140,12 @@ export default function ContinueReading({
       {books.length === 0 ? (
         <GlassCard hover={false} className="text-center py-8">
           <BookOpen className="w-12 h-12 text-white/30 mx-auto mb-3" />
-          <p className="text-white/60">No books in progress</p>
+          <p className="text-white/60">{t('recommendations.noBooksInProgress')}</p>
           <Link
             to="/marketplace"
             className="text-purple-400 hover:text-purple-300 text-sm mt-2 inline-block"
           >
-            Discover new books
+            {t('recommendations.discoverNewBooks')}
           </Link>
         </GlassCard>
       ) : (
@@ -179,7 +182,7 @@ export default function ContinueReading({
                     {/* Progress Overlay */}
                     <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm p-2">
                       <div className="flex items-center justify-between text-xs text-white/80 mb-1">
-                        <span>{Math.round(item.progress)}% completed</span>
+                        <span>{t('recommendations.percentCompleted', { percent: Math.round(item.progress) })}</span>
                       </div>
                       <div className="w-full bg-white/20 rounded-full h-1.5">
                         <div
@@ -207,7 +210,7 @@ export default function ContinueReading({
 
                     {/* Resume Button */}
                     <button className="w-full mt-3 py-2 bg-purple-600/50 hover:bg-purple-600 rounded-lg text-white text-sm font-medium transition-colors">
-                      Continue Reading
+                      {t('recommendations.continueReadingButton')}
                     </button>
                   </div>
                 </GlassCard>

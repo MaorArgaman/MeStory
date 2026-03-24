@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { PenLine, Clock, ChevronRight, FileText } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import GlassCard from '../ui/GlassCard';
 
@@ -33,9 +34,11 @@ interface ContinueWritingProps {
 
 export default function ContinueWriting({
   limit = 4,
-  title = 'Continue Writing',
+  title,
   showIfEmpty = false,
 }: ContinueWritingProps) {
+  const { t } = useTranslation('common');
+  const displayTitle = title || t('recommendations.continueWriting');
   const [drafts, setDrafts] = useState<WritingProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,16 +89,16 @@ export default function ContinueWriting({
     const now = new Date();
     const diffMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
-    if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
+    if (diffMinutes < 60) return t('recommendations.minutesAgo', { count: diffMinutes });
 
     const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffHours < 24) return t('recommendations.hoursAgo', { count: diffHours });
 
     const diffDays = Math.floor(diffHours / 24);
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays === 1) return t('recommendations.yesterday');
+    if (diffDays < 7) return t('recommendations.daysAgo', { count: diffDays });
 
-    return date.toLocaleDateString('en-US');
+    return date.toLocaleDateString();
   };
 
   const formatWordCount = (count: number) => {
@@ -110,7 +113,7 @@ export default function ContinueWriting({
       <div className="py-6">
         <div className="flex items-center gap-2 mb-4">
           <PenLine className="w-5 h-5 text-amber-400" />
-          <h2 className="text-xl font-bold text-white">{title}</h2>
+          <h2 className="text-xl font-bold text-white">{displayTitle}</h2>
         </div>
         <div className="flex gap-4 overflow-x-auto pb-2">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -133,14 +136,14 @@ export default function ContinueWriting({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <PenLine className="w-5 h-5 text-amber-400" />
-          <h2 className="text-xl font-bold text-white">{title}</h2>
+          <h2 className="text-xl font-bold text-white">{displayTitle}</h2>
         </div>
         {drafts.length > limit && (
           <Link
             to="/dashboard"
             className="flex items-center gap-1 text-amber-400 hover:text-amber-300 transition-colors text-sm"
           >
-            View All
+            {t('recommendations.viewAll')}
             <ChevronRight className="w-4 h-4" />
           </Link>
         )}
@@ -149,12 +152,12 @@ export default function ContinueWriting({
       {drafts.length === 0 ? (
         <GlassCard hover={false} className="text-center py-8">
           <PenLine className="w-12 h-12 text-white/30 mx-auto mb-3" />
-          <p className="text-white/60">No active drafts</p>
+          <p className="text-white/60">{t('recommendations.noActiveDrafts')}</p>
           <Link
             to="/dashboard"
             className="text-amber-400 hover:text-amber-300 text-sm mt-2 inline-block"
           >
-            Start a new book
+            {t('recommendations.startNewBook')}
           </Link>
         </GlassCard>
       ) : (
@@ -190,7 +193,7 @@ export default function ContinueWriting({
 
                     {/* Draft Badge */}
                     <div className="absolute top-2 left-2 bg-amber-500/90 text-black text-xs font-bold px-2 py-0.5 rounded">
-                      Draft
+                      {t('recommendations.draft')}
                     </div>
                   </div>
 
@@ -205,7 +208,7 @@ export default function ContinueWriting({
                     <div className="flex items-center justify-between mt-2 text-xs text-white/40">
                       <div className="flex items-center gap-1">
                         <FileText className="w-3 h-3" />
-                        <span>{formatWordCount(item.wordCount)} words</span>
+                        <span>{formatWordCount(item.wordCount)} {t('recommendations.words')}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
@@ -215,7 +218,7 @@ export default function ContinueWriting({
 
                     {/* Continue Button */}
                     <button className="w-full mt-3 py-2 bg-amber-600/50 hover:bg-amber-600 rounded-lg text-white text-sm font-medium transition-colors">
-                      Continue Writing
+                      {t('recommendations.continueWritingButton')}
                     </button>
                   </div>
                 </GlassCard>

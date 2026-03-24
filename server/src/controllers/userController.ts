@@ -2,6 +2,10 @@ import { Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { User } from '../models/User';
 import { Book } from '../models/Book';
+import { Summary } from '../models/Summary';
+import { Transaction } from '../models/Transaction';
+import { Notification } from '../models/Notification';
+import { UserActivity } from '../models/UserActivity';
 import { AuthRequest } from '../types';
 import { supabaseAdmin } from '../config/supabase';
 
@@ -711,6 +715,144 @@ export const followUser = async (req: AuthRequest, res: Response): Promise<void>
     res.status(500).json({
       success: false,
       error: 'Failed to follow user',
+    });
+  }
+};
+
+/**
+ * Export all user data (GDPR compliance)
+ * GET /api/user/export-data
+ * BUG-009: GDPR data export functionality
+ */
+export const exportUserData = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: 'Authentication required',
+      });
+      return;
+    }
+
+    const userId = req.user.id;
+
+    // Fetch all user data in parallel for efficiency
+    const [user, books, summaries, transactions, notifications, userActivity] = await Promise.all([
+      User.findById(userId),
+      Book.find({ author: userId }),
+      Summary.find({ userId }),
+      Transaction.find({ userId }),
+      Notification.find({ recipient: userId }),
+      UserActivity.findByUserId(userId),
+    ]);
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: 'User not found',
+      });
+      return;
+    }
+
+    // Remove sensitive data from user profile
+    const { password, ...userDataWithoutPassword } = user as any;
+
+    // Build the export data object
+    const exportData = {
+      exportInfo: {
+        exportDate: new Date().toISOString(),
+        userId: userId,
+        dataVersion: '1.0',
+        description: 'Complete export of all your personal data stored in MeStory (GDPR Article 20)',
+      },
+      profile: {
+        id: userDataWithoutPassword.id,
+        name: userDataWithoutPassword.name,
+        email: userDataWithoutPassword.email,
+        role: userDataWithoutPassword.role,
+        credits: userDataWithoutPassword.credits,
+        bio: userDataWithoutPassword.profile?.bio,
+        avatar: userDataWithoutPassword.profile?.avatar,
+        language: userDataWithoutPassword.profile?.language,
+        createdAt: userDataWithoutPassword.created_at,
+        updatedAt: userDataWithoutPassword.updated_at,
+      },
+      books: books.map((book) => ({
+        id: book.id,
+        title: book.title,
+        description: book.description,
+        genre: book.genre,
+        language: book.language,
+        status: book.status,
+        publishingStatus: book.publishingStatus,
+        coverImage: book.coverImage,
+        chapters: book.chapters,
+        statistics: book.statistics,
+        createdAt: book.created_at,
+        updatedAt: book.updated_at,
+      })),
+      summaries: summaries.map((summary) => ({
+        id: summary.id,
+        sourceType: summary.sourceType,
+        content: summary.content,
+        summary: summary.summary,
+        characters: summary.characters,
+        plotStructure: summary.plotStructure,
+        chapters: summary.chapters,
+        status: summary.status,
+        convertedToBook: summary.convertedToBook,
+        createdAt: summary.created_at,
+        updatedAt: summary.updated_at,
+      })),
+      transactions: transactions.map((transaction) => ({
+        id: transaction.id,
+        amount: transaction.amount,
+        currency: transaction.currency,
+        plan: transaction.plan,
+        status: transaction.status,
+        paymentMethod: transaction.paymentMethod,
+        description: transaction.description,
+        createdAt: transaction.created_at,
+        updatedAt: transaction.updated_at,
+      })),
+      notifications: notifications.map((notification) => ({
+        id: notification.id,
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        isRead: notification.isRead,
+        createdAt: notification.created_at,
+      })),
+      activity: userActivity ? {
+        readingHistory: userActivity.readingHistory,
+        completedBooks: userActivity.completedBooks,
+        currentlyReading: userActivity.currentlyReading,
+        writingProgress: userActivity.writingProgress,
+        completedWriting: userActivity.completedWriting,
+        currentlyWriting: userActivity.currentlyWriting,
+        genrePreferences: userActivity.genrePreferences,
+        authorPreferences: userActivity.authorPreferences,
+        totalBooksRead: userActivity.totalBooksRead,
+        totalBooksWritten: userActivity.totalBooksWritten,
+        totalReadingTime: userActivity.totalReadingTime,
+        totalWritingTime: userActivity.totalWritingTime,
+        currentStreak: userActivity.currentStreak,
+        longestStreak: userActivity.longestStreak,
+        lastActiveAt: userActivity.lastActiveAt,
+      } : null,
+    };
+
+    // Set headers for JSON file download
+    const filename = `mestory-data-export-${userId}-${new Date().toISOString().split('T')[0]}.json`;
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    res.status(200).json(exportData);
+  } catch (error) {
+    console.error('Export user data error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to export user data',
     });
   }
 };
