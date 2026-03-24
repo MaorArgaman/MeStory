@@ -860,6 +860,8 @@
     "blank_page": "עמוד ריק",
     "remove_toc": "הסר תוכן עניינים",
     "add_toc": "הוסף תוכן עניינים",
+    "edit_content": "ערוך תוכן",
+    "content_saved": "התוכן נשמר",
     "messages": {
       "layout_saved": "הפריסה נשמרה בהצלחה",
       "save_failed": "נכשל בשמירת הפריסה"

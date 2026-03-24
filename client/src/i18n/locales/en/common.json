@@ -790,6 +790,8 @@
     "blank_page": "Blank page",
     "remove_toc": "Remove TOC",
     "add_toc": "Add TOC",
+    "edit_content": "Edit content",
+    "content_saved": "Content saved",
     "messages": {
       "layout_saved": "Layout saved successfully",
       "save_failed": "Failed to save layout"

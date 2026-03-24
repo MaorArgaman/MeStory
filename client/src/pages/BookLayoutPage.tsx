@@ -23,6 +23,7 @@ import {
   Layout,
   Palette,
   Layers,
+  Edit3,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -359,6 +360,11 @@ export default function BookLayoutPage() {
 
   // Mobile UI state
   const [showMobilePages, setShowMobilePages] = useState(false);
+
+  // Editing state
+  const [editingPageIndex, setEditingPageIndex] = useState<number | null>(null);
+  const [editingContent, setEditingContent] = useState<string>('');
+  const editableRef = useRef<HTMLDivElement>(null);
 
   // Determine text direction based on book language
   const isBookRTL = book ? isRTL(book.title) || book.language === 'he' || book.language === 'ar' : false;
@@ -774,6 +780,108 @@ export default function BookLayoutPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Start editing a page
+  const handleStartEditing = (pageIndex: number) => {
+    const page = pages[pageIndex];
+    if (!page || page.type !== 'chapter') return;
+
+    setEditingPageIndex(pageIndex);
+    setEditingContent(page.content);
+  };
+
+  // Finish editing and save changes
+  const handleFinishEditing = async () => {
+    if (editingPageIndex === null || !book || !editableRef.current) return;
+
+    const page = pages[editingPageIndex];
+    if (!page || page.type !== 'chapter' || page.chapterIndex === undefined) {
+      setEditingPageIndex(null);
+      return;
+    }
+
+    // Get the edited HTML content
+    const editedHtml = editableRef.current.innerHTML;
+
+    // Extract just the content without the chapter title
+    let contentWithoutTitle = editedHtml;
+    const titleMatch = editedHtml.match(/<h2[^>]*class="chapter-title"[^>]*>.*?<\/h2>/i);
+    if (titleMatch) {
+      contentWithoutTitle = editedHtml.replace(titleMatch[0], '').trim();
+    }
+
+    // Update the chapter content
+    const chapterIndex = page.chapterIndex;
+    const updatedChapters = [...book.chapters];
+
+    // For multi-page chapters, we need to collect all pages of the same chapter
+    const chapterPages = pages.filter(p => p.type === 'chapter' && p.chapterIndex === chapterIndex);
+
+    if (chapterPages.length === 1) {
+      // Simple case: chapter fits on one page
+      updatedChapters[chapterIndex] = {
+        ...updatedChapters[chapterIndex],
+        content: contentWithoutTitle,
+      };
+    } else {
+      // Multi-page chapter: only update the specific page's content
+      // and rebuild the full chapter content
+      const pageIndexInChapter = chapterPages.findIndex(p => p.id === page.id);
+      const updatedPageContents = chapterPages.map((p, idx) => {
+        if (idx === pageIndexInChapter) {
+          return contentWithoutTitle;
+        }
+        // Remove chapter title from other pages too
+        let content = p.content;
+        const match = content.match(/<h2[^>]*class="chapter-title"[^>]*>.*?<\/h2>/i);
+        if (match) {
+          content = content.replace(match[0], '').trim();
+        }
+        return content;
+      });
+
+      updatedChapters[chapterIndex] = {
+        ...updatedChapters[chapterIndex],
+        content: updatedPageContents.join('\n'),
+      };
+    }
+
+    // Update book state
+    const updatedBook = {
+      ...book,
+      chapters: updatedChapters,
+    };
+    setBook(updatedBook);
+
+    // Update the page content locally
+    const updatedPages = [...pages];
+    updatedPages[editingPageIndex] = {
+      ...page,
+      content: editedHtml,
+    };
+    setPages(updatedPages);
+
+    // Clear editing state
+    setEditingPageIndex(null);
+    setEditingContent('');
+
+    // Save to server
+    try {
+      await api.put(`/books/${bookId}`, {
+        chapters: updatedChapters,
+      });
+      toast.success(t('book_layout.content_saved', 'Content saved'));
+    } catch (error) {
+      console.error('Failed to save chapter content:', error);
+      toast.error(t('book_layout.messages.save_failed', 'Failed to save content'));
+    }
+  };
+
+  // Cancel editing
+  const handleCancelEditing = () => {
+    setEditingPageIndex(null);
+    setEditingContent('');
   };
 
   // Handle template selection
@@ -1296,6 +1404,7 @@ export default function BookLayoutPage() {
               {spreadPages.left && typeof spreadPages.left !== 'string' ? (
                 <PageRenderer
                   page={spreadPages.left}
+                  pageIndex={pages.findIndex(p => p.id === spreadPages.left?.id)}
                   settings={settings}
                   isRTL={isBookRTL}
                   isSelected={selectedPageIndex === pages.findIndex(p => p.id === spreadPages.left?.id)}
@@ -1325,6 +1434,12 @@ export default function BookLayoutPage() {
                       : []
                   }
                   language={language}
+                  editingPageIndex={editingPageIndex}
+                  editingContent={editingContent}
+                  editableRef={editableRef}
+                  onStartEditing={handleStartEditing}
+                  onFinishEditing={handleFinishEditing}
+                  onCancelEditing={handleCancelEditing}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-300 text-sm">
@@ -1359,6 +1474,7 @@ export default function BookLayoutPage() {
               ) : spreadPages.right ? (
                 <PageRenderer
                   page={spreadPages.right}
+                  pageIndex={pages.findIndex(p => p.id === spreadPages.right!.id)}
                   settings={settings}
                   isRTL={isBookRTL}
                   isSelected={selectedPageIndex === pages.findIndex(p => p.id === spreadPages.right!.id)}
@@ -1388,6 +1504,12 @@ export default function BookLayoutPage() {
                       : []
                   }
                   language={language}
+                  editingPageIndex={editingPageIndex}
+                  editingContent={editingContent}
+                  editableRef={editableRef}
+                  onStartEditing={handleStartEditing}
+                  onFinishEditing={handleFinishEditing}
+                  onCancelEditing={handleCancelEditing}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-300 text-sm">
@@ -1829,6 +1951,7 @@ interface AIImagePlacementLocal {
 // Page Renderer Component
 interface PageRendererProps {
   page: PageContent;
+  pageIndex: number;
   settings: typeof defaultSettings;
   isRTL: boolean;
   isSelected: boolean;
@@ -1843,10 +1966,18 @@ interface PageRendererProps {
   headerStyle?: 'book-title' | 'chapter-title' | 'none';
   aiImagePlacements?: AIImagePlacementLocal[];
   language?: string;
+  // Text editing props
+  editingPageIndex: number | null;
+  editingContent: string;
+  editableRef: React.RefObject<HTMLDivElement>;
+  onStartEditing: (pageIndex: number) => void;
+  onFinishEditing: () => void;
+  onCancelEditing: () => void;
 }
 
 function PageRenderer({
   page,
+  pageIndex,
   settings,
   isRTL,
   isSelected,
@@ -1861,7 +1992,14 @@ function PageRenderer({
   headerStyle = 'book-title',
   aiImagePlacements = [],
   language = 'he',
+  editingPageIndex,
+  editingContent,
+  editableRef,
+  onStartEditing,
+  onFinishEditing,
+  onCancelEditing,
 }: PageRendererProps) {
+  const { t } = useTranslation('common');
   const [_isDragging, setIsDragging] = useState(false);
   const [_isResizing, setIsResizing] = useState(false);
   const [showEditToolbar, setShowEditToolbar] = useState(false);
@@ -1958,16 +2096,63 @@ function PageRenderer({
       )}
 
       {/* Page Content */}
-      <div
-        className="h-full overflow-hidden book-page-content prose prose-sm max-w-none"
-        dangerouslySetInnerHTML={{ __html: page.content }}
-        style={{
-          color: settings.textColor || '#000000',
-          direction: isRTL ? 'rtl' : 'ltr',
-          paddingTop: showHeader ? '15px' : '0',
-          paddingBottom: settings.showPageNumbers ? '20px' : '0',
-        }}
-      />
+      {editingPageIndex === pageIndex ? (
+        // Editable mode
+        <div className="relative h-full">
+          <div
+            ref={editableRef}
+            contentEditable
+            suppressContentEditableWarning
+            className="h-full overflow-auto book-page-content prose prose-sm max-w-none outline-none focus:ring-2 focus:ring-magic-gold/50 rounded"
+            dangerouslySetInnerHTML={{ __html: editingContent }}
+            style={{
+              color: settings.textColor || '#000000',
+              direction: isRTL ? 'rtl' : 'ltr',
+              paddingTop: showHeader ? '15px' : '0',
+              paddingBottom: settings.showPageNumbers ? '20px' : '0',
+            }}
+          />
+          {/* Editing controls */}
+          <div className="absolute bottom-2 right-2 flex gap-2 z-30">
+            <button
+              onClick={onCancelEditing}
+              className="px-2 py-1 bg-gray-600 hover:bg-gray-500 text-white text-xs rounded shadow"
+            >
+              {t('common.cancel', 'Cancel')}
+            </button>
+            <button
+              onClick={onFinishEditing}
+              className="px-2 py-1 bg-magic-gold hover:bg-yellow-500 text-black text-xs rounded shadow font-medium"
+            >
+              {t('common.save', 'Save')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        // View mode with edit button for chapter pages
+        <div className="relative h-full group">
+          <div
+            className="h-full overflow-hidden book-page-content prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: page.content }}
+            style={{
+              color: settings.textColor || '#000000',
+              direction: isRTL ? 'rtl' : 'ltr',
+              paddingTop: showHeader ? '15px' : '0',
+              paddingBottom: settings.showPageNumbers ? '20px' : '0',
+            }}
+          />
+          {/* Edit button for chapter pages */}
+          {page.type === 'chapter' && (
+            <button
+              onClick={() => onStartEditing(pageIndex)}
+              className="absolute top-2 right-2 p-1.5 bg-magic-gold/90 hover:bg-magic-gold text-black rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
+              title={t('book_layout.edit_content', 'Edit content')}
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* AI-Generated Interior Images */}
       {page.type === 'chapter' && aiImagePlacements.length > 0 && (
