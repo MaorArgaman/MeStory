@@ -111,13 +111,17 @@ export default function LandingPage() {
             <motion.div
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.2 }}
-              className="cursor-pointer -my-1"
+              className="cursor-pointer flex items-center"
               onClick={() => navigate('/')}
             >
               <img
                 src={logoIcon}
                 alt="MeStory"
-                className="h-16 sm:h-[72px] lg:h-20 w-auto object-contain drop-shadow-[0_2px_20px_rgba(255,215,0,0.5)]"
+                className="h-12 sm:h-14 w-auto object-cover"
+                style={{
+                  clipPath: 'inset(15% 5% 15% 5%)',
+                  transform: 'scale(1.4)',
+                }}
               />
             </motion.div>
 

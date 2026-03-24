@@ -1617,12 +1617,16 @@ export default function BookLayoutPage() {
             {/* Logo */}
             <button
               onClick={() => navigate('/dashboard')}
-              className="hidden sm:flex items-center hover:opacity-80 transition-opacity"
+              className="hidden sm:flex items-center hover:opacity-80 transition-opacity overflow-hidden"
             >
               <img
-                src="/img/MeStory-Logo.png"
+                src="/img/logo-glow.png"
                 alt="MeStory"
-                className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.3)]"
+                className="h-10 sm:h-12 w-auto object-cover"
+                style={{
+                  clipPath: 'inset(15% 5% 15% 5%)',
+                  transform: 'scale(1.4)',
+                }}
               />
             </button>
             <div className="hidden sm:block h-6 w-px bg-magic-gold/30" />
