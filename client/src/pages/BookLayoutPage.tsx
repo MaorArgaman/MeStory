@@ -1622,7 +1622,7 @@ export default function BookLayoutPage() {
               <img
                 src="/img/MeStory-Logo.png"
                 alt="MeStory"
-                className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.3)] mix-blend-lighten"
+                className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.3)]"
               />
             </button>
             <div className="hidden sm:block h-6 w-px bg-magic-gold/30" />

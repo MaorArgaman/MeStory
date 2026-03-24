@@ -117,7 +117,7 @@ export default function LandingPage() {
               <img
                 src={logoIcon}
                 alt="MeStory"
-                className="h-16 sm:h-[72px] lg:h-20 w-auto object-contain drop-shadow-[0_2px_20px_rgba(255,215,0,0.5)] mix-blend-lighten"
+                className="h-16 sm:h-[72px] lg:h-20 w-auto object-contain drop-shadow-[0_2px_20px_rgba(255,215,0,0.5)]"
               />
             </motion.div>
 
