@@ -247,6 +247,7 @@ export default function DesignStudioPage() {
   // Cover text positioning
   const [titlePosition, setTitlePosition] = useState({ x: 50, y: 20 });
   const [authorPosition, setAuthorPosition] = useState({ x: 50, y: 85 });
+  const [synopsisPosition, setSynopsisPosition] = useState({ x: 50, y: 40 });
   const [editMode, setEditMode] = useState(false);
 
 
@@ -306,6 +307,7 @@ export default function DesignStudioPage() {
           spineColor,
           titlePosition,
           authorPosition,
+          synopsisPosition,
         };
         localStorage.setItem(`design_studio_${bookId}`, JSON.stringify(designSettings));
       }
@@ -316,7 +318,7 @@ export default function DesignStudioPage() {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [coverColor, textColor, fontFamily, imageUrl, backCoverImageUrl, spineColor, titlePosition, authorPosition, bookId]);
+  }, [coverColor, textColor, fontFamily, imageUrl, backCoverImageUrl, spineColor, titlePosition, authorPosition, synopsisPosition, bookId]);
 
   // beforeunload warning for unsaved changes
   useEffect(() => {
@@ -367,8 +369,20 @@ export default function DesignStudioPage() {
           // Load text positions
           const loadedTitlePos = coverDesign.titlePosition || coverDesign.front?.title?.position;
           const loadedAuthorPos = coverDesign.authorPosition || coverDesign.front?.authorName?.position;
+          const loadedSynopsisPos = coverDesign.synopsisPosition || coverDesign.back?.synopsisPosition;
           if (loadedTitlePos) setTitlePosition(loadedTitlePos);
           if (loadedAuthorPos) setAuthorPosition(loadedAuthorPos);
+          if (loadedSynopsisPos) setSynopsisPosition(loadedSynopsisPos);
+
+          // Load back cover image URL
+          let existingBackCoverUrl = coverDesign.back?.imageUrl || '';
+          if (existingBackCoverUrl && !existingBackCoverUrl.startsWith('http') && !existingBackCoverUrl.startsWith('data:')) {
+            const apiUrl = import.meta.env.VITE_API_URL ||
+              (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
+            const serverBaseUrl = apiUrl.replace('/api', '');
+            existingBackCoverUrl = `${serverBaseUrl}${existingBackCoverUrl}`;
+          }
+          if (existingBackCoverUrl) setBackCoverImageUrl(existingBackCoverUrl);
         }
       }
     } catch (error) {
@@ -424,6 +438,7 @@ export default function DesignStudioPage() {
         imageUrl: imageUrl || undefined,
         titlePosition,
         authorPosition,
+        synopsisPosition,
         front: {
           type: 'uploaded',
           imageUrl: imageUrl || undefined,
@@ -446,6 +461,7 @@ export default function DesignStudioPage() {
         back: {
           imageUrl: backCoverImageUrl || undefined,
           backgroundColor: spineColor || coverColor,
+          synopsisPosition,
         },
         spine: {
           color: spineColor || undefined,
@@ -496,7 +512,7 @@ export default function DesignStudioPage() {
     setWizardProgress({
       show: true,
       currentStep: 1,
-      totalSteps: 6,
+      totalSteps: 8,
       stepName: language === 'he' ? 'מנתח את הספר...' : 'Analyzing book...',
     });
 
@@ -538,6 +554,43 @@ export default function DesignStudioPage() {
           if (coverDesign.front.imageUrl) {
             setImageUrl(coverDesign.front.imageUrl);
           }
+        }
+
+        // Step 7: Generate synopsis
+        setWizardProgress(prev => ({
+          ...prev,
+          currentStep: 7,
+          stepName: language === 'he' ? 'יוצר תקציר...' : 'Generating synopsis...',
+        }));
+
+        try {
+          const synopsisResponse = await api.post('/ai/generate-synopsis', { bookId });
+          if (synopsisResponse.data.success && synopsisResponse.data.data.synopsis) {
+            setSynopsis(synopsisResponse.data.data.synopsis);
+          }
+        } catch (synopsisError) {
+          console.warn('Synopsis generation failed:', synopsisError);
+        }
+
+        // Step 8: Generate back cover image
+        setWizardProgress(prev => ({
+          ...prev,
+          currentStep: 8,
+          stepName: language === 'he' ? 'יוצר תמונת גב...' : 'Generating back cover...',
+        }));
+
+        try {
+          const backCoverPrompt = `Book back cover design, elegant abstract background, ${book.genre || 'literary'} style, soft gradients, minimalist, professional book design, no text`;
+          const backCoverResponse = await api.post('/ai/generate-image', {
+            prompt: backCoverPrompt,
+            style: 'artistic',
+            aspectRatio: '3:4',
+          });
+          if (backCoverResponse.data.success && backCoverResponse.data.data.imageUrl) {
+            setBackCoverImageUrl(backCoverResponse.data.data.imageUrl);
+          }
+        } catch (backCoverError) {
+          console.warn('Back cover image generation failed:', backCoverError);
         }
 
         // Reload book to get all changes
@@ -582,7 +635,7 @@ export default function DesignStudioPage() {
 
     setGeneratingSynopsis(true);
     try {
-      const response = await api.post(`/ai/generate-synopsis/${bookId}`);
+      const response = await api.post('/ai/generate-synopsis', { bookId });
       if (response.data.success && response.data.data.synopsis) {
         setSynopsis(response.data.data.synopsis);
         // Update book state
@@ -1109,8 +1162,8 @@ export default function DesignStudioPage() {
                 </button>
                 <p className="text-xs text-center text-gray-400">
                   {language === 'he'
-                    ? 'צבעים, גופנים ותמונת עטיפה בלחיצה אחת'
-                    : 'Colors, fonts & cover image in one click'}
+                    ? 'צבעים, גופנים, תמונות ותקציר בלחיצה אחת'
+                    : 'Colors, fonts, images & synopsis in one click'}
                 </p>
 
               </div>
@@ -1390,9 +1443,11 @@ export default function DesignStudioPage() {
                 backCoverColor={spineColor || undefined}
                 titlePosition={titlePosition}
                 authorPosition={authorPosition}
+                synopsisPosition={synopsisPosition}
                 editMode={editMode}
                 onTitlePositionChange={setTitlePosition}
                 onAuthorPositionChange={setAuthorPosition}
+                onSynopsisPositionChange={setSynopsisPosition}
               />
             </div>
           </div>

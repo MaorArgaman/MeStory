@@ -4,7 +4,7 @@
  */
 
 import { BookTemplate, IBookTemplate, TemplateCategory } from '../models/BookTemplate';
-import { Book, IBook } from '../models/Book';
+import { Book, IBook, IPageLayout } from '../models/Book';
 import { defaultTemplates } from '../data/defaultTemplates';
 
 // UUID validation helper
@@ -156,7 +156,7 @@ export async function updateTemplate(
   // Remove protected fields from updates
   const { id, isSystem, createdBy, usageCount, createdAt, ...safeUpdates } = updates as any;
 
-  return BookTemplate.findByIdAndUpdate(templateId, safeUpdates, { new: true });
+  return BookTemplate.findByIdAndUpdate(templateId, safeUpdates);
 }
 
 // Delete a template
@@ -244,54 +244,64 @@ export async function applyTemplateToBook(
     throw new Error('Not authorized to modify this book');
   }
 
+  // Ensure template has pageLayout
+  const templatePageLayout = template.defaults.pageLayout;
+  if (!templatePageLayout) {
+    throw new Error('Template does not have page layout defined');
+  }
+
   // Build update object
-  const pageLayout = {
-    bodyFont: template.defaults.pageLayout.typography.bodyFont,
-    fontSize: template.defaults.pageLayout.typography.bodyFontSize,
-    lineHeight: template.defaults.pageLayout.typography.lineHeight,
+  const pageLayout: IPageLayout = {
+    bodyFont: templatePageLayout.typography?.bodyFont || 'Roboto',
+    fontSize: templatePageLayout.typography?.bodyFontSize || 12,
+    lineHeight: templatePageLayout.typography?.lineHeight || 1.5,
     pageSize: template.defaults.pageSize as 'A4' | 'A5' | 'Letter' | 'Custom',
     customPageSize: template.defaults.customPageSize,
-    margins: template.defaults.pageLayout.margins,
+    margins: templatePageLayout.margins,
     includeTableOfContents: true,
     headerFooter: {
-      includeHeader: template.defaults.pageLayout.header.enabled,
-      includeFooter: template.defaults.pageLayout.footer.enabled,
-      includePageNumbers: template.defaults.pageLayout.showPageNumber,
-      pageNumberPosition: template.defaults.pageLayout.pageNumberPosition.includes('top') ? 'top' : 'bottom',
+      includeHeader: templatePageLayout.header?.enabled ?? false,
+      includeFooter: templatePageLayout.footer?.enabled ?? false,
+      includePageNumbers: templatePageLayout.showPageNumber ?? true,
+      pageNumberPosition: (templatePageLayout.pageNumberPosition || 'bottom').includes('top') ? 'top' as const : 'bottom' as const,
     },
   };
 
   // Build cover design if no cover exists
   let coverDesign = book.coverDesign;
+  const frontCover = template.coverDefaults?.frontCover;
+  const backCover = template.coverDefaults?.backCover;
+  const spine = template.coverDefaults?.spine;
+
   if (!book.coverDesign || !book.coverDesign.front) {
     coverDesign = {
       front: {
         type: 'gradient',
-        backgroundColor: template.coverDefaults.frontCover.backgroundColor,
-        gradientColors: template.coverDefaults.frontCover.gradientColors,
+        backgroundColor: frontCover?.backgroundColor || '#1e3a5f',
+        gradientColors: frontCover?.gradientColors,
         title: {
           text: book.title,
-          font: template.coverDefaults.frontCover.titleFont,
-          size: template.coverDefaults.frontCover.titleSize,
-          color: template.coverDefaults.frontCover.titleColor,
-          position: template.coverDefaults.frontCover.titlePosition,
+          font: frontCover?.titleFont || 'Playfair Display',
+          size: frontCover?.titleSize || 36,
+          color: frontCover?.titleColor || '#ffffff',
+          position: frontCover?.titlePosition || { x: 50, y: 40 },
         },
         authorName: {
           text: '',
-          font: template.coverDefaults.frontCover.authorFont,
-          size: template.coverDefaults.frontCover.authorSize,
-          color: template.coverDefaults.frontCover.authorColor,
+          font: frontCover?.authorFont || 'Open Sans',
+          size: frontCover?.authorSize || 18,
+          color: frontCover?.authorColor || '#ffffff',
         },
       },
       back: {
-        backgroundColor: template.coverDefaults.backCover.backgroundColor,
+        backgroundColor: backCover?.backgroundColor || '#1e3a5f',
         synopsis: book.synopsis || '',
       },
       spine: {
         width: 0,
         title: book.title,
         author: '',
-        backgroundColor: template.coverDefaults.spine.backgroundColor,
+        backgroundColor: spine?.backgroundColor || '#1e3a5f',
       },
     };
   }

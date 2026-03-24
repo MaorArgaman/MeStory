@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RotateCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface Book3DPreviewProps {
@@ -17,9 +17,11 @@ interface Book3DPreviewProps {
   backCoverColor?: string;
   titlePosition?: { x: number; y: number };
   authorPosition?: { x: number; y: number };
+  synopsisPosition?: { x: number; y: number };
   editMode?: boolean;
   onTitlePositionChange?: (pos: { x: number; y: number }) => void;
   onAuthorPositionChange?: (pos: { x: number; y: number }) => void;
+  onSynopsisPositionChange?: (pos: { x: number; y: number }) => void;
 }
 
 export default function Book3DPreview({
@@ -36,9 +38,11 @@ export default function Book3DPreview({
   backCoverColor,
   titlePosition = { x: 50, y: 20 },
   authorPosition = { x: 50, y: 85 },
+  synopsisPosition = { x: 50, y: 40 },
   editMode = false,
   onTitlePositionChange,
   onAuthorPositionChange,
+  onSynopsisPositionChange,
 }: Book3DPreviewProps) {
   const { t } = useTranslation('common');
   // Detect RTL languages
@@ -49,12 +53,17 @@ export default function Book3DPreview({
   const [currentPage, setCurrentPage] = useState(0);
   const [isPageTurning, setIsPageTurning] = useState(false);
 
+  // Flip state to show back cover
+  const [showBackCover, setShowBackCover] = useState(false);
+
   // Drag state
   const [isDraggingTitle, setIsDraggingTitle] = useState(false);
   const [isDraggingAuthor, setIsDraggingAuthor] = useState(false);
+  const [isDraggingSynopsis, setIsDraggingSynopsis] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const coverRef = useRef<HTMLDivElement>(null);
+  const backCoverRef = useRef<HTMLDivElement>(null);
 
   // Handle drag for title (mouse)
   const handleTitleMouseDown = (e: React.MouseEvent) => {
@@ -96,12 +105,34 @@ export default function Book3DPreview({
     setStartPos({ x: authorPosition.x, y: authorPosition.y });
   };
 
+  // Handle drag for synopsis (mouse)
+  const handleSynopsisMouseDown = (e: React.MouseEvent) => {
+    if (!editMode || !onSynopsisPositionChange) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingSynopsis(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setStartPos({ x: synopsisPosition.x, y: synopsisPosition.y });
+  };
+
+  // Handle drag for synopsis (touch)
+  const handleSynopsisTouchStart = (e: React.TouchEvent) => {
+    if (!editMode || !onSynopsisPositionChange) return;
+    e.stopPropagation();
+    const touch = e.touches[0];
+    setIsDraggingSynopsis(true);
+    setDragStart({ x: touch.clientX, y: touch.clientY });
+    setStartPos({ x: synopsisPosition.x, y: synopsisPosition.y });
+  };
+
   useEffect(() => {
-    if (!isDraggingTitle && !isDraggingAuthor) return;
+    if (!isDraggingTitle && !isDraggingAuthor && !isDraggingSynopsis) return;
 
     const handleMove = (clientX: number, clientY: number) => {
-      if (!coverRef.current) return;
-      const rect = coverRef.current.getBoundingClientRect();
+      // Use the appropriate ref based on what we're dragging
+      const ref = isDraggingSynopsis ? backCoverRef : coverRef;
+      if (!ref.current) return;
+      const rect = ref.current.getBoundingClientRect();
       const deltaX = ((clientX - dragStart.x) / rect.width) * 100;
       const deltaY = ((clientY - dragStart.y) / rect.height) * 100;
 
@@ -114,6 +145,9 @@ export default function Book3DPreview({
       if (isDraggingAuthor && onAuthorPositionChange) {
         onAuthorPositionChange({ x: newX, y: newY });
       }
+      if (isDraggingSynopsis && onSynopsisPositionChange) {
+        onSynopsisPositionChange({ x: newX, y: newY });
+      }
     };
 
     const handleMouseMove = (e: MouseEvent) => handleMove(e.clientX, e.clientY);
@@ -125,6 +159,7 @@ export default function Book3DPreview({
     const handleEnd = () => {
       setIsDraggingTitle(false);
       setIsDraggingAuthor(false);
+      setIsDraggingSynopsis(false);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
@@ -138,7 +173,7 @@ export default function Book3DPreview({
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleEnd);
     };
-  }, [isDraggingTitle, isDraggingAuthor, dragStart, startPos, onTitlePositionChange, onAuthorPositionChange]);
+  }, [isDraggingTitle, isDraggingAuthor, isDraggingSynopsis, dragStart, startPos, onTitlePositionChange, onAuthorPositionChange, onSynopsisPositionChange]);
 
   const nextPage = () => {
     if (currentPage < pages.length - 1 && !isPageTurning) {
@@ -179,6 +214,15 @@ export default function Book3DPreview({
         }}
       />
 
+      {/* Flip Button */}
+      <button
+        onClick={() => setShowBackCover(!showBackCover)}
+        className="absolute top-2 right-2 z-30 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+        title={showBackCover ? t('design_studio.show_front_cover') : t('design_studio.show_back_cover')}
+      >
+        <RotateCw className={`w-5 h-5 text-white transition-transform ${showBackCover ? 'rotate-180' : ''}`} />
+      </button>
+
       {/* 3D Book Container */}
       <div
         className="book-container"
@@ -190,9 +234,14 @@ export default function Book3DPreview({
         <motion.div
           className="book-3d"
           animate={{
-            rotateY: isRTL ? [-15, -20, -15] : [15, 20, 15],
+            rotateY: showBackCover
+              ? (isRTL ? 165 : -165)
+              : (isRTL ? [-15, -20, -15] : [15, 20, 15]),
           }}
-          transition={{
+          transition={showBackCover ? {
+            duration: 0.6,
+            ease: 'easeInOut',
+          } : {
             duration: 4,
             repeat: Infinity,
             ease: 'easeInOut',
@@ -343,6 +392,7 @@ export default function Book3DPreview({
 
           {/* Back Cover with Synopsis */}
           <div
+            ref={backCoverRef}
             className="book-cover back-cover"
             style={{
               position: 'absolute',
@@ -354,10 +404,6 @@ export default function Book3DPreview({
               borderRadius: isRTL ? '4px 8px 8px 4px' : '8px 4px 4px 8px',
               boxShadow: 'inset 0 0 30px rgba(0,0,0,0.4)',
               transform: 'translateZ(-25px) rotateY(180deg)',
-              padding: '30px 25px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
               overflow: 'hidden',
               direction: isRTL ? 'rtl' : 'ltr',
             }}
@@ -370,33 +416,47 @@ export default function Book3DPreview({
               }}
             />
 
-            {/* Synopsis Content */}
-            <div className="relative z-10 flex flex-col h-full justify-between">
-              {/* Synopsis Text */}
-              <div className="flex-1 overflow-hidden">
-                <p
-                  style={{
-                    fontFamily: fontFamily,
-                    fontSize: '11px',
-                    lineHeight: '1.5',
-                    color: textColor,
-                    textShadow: '1px 1px 3px rgba(0,0,0,0.8)',
-                    textAlign: isRTL ? 'right' : 'left',
-                    opacity: 0.95,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 12,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {synopsis || (language === 'he'
-                    ? 'תקציר הספר יופיע כאן...'
-                    : 'Book synopsis will appear here...')}
-                </p>
-              </div>
+            {/* Synopsis - Draggable in edit mode */}
+            <div
+              className={`absolute z-10 ${editMode ? 'cursor-move touch-none' : ''} ${isDraggingSynopsis ? 'opacity-80' : ''}`}
+              style={{
+                left: `${synopsisPosition.x}%`,
+                top: `${synopsisPosition.y}%`,
+                transform: 'translate(-50%, -50%)',
+                maxWidth: '85%',
+                maxHeight: '70%',
+                overflow: 'hidden',
+              }}
+              onMouseDown={handleSynopsisMouseDown}
+              onTouchStart={handleSynopsisTouchStart}
+            >
+              <p
+                style={{
+                  fontFamily: fontFamily,
+                  fontSize: '11px',
+                  lineHeight: '1.5',
+                  color: textColor,
+                  textShadow: '1px 1px 3px rgba(0,0,0,0.8)',
+                  textAlign: isRTL ? 'right' : 'left',
+                  opacity: 0.95,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 10,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                }}
+              >
+                {synopsis || (language === 'he'
+                  ? 'תקציר הספר יופיע כאן...'
+                  : 'Book synopsis will appear here...')}
+              </p>
+              {editMode && (
+                <div className="absolute -inset-2 border-2 border-dashed border-white/40 rounded pointer-events-none" />
+              )}
+            </div>
 
-              {/* Author Section at Bottom */}
-              <div className="pt-4 border-t border-white/20 mt-4">
+            {/* Author Section at Bottom */}
+            <div className="absolute bottom-4 left-0 right-0 px-4">
+              <div className="pt-3 border-t border-white/20">
                 <p
                   style={{
                     fontFamily: fontFamily,
