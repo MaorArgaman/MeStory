@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getSuggestions, analyzeChapter, generateTitles, generateBookSynopsis, generateCoverColors, generateCover } from '../controllers/aiController';
+import { getSuggestions, analyzeChapter, generateTitles, generateBookSynopsis, generateCoverColors, generateCover, translateChapterContent, translateBook } from '../controllers/aiController';
 import {
   generateAIImage,
   generateAIImageVariations,
@@ -127,6 +127,30 @@ router.post('/generate-cover-colors', generateCoverColors as any);
  * }
  */
 router.post('/generate-cover', generateCover as any);
+
+/**
+ * POST /api/ai/translate-chapter
+ * Translate a single chapter from Hebrew to English or vice versa
+ *
+ * Body:
+ * {
+ *   content: string
+ *   title: string
+ *   targetLanguage: 'hebrew' | 'english'
+ * }
+ */
+router.post('/translate-chapter', translateChapterContent as any);
+
+/**
+ * POST /api/ai/translate-book/:bookId
+ * Translate an entire book from Hebrew to English or vice versa
+ *
+ * Body:
+ * {
+ *   targetLanguage: 'hebrew' | 'english'
+ * }
+ */
+router.post('/translate-book/:bookId', translateBook as any);
 
 /**
  * POST /api/ai/generate-image

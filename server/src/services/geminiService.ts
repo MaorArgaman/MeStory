@@ -576,3 +576,117 @@ Respond ONLY with valid JSON in this exact format:
     throw new Error('Failed to generate book cover. Please try again.');
   }
 }
+
+/**
+ * Translate text from one language to another
+ * Supports Hebrew <-> English translation
+ */
+export interface TranslationResult {
+  translatedText: string;
+  sourceLanguage: 'hebrew' | 'english';
+  targetLanguage: 'hebrew' | 'english';
+}
+
+export async function translateText(
+  text: string,
+  targetLanguage: 'hebrew' | 'english'
+): Promise<TranslationResult> {
+  try {
+    const model = getGeminiModel();
+
+    const sourceLanguage = targetLanguage === 'hebrew' ? 'english' : 'hebrew';
+    const targetLangName = targetLanguage === 'hebrew' ? 'Hebrew' : 'English';
+    const sourceLangName = sourceLanguage === 'hebrew' ? 'Hebrew' : 'English';
+
+    const prompt = `You are a professional literary translator specializing in ${sourceLangName} to ${targetLangName} translations.
+
+Translate the following text from ${sourceLangName} to ${targetLangName}.
+
+IMPORTANT RULES:
+1. Preserve the literary style, tone, and voice of the original text
+2. Keep paragraph structure and formatting intact
+3. Preserve any HTML tags exactly as they are (like <p>, <br>, <strong>, etc.)
+4. For names of people and places, transliterate them appropriately
+5. Maintain the emotional impact and nuances of the original
+6. For ${targetLangName === 'Hebrew' ? 'Hebrew' : 'English'} output, ensure natural-sounding prose
+
+TEXT TO TRANSLATE:
+${text}
+
+Provide ONLY the translated text, without any explanations or notes.`;
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const translatedText = response.text().trim();
+
+    return {
+      translatedText,
+      sourceLanguage,
+      targetLanguage
+    };
+  } catch (error: any) {
+    console.error('Gemini API error (translateText):', {
+      message: error.message,
+      response: error.response?.data,
+      stack: error.stack
+    });
+    throw new Error('Failed to translate text. Please try again.');
+  }
+}
+
+/**
+ * Translate an entire chapter (handles long text by chunking if needed)
+ */
+export async function translateChapter(
+  content: string,
+  title: string,
+  targetLanguage: 'hebrew' | 'english'
+): Promise<{ translatedContent: string; translatedTitle: string }> {
+  try {
+    // Translate title
+    const titleResult = await translateText(title, targetLanguage);
+
+    // For content, we may need to chunk large texts
+    const MAX_CHUNK_SIZE = 10000; // characters
+
+    if (content.length <= MAX_CHUNK_SIZE) {
+      const contentResult = await translateText(content, targetLanguage);
+      return {
+        translatedContent: contentResult.translatedText,
+        translatedTitle: titleResult.translatedText
+      };
+    }
+
+    // Split content by paragraphs to maintain structure
+    const paragraphs = content.split(/(<\/p>|<br\s*\/?>|\n\n)/);
+    const chunks: string[] = [];
+    let currentChunk = '';
+
+    for (const paragraph of paragraphs) {
+      if ((currentChunk + paragraph).length > MAX_CHUNK_SIZE && currentChunk.length > 0) {
+        chunks.push(currentChunk);
+        currentChunk = paragraph;
+      } else {
+        currentChunk += paragraph;
+      }
+    }
+    if (currentChunk.length > 0) {
+      chunks.push(currentChunk);
+    }
+
+    // Translate each chunk
+    const translatedChunks: string[] = [];
+    for (const chunk of chunks) {
+      const result = await translateText(chunk, targetLanguage);
+      translatedChunks.push(result.translatedText);
+    }
+
+    return {
+      translatedContent: translatedChunks.join(''),
+      translatedTitle: titleResult.translatedText
+    };
+  } catch (error: any) {
+    console.error('Error translating chapter:', error);
+    throw error;
+  }
+}

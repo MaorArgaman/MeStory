@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { generateContinuations, analyzeTextQuality, generateBookTitles, generateSynopsis, generateCoverColorScheme, generateBookCover } from '../services/geminiService';
+import { generateContinuations, analyzeTextQuality, generateBookTitles, generateSynopsis, generateCoverColorScheme, generateBookCover, translateChapter } from '../services/geminiService';
 import { Book } from '../models/Book';
 
 // UUID validation regex for Supabase IDs
@@ -268,6 +268,143 @@ export const generateCover = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({
       success: false,
       message: 'Failed to generate cover design',
+      error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined,
+    });
+  }
+};
+
+/**
+ * POST /api/ai/translate-chapter
+ * Translate a single chapter from Hebrew to English or vice versa
+ */
+export const translateChapterContent = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { content, title, targetLanguage } = req.body;
+
+    // Validation
+    if (!content || !title) {
+      res.status(400).json({
+        success: false,
+        message: 'content and title are required',
+      });
+      return;
+    }
+
+    if (!targetLanguage || !['hebrew', 'english'].includes(targetLanguage)) {
+      res.status(400).json({
+        success: false,
+        message: 'targetLanguage must be "hebrew" or "english"',
+      });
+      return;
+    }
+
+    // Translate chapter using Gemini AI
+    const translation = await translateChapter(content, title, targetLanguage);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        translatedContent: translation.translatedContent,
+        translatedTitle: translation.translatedTitle,
+        targetLanguage,
+      },
+    });
+  } catch (error) {
+    console.error('Error translating chapter:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to translate chapter',
+      error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined,
+    });
+  }
+};
+
+/**
+ * POST /api/ai/translate-book/:bookId
+ * Translate an entire book (all chapters) from Hebrew to English or vice versa
+ */
+export const translateBook = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { bookId } = req.params;
+    const { targetLanguage } = req.body;
+
+    // Validation
+    if (!bookId) {
+      res.status(400).json({
+        success: false,
+        message: 'bookId is required',
+      });
+      return;
+    }
+
+    if (!UUID_REGEX.test(bookId)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid bookId format',
+      });
+      return;
+    }
+
+    if (!targetLanguage || !['hebrew', 'english'].includes(targetLanguage)) {
+      res.status(400).json({
+        success: false,
+        message: 'targetLanguage must be "hebrew" or "english"',
+      });
+      return;
+    }
+
+    // Fetch book with chapters
+    const book = await Book.findById(bookId);
+    if (!book) {
+      res.status(404).json({
+        success: false,
+        message: 'Book not found',
+      });
+      return;
+    }
+
+    // Validate book has content
+    if (!book.chapters || book.chapters.length === 0) {
+      res.status(400).json({
+        success: false,
+        message: 'Book must have at least one chapter to translate',
+      });
+      return;
+    }
+
+    // Translate book title
+    const titleTranslation = await translateChapter(book.title, book.title, targetLanguage);
+
+    // Translate all chapters
+    const translatedChapters = [];
+    for (const chapter of book.chapters) {
+      const translation = await translateChapter(
+        chapter.content || '',
+        chapter.title || `Chapter ${chapter.order}`,
+        targetLanguage
+      );
+      translatedChapters.push({
+        _id: chapter._id,
+        order: chapter.order,
+        title: translation.translatedTitle,
+        content: translation.translatedContent,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        translatedTitle: titleTranslation.translatedTitle,
+        translatedChapters,
+        targetLanguage,
+        sourceLanguage: targetLanguage === 'hebrew' ? 'english' : 'hebrew',
+      },
+    });
+  } catch (error) {
+    console.error('Error translating book:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to translate book',
       error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined,
     });
   }

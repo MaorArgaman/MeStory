@@ -1263,6 +1263,14 @@
     "failed_copy": "Failed to copy text",
     "select_rating": "Please select a rating",
     "thank_you_review": "Thank you for your review!",
-    "failed_submit_review": "Failed to submit review"
+    "failed_submit_review": "Failed to submit review",
+    "translate_book": "Translate book",
+    "translated_to_hebrew": "Book translated to Hebrew",
+    "translated_to_english": "Book translated to English",
+    "translation_failed": "Failed to translate book. Please try again.",
+    "translated": "Translated",
+    "translating": "Translating...",
+    "show_original": "Show original",
+    "show_translated": "Show translated"
   }
 }

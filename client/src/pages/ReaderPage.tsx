@@ -22,6 +22,8 @@ import {
   SkipBack,
   Mic2,
   MessageCircle,
+  Languages,
+  Loader2,
 } from 'lucide-react';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
@@ -88,6 +90,15 @@ export default function ReaderPage() {
   const [showChatModal, setShowChatModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Translation state
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translatedBook, setTranslatedBook] = useState<{
+    title: string;
+    chapters: { _id: string; title: string; content: string; order: number }[];
+    targetLanguage: 'hebrew' | 'english';
+  } | null>(null);
+  const [showTranslation, setShowTranslation] = useState(false);
 
   // Narration state
   const [isNarrating, setIsNarrating] = useState(false);
@@ -352,7 +363,8 @@ export default function ReaderPage() {
     }
   };
 
-  const currentChapter = book?.chapters?.[currentChapterIndex];
+  const currentChapter = getCurrentChapter();
+  const displayTitle = getCurrentTitle();
   const progress = book?.chapters?.length ? ((currentChapterIndex + 1) / book.chapters.length) * 100 : 0;
 
   const nextChapter = () => {
@@ -396,6 +408,79 @@ export default function ReaderPage() {
     } catch (error) {
       toast.error(t('reader.failed_submit_review'));
     }
+  };
+
+  // Detect if book content is primarily Hebrew or English
+  const detectLanguage = (text: string): 'hebrew' | 'english' => {
+    const hebrewRegex = /[\u0590-\u05FF]/;
+    const hebrewMatches = (text.match(hebrewRegex) || []).length;
+    const englishRegex = /[a-zA-Z]/;
+    const englishMatches = (text.match(englishRegex) || []).length;
+    return hebrewMatches > englishMatches ? 'hebrew' : 'english';
+  };
+
+  // Translate the book
+  const handleTranslateBook = async () => {
+    if (!book || !bookId) return;
+
+    // If already showing translation, toggle back to original
+    if (showTranslation && translatedBook) {
+      setShowTranslation(false);
+      return;
+    }
+
+    // If we already have a translation, just show it
+    if (translatedBook) {
+      setShowTranslation(true);
+      return;
+    }
+
+    // Detect current language and determine target
+    const firstChapterContent = book.chapters[0]?.content || book.title;
+    const currentLanguage = detectLanguage(firstChapterContent);
+    const targetLanguage = currentLanguage === 'hebrew' ? 'english' : 'hebrew';
+
+    setIsTranslating(true);
+    try {
+      const response = await api.post(`/ai/translate-book/${bookId}`, {
+        targetLanguage,
+      });
+
+      if (response.data.success) {
+        setTranslatedBook({
+          title: response.data.data.translatedTitle,
+          chapters: response.data.data.translatedChapters,
+          targetLanguage,
+        });
+        setShowTranslation(true);
+        toast.success(
+          targetLanguage === 'hebrew'
+            ? t('reader.translated_to_hebrew')
+            : t('reader.translated_to_english')
+        );
+      }
+    } catch (error) {
+      console.error('Translation error:', error);
+      toast.error(t('reader.translation_failed'));
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  // Get current chapter (original or translated)
+  const getCurrentChapter = () => {
+    if (showTranslation && translatedBook) {
+      return translatedBook.chapters[currentChapterIndex];
+    }
+    return book?.chapters?.[currentChapterIndex];
+  };
+
+  // Get current book title (original or translated)
+  const getCurrentTitle = () => {
+    if (showTranslation && translatedBook) {
+      return translatedBook.title;
+    }
+    return book?.title || '';
   };
 
   const pageVariants = {
@@ -539,6 +624,29 @@ export default function ReaderPage() {
           title="Share this book"
         >
           <Share2 className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: currentTheme.accent }} />
+        </motion.button>
+
+        {/* Translate Button */}
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          whileHover={{ scale: 1.1 }}
+          onClick={handleTranslateBook}
+          disabled={isTranslating}
+          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold group ${
+            isTranslating ? 'cursor-wait' : ''
+          } ${showTranslation ? 'ring-2 ring-green-400' : ''}`}
+          style={{
+            background: showTranslation ? 'rgba(34, 197, 94, 0.3)' : 'rgba(0, 0, 0, 0.3)',
+            border: `1px solid ${showTranslation ? '#22c55e' : currentTheme.accent}`,
+          }}
+          title={t('reader.translate_book')}
+        >
+          {isTranslating ? (
+            <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" style={{ color: currentTheme.accent }} />
+          ) : (
+            <Languages className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: showTranslation ? '#22c55e' : currentTheme.accent }} />
+          )}
         </motion.button>
       </div>
 
@@ -1026,11 +1134,14 @@ export default function ReaderPage() {
       >
         <div className="glass rounded-xl px-3 sm:px-4 py-2 sm:py-3 backdrop-blur-md max-w-[200px]">
           <p className="text-xs sm:text-sm font-display font-semibold truncate" style={{ color: currentTheme.accent }}>
-            {book.title}
+            {displayTitle}
           </p>
           <p className="text-xs opacity-60 truncate" style={{ color: currentTheme.text }}>
             {t('reader.by_author', { author: book.author.name })}
           </p>
+          {showTranslation && (
+            <p className="text-xs text-green-400 mt-1">{t('reader.translated')}</p>
+          )}
         </div>
       </motion.div>
 

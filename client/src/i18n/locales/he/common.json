@@ -1333,6 +1333,14 @@
     "failed_copy": "העתקת הטקסט נכשלה",
     "select_rating": "אנא בחר דירוג",
     "thank_you_review": "תודה על הביקורת שלך!",
-    "failed_submit_review": "שליחת הביקורת נכשלה"
+    "failed_submit_review": "שליחת הביקורת נכשלה",
+    "translate_book": "תרגם ספר",
+    "translated_to_hebrew": "הספר תורגם לעברית",
+    "translated_to_english": "הספר תורגם לאנגלית",
+    "translation_failed": "תרגום הספר נכשל. נסה שוב.",
+    "translated": "מתורגם",
+    "translating": "מתרגם...",
+    "show_original": "הצג מקור",
+    "show_translated": "הצג תרגום"
   }
 }
