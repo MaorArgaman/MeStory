@@ -138,7 +138,8 @@
     "active": "Active",
     "inactive": "Inactive",
     "published": "Published",
-    "draft": "Draft"
+    "draft": "Draft",
+    "unsaved_changes": "Unsaved changes"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -802,6 +803,8 @@
     "synopsis": "Synopsis",
     "read_now": "Read Now",
     "buy_for": "Buy for ${{price}}",
+    "published_on": "Published {{date}}",
+    "reviews_section": "Reviews",
     "reviews": {
       "title": "Write a Review",
       "your_review": "Your Review",
@@ -853,7 +856,9 @@
       "notification_updated": "Notification preferences updated",
       "language_hebrew": "השפה שונתה לעברית",
       "language_english": "Language changed to English",
-      "language_failed": "Failed to change language"
+      "language_failed": "Failed to change language",
+      "export_success": "Your data has been exported successfully",
+      "export_failed": "Failed to export data. Please try again."
     },
     "profile": {
       "title": "Profile Information",
@@ -884,7 +889,16 @@
       "current": "Current",
       "last_active": "Last active: {{time}}",
       "revoke": "Revoke",
-      "security_warning": "If you see any sessions you don't recognize, revoke them immediately and change your password."
+      "security_warning": "If you see any sessions you don't recognize, revoke them immediately and change your password.",
+      "export_title": "Export My Data",
+      "export_subtitle": "Download a copy of all your personal data (GDPR)",
+      "export_description": "You can download a complete copy of all your personal data stored in MeStory. This includes:",
+      "export_includes_profile": "Your profile information",
+      "export_includes_books": "All your books and chapters",
+      "export_includes_summaries": "Story summaries and outlines",
+      "export_includes_transactions": "Transaction history",
+      "export_includes_activity": "Reading and writing activity",
+      "export_button": "Export My Data"
     },
     "earnings_tab": {
       "title": "Earnings Dashboard",
@@ -1018,5 +1032,37 @@
       "publish_success": "Book published successfully!",
       "publish_failed": "Failed to publish book"
     }
+  },
+  "authorProfile": {
+    "loading": "Loading profile...",
+    "books": "Books",
+    "totalReads": "Total Reads",
+    "followers": "Followers",
+    "rating": "Rating",
+    "follow": "Follow",
+    "following": "Following",
+    "publishedBooks": "Published Books",
+    "about": "About",
+    "noBooks": "No published books yet",
+    "free": "Free",
+    "aboutAuthor": "About {{name}}",
+    "noBio": "No bio available",
+    "authorStatistics": "Author Statistics",
+    "booksPublished": "Books Published",
+    "averageRating": "Average Rating"
+  },
+  "interview": {
+    "preparingInterview": "Preparing interview...",
+    "deepDiveInterview": "Deep Dive Interview",
+    "disableVoice": "Disable voice",
+    "enableVoice": "Enable voice",
+    "complete": "Complete",
+    "progress": "Progress",
+    "messages": "messages",
+    "aiInterviewer": "AI Interviewer",
+    "thinking": "Thinking...",
+    "transcribing": "Transcribing...",
+    "recordVoice": "Record voice",
+    "typeYourAnswer": "Type your answer..."
   }
 }

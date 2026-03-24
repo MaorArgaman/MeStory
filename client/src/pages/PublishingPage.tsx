@@ -399,7 +399,7 @@ export default function PublishingPage() {
                           : 'border-gray-700 text-gray-400 hover:border-gray-600'
                       }`}
                     >
-                      {t('publishing.paid')}
+                      {t('publishing.pricing.paid')}
                     </button>
                   </div>
 
@@ -416,7 +416,7 @@ export default function PublishingPage() {
                         className="input pl-8"
                         placeholder="0.00"
                       />
-                      <p className="text-xs text-gray-400 mt-2">{t('publishing.recommendedPrice')}</p>
+                      <p className="text-xs text-gray-400 mt-2">{t('publishing.pricing.price_help')}</p>
                     </div>
                   )}
                 </div>
@@ -425,25 +425,25 @@ export default function PublishingPage() {
                 <div>
                   <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                     <Target className="w-4 h-4" />
-                    {t('publishing.targetAudience')}
+                    {t('publishing.pricing.audience')}
                   </label>
                   <input
                     type="text"
                     value={targetAudience}
                     onChange={(e) => setTargetAudience(e.target.value)}
                     className="input"
-                    placeholder={t('publishing.targetAudiencePlaceholder')}
+                    placeholder={t('publishing.pricing.audience_placeholder')}
                   />
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">{t('publishing.marketingDescription')}</label>
+                  <label className="block text-sm font-medium mb-2">{t('publishing.pricing.description')}</label>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className="input min-h-[100px] resize-none"
-                    placeholder={t('publishing.marketingDescPlaceholder')}
+                    placeholder={t('publishing.pricing.description_placeholder')}
                   />
                 </div>
 
@@ -451,7 +451,7 @@ export default function PublishingPage() {
                 <div>
                   <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                     <Tag className="w-4 h-4" />
-                    {t('publishing.categories')}
+                    {t('publishing.pricing.categories')}
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" role="group" aria-label="Book categories">
                     {GENRE_CATEGORIES.map((category) => (
@@ -477,13 +477,13 @@ export default function PublishingPage() {
 
                 {/* Tags */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">{t('publishing.tags')}</label>
+                  <label className="block text-sm font-medium mb-2">{t('publishing.pricing.tags')}</label>
                   <input
                     type="text"
                     value={tags}
                     onChange={(e) => setTags(e.target.value)}
                     className="input"
-                    placeholder={t('publishing.tagsPlaceholder')}
+                    placeholder={t('publishing.pricing.tags_placeholder')}
                   />
                 </div>
               </div>
@@ -516,29 +516,29 @@ export default function PublishingPage() {
             >
               <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
                 <Rocket className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-400" />
-                <h2 className="text-xl sm:text-2xl font-bold">{t('publishing.readyToLaunch')}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold">{t('publishing.steps.launch')}</h2>
               </div>
 
               <div className="space-y-4 sm:space-y-6">
                 <div className="glass rounded-lg p-4 sm:p-6">
-                  <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">{t('publishing.publishingSummary')}</h3>
+                  <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">{t('publishing.summary.title')}</h3>
                   <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">{t('publishing.qualityScoreLabel')}:</span>
+                      <span className="text-gray-400">{t('publishing.summary.quality_score')}</span>
                       <span className="font-semibold text-green-400">{qualityScore}/100</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">{t('publishing.priceLabel')}:</span>
-                      <span className="font-semibold">{isFree ? t('publishing.free') : `$${price}`}</span>
+                      <span className="text-gray-400">{t('publishing.summary.price')}</span>
+                      <span className="font-semibold">{isFree ? t('publishing.pricing.free') : `$${price}`}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">{t('publishing.categoriesLabel')}:</span>
-                      <span className="font-semibold">{t('publishing.categoriesSelected', { count: selectedCategories.length })}</span>
+                      <span className="text-gray-400">{t('publishing.summary.categories')}</span>
+                      <span className="font-semibold">{selectedCategories.length} {t('publishing.summary.selected')}</span>
                     </div>
                     <div className="flex justify-between items-start">
-                      <span className="text-gray-400">{t('publishing.targetAudienceLabel')}:</span>
+                      <span className="text-gray-400">{t('publishing.summary.audience')}</span>
                       <span className="font-semibold text-right max-w-[60%] truncate">
-                        {targetAudience || t('publishing.notSpecified')}
+                        {targetAudience || t('publishing.summary.not_specified')}
                       </span>
                     </div>
                   </div>
@@ -546,7 +546,7 @@ export default function PublishingPage() {
 
                 <div className="p-3 sm:p-4 bg-indigo-500/10 border border-indigo-500/30 rounded-lg">
                   <p className="text-xs sm:text-sm text-indigo-300">
-                    {t('publishing.publishNote')}
+                    {t('publishing.summary.info')}
                   </p>
                 </div>
 
@@ -558,12 +558,12 @@ export default function PublishingPage() {
                   {publishing ? (
                     <>
                       <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
-                      {t('publishing.publishing')}
+                      {t('publishing.buttons.publishing')}
                     </>
                   ) : (
                     <>
                       <Rocket className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                      {t('publishing.publishBook')}
+                      {t('publishing.buttons.publish')}
                     </>
                   )}
                 </button>
@@ -590,15 +590,15 @@ export default function PublishingPage() {
                 <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white" />
               </div>
 
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text mb-2 sm:mb-4">{t('publishing.congratulations')}</h2>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text mb-2 sm:mb-4">{t('publishing.success.title')}</h2>
               <p className="text-base sm:text-lg lg:text-xl text-gray-300 mb-6 sm:mb-8 px-2">
-                {t('publishing.bookIsLive', { title: book.title })}
+                {t('publishing.success.message', { title: book.title })}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                 <button onClick={() => navigate('/marketplace')} className="btn-primary text-sm sm:text-base">
                   <Sparkles className="w-4 h-4 mr-1 sm:mr-2" />
-                  {t('publishing.viewInMarketplace')}
+                  {t('publishing.success.view_marketplace')}
                 </button>
                 <button onClick={() => navigate('/dashboard')} className="btn-secondary text-sm sm:text-base">
                   {t('publishing.buttons.back_dashboard')}

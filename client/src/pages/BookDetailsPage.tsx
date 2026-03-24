@@ -204,7 +204,7 @@ export default function BookDetailsPage() {
       <div className="min-h-screen pt-32 flex items-center justify-center">
         <div className="text-center">
           <BookOpen className="w-16 h-16 text-magic-gold mx-auto mb-4 animate-pulse" />
-          <p className="text-gray-300 text-lg">{t('bookDetails.loading')}</p>
+          <p className="text-gray-300 text-lg">{t('book_details.loading')}</p>
         </div>
       </div>
     );
@@ -296,7 +296,7 @@ export default function BookDetailsPage() {
                 <User className="w-6 h-6 text-deep-space" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">{t('bookDetails.writtenBy')}</p>
+                <p className="text-sm text-gray-400">{t('book_details.written_by')}</p>
                 <p className="text-xl font-semibold text-white group-hover:text-magic-gold transition-colors">
                   {book.author.name}
                 </p>
@@ -313,7 +313,7 @@ export default function BookDetailsPage() {
                     {book.statistics.averageRating.toFixed(1)}
                   </span>
                   <span className="text-gray-400 text-sm">
-                    ({t('bookDetails.reviewsCount', { count: book.statistics.totalReviews })})
+                    ({book.statistics.totalReviews} {t('book_details.reviews.title')})
                   </span>
                 </div>
               )}
@@ -321,14 +321,14 @@ export default function BookDetailsPage() {
               {/* Views */}
               <div className="flex items-center gap-2">
                 <Eye className="w-5 h-5 text-gray-400" />
-                <span className="text-gray-300">{t('bookDetails.viewsCount', { count: book.statistics.views })}</span>
+                <span className="text-gray-300">{book.statistics.views} {t('book_details.views')}</span>
               </div>
 
               {/* Word Count */}
               <div className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-gray-400" />
                 <span className="text-gray-300">
-                  {t('bookDetails.wordsCount', { count: book.statistics.wordCount.toLocaleString() })}
+                  {book.statistics.wordCount.toLocaleString()} {t('book_details.words')}
                 </span>
               </div>
             </div>
@@ -365,8 +365,8 @@ export default function BookDetailsPage() {
               >
                 <BookOpen className="w-5 h-5" />
                 {book.publishingStatus.isFree
-                  ? t('bookDetails.readNow')
-                  : t('bookDetails.buyFor', { price: book.publishingStatus.price })}
+                  ? t('book_details.read_now')
+                  : t('book_details.buy_for', { price: book.publishingStatus.price })}
               </GlowingButton>
 
               {/* Like Button */}
@@ -397,7 +397,7 @@ export default function BookDetailsPage() {
             <div className="flex items-center gap-2 text-gray-400 text-sm">
               <Calendar className="w-4 h-4" />
               <span>
-                {t('bookDetails.publishedOn', {
+                {t('book_details.published_on', {
                   date: new Date(book.createdAt).toLocaleDateString('en-US', {
                     month: 'long',
                     day: 'numeric',
@@ -419,7 +419,7 @@ export default function BookDetailsPage() {
           >
             <GlassCard>
               <h2 className="text-3xl font-display font-bold text-magic-gold mb-6">
-                {t('bookDetails.synopsis')}
+                {t('book_details.synopsis')}
               </h2>
               <p className="text-gray-300 text-lg leading-relaxed whitespace-pre-line">
                 {book.synopsis}
@@ -438,7 +438,7 @@ export default function BookDetailsPage() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-3xl font-display font-bold text-magic-gold flex items-center gap-3">
                 <MessageCircle className="w-8 h-8" />
-                {t('bookDetails.reviews')} ({book.statistics.totalReviews})
+                {t('book_details.reviews_section')} ({book.statistics.totalReviews})
               </h2>
 
               {user && !book.reviews.some((r) => r.user === user._id) && (
@@ -447,7 +447,7 @@ export default function BookDetailsPage() {
                   size="md"
                   onClick={() => setShowReviewForm(!showReviewForm)}
                 >
-                  {t('bookDetails.writeReview')}
+                  {t('book_details.reviews.title')}
                 </GlowingButton>
               )}
             </div>
@@ -463,12 +463,12 @@ export default function BookDetailsPage() {
                 >
                   <div className="bg-white/5 rounded-xl p-6">
                     <h3 className="font-display font-semibold text-white mb-4">
-                      {t('bookDetails.yourReview')}
+                      {t('book_details.reviews.your_review')}
                     </h3>
 
                     {/* Star Rating */}
                     <div className="mb-4">
-                      <p className="text-sm text-gray-400 mb-2" id="rating-label">{t('bookDetails.rating')}</p>
+                      <p className="text-sm text-gray-400 mb-2" id="rating-label">{t('book_details.reviews.rating')}</p>
                       <div className="flex gap-2" role="radiogroup" aria-labelledby="rating-label">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <motion.button
@@ -495,16 +495,16 @@ export default function BookDetailsPage() {
 
                     {/* Comment */}
                     <div className="mb-4">
-                      <p className="text-sm text-gray-400 mb-2">{t('bookDetails.comment')}</p>
+                      <p className="text-sm text-gray-400 mb-2">{t('book_details.reviews.comment')}</p>
                       <textarea
                         value={reviewComment}
                         onChange={(e) => setReviewComment(e.target.value)}
-                        placeholder={t('bookDetails.commentPlaceholder')}
+                        placeholder={t('book_details.reviews.comment_placeholder')}
                         className="w-full h-32 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-magic-gold/50 focus:shadow-glow-gold transition-all resize-none"
                         maxLength={1000}
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        {t('bookDetails.charactersCount', { current: reviewComment.length, max: 1000 })}
+                        {reviewComment.length} / 1000 {t('book_details.reviews.characters')}
                       </p>
                     </div>
 
@@ -516,7 +516,7 @@ export default function BookDetailsPage() {
                         onClick={handleSubmitReview}
                         disabled={submittingReview}
                       >
-                        {submittingReview ? t('bookDetails.submitting') : t('bookDetails.submitReview')}
+                        {submittingReview ? t('book_details.reviews.submitting') : t('book_details.reviews.submit')}
                       </GlowingButton>
                       <GlowingButton
                         variant="cosmic"
@@ -537,7 +537,7 @@ export default function BookDetailsPage() {
                 <div className="text-center py-12">
                   <MessageCircle className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                   <p className="text-gray-400">
-                    {t('bookDetails.noReviews')}
+                    {t('book_details.reviews.empty')}
                   </p>
                 </div>
               ) : (

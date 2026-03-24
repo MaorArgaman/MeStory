@@ -138,7 +138,8 @@
     "active": "פעיל",
     "inactive": "לא פעיל",
     "published": "פורסם",
-    "draft": "טיוטה"
+    "draft": "טיוטה",
+    "unsaved_changes": "שינויים לא שמורים"
   },
   "errors": {
     "generic": "משהו השתבש. אנא נסה שוב.",
@@ -872,6 +873,8 @@
     "synopsis": "תקציר",
     "read_now": "קרא עכשיו",
     "buy_for": "קנה ב-${{price}}",
+    "published_on": "פורסם ב-{{date}}",
+    "reviews_section": "ביקורות",
     "reviews": {
       "title": "כתוב ביקורת",
       "your_review": "הביקורת שלך",
@@ -923,7 +926,9 @@
       "notification_updated": "העדפות ההתראות עודכנו",
       "language_hebrew": "השפה שונתה לעברית",
       "language_english": "Language changed to English",
-      "language_failed": "שינוי השפה נכשל"
+      "language_failed": "שינוי השפה נכשל",
+      "export_success": "הנתונים שלך יוצאו בהצלחה",
+      "export_failed": "ייצוא הנתונים נכשל. נסה שוב."
     },
     "profile": {
       "title": "פרטי פרופיל",
@@ -954,7 +959,16 @@
       "current": "נוכחי",
       "last_active": "פעילות אחרונה: {{time}}",
       "revoke": "בטל",
-      "security_warning": "אם אתה רואה התחברויות שאתה לא מזהה, בטל אותן מיד ושנה את הסיסמה."
+      "security_warning": "אם אתה רואה התחברויות שאתה לא מזהה, בטל אותן מיד ושנה את הסיסמה.",
+      "export_title": "ייצוא הנתונים שלי",
+      "export_subtitle": "הורד עותק של כל הנתונים האישיים שלך (GDPR)",
+      "export_description": "באפשרותך להוריד עותק מלא של כל הנתונים האישיים שלך השמורים ב-MeStory. זה כולל:",
+      "export_includes_profile": "פרטי הפרופיל שלך",
+      "export_includes_books": "כל הספרים והפרקים שלך",
+      "export_includes_summaries": "תקצירי סיפורים ומתווים",
+      "export_includes_transactions": "היסטוריית עסקאות",
+      "export_includes_activity": "פעילות קריאה וכתיבה",
+      "export_button": "ייצא את הנתונים שלי"
     },
     "earnings_tab": {
       "title": "לוח הכנסות",
@@ -1088,5 +1102,37 @@
       "publish_success": "הספר פורסם בהצלחה!",
       "publish_failed": "נכשל בפרסום הספר"
     }
+  },
+  "authorProfile": {
+    "loading": "טוען פרופיל...",
+    "books": "ספרים",
+    "totalReads": "סה\"כ קריאות",
+    "followers": "עוקבים",
+    "rating": "דירוג",
+    "follow": "עקוב",
+    "following": "עוקב",
+    "publishedBooks": "ספרים שפורסמו",
+    "about": "אודות",
+    "noBooks": "אין ספרים שפורסמו עדיין",
+    "free": "חינם",
+    "aboutAuthor": "אודות {{name}}",
+    "noBio": "אין ביוגרפיה זמינה",
+    "authorStatistics": "סטטיסטיקות סופר",
+    "booksPublished": "ספרים שפורסמו",
+    "averageRating": "דירוג ממוצע"
+  },
+  "interview": {
+    "preparingInterview": "מכין ראיון...",
+    "deepDiveInterview": "ראיון מעמיק",
+    "disableVoice": "השבת קול",
+    "enableVoice": "הפעל קול",
+    "complete": "סיים",
+    "progress": "התקדמות",
+    "messages": "הודעות",
+    "aiInterviewer": "מראיין AI",
+    "thinking": "חושב...",
+    "transcribing": "מתמלל...",
+    "recordVoice": "הקלט קול",
+    "typeYourAnswer": "הקלד את תשובתך..."
   }
 }

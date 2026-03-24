@@ -4,6 +4,32 @@
 **תאריך בדיקה:** 2026-03-24
 **גרסה:** Current Main Branch
 **בודק:** Claude Code QA Agent
+**עדכון אחרון:** 2026-03-24
+
+---
+
+## תקלות שתוקנו (Fixed Issues)
+
+| מזהה | תיאור | Commit |
+|------|-------|--------|
+| SEC-001 | Mock payment mode in production | 5faeb5c |
+| SEC-002 | JWT token exposed in URL | 5faeb5c |
+| SEC-003 | Weak session secret fallback | 5faeb5c |
+| SEC-004 | Missing credits validation | 5faeb5c |
+| SEC-005 | Missing profile input validation | 5faeb5c |
+| SEC-006 | Regex injection risk | 5faeb5c |
+| SEC-007 | Missing pagination limits | 5faeb5c |
+| SEC-009 | Overly permissive CORS | 5faeb5c |
+| SEC-010 | Sensitive data in logs | 5faeb5c |
+| SEC-011 | File deletion error handling | ec0d458 |
+| SEC-015 | Batch operations error handling | ec0d458 |
+| FUNC-003 | "Chapter 1" hardcoded in English | 5faeb5c |
+| FUNC-008 | Draft notes localStorage collision | 5faeb5c |
+| FUNC-009 | No Error Boundary | 5faeb5c |
+| I18N-001 | Login page hardcoded English | 5faeb5c |
+| I18N-002 | Register page hardcoded English | 5faeb5c |
+| I18N-005 | DraftNotes inline translations | ec0d458 |
+| UI-006 | Color picker accessibility labels | ec0d458 |
 
 ---
 

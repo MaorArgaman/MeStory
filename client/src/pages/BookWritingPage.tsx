@@ -411,7 +411,7 @@ export default function BookWritingPage() {
               className="btn-ghost flex items-center gap-1 sm:gap-2 p-2 sm:px-3 sm:py-2"
             >
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">{isHebrew ? 'חזרה' : 'Back'}</span>
+              <span className="hidden sm:inline">{t('editor.toolbar.back')}</span>
             </button>
             <div className="hidden sm:block h-6 w-px bg-gray-700" />
             <h1 className="text-sm sm:text-xl font-semibold text-white truncate max-w-[120px] sm:max-w-none">{book.title}</h1>
@@ -424,15 +424,15 @@ export default function BookWritingPage() {
               {saving ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                  <span className="text-gray-400">{isHebrew ? 'שומר...' : 'Saving...'}</span>
+                  <span className="text-gray-400">{t('status.saving')}</span>
                 </>
               ) : saved ? (
                 <>
                   <Check className="w-4 h-4 text-green-400" />
-                  <span className="text-green-400">{isHebrew ? 'נשמר' : 'Saved'}</span>
+                  <span className="text-green-400">{t('status.saved')}</span>
                 </>
               ) : (
-                <span className="text-yellow-400">{isHebrew ? 'שינויים לא שמורים' : 'Unsaved changes'}</span>
+                <span className="text-yellow-400">{t('status.unsaved_changes')}</span>
               )}
             </div>
 
@@ -442,7 +442,7 @@ export default function BookWritingPage() {
               className="btn-secondary flex items-center gap-2"
             >
               <Palette className="w-4 h-4" />
-              {isHebrew ? 'עיצוב כריכה' : 'Design Cover'}
+              {t('editor.toolbar.design_cover')}
             </button>
 
             {/* Book Layout Button */}
@@ -451,7 +451,7 @@ export default function BookWritingPage() {
               className="btn-secondary flex items-center gap-2"
             >
               <LayoutGrid className="w-4 h-4" />
-              {isHebrew ? 'פריסת עמודים' : 'Page Layout'}
+              {t('editor.toolbar.page_layout')}
             </button>
 
             {/* Save Button */}
@@ -461,7 +461,7 @@ export default function BookWritingPage() {
               className="btn-primary flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
-              {isHebrew ? 'שמור' : 'Save'}
+              {t('editor.toolbar.save')}
             </button>
           </div>
 
@@ -508,7 +508,7 @@ export default function BookWritingPage() {
               className="w-full btn-secondary flex items-center justify-center gap-2 py-2"
             >
               <Palette className="w-4 h-4" />
-              {isHebrew ? 'עיצוב כריכה' : 'Design Cover'}
+              {t('editor.toolbar.design_cover')}
             </button>
             <button
               onClick={() => {
@@ -518,7 +518,7 @@ export default function BookWritingPage() {
               className="w-full btn-secondary flex items-center justify-center gap-2 py-2"
             >
               <LayoutGrid className="w-4 h-4" />
-              {isHebrew ? 'פריסת עמודים' : 'Page Layout'}
+              {t('editor.toolbar.page_layout')}
             </button>
           </div>
         )}
