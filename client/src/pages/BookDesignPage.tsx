@@ -22,6 +22,7 @@ import {
 import TemplateSelector from '../components/design/TemplateSelector';
 import AIDesignWizard from '../components/design/AIDesignWizard';
 import Book3DPreview from '../components/design/Book3DPreview';
+import BrandWatermark from '../components/common/BrandWatermark';
 
 // Book data interface
 interface BookData {
@@ -590,6 +591,14 @@ export default function BookDesignPage() {
           />
         )}
       </AnimatePresence>
+
+      {/* Brand Watermark - Marketing */}
+      <BrandWatermark
+        position="bottom-right"
+        size="small"
+        opacity={0.12}
+        className="hidden lg:block"
+      />
     </div>
   );
 }

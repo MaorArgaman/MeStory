@@ -37,6 +37,8 @@ import {
 import type { AICompleteDesign } from '../types/templates';
 import ImageEditToolbar from '../components/layout/ImageEditToolbar';
 import ImagePlaceholder from '../components/layout/ImagePlaceholder';
+import AICompleteDesignWizard from '../components/design/AICompleteDesignWizard';
+import BrandWatermark from '../components/common/BrandWatermark';
 
 interface PageImage {
   id: string;
@@ -375,6 +377,7 @@ export default function BookLayoutPage() {
   // AI Design state (for applying stored designs)
   const [aiDesign, setAiDesign] = useState<CompleteBookDesign | null>(null);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const [showAIDesignWizard, setShowAIDesignWizard] = useState(false);
 
   // Save as Template state
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
@@ -1082,6 +1085,123 @@ export default function BookLayoutPage() {
         setSaving(false);
       }
     }
+  };
+
+  // Handle AI Complete Design
+  const handleAIDesignComplete = async (
+    design: any,
+    coverImageUrls: { front?: string; back?: string }
+  ) => {
+    // Apply typography settings
+    const newSettings = {
+      ...settings,
+      fontFamily: design.typography.bodyFont,
+      titleFont: design.typography.titleFont,
+      headerFont: design.typography.headingFont,
+      fontSize: design.typography.fontSize,
+      lineHeight: design.typography.lineHeight,
+      textColor: design.typography.colors.text,
+      accentColor: design.typography.colors.accent,
+      margins: {
+        top: design.layout.margins.top,
+        bottom: design.layout.margins.bottom,
+        left: design.layout.margins.inner,
+        right: design.layout.margins.outer,
+      },
+      showPageNumbers: design.layout.pageNumberPosition !== 'none',
+      pageNumberPosition: design.layout.pageNumberPosition,
+      chapterStartStyle: design.layout.chapterStartStyle,
+      headerStyle: design.layout.headerStyle,
+      dropCapEnabled: design.layout.dropCaps,
+    };
+
+    setSettings(newSettings);
+    loadGoogleFonts(newSettings as PageLayoutSettings);
+
+    // Set cover image if generated
+    if (coverImageUrls.front) {
+      setCoverImageUrl(coverImageUrls.front);
+      setBook(prev => prev ? {
+        ...prev,
+        coverDesign: {
+          ...prev.coverDesign,
+          imageUrl: coverImageUrls.front,
+        },
+      } : null);
+    }
+
+    // Store AI design for save-as-template feature
+    setAiDesign({
+      typography: design.typography,
+      layout: design.layout,
+      cover: design.cover,
+      imagePlacements: design.imagePlacements,
+      overallStyle: design.overallStyle,
+      moodDescription: design.moodDescription,
+      generatedAt: new Date(),
+    } as CompleteBookDesign);
+
+    // Add image placeholders based on AI suggestions
+    if (design.imagePlacements && design.imagePlacements.length > 0) {
+      const updatedPages = [...pages];
+      design.imagePlacements.forEach((placement: any) => {
+        const chapterPages = updatedPages.filter(p => p.type === 'chapter' && p.chapterIndex === placement.chapterIndex);
+        if (chapterPages.length > 0) {
+          const targetPage = placement.position === 'chapter-start' ? chapterPages[0] :
+                            placement.position === 'chapter-end' ? chapterPages[chapterPages.length - 1] :
+                            chapterPages[Math.floor(chapterPages.length / 2)];
+
+          if (targetPage) {
+            const pageIndex = updatedPages.findIndex(p => p.id === targetPage.id);
+            if (pageIndex !== -1) {
+              // Add image placeholder info to settings
+              const existingPlaceholders = (newSettings as any).imagePlaceholders || [];
+              (newSettings as any).imagePlaceholders = [
+                ...existingPlaceholders,
+                {
+                  pageIndex,
+                  x: 60,
+                  y: placement.position === 'chapter-start' ? 10 : placement.position === 'mid-chapter' ? 40 : 70,
+                  width: 35,
+                  height: 25,
+                  shape: 'rounded',
+                  prompt: placement.suggestedPrompt,
+                },
+              ];
+            }
+          }
+        }
+      });
+      setPages(updatedPages);
+      setSettings(newSettings);
+    }
+
+    // Save to database
+    if (book) {
+      setSaving(true);
+      try {
+        const payload = {
+          pageLayout: {
+            pages,
+            settings: newSettings,
+          },
+          coverDesign: coverImageUrls.front ? {
+            ...book.coverDesign,
+            imageUrl: coverImageUrls.front,
+          } : book.coverDesign,
+        };
+        await api.put(`/books/${bookId}`, payload);
+        setLastSaved(new Date());
+        toast.success(language === 'he' ? 'העיצוב הוחל ונשמר!' : 'Design applied and saved!');
+      } catch (error) {
+        console.error('Failed to save AI design:', error);
+        toast.error(language === 'he' ? 'העיצוב הוחל אך השמירה נכשלה' : 'Design applied but save failed');
+      } finally {
+        setSaving(false);
+      }
+    }
+
+    setShowAIDesignWizard(false);
   };
 
   // Handle image upload
@@ -1933,6 +2053,31 @@ export default function BookLayoutPage() {
                   </button>
                 </div>
 
+                {/* AI Complete Design - Special Premium Button */}
+                <div className="mb-4">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowAIDesignWizard(true)}
+                    className="w-full relative overflow-hidden rounded-xl p-4 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 text-white shadow-lg shadow-purple-500/25"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-pink-400/20 to-indigo-400/20 animate-pulse" />
+                    <div className="relative flex items-center justify-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                        <Sparkles className="w-5 h-5" />
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-lg">
+                          {language === 'he' ? 'עיצוב AI מלא' : 'Complete AI Design'}
+                        </div>
+                        <div className="text-xs text-white/80">
+                          {language === 'he' ? 'כריכה + פריסה + טיפוגרפיה + תמונות' : 'Cover + Layout + Typography + Images'}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.button>
+                </div>
+
                 {/* Template Selection */}
                 <div className="mb-6 space-y-3">
                   <button
@@ -2310,6 +2455,24 @@ export default function BookLayoutPage() {
         currentTemplateId={settings.templateId}
       />
 
+      {/* AI Complete Design Wizard */}
+      {book && (
+        <AICompleteDesignWizard
+          isOpen={showAIDesignWizard}
+          onClose={() => setShowAIDesignWizard(false)}
+          bookId={bookId || ''}
+          book={{
+            title: book.title,
+            genre: book.genre,
+            synopsis: book.synopsis,
+            description: book.description,
+            chapters: book.chapters,
+            author: book.author,
+          }}
+          onDesignComplete={handleAIDesignComplete}
+        />
+      )}
+
       {/* Save as Template Modal */}
       <AnimatePresence>
         {showSaveTemplateModal && (
@@ -2414,6 +2577,14 @@ export default function BookLayoutPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Brand Watermark - Marketing */}
+      <BrandWatermark
+        position="bottom-right"
+        size="small"
+        opacity={0.12}
+        className="hidden lg:block"
+      />
     </div>
   );
 }

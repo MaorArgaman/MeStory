@@ -41,6 +41,7 @@ import TensionArcChart from '../components/analysis/TensionArcChart';
 import WritingTechniquesCard from '../components/analysis/WritingTechniquesCard';
 import WritingGuidanceAlert, { useWritingGuidance } from '../components/analysis/WritingGuidanceAlert';
 import { useLanguage } from '../contexts/LanguageContext';
+import BrandWatermark from '../components/common/BrandWatermark';
 
 interface Chapter {
   _id?: string;
@@ -1001,6 +1002,14 @@ export default function BookWritingPage() {
           language={book.language || 'he'}
         />
       )}
+
+      {/* Brand Watermark - Marketing */}
+      <BrandWatermark
+        position="bottom-right"
+        size="small"
+        opacity={0.12}
+        className="hidden lg:block"
+      />
     </div>
   );
 }
