@@ -1005,12 +1005,12 @@ export default function DesignStudioPage() {
       </div>
 
       {/* Mobile Controls Toggle */}
-      <div className="lg:hidden fixed bottom-4 left-4 z-40">
+      <div className="lg:hidden fixed bottom-6 left-4 z-40">
         <button
           onClick={() => setShowMobileControls(!showMobileControls)}
-          className="glass-strong p-3 rounded-full border border-white/10 shadow-lg"
+          className="glass-strong p-4 rounded-full border border-white/10 shadow-lg min-w-[56px] min-h-[56px] flex items-center justify-center active:scale-95 transition-transform"
         >
-          {showMobileControls ? <Eye className="w-5 h-5 text-indigo-400" /> : <Settings className="w-5 h-5 text-indigo-400" />}
+          {showMobileControls ? <Eye className="w-6 h-6 text-indigo-400" /> : <Settings className="w-6 h-6 text-indigo-400" />}
         </button>
       </div>
 
@@ -1028,15 +1028,15 @@ export default function DesignStudioPage() {
         <div className={`
           ${showMobileControls ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           fixed lg:relative z-50 lg:z-auto
-          w-[85%] sm:w-80 lg:w-80 xl:w-96 h-full
+          w-4/5 max-w-[320px] sm:w-80 lg:w-80 xl:w-96 h-full max-h-screen
           glass-strong border-r border-white/10 p-4 sm:p-6 overflow-y-auto
           transition-transform duration-300 ease-in-out
         `}>
           {/* Mobile Close Button */}
           <div className="lg:hidden flex items-center justify-between mb-4">
             <span className="text-sm font-semibold text-gray-300">{t('design_studio.design_controls')}</span>
-            <button onClick={() => setShowMobileControls(false)} className="btn-ghost p-2">
-              <X className="w-4 h-4" />
+            <button onClick={() => setShowMobileControls(false)} className="btn-ghost p-3 min-w-[44px] min-h-[44px]">
+              <X className="w-5 h-5" />
             </button>
           </div>
           <div className="space-y-6">
@@ -1114,13 +1114,13 @@ export default function DesignStudioPage() {
               {/* Color Presets - Compact */}
               <div className="mb-4">
                 <p className="text-xs text-gray-500 mb-2">{language === 'he' ? 'ערכות צבע מהירות' : 'Quick color presets'}</p>
-                <div className="grid grid-cols-6 gap-1.5">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                   {COLOR_PRESETS.map((preset) => (
                     <button
                       key={preset.name}
                       onClick={() => applyPreset(preset)}
                       title={preset.name}
-                      className="w-full aspect-square rounded-lg shadow-lg hover:ring-2 hover:ring-indigo-500 transition-all"
+                      className="w-full aspect-square min-h-[44px] rounded-lg shadow-lg hover:ring-2 hover:ring-indigo-500 active:ring-2 active:ring-indigo-600 active:scale-95 transition-all"
                       style={{ background: preset.cover }}
                     />
                   ))}
@@ -1129,21 +1129,21 @@ export default function DesignStudioPage() {
 
               {/* Custom Colors - Compact */}
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3 sm:gap-2">
                   <input
                     type="color"
                     value={coverColor}
                     onChange={(e) => setCoverColor(e.target.value)}
-                    className="w-8 h-8 rounded cursor-pointer border border-white/10"
+                    className="w-11 h-11 sm:w-8 sm:h-8 rounded cursor-pointer border border-white/10"
                   />
-                  <span className="text-xs text-gray-400 flex-1">{language === 'he' ? 'רקע' : 'Background'}</span>
+                  <span className="text-sm sm:text-xs text-gray-400 flex-1">{language === 'he' ? 'רקע' : 'Background'}</span>
                   <input
                     type="color"
                     value={textColor}
                     onChange={(e) => setTextColor(e.target.value)}
-                    className="w-8 h-8 rounded cursor-pointer border border-white/10"
+                    className="w-11 h-11 sm:w-8 sm:h-8 rounded cursor-pointer border border-white/10"
                   />
-                  <span className="text-xs text-gray-400">{language === 'he' ? 'טקסט' : 'Text'}</span>
+                  <span className="text-sm sm:text-xs text-gray-400">{language === 'he' ? 'טקסט' : 'Text'}</span>
                 </div>
 
                 {/* Font Selection - Compact */}
@@ -1316,13 +1316,13 @@ export default function DesignStudioPage() {
                   <p className="text-xs text-gray-500 mb-2">
                     {language === 'he' ? 'פלטות מתוחכמות' : 'Sophisticated palettes'}
                   </p>
-                  <div className="grid grid-cols-4 gap-1.5">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                     {SOPHISTICATED_PALETTES.slice(0, 8).map((palette) => (
                       <button
                         key={palette.name}
                         onClick={() => setSpineColor(palette.colors[0])}
                         title={palette.name}
-                        className="w-full aspect-square rounded-lg shadow-lg hover:ring-2 hover:ring-indigo-500 transition-all"
+                        className="w-full aspect-square min-h-[44px] rounded-lg shadow-lg hover:ring-2 hover:ring-indigo-500 active:ring-2 active:ring-indigo-600 active:scale-95 transition-all"
                         style={{
                           background: `linear-gradient(135deg, ${palette.colors.join(', ')})`,
                         }}
@@ -1385,20 +1385,20 @@ export default function DesignStudioPage() {
           </div>
 
           {/* Edit Mode Toggle & Info overlay */}
-          <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 text-center px-4 flex flex-col items-center gap-2">
+          <div className="absolute bottom-3 sm:bottom-6 lg:bottom-8 left-1/2 -translate-x-1/2 text-center px-2 sm:px-4 flex flex-col items-center gap-2">
             <button
               onClick={() => setEditMode(!editMode)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-5 py-3 sm:px-4 sm:py-2 rounded-lg text-base sm:text-sm font-medium transition-colors min-h-[44px] ${
                 editMode
-                  ? 'bg-amber-500 text-white'
-                  : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                  ? 'bg-amber-500 text-white active:bg-amber-600'
+                  : 'bg-white/10 text-gray-300 hover:bg-white/20 active:bg-white/30'
               }`}
             >
               {editMode
                 ? t('design_studio.done_positioning')
                 : t('design_studio.edit_text_position')}
             </button>
-            <p className="text-xs sm:text-sm text-gray-400">
+            <p className="text-xs sm:text-sm text-gray-400 max-w-[280px] sm:max-w-none">
               {editMode
                 ? t('design_studio.drag_to_position')
                 : t('design_studio.preview_hint')}

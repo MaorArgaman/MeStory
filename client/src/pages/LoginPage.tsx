@@ -193,8 +193,14 @@ export default function LoginPage() {
             </div>
 
             {/* Google Sign-In Button */}
-            <a
-              href={import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api/auth/google' : 'http://localhost:5001/api/auth/google'}
+            <button
+              type="button"
+              onClick={() => {
+                const googleAuthUrl = import.meta.env.PROD
+                  ? 'https://me-story-server-7wdx.vercel.app/api/auth/google'
+                  : 'http://localhost:5001/api/auth/google';
+                window.location.href = googleAuthUrl;
+              }}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white hover:bg-gray-100 text-gray-900 font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -216,7 +222,7 @@ export default function LoginPage() {
                 />
               </svg>
               {t('auth.login.google_login')}
-            </a>
+            </button>
 
             {/* Register Link */}
             <div className="mt-6 text-center text-sm text-gray-400">

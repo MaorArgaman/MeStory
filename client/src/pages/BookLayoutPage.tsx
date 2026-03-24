@@ -1663,7 +1663,7 @@ export default function BookLayoutPage() {
 
           {/* Book Spread - responsive scaling */}
           <div
-            className={`flex ${isBookRTL ? 'flex-row-reverse' : 'flex-row'} gap-1 sm:gap-2 perspective-1000 transform scale-[0.45] sm:scale-[0.65] md:scale-[0.8] lg:scale-100 origin-center`}
+            className={`flex ${isBookRTL ? 'flex-row-reverse' : 'flex-row'} gap-1 sm:gap-2 perspective-1000 transform scale-[0.35] xs:scale-[0.45] sm:scale-[0.55] md:scale-[0.7] lg:scale-[0.85] xl:scale-100 origin-center`}
           >
             {/* Left Page */}
             <div
@@ -2809,15 +2809,23 @@ function DraggableCoverText({
     setStartPos({ x: position.x, y: position.y });
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    const touch = e.touches[0];
+    setIsDragging(true);
+    setDragStart({ x: touch.clientX, y: touch.clientY });
+    setStartPos({ x: position.x, y: position.y });
+  };
+
   useEffect(() => {
     if (!isDragging) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMove = (clientX: number, clientY: number) => {
       if (!containerRef.current) return;
 
       const rect = containerRef.current.getBoundingClientRect();
-      const deltaX = ((e.clientX - dragStart.x) / rect.width) * 100;
-      const deltaY = ((e.clientY - dragStart.y) / rect.height) * 100;
+      const deltaX = ((clientX - dragStart.x) / rect.width) * 100;
+      const deltaY = ((clientY - dragStart.y) / rect.height) * 100;
 
       const newX = Math.max(0, Math.min(100, startPos.x + deltaX));
       const newY = Math.max(0, Math.min(100, startPos.y + deltaY));
@@ -2825,29 +2833,40 @@ function DraggableCoverText({
       onPositionChange({ x: newX, y: newY });
     };
 
-    const handleMouseUp = () => {
+    const handleMouseMove = (e: MouseEvent) => handleMove(e.clientX, e.clientY);
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      handleMove(e.touches[0].clientX, e.touches[0].clientY);
+    };
+
+    const handleEnd = () => {
       setIsDragging(false);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mouseup', handleEnd);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleEnd);
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mouseup', handleEnd);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleEnd);
     };
   }, [isDragging, dragStart, startPos, containerRef, onPositionChange]);
 
   return (
     <div
       ref={elementRef}
-      className={`absolute cursor-move select-none ${isDragging ? 'opacity-80' : ''} ${className || ''}`}
+      className={`absolute cursor-move select-none touch-none ${isDragging ? 'opacity-80' : ''} ${className || ''}`}
       style={{
         left: `${position.x}%`,
         top: `${position.y}%`,
         transform: 'translate(-50%, -50%)',
       }}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
     >
       <div className={`${isDragging ? 'ring-2 ring-white/50 ring-offset-2 ring-offset-transparent rounded px-2' : ''}`}>
         {children}
