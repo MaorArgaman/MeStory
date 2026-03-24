@@ -10,7 +10,7 @@ import _logoIconLegacy from '../assets/images/logo-icon.png';
 
 // Use new realistic images from public folder
 const loginSideImage = '/img/login-side.png';
-const logoIcon = '/img/MeStory-Logo.png';
+const logoIcon = '/img/logo-glow.png';
 
 export default function LoginPage() {
   const { t } = useTranslation('auth');
