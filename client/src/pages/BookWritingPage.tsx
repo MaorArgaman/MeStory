@@ -688,16 +688,16 @@ export default function BookWritingPage() {
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3 lg:space-y-2">
             {book.chapters && book.chapters.length > 0 ? (
               book.chapters.map((chapter, index) => (
                 <div
                   key={index}
-                  className={`group relative ${
+                  className={`group relative rounded-xl lg:rounded-lg ${
                     selectedChapterIndex === index
-                      ? 'sidebar-item-active'
-                      : 'sidebar-item'
-                  }`}
+                      ? 'bg-indigo-500/20 border border-indigo-500/30'
+                      : 'bg-white/5 lg:bg-transparent border border-white/10 lg:border-transparent hover:bg-white/10'
+                  } p-4 lg:p-3 transition-all`}
                 >
                   <button
                     onClick={() => {
@@ -706,11 +706,13 @@ export default function BookWritingPage() {
                     }}
                     className="w-full text-left"
                   >
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="w-4 h-4" />
-                      <span className="flex-1 truncate text-sm">{chapter.title}</span>
+                    <div className="flex items-center gap-3 lg:gap-2">
+                      <BookOpen className="w-5 h-5 lg:w-4 lg:h-4 text-indigo-400" />
+                      <span className="flex-1 truncate text-base lg:text-sm font-medium text-white lg:text-gray-200">
+                        {chapter.title}
+                      </span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-sm lg:text-xs text-gray-400 mt-2 lg:mt-1">
                       {chapter.wordCount} {t('editor.statistics.words_unit')}
                     </p>
                   </button>
@@ -719,17 +721,17 @@ export default function BookWritingPage() {
                       e.stopPropagation();
                       deleteChapter(index);
                     }}
-                    className="absolute top-2 right-2 p-1.5 rounded opacity-0 group-hover:opacity-100 hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-all"
+                    className="absolute top-3 right-3 lg:top-2 lg:right-2 p-2 lg:p-1.5 rounded-lg lg:rounded opacity-100 lg:opacity-0 group-hover:opacity-100 bg-red-500/10 lg:bg-transparent hover:bg-red-500/20 text-red-400 transition-all"
                     title={t('editor.chapters.delete')}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
                   </button>
                 </div>
               ))
             ) : (
-              <div className="text-center py-8 text-gray-500 text-sm">
+              <div className="text-center py-12 lg:py-8 text-gray-400 text-base lg:text-sm">
                 <p>{t('editor.sidebar.no_chapters')}</p>
-                <button onClick={addChapter} className="btn-secondary mt-3 text-xs">
+                <button onClick={addChapter} className="btn-secondary mt-4 lg:mt-3 text-sm lg:text-xs px-6 py-3 lg:px-4 lg:py-2">
                   {t('editor.sidebar.add_first')}
                 </button>
               </div>
