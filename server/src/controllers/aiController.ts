@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { generateContinuations, analyzeTextQuality, generateBookTitles, generateSynopsis, generateCoverColorScheme, generateBookCover, translateChapter } from '../services/geminiService';
 import { Book } from '../models/Book';
+import { SupportedLanguage, detectLanguage } from '../utils/languageHelper';
 
 // UUID validation regex for Supabase IDs
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -11,7 +12,7 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
  */
 export const getSuggestions = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { currentText, genre, context } = req.body;
+    const { currentText, genre, context, language } = req.body;
 
     // Validation
     if (!currentText || !genre) {
@@ -30,8 +31,11 @@ export const getSuggestions = async (req: Request, res: Response): Promise<void>
       return;
     }
 
+    // Determine language (from request or auto-detect from text)
+    const lang: SupportedLanguage = language || detectLanguage(currentText);
+
     // Generate suggestions using Gemini AI
-    const suggestions = await generateContinuations(currentText, genre, context);
+    const suggestions = await generateContinuations(currentText, genre, context, lang);
 
     res.status(200).json({
       success: true,
@@ -53,7 +57,7 @@ export const getSuggestions = async (req: Request, res: Response): Promise<void>
  */
 export const analyzeChapter = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { text } = req.body;
+    const { text, language } = req.body;
 
     // Validation
     if (!text) {
@@ -72,8 +76,11 @@ export const analyzeChapter = async (req: Request, res: Response): Promise<void>
       return;
     }
 
+    // Determine language (from request or auto-detect from text)
+    const lang: SupportedLanguage = language || detectLanguage(text);
+
     // Analyze text using Gemini AI
-    const analysis = await analyzeTextQuality(text);
+    const analysis = await analyzeTextQuality(text, lang);
 
     res.status(200).json({
       success: true,
@@ -95,7 +102,7 @@ export const analyzeChapter = async (req: Request, res: Response): Promise<void>
  */
 export const generateTitles = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { genre, count = 5 } = req.body;
+    const { genre, count = 5, language = 'en' } = req.body;
 
     // Validation
     if (!genre) {
@@ -114,8 +121,9 @@ export const generateTitles = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // Generate titles using Gemini AI
-    const titles = await generateBookTitles(genre, count);
+    // Generate titles using Gemini AI (with language support)
+    const lang: SupportedLanguage = language === 'he' ? 'he' : 'en';
+    const titles = await generateBookTitles(genre, count, lang);
 
     res.status(200).json({
       success: true,
@@ -179,6 +187,10 @@ export const generateBookSynopsis = async (req: Request, res: Response): Promise
       return;
     }
 
+    // Detect language from book content
+    const sampleContent = book.chapters[0]?.content || book.title;
+    const lang: SupportedLanguage = detectLanguage(sampleContent);
+
     // Generate synopsis using Gemini AI
     const synopsis = await generateSynopsis(
       book.title,
@@ -186,7 +198,8 @@ export const generateBookSynopsis = async (req: Request, res: Response): Promise
       book.chapters.map((ch: any) => ({
         title: ch.title,
         content: ch.content,
-      }))
+      })),
+      lang
     );
 
     res.status(200).json({
@@ -211,7 +224,7 @@ export const generateBookSynopsis = async (req: Request, res: Response): Promise
  */
 export const generateCoverColors = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { title, genre, mood } = req.body;
+    const { title, genre, mood, language = 'en' } = req.body;
 
     // Validation
     if (!title || !genre) {
@@ -222,8 +235,11 @@ export const generateCoverColors = async (req: Request, res: Response): Promise<
       return;
     }
 
+    // Determine language
+    const lang: SupportedLanguage = language === 'he' ? 'he' : detectLanguage(title);
+
     // Generate color scheme using Gemini AI
-    const colorScheme = await generateCoverColorScheme(title, genre, mood);
+    const colorScheme = await generateCoverColorScheme(title, genre, mood, lang);
 
     res.status(200).json({
       success: true,
@@ -245,7 +261,7 @@ export const generateCoverColors = async (req: Request, res: Response): Promise<
  */
 export const generateCover = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { synopsis, genre, title } = req.body;
+    const { synopsis, genre, title, language = 'en' } = req.body;
 
     // Validation
     if (!synopsis || !genre || !title) {
@@ -256,8 +272,11 @@ export const generateCover = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
+    // Determine language
+    const lang: SupportedLanguage = language === 'he' ? 'he' : detectLanguage(synopsis);
+
     // Generate cover design using Gemini AI
-    const coverDesign = await generateBookCover(synopsis, genre, title);
+    const coverDesign = await generateBookCover(synopsis, genre, title, lang);
 
     res.status(200).json({
       success: true,

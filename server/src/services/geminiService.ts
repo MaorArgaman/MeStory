@@ -407,7 +407,8 @@ Format: Return only the titles, one per line, numbered 1-${count}.`;
 export async function generateSynopsis(
   title: string,
   genre: string,
-  chapters: Array<{ title: string; content: string }>
+  chapters: Array<{ title: string; content: string }>,
+  language?: SupportedLanguage
 ): Promise<string> {
   try {
     // Aggregate chapter content (use first 3 chapters or all if less)
@@ -416,7 +417,12 @@ export async function generateSynopsis(
       .map((ch, idx) => `Chapter ${idx + 1}: ${ch.title}\n${ch.content.slice(0, 1000)}`)
       .join('\n\n---\n\n');
 
+    // Auto-detect language from content if not provided
+    const lang = language || detectLanguage(contentSample);
+    const langInstruction = getLanguageInstruction(lang);
+
     const prompt = `You are a professional book marketer and copywriter. Your task is to write a compelling book synopsis for the marketplace.
+${langInstruction}
 
 BOOK INFORMATION:
 Title: "${title}"
@@ -473,7 +479,8 @@ Respond with ONLY the synopsis text, no titles, no explanations, no formatting m
 export async function generateCoverColorScheme(
   title: string,
   genre: string,
-  mood?: string
+  mood?: string,
+  language: SupportedLanguage = 'en'
 ): Promise<{
   backgroundColor: string;
   gradientColors: string[];
@@ -482,7 +489,10 @@ export async function generateCoverColorScheme(
   suggestion: string;
 }> {
   try {
+    const langInstruction = getLanguageInstruction(language);
+
     const prompt = `You are a professional book cover designer. Generate a compelling color scheme for a book cover.
+${langInstruction}
 
 BOOK INFORMATION:
 Title: "${title}"
@@ -536,7 +546,8 @@ Provide colors as hex codes. Respond ONLY with valid JSON in this exact format:
 export async function generateBookCover(
   synopsis: string,
   genre: string,
-  title: string
+  title: string,
+  language: SupportedLanguage = 'en'
 ): Promise<{
   type: 'gradient' | 'pattern';
   backgroundColor: string;
@@ -546,7 +557,10 @@ export async function generateBookCover(
   suggestion: string;
 }> {
   try {
+    const langInstruction = getLanguageInstruction(language);
+
     const prompt = `You are a professional book cover designer specializing in ${genre} books.
+${langInstruction}
 
 BOOK INFORMATION:
 Title: "${title}"

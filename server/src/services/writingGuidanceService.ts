@@ -5,6 +5,7 @@
 
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { IBook } from '../models/Book';
+import { SupportedLanguage, detectLanguage, getLanguageInstruction } from '../utils/languageHelper';
 
 // Lazy-initialize Gemini AI client (only when API key is available)
 let genAIClient: GoogleGenerativeAI | null = null;
@@ -51,7 +52,8 @@ function stripHtml(html: string): string {
 export async function checkGuidance(
   book: IBook,
   chapterIndex: number,
-  recentText: string
+  recentText: string,
+  language?: SupportedLanguage
 ): Promise<WritingGuidance | null> {
   // Get established story elements
   const voiceInterview = book.storyContext?.voiceInterview?.summary;
@@ -61,10 +63,16 @@ export async function checkGuidance(
     return null;
   }
 
-  // Build context from voice interview
+  // Auto-detect language from recent text if not provided
+  const lang = language || detectLanguage(recentText);
+  const langInstruction = getLanguageInstruction(lang);
+  const isHebrew = lang === 'he';
+
+  // Build context from voice interview (language-aware)
   let storyContext = '';
   if (voiceInterview) {
-    storyContext = `
+    if (isHebrew) {
+      storyContext = `
 אלמנטים מבוססים של הסיפור (מראיון המחבר):
 ${voiceInterview.theme?.mainTheme ? `נושא מרכזי: ${voiceInterview.theme.mainTheme}` : ''}
 ${(voiceInterview as any).tone ? `טון: ${(voiceInterview as any).tone}` : ''}
@@ -72,12 +80,24 @@ ${voiceInterview.plot?.conflict ? `קונפליקט מרכזי: ${voiceInterview
 ${voiceInterview.characters && voiceInterview.characters.length > 0 ? `דמויות ראשיות: ${voiceInterview.characters.map((c: any) => c.name).join(', ')}` : ''}
 ${voiceInterview.writingGuidelines && voiceInterview.writingGuidelines.length > 0 ? `הנחיות כתיבה:\n${voiceInterview.writingGuidelines.map((g: string) => `- ${g}`).join('\n')}` : ''}
 `;
+    } else {
+      storyContext = `
+Established story elements (from author interview):
+${voiceInterview.theme?.mainTheme ? `Main theme: ${voiceInterview.theme.mainTheme}` : ''}
+${(voiceInterview as any).tone ? `Tone: ${(voiceInterview as any).tone}` : ''}
+${voiceInterview.plot?.conflict ? `Central conflict: ${voiceInterview.plot.conflict}` : ''}
+${voiceInterview.characters && voiceInterview.characters.length > 0 ? `Main characters: ${voiceInterview.characters.map((c: any) => c.name).join(', ')}` : ''}
+${voiceInterview.writingGuidelines && voiceInterview.writingGuidelines.length > 0 ? `Writing guidelines:\n${voiceInterview.writingGuidelines.map((g: string) => `- ${g}`).join('\n')}` : ''}
+`;
+    }
   }
 
   // Get previous content for context
   const previousContent = stripHtml(currentChapter.content).slice(-1000);
 
-  const prompt = `אתה מנחה כתיבה שעוזר לסופרים לשמור על עקביות ומבנה נכון.
+  // Build prompt based on language
+  const prompt = isHebrew ? `אתה מנחה כתיבה שעוזר לסופרים לשמור על עקביות ומבנה נכון.
+${langInstruction}
 
 ${storyContext}
 
@@ -114,12 +134,46 @@ ${recentText}
 אם הכל בסדר, החזר:
 { "hasGuidance": false }
 
-הערה: תן הנחיה רק אם יש באמת צורך. אל תפריע לסופר סתם.
-עדיף לתת הנחיה רק כאשר:
-- יש סטייה ברורה מהנושא שנקבע
-- הטון השתנה באופן משמעותי
-- דמות מתנהגת לא עקבית
-- המבנה חסר אלמנט חשוב`;
+הערה: תן הנחיה רק אם יש באמת צורך. אל תפריע לסופר סתם.` :
+  `You are a writing coach helping authors maintain consistency and proper structure.
+${langInstruction}
+
+${storyContext}
+
+Current chapter context:
+Chapter ${chapterIndex + 1}: "${currentChapter.title}"
+Previous content: ${previousContent.slice(-500)}...
+
+Recently written text (last 500 characters):
+${recentText}
+
+TASK:
+Check if the recently written text:
+1. Follows the established themes and tone
+2. Maintains character voice consistency
+3. Fits the story structure (beginning/middle/end)
+4. Builds tension appropriately toward climax/resolution
+5. Maintains the established tone
+
+If there's a deviation or opportunity for guidance, return JSON:
+{
+  "hasGuidance": true,
+  "guidance": {
+    "type": "deviation" | "structure" | "tension" | "character" | "pacing" | "theme",
+    "severity": "info" | "warning" | "suggestion",
+    "message": "Message in English",
+    "context": "What triggered this guidance",
+    "suggestions": [
+      { "text": "Description of suggestion", "insertable": "Text to insert (optional)" }
+    ],
+    "dismissible": true
+  }
+}
+
+If everything is fine, return:
+{ "hasGuidance": false }
+
+Note: Only provide guidance when truly needed. Don't interrupt the author unnecessarily.`;
 
   try {
     const result = await getGeminiModel().generateContent(prompt);
