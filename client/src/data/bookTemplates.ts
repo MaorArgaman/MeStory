@@ -2064,3 +2064,50 @@ export const textColorPresets = [
   { color: '#16213e', name: 'Midnight', nameHe: 'חצות' },
   { color: '#3d3d3d', name: 'Dark Slate', nameHe: 'צפחה כהה' },
 ];
+
+// Custom Templates Storage (localStorage)
+const CUSTOM_TEMPLATES_KEY = 'mestory-custom-templates';
+
+export function getCustomTemplates(): BookTemplate[] {
+  try {
+    const stored = localStorage.getItem(CUSTOM_TEMPLATES_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error('Error loading custom templates:', error);
+  }
+  return [];
+}
+
+export function saveCustomTemplate(template: BookTemplate): void {
+  try {
+    const existing = getCustomTemplates();
+    // Check if template with same ID exists, update it
+    const index = existing.findIndex(t => t.id === template.id);
+    if (index >= 0) {
+      existing[index] = template;
+    } else {
+      existing.push(template);
+    }
+    localStorage.setItem(CUSTOM_TEMPLATES_KEY, JSON.stringify(existing));
+  } catch (error) {
+    console.error('Error saving custom template:', error);
+    throw error;
+  }
+}
+
+export function deleteCustomTemplate(templateId: string): void {
+  try {
+    const existing = getCustomTemplates();
+    const filtered = existing.filter(t => t.id !== templateId);
+    localStorage.setItem(CUSTOM_TEMPLATES_KEY, JSON.stringify(filtered));
+  } catch (error) {
+    console.error('Error deleting custom template:', error);
+    throw error;
+  }
+}
+
+export function getAllTemplates(): BookTemplate[] {
+  return [...bookTemplates, ...getCustomTemplates()];
+}

@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Layout, Check, Sparkles } from 'lucide-react';
+import { X, Layout, Check, Sparkles, Plus, Trash2 } from 'lucide-react';
 import { useModal } from '../../hooks/useModal';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { bookTemplates, templateCategories, BookTemplate } from '../../data/bookTemplates';
+import { bookTemplates, templateCategories, BookTemplate, getCustomTemplates, saveCustomTemplate, deleteCustomTemplate, getAllTemplates } from '../../data/bookTemplates';
+import CustomTemplateBuilder from './CustomTemplateBuilder';
+import toast from 'react-hot-toast';
 
 interface TemplateGalleryProps {
   isOpen: boolean;
@@ -23,10 +25,39 @@ export default function TemplateGallery({
 
   const { language } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+  const [customTemplates, setCustomTemplates] = useState<BookTemplate[]>([]);
+
+  // Load custom templates on mount
+  useEffect(() => {
+    if (isOpen) {
+      setCustomTemplates(getCustomTemplates());
+    }
+  }, [isOpen]);
+
+  const allTemplates = [...bookTemplates, ...customTemplates];
 
   const filteredTemplates = selectedCategory === 'all'
-    ? bookTemplates
-    : bookTemplates.filter(t => t.category === selectedCategory);
+    ? allTemplates
+    : selectedCategory === 'custom'
+    ? customTemplates
+    : allTemplates.filter(t => t.category === selectedCategory);
+
+  const handleSaveCustomTemplate = (template: BookTemplate) => {
+    saveCustomTemplate(template);
+    setCustomTemplates(getCustomTemplates());
+    setIsBuilderOpen(false);
+    toast.success(language === 'he' ? 'התבנית נשמרה בהצלחה!' : 'Template saved successfully!');
+  };
+
+  const handleDeleteCustomTemplate = (templateId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm(language === 'he' ? 'למחוק את התבנית?' : 'Delete this template?')) {
+      deleteCustomTemplate(templateId);
+      setCustomTemplates(getCustomTemplates());
+      toast.success(language === 'he' ? 'התבנית נמחקה' : 'Template deleted');
+    }
+  };
 
   const handleSelect = (template: BookTemplate) => {
     onSelect(template);
@@ -34,6 +65,7 @@ export default function TemplateGallery({
   };
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <>
@@ -103,6 +135,26 @@ export default function TemplateGallery({
               {/* Templates Grid */}
               <div className="flex-1 overflow-y-auto p-6">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {/* Create Custom Template Button */}
+                  <motion.button
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    onClick={() => setIsBuilderOpen(true)}
+                    className="group relative rounded-xl overflow-hidden border-2 border-dashed border-indigo-500/50 hover:border-indigo-500 transition-all bg-indigo-500/5 hover:bg-indigo-500/10"
+                  >
+                    <div className="aspect-[3/4] flex flex-col items-center justify-center p-4">
+                      <div className="w-16 h-16 bg-indigo-500/20 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <Plus className="w-8 h-8 text-indigo-400" />
+                      </div>
+                      <h3 className="font-medium text-white text-sm text-center">
+                        {language === 'he' ? 'צור תבנית מותאמת' : 'Create Custom'}
+                      </h3>
+                      <p className="text-xs text-white/50 text-center mt-1">
+                        {language === 'he' ? 'עצב תבנית משלך' : 'Design your own'}
+                      </p>
+                    </div>
+                  </motion.button>
+
                   {filteredTemplates.map((template, index) => (
                     <motion.button
                       key={template.id}
@@ -162,11 +214,20 @@ export default function TemplateGallery({
                           </div>
                         </div>
 
-                        {/* Custom badge */}
+                        {/* Custom badge and delete button */}
                         {template.category === 'custom' && (
-                          <div className="absolute top-2 left-2 px-2 py-0.5 bg-purple-500 rounded text-xs font-bold text-white flex items-center gap-1">
-                            <Sparkles className="w-2.5 h-2.5" />
-                            {language === 'he' ? 'מותאם' : 'Custom'}
+                          <div className="absolute top-2 left-2 flex items-center gap-1">
+                            <div className="px-2 py-0.5 bg-purple-500 rounded text-xs font-bold text-white flex items-center gap-1">
+                              <Sparkles className="w-2.5 h-2.5" />
+                              {language === 'he' ? 'מותאם' : 'Custom'}
+                            </div>
+                            <button
+                              onClick={(e) => handleDeleteCustomTemplate(template.id, e)}
+                              className="p-1 bg-red-500/80 hover:bg-red-500 rounded transition-colors"
+                              title={language === 'he' ? 'מחק תבנית' : 'Delete template'}
+                            >
+                              <Trash2 className="w-3 h-3 text-white" />
+                            </button>
                           </div>
                         )}
 
@@ -232,5 +293,13 @@ export default function TemplateGallery({
         </>
       )}
     </AnimatePresence>
+
+      {/* Custom Template Builder Modal */}
+      <CustomTemplateBuilder
+        isOpen={isBuilderOpen}
+        onClose={() => setIsBuilderOpen(false)}
+        onSave={handleSaveCustomTemplate}
+      />
+    </>
   );
 }
