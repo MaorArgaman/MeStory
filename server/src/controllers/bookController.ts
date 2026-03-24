@@ -267,7 +267,7 @@ export const getBookById = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    // For public books, return limited data with author info
+    // For public books, return data with author info and chapters for reading
     const author = await User.findById(book.author);
     res.status(200).json({
       success: true,
@@ -278,6 +278,7 @@ export const getBookById = async (req: AuthRequest, res: Response): Promise<void
         genre: book.genre,
         synopsis: book.synopsis,
         description: book.description,
+        chapters: book.chapters || [], // Include chapters for reading
         coverDesign: book.coverDesign,
         qualityScore: book.qualityScore,
         publishingStatus: {

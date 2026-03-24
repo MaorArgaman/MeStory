@@ -337,7 +337,9 @@ export default function ReaderPage() {
       setLoading(true);
       const response = await api.get(`/books/${bookId}`);
       if (response.data.success) {
-        setBook(response.data.data);
+        // Handle both owner format (data.book) and public format (data directly)
+        const bookData = response.data.data.book || response.data.data;
+        setBook(bookData);
       }
     } catch (error) {
       console.error('Failed to load book:', error);
