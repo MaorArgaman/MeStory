@@ -26,6 +26,7 @@ import { motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 // Predefined color palette - keys are used for translation
 const TEXT_COLORS = [
@@ -61,6 +62,7 @@ type HeadingLevel = 1 | 2 | 3;
 
 export default function EditorToolbar({ editor }: EditorToolbarProps) {
   const { t } = useTranslation('common');
+  const { isRTL } = useLanguage();
   const [showHeadingMenu, setShowHeadingMenu] = useState(false);
   const [showColorMenu, setShowColorMenu] = useState(false);
   const [showHighlightMenu, setShowHighlightMenu] = useState(false);
@@ -78,34 +80,58 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   useEffect(() => {
     if (showHeadingMenu && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      setMenuPosition({
-        top: rect.bottom + 4,
-        left: rect.left,
-      });
+      if (isRTL) {
+        // For RTL: position from right edge
+        setMenuPosition({
+          top: rect.bottom + 4,
+          left: Math.max(8, window.innerWidth - rect.right),
+        });
+      } else {
+        setMenuPosition({
+          top: rect.bottom + 4,
+          left: rect.left,
+        });
+      }
     }
-  }, [showHeadingMenu]);
+  }, [showHeadingMenu, isRTL]);
 
   // Calculate color menu position
   useEffect(() => {
     if (showColorMenu && colorButtonRef.current) {
       const rect = colorButtonRef.current.getBoundingClientRect();
-      setColorMenuPosition({
-        top: rect.bottom + 4,
-        left: Math.max(8, rect.left - 60),
-      });
+      if (isRTL) {
+        // For RTL: position from right edge, offset to center the menu
+        setColorMenuPosition({
+          top: rect.bottom + 4,
+          left: Math.max(8, window.innerWidth - rect.right - 60),
+        });
+      } else {
+        setColorMenuPosition({
+          top: rect.bottom + 4,
+          left: Math.max(8, rect.left - 60),
+        });
+      }
     }
-  }, [showColorMenu]);
+  }, [showColorMenu, isRTL]);
 
   // Calculate highlight menu position
   useEffect(() => {
     if (showHighlightMenu && highlightButtonRef.current) {
       const rect = highlightButtonRef.current.getBoundingClientRect();
-      setHighlightMenuPosition({
-        top: rect.bottom + 4,
-        left: Math.max(8, rect.left - 40),
-      });
+      if (isRTL) {
+        // For RTL: position from right edge, offset to center the menu
+        setHighlightMenuPosition({
+          top: rect.bottom + 4,
+          left: Math.max(8, window.innerWidth - rect.right - 40),
+        });
+      } else {
+        setHighlightMenuPosition({
+          top: rect.bottom + 4,
+          left: Math.max(8, rect.left - 40),
+        });
+      }
     }
-  }, [showHighlightMenu]);
+  }, [showHighlightMenu, isRTL]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -194,18 +220,18 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   return (
     <div className="bg-slate-800/80 backdrop-blur-md rounded-xl p-2 mb-4 flex flex-wrap gap-1 items-center border border-white/10 shadow-lg">
       {/* Undo/Redo */}
-      <div className="flex gap-0.5 items-center pr-2 border-r border-white/10">
+      <div className={`flex gap-0.5 items-center ${isRTL ? 'pl-2 border-l' : 'pr-2 border-r'} border-white/10`}>
         <ToolbarButton
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
-          title="Undo (Ctrl+Z)"
+          title={`${t('editor.toolbar.undo')} (Ctrl+Z)`}
         >
           <Undo className={iconClass} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
-          title="Redo (Ctrl+Y)"
+          title={`${t('editor.toolbar.redo')} (Ctrl+Y)`}
         >
           <Redo className={iconClass} />
         </ToolbarButton>
@@ -236,7 +262,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             className="fixed bg-slate-800 border border-white/10 rounded-lg shadow-2xl min-w-[160px]"
             style={{
               top: menuPosition.top,
-              left: menuPosition.left,
+              ...(isRTL ? { right: menuPosition.left } : { left: menuPosition.left }),
               zIndex: 9999,
             }}
           >
@@ -288,28 +314,28 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           isActive={editor.isActive('bold')}
-          title="Bold (Ctrl+B)"
+          title={`${t('editor.toolbar.bold')} (Ctrl+B)`}
         >
           <Bold className={iconClass} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleItalic().run()}
           isActive={editor.isActive('italic')}
-          title="Italic (Ctrl+I)"
+          title={`${t('editor.toolbar.italic')} (Ctrl+I)`}
         >
           <Italic className={iconClass} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleUnderline().run()}
           isActive={editor.isActive('underline')}
-          title="Underline (Ctrl+U)"
+          title={`${t('editor.toolbar.underline')} (Ctrl+U)`}
         >
           <Underline className={iconClass} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleStrike().run()}
           isActive={editor.isActive('strike')}
-          title="Strikethrough"
+          title={t('editor.toolbar.strikethrough')}
         >
           <Strikethrough className={iconClass} />
         </ToolbarButton>
@@ -324,7 +350,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               setShowColorMenu(!showColorMenu);
               setShowHighlightMenu(false);
             }}
-            title="Text Color"
+            title={t('editor.toolbar.text_color')}
             className="p-3 sm:p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all relative flex items-center justify-center"
           >
             <Palette className={iconClass} />
@@ -345,7 +371,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               setShowHighlightMenu(!showHighlightMenu);
               setShowColorMenu(false);
             }}
-            title="Highlight"
+            title={t('editor.toolbar.highlight')}
             className="p-3 sm:p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center"
           >
             <Highlighter className={iconClass} />
@@ -362,7 +388,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           className="fixed bg-slate-800 border border-white/10 rounded-lg shadow-2xl p-3"
           style={{
             top: colorMenuPosition.top,
-            left: colorMenuPosition.left,
+            ...(isRTL ? { right: colorMenuPosition.left } : { left: colorMenuPosition.left }),
             zIndex: 9999,
           }}
         >
@@ -421,7 +447,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           className="fixed bg-slate-800 border border-white/10 rounded-lg shadow-2xl p-3"
           style={{
             top: highlightMenuPosition.top,
-            left: highlightMenuPosition.left,
+            ...(isRTL ? { right: highlightMenuPosition.left } : { left: highlightMenuPosition.left }),
             zIndex: 9999,
           }}
         >
@@ -468,28 +494,28 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         <ToolbarButton
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
           isActive={editor.isActive({ textAlign: 'left' })}
-          title="Align Left"
+          title={t('editor.toolbar.align_left')}
         >
           <AlignLeft className={iconClass} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().setTextAlign('center').run()}
           isActive={editor.isActive({ textAlign: 'center' })}
-          title="Align Center"
+          title={t('editor.toolbar.align_center')}
         >
           <AlignCenter className={iconClass} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().setTextAlign('right').run()}
           isActive={editor.isActive({ textAlign: 'right' })}
-          title="Align Right"
+          title={t('editor.toolbar.align_right')}
         >
           <AlignRight className={iconClass} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().setTextAlign('justify').run()}
           isActive={editor.isActive({ textAlign: 'justify' })}
-          title="Justify"
+          title={t('editor.toolbar.align_justify')}
         >
           <AlignJustify className={iconClass} />
         </ToolbarButton>
@@ -502,34 +528,34 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           isActive={editor.isActive('bulletList')}
-          title="Bullet List"
+          title={t('editor.toolbar.bullet_list')}
         >
           <List className={iconClass} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           isActive={editor.isActive('orderedList')}
-          title="Numbered List"
+          title={t('editor.toolbar.numbered_list')}
         >
           <ListOrdered className={iconClass} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           isActive={editor.isActive('blockquote')}
-          title="Quote"
+          title={t('editor.toolbar.quote')}
         >
           <Quote className={iconClass} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          title="Horizontal Line"
+          title={t('editor.toolbar.horizontal_line')}
         >
           <Minus className={iconClass} />
         </ToolbarButton>
       </div>
 
       {/* Word Count - Right aligned */}
-      <div className="ml-auto flex items-center gap-3 text-xs text-gray-400 px-3">
+      <div className={`${isRTL ? 'mr-auto' : 'ml-auto'} flex items-center gap-3 text-xs text-gray-400 px-3`}>
         <span className="hidden sm:inline">
           {editor.storage.characterCount?.words() || 0} {t('editor.toolbar.words')}
         </span>

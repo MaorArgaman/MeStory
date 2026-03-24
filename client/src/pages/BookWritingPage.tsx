@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
@@ -17,6 +17,7 @@ import {
   PenTool,
   Menu,
   X,
+  Trash2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -81,6 +82,9 @@ export default function BookWritingPage() {
   // Refs for sidebar focus management
   const leftSidebarRef = useRef<HTMLDivElement>(null);
   const rightSidebarRef = useRef<HTMLDivElement>(null);
+
+  // Ref for debounced auto-save timer
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Focus management for sidebars (accessibility)
   useEffect(() => {
@@ -202,17 +206,41 @@ export default function BookWritingPage() {
     }
   }, [bookId]);
 
-  // Auto-save every 30 seconds (Section 5.1)
+  // Debounced auto-save: saves 2 seconds after last edit
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Prevent concurrent saves and only save if there are changes
-      if (!saved && content && !saving) {
-        saveBook();
-      }
-    }, 30000);
+    // Clear any existing timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
 
-    return () => clearInterval(interval);
+    // Only set timer if there are unsaved changes
+    if (!saved && content && !saving) {
+      autoSaveTimerRef.current = setTimeout(() => {
+        saveBook();
+      }, 2000);
+    }
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
   }, [saved, content, saving]);
+
+  // Warn user before leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!saved) {
+        e.preventDefault();
+        e.returnValue = t('status.unsaved_changes');
+        return t('status.unsaved_changes');
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [saved, t]);
 
   const loadBook = async () => {
     try {
@@ -300,13 +328,83 @@ export default function BookWritingPage() {
     setSaved(false);
   };
 
-  const selectChapter = (index: number) => {
+  const selectChapter = useCallback(async (index: number) => {
     if (!book || !book.chapters || !book.chapters[index]) return;
+
+    // Save current chapter if there are unsaved changes before switching
+    if (!saved && editor && book.chapters[selectedChapterIndex]) {
+      const updatedChapters = [...book.chapters];
+      updatedChapters[selectedChapterIndex] = {
+        ...updatedChapters[selectedChapterIndex],
+        content,
+        wordCount: editor.storage.characterCount?.words() || 0,
+      };
+
+      try {
+        const response = await api.put(`/books/${bookId}`, {
+          chapters: updatedChapters,
+        });
+
+        if (response.data.success) {
+          setBook(response.data.data.book);
+        }
+      } catch (error) {
+        console.error('Failed to save before switching chapter:', error);
+        // Continue switching even if save fails
+      }
+    }
 
     setSelectedChapterIndex(index);
     setContent(book.chapters[index].content || '');
     setSaved(true);
-  };
+  }, [book, saved, editor, selectedChapterIndex, content, bookId]);
+
+  const deleteChapter = useCallback(async (index: number) => {
+    if (!book || !book.chapters || book.chapters.length === 0) return;
+
+    // Show confirmation dialog
+    const confirmed = window.confirm(t('editor.chapters.delete_confirm'));
+    if (!confirmed) return;
+
+    const updatedChapters = [...book.chapters];
+    updatedChapters.splice(index, 1);
+
+    // Re-order remaining chapters
+    updatedChapters.forEach((chapter, i) => {
+      chapter.order = i;
+    });
+
+    try {
+      const response = await api.put(`/books/${bookId}`, {
+        chapters: updatedChapters,
+      });
+
+      if (response.data.success) {
+        setBook(response.data.data.book);
+
+        // Handle edge cases for selected chapter index
+        if (updatedChapters.length === 0) {
+          // No chapters left
+          setSelectedChapterIndex(0);
+          setContent('');
+        } else if (index === selectedChapterIndex) {
+          // Deleted the currently selected chapter
+          const newIndex = Math.min(index, updatedChapters.length - 1);
+          setSelectedChapterIndex(newIndex);
+          setContent(updatedChapters[newIndex]?.content || '');
+        } else if (index < selectedChapterIndex) {
+          // Deleted a chapter before the current one, adjust index
+          setSelectedChapterIndex(selectedChapterIndex - 1);
+        }
+
+        setSaved(true);
+        toast.success(t('status.saved'));
+      }
+    } catch (error) {
+      console.error('Failed to delete chapter:', error);
+      toast.error(t('errors.generic'));
+    }
+  }, [book, bookId, selectedChapterIndex, t]);
 
   const handleInsertText = (text: string) => {
     if (!editor) return;
@@ -582,26 +680,40 @@ export default function BookWritingPage() {
           <div className="space-y-2">
             {book.chapters && book.chapters.length > 0 ? (
               book.chapters.map((chapter, index) => (
-                <button
+                <div
                   key={index}
-                  onClick={() => {
-                    selectChapter(index);
-                    setShowLeftSidebar(false);
-                  }}
-                  className={
+                  className={`group relative ${
                     selectedChapterIndex === index
-                      ? 'sidebar-item-active w-full text-left'
-                      : 'sidebar-item w-full text-left'
-                  }
+                      ? 'sidebar-item-active'
+                      : 'sidebar-item'
+                  }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4" />
-                    <span className="flex-1 truncate text-sm">{chapter.title}</span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {chapter.wordCount} {t('editor.statistics.words_unit')}
-                  </p>
-                </button>
+                  <button
+                    onClick={() => {
+                      selectChapter(index);
+                      setShowLeftSidebar(false);
+                    }}
+                    className="w-full text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4" />
+                      <span className="flex-1 truncate text-sm">{chapter.title}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {chapter.wordCount} {t('editor.statistics.words_unit')}
+                    </p>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteChapter(index);
+                    }}
+                    className="absolute top-2 right-2 p-1.5 rounded opacity-0 group-hover:opacity-100 hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-all"
+                    title={t('editor.chapters.delete')}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               ))
             ) : (
               <div className="text-center py-8 text-gray-500 text-sm">
@@ -626,6 +738,7 @@ export default function BookWritingPage() {
                     type="text"
                     name="chapterTitle"
                     value={currentChapter.title}
+                    dir={isHebrew ? 'rtl' : 'ltr'}
                     onChange={(e) => {
                       const updated = [...book.chapters];
                       updated[selectedChapterIndex].title = e.target.value;

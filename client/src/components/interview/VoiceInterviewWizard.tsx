@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useModal } from '../../hooks/useModal';
 import {
@@ -52,6 +53,9 @@ export default function VoiceInterviewWizard({
 }: VoiceInterviewWizardProps) {
   // Use modal hook for ESC key and scroll lock
   useModal(true, onCancel);
+
+  // i18n hook
+  const { t } = useTranslation('common');
 
   // State
   const [step, setStep] = useState<WizardStep>('intro');
@@ -120,7 +124,7 @@ export default function VoiceInterviewWizard({
       // Speak the first question
       await speakQuestion(result.firstQuestion);
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Error starting the interview');
+      toast.error(error.response?.data?.error || t('voice_interview.error_starting', 'Error starting the interview'));
     } finally {
       setIsProcessing(false);
     }
@@ -152,7 +156,7 @@ export default function VoiceInterviewWizard({
         await speakQuestion(result.nextQuestion);
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Error processing your response');
+      toast.error(error.response?.data?.error || t('voice_interview.error_processing', 'Error processing your response'));
       setAvatarState('listening');
     } finally {
       setIsProcessing(false);
@@ -176,7 +180,7 @@ export default function VoiceInterviewWizard({
       setStep('summary');
       setAvatarState('idle');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Error completing the interview');
+      toast.error(error.response?.data?.error || t('voice_interview.error_completing', 'Error completing the interview'));
     } finally {
       setIsProcessing(false);
     }
@@ -205,10 +209,10 @@ export default function VoiceInterviewWizard({
     >
       <AIAvatar state="idle" size="lg" className="mb-8" />
 
-      <h2 id="voice-interview-wizard-title" className="text-2xl font-bold text-white mb-4">AI Voice Interview</h2>
+      <h2 id="voice-interview-wizard-title" className="text-2xl font-bold text-white mb-4">{t('voice_interview.title', 'AI Voice Interview')}</h2>
 
       <p className="text-gray-300 mb-6 max-w-md">
-        I'll ask you questions about the book you want to write. Answer by voice or text, and at the end we'll get a comprehensive summary to help you with your writing.
+        {t('voice_interview.description', "I'll ask you questions about the book you want to write. Answer by voice or text, and at the end we'll get a comprehensive summary to help you with your writing.")}
       </p>
 
       {/* Mic permission status */}
@@ -216,17 +220,17 @@ export default function VoiceInterviewWizard({
         {micPermissionGranted === null ? (
           <div className="flex items-center gap-2 text-gray-400">
             <RefreshCw className="w-4 h-4 animate-spin" />
-            <span>Checking microphone permissions...</span>
+            <span>{t('voice_interview.checking_mic', 'Checking microphone permissions...')}</span>
           </div>
         ) : micPermissionGranted ? (
           <div className="flex items-center gap-2 text-green-400">
             <Mic className="w-4 h-4" />
-            <span>Microphone available</span>
+            <span>{t('voice_interview.mic_available', 'Microphone available')}</span>
           </div>
         ) : (
           <div className="flex items-center gap-2 text-yellow-400">
             <MicOff className="w-4 h-4" />
-            <span>Cannot access microphone - you can type responses</span>
+            <span>{t('voice_interview.mic_unavailable', 'Cannot access microphone - you can type responses')}</span>
           </div>
         )}
       </div>
@@ -242,7 +246,7 @@ export default function VoiceInterviewWizard({
           }`}
         >
           {isTTSEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-          <span>{isTTSEnabled ? 'Voice enabled' : 'Voice disabled'}</span>
+          <span>{isTTSEnabled ? t('voice_interview.voice_enabled', 'Voice enabled') : t('voice_interview.voice_disabled', 'Voice disabled')}</span>
         </button>
       </div>
 
@@ -268,12 +272,12 @@ export default function VoiceInterviewWizard({
         {isProcessing ? (
           <>
             <RefreshCw className="w-5 h-5 animate-spin" />
-            <span>Starting...</span>
+            <span>{t('voice_interview.starting', 'Starting...')}</span>
           </>
         ) : (
           <>
             <Mic className="w-5 h-5" />
-            <span>Start Interview</span>
+            <span>{t('voice_interview.start', 'Start Interview')}</span>
           </>
         )}
       </button>
@@ -291,7 +295,7 @@ export default function VoiceInterviewWizard({
       {/* Progress bar */}
       <div className="w-full max-w-md mb-6">
         <div className="flex items-center justify-between text-sm text-gray-400 mb-2">
-          <span>Progress</span>
+          <span>{t('voice_interview.progress', 'Progress')}</span>
           <span>{progress}%</span>
         </div>
         <div className="h-2 bg-white/10 rounded-full overflow-hidden">
@@ -343,7 +347,7 @@ export default function VoiceInterviewWizard({
           className="text-magic-gold hover:text-yellow-400 text-sm flex items-center gap-1"
         >
           <CheckCircle className="w-4 h-4" />
-          <span>Complete Interview Early</span>
+          <span>{t('voice_interview.complete_early', 'Complete Interview Early')}</span>
         </button>
       )}
     </motion.div>
@@ -358,13 +362,13 @@ export default function VoiceInterviewWizard({
       className="w-full max-w-2xl"
     >
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-white">Interview Summary</h2>
+        <h2 className="text-2xl font-bold text-white">{t('voice_interview.summary_title', 'Interview Summary')}</h2>
         <button
           onClick={() => setStep('editing')}
           className="flex items-center gap-2 text-magic-gold hover:text-yellow-400 transition-colors"
         >
           <Edit3 className="w-4 h-4" />
-          <span>Edit</span>
+          <span>{t('voice_interview.edit', 'Edit')}</span>
         </button>
       </div>
 
@@ -385,7 +389,7 @@ export default function VoiceInterviewWizard({
                 ))}
               </div>
             )}
-            <p className="text-gray-400 text-sm mt-2">Tone: {editingSummary.theme.tone}</p>
+            <p className="text-gray-400 text-sm mt-2">{t('voice_interview.tone', 'Tone')}: {editingSummary.theme.tone}</p>
           </div>
 
           {/* Characters */}
@@ -399,12 +403,10 @@ export default function VoiceInterviewWizard({
                   <span className="text-white font-medium">{char.name}</span>
                   <span className="text-xs bg-magic-gold/20 text-magic-gold px-2 py-0.5 rounded">
                     {char.role === 'protagonist'
-                      ? 'Protagonist'
+                      ? t('voice_interview.protagonist', 'Protagonist')
                       : char.role === 'antagonist'
-                      ? 'Antagonist'
-                      : char.role === 'supporting'
-                      ? 'Supporting'
-                      : 'Supporting'}
+                      ? t('voice_interview.antagonist', 'Antagonist')
+                      : t('voice_interview.supporting', 'Supporting')}
                   </span>
                 </div>
                 <p className="text-gray-300 text-sm">{char.description}</p>
@@ -419,15 +421,15 @@ export default function VoiceInterviewWizard({
             </h3>
             <div className="space-y-2 text-sm">
               <p>
-                <span className="text-gray-400">Premise: </span>
+                <span className="text-gray-400">{t('voice_interview.premise', 'Premise')}: </span>
                 <span className="text-white">{editingSummary.plot.premise}</span>
               </p>
               <p>
-                <span className="text-gray-400">Conflict: </span>
+                <span className="text-gray-400">{t('voice_interview.conflict', 'Conflict')}: </span>
                 <span className="text-white">{editingSummary.plot.conflict}</span>
               </p>
               <p>
-                <span className="text-gray-400">Stakes: </span>
+                <span className="text-gray-400">{t('voice_interview.stakes', 'Stakes')}: </span>
                 <span className="text-white">{editingSummary.plot.stakes}</span>
               </p>
             </div>
@@ -447,7 +449,7 @@ export default function VoiceInterviewWizard({
           {/* Writing guidelines */}
           {editingSummary.writingGuidelines.length > 0 && (
             <div className="bg-magic-gold/10 rounded-xl p-4 border border-magic-gold/30">
-              <h3 className="text-magic-gold font-medium mb-2">Writing Guidelines</h3>
+              <h3 className="text-magic-gold font-medium mb-2">{t('voice_interview.writing_guidelines', 'Writing Guidelines')}</h3>
               <ul className="space-y-1">
                 {editingSummary.writingGuidelines.map((guide, i) => (
                   <li key={i} className="text-gray-300 text-sm flex items-start gap-2">
@@ -467,14 +469,14 @@ export default function VoiceInterviewWizard({
           onClick={handleCancel}
           className="flex-1 py-3 px-4 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 transition-colors border border-white/20"
         >
-          Cancel
+          {t('voice_interview.cancel', 'Cancel')}
         </button>
         <button
           onClick={handleSaveAndComplete}
           className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space font-bold hover:from-yellow-500 hover:to-magic-gold transition-all flex items-center justify-center gap-2"
         >
           <Save className="w-5 h-5" />
-          <span>Save & Continue</span>
+          <span>{t('voice_interview.save_continue', 'Save & Continue')}</span>
         </button>
       </div>
     </motion.div>
@@ -492,14 +494,14 @@ export default function VoiceInterviewWizard({
         <button onClick={() => setStep('summary')} className="text-gray-400 hover:text-white">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h2 className="text-2xl font-bold text-white">Edit Summary</h2>
+        <h2 className="text-2xl font-bold text-white">{t('voice_interview.edit_summary', 'Edit Summary')}</h2>
       </div>
 
       {editingSummary && (
         <div className="space-y-6">
           {/* Theme editing */}
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <label className="block text-magic-gold font-medium mb-2">Main Theme</label>
+            <label className="block text-magic-gold font-medium mb-2">{t('voice_interview.main_theme', 'Main Theme')}</label>
             <textarea
               value={editingSummary.theme.mainTheme}
               onChange={(e) =>
@@ -515,7 +517,7 @@ export default function VoiceInterviewWizard({
 
           {/* Conflict editing */}
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <label className="block text-magic-gold font-medium mb-2">Conflict</label>
+            <label className="block text-magic-gold font-medium mb-2">{t('voice_interview.conflict', 'Conflict')}</label>
             <textarea
               value={editingSummary.plot.conflict}
               onChange={(e) =>
@@ -531,7 +533,7 @@ export default function VoiceInterviewWizard({
 
           {/* Setting editing */}
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <label className="block text-magic-gold font-medium mb-2">Story World</label>
+            <label className="block text-magic-gold font-medium mb-2">{t('voice_interview.story_world', 'Story World')}</label>
             <textarea
               value={editingSummary.setting.world}
               onChange={(e) =>
@@ -552,14 +554,14 @@ export default function VoiceInterviewWizard({
           onClick={() => setStep('summary')}
           className="flex-1 py-3 px-4 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 transition-colors border border-white/20"
         >
-          Back to Summary
+          {t('voice_interview.back_to_summary', 'Back to Summary')}
         </button>
         <button
           onClick={handleSaveAndComplete}
           className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space font-bold hover:from-yellow-500 hover:to-magic-gold transition-all flex items-center justify-center gap-2"
         >
           <Save className="w-5 h-5" />
-          <span>Save & Continue</span>
+          <span>{t('voice_interview.save_continue', 'Save & Continue')}</span>
         </button>
       </div>
     </motion.div>

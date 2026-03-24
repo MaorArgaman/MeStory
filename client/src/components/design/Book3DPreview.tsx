@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Book3DPreviewProps {
   title: string;
@@ -14,6 +15,11 @@ interface Book3DPreviewProps {
   synopsis?: string;
   backCoverImageUrl?: string;
   backCoverColor?: string;
+  titlePosition?: { x: number; y: number };
+  authorPosition?: { x: number; y: number };
+  editMode?: boolean;
+  onTitlePositionChange?: (pos: { x: number; y: number }) => void;
+  onAuthorPositionChange?: (pos: { x: number; y: number }) => void;
 }
 
 export default function Book3DPreview({
@@ -28,7 +34,13 @@ export default function Book3DPreview({
   synopsis = '',
   backCoverImageUrl,
   backCoverColor,
+  titlePosition = { x: 50, y: 20 },
+  authorPosition = { x: 50, y: 85 },
+  editMode = false,
+  onTitlePositionChange,
+  onAuthorPositionChange,
 }: Book3DPreviewProps) {
+  const { t } = useTranslation('common');
   // Detect RTL languages
   const isRTL = language === 'he' || language === 'ar';
 
@@ -36,6 +48,67 @@ export default function Book3DPreview({
   const pages = splitIntoPages(content, 300);
   const [currentPage, setCurrentPage] = useState(0);
   const [isPageTurning, setIsPageTurning] = useState(false);
+
+  // Drag state
+  const [isDraggingTitle, setIsDraggingTitle] = useState(false);
+  const [isDraggingAuthor, setIsDraggingAuthor] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  const coverRef = useRef<HTMLDivElement>(null);
+
+  // Handle drag for title
+  const handleTitleMouseDown = (e: React.MouseEvent) => {
+    if (!editMode || !onTitlePositionChange) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingTitle(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setStartPos({ x: titlePosition.x, y: titlePosition.y });
+  };
+
+  // Handle drag for author
+  const handleAuthorMouseDown = (e: React.MouseEvent) => {
+    if (!editMode || !onAuthorPositionChange) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingAuthor(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setStartPos({ x: authorPosition.x, y: authorPosition.y });
+  };
+
+  useEffect(() => {
+    if (!isDraggingTitle && !isDraggingAuthor) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!coverRef.current) return;
+      const rect = coverRef.current.getBoundingClientRect();
+      const deltaX = ((e.clientX - dragStart.x) / rect.width) * 100;
+      const deltaY = ((e.clientY - dragStart.y) / rect.height) * 100;
+
+      const newX = Math.max(10, Math.min(90, startPos.x + deltaX));
+      const newY = Math.max(5, Math.min(95, startPos.y + deltaY));
+
+      if (isDraggingTitle && onTitlePositionChange) {
+        onTitlePositionChange({ x: newX, y: newY });
+      }
+      if (isDraggingAuthor && onAuthorPositionChange) {
+        onAuthorPositionChange({ x: newX, y: newY });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingTitle(false);
+      setIsDraggingAuthor(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDraggingTitle, isDraggingAuthor, dragStart, startPos, onTitlePositionChange, onAuthorPositionChange]);
 
   const nextPage = () => {
     if (currentPage < pages.length - 1 && !isPageTurning) {
@@ -104,6 +177,7 @@ export default function Book3DPreview({
         >
           {/* Front Cover */}
           <div
+            ref={coverRef}
             className="book-cover front-cover"
             style={{
               position: 'absolute',
@@ -120,10 +194,6 @@ export default function Book3DPreview({
                 0 0 80px ${coverColor}40
               `,
               transform: 'translateZ(25px)',
-              padding: '40px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
               overflow: 'hidden',
               direction: isRTL ? 'rtl' : 'ltr',
             }}
@@ -138,8 +208,17 @@ export default function Book3DPreview({
               />
             )}
 
-            {/* Title */}
-            <div className="relative z-10">
+            {/* Title - Draggable in edit mode */}
+            <div
+              className={`absolute z-10 ${editMode ? 'cursor-move' : ''} ${isDraggingTitle ? 'opacity-80' : ''}`}
+              style={{
+                left: `${titlePosition.x}%`,
+                top: `${titlePosition.y}%`,
+                transform: 'translate(-50%, -50%)',
+                maxWidth: '80%',
+              }}
+              onMouseDown={handleTitleMouseDown}
+            >
               <h1
                 style={{
                   fontFamily: fontFamily,
@@ -149,15 +228,27 @@ export default function Book3DPreview({
                   textShadow: '2px 2px 8px rgba(0,0,0,0.8)',
                   lineHeight: '1.2',
                   wordWrap: 'break-word',
-                  textAlign: isRTL ? 'right' : 'left',
+                  textAlign: 'center',
                 }}
               >
                 {title || 'Book Title'}
               </h1>
+              {editMode && (
+                <div className="absolute -inset-2 border-2 border-dashed border-white/40 rounded pointer-events-none" />
+              )}
             </div>
 
-            {/* Author */}
-            <div className="relative z-10">
+            {/* Author - Draggable in edit mode */}
+            <div
+              className={`absolute z-10 ${editMode ? 'cursor-move' : ''} ${isDraggingAuthor ? 'opacity-80' : ''}`}
+              style={{
+                left: `${authorPosition.x}%`,
+                top: `${authorPosition.y}%`,
+                transform: 'translate(-50%, -50%)',
+                maxWidth: '80%',
+              }}
+              onMouseDown={handleAuthorMouseDown}
+            >
               <p
                 style={{
                   fontFamily: fontFamily,
@@ -165,11 +256,14 @@ export default function Book3DPreview({
                   color: textColor,
                   textShadow: '1px 1px 4px rgba(0,0,0,0.8)',
                   opacity: 0.9,
-                  textAlign: isRTL ? 'right' : 'left',
+                  textAlign: 'center',
                 }}
               >
                 {author || 'Author Name'}
               </p>
+              {editMode && (
+                <div className="absolute -inset-2 border-2 border-dashed border-white/40 rounded pointer-events-none" />
+              )}
             </div>
           </div>
 
@@ -373,22 +467,22 @@ export default function Book3DPreview({
         </motion.div>
       </div>
 
-      {/* Pagination Controls */}
+      {/* Pagination Controls - DESIGN-001/005 FIX: Added translations and RTL button order */}
       {pages.length > 1 && (
-        <div className="mt-8 flex items-center gap-4">
+        <div className={`mt-8 flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={prevPage}
             disabled={currentPage === 0 || isPageTurning}
-            className="btn-secondary px-4 py-2 flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            className={`btn-secondary px-4 py-2 flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${isRTL ? 'flex-row-reverse' : ''}`}
           >
             {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            Previous
+            {t('pagination.previous', 'Previous')}
           </motion.button>
 
           <div className="glass rounded-lg px-4 py-2 text-sm text-gray-300">
-            Page {currentPage + 1} of {pages.length}
+            {t('pagination.page_of', { current: currentPage + 1, total: pages.length })}
           </div>
 
           <motion.button
@@ -396,9 +490,9 @@ export default function Book3DPreview({
             whileTap={{ scale: 0.95 }}
             onClick={nextPage}
             disabled={currentPage === pages.length - 1 || isPageTurning}
-            className="btn-secondary px-4 py-2 flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            className={`btn-secondary px-4 py-2 flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${isRTL ? 'flex-row-reverse' : ''}`}
           >
-            Next
+            {t('pagination.next', 'Next')}
             {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </motion.button>
         </div>

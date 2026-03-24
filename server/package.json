@@ -8,7 +8,8 @@
     "build": "echo 'Build skipped'",
     "start": "node dist/server.js",
     "test": "jest",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "seed": "ts-node src/scripts/seedSampleBook.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.1.3",

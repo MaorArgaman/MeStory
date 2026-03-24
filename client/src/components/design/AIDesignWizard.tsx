@@ -58,6 +58,7 @@ export default function AIDesignWizard({
   const [design, setDesign] = useState<AICompleteDesign | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [generateImages, setGenerateImages] = useState(true);
+  const [premiumMode, setPremiumMode] = useState(true); // Premium mode by default for "עצב לי הכל"
   const [previewTab, setPreviewTab] = useState<'typography' | 'layout' | 'covers' | 'images'>('typography');
 
   // Start design generation
@@ -65,15 +66,49 @@ export default function AIDesignWizard({
     try {
       setStep('analyzing');
       setError(null);
-      setProgress({ currentStep: 1, totalSteps: 4, stepName: 'Analyzing book content' });
 
-      // Call the complete design endpoint
-      const response = await api.post(`/ai/design-complete/${bookId}`, {
+      const totalSteps = premiumMode ? 9 : 4;
+      setProgress({
+        currentStep: 1,
+        totalSteps,
+        stepName: premiumMode ? t('ai_design_wizard.analyzing_content') : 'Analyzing book content'
+      });
+
+      // Call the appropriate design endpoint
+      const endpoint = premiumMode
+        ? `/ai/premium-design/${bookId}`
+        : `/ai/design-complete/${bookId}`;
+
+      const response = await api.post(endpoint, {
         generateImages,
+        generateCoverImages: generateImages,
+        generateInteriorImages: generateImages,
+        maxInteriorImages: 5,
       });
 
       if (response.data.success) {
-        setDesign(response.data.design);
+        // For premium design, the data is structured differently
+        if (premiumMode) {
+          const premiumData = response.data.data;
+          setDesign({
+            typography: premiumData.typography,
+            layout: premiumData.layout,
+            cover: premiumData.coverDesign,
+            covers: {
+              front: {
+                generatedImageUrl: premiumData.covers?.frontImageUrl,
+              },
+              back: {
+                generatedImageUrl: premiumData.covers?.backImageUrl,
+              },
+            },
+            imagePlacements: premiumData.imagePlacements || [],
+            reasoning: premiumData.theme?.primaryTheme,
+            moodDescription: premiumData.overallStyle,
+          });
+        } else {
+          setDesign(response.data.design);
+        }
         setStep('preview');
       } else {
         throw new Error(response.data.error || 'Failed to generate design');
@@ -83,7 +118,7 @@ export default function AIDesignWizard({
       setError(err.message || 'Failed to generate design');
       setStep('error');
     }
-  }, [bookId, generateImages]);
+  }, [bookId, generateImages, premiumMode, t]);
 
   // Poll for design state (for long-running operations)
   useEffect(() => {
@@ -139,8 +174,14 @@ export default function AIDesignWizard({
     if (!design) return;
 
     try {
-      await api.post(`/ai/apply-complete-design/${bookId}`, { design });
-      onComplete(design);
+      // Premium design is already saved during generation, so we just notify completion
+      if (premiumMode) {
+        onComplete(design);
+      } else {
+        // For regular design, apply it to the book
+        await api.post(`/ai/apply-complete-design/${bookId}`, { design });
+        onComplete(design);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to apply design');
     }
@@ -284,7 +325,27 @@ export default function AIDesignWizard({
                 </div>
 
                 {/* Options */}
-                <div className="bg-gray-800 rounded-xl p-4">
+                <div className="bg-gray-800 rounded-xl p-4 space-y-4">
+                  {/* Premium Mode Toggle */}
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={premiumMode}
+                      onChange={(e) => setPremiumMode(e.target.checked)}
+                      className="w-5 h-5 rounded border-gray-600 bg-gray-700 text-purple-500 focus:ring-purple-500"
+                    />
+                    <div>
+                      <span className="font-medium flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-yellow-400" />
+                        {t('ai_design_wizard.premium_mode', 'עיצוב פרימיום')}
+                      </span>
+                      <p className="text-sm text-gray-400">
+                        {t('ai_design_wizard.premium_mode_desc', 'עיצוב ברמה הכי גבוהה - כולל ניתוח עמוק, צבעים ייחודיים, עיצוב פרקים, תוכן עניינים מעוצב, ותמונות AI')}
+                      </p>
+                    </div>
+                  </label>
+
+                  {/* Generate Images Toggle */}
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"

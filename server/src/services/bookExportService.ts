@@ -156,6 +156,70 @@ interface BookExportData {
 }
 
 // ============================================================================
+// I18N LABELS
+// ============================================================================
+
+const i18nLabels = {
+  he: {
+    allRightsReserved: 'כל הזכויות שמורות',
+    createdWith: 'נוצר באמצעות MeStory',
+    tableOfContents: 'תוכן עניינים',
+    bookCharacters: 'דמויות הספר',
+    characters: 'דמויות',
+    chapter: 'פרק',
+    chapterWithoutName: 'פרק ללא שם',
+    unknownAuthor: 'מחבר לא ידוע',
+    fiction: 'סיפורת',
+    age: 'גיל',
+    traits: 'תכונות',
+    backstory: 'רקע',
+    goals: 'מטרות',
+    arc: 'התפתחות',
+    storyBehindBook: 'הסיפור מאחורי הספר',
+    mainTheme: 'נושא מרכזי',
+    storyWorld: 'עולם הסיפור',
+    conflict: 'הקונפליקט',
+    keyPoints: 'נקודות מפתח',
+    climax: 'שיא הסיפור',
+    ending: 'הסיום',
+    words: 'מילים',
+    chapters: 'פרקים',
+  },
+  en: {
+    allRightsReserved: 'All Rights Reserved',
+    createdWith: 'Created with MeStory',
+    tableOfContents: 'Table of Contents',
+    bookCharacters: 'Book Characters',
+    characters: 'Characters',
+    chapter: 'Chapter',
+    chapterWithoutName: 'Untitled Chapter',
+    unknownAuthor: 'Unknown Author',
+    fiction: 'Fiction',
+    age: 'Age',
+    traits: 'Traits',
+    backstory: 'Backstory',
+    goals: 'Goals',
+    arc: 'Character Arc',
+    storyBehindBook: 'The Story Behind the Book',
+    mainTheme: 'Main Theme',
+    storyWorld: 'Story World',
+    conflict: 'The Conflict',
+    keyPoints: 'Key Points',
+    climax: 'Story Climax',
+    ending: 'The Ending',
+    words: 'words',
+    chapters: 'chapters',
+  },
+};
+
+type LangKey = keyof typeof i18nLabels;
+
+function getLabels(language: string) {
+  const lang: LangKey = language === 'he' ? 'he' : 'en';
+  return i18nLabels[lang];
+}
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
@@ -401,9 +465,12 @@ async function extractBookData(bookId: string): Promise<BookExportData> {
     }
   });
 
+  // Get language-aware labels
+  const labels = getLabels(book.language || 'he');
+
   // Extract chapters with images
   const chapters: ChapterData[] = (book.chapters || []).map((ch: IChapter, index: number) => ({
-    title: ch.title || 'פרק ללא שם',
+    title: ch.title || labels.chapterWithoutName,
     content: stripHtml(ch.content || ''),
     wordCount: ch.wordCount || 0,
     images: chapterImagesMap.get(index) || [],
@@ -445,8 +512,8 @@ async function extractBookData(bookId: string): Promise<BookExportData> {
 
   return {
     title: book.title,
-    authorName: author?.name || 'מחבר לא ידוע',
-    genre: book.genre || 'סיפורת',
+    authorName: author?.name || labels.unknownAuthor,
+    genre: book.genre || labels.fiction,
     description: book.description || '',
     synopsis: book.synopsis || coverDesignData?.back?.synopsis || '',
     language: book.language || 'he',
@@ -486,6 +553,9 @@ async function extractBookData(bookId: string): Promise<BookExportData> {
  */
 export async function generatePDF(bookId: string): Promise<Buffer> {
   const bookData = await extractBookData(bookId);
+
+  // Get language-aware labels
+  const labels = getLabels(bookData.language);
 
   // Determine if book is RTL (Hebrew)
   const isRTL = bookData.language === 'he' || containsHebrew(bookData.title);

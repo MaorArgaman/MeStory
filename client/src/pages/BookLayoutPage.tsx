@@ -24,6 +24,7 @@ import {
   Palette,
   Layers,
   Edit3,
+  AlertTriangle,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -341,6 +342,7 @@ export default function BookLayoutPage() {
   const [saving, setSaving] = useState(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [autoSaveFailed, setAutoSaveFailed] = useState(false);
 
   // Page navigation
   const [currentSpread, setCurrentSpread] = useState(0); // 0 = cover, 1 = pages 1-2, etc.
@@ -359,6 +361,12 @@ export default function BookLayoutPage() {
   // AI Design state (for applying stored designs)
   const [aiDesign, setAiDesign] = useState<CompleteBookDesign | null>(null);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+
+  // Save as Template state
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [templateName, setTemplateName] = useState('');
+  const [templateNameHe, setTemplateNameHe] = useState('');
+  const [savingTemplate, setSavingTemplate] = useState(false);
 
   // Mobile UI state
   const [showMobilePages, setShowMobilePages] = useState(false);
@@ -647,6 +655,99 @@ export default function BookLayoutPage() {
     }
   };
 
+  // Save current design as a custom template
+  const handleSaveAsTemplate = async () => {
+    if (!templateName.trim() || !templateNameHe.trim()) {
+      toast.error(language === 'he' ? 'נא להזין שם לתבנית' : 'Please enter a template name');
+      return;
+    }
+
+    if (!aiDesign && !settings) {
+      toast.error(language === 'he' ? 'אין עיצוב לשמור' : 'No design to save');
+      return;
+    }
+
+    setSavingTemplate(true);
+
+    try {
+      const templateData = {
+        name: templateName.trim(),
+        nameHe: templateNameHe.trim(),
+        description: `Custom template based on ${book?.title || 'AI Design'}`,
+        descriptionHe: `תבנית מותאמת אישית מבוססת על ${book?.title || 'עיצוב AI'}`,
+        category: 'custom',
+        // Typography
+        fonts: {
+          title: aiDesign?.typography?.titleFont || settings.fontFamily || 'Inter',
+          body: aiDesign?.typography?.bodyFont || settings.fontFamily || 'Inter',
+          headers: aiDesign?.typography?.headingFont || settings.fontFamily || 'Inter',
+        },
+        headerSizes: {
+          h1: aiDesign?.typography?.chapterTitleSize || 24,
+          h2: 20,
+          h3: 16,
+        },
+        fontSize: aiDesign?.typography?.fontSize || settings.fontSize || 14,
+        lineHeight: aiDesign?.typography?.lineHeight || settings.lineHeight || 1.6,
+        // Layout
+        columns: settings.columns || 1,
+        paragraphStyle: 'vertical',
+        pageNumberPosition: settings.showPageNumbers
+          ? (aiDesign?.layout?.pageNumberPosition || 'bottom-center')
+          : 'none',
+        margins: settings.margins || { top: 50, bottom: 50, left: 50, right: 50 },
+        paragraphIndent: settings.paragraphIndent || 0,
+        paragraphSpacing: settings.paragraphSpacing || 12,
+        // Advanced features
+        chapterStartStyle: aiDesign?.layout?.chapterStartStyle || 'new-page',
+        dropCapStyle: aiDesign?.layout?.dropCaps ? 'classic' : 'none',
+        headerDecoration: aiDesign?.layout?.headerStyle !== 'none' ? 'line' : 'none',
+        dividerStyle: 'ornament',
+        // Images
+        imagePositions: ['top', 'center', 'bottom'],
+        imageFrameStyle: 'shadow',
+        imageLayout: 'single',
+        // Cover
+        coverStyle: {
+          backgroundColor: settings.backgroundColor || '#1a1a2e',
+          gradientColors: [settings.backgroundColor || '#1a1a2e'],
+          titlePosition: 'center',
+          titleAlignment: 'center',
+          titleColor: settings.textColor || '#ffffff',
+          authorColor: settings.accentColor || '#cccccc',
+        },
+        // Colors
+        textColor: aiDesign?.typography?.colors?.text || settings.textColor || '#000000',
+        accentColor: aiDesign?.typography?.colors?.accent || settings.accentColor || '#6366f1',
+        backgroundColor: settings.backgroundColor || '#ffffff',
+        previewGradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)',
+        // Include AI design data if available
+        aiDesignData: aiDesign ? {
+          typography: aiDesign.typography,
+          layout: aiDesign.layout,
+          imagePlacements: aiDesign.imagePlacements,
+          moodDescription: aiDesign.moodDescription,
+        } : undefined,
+      };
+
+      const response = await api.post('/templates', templateData);
+
+      if (response.data.success) {
+        toast.success(language === 'he' ? 'התבנית נשמרה בהצלחה!' : 'Template saved successfully!');
+        setShowSaveTemplateModal(false);
+        setTemplateName('');
+        setTemplateNameHe('');
+      } else {
+        throw new Error(response.data.error || 'Failed to save template');
+      }
+    } catch (error: any) {
+      console.error('Error saving template:', error);
+      toast.error(error.message || (language === 'he' ? 'שגיאה בשמירת התבנית' : 'Failed to save template'));
+    } finally {
+      setSavingTemplate(false);
+    }
+  };
+
   // Generate pages from chapters
   const generatePagesFromChapters = (bookData: BookData) => {
     const newPages: PageContent[] = [];
@@ -766,18 +867,22 @@ export default function BookLayoutPage() {
           pages: pagesForSave,
           settings,
         },
+        coverDesign: book.coverDesign,
       });
 
       if (response.data.success) {
         setLastSaved(new Date());
+        setAutoSaveFailed(false); // Clear any previous failure state
         if (!isAutoSave) {
-          toast.success('Layout saved successfully!');
+          toast.success(t('book_layout.messages.save_success', 'Layout saved successfully!'));
         }
       }
     } catch (error) {
       console.error('Failed to save layout:', error);
-      if (!isAutoSave) {
-        toast.error('Error saving layout');
+      if (isAutoSave) {
+        setAutoSaveFailed(true); // Set failure state for persistent warning
+      } else {
+        toast.error(t('book_layout.messages.save_error', 'Error saving layout'));
       }
     } finally {
       setSaving(false);
@@ -1084,9 +1189,19 @@ export default function BookLayoutPage() {
     console.log('updateImagePosition called:', { pageIndex, imageId, updates });
 
     setPages(prevPages => {
+      // Handle empty pages array
+      if (!prevPages || prevPages.length === 0) {
+        console.error('Pages array is empty');
+        return prevPages;
+      }
       const updatedPages = [...prevPages];
       if (!updatedPages[pageIndex]) {
         console.error('Page not found at index:', pageIndex);
+        return prevPages;
+      }
+      // Ensure images array exists
+      if (!updatedPages[pageIndex].images) {
+        updatedPages[pageIndex].images = [];
         return prevPages;
       }
       const imageIndex = updatedPages[pageIndex].images.findIndex(img => img.id === imageId);
@@ -1107,7 +1222,17 @@ export default function BookLayoutPage() {
 
   // Delete image
   const deleteImage = (pageIndex: number, imageId: string) => {
+    // Handle empty pages array
+    if (!pages || pages.length === 0 || !pages[pageIndex]) {
+      console.error('Invalid page index or empty pages array');
+      return;
+    }
     const updatedPages = [...pages];
+    // Ensure images array exists
+    if (!updatedPages[pageIndex].images) {
+      updatedPages[pageIndex].images = [];
+      return;
+    }
     updatedPages[pageIndex].images = updatedPages[pageIndex].images.filter(img => img.id !== imageId);
     setPages(updatedPages);
     setSelectedImageId(null);
@@ -1115,7 +1240,17 @@ export default function BookLayoutPage() {
 
   // Duplicate image
   const duplicateImage = (pageIndex: number, imageId: string) => {
+    // Handle empty pages array
+    if (!pages || pages.length === 0 || !pages[pageIndex]) {
+      console.error('Invalid page index or empty pages array');
+      return;
+    }
     const updatedPages = [...pages];
+    // Ensure images array exists
+    if (!updatedPages[pageIndex].images) {
+      updatedPages[pageIndex].images = [];
+      return;
+    }
     const originalImage = updatedPages[pageIndex].images.find(img => img.id === imageId);
     if (originalImage) {
       const newImage: PageImage = {
@@ -1133,6 +1268,10 @@ export default function BookLayoutPage() {
 
   // Add page break / blank page
   const addBlankPage = (afterIndex: number) => {
+    // Handle empty pages array
+    if (!pages) {
+      return;
+    }
     const newPage: PageContent = {
       id: `page-blank-${Date.now()}`,
       type: 'blank',
@@ -1142,33 +1281,85 @@ export default function BookLayoutPage() {
     const updatedPages = [...pages];
     updatedPages.splice(afterIndex + 1, 0, newPage);
     setPages(updatedPages);
-    toast.success('Blank page added');
+    toast.success(t('book_layout.blank_page_added', 'Blank page added'));
   };
 
   // Remove page
   const removePage = (index: number) => {
+    // Handle empty pages array
+    if (!pages || pages.length === 0 || !pages[index]) {
+      return;
+    }
     if (pages[index].type === 'blank') {
       const updatedPages = pages.filter((_, i) => i !== index);
       setPages(updatedPages);
-      toast.success('Page removed');
+      toast.success(t('book_layout.page_removed', 'Page removed'));
     } else {
-      toast.error('Only blank pages can be removed');
+      toast.error(t('book_layout.only_blank_removable', 'Only blank pages can be removed'));
     }
   };
 
-  // Toggle TOC
+  // Toggle TOC - only add/remove TOC pages without regenerating chapter pages
   const toggleToc = () => {
+    if (!book) return;
+
     const hasToc = pages.some(p => p.type === 'toc');
     if (hasToc) {
-      setPages(pages.filter(p => p.type !== 'toc'));
+      // Remove TOC pages (toc and the blank page after it) without affecting other pages
+      const tocIndex = pages.findIndex(p => p.type === 'toc');
+      const updatedPages = pages.filter((p, index) => {
+        // Remove TOC page
+        if (p.type === 'toc') return false;
+        // Remove blank page immediately after TOC (if it exists)
+        if (tocIndex >= 0 && index === tocIndex + 1 && p.type === 'blank' && p.id.includes('blank-2')) return false;
+        return true;
+      });
+      setPages(updatedPages);
       setSettings({ ...settings, includeToc: false });
-      toast.success('Table of Contents removed');
+      toast.success(t('book_layout.toc_removed', 'Table of Contents removed'));
     } else {
-      if (book) {
-        generatePagesFromChapters(book);
-      }
+      // Add TOC pages after title/blank pages without regenerating chapter pages
+      // Find where to insert TOC (after title page and first blank page)
+      const titleIndex = pages.findIndex(p => p.type === 'title');
+      const insertIndex = titleIndex >= 0 ? titleIndex + 2 : 2; // After title and first blank
+
+      // Calculate page numbers for TOC entries
+      const chapterStartPages: number[] = [];
+      let currentPage = insertIndex + 3; // After title, blank, toc, blank
+
+      const seenChapters = new Set<number>();
+      pages.forEach(p => {
+        if (p.type === 'chapter' && p.chapterIndex !== undefined && !seenChapters.has(p.chapterIndex)) {
+          seenChapters.add(p.chapterIndex);
+          chapterStartPages.push(currentPage);
+        }
+        if (p.type === 'chapter') currentPage++;
+      });
+
+      // Generate TOC content
+      const tocContent = book.chapters
+        .map((ch, i) => `<div class="toc-item"><span class="toc-title">${ch.title}</span><span class="toc-page">${chapterStartPages[i] || ''}</span></div>`)
+        .join('');
+
+      const tocPage: PageContent = {
+        id: `page-toc`,
+        type: 'toc',
+        content: `<h2 class="toc-header">${t('book_layout.table_of_contents', 'Table of Contents')}</h2>${tocContent}`,
+        images: [],
+      };
+
+      const blankAfterToc: PageContent = {
+        id: `page-blank-2`,
+        type: 'blank',
+        content: '',
+        images: [],
+      };
+
+      const updatedPages = [...pages];
+      updatedPages.splice(insertIndex, 0, tocPage, blankAfterToc);
+      setPages(updatedPages);
       setSettings({ ...settings, includeToc: true });
-      toast.success('Table of Contents added');
+      toast.success(t('book_layout.toc_added', 'Table of Contents added'));
     }
   };
 
@@ -1181,7 +1372,7 @@ export default function BookLayoutPage() {
   void _updatePageContent; // Suppress unused warning
 
   // Navigate spreads
-  const totalSpreads = Math.ceil((pages.length + 1) / 2); // +1 for cover
+  const totalSpreads = Math.ceil(((pages?.length || 0) + 1) / 2); // +1 for cover
   const goToNextSpread = () => {
     if (currentSpread < totalSpreads - 1) {
       setCurrentSpread(currentSpread + 1);
@@ -1195,6 +1386,10 @@ export default function BookLayoutPage() {
 
   // Get pages for current spread
   const getSpreadPages = (): { left: PageContent | null; right: PageContent | null; isCover: boolean } => {
+    // Handle empty pages array
+    if (!pages || pages.length === 0) {
+      return { left: null, right: null, isCover: currentSpread === 0 };
+    }
     if (currentSpread === 0) {
       return { left: null, right: null, isCover: true };
     }
@@ -1277,12 +1472,17 @@ export default function BookLayoutPage() {
               {saving ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>{t('book_layout.saving')}</span>
+                  <span>{t('book_layout.saving', 'Saving...')}</span>
+                </>
+              ) : autoSaveFailed ? (
+                <>
+                  <AlertTriangle className="w-4 h-4 text-amber-400" />
+                  <span className="text-amber-400">{t('book_layout.auto_save_failed', 'Auto-save failed')}</span>
                 </>
               ) : lastSaved ? (
                 <>
                   <CheckCircle2 className="w-4 h-4 text-green-400" />
-                  <span className="hidden lg:inline">{t('book_layout.saved')} {lastSaved.toLocaleTimeString()}</span>
+                  <span className="hidden lg:inline">{t('book_layout.saved', 'Saved')} {lastSaved.toLocaleTimeString()}</span>
                 </>
               ) : null}
             </div>
@@ -1502,7 +1702,12 @@ export default function BookLayoutPage() {
               }}
             >
               {spreadPages.isCover ? (
-                <CoverPreview book={book} coverImageUrl={coverImageUrl} />
+                <CoverPreview
+                  book={book}
+                  coverImageUrl={coverImageUrl}
+                  onTitlePositionChange={handleTitlePositionChange}
+                  onAuthorPositionChange={handleAuthorPositionChange}
+                />
               ) : spreadPages.right ? (
                 <PageRenderer
                   page={spreadPages.right}
@@ -1622,7 +1827,7 @@ export default function BookLayoutPage() {
                 </div>
 
                 {/* Template Selection */}
-                <div className="mb-6">
+                <div className="mb-6 space-y-3">
                   <button
                     onClick={() => setShowTemplateGallery(true)}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl text-white font-medium transition-all"
@@ -1630,6 +1835,18 @@ export default function BookLayoutPage() {
                     <Layout className="w-5 h-5" />
                     {language === 'he' ? 'בחר תבנית' : 'Choose Template'}
                   </button>
+
+                  {/* Save as Template button - only show when AI design is applied */}
+                  {aiDesign && (
+                    <button
+                      onClick={() => setShowSaveTemplateModal(true)}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl text-white font-medium transition-all"
+                    >
+                      <Save className="w-5 h-5" />
+                      {language === 'he' ? 'שמור כתבנית' : 'Save as Template'}
+                    </button>
+                  )}
+
                   {settings.templateId && (
                     <p className="text-xs text-indigo-400 mt-2 text-center">
                       Using: {settings.templateId}
@@ -1832,9 +2049,9 @@ export default function BookLayoutPage() {
                     <input
                       type="checkbox"
                       checked={settings.includeToc}
-                      onChange={(e) => {
-                        setSettings({ ...settings, includeToc: e.target.checked });
-                        if (book) generatePagesFromChapters(book);
+                      onChange={() => {
+                        // Use toggleToc which preserves user edits
+                        toggleToc();
                       }}
                       className="w-4 h-4 rounded border-gray-600 bg-white/10"
                     />
@@ -1846,8 +2063,25 @@ export default function BookLayoutPage() {
                       type="checkbox"
                       checked={settings.includeBackCover}
                       onChange={(e) => {
-                        setSettings({ ...settings, includeBackCover: e.target.checked });
-                        if (book) generatePagesFromChapters(book);
+                        const include = e.target.checked;
+                        setSettings({ ...settings, includeBackCover: include });
+                        // Toggle back cover without regenerating all pages
+                        if (include) {
+                          // Add back cover if not present
+                          const hasSummary = pages?.some(p => p.type === 'summary');
+                          if (!hasSummary && book) {
+                            const summaryPage: PageContent = {
+                              id: `page-summary`,
+                              type: 'summary',
+                              content: book.synopsis || book.description || '',
+                              images: [],
+                            };
+                            setPages(prev => [...(prev || []), summaryPage]);
+                          }
+                        } else {
+                          // Remove back cover
+                          setPages(prev => (prev || []).filter(p => p.type !== 'summary'));
+                        }
                       }}
                       className="w-4 h-4 rounded border-gray-600 bg-white/10"
                     />
@@ -1968,6 +2202,111 @@ export default function BookLayoutPage() {
         onSelect={handleTemplateSelect}
         currentTemplateId={settings.templateId}
       />
+
+      {/* Save as Template Modal */}
+      <AnimatePresence>
+        {showSaveTemplateModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => !savingTemplate && setShowSaveTemplateModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-gray-900 rounded-xl max-w-md w-full p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+              dir={language === 'he' ? 'rtl' : 'ltr'}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Save className="w-6 h-6 text-amber-400" />
+                  {language === 'he' ? 'שמור כתבנית' : 'Save as Template'}
+                </h3>
+                <button
+                  onClick={() => setShowSaveTemplateModal(false)}
+                  disabled={savingTemplate}
+                  className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    {language === 'he' ? 'שם התבנית (אנגלית)' : 'Template Name (English)'}
+                  </label>
+                  <input
+                    type="text"
+                    value={templateName}
+                    onChange={(e) => setTemplateName(e.target.value)}
+                    placeholder="My Custom Template"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    disabled={savingTemplate}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    {language === 'he' ? 'שם התבנית (עברית)' : 'Template Name (Hebrew)'}
+                  </label>
+                  <input
+                    type="text"
+                    value={templateNameHe}
+                    onChange={(e) => setTemplateNameHe(e.target.value)}
+                    placeholder="התבנית שלי"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    disabled={savingTemplate}
+                    dir="rtl"
+                  />
+                </div>
+
+                {aiDesign && (
+                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+                    <p className="text-amber-400 text-sm flex items-center gap-2">
+                      <Sparkles className="w-4 h-4" />
+                      {language === 'he'
+                        ? 'העיצוב שנוצר על ידי AI יישמר בתבנית זו'
+                        : 'AI-generated design will be saved in this template'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setShowSaveTemplateModal(false)}
+                  disabled={savingTemplate}
+                  className="flex-1 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-medium transition-colors"
+                >
+                  {language === 'he' ? 'ביטול' : 'Cancel'}
+                </button>
+                <button
+                  onClick={handleSaveAsTemplate}
+                  disabled={savingTemplate || !templateName.trim() || !templateNameHe.trim()}
+                  className="flex-1 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  {savingTemplate ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      {language === 'he' ? 'שומר...' : 'Saving...'}
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-5 h-5" />
+                      {language === 'he' ? 'שמור תבנית' : 'Save Template'}
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

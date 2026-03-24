@@ -24,6 +24,12 @@ import {
   BookDesignInput,
   CompleteBookDesign,
 } from '../services/aiBookDesignService';
+import {
+  generateUltimatePremiumDesign,
+  convertPremiumDesignToBookState,
+  BookDesignInput as PremiumBookDesignInput,
+  PremiumCompleteDesign,
+} from '../services/premiumDesignService';
 
 /**
  * Generate complete AI book design
@@ -1188,6 +1194,312 @@ export const generateTemplateDesign = async (req: AuthRequest, res: Response): P
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to generate template design',
+    });
+  }
+};
+
+/**
+ * ULTIMATE PREMIUM DESIGN - "עצב לי הכל" Feature
+ * POST /api/ai/premium-design/:bookId
+ *
+ * Creates the highest quality AI-powered book design including:
+ * - Deep theme analysis for understanding book essence
+ * - Premium typography with perfect font pairing and rich colors
+ * - Unique background colors and styled text
+ * - Beautiful table of contents design
+ * - Chapter decorations and ornaments
+ * - Page numbering, headers, footers
+ * - Drop caps and section breaks
+ * - Strategic image placements with AI-generated images
+ * - Professional cover design with AI-generated front/back images
+ * - All design elements saved to database
+ */
+export const premiumDesignWizard = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: 'Authentication required',
+      });
+      return;
+    }
+
+    const { bookId } = req.params;
+    const {
+      generateCoverImages = true,
+      generateInteriorImages = true,
+      maxInteriorImages = 5,
+    } = req.body;
+
+    // Validate book ID
+    if (!isValidUUID(bookId)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid book ID',
+      });
+      return;
+    }
+
+    // Find book with all data
+    const book = await Book.findById(bookId);
+    if (!book) {
+      res.status(404).json({
+        success: false,
+        error: 'Book not found',
+      });
+      return;
+    }
+
+    // Ensure user owns this book
+    if (book.author !== req.user.id) {
+      res.status(403).json({
+        success: false,
+        error: 'You do not have permission to design this book',
+      });
+      return;
+    }
+
+    // Calculate total steps
+    const totalSteps = generateInteriorImages ? 9 : 7;
+    const stepNames = [
+      'מנתח את תוכן הספר...', // Analyzing book content
+      'יוצר מערכת טיפוגרפיה מקצועית...', // Creating typography
+      'מעצב תוכן עניינים...', // Designing TOC
+      'יוצר עיצוב פרקים...', // Creating chapter decorations
+      'מעצב פריסת עמודים...', // Designing page layout
+      'יוצר עיצוב כריכה...', // Creating cover design
+      'מייצר תמונות כריכה עם AI...', // Generating cover images
+      ...(generateInteriorImages
+        ? ['מנתח מיקומי תמונות...', 'מייצר איורים פנימיים...'] // Analyzing image placements, Generating interior images
+        : []),
+    ];
+
+    // Initialize design state
+    await Book.findByIdAndUpdate(bookId, {
+      aiDesignState: {
+        status: 'analyzing',
+        startedAt: new Date().toISOString(),
+        progress: {
+          currentStep: 1,
+          totalSteps,
+          stepName: stepNames[0],
+        },
+      },
+    });
+
+    // Prepare design input
+    const designInput: PremiumBookDesignInput = {
+      title: book.title,
+      authorName: await getAuthorName(book.author),
+      genre: book.genre,
+      language: book.language || 'en',
+      synopsis: book.synopsis || book.description,
+      chapters: book.chapters.map((ch) => ({
+        title: ch.title,
+        content: ch.content,
+        wordCount: ch.wordCount,
+      })),
+      targetAudience: book.targetAudience,
+    };
+
+    console.log(`\n🌟 Starting PREMIUM DESIGN for "${book.title}"...`);
+
+    // Generate ultimate premium design
+    const premiumDesign = await generateUltimatePremiumDesign(
+      designInput,
+      async (progress) => {
+        // Update progress in database
+        const stepIndex = progress.currentStep - 1;
+        await Book.findByIdAndUpdate(bookId, {
+          aiDesignState: {
+            status: progress.currentStep === progress.totalSteps ? 'completed' : 'generating-design',
+            progress: {
+              currentStep: progress.currentStep,
+              totalSteps: progress.totalSteps,
+              stepName: stepNames[stepIndex] || progress.stepName,
+            },
+          },
+        });
+      },
+      {
+        generateCoverImages,
+        generateInteriorImages,
+        maxInteriorImages,
+      }
+    );
+
+    // Convert design to book state format
+    const designState = convertPremiumDesignToBookState(premiumDesign);
+
+    // Build comprehensive page layout from premium design
+    const newPageLayout = {
+      bodyFont: premiumDesign.typography.bodyFont,
+      fontSize: premiumDesign.typography.fontSize,
+      lineHeight: premiumDesign.typography.lineHeight,
+      pageSize: premiumDesign.layout.pageSize as 'A4' | 'A5' | 'Letter' | 'Custom',
+      margins: {
+        top: premiumDesign.layout.margins.top,
+        bottom: premiumDesign.layout.margins.bottom,
+        left: premiumDesign.layout.margins.inner,
+        right: premiumDesign.layout.margins.outer,
+      },
+      includeTableOfContents: true,
+      tableOfContentsStyle: premiumDesign.tableOfContents.style,
+      headerFooter: {
+        includeHeader: premiumDesign.layout.headers.enabled,
+        includeFooter: premiumDesign.layout.footers.enabled,
+        includePageNumbers: premiumDesign.layout.pageNumbering.enabled,
+        pageNumberPosition: premiumDesign.layout.pageNumbering.position.includes('bottom') ? 'bottom' : 'top' as 'top' | 'bottom' | 'none',
+      },
+      textColor: premiumDesign.typography.colors.text,
+      titleFont: premiumDesign.typography.titleFont,
+      headerFont: premiumDesign.typography.headingFont,
+      accentColor: premiumDesign.typography.colors.accent,
+      backgroundColor: premiumDesign.layout.background.primaryColor,
+      columns: premiumDesign.layout.columns,
+      paragraphIndent: premiumDesign.typography.formatting.firstParagraphIndent ? 20 : 0,
+      paragraphSpacing: premiumDesign.typography.paragraphSpacing,
+      // Store additional premium design data
+      settings: {
+        premiumDesign: {
+          theme: premiumDesign.theme,
+          typography: premiumDesign.typography,
+          tableOfContents: premiumDesign.tableOfContents,
+          chapterDecoration: premiumDesign.chapterDecoration,
+          layout: premiumDesign.layout,
+          imagePlacements: premiumDesign.imagePlacements,
+          overallStyle: premiumDesign.overallStyle,
+          qualityScore: premiumDesign.qualityScore,
+        },
+      },
+    };
+
+    // Build cover design from premium design
+    const newCoverDesign = {
+      front: {
+        type: premiumDesign.covers.frontImageUrl ? 'ai-generated' : 'gradient' as 'ai-generated' | 'uploaded' | 'gradient' | 'solid',
+        imageUrl: premiumDesign.covers.frontImageUrl,
+        backgroundColor: premiumDesign.cover.front.colorPalette[0] || '#1a1a2e',
+        gradientColors: premiumDesign.cover.front.colorPalette,
+        title: {
+          text: book.title,
+          font: premiumDesign.cover.front.title.font,
+          size: premiumDesign.cover.front.title.size,
+          color: premiumDesign.cover.front.title.color,
+          position: premiumDesign.cover.front.title.position,
+        },
+        subtitle: premiumDesign.cover.front.subtitle,
+        authorName: {
+          text: await getAuthorName(book.author),
+          font: premiumDesign.cover.front.author.font,
+          size: premiumDesign.cover.front.author.size,
+          color: premiumDesign.cover.front.author.color,
+        },
+      },
+      back: {
+        imageUrl: premiumDesign.covers.backImageUrl,
+        backgroundColor: premiumDesign.cover.back.backgroundColor,
+        synopsis: book.synopsis || book.description || '',
+        authorBio: premiumDesign.cover.back.authorBio?.text,
+      },
+      spine: {
+        width: Math.ceil((book.statistics?.pageCount || 100) / 10) + 5,
+        title: book.title,
+        author: await getAuthorName(book.author),
+        backgroundColor: premiumDesign.cover.spine.backgroundColor,
+      },
+    };
+
+    // Build page images from generated images
+    const newPageImages = premiumDesign.generatedImages.map((img, idx) => ({
+      _id: `premium-${Date.now()}-${idx}`,
+      pageIndex: img.chapterIndex * 2 + 1, // Rough page estimate
+      url: img.imageUrl,
+      x: 10,
+      y: img.position === 'chapter-start' ? 10 : img.position === 'chapter-end' ? 60 : 35,
+      width: 80,
+      height: 40,
+      rotation: 0,
+      isAiGenerated: true,
+      prompt: img.prompt,
+      createdAt: new Date().toISOString(),
+    }));
+
+    // Merge with existing page images
+    const existingImages = book.pageImages || [];
+    const allPageImages = [...existingImages, ...newPageImages];
+
+    // Save everything to the database
+    const updatedBook = await Book.findByIdAndUpdate(
+      bookId,
+      {
+        aiDesignState: {
+          ...designState,
+          status: 'completed',
+          completedAt: new Date().toISOString(),
+        },
+        pageLayout: newPageLayout,
+        coverDesign: newCoverDesign,
+        pageImages: allPageImages,
+      },
+      { new: true }
+    );
+
+    console.log(`\n✅ PREMIUM DESIGN SAVED for "${book.title}"!`);
+    console.log(`   Quality Score: ${premiumDesign.qualityScore}/100`);
+    console.log(`   Cover Images: ${premiumDesign.covers.frontImageUrl ? '✓' : '✗'} front, ${premiumDesign.covers.backImageUrl ? '✓' : '✗'} back`);
+    console.log(`   Interior Images: ${premiumDesign.generatedImages.length}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'עיצוב פרימיום הושלם בהצלחה!', // Premium design completed successfully
+      data: {
+        bookId,
+        qualityScore: premiumDesign.qualityScore,
+        theme: premiumDesign.theme,
+        typography: {
+          bodyFont: premiumDesign.typography.bodyFont,
+          headingFont: premiumDesign.typography.headingFont,
+          colors: premiumDesign.typography.colors,
+        },
+        tableOfContents: premiumDesign.tableOfContents,
+        chapterDecoration: premiumDesign.chapterDecoration,
+        layout: {
+          pageSize: premiumDesign.layout.pageSize,
+          chapterStartStyle: premiumDesign.layout.chapterStartStyle,
+          pageNumbering: premiumDesign.layout.pageNumbering,
+          background: premiumDesign.layout.background,
+        },
+        covers: {
+          frontImageUrl: premiumDesign.covers.frontImageUrl,
+          backImageUrl: premiumDesign.covers.backImageUrl,
+        },
+        imagePlacements: premiumDesign.imagePlacements.length,
+        generatedImages: premiumDesign.generatedImages.length,
+        overallStyle: premiumDesign.overallStyle,
+        pageLayout: updatedBook?.pageLayout,
+        coverDesign: updatedBook?.coverDesign,
+      },
+    });
+  } catch (error: any) {
+    console.error('Premium Design Wizard error:', error);
+
+    // Update book with error state
+    try {
+      const { bookId } = req.params;
+      await Book.findByIdAndUpdate(bookId, {
+        aiDesignState: {
+          status: 'error',
+          error: error.message,
+        },
+      });
+    } catch (e) {
+      console.error('Failed to update error state:', e);
+    }
+
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Premium design wizard failed',
     });
   }
 };

@@ -409,14 +409,18 @@ export default function PublishingPage() {
                       <input
                         type="number"
                         min="0"
-                        max="999"
+                        max="25"
                         step="0.01"
                         value={price}
                         onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
-                        className="input pl-8"
+                        className={`input pl-8 ${price > 25 ? 'border-red-500 focus:border-red-500' : ''}`}
                         placeholder="0.00"
                       />
-                      <p className="text-xs text-gray-400 mt-2">{t('publishing.pricing.price_help')}</p>
+                      {price > 25 ? (
+                        <p className="text-xs text-red-400 mt-2">{t('publishing.pricing.price_error')}</p>
+                      ) : (
+                        <p className="text-xs text-gray-400 mt-2">{t('publishing.pricing.price_help')}</p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -496,7 +500,7 @@ export default function PublishingPage() {
                 </button>
                 <button
                   onClick={() => setStep(3)}
-                  disabled={selectedCategories.length === 0}
+                  disabled={selectedCategories.length === 0 || (!isFree && price > 25)}
                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
                 >
                   {t('buttons.continue')}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -39,6 +39,8 @@ interface CoverDesign {
   textColor?: string;
   fontFamily?: string;
   imageUrl?: string;
+  titlePosition?: { x: number; y: number };
+  authorPosition?: { x: number; y: number };
   front?: {
     type?: string;
     imageUrl?: string;
@@ -49,12 +51,14 @@ interface CoverDesign {
       font: string;
       size: number;
       color: string;
+      position?: { x: number; y: number };
     };
     authorName?: {
       text: string;
       font: string;
       size: number;
       color: string;
+      position?: { x: number; y: number };
     };
   };
   back?: {
@@ -238,6 +242,11 @@ export default function DesignStudioPage() {
   const [backCoverImageUrl, setBackCoverImageUrl] = useState<string>('');
   const [spineColor, setSpineColor] = useState<string>(''); // Auto-generated harmonious color
 
+  // Cover text positioning
+  const [titlePosition, setTitlePosition] = useState({ x: 50, y: 20 });
+  const [authorPosition, setAuthorPosition] = useState({ x: 50, y: 85 });
+  const [editMode, setEditMode] = useState(false);
+
 
   // Publish modal state
   const [showPublishModal, setShowPublishModal] = useState(false);
@@ -256,12 +265,72 @@ export default function DesignStudioPage() {
   const [showMobileControls, setShowMobileControls] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
 
+  // Unsaved changes tracking
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const initialLoadRef = useRef(true);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Load book data
   useEffect(() => {
     if (bookId) {
       loadBook();
     }
   }, [bookId]);
+
+  // localStorage auto-save with debouncing
+  useEffect(() => {
+    // Skip during initial load
+    if (initialLoadRef.current) {
+      return;
+    }
+
+    // Mark as having unsaved changes
+    setHasUnsavedChanges(true);
+
+    // Clear existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Debounce localStorage save (500ms)
+    debounceTimerRef.current = setTimeout(() => {
+      if (bookId) {
+        const designSettings = {
+          coverColor,
+          textColor,
+          fontFamily,
+          imageUrl,
+          backCoverImageUrl,
+          spineColor,
+          titlePosition,
+          authorPosition,
+        };
+        localStorage.setItem(`design_studio_${bookId}`, JSON.stringify(designSettings));
+      }
+    }, 500);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [coverColor, textColor, fontFamily, imageUrl, backCoverImageUrl, spineColor, titlePosition, authorPosition, bookId]);
+
+  // beforeunload warning for unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
 
   const loadBook = async () => {
     try {
@@ -291,6 +360,12 @@ export default function DesignStudioPage() {
             existingImageUrl = `${serverBaseUrl}${existingImageUrl}`;
           }
           setImageUrl(existingImageUrl);
+
+          // Load text positions
+          const loadedTitlePos = coverDesign.titlePosition || coverDesign.front?.title?.position;
+          const loadedAuthorPos = coverDesign.authorPosition || coverDesign.front?.authorName?.position;
+          if (loadedTitlePos) setTitlePosition(loadedTitlePos);
+          if (loadedAuthorPos) setAuthorPosition(loadedAuthorPos);
         }
       }
     } catch (error) {
@@ -299,6 +374,10 @@ export default function DesignStudioPage() {
       navigate('/dashboard');
     } finally {
       setLoading(false);
+      // Mark initial load as complete so future changes are tracked
+      setTimeout(() => {
+        initialLoadRef.current = false;
+      }, 100);
     }
   };
 
@@ -340,6 +419,8 @@ export default function DesignStudioPage() {
         textColor,
         fontFamily,
         imageUrl: imageUrl || undefined,
+        titlePosition,
+        authorPosition,
         front: {
           type: 'uploaded',
           imageUrl: imageUrl || undefined,
@@ -349,12 +430,14 @@ export default function DesignStudioPage() {
             font: fontFamily,
             size: 32,
             color: textColor,
+            position: titlePosition,
           },
           authorName: {
             text: book.author?.name || '',
             font: fontFamily,
             size: 18,
             color: textColor,
+            position: authorPosition,
           },
         },
         back: {
@@ -374,6 +457,7 @@ export default function DesignStudioPage() {
       if (response.data.success) {
         toast.success(t('design_studio.messages.design_saved'));
         setBook(response.data.data.book);
+        setHasUnsavedChanges(false);
       }
     } catch (error) {
       console.error('Failed to save design:', error);
@@ -478,7 +562,7 @@ export default function DesignStudioPage() {
     const baseColor = coverColor || '#1a1a2e';
     const newSpineColor = generateHarmoniousColor(baseColor);
     setSpineColor(newSpineColor);
-    toast.success(language === 'he' ? 'צבע חדש נוצר!' : 'New color generated!');
+    toast.success(t('design_studio.messages.color_generated', 'New color generated!'));
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -487,7 +571,7 @@ export default function DesignStudioPage() {
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select a valid image file');
+      toast.error(t('design_studio.messages.invalid_image_file', 'Please select a valid image file'));
       return;
     }
 
@@ -498,7 +582,7 @@ export default function DesignStudioPage() {
     }
 
     try {
-      toast.loading('Uploading image...', { id: 'upload' });
+      toast.loading(t('design_studio.messages.uploading', 'Uploading image...'), { id: 'upload' });
 
       const formData = new FormData();
       formData.append('cover', file);
@@ -536,15 +620,15 @@ export default function DesignStudioPage() {
             imageUrl: fullImageUrl,
           };
           await api.put(`/books/${bookId}`, { coverDesign });
-          toast.success('Image uploaded and saved!', { id: 'upload' });
+          toast.success(t('design_studio.messages.image_saved', 'Image uploaded and saved!'), { id: 'upload' });
         } catch (saveError) {
           console.error('Failed to auto-save image:', saveError);
-          toast.success('Image uploaded! Click Save to persist.', { id: 'upload' });
+          toast.success(t('design_studio.messages.image_uploaded', 'Image uploaded! Click Save to persist.'), { id: 'upload' });
         }
       }
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error(error.response?.data?.error || 'Failed to upload image', { id: 'upload' });
+      toast.error(error.response?.data?.error || t('design_studio.messages.upload_failed', 'Failed to upload image'), { id: 'upload' });
     }
   };
 
@@ -1218,14 +1302,33 @@ export default function DesignStudioPage() {
                 language={language}
                 backCoverImageUrl={backCoverImageUrl}
                 backCoverColor={spineColor || undefined}
+                titlePosition={titlePosition}
+                authorPosition={authorPosition}
+                editMode={editMode}
+                onTitlePositionChange={setTitlePosition}
+                onAuthorPositionChange={setAuthorPosition}
               />
             </div>
           </div>
 
-          {/* Info overlay */}
-          <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 text-center px-4">
+          {/* Edit Mode Toggle & Info overlay */}
+          <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 text-center px-4 flex flex-col items-center gap-2">
+            <button
+              onClick={() => setEditMode(!editMode)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                editMode
+                  ? 'bg-amber-500 text-white'
+                  : 'bg-white/10 text-gray-300 hover:bg-white/20'
+              }`}
+            >
+              {editMode
+                ? t('design_studio.done_positioning')
+                : t('design_studio.edit_text_position')}
+            </button>
             <p className="text-xs sm:text-sm text-gray-400">
-              {t('design_studio.preview_hint')}
+              {editMode
+                ? t('design_studio.drag_to_position')
+                : t('design_studio.preview_hint')}
             </p>
           </div>
         </div>
@@ -1415,17 +1518,17 @@ export default function DesignStudioPage() {
                           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span>
                           <input
                             type="number"
-                            min="5"
-                            max="200"
-                            step="5"
+                            min="0"
+                            max="25"
+                            step="0.01"
                             value={selectedPrice}
                             onChange={(e) => setSelectedPrice(parseFloat(e.target.value) || 0)}
-                            className="input pl-10 text-lg font-bold"
+                            className={`input pl-10 text-lg font-bold ${selectedPrice > 25 ? 'border-red-500 focus:border-red-500' : ''}`}
                             placeholder="0"
                           />
                         </div>
                         <div className="flex gap-2">
-                          {[10, 20, 30, 50].map((price) => (
+                          {[5, 10, 15, 25].map((price) => (
                             <button
                               key={price}
                               onClick={() => setSelectedPrice(price)}
@@ -1439,9 +1542,15 @@ export default function DesignStudioPage() {
                             </button>
                           ))}
                         </div>
-                        <p className="text-xs text-gray-400">
-                          {t('design_studio.publish_modal.genre_price_range')}: ${pricingStrategy.marketAnalysis.competitorPriceRange.min} - ${pricingStrategy.marketAnalysis.competitorPriceRange.max}
-                        </p>
+                        {selectedPrice > 25 ? (
+                          <p className="text-xs text-red-400">
+                            {t('publishing.pricing.price_error')}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-gray-400">
+                            {t('publishing.pricing.price_help')}
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1475,7 +1584,7 @@ export default function DesignStudioPage() {
                   {/* Publish Button */}
                   <button
                     onClick={handlePublish}
-                    disabled={publishing || !book.qualityScore || book.qualityScore.overallScore < 70}
+                    disabled={publishing || !book.qualityScore || book.qualityScore.overallScore < 70 || (!isFree && selectedPrice > 25)}
                     className="w-full btn-gold py-4 text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {publishing ? (

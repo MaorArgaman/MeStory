@@ -18,6 +18,7 @@ import {
   applyCompleteDesign,
   generateTemplateDesign,
   designWizard,
+  premiumDesignWizard,
 } from '../controllers/aiBookDesignController';
 import {
   startInterview,
@@ -256,6 +257,29 @@ router.post('/design-complete/:bookId', generateCompleteDesign as any);
  * }
  */
 router.post('/design-wizard/:bookId', designWizard as any);
+
+/**
+ * POST /api/ai/premium-design/:bookId
+ * ULTIMATE PREMIUM DESIGN - "עצב לי הכל" Feature
+ * Creates the highest quality AI-powered book design including:
+ * - Deep theme analysis for understanding book essence
+ * - Premium typography with perfect font pairing and rich colors
+ * - Unique background colors and styled text
+ * - Beautiful table of contents design
+ * - Chapter decorations and ornaments
+ * - Page numbering, headers, footers, drop caps
+ * - Strategic image placements with AI-generated images
+ * - Professional cover design with AI-generated images
+ * - ALL design elements saved to database
+ *
+ * Body:
+ * {
+ *   generateCoverImages?: boolean (default true)
+ *   generateInteriorImages?: boolean (default true)
+ *   maxInteriorImages?: number (default 5)
+ * }
+ */
+router.post('/premium-design/:bookId', premiumDesignWizard as any);
 
 /**
  * POST /api/ai/design-preview/:bookId
