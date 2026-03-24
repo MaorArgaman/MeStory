@@ -56,7 +56,7 @@ export default function Book3DPreview({
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const coverRef = useRef<HTMLDivElement>(null);
 
-  // Handle drag for title
+  // Handle drag for title (mouse)
   const handleTitleMouseDown = (e: React.MouseEvent) => {
     if (!editMode || !onTitlePositionChange) return;
     e.preventDefault();
@@ -66,7 +66,17 @@ export default function Book3DPreview({
     setStartPos({ x: titlePosition.x, y: titlePosition.y });
   };
 
-  // Handle drag for author
+  // Handle drag for title (touch)
+  const handleTitleTouchStart = (e: React.TouchEvent) => {
+    if (!editMode || !onTitlePositionChange) return;
+    e.stopPropagation();
+    const touch = e.touches[0];
+    setIsDraggingTitle(true);
+    setDragStart({ x: touch.clientX, y: touch.clientY });
+    setStartPos({ x: titlePosition.x, y: titlePosition.y });
+  };
+
+  // Handle drag for author (mouse)
   const handleAuthorMouseDown = (e: React.MouseEvent) => {
     if (!editMode || !onAuthorPositionChange) return;
     e.preventDefault();
@@ -76,14 +86,24 @@ export default function Book3DPreview({
     setStartPos({ x: authorPosition.x, y: authorPosition.y });
   };
 
+  // Handle drag for author (touch)
+  const handleAuthorTouchStart = (e: React.TouchEvent) => {
+    if (!editMode || !onAuthorPositionChange) return;
+    e.stopPropagation();
+    const touch = e.touches[0];
+    setIsDraggingAuthor(true);
+    setDragStart({ x: touch.clientX, y: touch.clientY });
+    setStartPos({ x: authorPosition.x, y: authorPosition.y });
+  };
+
   useEffect(() => {
     if (!isDraggingTitle && !isDraggingAuthor) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMove = (clientX: number, clientY: number) => {
       if (!coverRef.current) return;
       const rect = coverRef.current.getBoundingClientRect();
-      const deltaX = ((e.clientX - dragStart.x) / rect.width) * 100;
-      const deltaY = ((e.clientY - dragStart.y) / rect.height) * 100;
+      const deltaX = ((clientX - dragStart.x) / rect.width) * 100;
+      const deltaY = ((clientY - dragStart.y) / rect.height) * 100;
 
       const newX = Math.max(10, Math.min(90, startPos.x + deltaX));
       const newY = Math.max(5, Math.min(95, startPos.y + deltaY));
@@ -96,17 +116,27 @@ export default function Book3DPreview({
       }
     };
 
-    const handleMouseUp = () => {
+    const handleMouseMove = (e: MouseEvent) => handleMove(e.clientX, e.clientY);
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      handleMove(e.touches[0].clientX, e.touches[0].clientY);
+    };
+
+    const handleEnd = () => {
       setIsDraggingTitle(false);
       setIsDraggingAuthor(false);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mouseup', handleEnd);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleEnd);
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mouseup', handleEnd);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleEnd);
     };
   }, [isDraggingTitle, isDraggingAuthor, dragStart, startPos, onTitlePositionChange, onAuthorPositionChange]);
 
@@ -210,7 +240,7 @@ export default function Book3DPreview({
 
             {/* Title - Draggable in edit mode */}
             <div
-              className={`absolute z-10 ${editMode ? 'cursor-move' : ''} ${isDraggingTitle ? 'opacity-80' : ''}`}
+              className={`absolute z-10 ${editMode ? 'cursor-move touch-none' : ''} ${isDraggingTitle ? 'opacity-80' : ''}`}
               style={{
                 left: `${titlePosition.x}%`,
                 top: `${titlePosition.y}%`,
@@ -218,6 +248,7 @@ export default function Book3DPreview({
                 maxWidth: '80%',
               }}
               onMouseDown={handleTitleMouseDown}
+              onTouchStart={handleTitleTouchStart}
             >
               <h1
                 style={{
@@ -240,7 +271,7 @@ export default function Book3DPreview({
 
             {/* Author - Draggable in edit mode */}
             <div
-              className={`absolute z-10 ${editMode ? 'cursor-move' : ''} ${isDraggingAuthor ? 'opacity-80' : ''}`}
+              className={`absolute z-10 ${editMode ? 'cursor-move touch-none' : ''} ${isDraggingAuthor ? 'opacity-80' : ''}`}
               style={{
                 left: `${authorPosition.x}%`,
                 top: `${authorPosition.y}%`,
@@ -248,6 +279,7 @@ export default function Book3DPreview({
                 maxWidth: '80%',
               }}
               onMouseDown={handleAuthorMouseDown}
+              onTouchStart={handleAuthorTouchStart}
             >
               <p
                 style={{

@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import RequireAuth from './components/RequireAuth';
+import RedirectIfAuth from './components/RedirectIfAuth';
 import Layout from './components/layout/Layout';
 import LoadingScreen from './components/LoadingScreen';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -63,10 +64,10 @@ function AppContent() {
       <AnimatePresence mode="wait">
         <ErrorBoundary>
           <Routes location={location} key={location.pathname}>
-          {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          {/* Public Routes - Redirect to dashboard if already logged in */}
+          <Route path="/" element={<RedirectIfAuth><LandingPage /></RedirectIfAuth>} />
+          <Route path="/login" element={<RedirectIfAuth><LoginPage /></RedirectIfAuth>} />
+          <Route path="/register" element={<RedirectIfAuth><RegisterPage /></RedirectIfAuth>} />
           <Route path="/auth-success" element={<AuthSuccessPage />} />
 
         {/* Protected Routes with Layout */}
