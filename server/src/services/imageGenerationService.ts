@@ -185,27 +185,35 @@ export async function generateImage(request: ImageGenerationRequest): Promise<Im
     const enhancedPrompt = `${translatedPrompt}${styleModifier}, high quality, detailed`;
     console.log('🖼️ Final prompt for image generation:', enhancedPrompt);
 
-    // Use DALL-E as primary service (OpenAI API key required)
-    // Fallback to Pollinations if DALL-E fails
-    const configuredService = process.env.IMAGE_GENERATION_SERVICE || 'dalle';
+    // Use Gemini (Imagen) as primary service - free with API key
+    const configuredService = process.env.IMAGE_GENERATION_SERVICE || 'gemini';
     console.log('🖼️ Configured service:', configuredService);
 
     let imageUrl: string;
 
-    // Try DALL-E first if OpenAI key is available
-    if (process.env.OPENAI_API_KEY) {
+    // Try Gemini/Imagen first (free with API key)
+    if (process.env.GEMINI_API_KEY) {
       try {
-        console.log('🎨 Using DALL-E 3 for image generation...');
-        imageUrl = await generateWithDallE(enhancedPrompt, request.aspectRatio);
+        console.log('🎨 Using Gemini Imagen for image generation...');
+        imageUrl = await generateWithNanoBananaPro(enhancedPrompt, request.aspectRatio);
         return {
           success: true,
           imageUrl,
           prompt: request.prompt,
           enhancedPrompt,
         };
-      } catch (dalleError: any) {
-        console.error('❌ DALL-E failed:', dalleError.message);
-        console.log('🔄 Falling back to alternative service...');
+      } catch (geminiError: any) {
+        console.error('❌ Gemini Imagen failed:', geminiError.message);
+        // Return a placeholder image with error message
+        console.log('🔄 Using placeholder image...');
+        imageUrl = generatePlaceholderImage(request.bookContext?.genre || 'fiction', request.aspectRatio);
+        return {
+          success: true,
+          imageUrl,
+          prompt: request.prompt,
+          enhancedPrompt,
+          error: 'AI generation failed, using placeholder',
+        };
       }
     }
 
@@ -213,11 +221,12 @@ export async function generateImage(request: ImageGenerationRequest): Promise<Im
     switch (configuredService) {
       case 'dalle':
       case 'openai':
-        // Already tried above, throw error
-        throw new Error('DALL-E generation failed and no fallback available');
+        // DALL-E 3 via OpenAI
+        imageUrl = await generateWithDallE(enhancedPrompt, request.aspectRatio);
+        break;
 
       case 'pollinations':
-        // Free AI image generation via Pollinations.ai
+        // Free AI image generation via Pollinations.ai (currently broken)
         imageUrl = await generateWithPollinations(enhancedPrompt, request.aspectRatio);
         break;
 
