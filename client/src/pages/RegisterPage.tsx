@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import logoIcon from '../assets/images/logo-icon.png';
 
 export default function RegisterPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('auth');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,17 +25,17 @@ export default function RegisterPage() {
 
     // Password validation
     if (password.length < 8) {
-      setError(t('auth.validation.password_length'));
+      setError(t('validation.password_length'));
       return;
     }
 
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      setError(t('auth.validation.password_complexity'));
+      setError(t('validation.password_complexity'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError(t('auth.validation.passwords_mismatch'));
+      setError(t('validation.passwords_mismatch'));
       return;
     }
 
@@ -75,12 +75,12 @@ export default function RegisterPage() {
             />
           </motion.div>
           <h1 className="text-4xl font-bold gradient-text mb-2">MeStory</h1>
-          <p className="text-gray-400">{t('auth.register.subtitle')}</p>
+          <p className="text-gray-400">{t('register.subtitle')}</p>
         </div>
 
         {/* Register Card */}
         <div className="card glow">
-          <h2 className="text-2xl font-bold text-white mb-6">{t('auth.register.title')}</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">{t('register.title')}</h2>
 
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-red-500/20 border border-red-500/50 text-red-300 text-sm">
@@ -92,7 +92,7 @@ export default function RegisterPage() {
             {/* Name Input */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-                {t('auth.register.name')}
+                {t('register.name')}
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -104,7 +104,7 @@ export default function RegisterPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="input pl-11"
-                  placeholder={t('auth.register.name_placeholder')}
+                  placeholder={t('register.name_placeholder')}
                   required
                   disabled={loading}
                   minLength={2}
@@ -115,7 +115,7 @@ export default function RegisterPage() {
             {/* Email Input */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                {t('auth.register.email')}
+                {t('register.email')}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -127,7 +127,7 @@ export default function RegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="input pl-11"
-                  placeholder={t('auth.register.email_placeholder')}
+                  placeholder={t('register.email_placeholder')}
                   required
                   disabled={loading}
                 />
@@ -137,7 +137,7 @@ export default function RegisterPage() {
             {/* Password Input */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                {t('auth.register.password')}
+                {t('register.password')}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -164,14 +164,14 @@ export default function RegisterPage() {
                 </button>
               </div>
               <p className="mt-1 text-xs text-gray-500">
-                {t('auth.register.password_hint')}
+                {t('register.password_hint')}
               </p>
             </div>
 
             {/* Confirm Password Input */}
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
-                {t('auth.register.confirm_password')}
+                {t('register.confirm_password')}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -207,10 +207,10 @@ export default function RegisterPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  {t('auth.register.submitting')}
+                  {t('register.submitting')}
                 </>
               ) : (
-                t('auth.register.submit')
+                t('register.submit')
               )}
             </button>
           </form>
@@ -221,7 +221,7 @@ export default function RegisterPage() {
               <div className="w-full border-t border-gray-700"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-dark-card text-gray-400">{t('auth.register.or')}</span>
+              <span className="px-2 bg-dark-card text-gray-400">{t('register.or')}</span>
             </div>
           </div>
 
@@ -254,21 +254,21 @@ export default function RegisterPage() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            {t('auth.register.google_register')}
+            {t('register.google_register')}
           </button>
 
           {/* Login Link */}
           <div className="mt-6 text-center text-sm text-gray-400">
-            {t('auth.register.have_account')}{' '}
+            {t('register.have_account')}{' '}
             <Link to="/login" className="text-indigo-400 hover:text-indigo-300 font-medium">
-              {t('auth.register.sign_in')}
+              {t('register.sign_in')}
             </Link>
           </div>
         </div>
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-600 mt-8">
-          {t('auth.register.footer')}
+          {t('register.footer')}
         </p>
       </motion.div>
     </div>

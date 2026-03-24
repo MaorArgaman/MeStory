@@ -8,7 +8,7 @@ import loginSideImage from '../assets/images/login-side-image.png';
 import logoIcon from '../assets/images/logo-icon.png';
 
 export default function LoginPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -49,12 +49,12 @@ export default function LoginPage() {
             transition={{ duration: 0.8, delay: 0.3 }}
           >
             <h2 className="text-5xl font-bold text-white mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
-              {t('auth.login.side_title_1')}
+              {t('login.side_title_1')}
               <br />
-              <span className="gradient-gold">{t('auth.login.side_title_2')}</span>
+              <span className="gradient-gold">{t('login.side_title_2')}</span>
             </h2>
             <p className="text-xl text-gray-300 max-w-md">
-              {t('auth.login.side_description')}
+              {t('login.side_description')}
             </p>
           </motion.div>
 
@@ -105,18 +105,18 @@ export default function LoginPage() {
               />
             </motion.div>
             <h1 className="text-4xl font-bold gradient-text mb-2">MeStory</h1>
-            <p className="text-gray-400">{t('auth.login.tagline')}</p>
+            <p className="text-gray-400">{t('login.tagline')}</p>
           </div>
 
           {/* Login Card */}
           <div className="card glow">
-            <h2 className="text-2xl font-bold text-white mb-6">{t('auth.login.title')}</h2>
+            <h2 className="text-2xl font-bold text-white mb-6">{t('login.title')}</h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email Input */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                  {t('auth.login.email')}
+                  {t('login.email')}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -128,7 +128,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="input pl-11"
-                    placeholder={t('auth.login.email_placeholder')}
+                    placeholder={t('login.email_placeholder')}
                     required
                     disabled={loading}
                   />
@@ -138,7 +138,7 @@ export default function LoginPage() {
               {/* Password Input */}
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                  {t('auth.login.password')}
+                  {t('login.password')}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -174,10 +174,10 @@ export default function LoginPage() {
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    {t('auth.login.submitting')}
+                    {t('login.submitting')}
                   </>
                 ) : (
-                  t('auth.login.submit')
+                  t('login.submit')
                 )}
               </button>
             </form>
@@ -188,7 +188,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-700"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-dark-card text-gray-400">{t('auth.login.or')}</span>
+                <span className="px-2 bg-dark-card text-gray-400">{t('login.or')}</span>
               </div>
             </div>
 
@@ -221,21 +221,21 @@ export default function LoginPage() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              {t('auth.login.google_login')}
+              {t('login.google_login')}
             </button>
 
             {/* Register Link */}
             <div className="mt-6 text-center text-sm text-gray-400">
-              {t('auth.login.no_account')}{' '}
+              {t('login.no_account')}{' '}
               <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-medium">
-                {t('auth.login.create_account')}
+                {t('login.create_account')}
               </Link>
             </div>
           </div>
 
           {/* Footer */}
           <p className="text-center text-xs text-gray-600 mt-8">
-            {t('auth.login.footer')}
+            {t('login.footer')}
           </p>
         </motion.div>
       </div>
