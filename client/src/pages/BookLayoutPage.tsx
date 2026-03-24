@@ -1573,6 +1573,26 @@ export default function BookLayoutPage() {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative">
+        {/* Mobile Floating Toggle Buttons */}
+        <div className="lg:hidden fixed bottom-6 left-4 z-40 flex flex-col gap-3">
+          <button
+            onClick={() => setShowMobilePages(!showMobilePages)}
+            className="glass-strong p-4 rounded-full border border-magic-gold/30 shadow-lg shadow-magic-gold/10 active:scale-95 transition-transform"
+            aria-label="Pages"
+          >
+            <Layers className="w-6 h-6 text-magic-gold" />
+          </button>
+        </div>
+        <div className="lg:hidden fixed bottom-6 right-4 z-40 flex flex-col gap-3">
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className="glass-strong p-4 rounded-full border border-indigo-500/30 shadow-lg shadow-indigo-500/10 active:scale-95 transition-transform"
+            aria-label="Settings"
+          >
+            <Settings className="w-6 h-6 text-indigo-400" />
+          </button>
+        </div>
+
         {/* Mobile Pages Overlay */}
         {showMobilePages && (
           <div

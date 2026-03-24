@@ -1020,9 +1020,10 @@ export default function DesignStudioPage() {
       <div className="lg:hidden fixed bottom-6 left-4 z-40">
         <button
           onClick={() => setShowMobileControls(!showMobileControls)}
-          className="glass-strong p-4 rounded-full border border-white/10 shadow-lg min-w-[56px] min-h-[56px] flex items-center justify-center active:scale-95 transition-transform"
+          className="glass-strong p-4 rounded-full border border-magic-gold/30 shadow-lg shadow-magic-gold/10 min-w-[56px] min-h-[56px] flex items-center justify-center active:scale-95 transition-transform"
+          aria-label={showMobileControls ? 'Hide controls' : 'Show controls'}
         >
-          {showMobileControls ? <Eye className="w-6 h-6 text-indigo-400" /> : <Settings className="w-6 h-6 text-indigo-400" />}
+          {showMobileControls ? <Eye className="w-6 h-6 text-magic-gold" /> : <Settings className="w-6 h-6 text-magic-gold" />}
         </button>
       </div>
 
