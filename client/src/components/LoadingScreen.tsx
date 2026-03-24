@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 // Use new logo from public folder
-const logoIcon = '/img/MeStory-Logo.jpeg';
+const logoIcon = '/img/MeStory-Logo.png';
 
 /**
  * Loading Screen Component

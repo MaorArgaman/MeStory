@@ -140,6 +140,7 @@ export default function CustomTemplateBuilder({
   const [isAddingPlaceholder, setIsAddingPlaceholder] = useState(false);
   const [selectedPlaceholder, setSelectedPlaceholder] = useState<string | null>(null);
   const [newPlaceholderShape, setNewPlaceholderShape] = useState<'rectangle' | 'circle' | 'rounded'>('rectangle');
+  const [mobileView, setMobileView] = useState<'settings' | 'preview'>('settings');
   const previewRef = useRef<HTMLDivElement>(null);
 
   // Add image placeholder on click
@@ -270,65 +271,90 @@ export default function CustomTemplateBuilder({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4"
         onClick={onClose}
       >
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-gray-900 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl"
+          className="bg-gray-900 rounded-xl sm:rounded-2xl w-full max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden shadow-2xl mx-1 sm:mx-4"
           onClick={e => e.stopPropagation()}
           dir={isRTL ? 'rtl' : 'ltr'}
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Settings2 className="w-6 h-6 text-white" />
-              <h2 className="text-xl font-bold text-white">
-                {isRTL ? 'בונה תבניות מותאם אישית' : 'Custom Template Builder'}
+          <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Settings2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              <h2 className="text-base sm:text-xl font-bold text-white">
+                {isRTL ? 'בונה תבניות' : 'Template Builder'}
               </h2>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
+              {/* Mobile view toggle */}
+              <div className="lg:hidden flex bg-white/10 rounded-lg p-0.5">
+                <button
+                  onClick={() => setMobileView('settings')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    mobileView === 'settings'
+                      ? 'bg-white text-purple-600'
+                      : 'text-white hover:bg-white/10'
+                  }`}
+                >
+                  {isRTL ? 'הגדרות' : 'Settings'}
+                </button>
+                <button
+                  onClick={() => setMobileView('preview')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    mobileView === 'preview'
+                      ? 'bg-white text-purple-600'
+                      : 'text-white hover:bg-white/10'
+                  }`}
+                >
+                  <Eye className="w-4 h-4 inline-block" />
+                </button>
+              </div>
               <button
                 onClick={handleReset}
                 className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                 title={isRTL ? 'איפוס' : 'Reset'}
               >
-                <RotateCcw className="w-5 h-5 text-white" />
+                <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </button>
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-white/20 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-white" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </button>
             </div>
           </div>
 
-          <div className="flex h-[calc(90vh-80px)]">
+          <div className="flex flex-col lg:flex-row h-[calc(90vh-100px)] sm:h-[calc(90vh-80px)]">
             {/* Left Panel - Settings */}
-            <div className="w-80 border-r border-white/10 overflow-y-auto">
+            <div className={`w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-white/10 overflow-y-auto flex-shrink-0 ${
+              mobileView === 'preview' ? 'hidden lg:block' : 'block'
+            }`}>
               {/* Section Tabs */}
-              <div className="flex flex-wrap gap-1 p-3 border-b border-white/10">
+              <div className="flex gap-1 p-2 sm:p-3 border-b border-white/10 overflow-x-auto scrollbar-thin scrollbar-thumb-white/20">
                 {sections.map(section => (
                   <button
                     key={section.id}
                     onClick={() => setActiveSection(section.id as any)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
                       activeSection === section.id
                         ? 'bg-purple-600 text-white'
                         : 'bg-white/5 text-gray-400 hover:bg-white/10'
                     }`}
                   >
-                    <section.icon className="w-4 h-4" />
-                    <span>{section.label}</span>
+                    <section.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">{section.label}</span>
                   </button>
                 ))}
               </div>
 
               {/* Section Content */}
-              <div className="p-4 space-y-4">
+              <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 max-h-[50vh] lg:max-h-none overflow-y-auto">
                 {/* Typography Section */}
                 {activeSection === 'typography' && (
                   <>
@@ -834,11 +860,13 @@ export default function CustomTemplateBuilder({
             </div>
 
             {/* Right Panel - Preview */}
-            <div className="flex-1 p-6 overflow-y-auto bg-gray-800/50">
+            <div className={`flex-1 p-3 sm:p-6 overflow-y-auto bg-gray-800/50 ${
+              mobileView === 'settings' ? 'hidden lg:block' : 'block'
+            }`}>
               {/* Template Name */}
-              <div className="mb-4 flex gap-4">
+              <div className="mb-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1">
                     {isRTL ? 'שם התבנית (אנגלית)' : 'Template Name (English)'}
                   </label>
                   <input
@@ -846,11 +874,11 @@ export default function CustomTemplateBuilder({
                     value={template.name}
                     onChange={e => setTemplate(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="My Custom Template"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 sm:px-4 py-2 text-white text-sm"
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1">
                     {isRTL ? 'שם התבנית (עברית)' : 'Template Name (Hebrew)'}
                   </label>
                   <input
@@ -859,7 +887,7 @@ export default function CustomTemplateBuilder({
                     onChange={e => setTemplate(prev => ({ ...prev, nameHe: e.target.value }))}
                     placeholder="התבנית שלי"
                     dir="rtl"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 sm:px-4 py-2 text-white text-sm"
                   />
                 </div>
               </div>
@@ -869,12 +897,10 @@ export default function CustomTemplateBuilder({
                 <div
                   ref={previewRef}
                   onClick={handlePreviewClick}
-                  className={`relative shadow-2xl transition-all ${
+                  className={`relative shadow-2xl transition-all w-full max-w-[280px] sm:max-w-[350px] aspect-[7/10] ${
                     isAddingPlaceholder ? 'cursor-crosshair ring-2 ring-green-500' : ''
                   }`}
                   style={{
-                    width: '350px',
-                    height: '500px',
                     backgroundColor: template.backgroundColor,
                     padding: `${template.margins.top * 0.5}px ${template.margins.right * 0.5}px ${template.margins.bottom * 0.5}px ${template.margins.left * 0.5}px`,
                     fontFamily: template.fonts.body,
@@ -984,12 +1010,12 @@ export default function CustomTemplateBuilder({
               </div>
 
               {/* Save Button */}
-              <div className="mt-6 flex justify-center">
+              <div className="mt-4 sm:mt-6 flex justify-center pb-4 sm:pb-0">
                 <button
                   onClick={handleSave}
-                  className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl font-bold text-white flex items-center gap-2 shadow-lg"
+                  className="px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl font-bold text-white flex items-center gap-2 shadow-lg text-sm sm:text-base"
                 >
-                  <Save className="w-5 h-5" />
+                  <Save className="w-4 h-4 sm:w-5 sm:h-5" />
                   {isRTL ? 'שמור תבנית' : 'Save Template'}
                 </button>
               </div>

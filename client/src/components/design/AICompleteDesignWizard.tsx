@@ -482,13 +482,13 @@ export default function AICompleteDesignWizard({
                   transition={{ duration: 0.5 }}
                 />
               </div>
-              <div className="flex items-center justify-center gap-1 mt-3">
+              <div className="flex items-center justify-center gap-0.5 sm:gap-1 mt-3 overflow-x-auto px-2">
                 {STEPS.map((s, i) => {
                   const Icon = s.icon;
                   return (
                     <div
                       key={s.key}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                      className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${
                         i < currentStepIndex
                           ? 'bg-green-500 text-white'
                           : i === currentStepIndex
@@ -497,9 +497,9 @@ export default function AICompleteDesignWizard({
                       }`}
                     >
                       {i < currentStepIndex ? (
-                        <Check className="w-4 h-4" />
+                        <Check className="w-3 h-3 sm:w-4 sm:h-4" />
                       ) : (
-                        <Icon className="w-4 h-4" />
+                        <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
                       )}
                     </div>
                   );
@@ -665,7 +665,7 @@ export default function AICompleteDesignWizard({
                 </div>
 
                 {/* Preview Tabs */}
-                <div className="flex gap-2 border-b border-white/10 pb-2 overflow-x-auto">
+                <div className="flex gap-1.5 sm:gap-2 border-b border-white/10 pb-2 overflow-x-auto scrollbar-thin scrollbar-thumb-white/20">
                   {[
                     { key: 'cover', icon: BookMarked, label: isHebrew ? 'כריכה' : 'Cover' },
                     { key: 'typography', icon: Type, label: isHebrew ? 'טיפוגרפיה' : 'Typography' },
@@ -675,20 +675,20 @@ export default function AICompleteDesignWizard({
                     <button
                       key={tab.key}
                       onClick={() => setPreviewTab(tab.key as any)}
-                      className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap ${
+                      className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg flex items-center gap-1.5 sm:gap-2 transition-colors whitespace-nowrap text-xs sm:text-sm flex-shrink-0 ${
                         previewTab === tab.key
                           ? 'bg-purple-600 text-white'
                           : 'bg-white/5 text-white/70 hover:bg-white/10'
                       }`}
                     >
-                      <tab.icon className="w-4 h-4" />
+                      <tab.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       {tab.label}
                     </button>
                   ))}
                 </div>
 
                 {/* Tab Content */}
-                <div className="bg-white/5 rounded-xl p-6">
+                <div className="bg-white/5 rounded-xl p-4 sm:p-6">
                   {/* Cover Tab */}
                   {previewTab === 'cover' && (
                     <div className="space-y-6">
@@ -748,7 +748,7 @@ export default function AICompleteDesignWizard({
 
                   {/* Typography Tab */}
                   {previewTab === 'typography' && (
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div>
                         <label className="text-sm text-white/50">{isHebrew ? 'גופן גוף' : 'Body Font'}</label>
                         <p className="text-white font-medium">{design.typography.bodyFont}</p>
@@ -765,9 +765,9 @@ export default function AICompleteDesignWizard({
                         <label className="text-sm text-white/50">{isHebrew ? 'גובה שורה' : 'Line Height'}</label>
                         <p className="text-white font-medium">{design.typography.lineHeight}</p>
                       </div>
-                      <div className="col-span-2">
+                      <div className="sm:col-span-2">
                         <label className="text-sm text-white/50 mb-2 block">{isHebrew ? 'צבעים' : 'Colors'}</label>
-                        <div className="flex gap-4">
+                        <div className="flex flex-wrap gap-3 sm:gap-4">
                           <div className="flex items-center gap-2">
                             <div className="w-6 h-6 rounded-full border border-white/20" style={{ backgroundColor: design.typography.colors.text }} />
                             <span className="text-sm text-white/70">{isHebrew ? 'טקסט' : 'Text'}</span>
@@ -787,7 +787,7 @@ export default function AICompleteDesignWizard({
 
                   {/* Layout Tab */}
                   {previewTab === 'layout' && (
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div>
                         <label className="text-sm text-white/50">{isHebrew ? 'סגנון פרק' : 'Chapter Style'}</label>
                         <p className="text-white font-medium">
@@ -844,10 +844,10 @@ export default function AICompleteDesignWizard({
                 </div>
 
                 {/* Apply Button */}
-                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-white/10">
                   <button
                     onClick={() => { setStep('intro'); setDesign(null); setCoverImages({}); setSynopsis(''); }}
-                    className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors w-full sm:w-auto justify-center sm:justify-start"
                   >
                     <RefreshCw className="w-4 h-4" />
                     {isHebrew ? 'צור מחדש' : 'Regenerate'}
@@ -855,11 +855,11 @@ export default function AICompleteDesignWizard({
 
                   <button
                     onClick={handleApply}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-xl text-white font-bold transition-all shadow-lg shadow-green-500/25"
+                    className="flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-xl text-white font-bold transition-all shadow-lg shadow-green-500/25 w-full sm:w-auto justify-center text-sm sm:text-base order-first sm:order-last"
                   >
-                    <Check className="w-5 h-5" />
+                    <Check className="w-4 h-4 sm:w-5 sm:h-5" />
                     {isHebrew ? 'סיום והחלה' : 'Finish & Apply'}
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </div>
               </motion.div>

@@ -10,7 +10,7 @@ import { getUnreadCount as getNotificationsUnreadCount } from '../../services/no
 import ConversationsList from '../messaging/ConversationsList';
 import NotificationCenter from '../notifications/NotificationCenter';
 // MeStory Logo
-const logoIcon = '/img/MeStory-Logo.jpeg';
+const logoIcon = '/img/MeStory-Logo.png';
 
 export default function Navbar() {
   const { t } = useTranslation('common');
