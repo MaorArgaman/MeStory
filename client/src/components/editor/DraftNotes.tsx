@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   StickyNote,
   Plus,
@@ -43,6 +44,7 @@ export default function DraftNotes({
   onInsertText,
   language = 'he',
 }: DraftNotesProps) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const isHebrew = language === 'he';
   const [isExpanded, setIsExpanded] = useState(false);
@@ -142,7 +144,7 @@ export default function DraftNotes({
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className={`absolute top-0 ${isHebrew ? 'right-0 translate-x-full rounded-r-lg' : 'left-0 -translate-x-full rounded-l-lg'} bg-amber-500 hover:bg-amber-600 text-white p-2 shadow-lg transition-colors`}
-        title={isHebrew ? 'טיוטות' : 'Draft Notes'}
+        title={t('draft_notes.title')}
       >
         {isExpanded ? (
           isHebrew ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
@@ -165,12 +167,12 @@ export default function DraftNotes({
             <div className="p-3 border-b border-white/10 flex items-center justify-between">
               <h3 className="text-sm font-medium text-white flex items-center gap-2">
                 <StickyNote className="w-4 h-4 text-amber-400" />
-                {isHebrew ? 'טיוטות' : 'Draft Notes'}
+                {t('draft_notes.title')}
               </h3>
               <button
                 onClick={addNote}
                 className="p-1.5 bg-amber-500/20 hover:bg-amber-500/30 rounded-lg text-amber-400 transition-colors"
-                title={isHebrew ? 'הוסף טיוטה' : 'Add Note'}
+                title={t('draft_notes.add_note')}
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -182,9 +184,7 @@ export default function DraftNotes({
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 p-4">
                   <StickyNote className="w-8 h-8 mb-2 opacity-50" />
                   <p className="text-xs text-center">
-                    {isHebrew
-                      ? 'לחץ + כדי להוסיף טיוטה חדשה. גרור אותה למיקום הרצוי.'
-                      : 'Click + to add a new draft note. Drag it to the desired position.'}
+                    {t('draft_notes.empty_message')}
                   </p>
                 </div>
               ) : (
@@ -209,13 +209,14 @@ export default function DraftNotes({
                       <div className="flex items-center justify-between px-2 py-1 bg-black/10">
                         <GripVertical className="w-3 h-3 text-black/40 cursor-grab" />
                         <div className="flex items-center gap-1">
-                          {/* Color Picker */}
+                          {/* Color Picker - UI-006 FIX: Added aria-label for accessibility */}
                           <div className="flex gap-0.5">
                             {NOTE_COLORS.map((c) => (
                               <button
                                 key={c.color}
                                 onClick={() => changeNoteColor(note.id, c.color)}
-                                className={`w-3 h-3 rounded-full border ${
+                                aria-label={t(`colors.${c.name.toLowerCase()}`)}
+                                className={`w-3 h-3 rounded-full border focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-amber-500 ${
                                   note.color === c.color ? 'border-black/50' : 'border-transparent'
                                 }`}
                                 style={{ backgroundColor: c.color }}
@@ -225,7 +226,8 @@ export default function DraftNotes({
                           {/* Delete */}
                           <button
                             onClick={() => deleteNote(note.id)}
-                            className="p-0.5 hover:bg-black/10 rounded text-black/40 hover:text-red-600"
+                            aria-label={t('buttons.delete')}
+                            className="p-0.5 hover:bg-black/10 rounded text-black/40 hover:text-red-600 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-red-500"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
@@ -240,7 +242,7 @@ export default function DraftNotes({
                               autoFocus
                               value={note.content}
                               onChange={(e) => updateNote(note.id, e.target.value)}
-                              placeholder={isHebrew ? 'כתוב את הרעיון שלך...' : 'Write your idea...'}
+                              placeholder={t('draft_notes.write_idea')}
                               className="w-full bg-transparent text-black/80 text-xs resize-none outline-none min-h-[60px] placeholder-black/40"
                               onBlur={() => setEditingId(null)}
                               onKeyDown={(e) => {
@@ -255,7 +257,7 @@ export default function DraftNotes({
                           >
                             {note.content || (
                               <span className="text-black/40 italic">
-                                {isHebrew ? 'לחץ לעריכה...' : 'Click to edit...'}
+                                {t('draft_notes.click_to_edit')}
                               </span>
                             )}
                           </div>
@@ -270,7 +272,7 @@ export default function DraftNotes({
                             className="w-full py-1 bg-black/10 hover:bg-black/20 rounded text-xs text-black/60 flex items-center justify-center gap-1"
                           >
                             <Edit3 className="w-3 h-3" />
-                            {isHebrew ? 'הכנס לטקסט' : 'Insert to text'}
+                            {t('draft_notes.insert_to_text')}
                           </button>
                         </div>
                       )}
@@ -283,7 +285,7 @@ export default function DraftNotes({
             {/* Footer */}
             {notes.length > 0 && (
               <div className="p-2 border-t border-white/10 text-xs text-gray-500 text-center">
-                {notes.length} {isHebrew ? 'טיוטות' : 'notes'}
+                {t('draft_notes.notes_count', { count: notes.length })}
               </div>
             )}
           </motion.div>

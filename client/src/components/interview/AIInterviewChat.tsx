@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -45,6 +46,7 @@ export default function AIInterviewChat({
   targetAudience,
 }: AIInterviewChatProps) {
   // Language
+  const { t } = useTranslation();
   const { language, isRTL } = useLanguage();
   const topicNames = getTopicNames(language);
 
@@ -239,7 +241,7 @@ export default function AIInterviewChat({
       >
         <div className="flex flex-col items-center gap-4">
           <AIAvatar state="thinking" size="lg" />
-          <p className="text-gray-300 text-lg">Preparing interview...</p>
+          <p className="text-gray-300 text-lg">{t('interview.preparingInterview')}</p>
         </div>
       </motion.div>
     );
@@ -263,7 +265,7 @@ export default function AIInterviewChat({
           <div className="flex items-center gap-4">
             <AIAvatar state={avatarState} size="sm" />
             <div>
-              <h2 className="text-lg font-bold text-white">Deep Dive Interview</h2>
+              <h2 className="text-lg font-bold text-white">{t('interview.deepDiveInterview')}</h2>
               <div className="flex items-center gap-2 text-sm text-gray-400">
                 <span>{topicNames[interviewState?.currentTopic || 'theme']}</span>
                 <span className="text-gray-600">|</span>
@@ -281,7 +283,7 @@ export default function AIInterviewChat({
                   ? 'bg-magic-gold/20 text-magic-gold'
                   : 'bg-white/10 text-gray-400 hover:text-white'
               }`}
-              title={ttsEnabled ? 'Disable voice' : 'Enable voice'}
+              title={ttsEnabled ? t('interview.disableVoice') : t('interview.enableVoice')}
             >
               {ttsEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
             </button>
@@ -298,7 +300,7 @@ export default function AIInterviewChat({
                 ) : (
                   <CheckCircle className="w-4 h-4" />
                 )}
-                Complete
+                {t('interview.complete')}
               </button>
             )}
 
@@ -335,8 +337,8 @@ export default function AIInterviewChat({
             })}
           </div>
           <div className="flex justify-between text-xs text-gray-500">
-            <span>Progress: {interviewState?.progress || 0}%</span>
-            <span>{messages.length} messages</span>
+            <span>{t('interview.progress')}: {interviewState?.progress || 0}%</span>
+            <span>{messages.length} {t('interview.messages')}</span>
           </div>
         </div>
 
@@ -360,7 +362,7 @@ export default function AIInterviewChat({
                 >
                   {message.role === 'ai' && (
                     <div className="flex items-center gap-2 mb-1 text-xs text-gray-400">
-                      <span className="font-medium text-magic-gold">AI Interviewer</span>
+                      <span className="font-medium text-magic-gold">{t('interview.aiInterviewer')}</span>
                       <ChevronRight className="w-3 h-3" />
                       <span>{topicNames[message.topic]}</span>
                     </div>
@@ -384,7 +386,7 @@ export default function AIInterviewChat({
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin text-magic-gold" />
                   <span className="text-sm text-gray-400">
-                    {isTranscribing ? 'Transcribing...' : 'Thinking...'}
+                    {isTranscribing ? t('interview.transcribing') : t('interview.thinking')}
                   </span>
                 </div>
               </div>
@@ -429,7 +431,7 @@ export default function AIInterviewChat({
                   onClick={() => setShowVoiceInput(true)}
                   disabled={isSending}
                   className="p-3 rounded-xl bg-white/10 text-gray-400 hover:text-white hover:bg-white/20 transition-colors disabled:opacity-50"
-                  title="Record voice"
+                  title={t('interview.recordVoice')}
                 >
                   <Mic className="w-5 h-5" />
                 </button>
@@ -441,7 +443,7 @@ export default function AIInterviewChat({
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder={language === 'he' ? 'הקלד את תשובתך...' : 'Type your answer...'}
+                  placeholder={t('interview.typeYourAnswer')}
                   dir={isRTL ? 'rtl' : 'ltr'}
                   className="flex-1 bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
                   disabled={isSending}

@@ -406,15 +406,21 @@ export const getMessages = async (req: AuthRequest, res: Response): Promise<void
       })
     );
 
-    // Mark messages as read - update each unread message individually
+    // SEC-015 FIX: Mark messages as read - use allSettled for graceful partial failure handling
     const unreadMessages = messages.filter(
       (msg) => msg.sender !== req.user!.id && !msg.readAt
     );
-    await Promise.all(
+    const markResults = await Promise.allSettled(
       unreadMessages.map((msg) =>
         Message.findByIdAndUpdate(msg.id, { readAt: new Date().toISOString() })
       )
     );
+
+    // Log any failed updates but don't fail the request
+    const failedUpdates = markResults.filter((r) => r.status === 'rejected');
+    if (failedUpdates.length > 0) {
+      console.warn(`Failed to mark ${failedUpdates.length}/${unreadMessages.length} messages as read`);
+    }
 
     // Reset unread count for current user
     conversation.unreadCount[req.user.id] = 0;

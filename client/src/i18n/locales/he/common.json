@@ -1009,6 +1009,28 @@
       "language_failed": "נכשל בשינוי השפה"
     }
   },
+  "draft_notes": {
+    "title": "טיוטות",
+    "add_note": "הוסף טיוטה",
+    "write_idea": "כתוב את הרעיון שלך...",
+    "click_to_edit": "לחץ לעריכה...",
+    "insert_to_text": "הכנס לטקסט",
+    "notes_count": "{{count}} טיוטות",
+    "empty_message": "לחץ + כדי להוסיף טיוטה חדשה. גרור אותה למיקום הרצוי."
+  },
+  "image_toolbar": {
+    "position": "מיקום",
+    "size": "גודל",
+    "rotation": "סיבוב",
+    "opacity": "שקיפות",
+    "border_radius": "רדיוס פינה",
+    "shadow": "צל",
+    "flip_horizontal": "הפוך אופקית",
+    "flip_vertical": "הפוך אנכית",
+    "duplicate": "שכפל",
+    "delete": "מחק",
+    "image_duplicated": "התמונה שוכפלה"
+  },
   "publishing": {
     "title": "פרסם את הספר שלך",
     "steps": {

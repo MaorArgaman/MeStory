@@ -40,8 +40,22 @@ async function cleanupTempFile(tempFile: string | null): Promise<void> {
       await fsPromises.unlink(tempFile);
       console.log(`🗑️ Cleaned up temp file: ${tempFile}`);
     } catch (err) {
-      // Ignore cleanup errors
+      // SEC-011 FIX: Log cleanup errors instead of ignoring
+      console.error(`Failed to clean up temp file ${tempFile}:`, err);
     }
+  }
+}
+
+// SEC-011 FIX: Helper to clean up disk storage files with error logging
+function cleanupDiskFile(filePath: string | undefined): void {
+  if (filePath) {
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.error(`Failed to delete disk file ${filePath}:`, err.message);
+      } else {
+        console.log(`🗑️ Cleaned up disk file: ${filePath}`);
+      }
+    });
   }
 }
 import {
@@ -174,9 +188,7 @@ export const processInterviewResponse = async (req: AuthRequest, res: Response):
         responseText = transcription.text;
 
         // Clean up disk storage file if exists (local development)
-        if (audioFile.path) {
-          fs.unlink(audioFile.path, () => {});
-        }
+        cleanupDiskFile(audioFile.path);
       } catch (transcribeError: any) {
         console.error('Transcription error:', transcribeError);
 
@@ -184,9 +196,7 @@ export const processInterviewResponse = async (req: AuthRequest, res: Response):
         await cleanupTempFile(tempFile);
 
         // Clean up disk storage file on error
-        if (audioFile.path) {
-          fs.unlink(audioFile.path, () => {});
-        }
+        cleanupDiskFile(audioFile.path);
 
         const errorMessage = transcribeError.message?.includes('API key')
           ? 'Audio transcription service is not configured.'
@@ -282,9 +292,7 @@ export const transcribeVoice = async (req: AuthRequest, res: Response): Promise<
     tempFile = null;
 
     // Clean up disk storage file if exists
-    if (audioFile.path) {
-      fs.unlink(audioFile.path, () => {});
-    }
+    cleanupDiskFile(audioFile.path);
 
     res.status(200).json({
       success: true,
@@ -300,9 +308,7 @@ export const transcribeVoice = async (req: AuthRequest, res: Response): Promise<
     await cleanupTempFile(tempFile);
 
     // Clean up disk storage file on error
-    if (req.file?.path) {
-      fs.unlink(req.file.path, () => {});
-    }
+    cleanupDiskFile(req.file?.path);
 
     const errorMessage = error.message?.includes('API key')
       ? 'Audio transcription service is not configured.'

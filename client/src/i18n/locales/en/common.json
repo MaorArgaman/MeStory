@@ -939,6 +939,28 @@
       "language_failed": "Failed to change language"
     }
   },
+  "draft_notes": {
+    "title": "Draft Notes",
+    "add_note": "Add Note",
+    "write_idea": "Write your idea...",
+    "click_to_edit": "Click to edit...",
+    "insert_to_text": "Insert to text",
+    "notes_count": "{{count}} notes",
+    "empty_message": "Click + to add a new draft note. Drag it to the desired position."
+  },
+  "image_toolbar": {
+    "position": "Position",
+    "size": "Size",
+    "rotation": "Rotation",
+    "opacity": "Opacity",
+    "border_radius": "Border Radius",
+    "shadow": "Shadow",
+    "flip_horizontal": "Flip Horizontal",
+    "flip_vertical": "Flip Vertical",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "image_duplicated": "Image duplicated"
+  },
   "publishing": {
     "title": "Publish Your Book",
     "steps": {
