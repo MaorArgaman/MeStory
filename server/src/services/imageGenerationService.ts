@@ -71,9 +71,12 @@ export interface ImageGenerationResult {
 
 /**
  * Generate an enhanced image prompt based on user input and book context
+ * IMPORTANT: Preserves the user's original intent while translating to English
  */
 export async function generateEnhancedPrompt(request: ImageGenerationRequest): Promise<string> {
   const { prompt, bookContext, style } = request;
+
+  console.log('🎨 Enhancing prompt - Original:', prompt);
 
   try {
     const contextInfo = bookContext ? `
@@ -87,35 +90,46 @@ Scene: ${bookContext.sceneDescription || 'Not specified'}
 Requested Style: ${style}
 ` : '';
 
-    const aiPrompt = `You are a professional book illustrator and prompt engineer. Create an enhanced, detailed image generation prompt based on the following request.
+    const aiPrompt = `You are a professional translator and image prompt engineer. Your task is to translate and enhance an image generation prompt.
 
-USER'S REQUEST:
-${prompt}
+USER'S ORIGINAL REQUEST (may be in Hebrew or any language):
+"${prompt}"
 
 ${contextInfo}
 ${styleGuide}
 
-TASK:
-Transform the user's request into a detailed, vivid image generation prompt that:
-- Describes the scene in rich visual detail
-- Specifies lighting, mood, and atmosphere
-- Includes relevant style descriptors for the requested style
-- Is suitable for a book illustration
-- Avoids any inappropriate or copyrighted content
-- Is clear and specific for AI image generation
+CRITICAL INSTRUCTIONS:
+1. FIRST: Translate the user's request EXACTLY to English - preserve ALL specific details they mentioned
+2. THEN: Add visual quality enhancers (lighting, atmosphere, style)
+3. DO NOT change the core subject or meaning of the user's request
+4. DO NOT replace specific items with generic ones
+5. If user asked for "a cat sitting on a red chair" - the output MUST include a cat on a red chair
 
-IMPORTANT: The output MUST be in ENGLISH only. If the user's request is in Hebrew or any other language, translate it to English.
+Example:
+- User input (Hebrew): "ילדה קטנה עם שיער אדום מחזיקה בלון כחול בפארק"
+- Correct output: "A little girl with red hair holding a blue balloon in a park, soft natural lighting, warm atmosphere, illustration style"
+- WRONG output: "A child playing outdoors" (this loses all the specific details!)
 
-Keep the enhanced prompt under 300 characters for optimal AI image generation.
+OUTPUT REQUIREMENTS:
+- Must be in ENGLISH
+- Must preserve ALL specific elements from the user's request
+- Under 300 characters
+- No quotes or explanations, just the prompt
 
-Respond ONLY with the enhanced prompt text in English, nothing else.`;
+Respond with ONLY the enhanced prompt:`;
 
     const result = await getGeminiModel().generateContent(aiPrompt);
     const response = result.response;
-    return response.text().trim();
+    const enhancedPrompt = response.text().trim();
+
+    console.log('🎨 Enhanced prompt result:', enhancedPrompt);
+
+    return enhancedPrompt;
   } catch (error) {
     console.error('Error generating enhanced prompt:', error);
-    return prompt; // Return original prompt if enhancement fails
+    // On error, try a simple translation approach
+    console.log('🎨 Falling back to original prompt');
+    return prompt;
   }
 }
 
@@ -125,12 +139,15 @@ Respond ONLY with the enhanced prompt text in English, nothing else.`;
  */
 export async function generateImage(request: ImageGenerationRequest): Promise<ImageGenerationResult> {
   try {
-    console.log('🖼️ Image generation started');
-    console.log('🖼️ Original prompt:', request.prompt?.slice(0, 100));
+    console.log('🖼️ ====== IMAGE GENERATION STARTED ======');
+    console.log('🖼️ Original prompt (full):', request.prompt);
+    console.log('🖼️ Book context:', JSON.stringify(request.bookContext));
+    console.log('🖼️ Style:', request.style);
+    console.log('🖼️ Aspect ratio:', request.aspectRatio);
 
     // Enhance the prompt using Gemini (translates to English if needed)
     const enhancedPrompt = await generateEnhancedPrompt(request);
-    console.log('🖼️ Enhanced prompt:', enhancedPrompt?.slice(0, 100));
+    console.log('🖼️ Enhanced prompt (full):', enhancedPrompt);
 
     // For now, use a placeholder image service
     // In production, replace this with actual AI image generation API
