@@ -185,6 +185,8 @@ interface BookData {
     textColor: string;
     fontFamily: string;
     imageUrl?: string;
+    titlePosition?: { x: number; y: number };
+    authorPosition?: { x: number; y: number };
   };
   pageLayout?: {
     pages: PageContent[];
@@ -882,6 +884,36 @@ export default function BookLayoutPage() {
   const handleCancelEditing = () => {
     setEditingPageIndex(null);
     setEditingContent('');
+  };
+
+  // Handle cover title position change
+  const handleTitlePositionChange = (pos: { x: number; y: number }) => {
+    if (!book) return;
+    setBook(prev => prev ? {
+      ...prev,
+      coverDesign: {
+        ...prev.coverDesign,
+        coverColor: prev.coverDesign?.coverColor || '#1a1a2e',
+        textColor: prev.coverDesign?.textColor || '#ffffff',
+        fontFamily: prev.coverDesign?.fontFamily || 'Arial',
+        titlePosition: pos,
+      },
+    } : null);
+  };
+
+  // Handle cover author position change
+  const handleAuthorPositionChange = (pos: { x: number; y: number }) => {
+    if (!book) return;
+    setBook(prev => prev ? {
+      ...prev,
+      coverDesign: {
+        ...prev.coverDesign,
+        coverColor: prev.coverDesign?.coverColor || '#1a1a2e',
+        textColor: prev.coverDesign?.textColor || '#ffffff',
+        fontFamily: prev.coverDesign?.fontFamily || 'Arial',
+        authorPosition: pos,
+      },
+    } : null);
   };
 
   // Handle template selection
@@ -2288,20 +2320,110 @@ function PageRenderer({
   );
 }
 
+// Draggable Cover Text Component
+function DraggableCoverText({
+  children,
+  position,
+  onPositionChange,
+  containerRef,
+  className,
+}: {
+  children: React.ReactNode;
+  position: { x: number; y: number };
+  onPositionChange: (pos: { x: number; y: number }) => void;
+  containerRef: React.RefObject<HTMLDivElement>;
+  className?: string;
+}) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  const elementRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setStartPos({ x: position.x, y: position.y });
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return;
+
+      const rect = containerRef.current.getBoundingClientRect();
+      const deltaX = ((e.clientX - dragStart.x) / rect.width) * 100;
+      const deltaY = ((e.clientY - dragStart.y) / rect.height) * 100;
+
+      const newX = Math.max(0, Math.min(100, startPos.x + deltaX));
+      const newY = Math.max(0, Math.min(100, startPos.y + deltaY));
+
+      onPositionChange({ x: newX, y: newY });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragStart, startPos, containerRef, onPositionChange]);
+
+  return (
+    <div
+      ref={elementRef}
+      className={`absolute cursor-move select-none ${isDragging ? 'opacity-80' : ''} ${className || ''}`}
+      style={{
+        left: `${position.x}%`,
+        top: `${position.y}%`,
+        transform: 'translate(-50%, -50%)',
+      }}
+      onMouseDown={handleMouseDown}
+    >
+      <div className={`${isDragging ? 'ring-2 ring-white/50 ring-offset-2 ring-offset-transparent rounded px-2' : ''}`}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 // Cover Preview Component
-function CoverPreview({ book, coverImageUrl }: { book: BookData; coverImageUrl?: string | null }) {
+function CoverPreview({
+  book,
+  coverImageUrl,
+  onTitlePositionChange,
+  onAuthorPositionChange,
+}: {
+  book: BookData;
+  coverImageUrl?: string | null;
+  onTitlePositionChange?: (pos: { x: number; y: number }) => void;
+  onAuthorPositionChange?: (pos: { x: number; y: number }) => void;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const coverDesign = book.coverDesign as any || {
     coverColor: '#1a1a2e',
     textColor: '#ffffff',
     fontFamily: 'Arial',
   };
 
+  // Get positions with defaults (center for title, bottom-center for author)
+  const titlePosition = coverDesign.titlePosition || coverDesign.front?.title?.position || { x: 50, y: 30 };
+  const authorPosition = coverDesign.authorPosition || coverDesign.front?.authorName?.position || { x: 50, y: 85 };
+
   // Get image URL from multiple sources
   const imageUrl = coverImageUrl || coverDesign.imageUrl || coverDesign.front?.imageUrl;
 
   return (
     <div
-      className="h-full flex flex-col items-center justify-center p-8 relative overflow-hidden"
+      ref={containerRef}
+      className="h-full w-full relative overflow-hidden"
       style={{
         background: imageUrl ? 'transparent' : (coverDesign.coverColor || coverDesign.front?.backgroundColor || '#1a1a2e'),
         color: coverDesign.textColor || coverDesign.front?.title?.color || '#ffffff',
@@ -2319,12 +2441,30 @@ function CoverPreview({ book, coverImageUrl }: { book: BookData; coverImageUrl?:
       {imageUrl && (
         <div className="absolute inset-0 bg-black/30" />
       )}
-      <h1 className="text-2xl font-bold text-center relative z-10 mb-4 text-white drop-shadow-lg">
-        {book.title}
-      </h1>
-      <p className="text-lg relative z-10 text-white drop-shadow-lg">
-        {book.author?.name}
-      </p>
+
+      {/* Draggable Title */}
+      <DraggableCoverText
+        position={titlePosition}
+        onPositionChange={onTitlePositionChange || (() => {})}
+        containerRef={containerRef as React.RefObject<HTMLDivElement>}
+        className="z-10"
+      >
+        <h1 className="text-2xl font-bold text-center text-white drop-shadow-lg whitespace-nowrap">
+          {book.title}
+        </h1>
+      </DraggableCoverText>
+
+      {/* Draggable Author */}
+      <DraggableCoverText
+        position={authorPosition}
+        onPositionChange={onAuthorPositionChange || (() => {})}
+        containerRef={containerRef as React.RefObject<HTMLDivElement>}
+        className="z-10"
+      >
+        <p className="text-lg text-white drop-shadow-lg whitespace-nowrap">
+          {book.author?.name}
+        </p>
+      </DraggableCoverText>
     </div>
   );
 }
