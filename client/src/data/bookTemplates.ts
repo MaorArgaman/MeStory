@@ -39,10 +39,65 @@ export interface BookTemplate {
   dividerStyle?: 'none' | 'line' | 'ornament' | 'stars' | 'dots' | 'wave';
   pullQuoteStyle?: 'none' | 'bordered' | 'background' | 'side-accent' | 'centered';
 
-  // Images
+  // Images - Basic
   imagePositions: ('top' | 'center' | 'bottom' | 'combined' | 'side' | 'full-bleed')[];
   imageFrameStyle?: 'none' | 'border' | 'shadow' | 'rounded' | 'polaroid' | 'vintage';
   imageLayout?: 'single' | 'grid-2' | 'grid-3' | 'mosaic' | 'scattered';
+
+  // Images - Creative Layouts
+  creativeImageLayout?: {
+    pattern: 'triangle' | 'corners' | 'diagonal' | 'side-by-side' | 'staggered' | 'pyramid' | 'circular' | 'filmstrip' | 'collage' | 'waterfall' | 'honeycomb' | 'zigzag';
+    imageCount: number;
+    customPositions?: { x: number; y: number; width: number; height: number; rotation?: number }[];
+  };
+
+  // Decorative Elements
+  decorativeElements?: {
+    // Emoji decorations
+    headerEmoji?: string; // e.g., "📖" or "✨"
+    footerEmoji?: string;
+    chapterEmoji?: string;
+    dividerEmoji?: string;
+    cornerEmojis?: { topLeft?: string; topRight?: string; bottomLeft?: string; bottomRight?: string };
+
+    // Visual elements
+    cornerDecorations?: 'none' | 'flourish' | 'geometric' | 'floral' | 'stars' | 'hearts' | 'leaves';
+    backgroundPattern?: 'none' | 'dots' | 'stripes' | 'grid' | 'waves' | 'confetti' | 'stars' | 'hearts' | 'geometric';
+    backgroundPatternOpacity?: number;
+
+    // Frames and borders
+    pageFrame?: 'none' | 'simple' | 'double' | 'ornate' | 'rounded' | 'dashed' | 'dotted' | 'gradient';
+    frameColor?: string;
+    frameWidth?: number;
+
+    // Decorative lines
+    titleUnderline?: 'none' | 'simple' | 'double' | 'wavy' | 'dotted' | 'gradient' | 'ornate';
+    sectionDivider?: string; // Custom divider character/emoji pattern e.g., "✦ ✧ ✦" or "~ • ~"
+  };
+
+  // Per-Page Variations (for custom template)
+  perPageStyling?: {
+    enabled: boolean;
+    variations?: {
+      pageNumber?: number; // 0 = all odd pages, -1 = all even pages, or specific page number
+      backgroundColor?: string;
+      accentColor?: string;
+      imageLayout?: string;
+      decorativeElements?: Partial<BookTemplate['decorativeElements']>;
+    }[];
+  };
+
+  // Header & Footer
+  headerFooter?: {
+    headerStyle?: 'none' | 'simple' | 'decorated' | 'chapter-title' | 'book-title';
+    footerStyle?: 'none' | 'simple' | 'decorated' | 'page-number-only';
+    headerText?: string;
+    footerText?: string;
+    headerBackgroundColor?: string;
+    footerBackgroundColor?: string;
+    headerHeight?: number;
+    footerHeight?: number;
+  };
 
   // Cover
   coverStyle: {
@@ -66,6 +121,7 @@ export interface BookTemplate {
   // Preview
   previewGradient: string;
   previewLayout?: string; // CSS for layout preview thumbnail
+  previewIcon?: string; // Emoji for template preview
 }
 
 export const bookTemplates: BookTemplate[] = [
@@ -891,26 +947,106 @@ export const templateCategories = [
 
 // Available fonts for custom selection
 export const availableFonts = [
-  'Inter',
+  // Hebrew-friendly fonts
+  'David Libre',
+  'Frank Ruhl Libre',
+  'Heebo',
+  'Assistant',
+  'Rubik',
+  'Alef',
+  'Secular One',
+  'Varela Round',
+  'Suez One',
+  'Amatic SC',
+
+  // Classic Serif
   'Playfair Display',
   'Merriweather',
-  'Cinzel',
-  'Cinzel Decorative',
   'Crimson Text',
-  'Fredoka One',
-  'Nunito',
-  'Times New Roman',
-  'Oswald',
+  'Libre Baskerville',
+  'Cormorant Garamond',
+  'PT Serif',
+  'Lora',
+  'Source Serif Pro',
+  'Bitter',
+  'Abril Fatface',
+
+  // Modern Sans-Serif
+  'Inter',
   'Open Sans',
   'Montserrat',
   'Lato',
-  'Libre Baskerville',
-  'Cormorant Garamond',
-  'Georgia',
   'Roboto',
+  'Nunito',
+  'Poppins',
+  'Raleway',
+  'Quicksand',
+  'Josefin Sans',
+
+  // Decorative & Display
+  'Cinzel',
+  'Cinzel Decorative',
+  'Fredoka One',
+  'Oswald',
+  'Bebas Neue',
+  'Lobster',
+  'Pacifico',
+  'Dancing Script',
+  'Caveat',
+  'Permanent Marker',
+
+  // Elegant & Script
+  'Great Vibes',
+  'Satisfy',
+  'Tangerine',
+  'Alex Brush',
+  'Pinyon Script',
+
+  // Roboto Family
   'Roboto Slab',
-  'Source Sans Pro',
-  'PT Serif',
+  'Roboto Condensed',
+  'Roboto Mono',
+
+  // System Fonts
+  'Times New Roman',
+  'Georgia',
+  'Arial',
+  'Helvetica',
+  'Verdana',
+];
+
+// Font categories for UI organization
+export const fontCategories = [
+  {
+    id: 'hebrew',
+    name: 'Hebrew',
+    nameHe: 'עברית',
+    fonts: ['David Libre', 'Frank Ruhl Libre', 'Heebo', 'Assistant', 'Rubik', 'Alef', 'Secular One', 'Varela Round', 'Suez One', 'Amatic SC']
+  },
+  {
+    id: 'serif',
+    name: 'Serif',
+    nameHe: 'סריף',
+    fonts: ['Playfair Display', 'Merriweather', 'Crimson Text', 'Libre Baskerville', 'Cormorant Garamond', 'PT Serif', 'Lora', 'Source Serif Pro', 'Bitter', 'Abril Fatface']
+  },
+  {
+    id: 'sans-serif',
+    name: 'Sans-Serif',
+    nameHe: 'ללא סריף',
+    fonts: ['Inter', 'Open Sans', 'Montserrat', 'Lato', 'Roboto', 'Nunito', 'Poppins', 'Raleway', 'Quicksand', 'Josefin Sans']
+  },
+  {
+    id: 'decorative',
+    name: 'Decorative',
+    nameHe: 'דקורטיבי',
+    fonts: ['Cinzel', 'Cinzel Decorative', 'Fredoka One', 'Oswald', 'Bebas Neue', 'Lobster', 'Pacifico', 'Dancing Script', 'Caveat', 'Permanent Marker']
+  },
+  {
+    id: 'script',
+    name: 'Script',
+    nameHe: 'כתב יד',
+    fonts: ['Great Vibes', 'Satisfy', 'Tangerine', 'Alex Brush', 'Pinyon Script']
+  },
 ];
 
 // Common text colors

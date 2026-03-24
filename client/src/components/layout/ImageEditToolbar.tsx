@@ -58,7 +58,13 @@ export default function ImageEditToolbar({
   language = 'he',
 }: ImageEditToolbarProps) {
   const isHebrew = language === 'he';
-  const [activeTab, setActiveTab] = useState<'style' | 'position' | 'effects'>('style');
+  const [activeTab, setActiveTab] = useState<'style' | 'position' | 'effects'>('position');
+
+  // Debug wrapper for onUpdate
+  const handleUpdate = (updates: Partial<ImageEditToolbarProps['image']>) => {
+    console.log('ImageEditToolbar handleUpdate:', updates);
+    onUpdate(updates);
+  };
 
   const tabs = [
     { id: 'style', labelHe: 'סגנון', labelEn: 'Style', icon: ImageIcon },
@@ -87,6 +93,8 @@ export default function ImageEditToolbar({
       exit={{ opacity: 0, scale: 0.95 }}
       className="fixed top-20 left-1/2 -translate-x-1/2 z-[9999] max-w-[95vw]"
       style={{ direction: isHebrew ? 'rtl' : 'ltr' }}
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
     >
       <div className="bg-gray-900 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-700 overflow-hidden max-h-[70vh] overflow-y-auto">
         {/* Header with tabs */}
@@ -135,7 +143,7 @@ export default function ImageEditToolbar({
                       min="0"
                       max="100"
                       value={(image.opacity ?? 1) * 100}
-                      onChange={(e) => onUpdate({ opacity: parseInt(e.target.value) / 100 })}
+                      onChange={(e) => handleUpdate({ opacity: parseInt(e.target.value) / 100 })}
                       className="flex-1 accent-amber-500"
                     />
                     <span className="text-sm text-white w-12 text-center">
@@ -151,7 +159,7 @@ export default function ImageEditToolbar({
                   </label>
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => onUpdate({ borderRadius: 0 })}
+                      onClick={() => handleUpdate({ borderRadius: 0 })}
                       className={`p-2 rounded-lg transition-colors ${
                         (image.borderRadius ?? 0) === 0
                           ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-500'
@@ -166,11 +174,11 @@ export default function ImageEditToolbar({
                       min="0"
                       max="50"
                       value={image.borderRadius ?? 0}
-                      onChange={(e) => onUpdate({ borderRadius: parseInt(e.target.value) })}
+                      onChange={(e) => handleUpdate({ borderRadius: parseInt(e.target.value) })}
                       className="flex-1 accent-amber-500"
                     />
                     <button
-                      onClick={() => onUpdate({ borderRadius: 50 })}
+                      onClick={() => handleUpdate({ borderRadius: 50 })}
                       className={`p-2 rounded-lg transition-colors ${
                         (image.borderRadius ?? 0) >= 50
                           ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-500'
@@ -190,7 +198,7 @@ export default function ImageEditToolbar({
                     <input
                       type="checkbox"
                       checked={image.fadeEdges ?? false}
-                      onChange={(e) => onUpdate({ fadeEdges: e.target.checked })}
+                      onChange={(e) => handleUpdate({ fadeEdges: e.target.checked })}
                       className="w-4 h-4 accent-amber-500"
                     />
                   </label>
@@ -200,7 +208,7 @@ export default function ImageEditToolbar({
                       min="5"
                       max="50"
                       value={image.fadeAmount ?? 20}
-                      onChange={(e) => onUpdate({ fadeAmount: parseInt(e.target.value) })}
+                      onChange={(e) => handleUpdate({ fadeAmount: parseInt(e.target.value) })}
                       className="w-full accent-amber-500"
                     />
                   )}
@@ -216,7 +224,7 @@ export default function ImageEditToolbar({
                       <button
                         key={style.value}
                         onClick={() =>
-                          onUpdate({
+                          handleUpdate({
                             border: style.value === 'none'
                               ? undefined
                               : {
@@ -244,7 +252,7 @@ export default function ImageEditToolbar({
                         min="1"
                         max="10"
                         value={image.border.width}
-                        onChange={(e) => onUpdate({
+                        onChange={(e) => handleUpdate({
                           border: { ...image.border!, width: parseInt(e.target.value) }
                         })}
                         className="flex-1 accent-amber-500"
@@ -252,7 +260,7 @@ export default function ImageEditToolbar({
                       <input
                         type="color"
                         value={image.border.color}
-                        onChange={(e) => onUpdate({
+                        onChange={(e) => handleUpdate({
                           border: { ...image.border!, color: e.target.value }
                         })}
                         className="w-8 h-8 rounded cursor-pointer"
@@ -268,7 +276,7 @@ export default function ImageEditToolbar({
                     <input
                       type="checkbox"
                       checked={image.shadow ?? false}
-                      onChange={(e) => onUpdate({ shadow: e.target.checked })}
+                      onChange={(e) => handleUpdate({ shadow: e.target.checked })}
                       className="w-4 h-4 accent-amber-500"
                     />
                   </label>
@@ -293,7 +301,7 @@ export default function ImageEditToolbar({
                     {textWrapOptions.map((option) => (
                       <button
                         key={option.value}
-                        onClick={() => onUpdate({ textWrap: option.value as any })}
+                        onClick={() => handleUpdate({ textWrap: option.value as any })}
                         className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
                           (image.textWrap ?? 'none') === option.value
                             ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-500'
@@ -316,7 +324,7 @@ export default function ImageEditToolbar({
                   </label>
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => onUpdate({ rotation: ((image.rotation ?? 0) - 90) % 360 })}
+                      onClick={() => handleUpdate({ rotation: ((image.rotation ?? 0) - 90) % 360 })}
                       className="p-2 bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
                     >
                       <RotateCw className="w-5 h-5 transform -scale-x-100" />
@@ -326,11 +334,11 @@ export default function ImageEditToolbar({
                       min="-180"
                       max="180"
                       value={image.rotation ?? 0}
-                      onChange={(e) => onUpdate({ rotation: parseInt(e.target.value) })}
+                      onChange={(e) => handleUpdate({ rotation: parseInt(e.target.value) })}
                       className="flex-1 accent-amber-500"
                     />
                     <button
-                      onClick={() => onUpdate({ rotation: ((image.rotation ?? 0) + 90) % 360 })}
+                      onClick={() => handleUpdate({ rotation: ((image.rotation ?? 0) + 90) % 360 })}
                       className="p-2 bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
                     >
                       <RotateCw className="w-5 h-5" />
@@ -348,7 +356,7 @@ export default function ImageEditToolbar({
                   </label>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => onUpdate({ flipH: !image.flipH })}
+                      onClick={() => handleUpdate({ flipH: !image.flipH })}
                       className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                         image.flipH
                           ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-500'
@@ -359,7 +367,7 @@ export default function ImageEditToolbar({
                       {isHebrew ? 'אופקי' : 'Horizontal'}
                     </button>
                     <button
-                      onClick={() => onUpdate({ flipV: !image.flipV })}
+                      onClick={() => handleUpdate({ flipV: !image.flipV })}
                       className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                         image.flipV
                           ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-500'
@@ -383,7 +391,7 @@ export default function ImageEditToolbar({
                       min="5"
                       max="100"
                       value={Math.round(image.width)}
-                      onChange={(e) => onUpdate({ width: parseInt(e.target.value) || 20 })}
+                      onChange={(e) => handleUpdate({ width: parseInt(e.target.value) || 20 })}
                       className="w-full px-3 py-2 bg-gray-800 rounded-lg text-white text-sm"
                     />
                   </div>
@@ -396,7 +404,7 @@ export default function ImageEditToolbar({
                       min="5"
                       max="100"
                       value={Math.round(image.height)}
-                      onChange={(e) => onUpdate({ height: parseInt(e.target.value) || 20 })}
+                      onChange={(e) => handleUpdate({ height: parseInt(e.target.value) || 20 })}
                       className="w-full px-3 py-2 bg-gray-800 rounded-lg text-white text-sm"
                     />
                   </div>
@@ -419,7 +427,7 @@ export default function ImageEditToolbar({
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     <button
-                      onClick={() => onUpdate({
+                      onClick={() => handleUpdate({
                         borderRadius: 0,
                         fadeEdges: false,
                         shadow: false,
@@ -430,7 +438,7 @@ export default function ImageEditToolbar({
                       {isHebrew ? 'רגיל' : 'Normal'}
                     </button>
                     <button
-                      onClick={() => onUpdate({
+                      onClick={() => handleUpdate({
                         borderRadius: 10,
                         shadow: true,
                         fadeEdges: false
@@ -440,7 +448,7 @@ export default function ImageEditToolbar({
                       {isHebrew ? 'מעוגל + צל' : 'Rounded + Shadow'}
                     </button>
                     <button
-                      onClick={() => onUpdate({
+                      onClick={() => handleUpdate({
                         borderRadius: 50,
                         shadow: false,
                         fadeEdges: false
@@ -450,7 +458,7 @@ export default function ImageEditToolbar({
                       {isHebrew ? 'עגול' : 'Circle'}
                     </button>
                     <button
-                      onClick={() => onUpdate({
+                      onClick={() => handleUpdate({
                         fadeEdges: true,
                         fadeAmount: 30,
                         borderRadius: 0
@@ -460,7 +468,7 @@ export default function ImageEditToolbar({
                       {isHebrew ? 'דהייה' : 'Fade'}
                     </button>
                     <button
-                      onClick={() => onUpdate({
+                      onClick={() => handleUpdate({
                         border: { width: 3, color: '#ffffff', style: 'solid' },
                         borderRadius: 0
                       })}
@@ -469,7 +477,7 @@ export default function ImageEditToolbar({
                       {isHebrew ? 'מסגרת לבנה' : 'White Frame'}
                     </button>
                     <button
-                      onClick={() => onUpdate({
+                      onClick={() => handleUpdate({
                         border: { width: 5, color: '#d4af37', style: 'solid' },
                         borderRadius: 5,
                         shadow: true
@@ -488,7 +496,7 @@ export default function ImageEditToolbar({
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
-                      onClick={() => onUpdate({
+                      onClick={() => handleUpdate({
                         borderRadius: 2,
                         shadow: true,
                         border: { width: 8, color: '#ffffff', style: 'solid' },
@@ -499,7 +507,7 @@ export default function ImageEditToolbar({
                       {isHebrew ? 'פולרויד' : 'Polaroid'}
                     </button>
                     <button
-                      onClick={() => onUpdate({
+                      onClick={() => handleUpdate({
                         borderRadius: 0,
                         shadow: true,
                         border: { width: 1, color: '#333333', style: 'solid' },

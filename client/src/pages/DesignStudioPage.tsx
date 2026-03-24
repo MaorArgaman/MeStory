@@ -57,6 +57,13 @@ interface CoverDesign {
       color: string;
     };
   };
+  back?: {
+    imageUrl?: string;
+    backgroundColor?: string;
+  };
+  spine?: {
+    color?: string;
+  };
 }
 
 interface PricingStrategy {
@@ -123,6 +130,97 @@ const COLOR_PRESETS = [
   { name: 'Rose', cover: '#880e4f', text: '#ffffff' },
 ];
 
+// Sophisticated color palettes for spine/connector (more unique shades)
+const SOPHISTICATED_PALETTES = [
+  // Deep jewel tones
+  { name: 'Sapphire Dust', colors: ['#1e3a5f', '#2d5a87', '#1a4a6e'] },
+  { name: 'Amethyst Glow', colors: ['#4a2c6a', '#6b3d8f', '#5c3478'] },
+  { name: 'Emerald Shadow', colors: ['#1d4a3a', '#2d6b52', '#1f5540'] },
+  { name: 'Ruby Mist', colors: ['#6b2d3a', '#8b3d4a', '#7a3040'] },
+  { name: 'Topaz Ember', colors: ['#7a5230', '#9b6840', '#8a5a35'] },
+  // Sophisticated neutrals
+  { name: 'Charcoal Silk', colors: ['#2a2d32', '#3a3d42', '#323538'] },
+  { name: 'Slate Storm', colors: ['#3d4a5a', '#4d5a6a', '#455360'] },
+  { name: 'Burgundy Velvet', colors: ['#4a1a2a', '#5a2a3a', '#522030'] },
+  { name: 'Forest Twilight', colors: ['#2a3a2a', '#3a4a3a', '#324032'] },
+  { name: 'Ocean Depth', colors: ['#1a3a4a', '#2a4a5a', '#224050'] },
+  // Warm sophisticated
+  { name: 'Terracotta Dream', colors: ['#8b5a4a', '#9b6a5a', '#936050'] },
+  { name: 'Bronze Age', colors: ['#6a5a40', '#7a6a50', '#725f48'] },
+  { name: 'Copper Patina', colors: ['#5a6a5a', '#6a7a6a', '#627062'] },
+];
+
+// Helper function to convert hex to HSL
+function hexToHSL(hex: string): { h: number; s: number; l: number } {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+
+  return { h: h * 360, s: s * 100, l: l * 100 };
+}
+
+// Helper function to convert HSL to hex
+function hslToHex(h: number, s: number, l: number): string {
+  s /= 100;
+  l /= 100;
+
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+  const m = l - c / 2;
+  let r = 0, g = 0, b = 0;
+
+  if (h >= 0 && h < 60) { r = c; g = x; b = 0; }
+  else if (h >= 60 && h < 120) { r = x; g = c; b = 0; }
+  else if (h >= 120 && h < 180) { r = 0; g = c; b = x; }
+  else if (h >= 180 && h < 240) { r = 0; g = x; b = c; }
+  else if (h >= 240 && h < 300) { r = x; g = 0; b = c; }
+  else { r = c; g = 0; b = x; }
+
+  const toHex = (v: number) => {
+    const hex = Math.round((v + m) * 255).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  };
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+// Generate a harmonious sophisticated color based on the cover color
+function generateHarmoniousColor(baseColor: string): string {
+  const hsl = hexToHSL(baseColor);
+
+  // Create a complementary or analogous color with sophisticated adjustments
+  const variations = [
+    // Complementary with depth
+    { h: (hsl.h + 180) % 360, s: Math.min(hsl.s * 0.7, 45), l: Math.max(20, hsl.l * 0.6) },
+    // Analogous with richness
+    { h: (hsl.h + 30) % 360, s: Math.min(hsl.s * 0.8, 50), l: Math.max(25, hsl.l * 0.7) },
+    // Triadic with muted elegance
+    { h: (hsl.h + 120) % 360, s: Math.min(hsl.s * 0.6, 40), l: Math.max(22, hsl.l * 0.65) },
+    // Split complementary
+    { h: (hsl.h + 150) % 360, s: Math.min(hsl.s * 0.75, 48), l: Math.max(23, hsl.l * 0.68) },
+  ];
+
+  // Pick a random variation for uniqueness
+  const variation = variations[Math.floor(Math.random() * variations.length)];
+  return hslToHex(variation.h, variation.s, variation.l);
+}
+
 export default function DesignStudioPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
@@ -137,6 +235,8 @@ export default function DesignStudioPage() {
   const [textColor, setTextColor] = useState('#ffffff');
   const [fontFamily, setFontFamily] = useState(FONT_OPTIONS[0].value);
   const [imageUrl, setImageUrl] = useState<string>('');
+  const [backCoverImageUrl, setBackCoverImageUrl] = useState<string>('');
+  const [spineColor, setSpineColor] = useState<string>(''); // Auto-generated harmonious color
 
 
   // Publish modal state
@@ -257,6 +357,13 @@ export default function DesignStudioPage() {
             color: textColor,
           },
         },
+        back: {
+          imageUrl: backCoverImageUrl || undefined,
+          backgroundColor: spineColor || coverColor,
+        },
+        spine: {
+          color: spineColor || undefined,
+        },
       };
 
       const response = await api.put(`/books/${bookId}`, {
@@ -366,6 +473,14 @@ export default function DesignStudioPage() {
     }
   };
 
+  // Generate harmonious spine color when images change
+  const generateSpineColor = () => {
+    const baseColor = coverColor || '#1a1a2e';
+    const newSpineColor = generateHarmoniousColor(baseColor);
+    setSpineColor(newSpineColor);
+    toast.success(language === 'he' ? 'צבע חדש נוצר!' : 'New color generated!');
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -376,9 +491,9 @@ export default function DesignStudioPage() {
       return;
     }
 
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image must be less than 10MB');
+    // Validate file size (5MB max to avoid 413 errors)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(language === 'he' ? 'התמונה חייבת להיות קטנה מ-5MB' : 'Image must be less than 5MB');
       return;
     }
 
@@ -430,6 +545,57 @@ export default function DesignStudioPage() {
     } catch (error: any) {
       console.error('Upload error:', error);
       toast.error(error.response?.data?.error || 'Failed to upload image', { id: 'upload' });
+    }
+  };
+
+  // Handle back cover image upload
+  const handleBackCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error(language === 'he' ? 'בחר קובץ תמונה תקין' : 'Please select a valid image file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(language === 'he' ? 'התמונה חייבת להיות קטנה מ-5MB' : 'Image must be less than 5MB');
+      return;
+    }
+
+    try {
+      toast.loading(language === 'he' ? 'מעלה תמונה...' : 'Uploading image...', { id: 'back-upload' });
+
+      const formData = new FormData();
+      formData.append('cover', file);
+
+      const response = await api.post(`/books/${bookId}/upload-cover`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      if (response.data.success) {
+        const imageUrlPath = response.data.data.imageUrl;
+        let fullImageUrl: string;
+        if (imageUrlPath.startsWith('data:') || imageUrlPath.startsWith('http')) {
+          fullImageUrl = imageUrlPath;
+        } else {
+          const apiUrl = import.meta.env.VITE_API_URL ||
+            (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
+          const serverBaseUrl = apiUrl.replace('/api', '');
+          fullImageUrl = `${serverBaseUrl}${imageUrlPath}`;
+        }
+        setBackCoverImageUrl(fullImageUrl);
+
+        // Auto-generate harmonious spine color
+        if (!spineColor) {
+          setSpineColor(generateHarmoniousColor(coverColor));
+        }
+
+        toast.success(language === 'he' ? 'תמונת גב נטענה!' : 'Back cover uploaded!', { id: 'back-upload' });
+      }
+    } catch (error: any) {
+      console.error('Back cover upload error:', error);
+      toast.error(error.response?.data?.error || (language === 'he' ? 'שגיאה בהעלאה' : 'Upload failed'), { id: 'back-upload' });
     }
   };
 
@@ -779,7 +945,7 @@ export default function DesignStudioPage() {
                   <input
                     type="text"
                     value={book.author?.name || ''}
-                    onChange={(e) => setBook({ ...book, author: { ...book.author, name: e.target.value } })}
+                    onChange={(e) => setBook({ ...book, author: { _id: book.author?._id || '', name: e.target.value } })}
                     className="input bg-white/5"
                     placeholder={t('design_studio.unknown_author')}
                   />
@@ -918,6 +1084,97 @@ export default function DesignStudioPage() {
                 </p>
               </div>
             </div>
+
+            {/* Back Cover Image */}
+            <div>
+              <h2 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                <ImageIcon className="w-4 h-4" />
+                {language === 'he' ? 'תמונת גב כריכה' : 'Back Cover Image'}
+              </h2>
+              <div className="space-y-2">
+                <label className="btn-secondary w-full flex items-center justify-center gap-2 cursor-pointer">
+                  <ImageIcon className="w-4 h-4" />
+                  {language === 'he' ? 'העלה תמונה לגב' : 'Upload Back Image'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleBackCoverUpload}
+                  />
+                </label>
+                {backCoverImageUrl && (
+                  <div className="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                    <span className="text-xs text-green-400 truncate flex-1">
+                      {language === 'he' ? 'תמונת גב נטענה' : 'Back image loaded'}
+                    </span>
+                    <button
+                      onClick={() => setBackCoverImageUrl('')}
+                      className="text-xs text-red-400 hover:text-red-300 ml-2"
+                    >
+                      {language === 'he' ? 'הסר' : 'Remove'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Spine/Connector Color */}
+            <div>
+              <h2 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                <Palette className="w-4 h-4" />
+                {language === 'he' ? 'צבע שדרה (מחבר)' : 'Spine Color (Connector)'}
+              </h2>
+              <div className="space-y-3">
+                {/* Auto-generate button */}
+                <button
+                  onClick={generateSpineColor}
+                  className="w-full btn-secondary flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  {language === 'he' ? 'צור צבע הרמוני' : 'Generate Harmonious Color'}
+                </button>
+
+                {/* Current spine color preview */}
+                {spineColor && (
+                  <div className="flex items-center gap-3 p-2 bg-white/5 rounded-lg">
+                    <div
+                      className="w-10 h-10 rounded-lg shadow-lg border border-white/20"
+                      style={{ backgroundColor: spineColor }}
+                    />
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-300">{language === 'he' ? 'צבע נבחר' : 'Selected color'}</p>
+                      <p className="text-xs text-gray-500 font-mono">{spineColor}</p>
+                    </div>
+                    <input
+                      type="color"
+                      value={spineColor}
+                      onChange={(e) => setSpineColor(e.target.value)}
+                      className="w-8 h-8 rounded cursor-pointer border border-white/10"
+                    />
+                  </div>
+                )}
+
+                {/* Sophisticated color palette options */}
+                <div>
+                  <p className="text-xs text-gray-500 mb-2">
+                    {language === 'he' ? 'פלטות מתוחכמות' : 'Sophisticated palettes'}
+                  </p>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {SOPHISTICATED_PALETTES.slice(0, 8).map((palette) => (
+                      <button
+                        key={palette.name}
+                        onClick={() => setSpineColor(palette.colors[0])}
+                        title={palette.name}
+                        className="w-full aspect-square rounded-lg shadow-lg hover:ring-2 hover:ring-indigo-500 transition-all"
+                        style={{
+                          background: `linear-gradient(135deg, ${palette.colors.join(', ')})`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -959,6 +1216,8 @@ export default function DesignStudioPage() {
                 imageUrl={imageUrl}
                 synopsis={book.synopsis || book.description || ''}
                 language={language}
+                backCoverImageUrl={backCoverImageUrl}
+                backCoverColor={spineColor || undefined}
               />
             </div>
           </div>

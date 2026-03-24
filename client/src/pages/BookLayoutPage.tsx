@@ -312,11 +312,19 @@ const defaultSettings = {
   fontSize: 14,
   lineHeight: 1.6,
   fontFamily: 'David Libre',
+  titleFont: 'David Libre',
+  headerFont: 'David Libre',
   margins: { top: 60, bottom: 60, left: 50, right: 50 },
   showPageNumbers: true,
   includeToc: true,
   includeBackCover: true,
   textColor: '#000000',
+  backgroundColor: '#ffffff',
+  accentColor: '#6366f1',
+  columns: 1 as 1 | 2 | 3 | 4,
+  paragraphIndent: 0,
+  paragraphSpacing: 12,
+  pageNumberPosition: 'bottom-center' as 'top-left' | 'top-right' | 'bottom-center' | 'bottom-outside' | 'none',
   templateId: undefined as string | undefined,
 };
 
@@ -382,6 +390,13 @@ export default function BookLayoutPage() {
       }
     };
   }, [pages, settings, autoSaveEnabled]);
+
+  // Load Google Fonts when fontFamily changes
+  useEffect(() => {
+    if (settings.fontFamily) {
+      loadGoogleFonts(settings);
+    }
+  }, [settings.fontFamily, settings.titleFont, settings.headerFont]);
 
   const loadBook = async () => {
     try {
@@ -926,15 +941,28 @@ export default function BookLayoutPage() {
 
   // Update image position/size
   const updateImagePosition = (pageIndex: number, imageId: string, updates: Partial<PageImage>) => {
-    const updatedPages = [...pages];
-    const imageIndex = updatedPages[pageIndex].images.findIndex(img => img.id === imageId);
-    if (imageIndex !== -1) {
-      updatedPages[pageIndex].images[imageIndex] = {
-        ...updatedPages[pageIndex].images[imageIndex],
-        ...updates,
-      };
-      setPages(updatedPages);
-    }
+    console.log('updateImagePosition called:', { pageIndex, imageId, updates });
+
+    setPages(prevPages => {
+      const updatedPages = [...prevPages];
+      if (!updatedPages[pageIndex]) {
+        console.error('Page not found at index:', pageIndex);
+        return prevPages;
+      }
+      const imageIndex = updatedPages[pageIndex].images.findIndex(img => img.id === imageId);
+      console.log('Found image at index:', imageIndex);
+
+      if (imageIndex !== -1) {
+        updatedPages[pageIndex].images[imageIndex] = {
+          ...updatedPages[pageIndex].images[imageIndex],
+          ...updates,
+        };
+        console.log('Updated image:', updatedPages[pageIndex].images[imageIndex]);
+        return updatedPages;
+      }
+      console.error('Image not found with id:', imageId);
+      return prevPages;
+    });
   };
 
   // Delete image
@@ -1249,13 +1277,14 @@ export default function BookLayoutPage() {
           >
             {/* Left Page */}
             <div
-              className={`relative bg-white rounded-lg shadow-2xl overflow-hidden ${
+              className={`relative rounded-lg shadow-2xl overflow-hidden ${
                 currentSpread === 0 ? 'opacity-30' : ''
               }`}
               style={{
                 width: '350px',
                 height: '500px',
                 direction: isBookRTL ? 'rtl' : 'ltr',
+                backgroundColor: settings.backgroundColor || '#ffffff',
               }}
               onClick={() => {
                 if (spreadPages.left && typeof spreadPages.left !== 'string') {
@@ -1309,11 +1338,12 @@ export default function BookLayoutPage() {
 
             {/* Right Page */}
             <div
-              className="relative bg-white rounded-lg shadow-2xl overflow-hidden"
+              className="relative rounded-lg shadow-2xl overflow-hidden"
               style={{
                 width: '350px',
                 height: '500px',
                 direction: isBookRTL ? 'rtl' : 'ltr',
+                backgroundColor: settings.backgroundColor || '#ffffff',
               }}
               onClick={() => {
                 if (spreadPages.isCover) {
@@ -1426,7 +1456,9 @@ export default function BookLayoutPage() {
             >
               <div className="p-4 sm:p-6 w-full sm:w-80 h-full overflow-y-auto">
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
-                  <h3 className="text-base sm:text-lg font-semibold text-white">Layout Settings</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-white">
+                    {language === 'he' ? 'הגדרות פריסה' : 'Layout Settings'}
+                  </h3>
                   <button
                     onClick={() => setShowSettings(false)}
                     className="lg:hidden btn-ghost p-1"
@@ -1442,7 +1474,7 @@ export default function BookLayoutPage() {
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl text-white font-medium transition-all"
                   >
                     <Layout className="w-5 h-5" />
-                    Choose Template
+                    {language === 'he' ? 'בחר תבנית' : 'Choose Template'}
                   </button>
                   {settings.templateId && (
                     <p className="text-xs text-indigo-400 mt-2 text-center">
@@ -1455,7 +1487,7 @@ export default function BookLayoutPage() {
 
                 {/* Font Size */}
                 <div className="mb-4">
-                  <label className="block text-sm text-gray-300 mb-2">Font Size</label>
+                  <label className="block text-sm text-gray-300 mb-2">{language === 'he' ? 'גודל גופן' : 'Font Size'}</label>
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setSettings({ ...settings, fontSize: Math.max(10, settings.fontSize - 1) })}
@@ -1475,7 +1507,7 @@ export default function BookLayoutPage() {
 
                 {/* Line Height */}
                 <div className="mb-4">
-                  <label className="block text-sm text-gray-300 mb-2">Line Height</label>
+                  <label className="block text-sm text-gray-300 mb-2">{language === 'he' ? 'גובה שורה' : 'Line Height'}</label>
                   <input
                     type="range"
                     min="1.2"
@@ -1490,7 +1522,7 @@ export default function BookLayoutPage() {
 
                 {/* Font Family */}
                 <div className="mb-4">
-                  <label className="block text-sm text-gray-300 mb-2">Font</label>
+                  <label className="block text-sm text-gray-300 mb-2">{language === 'he' ? 'גופן' : 'Font'}</label>
                   <select
                     value={settings.fontFamily}
                     onChange={(e) => setSettings({ ...settings, fontFamily: e.target.value })}
@@ -1506,7 +1538,7 @@ export default function BookLayoutPage() {
                 <div className="mb-4">
                   <label className="block text-sm text-gray-300 mb-2 flex items-center gap-2">
                     <Palette className="w-4 h-4" />
-                    Text Color
+                    {language === 'he' ? 'צבע טקסט' : 'Text Color'}
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {textColorPresets.map(preset => (
@@ -1530,16 +1562,57 @@ export default function BookLayoutPage() {
                       onChange={(e) => setSettings({ ...settings, textColor: e.target.value })}
                       className="w-8 h-8 rounded cursor-pointer"
                     />
-                    <span className="text-xs text-gray-400">Custom color</span>
+                    <span className="text-xs text-gray-400">{language === 'he' ? 'צבע מותאם' : 'Custom color'}</span>
+                  </div>
+                </div>
+
+                {/* Background Color */}
+                <div className="mb-4">
+                  <label className="block text-sm text-gray-300 mb-2 flex items-center gap-2">
+                    <Palette className="w-4 h-4" />
+                    {language === 'he' ? 'צבע רקע' : 'Background Color'}
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { color: '#ffffff', name: 'White', nameHe: 'לבן' },
+                      { color: '#faf8f5', name: 'Cream', nameHe: 'קרם' },
+                      { color: '#f5f0e6', name: 'Parchment', nameHe: 'קלף' },
+                      { color: '#fffbeb', name: 'Warm', nameHe: 'חם' },
+                      { color: '#f0fdf4', name: 'Mint', nameHe: 'מנטה' },
+                      { color: '#fdf2f8', name: 'Rose', nameHe: 'ורוד' },
+                      { color: '#f8fafc', name: 'Cool', nameHe: 'קר' },
+                      { color: '#1a1a1a', name: 'Dark', nameHe: 'כהה' },
+                    ].map(preset => (
+                      <button
+                        key={preset.color}
+                        onClick={() => setSettings({ ...settings, backgroundColor: preset.color })}
+                        className={`w-8 h-8 rounded-lg border-2 transition-all ${
+                          settings.backgroundColor === preset.color
+                            ? 'border-indigo-500 ring-2 ring-indigo-500/30 scale-110'
+                            : 'border-white/20 hover:border-white/40'
+                        }`}
+                        style={{ backgroundColor: preset.color }}
+                        title={language === 'he' ? preset.nameHe : preset.name}
+                      />
+                    ))}
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={settings.backgroundColor || '#ffffff'}
+                      onChange={(e) => setSettings({ ...settings, backgroundColor: e.target.value })}
+                      className="w-8 h-8 rounded cursor-pointer"
+                    />
+                    <span className="text-xs text-gray-400">{language === 'he' ? 'צבע מותאם' : 'Custom color'}</span>
                   </div>
                 </div>
 
                 {/* Margins */}
                 <div className="mb-4">
-                  <label className="block text-sm text-gray-300 mb-2">Margins</label>
+                  <label className="block text-sm text-gray-300 mb-2">{language === 'he' ? 'שוליים' : 'Margins'}</label>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-xs text-gray-400">Top</label>
+                      <label className="text-xs text-gray-400">{language === 'he' ? 'למעלה' : 'Top'}</label>
                       <input
                         type="number"
                         value={settings.margins.top}
@@ -1551,7 +1624,7 @@ export default function BookLayoutPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400">Bottom</label>
+                      <label className="text-xs text-gray-400">{language === 'he' ? 'למטה' : 'Bottom'}</label>
                       <input
                         type="number"
                         value={settings.margins.bottom}
@@ -1563,7 +1636,7 @@ export default function BookLayoutPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400">Left</label>
+                      <label className="text-xs text-gray-400">{language === 'he' ? 'שמאל' : 'Left'}</label>
                       <input
                         type="number"
                         value={settings.margins.left}
@@ -1575,7 +1648,7 @@ export default function BookLayoutPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400">Right</label>
+                      <label className="text-xs text-gray-400">{language === 'he' ? 'ימין' : 'Right'}</label>
                       <input
                         type="number"
                         value={settings.margins.right}
@@ -1598,7 +1671,7 @@ export default function BookLayoutPage() {
                       onChange={(e) => setSettings({ ...settings, showPageNumbers: e.target.checked })}
                       className="w-4 h-4 rounded border-gray-600 bg-white/10"
                     />
-                    <span className="text-sm text-gray-300">Show page numbers</span>
+                    <span className="text-sm text-gray-300">{language === 'he' ? 'הצג מספרי עמודים' : 'Show page numbers'}</span>
                   </label>
 
                   <label className="flex items-center gap-3 cursor-pointer">
@@ -1611,7 +1684,7 @@ export default function BookLayoutPage() {
                       }}
                       className="w-4 h-4 rounded border-gray-600 bg-white/10"
                     />
-                    <span className="text-sm text-gray-300">Include Table of Contents</span>
+                    <span className="text-sm text-gray-300">{language === 'he' ? 'כלול תוכן עניינים' : 'Include Table of Contents'}</span>
                   </label>
 
                   <label className="flex items-center gap-3 cursor-pointer">
@@ -1624,7 +1697,7 @@ export default function BookLayoutPage() {
                       }}
                       className="w-4 h-4 rounded border-gray-600 bg-white/10"
                     />
-                    <span className="text-sm text-gray-300">Include back cover with summary</span>
+                    <span className="text-sm text-gray-300">{language === 'he' ? 'כלול כריכה אחורית עם תקציר' : 'Include back cover with summary'}</span>
                   </label>
 
                   <label className="flex items-center gap-3 cursor-pointer">
@@ -1634,7 +1707,7 @@ export default function BookLayoutPage() {
                       onChange={(e) => setAutoSaveEnabled(e.target.checked)}
                       className="w-4 h-4 rounded border-gray-600 bg-white/10"
                     />
-                    <span className="text-sm text-gray-300">Auto-save</span>
+                    <span className="text-sm text-gray-300">{language === 'he' ? 'שמירה אוטומטית' : 'Auto-save'}</span>
                   </label>
                 </div>
               </div>
@@ -1863,6 +1936,7 @@ function PageRenderer({
         fontSize: `${settings.fontSize}px`,
         lineHeight: settings.lineHeight,
         color: settings.textColor || '#000000',
+        backgroundColor: settings.backgroundColor || '#ffffff',
         direction: isRTL ? 'rtl' : 'ltr',
         textAlign: isRTL ? 'right' : 'left',
       }}

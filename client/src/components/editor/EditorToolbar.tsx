@@ -372,7 +372,18 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               <button
                 key={item.color}
                 onClick={() => {
-                  editor.chain().focus().setColor(item.color).run();
+                  try {
+                    // Check if setColor exists before calling
+                    const chain = editor.chain().focus();
+                    if ('setColor' in chain) {
+                      (chain as any).setColor(item.color).run();
+                    } else {
+                      // Fallback: apply color via inline style
+                      editor.chain().focus().setMark('textStyle', { color: item.color }).run();
+                    }
+                  } catch (e) {
+                    console.warn('setColor not available:', e);
+                  }
                   setShowColorMenu(false);
                 }}
                 title={item.name}
@@ -383,7 +394,14 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           </div>
           <button
             onClick={() => {
-              editor.chain().focus().unsetColor().run();
+              try {
+                const chain = editor.chain().focus();
+                if ('unsetColor' in chain) {
+                  (chain as any).unsetColor().run();
+                }
+              } catch (e) {
+                console.warn('unsetColor not available:', e);
+              }
               setShowColorMenu(false);
             }}
             className="w-full mt-2 px-2 py-1 text-xs text-gray-400 hover:text-white hover:bg-white/10 rounded"
@@ -413,10 +431,19 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               <button
                 key={item.color}
                 onClick={() => {
-                  if (item.color === 'transparent') {
-                    editor.chain().focus().unsetHighlight().run();
-                  } else {
-                    editor.chain().focus().toggleHighlight({ color: item.color }).run();
+                  try {
+                    const chain = editor.chain().focus();
+                    if (item.color === 'transparent') {
+                      if ('unsetHighlight' in chain) {
+                        (chain as any).unsetHighlight().run();
+                      }
+                    } else {
+                      if ('toggleHighlight' in chain) {
+                        (chain as any).toggleHighlight({ color: item.color }).run();
+                      }
+                    }
+                  } catch (e) {
+                    console.warn('Highlight not available:', e);
                   }
                   setShowHighlightMenu(false);
                 }}
