@@ -1398,7 +1398,7 @@ export default function DesignStudioPage() {
           </div>
 
           {/* Edit Mode Toggle & Info overlay */}
-          <div className="absolute bottom-3 sm:bottom-6 lg:bottom-8 left-1/2 -translate-x-1/2 text-center px-2 sm:px-4 flex flex-col items-center gap-2">
+          <div className="absolute bottom-3 sm:bottom-6 lg:bottom-8 left-1/2 -translate-x-1/2 text-center px-2 sm:px-4 flex flex-col items-center gap-2 z-20">
             <button
               onClick={() => setEditMode(!editMode)}
               className={`px-5 py-3 sm:px-4 sm:py-2 rounded-lg text-base sm:text-sm font-medium transition-colors min-h-[44px] ${
