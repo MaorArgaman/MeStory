@@ -19,12 +19,12 @@ import {
 } from '../components/recommendations';
 import MemorialSection from '../components/memorial/MemorialSection';
 
-// Realistic dashboard images
-import emptyDashboard from '../assets/images/empty-dashboard.png';
-import dashboardIconScratch from '../assets/images/dashboard-icon-scratch.png';
-import dashboardIconInterview from '../assets/images/dashboard-icon-interview.png';
-import dashboardIconVoice from '../assets/images/dashboard-icon-voice.png';
-import dashboardIconImport from '../assets/images/dashboard-icon-import.png';
+// Realistic dashboard images from public folder
+const emptyDashboard = '/img/empty-start.png';
+const dashboardIconScratch = '/img/dashboard-scratch.png';
+const dashboardIconInterview = '/img/dashboard-interview.png';
+const dashboardIconVoice = '/img/dashboard-voice.png';
+const dashboardIconImport = '/img/dashboard-import.png';
 
 interface BookItem {
   id: string;

@@ -12,20 +12,21 @@ import {
   TrendingBooks,
   FeaturedBooks,
 } from '../components/recommendations';
-// Use images from public folder - old banners kept as fallback
-import fantasyBanner from '../assets/images/fantasy-banner.png';
-import scifiBanner from '../assets/images/marketplace-banner-scifi.png';
-import mysteryBanner from '../assets/images/marketplace-banner-mystery.png';
-
-// New realistic genre banners
+// Realistic genre banners from public folder
 const genreBanners: Record<string, string> = {
   'Romance': '/img/genre-romance.png',
   'Children': '/img/genre-children.png',
   'Biography': '/img/genre-biography.png',
   'Self-Help': '/img/genre-selfhelp.png',
-  'Fantasy': fantasyBanner,
-  'Sci-Fi': scifiBanner,
-  'Mystery': mysteryBanner,
+  'Fantasy': '/img/genre-fantasy.png',
+  'Sci-Fi': '/img/genre-scifi.png',
+  'Mystery': '/img/genre-mystery.png',
+  'Young Adult': '/img/genre-children.png',
+  'Historical': '/img/genre-biography.png',
+  'Thriller': '/img/genre-mystery.png',
+  'Horror': '/img/genre-mystery.png',
+  'Literary Fiction': '/img/genre-selfhelp.png',
+  'Adventure': '/img/genre-fantasy.png',
 };
 
 // Check if user is logged in
@@ -522,7 +523,7 @@ export default function MarketplacePage() {
             <div
               className="relative w-full h-48 md:h-56 lg:h-64 rounded-2xl bg-cover bg-center shadow-2xl"
               style={{
-                backgroundImage: `url(${fantasyBanner})`,
+                backgroundImage: `url(${genreBanners['Fantasy']})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }}
@@ -623,7 +624,7 @@ export default function MarketplacePage() {
             <div
               className="relative w-full h-48 md:h-56 lg:h-64 rounded-2xl bg-cover bg-center shadow-2xl"
               style={{
-                backgroundImage: `url(${scifiBanner})`,
+                backgroundImage: `url(${genreBanners['Sci-Fi']})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }}
@@ -961,7 +962,7 @@ export default function MarketplacePage() {
             <div
               className="relative w-full h-48 md:h-56 lg:h-64 rounded-2xl bg-cover bg-center shadow-2xl"
               style={{
-                backgroundImage: `url(${mysteryBanner})`,
+                backgroundImage: `url(${genreBanners['Mystery']})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }}
@@ -1044,6 +1045,58 @@ export default function MarketplacePage() {
                     }}
                   />
                 ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Dynamic Banner for Other Categories */}
+        {selectedCategory !== 'All' &&
+         selectedCategory !== 'Fantasy' &&
+         selectedCategory !== 'Sci-Fi' &&
+         selectedCategory !== 'Mystery' &&
+         genreBanners[selectedCategory] && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ duration: 0.6 }}
+            className="mb-12 relative overflow-hidden"
+          >
+            <div
+              className="relative w-full h-48 md:h-56 lg:h-64 rounded-2xl bg-cover bg-center shadow-2xl"
+              style={{
+                backgroundImage: `url(${genreBanners[selectedCategory]})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
+              {/* Glowing Border */}
+              <div className="absolute inset-0 rounded-2xl ring-2 ring-magic-gold/30 shadow-lg" />
+
+              {/* Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-deep-space/95 via-deep-space/50 to-transparent rounded-2xl" />
+
+              {/* Category Title */}
+              <div className="relative z-10 h-full flex items-end p-4 sm:p-6 md:p-8">
+                <div>
+                  <motion.h1
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                    className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold gradient-gold mb-2"
+                  >
+                    {selectedCategory}
+                  </motion.h1>
+                  <motion.p
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
+                    className="text-gray-300 text-sm sm:text-base md:text-lg max-w-2xl"
+                  >
+                    {t(`marketplace.banners.${selectedCategory.toLowerCase().replace(/\s+/g, '_')}.subtitle`, `Discover amazing ${selectedCategory} books`)}
+                  </motion.p>
+                </div>
               </div>
             </div>
           </motion.div>

@@ -156,11 +156,37 @@ export default function MemorialSection() {
         </motion.button>
       </motion.div>
 
+      {/* Family Legacy Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="mt-12 max-w-4xl mx-auto"
+      >
+        <div className="grid md:grid-cols-2 gap-6 items-center">
+          <div className="rounded-2xl overflow-hidden">
+            <img
+              src={memorialFamilyImage}
+              alt="Family Legacy"
+              className="w-full h-48 sm:h-64 object-cover"
+            />
+          </div>
+          <div className="text-center md:text-left">
+            <h3 className="text-2xl font-display font-bold text-memorial-accent mb-4">
+              {t('family_legacy.title', 'Preserve Family Stories')}
+            </h3>
+            <p className="text-gray-300 leading-relaxed">
+              {t('family_legacy.description', 'Every family has stories worth preserving. Create a lasting legacy for future generations with our guided writing tools.')}
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Support Resources */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
+        transition={{ delay: 0.5 }}
         className="mt-12 p-6 rounded-xl bg-white/5 border border-white/10 max-w-2xl mx-auto text-center"
       >
         <h4 className="text-white font-semibold mb-2">{t('support.title')}</h4>

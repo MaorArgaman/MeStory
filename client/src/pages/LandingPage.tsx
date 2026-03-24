@@ -41,6 +41,7 @@ export default function LandingPage() {
   const features = [
     {
       icon: Zap,
+      image: '/img/hero-writing.png',
       titleKey: 'landing.features.ai_copilot.title',
       descriptionKey: 'landing.features.ai_copilot.description',
       color: 'from-yellow-400 to-yellow-600',
@@ -48,6 +49,7 @@ export default function LandingPage() {
     },
     {
       icon: Palette,
+      image: '/img/feature-cover-design.png',
       titleKey: 'landing.features.cover_studio.title',
       descriptionKey: 'landing.features.cover_studio.description',
       color: 'from-purple-400 to-purple-600',
@@ -55,12 +57,32 @@ export default function LandingPage() {
     },
     {
       icon: Globe,
+      image: '/img/feature-marketplace.png',
       titleKey: 'landing.features.marketplace.title',
       descriptionKey: 'landing.features.marketplace.description',
       color: 'from-blue-400 to-blue-600',
       glow: 'shadow-lg',
     },
   ];
+
+  // Success stories with real images
+  const successStories = [
+    {
+      image: '/img/success-author1.png',
+      name: 'Sarah Jenkins',
+      book: 'Midnight Tides',
+      quote: 'MeStory helped me publish my first novel in just 3 months!',
+    },
+    {
+      image: '/img/success-journey.png',
+      name: 'The Writing Journey',
+      book: 'From Draft to Published',
+      quote: 'See how ideas transform into published books.',
+    },
+  ];
+
+  // Community image
+  const communityImage = '/img/community-writers.png';
 
   const stats = [
     { icon: Users, value: '50K+', labelKey: 'landing.stats.active_authors' },
@@ -321,26 +343,38 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.2, duration: 0.8 }}
               >
-                <GlassCard hover glow={index === 0 ? 'gold' : index === 1 ? 'purple' : 'cosmic'}>
-                  <div
-                    className={`w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center ${feature.glow} mb-4 sm:mb-6`}
-                  >
-                    <feature.icon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white" />
+                <GlassCard hover glow={index === 0 ? 'gold' : index === 1 ? 'purple' : 'cosmic'} className="overflow-hidden p-0">
+                  {/* Feature Image */}
+                  <div className="relative h-40 sm:h-48 overflow-hidden">
+                    <img
+                      src={feature.image}
+                      alt={t(feature.titleKey)}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-dark-card via-transparent to-transparent" />
+                    {/* Icon Badge */}
+                    <div
+                      className={`absolute bottom-3 left-4 w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center ${feature.glow}`}
+                    >
+                      <feature.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
                   </div>
 
-                  <h3 className="text-lg sm:text-xl lg:text-2xl font-display font-bold text-white mb-2 sm:mb-4">
-                    {t(feature.titleKey)}
-                  </h3>
+                  <div className="p-4 sm:p-6">
+                    <h3 className="text-lg sm:text-xl lg:text-2xl font-display font-bold text-white mb-2 sm:mb-4">
+                      {t(feature.titleKey)}
+                    </h3>
 
-                  <p className="text-sm sm:text-base text-gray-300 leading-relaxed">{t(feature.descriptionKey)}</p>
+                    <p className="text-sm sm:text-base text-gray-300 leading-relaxed">{t(feature.descriptionKey)}</p>
 
-                  <motion.div
-                    whileHover={{ x: 5 }}
-                    className="mt-4 sm:mt-6 flex items-center gap-2 text-magic-gold font-semibold cursor-pointer text-sm sm:text-base"
-                  >
-                    {t('landing.features.learn_more')}
-                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </motion.div>
+                    <motion.div
+                      whileHover={{ x: 5 }}
+                      className="mt-4 sm:mt-6 flex items-center gap-2 text-magic-gold font-semibold cursor-pointer text-sm sm:text-base"
+                    >
+                      {t('landing.features.learn_more')}
+                      <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
+                    </motion.div>
+                  </div>
                 </GlassCard>
               </motion.div>
             ))}
@@ -384,6 +418,110 @@ export default function LandingPage() {
                 </GlassCard>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Success Stories Section */}
+      <section className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-10 sm:mb-16"
+          >
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-display font-bold gradient-gold mb-4 sm:mb-6">
+              {t('landing.success.title', 'Success Stories')}
+            </h2>
+            <p className="text-sm sm:text-lg text-gray-300 max-w-2xl mx-auto">
+              {t('landing.success.subtitle', 'Real authors, real books, real success')}
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
+            {successStories.map((story, index) => (
+              <motion.div
+                key={story.name}
+                initial={{ opacity: 0, x: index === 0 ? -30 : 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.2, duration: 0.8 }}
+              >
+                <GlassCard className="overflow-hidden p-0">
+                  <div className="relative h-48 sm:h-56">
+                    <img
+                      src={story.image}
+                      alt={story.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-dark-card via-dark-card/50 to-transparent" />
+                  </div>
+                  <div className="p-4 sm:p-6">
+                    <p className="text-gray-300 italic mb-4">"{story.quote}"</p>
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <p className="text-white font-semibold">{story.name}</p>
+                        <p className="text-magic-gold text-sm">{story.book}</p>
+                      </div>
+                    </div>
+                  </div>
+                </GlassCard>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Community Section */}
+      <section className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 bg-gradient-to-b from-transparent via-purple-900/10 to-transparent">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Image */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="relative rounded-2xl overflow-hidden"
+            >
+              <img
+                src={communityImage}
+                alt="MeStory Writers Community"
+                className="w-full h-64 sm:h-80 lg:h-96 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-deep-space/60 to-transparent" />
+            </motion.div>
+
+            {/* Content */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <h2 className="text-2xl sm:text-4xl font-display font-bold gradient-gold mb-4 sm:mb-6">
+                {t('landing.writers_community.title', 'Join Our Writers Community')}
+              </h2>
+              <p className="text-gray-300 mb-6 leading-relaxed">
+                {t('landing.writers_community.description', 'Connect with fellow authors, share your journey, get feedback, and grow together. Our community spans across ages and genres, united by the love of storytelling.')}
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex items-center gap-2 text-magic-gold">
+                  <Users className="w-5 h-5" />
+                  <span>50K+ Writers</span>
+                </div>
+                <div className="flex items-center gap-2 text-magic-gold">
+                  <BookOpen className="w-5 h-5" />
+                  <span>Daily Workshops</span>
+                </div>
+                <div className="flex items-center gap-2 text-magic-gold">
+                  <Star className="w-5 h-5" />
+                  <span>Expert Feedback</span>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
