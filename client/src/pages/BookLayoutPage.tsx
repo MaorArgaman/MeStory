@@ -36,6 +36,7 @@ import {
 } from '../services/designApplicationService';
 import type { AICompleteDesign } from '../types/templates';
 import ImageEditToolbar from '../components/layout/ImageEditToolbar';
+import ImagePlaceholder from '../components/layout/ImagePlaceholder';
 
 interface PageImage {
   id: string;
@@ -312,6 +313,17 @@ const splitContentIntoPages = (
 };
 
 // Default page layout settings
+// Image placeholder position from template
+interface ImagePlaceholderPosition {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation?: number;
+  frameStyle?: 'none' | 'thin-border' | 'shadow' | 'rounded' | 'decorative';
+  label?: string;
+}
+
 const defaultSettings = {
   fontSize: 14,
   lineHeight: 1.6,
@@ -330,6 +342,8 @@ const defaultSettings = {
   paragraphSpacing: 12,
   pageNumberPosition: 'bottom-center' as 'top-left' | 'top-right' | 'bottom-center' | 'bottom-outside' | 'none',
   templateId: undefined as string | undefined,
+  imagePlaceholders: [] as ImagePlaceholderPosition[],
+  imageFrameStyle: 'shadow' as 'none' | 'thin-border' | 'shadow' | 'rounded' | 'decorative',
 };
 
 export default function BookLayoutPage() {
@@ -2344,6 +2358,21 @@ interface PageRendererProps {
   onStartEditing: (pageIndex: number) => void;
   onFinishEditing: () => void;
   onCancelEditing: () => void;
+  // Image placeholder props
+  onImageAdded?: (imageUrl: string, imageData: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    isAiGenerated: boolean;
+    prompt?: string;
+  }) => void;
+  bookId?: string;
+  bookContext?: {
+    title: string;
+    genre: string;
+    chapterTitle?: string;
+  };
 }
 
 function PageRenderer({
@@ -2369,6 +2398,9 @@ function PageRenderer({
   onStartEditing,
   onFinishEditing,
   onCancelEditing,
+  onImageAdded,
+  bookId,
+  bookContext,
 }: PageRendererProps) {
   const { t } = useTranslation('common');
   const [_isDragging, setIsDragging] = useState(false);
@@ -2634,6 +2666,37 @@ function PageRenderer({
           </div>
         );
       })}
+
+      {/* Image Placeholders from Template */}
+      {page.type === 'chapter' && settings.imagePlaceholders && settings.imagePlaceholders.length > 0 && onImageAdded && (
+        settings.imagePlaceholders.map((placeholder, idx) => {
+          // Check if there's already an image at this approximate position
+          const hasImageAtPosition = (page.images || []).some(img =>
+            Math.abs(img.x - placeholder.x) < 10 &&
+            Math.abs(img.y - placeholder.y) < 10
+          );
+
+          if (hasImageAtPosition) return null;
+
+          return (
+            <ImagePlaceholder
+              key={`placeholder-${idx}`}
+              x={placeholder.x}
+              y={placeholder.y}
+              width={placeholder.width}
+              height={placeholder.height}
+              frameStyle={placeholder.frameStyle || settings.imageFrameStyle || 'shadow'}
+              onImageAdded={onImageAdded}
+              bookId={bookId}
+              chapterIndex={page.chapterIndex}
+              pageIndex={page.pageIndex}
+              bookContext={bookContext}
+              label={placeholder.label}
+              isRTL={isRTL}
+            />
+          );
+        })
+      )}
 
       {/* Page Number Footer */}
       {settings.showPageNumbers && pageNumber !== undefined && page.type !== 'title' && (

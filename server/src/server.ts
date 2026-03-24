@@ -51,13 +51,23 @@ if (isVercel) {
 // ============================================
 let isInitialized = false;
 let initializationPromise: Promise<void> | null = null;
-let initializationError: Error | null = null;
+let lastInitError: Error | null = null;
+let lastInitAttempt: number = 0;
+const INIT_RETRY_DELAY = 5000; // 5 seconds between retry attempts
 
 const initializeApp = async () => {
   if (isInitialized) return;
-  if (initializationError) throw initializationError;
+
+  // Allow retry after delay if previous attempt failed
+  const now = Date.now();
+  if (lastInitError && (now - lastInitAttempt) < INIT_RETRY_DELAY) {
+    throw lastInitError;
+  }
 
   try {
+    lastInitAttempt = now;
+    lastInitError = null;
+
     // Connect to Supabase
     await connectDatabase();
 
@@ -75,7 +85,8 @@ const initializeApp = async () => {
     console.log('✅ Server initialization complete');
   } catch (error) {
     console.error('❌ Failed to initialize app:', error);
-    initializationError = error as Error;
+    lastInitError = error as Error;
+    initializationPromise = null; // Allow new initialization attempt
     throw error;
   }
 };
@@ -242,7 +253,7 @@ app.get('/health', async (_req, res) => {
     status: configIssues.length === 0 ? 'ok' : 'warning',
     message: 'MeStory API is running',
     initialized: isInitialized,
-    initError: initializationError?.message || null,
+    initError: lastInitError?.message || null,
     configIssues: configIssues.length > 0 ? configIssues : undefined,
     database: dbStatus,
     env: {

@@ -713,11 +713,11 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       align: 'center',
       width: contentWidth,
     });
-    doc.text('כל הזכויות שמורות', margins.left, doc.y + 15, {
+    doc.text(labels.allRightsReserved, margins.left, doc.y + 15, {
       align: 'center',
       width: contentWidth,
     });
-    doc.text('נוצר באמצעות MeStory', margins.left, doc.y + 15, {
+    doc.text(labels.createdWith, margins.left, doc.y + 15, {
       align: 'center',
       width: contentWidth,
     });
@@ -744,7 +744,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       doc.fillColor('black')
         .font(boldFont)
         .fontSize(24)
-        .text('תוכן עניינים', margins.left, margins.top, {
+        .text(labels.tableOfContents, margins.left, margins.top, {
           align: 'center',
           width: contentWidth,
         });
@@ -780,7 +780,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       doc.fillColor('#666666')
         .font(mainFont)
         .fontSize(12)
-        .text(`פרק ${chapterIndex + 1}`, margins.left, margins.top, {
+        .text(`${labels.chapter} ${chapterIndex + 1}`, margins.left, margins.top, {
           align: 'center',
           width: contentWidth,
         });
@@ -1069,9 +1069,10 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
     }
 
     // Stats at bottom
+    const locale = bookData.language === 'he' ? 'he-IL' : 'en-US';
     doc.fontSize(10)
       .text(
-        `${bookData.statistics.wordCount.toLocaleString('he-IL')} מילים • ${bookData.statistics.chapterCount} פרקים`,
+        `${bookData.statistics.wordCount.toLocaleString(locale)} ${labels.words} • ${bookData.statistics.chapterCount} ${labels.chapters}`,
         margins.left,
         pageDims.height - 100,
         {
@@ -1092,7 +1093,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
     doc.font(mainFont)
       .fontSize(8)
       .fillColor(`rgb(${Math.min(textColor.r + 50, 255)}, ${Math.min(textColor.g + 50, 255)}, ${Math.min(textColor.b + 50, 255)})`)
-      .text('נוצר באמצעות MeStory', margins.left, pageDims.height - 40, {
+      .text(labels.createdWith, margins.left, pageDims.height - 40, {
         align: 'center',
         width: contentWidth,
       });
@@ -1150,6 +1151,9 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
 
   // Determine if book is RTL (Hebrew)
   const isRTL = bookData.language === 'he' || containsHebrew(bookData.title);
+
+  // Get language-aware labels
+  const labels = getLabels(bookData.language);
 
   // Get page dimensions
   const pageDims = getDocxPageDimensions(bookData.pageLayout.pageSize);

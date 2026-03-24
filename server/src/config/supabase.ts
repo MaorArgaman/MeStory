@@ -27,35 +27,58 @@ export const supabaseAdmin = createClient(
   }
 );
 
-// Connection status check
-export const getDatabaseStatus = async () => {
-  try {
-    const { error } = await supabaseAdmin.from('users').select('id').limit(1);
-    return {
-      isConnected: !error,
-      readyState: error ? 0 : 1,
-      readyStateText: error ? 'disconnected' : 'connected',
-      error: error?.message
-    };
-  } catch (err: any) {
-    return {
-      isConnected: false,
-      readyState: 0,
-      readyStateText: 'error',
-      error: err.message
-    };
+// Connection status check with retry
+export const getDatabaseStatus = async (retries = 3) => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const { error } = await supabaseAdmin.from('users').select('id').limit(1);
+      return {
+        isConnected: !error,
+        readyState: error ? 0 : 1,
+        readyStateText: error ? 'disconnected' : 'connected',
+        error: error?.message
+      };
+    } catch (err: any) {
+      console.error(`Database status check attempt ${attempt}/${retries} failed:`, err.message);
+      if (attempt === retries) {
+        return {
+          isConnected: false,
+          readyState: 0,
+          readyStateText: 'error',
+          error: err.message
+        };
+      }
+      // Wait before retry (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, attempt * 500));
+    }
   }
+  return {
+    isConnected: false,
+    readyState: 0,
+    readyStateText: 'error',
+    error: 'All connection attempts failed'
+  };
 };
 
-// Initialize database connection (no-op for Supabase, but kept for compatibility)
+// Initialize database connection with retry logic for serverless cold starts
 export const connectDatabase = async (): Promise<void> => {
   console.log('🔌 Connecting to Supabase...');
-  const status = await getDatabaseStatus();
-  if (status.isConnected) {
-    console.log('✅ Supabase connected successfully');
-  } else {
-    console.error('❌ Supabase connection failed:', status.error);
-    throw new Error(`Supabase connection failed: ${status.error}`);
+  const maxRetries = 3;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const status = await getDatabaseStatus(1); // Single attempt per getDatabaseStatus call
+    if (status.isConnected) {
+      console.log('✅ Supabase connected successfully');
+      return;
+    }
+
+    if (attempt < maxRetries) {
+      console.log(`⏳ Supabase connection attempt ${attempt}/${maxRetries} failed, retrying...`);
+      await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+    } else {
+      console.error('❌ Supabase connection failed after all retries:', status.error);
+      throw new Error(`Supabase connection failed: ${status.error}`);
+    }
   }
 };
 

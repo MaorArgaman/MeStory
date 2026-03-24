@@ -21,7 +21,7 @@ export const apiLimiter = rateLimit({
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 requests per 15 minutes
+  max: 10, // 10 failed requests per 15 minutes
   skipSuccessfulRequests: true, // Don't count successful requests
   message: {
     success: false,

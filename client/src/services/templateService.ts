@@ -1,6 +1,17 @@
 // Template Service - Apply book templates to page settings
 import { BookTemplate, getTemplateById } from '../data/bookTemplates';
 
+// Image placeholder position interface
+export interface ImagePlaceholderPosition {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation?: number;
+  frameStyle?: 'none' | 'thin-border' | 'shadow' | 'rounded' | 'decorative';
+  label?: string;
+}
+
 // Current page layout settings structure (from BookLayoutPage)
 export interface PageLayoutSettings {
   fontSize: number;
@@ -21,6 +32,9 @@ export interface PageLayoutSettings {
   pageNumberPosition?: 'top-left' | 'top-right' | 'bottom-center' | 'bottom-outside' | 'none';
   backgroundColor?: string;
   templateId?: string;
+  // Image placeholders from template
+  imagePlaceholders?: ImagePlaceholderPosition[];
+  imageFrameStyle?: 'none' | 'thin-border' | 'shadow' | 'rounded' | 'decorative';
 }
 
 // Cover design settings
@@ -58,6 +72,27 @@ export function applyTemplate(
   currentSettings: PageLayoutSettings,
   template: BookTemplate
 ): PageLayoutSettings {
+  // Extract image placeholders from template's creative layout
+  let imagePlaceholders: ImagePlaceholderPosition[] = [];
+  if (template.creativeImageLayout?.customPositions) {
+    imagePlaceholders = template.creativeImageLayout.customPositions.map((pos, idx) => ({
+      x: pos.x,
+      y: pos.y,
+      width: pos.width,
+      height: pos.height,
+      rotation: pos.rotation,
+      frameStyle: template.imageFrameStyle === 'border' ? 'thin-border' :
+                  template.imageFrameStyle === 'polaroid' || template.imageFrameStyle === 'vintage' ? 'decorative' :
+                  template.imageFrameStyle as any || 'shadow',
+      label: `תמונה ${idx + 1}`,
+    }));
+  }
+
+  // Map template imageFrameStyle to our format
+  const frameStyle = template.imageFrameStyle === 'border' ? 'thin-border' :
+                     template.imageFrameStyle === 'polaroid' || template.imageFrameStyle === 'vintage' ? 'decorative' :
+                     template.imageFrameStyle as any || 'shadow';
+
   return {
     ...currentSettings,
     fontSize: template.fontSize,
@@ -75,6 +110,8 @@ export function applyTemplate(
     pageNumberPosition: template.pageNumberPosition,
     backgroundColor: template.backgroundColor,
     templateId: template.id,
+    imagePlaceholders,
+    imageFrameStyle: frameStyle,
   };
 }
 
