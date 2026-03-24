@@ -5,8 +5,8 @@ import fs from 'fs/promises';
 const isValidUUID = (id: string): boolean =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 import path from 'path';
-// pdf-parse is temporarily disabled for Vercel serverless compatibility (DOMMatrix not defined)
-// import PDFParser from 'pdf-parse';
+// pdf-parse - enabled with buffer support for Vercel
+import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
 import { Book } from '../models/Book';
 import { User } from '../models/User';
@@ -1581,12 +1581,22 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
     try {
       // Extract text based on file type
       if (fileExtension === '.pdf') {
-        // PDF parsing is temporarily disabled for serverless compatibility
-        res.status(400).json({
-          success: false,
-          error: 'PDF upload is temporarily unavailable. Please upload DOCX or TXT files instead.',
-        });
-        return;
+        // PDF parsing using buffer (works on Vercel)
+        try {
+          const pdfBuffer = isVercel && req.file.buffer
+            ? req.file.buffer
+            : await fs.readFile(filePath);
+          const pdfData = await pdfParse(pdfBuffer);
+          extractedText = pdfData.text;
+          console.log(`📄 PDF parsed successfully: ${pdfData.numpages} pages, ${extractedText.length} chars`);
+        } catch (pdfError: any) {
+          console.error('PDF parsing error:', pdfError);
+          res.status(400).json({
+            success: false,
+            error: 'Could not parse PDF file. Please ensure it contains readable text or try DOCX format.',
+          });
+          return;
+        }
       } else if (fileExtension === '.docx' || fileExtension === '.doc') {
         // Extract text from DOCX - mammoth can use buffer directly on Vercel
         if (isVercel && req.file.buffer) {
