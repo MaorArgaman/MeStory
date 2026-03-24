@@ -241,6 +241,8 @@ export default function DesignStudioPage() {
   const [imageUrl, setImageUrl] = useState<string>('');
   const [backCoverImageUrl, setBackCoverImageUrl] = useState<string>('');
   const [spineColor, setSpineColor] = useState<string>(''); // Auto-generated harmonious color
+  const [synopsis, setSynopsis] = useState<string>('');
+  const [generatingSynopsis, setGeneratingSynopsis] = useState(false);
 
   // Cover text positioning
   const [titlePosition, setTitlePosition] = useState({ x: 50, y: 20 });
@@ -338,6 +340,7 @@ export default function DesignStudioPage() {
       if (response.data.success) {
         const bookData = response.data.data.book;
         setBook(bookData);
+        setSynopsis(bookData.synopsis || bookData.description || '');
 
         // Check for AI design state first (takes priority)
         if (bookData.aiDesignState?.status === 'completed' && bookData.aiDesignState?.design) {
@@ -452,6 +455,7 @@ export default function DesignStudioPage() {
       const response = await api.put(`/books/${bookId}`, {
         title: book.title,
         coverDesign,
+        synopsis: synopsis || undefined,
       });
 
       if (response.data.success) {
@@ -563,6 +567,34 @@ export default function DesignStudioPage() {
     const newSpineColor = generateHarmoniousColor(baseColor);
     setSpineColor(newSpineColor);
     toast.success(t('design_studio.messages.color_generated', 'New color generated!'));
+  };
+
+  // Generate synopsis with AI
+  const generateSynopsis = async () => {
+    if (!book) return;
+
+    // Check if book has content
+    const hasContent = book.chapters && book.chapters.some(ch => ch.content && ch.content.trim().length > 0);
+    if (!hasContent) {
+      toast.error(language === 'he' ? 'הוסף תוכן לספר לפני יצירת תקציר' : 'Add content to your book before generating synopsis');
+      return;
+    }
+
+    setGeneratingSynopsis(true);
+    try {
+      const response = await api.post(`/ai/generate-synopsis/${bookId}`);
+      if (response.data.success && response.data.data.synopsis) {
+        setSynopsis(response.data.data.synopsis);
+        // Update book state
+        setBook({ ...book, synopsis: response.data.data.synopsis });
+        toast.success(language === 'he' ? 'התקציר נוצר בהצלחה!' : 'Synopsis generated successfully!');
+      }
+    } catch (error: any) {
+      console.error('Failed to generate synopsis:', error);
+      toast.error(language === 'he' ? 'יצירת התקציר נכשלה' : 'Failed to generate synopsis');
+    } finally {
+      setGeneratingSynopsis(false);
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1202,6 +1234,47 @@ export default function DesignStudioPage() {
               </div>
             </div>
 
+            {/* Book Synopsis (Back Cover) */}
+            <div>
+              <h2 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                {language === 'he' ? 'תקציר הספר (גב הכריכה)' : 'Book Synopsis (Back Cover)'}
+              </h2>
+              <div className="space-y-3">
+                <textarea
+                  value={synopsis}
+                  onChange={(e) => setSynopsis(e.target.value)}
+                  placeholder={language === 'he' ? 'הזן תקציר לספר שיופיע בגב הכריכה...' : 'Enter book synopsis for the back cover...'}
+                  className="w-full h-32 bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                  dir={language === 'he' ? 'rtl' : 'ltr'}
+                />
+                <button
+                  onClick={generateSynopsis}
+                  disabled={generatingSynopsis}
+                  className="w-full btn-secondary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {generatingSynopsis ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      {language === 'he' ? 'יוצר תקציר...' : 'Generating...'}
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 text-purple-400" />
+                      {language === 'he' ? 'צור תקציר עם AI' : 'Generate Synopsis with AI'}
+                    </>
+                  )}
+                </button>
+                {synopsis && (
+                  <p className="text-xs text-gray-500">
+                    {language === 'he'
+                      ? `${synopsis.length} תווים`
+                      : `${synopsis.length} characters`}
+                  </p>
+                )}
+              </div>
+            </div>
+
             {/* Spine/Connector Color */}
             <div>
               <h2 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
@@ -1298,7 +1371,7 @@ export default function DesignStudioPage() {
                 textColor={textColor}
                 fontFamily={fontFamily}
                 imageUrl={imageUrl}
-                synopsis={book.synopsis || book.description || ''}
+                synopsis={synopsis}
                 language={language}
                 backCoverImageUrl={backCoverImageUrl}
                 backCoverColor={spineColor || undefined}
