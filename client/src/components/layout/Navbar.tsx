@@ -3,7 +3,8 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { BookOpen, User, LogOut, ChevronDown, Crown, MessageCircle, Bell, Store, Library, Menu, X } from 'lucide-react';
+import { useSocket } from '../../contexts/SocketContext';
+import { BookOpen, User, LogOut, ChevronDown, Crown, MessageCircle, Bell, Store, Library, Menu, X, DollarSign } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getUnreadCount as getMessagesUnreadCount } from '../../services/messagingApi';
 import { getUnreadCount as getNotificationsUnreadCount } from '../../services/notificationApi';
@@ -16,18 +17,29 @@ export default function Navbar() {
   const { t } = useTranslation('common');
   const { user, logout } = useAuth();
   const { isRTL } = useLanguage();
+  const {
+    isConnected: socketConnected,
+    notificationsUnreadCount: socketNotificationsCount,
+    messagesUnreadCount: socketMessagesCount,
+    setNotificationsUnreadCount: setSocketNotificationsCount,
+    setMessagesUnreadCount: setSocketMessagesCount,
+  } = useSocket();
   const navigate = useNavigate();
   const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [messagesUnreadCount, setMessagesUnreadCount] = useState(0);
-  const [notificationsUnreadCount, setNotificationsUnreadCount] = useState(0);
+  const [localMessagesUnreadCount, setLocalMessagesUnreadCount] = useState(0);
+  const [localNotificationsUnreadCount, setLocalNotificationsUnreadCount] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
-  // Fetch unread message and notification counts
+  // Use socket counts if available, otherwise use local state
+  const messagesUnreadCount = socketConnected ? socketMessagesCount : localMessagesUnreadCount;
+  const notificationsUnreadCount = socketConnected ? socketNotificationsCount : localNotificationsUnreadCount;
+
+  // Fetch unread message and notification counts (fallback when socket is not connected)
   useEffect(() => {
     const fetchUnreadCounts = async () => {
       try {
@@ -35,8 +47,11 @@ export default function Navbar() {
           getMessagesUnreadCount(),
           getNotificationsUnreadCount(),
         ]);
-        setMessagesUnreadCount(messagesCount);
-        setNotificationsUnreadCount(notificationsCount);
+        setLocalMessagesUnreadCount(messagesCount);
+        setLocalNotificationsUnreadCount(notificationsCount);
+        // Also sync to socket context for initial state
+        setSocketNotificationsCount(notificationsCount);
+        setSocketMessagesCount(messagesCount);
       } catch (error) {
         // Silently ignore errors
       }
@@ -44,11 +59,11 @@ export default function Navbar() {
 
     if (user) {
       fetchUnreadCounts();
-      // Refresh every 30 seconds
-      const interval = setInterval(fetchUnreadCounts, 30000);
+      // Refresh less frequently when socket is connected (socket handles real-time updates)
+      const interval = setInterval(fetchUnreadCounts, socketConnected ? 60000 : 30000);
       return () => clearInterval(interval);
     }
-  }, [user]);
+  }, [user, socketConnected, setSocketNotificationsCount, setSocketMessagesCount]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -289,6 +304,15 @@ export default function Navbar() {
                         </Link>
 
                         <Link
+                          to="/earnings"
+                          onClick={() => setShowUserMenu(false)}
+                          className={`flex items-center gap-3 px-5 py-3 text-gray-300 hover:text-magic-gold hover:bg-magic-gold/10 transition-all duration-300 ${isRTL ? 'flex-row-reverse' : ''}`}
+                        >
+                          <DollarSign className="w-4 h-4" />
+                          <span className="font-medium">{t('nav.earnings', 'My Earnings')}</span>
+                        </Link>
+
+                        <Link
                           to="/settings"
                           onClick={() => setShowUserMenu(false)}
                           className={`flex items-center gap-3 px-5 py-3 text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300 ${isRTL ? 'flex-row-reverse' : ''}`}
@@ -370,6 +394,18 @@ export default function Navbar() {
                   <div className="border-t border-white/10 my-2" />
 
                   <Link
+                    to="/earnings"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+                      isActive('/earnings')
+                        ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                        : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <DollarSign className="w-5 h-5" />
+                    <span className="font-semibold">{t('nav.earnings', 'My Earnings')}</span>
+                  </Link>
+
+                  <Link
                     to="/subscription"
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
                       isActive('/subscription')
@@ -430,7 +466,10 @@ export default function Navbar() {
         onClose={() => {
           setShowMessages(false);
           // Refresh unread count when closing
-          getMessagesUnreadCount().then(setMessagesUnreadCount).catch(() => {});
+          getMessagesUnreadCount().then((count) => {
+            setLocalMessagesUnreadCount(count);
+            setSocketMessagesCount(count);
+          }).catch(() => {});
         }}
       />
 
@@ -440,7 +479,14 @@ export default function Navbar() {
         onClose={() => {
           setShowNotifications(false);
           // Refresh unread count when closing
-          getNotificationsUnreadCount().then(setNotificationsUnreadCount).catch(() => {});
+          getNotificationsUnreadCount().then((count) => {
+            setLocalNotificationsUnreadCount(count);
+            setSocketNotificationsCount(count);
+          }).catch(() => {});
+        }}
+        onUnreadCountChange={(count) => {
+          setLocalNotificationsUnreadCount(count);
+          setSocketNotificationsCount(count);
         }}
       />
     </motion.nav>

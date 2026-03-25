@@ -7,41 +7,55 @@ interface CategoryCardProps {
   title: string;
   description: string;
   icon: React.ReactNode;
+  image?: string;
   onClick: () => void;
   subcategories?: string[];
 }
 
-function CategoryCard({ title, description, icon, onClick, subcategories }: CategoryCardProps) {
+function CategoryCard({ title, description, icon, image, onClick, subcategories }: CategoryCardProps) {
   return (
     <motion.div
       whileHover={{ scale: 1.02, y: -4 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="memorial-card p-6 rounded-2xl cursor-pointer group"
+      className="memorial-card rounded-2xl cursor-pointer group overflow-hidden"
     >
-      <div className="flex items-start gap-4">
-        <div className="w-14 h-14 rounded-xl bg-memorial-accent/10 flex items-center justify-center flex-shrink-0 group-hover:bg-memorial-accent/20 transition-colors">
-          {icon}
+      {/* Image Header */}
+      {image && (
+        <div className="relative h-32 sm:h-40 overflow-hidden">
+          <img
+            src={image}
+            alt={title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1a] via-[#0a0f1a]/60 to-transparent" />
         </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-memorial-accent transition-colors">
-            {title}
-          </h3>
-          <p className="text-gray-400 text-sm leading-relaxed mb-3">
-            {description}
-          </p>
-          {subcategories && subcategories.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {subcategories.map((sub, idx) => (
-                <span
-                  key={idx}
-                  className="px-2 py-1 text-xs rounded-full bg-white/5 text-gray-300 border border-white/10"
-                >
-                  {sub}
-                </span>
-              ))}
-            </div>
-          )}
+      )}
+      <div className="p-6">
+        <div className="flex items-start gap-4">
+          <div className="w-14 h-14 rounded-xl bg-memorial-accent/10 flex items-center justify-center flex-shrink-0 group-hover:bg-memorial-accent/20 transition-colors">
+            {icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-memorial-accent transition-colors">
+              {title}
+            </h3>
+            <p className="text-gray-400 text-sm leading-relaxed mb-3">
+              {description}
+            </p>
+            {subcategories && subcategories.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {subcategories.map((sub, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2 py-1 text-xs rounded-full bg-white/5 text-gray-300 border border-white/10"
+                  >
+                    {sub}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>
@@ -51,6 +65,8 @@ function CategoryCard({ title, description, icon, onClick, subcategories }: Cate
 // Memorial images from public folder
 const memorialHeroImage = '/img/memorial-hero.png';
 const memorialFamilyImage = '/img/memorial-family.png';
+const holocaustImage = '/img/holo.png';
+const october7Image = '/img/october7.png';
 
 export default function MemorialSection() {
   const { t } = useTranslation('memorial');
@@ -110,6 +126,7 @@ export default function MemorialSection() {
             title={t('categories.holocaust.title')}
             description={t('categories.holocaust.description')}
             icon={<Heart className="w-7 h-7 text-memorial-accent" />}
+            image={holocaustImage}
             onClick={() => handleCategoryClick('holocaust')}
           />
         </motion.div>
@@ -124,6 +141,7 @@ export default function MemorialSection() {
             title={t('categories.october7.title')}
             description={t('categories.october7.description')}
             icon={<Shield className="w-7 h-7 text-memorial-accent" />}
+            image={october7Image}
             onClick={() => handleCategoryClick('october7')}
             subcategories={[
               t('subcategories.hostages.title'),

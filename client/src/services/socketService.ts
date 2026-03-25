@@ -1,8 +1,11 @@
 /**
  * Socket.IO Client Service
  * Manages WebSocket connection for real-time notifications
+ *
+ * NOTE: Requires socket.io-client package. Run `npm install socket.io-client` if not installed.
  */
 
+// @ts-ignore - socket.io-client may need to be installed
 import { io, Socket } from 'socket.io-client';
 
 // Socket instance

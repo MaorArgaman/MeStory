@@ -6,7 +6,7 @@
  * - Daily credit replenishment
  */
 
-import cron from 'node-cron';
+import * as cron from 'node-cron';
 import {
   sendExpiryWarningNotifications,
   processSubscriptionRenewals,
@@ -18,7 +18,8 @@ import {
 let isInitialized = false;
 
 // Store job references for potential cleanup
-const scheduledJobs: cron.ScheduledTask[] = [];
+// Using 'any' since node-cron types vary between versions
+const scheduledJobs: any[] = [];
 
 /**
  * Initialize all subscription cron jobs
@@ -42,7 +43,6 @@ export function initializeSubscriptionJobs(): void {
       console.error('[SubscriptionJobs] 7-day warning job failed:', error);
     }
   }, {
-    scheduled: true,
     timezone: 'Asia/Jerusalem', // Israel timezone
   });
   scheduledJobs.push(sevenDayWarningJob);
@@ -57,7 +57,6 @@ export function initializeSubscriptionJobs(): void {
       console.error('[SubscriptionJobs] 1-day warning job failed:', error);
     }
   }, {
-    scheduled: true,
     timezone: 'Asia/Jerusalem',
   });
   scheduledJobs.push(oneDayWarningJob);
@@ -75,7 +74,6 @@ export function initializeSubscriptionJobs(): void {
       console.error('[SubscriptionJobs] Renewal job failed:', error);
     }
   }, {
-    scheduled: true,
     timezone: 'Asia/Jerusalem',
   });
   scheduledJobs.push(renewalJob);
@@ -90,7 +88,6 @@ export function initializeSubscriptionJobs(): void {
       console.error('[SubscriptionJobs] FREE credit replenishment job failed:', error);
     }
   }, {
-    scheduled: true,
     timezone: 'Asia/Jerusalem',
   });
   scheduledJobs.push(freeCreditJob);
@@ -105,7 +102,6 @@ export function initializeSubscriptionJobs(): void {
       console.error('[SubscriptionJobs] Paid credit replenishment job failed:', error);
     }
   }, {
-    scheduled: true,
     timezone: 'Asia/Jerusalem',
   });
   scheduledJobs.push(paidCreditJob);

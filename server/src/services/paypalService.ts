@@ -790,6 +790,125 @@ export async function checkBookOwnership(
   return { owns, isFree: false, isAuthor: false };
 }
 
+/**
+ * Refund Result interface
+ */
+interface RefundResult {
+  success: boolean;
+  refundId?: string;
+  status?: string;
+  error?: string;
+  mockMode?: boolean;
+}
+
+/**
+ * Process PayPal refund for a captured payment
+ * Uses POST /v2/payments/captures/{capture_id}/refund
+ */
+export async function processPayPalRefund(
+  captureId: string,
+  amount: number,
+  currency: string,
+  note?: string
+): Promise<RefundResult> {
+  try {
+    // Mock mode for development
+    if (!isPayPalConfigured() || process.env.NODE_ENV === 'development') {
+      const mockRefundId = `MOCK-REFUND-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      console.log(`💸 [MOCK] Processing refund:`);
+      console.log(`   Capture ID: ${captureId}`);
+      console.log(`   Amount: $${amount} ${currency}`);
+      console.log(`   Note: ${note || 'N/A'}`);
+      console.log(`   Mock Refund ID: ${mockRefundId}`);
+
+      return {
+        success: true,
+        refundId: mockRefundId,
+        status: 'COMPLETED',
+        mockMode: true,
+      };
+    }
+
+    // Production: Real PayPal Refund
+    const accessToken = await getAccessToken();
+
+    const refundPayload: any = {
+      amount: {
+        value: amount.toFixed(2),
+        currency_code: currency || 'USD',
+      },
+    };
+
+    if (note) {
+      refundPayload.note_to_payer = note.substring(0, 255); // PayPal limit
+    }
+
+    let response;
+    try {
+      response = await axios.post(
+        `${PAYPAL_BASE_URL}/v2/payments/captures/${captureId}/refund`,
+        refundPayload,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    } catch (refundError: any) {
+      console.error('PayPal refund API error:', refundError.response?.data || refundError.message);
+
+      // Handle specific PayPal refund errors
+      const paypalErrorName = refundError.response?.data?.name;
+      const paypalErrorDetails = refundError.response?.data?.details?.[0];
+
+      let errorMessage = 'Failed to process refund';
+
+      if (paypalErrorName === 'CAPTURE_NOT_FOUND') {
+        errorMessage = 'Original payment capture not found.';
+      } else if (paypalErrorName === 'CAPTURE_FULLY_REFUNDED') {
+        errorMessage = 'This payment has already been fully refunded.';
+      } else if (paypalErrorName === 'INVALID_RESOURCE_ID') {
+        errorMessage = 'Invalid capture ID. The payment may not exist.';
+      } else if (paypalErrorName === 'MAX_NUMBER_OF_REFUNDS_EXCEEDED') {
+        errorMessage = 'Maximum number of refunds for this payment exceeded.';
+      } else if (paypalErrorName === 'REFUND_NOT_ALLOWED') {
+        errorMessage = 'Refund is not allowed for this payment.';
+      } else if (paypalErrorName === 'REFUND_AMOUNT_EXCEEDED') {
+        errorMessage = 'Refund amount exceeds the available refund amount.';
+      } else if (paypalErrorDetails?.description) {
+        errorMessage = paypalErrorDetails.description;
+      }
+
+      return { success: false, error: errorMessage };
+    }
+
+    // Check refund status
+    const refundStatus = response.data.status;
+    if (refundStatus === 'COMPLETED' || refundStatus === 'PENDING') {
+      console.log(`[PayPal] Refund processed: ${response.data.id}, status: ${refundStatus}`);
+      return {
+        success: true,
+        refundId: response.data.id,
+        status: refundStatus,
+      };
+    } else {
+      console.error('PayPal refund unexpected status:', response.data);
+      return {
+        success: false,
+        error: `Refund returned unexpected status: ${refundStatus}`,
+      };
+    }
+  } catch (error: any) {
+    console.error('Process PayPal refund error:', error.response?.data || error.message);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to process refund',
+    };
+  }
+}
+
 export default {
   createBookPurchaseOrder,
   captureBookPayment,
@@ -798,4 +917,5 @@ export default {
   connectAuthorPayPal,
   checkBookOwnership,
   isPayPalConfigured,
+  processPayPalRefund,
 };

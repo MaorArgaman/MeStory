@@ -36,7 +36,11 @@ import analysisRoutes from './routes/analysisRoutes';
 import templateRoutes from './routes/templateRoutes';
 import bookPurchaseRoutes from './routes/bookPurchaseRoutes';
 import webhookRoutes from './routes/webhookRoutes';
+import refundRoutes from './routes/refundRoutes';
+import invoiceRoutes from './routes/invoiceRoutes';
 import { initializeDefaultTemplates } from './services/templateService';
+import { initializeSubscriptionJobs } from './jobs/subscriptionJobs';
+import { initializeCleanupJobs } from './jobs/cleanupJobs';
 
 const app = express();
 const httpServer = createServer(app);
@@ -307,6 +311,8 @@ app.use('/api/analysis', analysisRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/book-purchases', bookPurchaseRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/refunds', refundRoutes);
+app.use('/api/invoices', invoiceRoutes);
 
 // ============================================
 // Error Handling (must be last)
@@ -325,11 +331,20 @@ const startServer = async () => {
     initializeSocketIO(httpServer, allowedOrigins);
     console.log('✅ Socket.IO initialized');
 
+    // Initialize subscription cron jobs (only for non-serverless environments)
+    initializeSubscriptionJobs();
+    console.log('✅ Subscription cron jobs initialized');
+
+    // Initialize cleanup cron jobs (expired transactions, old notifications)
+    initializeCleanupJobs();
+    console.log('✅ Cleanup cron jobs initialized');
+
     httpServer.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🌐 Client URL: ${process.env.CLIENT_URL || 'http://localhost:5173'}`);
       console.log(`🔌 WebSocket enabled`);
+      console.log(`⏰ Cron jobs active (subscriptions & cleanup)`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

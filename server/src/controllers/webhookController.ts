@@ -18,6 +18,7 @@ import {
   sendPayPalReceiptEmail,
   sendSubscriptionUpgradeEmail,
 } from '../services/emailService';
+import { generateInvoiceForTransaction } from '../services/invoiceService';
 
 // PayPal API Configuration
 const PAYPAL_BASE_URL = process.env.PAYPAL_MODE === 'live'
@@ -208,6 +209,16 @@ async function handlePaymentCaptureCompleted(event: PayPalWebhookEvent): Promise
   } else {
     // Subscription upgrade
     await handleSubscriptionUpgradeComplete(transaction, user);
+  }
+
+  // Generate invoice for completed transaction
+  try {
+    const language = user.profile?.language || 'en';
+    const { invoiceNumber } = await generateInvoiceForTransaction(transaction.id, language);
+    console.log(`[Webhook] Invoice ${invoiceNumber} generated for transaction ${transaction.id}`);
+  } catch (invoiceError) {
+    // Log error but don't fail the payment processing
+    console.error(`[Webhook] Failed to generate invoice for transaction ${transaction.id}:`, invoiceError);
   }
 }
 

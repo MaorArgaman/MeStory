@@ -35,6 +35,7 @@ import AuthorProfilePage from './pages/AuthorProfilePage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCheck from './components/AdminCheck';
 import LibraryPage from './pages/LibraryPage';
+import EarningsPage from './pages/EarningsPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 
@@ -198,6 +199,18 @@ function AppContent() {
             <RequireAuth>
               <Layout>
                 <LibraryPage />
+              </Layout>
+            </RequireAuth>
+          }
+        />
+
+        {/* Earnings Route */}
+        <Route
+          path="/earnings"
+          element={
+            <RequireAuth>
+              <Layout>
+                <EarningsPage />
               </Layout>
             </RequireAuth>
           }

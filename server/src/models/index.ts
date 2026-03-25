@@ -5,5 +5,6 @@ export * from './Summary';
 export * from './Transaction';
 export * from './Message';
 export * from './Notification';
+export * from './NotificationPreferences';
 export * from './UserActivity';
 export * from './BookTemplate';

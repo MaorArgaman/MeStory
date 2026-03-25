@@ -12,6 +12,8 @@ import {
   markAllAsRead,
   archiveNotification,
   deleteNotification,
+  getPreferences,
+  updatePreferences,
 } from '../controllers/notificationController';
 import { authenticate } from '../middleware/auth';
 
@@ -38,6 +40,18 @@ router.get('/unread-count', getUnreadCount as any);
  * Get notification summary (counts by type)
  */
 router.get('/summary', getNotificationSummary as any);
+
+/**
+ * GET /api/notifications/preferences
+ * Get user notification preferences
+ */
+router.get('/preferences', getPreferences as any);
+
+/**
+ * PUT /api/notifications/preferences
+ * Update user notification preferences
+ */
+router.put('/preferences', updatePreferences as any);
 
 /**
  * PUT /api/notifications/read-all

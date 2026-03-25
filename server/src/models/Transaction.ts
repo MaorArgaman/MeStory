@@ -10,7 +10,7 @@ export interface ITransaction {
   amount: number;
   currency: 'USD' | 'ILS';
   plan: 'free' | 'standard' | 'premium';
-  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  status: 'pending' | 'completed' | 'failed' | 'refunded' | 'expired';
   paymentMethod: 'paypal' | 'mock' | 'credit_card';
   orderId?: string;
   paypalOrderId?: string;

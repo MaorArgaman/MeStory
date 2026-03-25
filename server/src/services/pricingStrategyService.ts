@@ -1,4 +1,136 @@
 import { Book } from '../models/Book';
+import { User } from '../models/User';
+
+// Supported languages
+type Language = 'en' | 'he';
+
+// Translation map for pricing strategy messages
+const pricingTranslations = {
+  firstBook: {
+    en: {
+      reasoning: 'This is your first book! We recommend offering it for free to build an initial readership and collect reviews. Readers are more likely to try a new author when there\'s no financial risk.',
+      tips: [
+        'A free first book helps build a loyal reader base',
+        'Ask readers to leave reviews - they\'re critical for future success',
+        'Share the book on social media and reading communities',
+        'Use positive reviews to market future books'
+      ]
+    },
+    he: {
+      reasoning: 'זה הספר הראשון שלך! מומלץ להציע אותו בחינם כדי לבנות קהל קוראים ראשוני ולאסוף ביקורות. קוראים נוטים יותר לנסות סופר חדש כשאין סיכון כספי.',
+      tips: [
+        'ספר ראשון בחינם עוזר לבנות בסיס קוראים נאמן',
+        'בקש מקוראים להשאיר ביקורות - הן קריטיות להצלחה עתידית',
+        'שתף את הספר ברשתות חברתיות ובקהילות קריאה',
+        'השתמש בביקורות החיוביות לשווק ספרים עתידיים'
+      ]
+    }
+  },
+  secondBookSuccess: {
+    en: {
+      reasoning: (sales: number) => `You already have ${sales} sales from your first book - great! Now is the time to start generating income. A relatively low price is recommended to continue building your audience.`,
+      tips: [
+        'A below-average price will help you continue to grow',
+        'Offer a discount to readers who read your first book',
+        'Consider making your first book free for a limited time to attract new readers',
+        'Build a mailing list of interested readers'
+      ]
+    },
+    he: {
+      reasoning: (sales: number) => `יש לך כבר ${sales} מכירות מהספר הראשון - מצוין! עכשיו הזמן להתחיל לייצר הכנסה. מומלץ מחיר נמוך יחסית כדי להמשיך לבנות את הקהל.`,
+      tips: [
+        'מחיר נמוך מהממוצע יעזור להמשיך לגדול',
+        'הצע הנחה לקוראים שקראו את הספר הראשון',
+        'שקול להציע את הספר הראשון בחינם לתקופה מוגבלת למשוך קוראים חדשים',
+        'בנה רשימת תפוצה של קוראים מעוניינים'
+      ]
+    }
+  },
+  secondBookNoSuccess: {
+    en: {
+      reasoning: 'Your first book hasn\'t gained enough readers yet. We recommend offering this book for free or at a symbolic price to increase exposure.',
+      tips: [
+        'Focus on marketing and reaching new readers',
+        'Check the reviews of your first book and learn from them',
+        'Consider updating the cover or description of your first book',
+        'Join reading and writing communities on social networks'
+      ]
+    },
+    he: {
+      reasoning: 'הספר הראשון לא צבר עדיין מספיק קוראים. מומלץ להציע גם את הספר הזה בחינם או במחיר סמלי כדי להגדיל את החשיפה.',
+      tips: [
+        'התמקד בשיווק ובהגעה לקוראים חדשים',
+        'בדוק את הביקורות של הספר הראשון ולמד מהן',
+        'שקול לעדכן את הכריכה או התיאור של הספר הראשון',
+        'הצטרף לקהילות קריאה וסופרים ברשתות'
+      ]
+    }
+  },
+  experiencedSuccess: {
+    en: {
+      reasoning: (sales: number, books: number) => `With ${sales} sales and ${books} published books, you have a loyal audience! The recommended price is based on your performance and genre prices.`,
+      tips: [
+        'Your readers are willing to pay - give them value!',
+        'Consider offering subscriptions or bundles for loyal readers',
+        'Add bonuses like exclusive chapters or behind-the-scenes content',
+        'Use a higher price for special or longer books'
+      ]
+    },
+    he: {
+      reasoning: (sales: number, books: number) => `עם ${sales} מכירות ו-${books} ספרים מפורסמים, יש לך קהל נאמן! המחיר המומלץ מבוסס על הביצועים שלך והמחירים בז'אנר.`,
+      tips: [
+        'הקוראים שלך מוכנים לשלם - תן להם ערך!',
+        'שקול להציע מנויים או חבילות לקוראים נאמנים',
+        'הוסף בונוסים כמו פרקים בלעדיים או תוכן מאחורי הקלעים',
+        'השתמש במחיר גבוה יותר לספרים מיוחדים או ארוכים יותר'
+      ]
+    }
+  },
+  experiencedNoSuccess: {
+    en: {
+      reasoning: 'You have experience publishing books. A slightly reduced price from the average can help increase sales and build momentum.',
+      tips: [
+        'Analyze what works for successful authors in your genre',
+        'Consider improving the covers and descriptions of all your books',
+        'Build a presence on social media',
+        'Consider collaborations with other authors'
+      ]
+    },
+    he: {
+      reasoning: 'יש לך ניסיון בפרסום ספרים. מחיר מופחת מעט מהממוצע יכול לעזור להגדיל את המכירות ולבנות תאוצה.',
+      tips: [
+        'נתח מה עובד אצל סופרים מצליחים בז\'אנר שלך',
+        'שקול לשפר את הכריכות והתיאורים של כל הספרים',
+        'בנה נוכחות ברשתות חברתיות',
+        'שקול שיתופי פעולה עם סופרים אחרים'
+      ]
+    }
+  },
+  highDemand: {
+    en: (genre: string) => `Demand in the ${genre} genre is high - you can raise the price`,
+    he: (genre: string) => `הביקוש בז'אנר ${genre} גבוה - אפשר להעלות מחיר`
+  },
+  lowDemand: {
+    en: 'Genre demand is relatively low - a competitive price will help',
+    he: 'הביקוש בז\'אנר נמוך יחסית - מחיר תחרותי יעזור'
+  },
+  highQuality: {
+    en: 'The high quality score justifies a premium price',
+    he: 'ציון האיכות הגבוה מצדיק מחיר פרימיום'
+  }
+};
+
+/**
+ * Get user's preferred language
+ */
+async function getUserLanguage(userId: string): Promise<Language> {
+  try {
+    const user = await User.findById(userId);
+    return (user?.profile?.language as Language) || 'en';
+  } catch {
+    return 'en';
+  }
+}
 
 interface AuthorStats {
   totalBooks: number;
@@ -135,8 +267,12 @@ export async function generatePricingStrategy(
   bookId: string,
   authorId: string
 ): Promise<PricingStrategy> {
-  // Get the book
-  const book = await Book.findById(bookId);
+  // Get the book and user's language preference
+  const [book, lang] = await Promise.all([
+    Book.findById(bookId),
+    getUserLanguage(authorId),
+  ]);
+
   if (!book) {
     throw new Error('Book not found');
   }
@@ -157,37 +293,25 @@ export async function generatePricingStrategy(
   if (authorStats.publishedBooks === 0) {
     recommendFree = true;
     recommendedPrice = 0;
-    reasoning = 'זה הספר הראשון שלך! מומלץ להציע אותו בחינם כדי לבנות קהל קוראים ראשוני ולאסוף ביקורות. קוראים נוטים יותר לנסות סופר חדש כשאין סיכון כספי.';
-    strategyTips.push(
-      'ספר ראשון בחינם עוזר לבנות בסיס קוראים נאמן',
-      'בקש מקוראים להשאיר ביקורות - הן קריטיות להצלחה עתידית',
-      'שתף את הספר ברשתות חברתיות ובקהילות קריאה',
-      'השתמש בביקורות החיוביות לשווק ספרים עתידיים'
-    );
+    const t = pricingTranslations.firstBook[lang];
+    reasoning = t.reasoning;
+    strategyTips.push(...t.tips);
   }
   // Second book with some success
   else if (authorStats.publishedBooks === 1 && authorStats.totalSales > 10) {
     recommendFree = false;
     recommendedPrice = Math.min(20, marketAnalysis.genreAveragePrice * 0.5);
-    reasoning = `יש לך כבר ${authorStats.totalSales} מכירות מהספר הראשון - מצוין! עכשיו הזמן להתחיל לייצר הכנסה. מומלץ מחיר נמוך יחסית כדי להמשיך לבנות את הקהל.`;
-    strategyTips.push(
-      'מחיר נמוך מהממוצע יעזור להמשיך לגדול',
-      'הצע הנחה לקוראים שקראו את הספר הראשון',
-      'שקול להציע את הספר הראשון בחינם לתקופה מוגבלת למשוך קוראים חדשים',
-      'בנה רשימת תפוצה של קוראים מעוניינים'
-    );
+    const t = pricingTranslations.secondBookSuccess[lang];
+    reasoning = t.reasoning(authorStats.totalSales);
+    strategyTips.push(...t.tips);
   }
   // Second book without much success
   else if (authorStats.publishedBooks === 1 && authorStats.totalSales <= 10) {
     recommendFree = true;
     recommendedPrice = 0;
-    reasoning = 'הספר הראשון לא צבר עדיין מספיק קוראים. מומלץ להציע גם את הספר הזה בחינם או במחיר סמלי כדי להגדיל את החשיפה.';
-    strategyTips.push(
-      'התמקד בשיווק ובהגעה לקוראים חדשים',
-      'בדוק את הביקורות של הספר הראשון ולמד מהן',
-      'שקול לעדכן את הכריכה או התיאור של הספר הראשון',
-      'הצטרף לקהילות קריאה וסופרים ברשתות'
-    );
+    const t = pricingTranslations.secondBookNoSuccess[lang];
+    reasoning = t.reasoning;
+    strategyTips.push(...t.tips);
   }
   // Third+ book with good track record
   else if (authorStats.publishedBooks >= 2 && authorStats.totalSales > 50) {
@@ -202,44 +326,32 @@ export async function generatePricingStrategy(
     );
     recommendedPrice = Math.min(recommendedPrice, marketAnalysis.competitorPriceRange.max);
 
-    reasoning = `עם ${authorStats.totalSales} מכירות ו-${authorStats.publishedBooks} ספרים מפורסמים, יש לך קהל נאמן! המחיר המומלץ מבוסס על הביצועים שלך והמחירים בז'אנר.`;
-    strategyTips.push(
-      'הקוראים שלך מוכנים לשלם - תן להם ערך!',
-      'שקול להציע מנויים או חבילות לקוראים נאמנים',
-      'הוסף בונוסים כמו פרקים בלעדיים או תוכן מאחורי הקלעים',
-      'השתמש במחיר גבוה יותר לספרים מיוחדים או ארוכים יותר'
-    );
+    const t = pricingTranslations.experiencedSuccess[lang];
+    reasoning = t.reasoning(authorStats.totalSales, authorStats.publishedBooks);
+    strategyTips.push(...t.tips);
   }
   // Third+ book without great success
   else if (authorStats.publishedBooks >= 2) {
     recommendFree = false;
     recommendedPrice = Math.round(marketAnalysis.genreAveragePrice * 0.7);
-    reasoning = 'יש לך ניסיון בפרסום ספרים. מחיר מופחת מעט מהממוצע יכול לעזור להגדיל את המכירות ולבנות תאוצה.';
-    strategyTips.push(
-      'נתח מה עובד אצל סופרים מצליחים בז\'אנר שלך',
-      'שקול לשפר את הכריכות והתיאורים של כל הספרים',
-      'בנה נוכחות ברשתות חברתיות',
-      'שקול שיתופי פעולה עם סופרים אחרים'
-    );
+    const t = pricingTranslations.experiencedNoSuccess[lang];
+    reasoning = t.reasoning;
+    strategyTips.push(...t.tips);
   }
 
   // Adjust based on market demand
   if (marketAnalysis.demandLevel === 'high' && !recommendFree) {
     recommendedPrice = Math.round(recommendedPrice * 1.2);
-    strategyTips.push(
-      `הביקוש בז'אנר ${book.genre} גבוה - אפשר להעלות מחיר`
-    );
+    strategyTips.push(pricingTranslations.highDemand[lang](book.genre || 'Fiction'));
   } else if (marketAnalysis.demandLevel === 'low' && !recommendFree) {
     recommendedPrice = Math.round(recommendedPrice * 0.8);
-    strategyTips.push(
-      `הביקוש בז'אנר נמוך יחסית - מחיר תחרותי יעזור`
-    );
+    strategyTips.push(pricingTranslations.lowDemand[lang]);
   }
 
   // Adjust based on quality score
   if (book.qualityScore?.overallScore && book.qualityScore.overallScore >= 85 && !recommendFree) {
     recommendedPrice = Math.round(recommendedPrice * 1.15);
-    strategyTips.push('ציון האיכות הגבוה מצדיק מחיר פרימיום');
+    strategyTips.push(pricingTranslations.highQuality[lang]);
   }
 
   // Ensure price is within reasonable bounds

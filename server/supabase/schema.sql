@@ -472,6 +472,64 @@ CREATE INDEX idx_notifications_recipient_archived_created ON notifications(recip
 CREATE INDEX idx_notifications_created_at ON notifications(created_at DESC);
 
 -- =====================================================
+-- NOTIFICATION PREFERENCES TABLE
+-- =====================================================
+
+CREATE TYPE email_digest_frequency AS ENUM ('none', 'daily', 'weekly');
+
+CREATE TABLE notification_preferences (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+
+    -- Email notifications
+    email_notifications JSONB DEFAULT '{
+        "purchases": true,
+        "subscriptions": true,
+        "bookUpdates": true,
+        "marketing": false
+    }'::jsonb,
+
+    -- Push notifications
+    push_notifications JSONB DEFAULT '{
+        "purchases": true,
+        "subscriptions": true,
+        "bookUpdates": true,
+        "mentions": true
+    }'::jsonb,
+
+    -- In-app notifications
+    in_app_notifications JSONB DEFAULT '{
+        "purchases": true,
+        "subscriptions": true,
+        "bookUpdates": true,
+        "mentions": true,
+        "likes": true,
+        "comments": true,
+        "shares": true,
+        "newFollowers": true,
+        "messages": true,
+        "payments": true,
+        "qualityScore": true,
+        "promotions": true,
+        "system": true
+    }'::jsonb,
+
+    -- Email digest frequency
+    email_digest email_digest_frequency DEFAULT 'weekly',
+
+    -- Quiet hours (do not disturb)
+    quiet_hours_start VARCHAR(5) DEFAULT NULL, -- e.g., "22:00"
+    quiet_hours_end VARCHAR(5) DEFAULT NULL,   -- e.g., "08:00"
+    quiet_hours_enabled BOOLEAN DEFAULT FALSE,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Notification Preferences indexes
+CREATE INDEX idx_notification_preferences_user_id ON notification_preferences(user_id);
+
+-- =====================================================
 -- USER ACTIVITIES TABLE
 -- =====================================================
 
@@ -602,6 +660,7 @@ CREATE TRIGGER update_transactions_updated_at BEFORE UPDATE ON transactions FOR 
 CREATE TRIGGER update_conversations_updated_at BEFORE UPDATE ON conversations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_messages_updated_at BEFORE UPDATE ON messages FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_notifications_updated_at BEFORE UPDATE ON notifications FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_notification_preferences_updated_at BEFORE UPDATE ON notification_preferences FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_user_activities_updated_at BEFORE UPDATE ON user_activities FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_book_templates_updated_at BEFORE UPDATE ON book_templates FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -617,6 +676,7 @@ ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notification_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE book_templates ENABLE ROW LEVEL SECURITY;
 
@@ -663,3 +723,61 @@ $$ LANGUAGE plpgsql;
 -- CREATE POLICY "Avatar Delete" ON storage.objects FOR DELETE USING (
 --   bucket_id = 'avatars' AND auth.role() = 'service_role'
 -- );
+
+-- =====================================================
+-- REFUND REQUESTS TABLE
+-- =====================================================
+
+CREATE TYPE refund_status AS ENUM ('pending', 'approved', 'rejected');
+
+CREATE TABLE refund_requests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    transaction_id UUID NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    reason TEXT NOT NULL,
+    status refund_status DEFAULT 'pending',
+    amount DECIMAL(10, 2) NOT NULL CHECK (amount >= 0),
+    currency transaction_currency DEFAULT 'USD',
+    admin_notes TEXT,
+    processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    processed_at TIMESTAMP WITH TIME ZONE,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Refund request indexes
+CREATE INDEX idx_refund_requests_user ON refund_requests(user_id);
+CREATE INDEX idx_refund_requests_transaction ON refund_requests(transaction_id);
+CREATE INDEX idx_refund_requests_book ON refund_requests(book_id);
+CREATE INDEX idx_refund_requests_status ON refund_requests(status);
+CREATE INDEX idx_refund_requests_status_created ON refund_requests(status, created_at DESC);
+CREATE INDEX idx_refund_requests_user_status ON refund_requests(user_id, status);
+
+-- Enable RLS
+ALTER TABLE refund_requests ENABLE ROW LEVEL SECURITY;
+
+-- Add trigger for updated_at
+CREATE TRIGGER update_refund_requests_updated_at BEFORE UPDATE ON refund_requests FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- =====================================================
+-- INVOICE COUNTERS TABLE
+-- =====================================================
+-- Stores sequential invoice numbers per year
+
+CREATE TABLE invoice_counters (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    year INTEGER NOT NULL UNIQUE,
+    counter INTEGER NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Invoice counter indexes
+CREATE INDEX idx_invoice_counters_year ON invoice_counters(year);
+
+-- Enable RLS
+ALTER TABLE invoice_counters ENABLE ROW LEVEL SECURITY;
+
+-- Add trigger for updated_at
+CREATE TRIGGER update_invoice_counters_updated_at BEFORE UPDATE ON invoice_counters FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

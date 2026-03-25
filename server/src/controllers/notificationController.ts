@@ -7,6 +7,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../types';
 import * as notificationService from '../services/notificationService';
 import { NotificationType } from '../models/Notification';
+import { NotificationPreferences, INotificationPreferences } from '../models/NotificationPreferences';
 
 // UUID validation regex for Supabase
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -247,6 +248,107 @@ export const deleteNotification = async (req: AuthRequest, res: Response): Promi
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to delete notification',
+    });
+  }
+};
+
+/**
+ * Get notification preferences
+ * GET /api/notifications/preferences
+ */
+export const getPreferences = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, error: 'Authentication required' });
+      return;
+    }
+
+    // Get or create default preferences for user
+    const preferences = await NotificationPreferences.getOrCreateForUser(req.user.id);
+
+    res.status(200).json({
+      success: true,
+      data: preferences,
+    });
+  } catch (error: any) {
+    console.error('Get notification preferences error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get notification preferences',
+    });
+  }
+};
+
+/**
+ * Update notification preferences
+ * PUT /api/notifications/preferences
+ */
+export const updatePreferences = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, error: 'Authentication required' });
+      return;
+    }
+
+    const {
+      emailNotifications,
+      pushNotifications,
+      inAppNotifications,
+      emailDigest,
+      quietHoursStart,
+      quietHoursEnd,
+      quietHoursEnabled,
+    } = req.body;
+
+    // Validate emailDigest if provided
+    if (emailDigest && !['none', 'daily', 'weekly'].includes(emailDigest)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid emailDigest value. Must be "none", "daily", or "weekly"',
+      });
+      return;
+    }
+
+    // Validate quiet hours format if provided
+    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (quietHoursStart && !timeRegex.test(quietHoursStart)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid quietHoursStart format. Use HH:MM (e.g., "22:00")',
+      });
+      return;
+    }
+    if (quietHoursEnd && !timeRegex.test(quietHoursEnd)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid quietHoursEnd format. Use HH:MM (e.g., "08:00")',
+      });
+      return;
+    }
+
+    // Build update object with only provided fields
+    const updateData: Partial<INotificationPreferences> = {};
+    if (emailNotifications !== undefined) updateData.emailNotifications = emailNotifications;
+    if (pushNotifications !== undefined) updateData.pushNotifications = pushNotifications;
+    if (inAppNotifications !== undefined) updateData.inAppNotifications = inAppNotifications;
+    if (emailDigest !== undefined) updateData.emailDigest = emailDigest;
+    if (quietHoursStart !== undefined) updateData.quietHoursStart = quietHoursStart;
+    if (quietHoursEnd !== undefined) updateData.quietHoursEnd = quietHoursEnd;
+    if (quietHoursEnabled !== undefined) updateData.quietHoursEnabled = quietHoursEnabled;
+
+    // Upsert preferences (create if not exists, update if exists)
+    const preferences = await NotificationPreferences.upsert(req.user.id, updateData);
+
+    res.status(200).json({
+      success: true,
+      message: 'Notification preferences updated',
+      data: preferences,
+    });
+  } catch (error: any) {
+    console.error('Update notification preferences error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to update notification preferences',
     });
   }
 };

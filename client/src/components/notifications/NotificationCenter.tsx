@@ -3,7 +3,7 @@
  * Shows all user notifications with filters
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useModal } from '../../hooks/useModal';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +26,7 @@ import {
   Loader2,
   Filter,
   User,
+  Wifi,
 } from 'lucide-react';
 import {
   getNotifications,
@@ -36,6 +37,7 @@ import {
   Notification,
   NotificationType,
 } from '../../services/notificationApi';
+import { useSocket } from '../../contexts/SocketContext';
 import toast from 'react-hot-toast';
 
 interface NotificationCenterProps {
@@ -54,6 +56,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
   const { t } = useTranslation('common');
   const navigate = useNavigate();
+  const { isConnected, lastNotification } = useSocket();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -62,6 +65,42 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [markingAllRead, setMarkingAllRead] = useState(false);
+
+  // Handle real-time notifications from socket
+  useEffect(() => {
+    if (lastNotification && isOpen) {
+      // Check if notification already exists using a function to avoid stale closure
+      setNotifications(prev => {
+        const exists = prev.some(n => n._id === lastNotification._id);
+        if (exists) return prev;
+
+        // Add new notification to the top of the list
+        const newNotification: Notification = {
+          _id: lastNotification._id,
+          type: lastNotification.type as NotificationType,
+          title: lastNotification.title,
+          message: lastNotification.message,
+          data: lastNotification.data,
+          isRead: lastNotification.isRead,
+          createdAt: lastNotification.createdAt,
+          sender: lastNotification.sender ? {
+            _id: lastNotification.sender._id,
+            name: lastNotification.sender.name,
+            profilePicture: lastNotification.sender.profilePicture,
+          } : undefined,
+        };
+
+        return [newNotification, ...prev];
+      });
+
+      // Update unread count
+      setUnreadCount(prev => {
+        const newCount = prev + 1;
+        onUnreadCountChange?.(newCount);
+        return newCount;
+      });
+    }
+  }, [lastNotification, isOpen, onUnreadCountChange]);
 
   useEffect(() => {
     if (isOpen) {
@@ -256,7 +295,15 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     </span>
                   )}
                 </div>
-                <h2 id="notification-center-title" className="text-xl font-bold text-white">{t('notifications.title')}</h2>
+                <div className="flex items-center gap-2">
+                  <h2 id="notification-center-title" className="text-xl font-bold text-white">{t('notifications.title')}</h2>
+                  {isConnected && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs" title={t('notifications.realtime_connected', 'Real-time updates active')}>
+                      <Wifi className="w-3 h-3" />
+                      <span className="hidden sm:inline">{t('notifications.live', 'Live')}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex items-center gap-2">

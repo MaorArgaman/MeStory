@@ -24,10 +24,58 @@ import {
   Globe,
   FileDown,
   Camera,
+  Clock,
+  MessageSquare,
+  BellRing,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 type Tab = 'profile' | 'earnings' | 'billing' | 'security' | 'notifications';
+
+// Notification preferences interfaces
+interface EmailNotifications {
+  purchases: boolean;
+  subscriptions: boolean;
+  bookUpdates: boolean;
+  marketing: boolean;
+}
+
+interface PushNotifications {
+  purchases: boolean;
+  subscriptions: boolean;
+  bookUpdates: boolean;
+  mentions: boolean;
+}
+
+interface InAppNotifications {
+  purchases: boolean;
+  subscriptions: boolean;
+  bookUpdates: boolean;
+  mentions: boolean;
+  likes: boolean;
+  comments: boolean;
+  shares: boolean;
+  newFollowers: boolean;
+  messages: boolean;
+  payments: boolean;
+  qualityScore: boolean;
+  promotions: boolean;
+  system: boolean;
+}
+
+type EmailDigestFrequency = 'none' | 'daily' | 'weekly';
+
+interface NotificationPreferences {
+  id: string;
+  userId: string;
+  emailNotifications: EmailNotifications;
+  pushNotifications: PushNotifications;
+  inAppNotifications: InAppNotifications;
+  emailDigest: EmailDigestFrequency;
+  quietHoursStart: string | null;
+  quietHoursEnd: string | null;
+  quietHoursEnabled: boolean;
+}
 
 interface EarningsData {
   earnings: {
@@ -84,19 +132,114 @@ export default function SettingsPage() {
   const [exportingData, setExportingData] = useState(false);
 
   // Notifications state
-  const [notifications, setNotifications] = useState({
-    newReview: true,
-    newFollower: true,
-    newSale: true,
-    systemUpdate: false,
-    weeklyDigest: true,
-  });
+  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences | null>(null);
+  const [loadingNotificationPrefs, setLoadingNotificationPrefs] = useState(false);
+  const [savingNotificationPrefs, setSavingNotificationPrefs] = useState(false);
 
   useEffect(() => {
     if (activeTab === 'earnings') {
       loadEarnings();
     }
+    if (activeTab === 'notifications') {
+      loadNotificationPreferences();
+    }
   }, [activeTab]);
+
+  const loadNotificationPreferences = async () => {
+    try {
+      setLoadingNotificationPrefs(true);
+      const response = await api.get('/notifications/preferences');
+      if (response.data.success) {
+        setNotificationPrefs(response.data.data);
+      }
+    } catch (error) {
+      console.error('Failed to load notification preferences:', error);
+      toast.error(t('settings.toast.load_notification_prefs_failed', 'Failed to load notification preferences'));
+    } finally {
+      setLoadingNotificationPrefs(false);
+    }
+  };
+
+  const saveNotificationPreferences = async (updates: Partial<NotificationPreferences>) => {
+    try {
+      setSavingNotificationPrefs(true);
+      const response = await api.put('/notifications/preferences', updates);
+      if (response.data.success) {
+        setNotificationPrefs(response.data.data);
+        toast.success(t('settings.toast.notification_prefs_saved', 'Notification preferences saved'));
+      }
+    } catch (error) {
+      console.error('Failed to save notification preferences:', error);
+      toast.error(t('settings.toast.save_notification_prefs_failed', 'Failed to save notification preferences'));
+    } finally {
+      setSavingNotificationPrefs(false);
+    }
+  };
+
+  const handleToggleEmailNotification = (key: keyof EmailNotifications) => {
+    if (!notificationPrefs) return;
+    const newValue = !notificationPrefs.emailNotifications[key];
+    const updates = {
+      emailNotifications: {
+        ...notificationPrefs.emailNotifications,
+        [key]: newValue,
+      },
+    };
+    setNotificationPrefs({ ...notificationPrefs, ...updates });
+    saveNotificationPreferences(updates);
+  };
+
+  const handleTogglePushNotification = (key: keyof PushNotifications) => {
+    if (!notificationPrefs) return;
+    const newValue = !notificationPrefs.pushNotifications[key];
+    const updates = {
+      pushNotifications: {
+        ...notificationPrefs.pushNotifications,
+        [key]: newValue,
+      },
+    };
+    setNotificationPrefs({ ...notificationPrefs, ...updates });
+    saveNotificationPreferences(updates);
+  };
+
+  const handleToggleInAppNotification = (key: keyof InAppNotifications) => {
+    if (!notificationPrefs) return;
+    const newValue = !notificationPrefs.inAppNotifications[key];
+    const updates = {
+      inAppNotifications: {
+        ...notificationPrefs.inAppNotifications,
+        [key]: newValue,
+      },
+    };
+    setNotificationPrefs({ ...notificationPrefs, ...updates });
+    saveNotificationPreferences(updates);
+  };
+
+  const handleEmailDigestChange = (value: EmailDigestFrequency) => {
+    if (!notificationPrefs) return;
+    const updates = { emailDigest: value };
+    setNotificationPrefs({ ...notificationPrefs, ...updates });
+    saveNotificationPreferences(updates);
+  };
+
+  const handleQuietHoursToggle = () => {
+    if (!notificationPrefs) return;
+    const newEnabled = !notificationPrefs.quietHoursEnabled;
+    const updates = {
+      quietHoursEnabled: newEnabled,
+      quietHoursStart: newEnabled ? (notificationPrefs.quietHoursStart || '22:00') : notificationPrefs.quietHoursStart,
+      quietHoursEnd: newEnabled ? (notificationPrefs.quietHoursEnd || '08:00') : notificationPrefs.quietHoursEnd,
+    };
+    setNotificationPrefs({ ...notificationPrefs, ...updates });
+    saveNotificationPreferences(updates);
+  };
+
+  const handleQuietHoursChange = (field: 'quietHoursStart' | 'quietHoursEnd', value: string) => {
+    if (!notificationPrefs) return;
+    const updates = { [field]: value };
+    setNotificationPrefs({ ...notificationPrefs, ...updates });
+    saveNotificationPreferences(updates);
+  };
 
   const loadEarnings = async () => {
     try {
@@ -230,14 +373,6 @@ export default function SettingsPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleToggleNotification = (key: keyof typeof notifications) => {
-    setNotifications((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-    toast.success(t('settings.toast.notification_updated'));
   };
 
   const handleLanguageChange = async (newLanguage: Language) => {
@@ -965,163 +1100,534 @@ export default function SettingsPage() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8"
+                  className="space-y-6"
                 >
-                  <div className="flex items-start sm:items-center gap-3 mb-4 sm:mb-6">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0">
-                      <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl sm:text-2xl font-bold">
-                        {t('settings.notifications_tab.title')}
-                      </h2>
-                      <p className="text-gray-400 text-xs sm:text-sm">
-                        {t('settings.notifications_tab.subtitle')}
-                      </p>
+                  {/* Header */}
+                  <div className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8">
+                    <div className="flex items-start sm:items-center gap-3 mb-4">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0">
+                        <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h2 className="text-xl sm:text-2xl font-bold">
+                          {t('settings.notifications_tab.title')}
+                        </h2>
+                        <p className="text-gray-400 text-xs sm:text-sm">
+                          {t('settings.notifications_tab.subtitle')}
+                        </p>
+                      </div>
+                      {savingNotificationPrefs && (
+                        <div className="flex items-center gap-2 text-sm text-gray-400">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          {t('common.saving', 'Saving...')}
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="space-y-6">
-                    {/* Email Notifications */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <Mail className="w-5 h-5 text-indigo-400" />
-                        {t('settings.notifications_tab.email_title')}
-                      </h3>
+                  {loadingNotificationPrefs ? (
+                    <div className="glass-strong rounded-xl p-8 flex items-center justify-center">
+                      <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+                    </div>
+                  ) : notificationPrefs ? (
+                    <>
+                      {/* Email Notifications */}
+                      <div className="glass-strong rounded-xl p-4 sm:p-6">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                          <Mail className="w-5 h-5 text-indigo-400" />
+                          {t('settings.notifications_tab.email_title', 'Email Notifications')}
+                        </h3>
 
-                      <div className="space-y-4">
-                        {/* New Review */}
-                        <div className="flex items-center justify-between p-4 glass rounded-lg">
-                          <div>
-                            <div className="font-medium text-white">
-                              {t('settings.notifications_tab.new_review')}
+                        <div className="space-y-4">
+                          {/* Purchases */}
+                          <div className="flex items-center justify-between p-4 glass rounded-lg">
+                            <div>
+                              <div className="font-medium text-white">
+                                {t('settings.notifications_tab.purchases', 'Purchases')}
+                              </div>
+                              <div className="text-sm text-gray-400">
+                                {t('settings.notifications_tab.purchases_desc', 'Get notified when someone buys your book')}
+                              </div>
                             </div>
-                            <div className="text-sm text-gray-400">
-                              {t('settings.notifications_tab.new_review_desc')}
-                            </div>
+                            <button
+                              onClick={() => handleToggleEmailNotification('purchases')}
+                              disabled={savingNotificationPrefs}
+                              className={`relative w-14 h-8 rounded-full transition-colors ${
+                                notificationPrefs.emailNotifications.purchases
+                                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                  : 'bg-gray-600'
+                              }`}
+                            >
+                              <motion.div
+                                animate={{ x: notificationPrefs.emailNotifications.purchases ? 24 : 2 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                              />
+                            </button>
                           </div>
-                          <button
-                            onClick={() => handleToggleNotification('newReview')}
-                            className={`relative w-14 h-8 rounded-full transition-colors ${
-                              notifications.newReview
-                                ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
-                                : 'bg-gray-600'
-                            }`}
-                          >
-                            <motion.div
-                              animate={{ x: notifications.newReview ? 24 : 2 }}
-                              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                              className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
-                            />
-                          </button>
-                        </div>
 
-                        {/* New Follower */}
-                        <div className="flex items-center justify-between p-4 glass rounded-lg">
-                          <div>
-                            <div className="font-medium text-white">
-                              {t('settings.notifications_tab.new_follower')}
+                          {/* Subscriptions */}
+                          <div className="flex items-center justify-between p-4 glass rounded-lg">
+                            <div>
+                              <div className="font-medium text-white">
+                                {t('settings.notifications_tab.subscriptions', 'Subscriptions')}
+                              </div>
+                              <div className="text-sm text-gray-400">
+                                {t('settings.notifications_tab.subscriptions_desc', 'Subscription updates and renewals')}
+                              </div>
                             </div>
-                            <div className="text-sm text-gray-400">
-                              {t('settings.notifications_tab.new_follower_desc')}
-                            </div>
+                            <button
+                              onClick={() => handleToggleEmailNotification('subscriptions')}
+                              disabled={savingNotificationPrefs}
+                              className={`relative w-14 h-8 rounded-full transition-colors ${
+                                notificationPrefs.emailNotifications.subscriptions
+                                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                  : 'bg-gray-600'
+                              }`}
+                            >
+                              <motion.div
+                                animate={{ x: notificationPrefs.emailNotifications.subscriptions ? 24 : 2 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                              />
+                            </button>
                           </div>
-                          <button
-                            onClick={() => handleToggleNotification('newFollower')}
-                            className={`relative w-14 h-8 rounded-full transition-colors ${
-                              notifications.newFollower
-                                ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
-                                : 'bg-gray-600'
-                            }`}
-                          >
-                            <motion.div
-                              animate={{ x: notifications.newFollower ? 24 : 2 }}
-                              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                              className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
-                            />
-                          </button>
-                        </div>
 
-                        {/* New Sale */}
-                        <div className="flex items-center justify-between p-4 glass rounded-lg">
-                          <div>
-                            <div className="font-medium text-white">
-                              {t('settings.notifications_tab.new_sale')}
+                          {/* Book Updates */}
+                          <div className="flex items-center justify-between p-4 glass rounded-lg">
+                            <div>
+                              <div className="font-medium text-white">
+                                {t('settings.notifications_tab.book_updates', 'Book Updates')}
+                              </div>
+                              <div className="text-sm text-gray-400">
+                                {t('settings.notifications_tab.book_updates_desc', 'Updates about your published books')}
+                              </div>
                             </div>
-                            <div className="text-sm text-gray-400">
-                              {t('settings.notifications_tab.new_sale_desc')}
-                            </div>
+                            <button
+                              onClick={() => handleToggleEmailNotification('bookUpdates')}
+                              disabled={savingNotificationPrefs}
+                              className={`relative w-14 h-8 rounded-full transition-colors ${
+                                notificationPrefs.emailNotifications.bookUpdates
+                                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                  : 'bg-gray-600'
+                              }`}
+                            >
+                              <motion.div
+                                animate={{ x: notificationPrefs.emailNotifications.bookUpdates ? 24 : 2 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                              />
+                            </button>
                           </div>
-                          <button
-                            onClick={() => handleToggleNotification('newSale')}
-                            className={`relative w-14 h-8 rounded-full transition-colors ${
-                              notifications.newSale
-                                ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
-                                : 'bg-gray-600'
-                            }`}
-                          >
-                            <motion.div
-                              animate={{ x: notifications.newSale ? 24 : 2 }}
-                              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                              className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
-                            />
-                          </button>
-                        </div>
 
-                        {/* System Update */}
-                        <div className="flex items-center justify-between p-4 glass rounded-lg">
-                          <div>
-                            <div className="font-medium text-white">
-                              {t('settings.notifications_tab.system_updates')}
+                          {/* Marketing */}
+                          <div className="flex items-center justify-between p-4 glass rounded-lg">
+                            <div>
+                              <div className="font-medium text-white">
+                                {t('settings.notifications_tab.marketing', 'Marketing & Promotions')}
+                              </div>
+                              <div className="text-sm text-gray-400">
+                                {t('settings.notifications_tab.marketing_desc', 'Tips, offers, and product updates')}
+                              </div>
                             </div>
-                            <div className="text-sm text-gray-400">
-                              {t('settings.notifications_tab.system_updates_desc')}
-                            </div>
+                            <button
+                              onClick={() => handleToggleEmailNotification('marketing')}
+                              disabled={savingNotificationPrefs}
+                              className={`relative w-14 h-8 rounded-full transition-colors ${
+                                notificationPrefs.emailNotifications.marketing
+                                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                  : 'bg-gray-600'
+                              }`}
+                            >
+                              <motion.div
+                                animate={{ x: notificationPrefs.emailNotifications.marketing ? 24 : 2 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                              />
+                            </button>
                           </div>
-                          <button
-                            onClick={() => handleToggleNotification('systemUpdate')}
-                            className={`relative w-14 h-8 rounded-full transition-colors ${
-                              notifications.systemUpdate
-                                ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
-                                : 'bg-gray-600'
-                            }`}
-                          >
-                            <motion.div
-                              animate={{ x: notifications.systemUpdate ? 24 : 2 }}
-                              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                              className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
-                            />
-                          </button>
-                        </div>
-
-                        {/* Weekly Digest */}
-                        <div className="flex items-center justify-between p-4 glass rounded-lg">
-                          <div>
-                            <div className="font-medium text-white">
-                              {t('settings.notifications_tab.weekly_digest')}
-                            </div>
-                            <div className="text-sm text-gray-400">
-                              {t('settings.notifications_tab.weekly_digest_desc')}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => handleToggleNotification('weeklyDigest')}
-                            className={`relative w-14 h-8 rounded-full transition-colors ${
-                              notifications.weeklyDigest
-                                ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
-                                : 'bg-gray-600'
-                            }`}
-                          >
-                            <motion.div
-                              animate={{ x: notifications.weeklyDigest ? 24 : 2 }}
-                              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                              className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
-                            />
-                          </button>
                         </div>
                       </div>
+
+                      {/* Push Notifications */}
+                      <div className="glass-strong rounded-xl p-4 sm:p-6">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                          <BellRing className="w-5 h-5 text-purple-400" />
+                          {t('settings.notifications_tab.push_title', 'Push Notifications')}
+                        </h3>
+
+                        <div className="space-y-4">
+                          {/* Purchases */}
+                          <div className="flex items-center justify-between p-4 glass rounded-lg">
+                            <div>
+                              <div className="font-medium text-white">
+                                {t('settings.notifications_tab.purchases', 'Purchases')}
+                              </div>
+                              <div className="text-sm text-gray-400">
+                                {t('settings.notifications_tab.push_purchases_desc', 'Instant alerts for sales')}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleTogglePushNotification('purchases')}
+                              disabled={savingNotificationPrefs}
+                              className={`relative w-14 h-8 rounded-full transition-colors ${
+                                notificationPrefs.pushNotifications.purchases
+                                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                  : 'bg-gray-600'
+                              }`}
+                            >
+                              <motion.div
+                                animate={{ x: notificationPrefs.pushNotifications.purchases ? 24 : 2 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                              />
+                            </button>
+                          </div>
+
+                          {/* Mentions */}
+                          <div className="flex items-center justify-between p-4 glass rounded-lg">
+                            <div>
+                              <div className="font-medium text-white">
+                                {t('settings.notifications_tab.mentions', 'Mentions')}
+                              </div>
+                              <div className="text-sm text-gray-400">
+                                {t('settings.notifications_tab.mentions_desc', 'When someone mentions you')}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleTogglePushNotification('mentions')}
+                              disabled={savingNotificationPrefs}
+                              className={`relative w-14 h-8 rounded-full transition-colors ${
+                                notificationPrefs.pushNotifications.mentions
+                                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                  : 'bg-gray-600'
+                              }`}
+                            >
+                              <motion.div
+                                animate={{ x: notificationPrefs.pushNotifications.mentions ? 24 : 2 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                              />
+                            </button>
+                          </div>
+
+                          {/* Book Updates */}
+                          <div className="flex items-center justify-between p-4 glass rounded-lg">
+                            <div>
+                              <div className="font-medium text-white">
+                                {t('settings.notifications_tab.book_updates', 'Book Updates')}
+                              </div>
+                              <div className="text-sm text-gray-400">
+                                {t('settings.notifications_tab.push_book_updates_desc', 'Publishing and quality updates')}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleTogglePushNotification('bookUpdates')}
+                              disabled={savingNotificationPrefs}
+                              className={`relative w-14 h-8 rounded-full transition-colors ${
+                                notificationPrefs.pushNotifications.bookUpdates
+                                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                  : 'bg-gray-600'
+                              }`}
+                            >
+                              <motion.div
+                                animate={{ x: notificationPrefs.pushNotifications.bookUpdates ? 24 : 2 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                              />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* In-App Notifications */}
+                      <div className="glass-strong rounded-xl p-4 sm:p-6">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                          <MessageSquare className="w-5 h-5 text-cyan-400" />
+                          {t('settings.notifications_tab.inapp_title', 'In-App Notifications')}
+                        </h3>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* Likes */}
+                          <div className="flex items-center justify-between p-4 glass rounded-lg">
+                            <div className="font-medium text-white">
+                              {t('settings.notifications_tab.likes', 'Likes')}
+                            </div>
+                            <button
+                              onClick={() => handleToggleInAppNotification('likes')}
+                              disabled={savingNotificationPrefs}
+                              className={`relative w-14 h-8 rounded-full transition-colors ${
+                                notificationPrefs.inAppNotifications.likes
+                                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                  : 'bg-gray-600'
+                              }`}
+                            >
+                              <motion.div
+                                animate={{ x: notificationPrefs.inAppNotifications.likes ? 24 : 2 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                              />
+                            </button>
+                          </div>
+
+                          {/* Comments */}
+                          <div className="flex items-center justify-between p-4 glass rounded-lg">
+                            <div className="font-medium text-white">
+                              {t('settings.notifications_tab.comments', 'Comments')}
+                            </div>
+                            <button
+                              onClick={() => handleToggleInAppNotification('comments')}
+                              disabled={savingNotificationPrefs}
+                              className={`relative w-14 h-8 rounded-full transition-colors ${
+                                notificationPrefs.inAppNotifications.comments
+                                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                  : 'bg-gray-600'
+                              }`}
+                            >
+                              <motion.div
+                                animate={{ x: notificationPrefs.inAppNotifications.comments ? 24 : 2 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                              />
+                            </button>
+                          </div>
+
+                          {/* Shares */}
+                          <div className="flex items-center justify-between p-4 glass rounded-lg">
+                            <div className="font-medium text-white">
+                              {t('settings.notifications_tab.shares', 'Shares')}
+                            </div>
+                            <button
+                              onClick={() => handleToggleInAppNotification('shares')}
+                              disabled={savingNotificationPrefs}
+                              className={`relative w-14 h-8 rounded-full transition-colors ${
+                                notificationPrefs.inAppNotifications.shares
+                                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                  : 'bg-gray-600'
+                              }`}
+                            >
+                              <motion.div
+                                animate={{ x: notificationPrefs.inAppNotifications.shares ? 24 : 2 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                              />
+                            </button>
+                          </div>
+
+                          {/* New Followers */}
+                          <div className="flex items-center justify-between p-4 glass rounded-lg">
+                            <div className="font-medium text-white">
+                              {t('settings.notifications_tab.new_followers', 'New Followers')}
+                            </div>
+                            <button
+                              onClick={() => handleToggleInAppNotification('newFollowers')}
+                              disabled={savingNotificationPrefs}
+                              className={`relative w-14 h-8 rounded-full transition-colors ${
+                                notificationPrefs.inAppNotifications.newFollowers
+                                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                  : 'bg-gray-600'
+                              }`}
+                            >
+                              <motion.div
+                                animate={{ x: notificationPrefs.inAppNotifications.newFollowers ? 24 : 2 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                              />
+                            </button>
+                          </div>
+
+                          {/* Messages */}
+                          <div className="flex items-center justify-between p-4 glass rounded-lg">
+                            <div className="font-medium text-white">
+                              {t('settings.notifications_tab.messages', 'Messages')}
+                            </div>
+                            <button
+                              onClick={() => handleToggleInAppNotification('messages')}
+                              disabled={savingNotificationPrefs}
+                              className={`relative w-14 h-8 rounded-full transition-colors ${
+                                notificationPrefs.inAppNotifications.messages
+                                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                  : 'bg-gray-600'
+                              }`}
+                            >
+                              <motion.div
+                                animate={{ x: notificationPrefs.inAppNotifications.messages ? 24 : 2 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                              />
+                            </button>
+                          </div>
+
+                          {/* Payments */}
+                          <div className="flex items-center justify-between p-4 glass rounded-lg">
+                            <div className="font-medium text-white">
+                              {t('settings.notifications_tab.payments', 'Payments')}
+                            </div>
+                            <button
+                              onClick={() => handleToggleInAppNotification('payments')}
+                              disabled={savingNotificationPrefs}
+                              className={`relative w-14 h-8 rounded-full transition-colors ${
+                                notificationPrefs.inAppNotifications.payments
+                                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                  : 'bg-gray-600'
+                              }`}
+                            >
+                              <motion.div
+                                animate={{ x: notificationPrefs.inAppNotifications.payments ? 24 : 2 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                              />
+                            </button>
+                          </div>
+
+                          {/* System */}
+                          <div className="flex items-center justify-between p-4 glass rounded-lg">
+                            <div className="font-medium text-white">
+                              {t('settings.notifications_tab.system', 'System')}
+                            </div>
+                            <button
+                              onClick={() => handleToggleInAppNotification('system')}
+                              disabled={savingNotificationPrefs}
+                              className={`relative w-14 h-8 rounded-full transition-colors ${
+                                notificationPrefs.inAppNotifications.system
+                                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                  : 'bg-gray-600'
+                              }`}
+                            >
+                              <motion.div
+                                animate={{ x: notificationPrefs.inAppNotifications.system ? 24 : 2 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                              />
+                            </button>
+                          </div>
+
+                          {/* Promotions */}
+                          <div className="flex items-center justify-between p-4 glass rounded-lg">
+                            <div className="font-medium text-white">
+                              {t('settings.notifications_tab.promotions', 'Promotions')}
+                            </div>
+                            <button
+                              onClick={() => handleToggleInAppNotification('promotions')}
+                              disabled={savingNotificationPrefs}
+                              className={`relative w-14 h-8 rounded-full transition-colors ${
+                                notificationPrefs.inAppNotifications.promotions
+                                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                  : 'bg-gray-600'
+                              }`}
+                            >
+                              <motion.div
+                                animate={{ x: notificationPrefs.inAppNotifications.promotions ? 24 : 2 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                              />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Email Digest */}
+                      <div className="glass-strong rounded-xl p-4 sm:p-6">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                          <Mail className="w-5 h-5 text-green-400" />
+                          {t('settings.notifications_tab.digest_title', 'Email Digest')}
+                        </h3>
+
+                        <p className="text-sm text-gray-400 mb-4">
+                          {t('settings.notifications_tab.digest_desc', 'Receive a summary of your activity and updates')}
+                        </p>
+
+                        <div className="flex flex-wrap gap-3">
+                          {(['none', 'daily', 'weekly'] as EmailDigestFrequency[]).map((option) => (
+                            <button
+                              key={option}
+                              onClick={() => handleEmailDigestChange(option)}
+                              disabled={savingNotificationPrefs}
+                              className={`px-4 py-2 rounded-lg transition-all ${
+                                notificationPrefs.emailDigest === option
+                                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white'
+                                  : 'glass text-gray-400 hover:text-white'
+                              }`}
+                            >
+                              {t(`settings.notifications_tab.digest_${option}`, option.charAt(0).toUpperCase() + option.slice(1))}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Quiet Hours */}
+                      <div className="glass-strong rounded-xl p-4 sm:p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-5 h-5 text-yellow-400" />
+                            <h3 className="text-lg font-semibold">
+                              {t('settings.notifications_tab.quiet_hours_title', 'Quiet Hours')}
+                            </h3>
+                          </div>
+                          <button
+                            onClick={handleQuietHoursToggle}
+                            disabled={savingNotificationPrefs}
+                            className={`relative w-14 h-8 rounded-full transition-colors ${
+                              notificationPrefs.quietHoursEnabled
+                                ? 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                : 'bg-gray-600'
+                            }`}
+                          >
+                            <motion.div
+                              animate={{ x: notificationPrefs.quietHoursEnabled ? 24 : 2 }}
+                              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                              className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg"
+                            />
+                          </button>
+                        </div>
+
+                        <p className="text-sm text-gray-400 mb-4">
+                          {t('settings.notifications_tab.quiet_hours_desc', 'Pause non-urgent notifications during specified hours')}
+                        </p>
+
+                        {notificationPrefs.quietHoursEnabled && (
+                          <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="flex-1">
+                              <label className="block text-sm font-medium mb-2">
+                                {t('settings.notifications_tab.quiet_start', 'Start Time')}
+                              </label>
+                              <input
+                                type="time"
+                                value={notificationPrefs.quietHoursStart || '22:00'}
+                                onChange={(e) => handleQuietHoursChange('quietHoursStart', e.target.value)}
+                                disabled={savingNotificationPrefs}
+                                className="input"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <label className="block text-sm font-medium mb-2">
+                                {t('settings.notifications_tab.quiet_end', 'End Time')}
+                              </label>
+                              <input
+                                type="time"
+                                value={notificationPrefs.quietHoursEnd || '08:00'}
+                                onChange={(e) => handleQuietHoursChange('quietHoursEnd', e.target.value)}
+                                disabled={savingNotificationPrefs}
+                                className="input"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="glass-strong rounded-xl p-8 text-center">
+                      <p className="text-gray-400">
+                        {t('settings.notifications_tab.load_failed', 'Failed to load notification preferences')}
+                      </p>
+                      <button
+                        onClick={loadNotificationPreferences}
+                        className="btn-secondary mt-4"
+                      >
+                        {t('common.retry', 'Retry')}
+                      </button>
                     </div>
-                  </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

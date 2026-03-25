@@ -9,6 +9,7 @@ import { User } from '../models/User';
 import { Book } from '../models/Book';
 import { AuthRequest } from '../types';
 import { notifyNewMessage } from '../services/notificationService';
+import { sendMessageNotification } from '../services/socketService';
 
 // UUID validation regex for Supabase
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -227,6 +228,24 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
         sanitizedContent,
         bookTitle
       ).catch((err) => console.error('Failed to send message notification:', err));
+
+      // Also send real-time socket message for instant delivery
+      const sender = await User.findById(req.user!.id);
+      if (sender) {
+        sendMessageNotification(otherParticipantId, {
+          conversationId,
+          message: {
+            _id: message._id,
+            content: sanitizedContent,
+            sender: {
+              _id: sender.id,
+              name: sender.name,
+              profilePicture: sender.profile?.avatar,
+            },
+            createdAt: message.createdAt,
+          },
+        });
+      }
     }
 
     // Update conversation with lastMessage and unreadCount
