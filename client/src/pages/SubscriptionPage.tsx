@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { api } from '../services/api';
+import { api, paymentApi } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import {
   Check,
@@ -73,18 +73,16 @@ export default function SubscriptionPage() {
     try {
       setUpgrading(planId);
 
-      // Step 1: Create payment order
+      // Step 1: Create payment order with idempotency key
       toast.loading('Creating payment order...', { id: 'payment' });
 
-      const orderResponse = await api.post('/payments/create-order', {
-        plan: planId,
-      });
+      const orderResponse = await paymentApi.createSubscriptionOrder(planId);
 
-      if (!orderResponse.data.success) {
-        throw new Error(orderResponse.data.error || 'Failed to create order');
+      if (!orderResponse.success) {
+        throw new Error(orderResponse.error || 'Failed to create order');
       }
 
-      const { orderId, mockMode } = orderResponse.data.data;
+      const { orderId, mockMode } = orderResponse.data;
 
       // Show mock mode indicator
       if (mockMode) {
@@ -93,16 +91,14 @@ export default function SubscriptionPage() {
         toast.success('Order created', { id: 'payment' });
       }
 
-      // Step 2: Capture payment (simulate processing delay)
+      // Step 2: Capture payment with idempotency key (simulate processing delay)
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast.loading('Processing payment...', { id: 'payment' });
 
-      const captureResponse = await api.post('/payments/capture-order', {
-        orderId,
-      });
+      const captureResponse = await paymentApi.captureSubscriptionOrder(orderId);
 
-      if (!captureResponse.data.success) {
-        throw new Error(captureResponse.data.error || 'Failed to capture payment');
+      if (!captureResponse.success) {
+        throw new Error(captureResponse.error || 'Failed to capture payment');
       }
 
       // Success! Play ka-ching sound (if available)
@@ -127,7 +123,7 @@ export default function SubscriptionPage() {
 
     } catch (error: any) {
       console.error('Failed to upgrade:', error);
-      toast.error(error.response?.data?.error || 'Payment failed. Please try again.', { id: 'payment' });
+      toast.error(error.response?.data?.error || error.message || 'Payment failed. Please try again.', { id: 'payment' });
     } finally {
       setUpgrading(null);
     }

@@ -140,9 +140,25 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   useEffect(() => {
     if (showMoreMenu && moreButtonRef.current) {
       const rect = moreButtonRef.current.getBoundingClientRect();
+      const menuWidth = window.innerWidth < 640 ? 260 : 280;
+      // For mobile, center the menu or position it to stay within viewport
+      const isMobile = window.innerWidth < 640;
+      let leftPos: number;
+
+      if (isMobile) {
+        // Center the menu on mobile, with padding from edges
+        leftPos = Math.max(8, (window.innerWidth - menuWidth) / 2);
+      } else if (isRTL) {
+        // For RTL desktop, position from right
+        leftPos = Math.max(8, window.innerWidth - rect.right);
+      } else {
+        // For LTR desktop
+        leftPos = Math.max(8, rect.left - 100);
+      }
+
       setMoreMenuPosition({
         top: rect.bottom + 4,
-        left: isRTL ? Math.max(8, window.innerWidth - rect.right) : Math.max(8, rect.left - 100),
+        left: leftPos,
       });
     }
   }, [showMoreMenu, isRTL]);
@@ -215,7 +231,6 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
     </motion.button>
   );
 
-  const iconClass = "w-4 h-4";
   const smallIconClass = "w-3.5 h-3.5";
 
   const getCurrentHeading = (): string => {
@@ -513,7 +528,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             className="fixed bg-slate-800 border border-white/10 rounded-xl shadow-2xl p-3 w-[260px] sm:w-[280px]"
             style={{
               top: moreMenuPosition.top,
-              ...(isRTL ? { right: Math.max(8, moreMenuPosition.left) } : { left: Math.min(moreMenuPosition.left, window.innerWidth - 270) }),
+              left: moreMenuPosition.left,
               zIndex: 9999,
             }}
           >

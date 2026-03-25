@@ -1,5 +1,21 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import toast from 'react-hot-toast';
+
+/**
+ * Generate a UUID v4 for idempotency keys
+ * Uses crypto.randomUUID() if available, falls back to manual generation
+ */
+export function generateIdempotencyKey(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback for older browsers
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
 // In production, use the server URL
 // In development, use localhost
@@ -97,6 +113,70 @@ export const uploadAvatar = async (file: File): Promise<string> => {
   }
 
   throw new Error(response.data.error || 'Failed to upload avatar');
+};
+
+/**
+ * Make a payment request with idempotency support
+ * Automatically generates and includes an idempotency key to prevent duplicate charges
+ *
+ * @param url - API endpoint
+ * @param data - Request body
+ * @param config - Additional axios config
+ * @returns Promise with response
+ */
+export async function paymentRequest<T = any>(
+  url: string,
+  data?: any,
+  config?: AxiosRequestConfig
+): Promise<T> {
+  const idempotencyKey = generateIdempotencyKey();
+
+  const response = await api.post(url, data, {
+    ...config,
+    headers: {
+      ...config?.headers,
+      'X-Idempotency-Key': idempotencyKey,
+    },
+  });
+
+  return response.data;
+}
+
+/**
+ * Payment API helpers with built-in idempotency support
+ */
+export const paymentApi = {
+  /**
+   * Create a subscription upgrade order
+   * @param plan - Plan ID ('standard' or 'premium')
+   */
+  createSubscriptionOrder: async (plan: string) => {
+    return paymentRequest('/payments/create-order', { plan });
+  },
+
+  /**
+   * Capture/complete a subscription payment
+   * @param orderId - Order ID from createOrder
+   */
+  captureSubscriptionOrder: async (orderId: string) => {
+    return paymentRequest('/payments/capture-order', { orderId });
+  },
+
+  /**
+   * Create a book purchase order
+   * @param bookId - Book ID to purchase
+   */
+  createBookPurchaseOrder: async (bookId: string) => {
+    return paymentRequest(`/book-purchases/${bookId}/create-order`);
+  },
+
+  /**
+   * Capture/complete a book purchase
+   * @param orderId - Order ID from createPurchaseOrder
+   */
+  captureBookPurchase: async (orderId: string) => {
+    return paymentRequest('/book-purchases/capture', { orderId });
+  },
 };
 
 export default api;

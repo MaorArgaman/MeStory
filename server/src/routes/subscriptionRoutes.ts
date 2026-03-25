@@ -5,6 +5,7 @@ import {
   cancelSubscription,
 } from '../controllers/subscriptionController';
 import { authenticate } from '../middleware/auth';
+import { subscriptionChangeLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
@@ -17,9 +18,11 @@ const router = Router();
 router.get('/plans', getPlans as any);
 
 // POST /api/subscription/upgrade - Upgrade subscription (authenticated)
-router.post('/upgrade', authenticate as any, upgradeSubscription as any);
+// Rate limited: 5 subscription changes per user per day
+router.post('/upgrade', authenticate as any, subscriptionChangeLimiter, upgradeSubscription as any);
 
 // POST /api/subscription/cancel - Cancel subscription (authenticated)
-router.post('/cancel', authenticate as any, cancelSubscription as any);
+// Rate limited: 5 subscription changes per user per day
+router.post('/cancel', authenticate as any, subscriptionChangeLimiter, cancelSubscription as any);
 
 export default router;

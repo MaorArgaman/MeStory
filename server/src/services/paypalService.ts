@@ -389,19 +389,48 @@ export async function captureBookPayment(
     // Production: Capture PayPal payment
     const accessToken = await getAccessToken();
 
-    const response = await axios.post(
-      `${PAYPAL_BASE_URL}/v2/checkout/orders/${orderId}/capture`,
-      {},
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
+    let response;
+    try {
+      response = await axios.post(
+        `${PAYPAL_BASE_URL}/v2/checkout/orders/${orderId}/capture`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    } catch (captureError: any) {
+      console.error('PayPal capture API error:', captureError.response?.data || captureError.message);
+
+      // Handle specific PayPal errors
+      const paypalErrorName = captureError.response?.data?.name;
+      const paypalErrorDetails = captureError.response?.data?.details?.[0];
+
+      let errorMessage = 'Failed to capture payment';
+
+      if (paypalErrorName === 'ORDER_NOT_APPROVED') {
+        errorMessage = 'Payment was not approved. Please complete the PayPal checkout.';
+      } else if (paypalErrorName === 'ORDER_ALREADY_CAPTURED') {
+        errorMessage = 'This payment has already been processed.';
+      } else if (paypalErrorName === 'INVALID_RESOURCE_ID') {
+        errorMessage = 'Invalid order ID. The order may have expired.';
+      } else if (paypalErrorName === 'PAYER_ACTION_REQUIRED') {
+        errorMessage = 'Additional action required from payer.';
+      } else if (paypalErrorDetails?.description) {
+        errorMessage = paypalErrorDetails.description;
       }
-    );
+
+      return { success: false, error: errorMessage };
+    }
 
     if (response.data.status !== 'COMPLETED') {
-      return { success: false, error: 'Payment capture failed' };
+      console.error('PayPal capture incomplete:', response.data.status);
+      return {
+        success: false,
+        error: `Payment capture failed with status: ${response.data.status}`
+      };
     }
 
     // Get capture ID
@@ -562,18 +591,56 @@ export async function processAuthorPayout(authorId: string): Promise<PayoutResul
       ],
     };
 
-    const response = await axios.post(
-      `${PAYPAL_BASE_URL}/v1/payments/payouts`,
-      payoutPayload,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
+    let response;
+    try {
+      response = await axios.post(
+        `${PAYPAL_BASE_URL}/v1/payments/payouts`,
+        payoutPayload,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    } catch (payoutError: any) {
+      console.error('PayPal payout API error:', payoutError.response?.data || payoutError.message);
+
+      // Handle specific PayPal payout errors
+      const paypalErrorName = payoutError.response?.data?.name;
+      const paypalErrorDetails = payoutError.response?.data?.details?.[0];
+
+      let errorMessage = 'Failed to process payout';
+
+      if (paypalErrorName === 'INSUFFICIENT_FUNDS') {
+        errorMessage = 'Platform has insufficient funds. Please contact support.';
+      } else if (paypalErrorName === 'RECEIVER_UNREGISTERED') {
+        errorMessage = 'The PayPal email is not registered. Please verify your PayPal account.';
+      } else if (paypalErrorName === 'RECEIVER_UNCONFIRMED') {
+        errorMessage = 'The PayPal email is not confirmed. Please verify your PayPal account.';
+      } else if (paypalErrorName === 'VALIDATION_ERROR') {
+        errorMessage = paypalErrorDetails?.description || 'Invalid payout details.';
+      } else if (paypalErrorName === 'SENDER_BATCH_ID_ALREADY_USED') {
+        errorMessage = 'A payout is already being processed. Please wait.';
+      } else if (paypalErrorDetails?.description) {
+        errorMessage = paypalErrorDetails.description;
       }
-    );
+
+      return { success: false, error: errorMessage };
+    }
+
+    // Check payout batch status
+    const batchStatus = response.data.batch_header?.batch_status;
+    if (batchStatus === 'DENIED' || batchStatus === 'CANCELED') {
+      console.error('PayPal payout denied/canceled:', response.data);
+      return {
+        success: false,
+        error: `Payout was ${batchStatus.toLowerCase()}. Please contact support.`
+      };
+    }
 
     const payoutBatchId = response.data.batch_header?.payout_batch_id;
+    console.log(`[PayPal] Payout created: ${payoutBatchId}, status: ${batchStatus}`);
 
     // Update author earnings
     if (!author.profile) author.profile = {};

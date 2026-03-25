@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config(); // Load environment variables FIRST before any other imports
 
 import express, { Request, Response, NextFunction } from 'express';
+import { createServer } from 'http';
 import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -15,6 +16,7 @@ import { connectDatabase, getDatabaseStatus } from './config/database';
 import { apiLimiter } from './middleware/rateLimiter';
 import { configurePassport } from './config/passport';
 import { errorHandler, notFoundHandler } from './middleware/errorMiddleware';
+import { initializeSocketIO, getOnlineUsersCount } from './services/socketService';
 
 // Import routes
 import authRoutes from './routes/authRoutes';
@@ -33,9 +35,11 @@ import voiceRoutes from './routes/voiceRoutes';
 import analysisRoutes from './routes/analysisRoutes';
 import templateRoutes from './routes/templateRoutes';
 import bookPurchaseRoutes from './routes/bookPurchaseRoutes';
+import webhookRoutes from './routes/webhookRoutes';
 import { initializeDefaultTemplates } from './services/templateService';
 
 const app = express();
+const httpServer = createServer(app);
 const PORT = process.env.PORT || 5001;
 
 // Check if running in Vercel serverless environment
@@ -256,6 +260,9 @@ app.get('/health', async (_req, res) => {
     initError: lastInitError?.message || null,
     configIssues: configIssues.length > 0 ? configIssues : undefined,
     database: dbStatus,
+    socket: {
+      onlineUsers: getOnlineUsersCount(),
+    },
     env: {
       hasSupabaseUrl: !!process.env.SUPABASE_URL,
       hasSupabaseKey: !!process.env.SUPABASE_ANON_KEY,
@@ -299,6 +306,7 @@ app.use('/api/voice', voiceRoutes);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/book-purchases', bookPurchaseRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // ============================================
 // Error Handling (must be last)
@@ -313,10 +321,15 @@ const startServer = async () => {
   try {
     await initializeApp();
 
-    app.listen(PORT, () => {
+    // Initialize Socket.IO for local development
+    initializeSocketIO(httpServer, allowedOrigins);
+    console.log('✅ Socket.IO initialized');
+
+    httpServer.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🌐 Client URL: ${process.env.CLIENT_URL || 'http://localhost:5173'}`);
+      console.log(`🔌 WebSocket enabled`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

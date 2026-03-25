@@ -205,7 +205,7 @@ interface SendEmailParams {
 /**
  * Send an email
  */
-async function sendEmail({ to, subject, html }: SendEmailParams): Promise<boolean> {
+export async function sendEmail({ to, subject, html }: SendEmailParams): Promise<boolean> {
   try {
     // Mock mode in development
     if (!transporter) {

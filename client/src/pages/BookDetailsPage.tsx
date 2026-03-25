@@ -12,7 +12,7 @@ import {
   Sparkles,
   Eye,
 } from 'lucide-react';
-import { api } from '../services/api';
+import { api, paymentApi } from '../services/api';
 import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
@@ -354,20 +354,40 @@ export default function BookDetailsPage() {
                   if (book.publishingStatus.isFree) {
                     window.location.href = `/read/${book._id}`;
                   } else {
-                    // Purchase the book
+                    // Purchase the book with idempotency support
                     try {
-                      toast.loading('Processing purchase...', { id: 'purchase' });
-                      const response = await api.post(`/books/${book._id}/purchase`);
-                      if (response.data.success) {
-                        toast.success('Purchase successful! Redirecting to reader...', { id: 'purchase' });
-                        setTimeout(() => {
-                          window.location.href = `/read/${book._id}`;
-                        }, 1500);
+                      toast.loading('Creating order...', { id: 'purchase' });
+
+                      // Step 1: Create purchase order with idempotency key
+                      const orderResponse = await paymentApi.createBookPurchaseOrder(book._id);
+
+                      if (!orderResponse.success) {
+                        throw new Error(orderResponse.error || 'Failed to create order');
                       }
+
+                      const { orderId, mockMode } = orderResponse.data;
+                      toast.loading('Processing payment...', { id: 'purchase' });
+
+                      // Step 2: Capture payment with idempotency key
+                      const captureResponse = await paymentApi.captureBookPurchase(orderId);
+
+                      if (!captureResponse.success) {
+                        throw new Error(captureResponse.error || 'Failed to capture payment');
+                      }
+
+                      toast.success(
+                        mockMode
+                          ? 'Purchase successful (Mock Mode)! Redirecting to reader...'
+                          : 'Purchase successful! Redirecting to reader...',
+                        { id: 'purchase' }
+                      );
+                      setTimeout(() => {
+                        window.location.href = `/read/${book._id}`;
+                      }, 1500);
                     } catch (error: any) {
                       console.error('Purchase error:', error);
                       toast.error(
-                        error.response?.data?.error || 'Failed to purchase book. Please try again.',
+                        error.response?.data?.error || error.message || 'Failed to purchase book. Please try again.',
                         { id: 'purchase' }
                       );
                     }

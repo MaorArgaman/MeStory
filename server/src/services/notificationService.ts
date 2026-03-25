@@ -6,6 +6,7 @@
 import { Notification, INotification, NotificationType } from '../models/Notification';
 import { User } from '../models/User';
 import { Book } from '../models/Book';
+import { sendNotificationToUser, emitUnreadCountUpdate } from './socketService';
 
 // UUID validation helper
 const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -33,6 +34,22 @@ export async function createNotification(params: CreateNotificationParams): Prom
     message: params.message,
     data: params.data,
   });
+
+  // Emit real-time notification via Socket.IO
+  sendNotificationToUser(params.recipientId, {
+    _id: notification._id,
+    type: notification.type,
+    title: notification.title,
+    message: notification.message,
+    data: notification.data,
+    isRead: notification.isRead,
+    createdAt: notification.createdAt,
+    sender: params.senderId ? await User.findById(params.senderId) : null,
+  });
+
+  // Also update the unread count
+  const unreadCount = await getUnreadCount(params.recipientId);
+  emitUnreadCountUpdate(params.recipientId, unreadCount);
 
   return notification;
 }
