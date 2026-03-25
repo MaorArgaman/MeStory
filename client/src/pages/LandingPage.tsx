@@ -117,11 +117,7 @@ export default function LandingPage() {
               <img
                 src={logoIcon}
                 alt="MeStory"
-                className="h-12 sm:h-14 w-auto object-cover"
-                style={{
-                  clipPath: 'inset(15% 5% 15% 5%)',
-                  transform: 'scale(1.4)',
-                }}
+                className="h-10 sm:h-12 w-auto object-contain"
               />
             </motion.div>
 
@@ -533,11 +529,7 @@ export default function LandingPage() {
               <img
                 src={logoIcon}
                 alt="MeStory"
-                className="h-16 sm:h-20 lg:h-24 w-auto mx-auto mb-4 sm:mb-6 object-cover opacity-90"
-                style={{
-                  clipPath: 'inset(15% 5% 15% 5%)',
-                  transform: 'scale(1.4)',
-                }}
+                className="h-16 sm:h-20 lg:h-24 w-auto mx-auto mb-4 sm:mb-6 object-contain"
               />
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-bold gradient-gold mb-4 sm:mb-6">
                 {t('landing.cta.title')}
@@ -569,11 +561,7 @@ export default function LandingPage() {
                 <img
                   src={logoIcon}
                   alt="MeStory"
-                  className="h-14 sm:h-16 w-auto object-cover"
-                  style={{
-                    clipPath: 'inset(10% 3% 10% 3%)',
-                    transform: 'scale(1.25)',
-                  }}
+                  className="h-12 sm:h-14 w-auto object-contain"
                 />
               </div>
               <p className="text-gray-400 text-sm sm:text-base max-w-md">
