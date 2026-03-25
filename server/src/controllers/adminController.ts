@@ -13,8 +13,8 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
  */
 export const getStats = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    // BUG-001: Admin role verification
-    if (!req.user || req.user.role !== UserRole.ADMIN) {
+    // BUG-001: Admin role verification (case-insensitive)
+    if (!req.user || req.user.role?.toUpperCase() !== UserRole.ADMIN) {
       res.status(403).json({
         success: false,
         error: 'Access denied. Admin privileges required.',
@@ -23,15 +23,15 @@ export const getStats = async (req: AuthRequest, res: Response): Promise<void> =
     }
 
     // Count users by role
-    const totalUsers = await User.count();
-    const freeUsers = await User.count({ role: UserRole.FREE });
-    const standardUsers = await User.count({ role: UserRole.STANDARD });
-    const premiumUsers = await User.count({ role: UserRole.PREMIUM });
+    const totalUsers = await User.countDocuments();
+    const freeUsers = await User.countDocuments({ role: UserRole.FREE });
+    const standardUsers = await User.countDocuments({ role: UserRole.STANDARD });
+    const premiumUsers = await User.countDocuments({ role: UserRole.PREMIUM });
 
     // Count books by status
-    const totalBooks = await Book.count();
-    const publishedBooks = await Book.count({ 'publishingStatus.status': 'published' });
-    const draftBooks = await Book.count({ 'publishingStatus.status': 'draft' });
+    const totalBooks = await Book.countDocuments();
+    const publishedBooks = await Book.countDocuments({ 'publishingStatus.status': 'published' });
+    const draftBooks = await Book.countDocuments({ 'publishingStatus.status': 'draft' });
 
     // Calculate total revenue (50% from all book sales)
     const books = await Book.find({
@@ -47,7 +47,7 @@ export const getStats = async (req: AuthRequest, res: Response): Promise<void> =
     // Get recent signups (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const recentSignups = await User.count({
+    const recentSignups = await User.countDocuments({
       createdAt: { $gte: sevenDaysAgo },
     });
 
