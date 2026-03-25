@@ -127,8 +127,8 @@ export default function DashboardPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    const allowedTypes = ['.pdf', '.docx', '.txt', '.doc'];
+    // Validate file type (PDF temporarily disabled - use DOCX or TXT)
+    const allowedTypes = ['.docx', '.txt', '.doc'];
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
     if (!allowedTypes.includes(fileExtension)) {
       toast.error(t('dashboard.messages.invalid_file_type'));
@@ -636,10 +636,11 @@ export default function DashboardPage() {
                     <Palette className="w-3 h-3" />
                     {t('dashboard.book_card.design')}
                   </button>
-                  {book.publishingStatus.status === 'published' ? (
+                  {/* Export button - available for all books with chapters */}
+                  {book.statistics.chapterCount > 0 ? (
                     <button
                       onClick={(e) => exportBook(book.id, book.title, e)}
-                      className="btn-primary text-xs py-2 flex items-center justify-center gap-1"
+                      className={`${book.publishingStatus.status === 'published' ? 'btn-primary' : 'btn-secondary'} text-xs py-2 flex items-center justify-center gap-1`}
                       title={t('dashboard.book_card.export')}
                     >
                       <Download className="w-3 h-3" />
@@ -727,7 +728,7 @@ export default function DashboardPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.docx,.txt,.doc"
+                  accept=".docx,.txt,.doc"
                   onChange={handleFileUpload}
                   className="hidden"
                   disabled={uploading}

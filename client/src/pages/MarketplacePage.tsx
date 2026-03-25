@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
-import { Search, Sparkles, Star, DollarSign, User, BookOpen, Eye, Heart, Shield, Users } from 'lucide-react';
+import { Search, Sparkles, Star, User, BookOpen, Eye, Heart, Shield, Users } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton, NeonInput } from '../components/ui';
 import {
@@ -133,6 +134,7 @@ const HOLOCAUST_SUBCATEGORIES = [
 export default function MarketplacePage() {
   const { t } = useTranslation('common');
   const { language } = useLanguage();
+  const { formatCurrency } = useCurrency();
   const [books, setBooks] = useState<BookItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -1295,8 +1297,7 @@ export default function MarketplacePage() {
                         </span>
                       ) : (
                         <div className="flex items-center gap-0.5 sm:gap-1 text-magic-gold font-bold text-sm sm:text-lg">
-                          <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
-                          <span>{book.publishingStatus.price.toFixed(2)}</span>
+                          <span>{formatCurrency(book.publishingStatus.price)}</span>
                         </div>
                       )}
 

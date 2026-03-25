@@ -11,11 +11,16 @@ import {
   MessageCircle,
   Sparkles,
   Eye,
+  Loader2,
 } from 'lucide-react';
 import { api, paymentApi } from '../services/api';
 import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useCurrency } from '../contexts/CurrencyContext';
+import { PaymentConfirmationModal, PaymentSuccessAnimation } from '../components/payment';
+import { getFriendlyErrorMessage } from '../utils/errorMessages';
 
 interface Book {
   _id: string;
@@ -69,6 +74,8 @@ export default function BookDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { language } = useLanguage();
+  const { formatCurrency } = useCurrency();
 
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
@@ -78,6 +85,11 @@ export default function BookDetailsPage() {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+
+  // Purchase states
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -111,7 +123,8 @@ export default function BookDetailsPage() {
           return;
         }
         console.error('Failed to load book:', error);
-        toast.error('Failed to load book details');
+        const friendlyMessage = getFriendlyErrorMessage(error, language as 'en' | 'he');
+        toast.error(friendlyMessage);
         navigate('/marketplace');
       } finally {
         if (!abortController.signal.aborted) {
@@ -125,7 +138,7 @@ export default function BookDetailsPage() {
     return () => {
       abortController.abort();
     };
-  }, [id, user, navigate]);
+  }, [id, user, navigate, language]);
 
   // Separate reload function for use after submitting reviews
   const reloadBook = useCallback(async () => {
@@ -159,7 +172,8 @@ export default function BookDetailsPage() {
       }
     } catch (error) {
       console.error('Failed to like book:', error);
-      toast.error('Failed to like book');
+      const friendlyMessage = getFriendlyErrorMessage(error, language as 'en' | 'he');
+      toast.error(friendlyMessage);
     }
   };
 
@@ -194,11 +208,82 @@ export default function BookDetailsPage() {
         setReviewComment('');
         reloadBook(); // Reload to show new review
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to submit review:', error);
-      toast.error(error.response?.data?.error || 'Failed to submit review');
+      const friendlyMessage = getFriendlyErrorMessage(error, language as 'en' | 'he');
+      toast.error(friendlyMessage);
     } finally {
       setSubmittingReview(false);
+    }
+  };
+
+  // Handle read/buy button click
+  const handleReadOrBuy = () => {
+    if (!book) return;
+
+    if (book.publishingStatus.isFree) {
+      window.location.href = `/read/${book._id}`;
+    } else {
+      // Show confirmation modal for paid books
+      setShowConfirmModal(true);
+    }
+  };
+
+  // Handle purchase confirmation
+  const handleConfirmPurchase = async () => {
+    if (!book) return;
+
+    try {
+      setIsPurchasing(true);
+
+      // Step 1: Create purchase order with idempotency key
+      toast.loading('Creating order...', { id: 'purchase' });
+
+      const orderResponse = await paymentApi.createBookPurchaseOrder(book._id);
+
+      if (!orderResponse.success) {
+        throw new Error(orderResponse.error || 'Failed to create order');
+      }
+
+      const { orderId, mockMode } = orderResponse.data;
+      toast.loading('Processing payment...', { id: 'purchase' });
+
+      // Step 2: Capture payment with idempotency key
+      const captureResponse = await paymentApi.captureBookPurchase(orderId);
+
+      if (!captureResponse.success) {
+        throw new Error(captureResponse.error || 'Failed to capture payment');
+      }
+
+      // Close modal and show success animation
+      setShowConfirmModal(false);
+      setShowSuccessAnimation(true);
+
+      toast.success(
+        mockMode
+          ? 'Purchase successful (Mock Mode)!'
+          : 'Purchase successful!',
+        { id: 'purchase' }
+      );
+
+      // Redirect to reader after showing success animation
+      setTimeout(() => {
+        window.location.href = `/read/${book._id}`;
+      }, 2500);
+
+    } catch (error: unknown) {
+      console.error('Purchase error:', error);
+      const friendlyMessage = getFriendlyErrorMessage(error, language as 'en' | 'he');
+      toast.error(friendlyMessage, { id: 'purchase' });
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
+
+  // Close confirmation modal
+  const handleCloseModal = () => {
+    if (!isPurchasing) {
+      setShowConfirmModal(false);
     }
   };
 
@@ -222,6 +307,38 @@ export default function BookDetailsPage() {
 
   return (
     <div className="min-h-screen pt-32 pb-20">
+      {/* Payment Confirmation Modal */}
+      <PaymentConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmPurchase}
+        isProcessing={isPurchasing}
+        type="book"
+        bookTitle={book.title}
+        bookAuthor={book.author.name}
+        bookPrice={book.publishingStatus.price}
+        bookCover={coverImage}
+      />
+
+      {/* Success Animation Overlay */}
+      <AnimatePresence>
+        {showSuccessAnimation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          >
+            <PaymentSuccessAnimation
+              size="lg"
+              variant="gold"
+              message={t('payment.purchase_success', 'Purchase Successful!')}
+              subMessage={t('payment.redirecting_reader', 'Redirecting to reader...')}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="max-w-7xl mx-auto px-6">
         {/* Hero Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12 lg:mb-16">
@@ -350,54 +467,22 @@ export default function BookDetailsPage() {
               <GlowingButton
                 variant="gold"
                 size="lg"
-                onClick={async () => {
-                  if (book.publishingStatus.isFree) {
-                    window.location.href = `/read/${book._id}`;
-                  } else {
-                    // Purchase the book with idempotency support
-                    try {
-                      toast.loading('Creating order...', { id: 'purchase' });
-
-                      // Step 1: Create purchase order with idempotency key
-                      const orderResponse = await paymentApi.createBookPurchaseOrder(book._id);
-
-                      if (!orderResponse.success) {
-                        throw new Error(orderResponse.error || 'Failed to create order');
-                      }
-
-                      const { orderId, mockMode } = orderResponse.data;
-                      toast.loading('Processing payment...', { id: 'purchase' });
-
-                      // Step 2: Capture payment with idempotency key
-                      const captureResponse = await paymentApi.captureBookPurchase(orderId);
-
-                      if (!captureResponse.success) {
-                        throw new Error(captureResponse.error || 'Failed to capture payment');
-                      }
-
-                      toast.success(
-                        mockMode
-                          ? 'Purchase successful (Mock Mode)! Redirecting to reader...'
-                          : 'Purchase successful! Redirecting to reader...',
-                        { id: 'purchase' }
-                      );
-                      setTimeout(() => {
-                        window.location.href = `/read/${book._id}`;
-                      }, 1500);
-                    } catch (error: any) {
-                      console.error('Purchase error:', error);
-                      toast.error(
-                        error.response?.data?.error || error.message || 'Failed to purchase book. Please try again.',
-                        { id: 'purchase' }
-                      );
-                    }
-                  }
-                }}
+                onClick={handleReadOrBuy}
+                disabled={isPurchasing}
               >
-                <BookOpen className="w-5 h-5" />
-                {book.publishingStatus.isFree
-                  ? t('book_details.read_now')
-                  : t('book_details.buy_for', { price: book.publishingStatus.price })}
+                {isPurchasing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    {t('payment.processing', 'Processing...')}
+                  </>
+                ) : (
+                  <>
+                    <BookOpen className="w-5 h-5" />
+                    {book.publishingStatus.isFree
+                      ? t('book_details.read_now')
+                      : t('book_details.buy_for', { price: formatCurrency(book.publishingStatus.price) })}
+                  </>
+                )}
               </GlowingButton>
 
               {/* Like Button */}
@@ -547,7 +632,14 @@ export default function BookDetailsPage() {
                         onClick={handleSubmitReview}
                         disabled={submittingReview}
                       >
-                        {submittingReview ? t('book_details.reviews.submitting') : t('book_details.reviews.submit')}
+                        {submittingReview ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            {t('book_details.reviews.submitting')}
+                          </>
+                        ) : (
+                          t('book_details.reviews.submit')
+                        )}
                       </GlowingButton>
                       <GlowingButton
                         variant="cosmic"

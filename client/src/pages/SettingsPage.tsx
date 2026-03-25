@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { api, uploadAvatar } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage, Language } from '../contexts/LanguageContext';
+import { useCurrency, Currency } from '../contexts/CurrencyContext';
 import { useTabKeyboardNavigation } from '../hooks/useModal';
 import {
   User,
@@ -104,6 +105,7 @@ export default function SettingsPage() {
   const { t } = useTranslation('common');
   const { user, refreshUser } = useAuth();
   const { language, setLanguage } = useLanguage();
+  const { currency, setCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [loading, setLoading] = useState(false);
 
@@ -111,6 +113,7 @@ export default function SettingsPage() {
   const tabKeys: Tab[] = ['profile', 'security', 'earnings', 'billing', 'notifications'];
   const handleTabKeyDown = useTabKeyboardNavigation(tabKeys, activeTab, setActiveTab);
   const [languageLoading, setLanguageLoading] = useState(false);
+  const [currencyLoading, setCurrencyLoading] = useState(false);
 
   // Profile state
   const [name, setName] = useState(user?.name || '');
@@ -388,6 +391,19 @@ export default function SettingsPage() {
     }
   };
 
+  const handleCurrencyChange = async (newCurrency: Currency) => {
+    try {
+      setCurrencyLoading(true);
+      await setCurrency(newCurrency);
+      toast.success(newCurrency === 'ILS' ? t('settings.toast.currency_ils') : t('settings.toast.currency_usd'));
+    } catch (error) {
+      console.error('Failed to change currency:', error);
+      toast.error(t('settings.toast.currency_failed'));
+    } finally {
+      setCurrencyLoading(false);
+    }
+  };
+
   const handleExportData = async () => {
     try {
       setExportingData(true);
@@ -534,6 +550,59 @@ export default function SettingsPage() {
                       </div>
                       <p className="text-xs text-gray-500 mt-2">
                         {t('settings.profile.language_help')}
+                      </p>
+                    </div>
+
+                    {/* Currency */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2 sm:mb-3 flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-green-400" />
+                        {t('currency.select')}
+                      </label>
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                        <button
+                          type="button"
+                          onClick={() => handleCurrencyChange('USD')}
+                          disabled={currencyLoading}
+                          className={`flex-1 flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl border transition-all ${
+                            currency === 'USD'
+                              ? 'bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-green-500/50 text-white'
+                              : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          {currencyLoading && currency !== 'USD' ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <>
+                              <span className="text-xl sm:text-2xl">$</span>
+                              <span className="font-medium text-sm sm:text-base">USD</span>
+                              {currency === 'USD' && <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />}
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleCurrencyChange('ILS')}
+                          disabled={currencyLoading}
+                          className={`flex-1 flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl border transition-all ${
+                            currency === 'ILS'
+                              ? 'bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-green-500/50 text-white'
+                              : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          {currencyLoading && currency !== 'ILS' ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <>
+                              <span className="text-xl sm:text-2xl">&#8362;</span>
+                              <span className="font-medium text-sm sm:text-base">ILS</span>
+                              {currency === 'ILS' && <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />}
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        {t('settings.profile.currency_help')}
                       </p>
                     </div>
 

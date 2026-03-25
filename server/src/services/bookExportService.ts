@@ -13,8 +13,21 @@ import axios from 'axios';
 interface ChapterData {
   title: string;
   content: string;
+  formattedContent: FormattedSegment[]; // Rich text segments with formatting
   wordCount: number;
   images: PageImageData[];
+}
+
+// Text segment with formatting information
+interface FormattedSegment {
+  text: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  isHeading?: boolean;
+  headingLevel?: number;
+  isListItem?: boolean;
+  isParagraphBreak?: boolean;
 }
 
 interface PageImageData {
@@ -184,6 +197,9 @@ const i18nLabels = {
     ending: 'הסיום',
     words: 'מילים',
     chapters: 'פרקים',
+    interviewResponses: 'תשובות מהראיון',
+    question: 'שאלה',
+    aboutAuthor: 'על המחבר',
   },
   en: {
     allRightsReserved: 'All Rights Reserved',
@@ -209,6 +225,9 @@ const i18nLabels = {
     ending: 'The Ending',
     words: 'words',
     chapters: 'chapters',
+    interviewResponses: 'Interview Responses',
+    question: 'Question',
+    aboutAuthor: 'About the Author',
   },
 };
 
@@ -225,6 +244,7 @@ function getLabels(language: string) {
 
 /**
  * Strip HTML tags from content while preserving paragraph structure
+ * Used for plain text extraction (word count, simple display)
  */
 function stripHtml(html: string): string {
   if (!html) return '';
@@ -250,6 +270,224 @@ function stripHtml(html: string): string {
     .replace(/&ndash;/g, '–')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+}
+
+/**
+ * Decode HTML entities
+ */
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&rsquo;/g, "'")
+    .replace(/&lsquo;/g, "'")
+    .replace(/&rdquo;/g, '"')
+    .replace(/&ldquo;/g, '"')
+    .replace(/&mdash;/g, '—')
+    .replace(/&ndash;/g, '–');
+}
+
+/**
+ * Parse HTML content and extract formatted segments
+ * Preserves bold, italic, underline, headings, and list formatting
+ */
+function parseHtmlToFormattedSegments(html: string): FormattedSegment[] {
+  if (!html) return [];
+
+  const segments: FormattedSegment[] = [];
+
+  // Normalize line breaks
+  let content = html
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n');
+
+  // Process block-level elements
+  const blocks = content.split(/<\/(?:p|div|h[1-6]|li)>/gi);
+
+  for (let block of blocks) {
+    if (!block.trim()) continue;
+
+    // Check for heading
+    const headingMatch = block.match(/<h([1-6])[^>]*>/i);
+    const isHeading = !!headingMatch;
+    const headingLevel = headingMatch ? parseInt(headingMatch[1]) : undefined;
+
+    // Check for list item
+    const isListItem = /<li[^>]*>/i.test(block);
+
+    // Remove opening block tags
+    block = block.replace(/<(?:p|div|h[1-6]|li)[^>]*>/gi, '');
+
+    // Handle line breaks within block
+    block = block.replace(/<br\s*\/?>/gi, '\n');
+
+    // Parse inline formatting
+    const inlineSegments = parseInlineFormatting(block);
+
+    for (const seg of inlineSegments) {
+      segments.push({
+        ...seg,
+        isHeading,
+        headingLevel,
+        isListItem: isListItem && seg === inlineSegments[0],
+      });
+    }
+
+    // Add paragraph break after block
+    segments.push({ text: '', isParagraphBreak: true });
+  }
+
+  return segments;
+}
+
+/**
+ * Parse inline formatting (bold, italic, underline) from HTML
+ */
+function parseInlineFormatting(html: string): FormattedSegment[] {
+  const segments: FormattedSegment[] = [];
+
+  // Simple regex-based parsing for common formatting tags
+  // This handles nested tags by processing from innermost to outermost
+
+  interface TextNode {
+    text: string;
+    bold: boolean;
+    italic: boolean;
+    underline: boolean;
+  }
+
+  const nodes: TextNode[] = [];
+  let remaining = html;
+
+  // Pattern to match formatting tags with their content
+  const tagPattern = /<(strong|b|em|i|u|span[^>]*style[^>]*(?:font-weight:\s*bold|font-style:\s*italic|text-decoration:\s*underline)[^>]*)>([^<]*)<\/\1>/gi;
+
+  // First pass: extract all plain text and formatted segments
+  let lastIndex = 0;
+  const matches: Array<{index: number, length: number, text: string, tag: string}> = [];
+
+  // Find all formatting tags
+  let match;
+  const strongPattern = /<(strong|b)>(.*?)<\/\1>/gis;
+  const emPattern = /<(em|i)>(.*?)<\/\1>/gis;
+  const uPattern = /<u>(.*?)<\/u>/gis;
+
+  // Process the HTML by splitting on tags and tracking state
+  const processedText = html
+    // First, mark formatting boundaries
+    .replace(/<(strong|b)>/gi, '{{BOLD_START}}')
+    .replace(/<\/(strong|b)>/gi, '{{BOLD_END}}')
+    .replace(/<(em|i)>/gi, '{{ITALIC_START}}')
+    .replace(/<\/(em|i)>/gi, '{{ITALIC_END}}')
+    .replace(/<u>/gi, '{{UNDERLINE_START}}')
+    .replace(/<\/u>/gi, '{{UNDERLINE_END}}')
+    // Remove other tags
+    .replace(/<[^>]*>/g, '');
+
+  // Parse the marked text
+  let currentBold = false;
+  let currentItalic = false;
+  let currentUnderline = false;
+  let currentText = '';
+
+  const parts = processedText.split(/({{(?:BOLD|ITALIC|UNDERLINE)_(?:START|END)}})/);
+
+  for (const part of parts) {
+    switch (part) {
+      case '{{BOLD_START}}':
+        if (currentText) {
+          segments.push({
+            text: decodeHtmlEntities(currentText),
+            bold: currentBold,
+            italic: currentItalic,
+            underline: currentUnderline,
+          });
+          currentText = '';
+        }
+        currentBold = true;
+        break;
+      case '{{BOLD_END}}':
+        if (currentText) {
+          segments.push({
+            text: decodeHtmlEntities(currentText),
+            bold: currentBold,
+            italic: currentItalic,
+            underline: currentUnderline,
+          });
+          currentText = '';
+        }
+        currentBold = false;
+        break;
+      case '{{ITALIC_START}}':
+        if (currentText) {
+          segments.push({
+            text: decodeHtmlEntities(currentText),
+            bold: currentBold,
+            italic: currentItalic,
+            underline: currentUnderline,
+          });
+          currentText = '';
+        }
+        currentItalic = true;
+        break;
+      case '{{ITALIC_END}}':
+        if (currentText) {
+          segments.push({
+            text: decodeHtmlEntities(currentText),
+            bold: currentBold,
+            italic: currentItalic,
+            underline: currentUnderline,
+          });
+          currentText = '';
+        }
+        currentItalic = false;
+        break;
+      case '{{UNDERLINE_START}}':
+        if (currentText) {
+          segments.push({
+            text: decodeHtmlEntities(currentText),
+            bold: currentBold,
+            italic: currentItalic,
+            underline: currentUnderline,
+          });
+          currentText = '';
+        }
+        currentUnderline = true;
+        break;
+      case '{{UNDERLINE_END}}':
+        if (currentText) {
+          segments.push({
+            text: decodeHtmlEntities(currentText),
+            bold: currentBold,
+            italic: currentItalic,
+            underline: currentUnderline,
+          });
+          currentText = '';
+        }
+        currentUnderline = false;
+        break;
+      default:
+        currentText += part;
+        break;
+    }
+  }
+
+  // Add remaining text
+  if (currentText) {
+    segments.push({
+      text: decodeHtmlEntities(currentText),
+      bold: currentBold,
+      italic: currentItalic,
+      underline: currentUnderline,
+    });
+  }
+
+  // Filter out empty segments
+  return segments.filter(s => s.text.length > 0 || s.isParagraphBreak);
 }
 
 /**
@@ -468,10 +706,11 @@ async function extractBookData(bookId: string): Promise<BookExportData> {
   // Get language-aware labels
   const labels = getLabels(book.language || 'he');
 
-  // Extract chapters with images
+  // Extract chapters with images and formatted content
   const chapters: ChapterData[] = (book.chapters || []).map((ch: IChapter, index: number) => ({
     title: ch.title || labels.chapterWithoutName,
     content: stripHtml(ch.content || ''),
+    formattedContent: parseHtmlToFormattedSegments(ch.content || ''),
     wordCount: ch.wordCount || 0,
     images: chapterImagesMap.get(index) || [],
   }));
@@ -764,7 +1003,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       // Add characters to TOC if any
       if (bookData.characters.length > 0) {
         doc.moveDown(1);
-        doc.text('דמויות', margins.left, doc.y, {
+        doc.text(labels.characters, margins.left, doc.y, {
           align: isRTL ? 'right' : 'left',
           width: contentWidth,
         });
@@ -815,32 +1054,79 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
         doc.moveDown(1);
       }
 
-      // Chapter content
-      doc.font(mainFont)
-        .fontSize(bookData.pageLayout.fontSize)
-        .fillColor('black');
+      // Chapter content with formatting preservation
+      doc.fillColor('black');
+      const fontSize = bookData.pageLayout.fontSize;
+      const lineGap = (bookData.pageLayout.lineHeight - 1) * fontSize;
 
-      const paragraphs = chapter.content.split(/\n\n+/);
-      paragraphs.forEach((para, paraIndex) => {
-        if (para.trim()) {
-          // Check if we need a new page
-          if (doc.y > pageDims.height - margins.bottom - 50) {
-            doc.addPage();
-            pageNum++;
-          }
+      // Render formatted segments
+      let currentX = margins.left;
+      let lineStart = true;
 
-          doc.text(para.trim(), margins.left, doc.y, {
-            align: 'justify',
-            width: contentWidth,
-            lineGap: (bookData.pageLayout.lineHeight - 1) * bookData.pageLayout.fontSize,
-            paragraphGap: 12,
-          });
-
-          if (paraIndex < paragraphs.length - 1) {
-            doc.moveDown(0.5);
-          }
+      for (const segment of chapter.formattedContent) {
+        // Check if we need a new page
+        if (doc.y > pageDims.height - margins.bottom - 50) {
+          doc.addPage();
+          pageNum++;
+          lineStart = true;
         }
-      });
+
+        // Handle paragraph breaks
+        if (segment.isParagraphBreak) {
+          doc.moveDown(0.8);
+          lineStart = true;
+          continue;
+        }
+
+        // Handle list items
+        if (segment.isListItem) {
+          doc.font(mainFont).fontSize(fontSize).text('• ', margins.left, doc.y, { continued: true });
+        }
+
+        // Skip empty segments
+        if (!segment.text || !segment.text.trim()) continue;
+
+        // Determine font based on formatting
+        let font = mainFont;
+        if (segment.bold && segment.italic) {
+          // For bold+italic, we use bold (PDFKit limitation with custom fonts)
+          font = boldFont;
+        } else if (segment.bold) {
+          font = boldFont;
+        } else if (segment.italic) {
+          // For italic, we'll use the main font but could add italic font later
+          font = mainFont;
+        }
+
+        // Set font and size
+        doc.font(font).fontSize(segment.isHeading ? fontSize + 4 : fontSize);
+
+        // Render the text
+        const textOptions: any = {
+          continued: false,
+          align: 'justify',
+          width: contentWidth,
+          lineGap: lineGap,
+        };
+
+        // Handle underline
+        if (segment.underline) {
+          doc.text(segment.text, margins.left, doc.y, textOptions);
+          // Draw underline manually
+          const textWidth = doc.widthOfString(segment.text);
+          const underlineY = doc.y;
+          doc.moveTo(margins.left, underlineY)
+            .lineTo(margins.left + Math.min(textWidth, contentWidth), underlineY)
+            .stroke();
+        } else {
+          doc.text(segment.text, margins.left, doc.y, textOptions);
+        }
+
+        lineStart = false;
+      }
+
+      // Add spacing after chapter
+      doc.moveDown(1);
     });
 
     // ========== CHARACTERS SECTION ==========
@@ -851,7 +1137,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       doc.fillColor('black')
         .font(boldFont)
         .fontSize(24)
-        .text('דמויות הספר', margins.left, margins.top, {
+        .text(labels.bookCharacters, margins.left, margins.top, {
           align: 'center',
           width: contentWidth,
         });
@@ -867,7 +1153,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
         // Character name
         doc.font(boldFont)
           .fontSize(16)
-          .text(character.name + (character.age ? ` (גיל ${character.age})` : ''), margins.left, doc.y, {
+          .text(character.name + (character.age ? ` (${labels.age} ${character.age})` : ''), margins.left, doc.y, {
             align: isRTL ? 'right' : 'left',
             width: contentWidth,
           });
@@ -886,28 +1172,28 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
 
         // Traits
         if (character.traits && character.traits.length > 0) {
-          doc.font(boldFont).fontSize(10).text('תכונות: ', { continued: true });
+          doc.font(boldFont).fontSize(10).text(`${labels.traits}: `, { continued: true });
           doc.font(mainFont).text(character.traits.join(', '));
           doc.moveDown(0.3);
         }
 
         // Backstory
         if (character.backstory) {
-          doc.font(boldFont).fontSize(10).text('רקע: ', { continued: true });
+          doc.font(boldFont).fontSize(10).text(`${labels.backstory}: `, { continued: true });
           doc.font(mainFont).text(character.backstory);
           doc.moveDown(0.3);
         }
 
         // Goals
         if (character.goals) {
-          doc.font(boldFont).fontSize(10).text('מטרות: ', { continued: true });
+          doc.font(boldFont).fontSize(10).text(`${labels.goals}: `, { continued: true });
           doc.font(mainFont).text(character.goals);
           doc.moveDown(0.3);
         }
 
         // Arc
         if (character.arc) {
-          doc.font(boldFont).fontSize(10).text('התפתחות: ', { continued: true });
+          doc.font(boldFont).fontSize(10).text(`${labels.arc}: `, { continued: true });
           doc.font(mainFont).text(character.arc);
         }
 
@@ -933,7 +1219,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       doc.fillColor('black')
         .font(boldFont)
         .fontSize(24)
-        .text('הסיפור מאחורי הספר', margins.left, margins.top, {
+        .text(labels.storyBehindBook, margins.left, margins.top, {
           align: 'center',
           width: contentWidth,
         });
@@ -942,12 +1228,12 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       doc.font(mainFont).fontSize(11);
 
       const contextSections = [
-        { title: 'נושא מרכזי', content: bookData.storyContext.theme },
-        { title: 'עולם הסיפור', content: bookData.storyContext.setting },
-        { title: 'הקונפליקט', content: bookData.storyContext.conflict },
-        { title: 'נקודות מפתח', content: bookData.storyContext.keyPoints },
-        { title: 'שיא הסיפור', content: bookData.storyContext.climax },
-        { title: 'הסיום', content: bookData.storyContext.resolution },
+        { title: labels.mainTheme, content: bookData.storyContext.theme },
+        { title: labels.storyWorld, content: bookData.storyContext.setting },
+        { title: labels.conflict, content: bookData.storyContext.conflict },
+        { title: labels.keyPoints, content: bookData.storyContext.keyPoints },
+        { title: labels.climax, content: bookData.storyContext.climax },
+        { title: labels.ending, content: bookData.storyContext.resolution },
       ];
 
       contextSections.forEach((section) => {
@@ -985,7 +1271,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
 
         doc.font(boldFont)
           .fontSize(16)
-          .text('תשובות מהראיון', margins.left, doc.y, {
+          .text(labels.interviewResponses, margins.left, doc.y, {
             align: 'center',
             width: contentWidth,
           });
@@ -1001,7 +1287,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
           doc.font(boldFont)
             .fontSize(11)
             .fillColor('#444444')
-            .text(`שאלה: ${response.question}`, margins.left, doc.y, {
+            .text(`${labels.question}: ${response.question}`, margins.left, doc.y, {
               align: isRTL ? 'right' : 'left',
               width: contentWidth,
             });
@@ -1055,7 +1341,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       doc.moveDown(2);
       doc.font(boldFont)
         .fontSize(12)
-        .text('על המחבר', margins.left, doc.y, {
+        .text(labels.aboutAuthor, margins.left, doc.y, {
           align: 'center',
           width: contentWidth,
         });

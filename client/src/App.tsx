@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { AnimatePresence } from 'framer-motion';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { CurrencyProvider } from './contexts/CurrencyContext';
 import { SocketProvider } from './contexts/SocketContext';
 import RequireAuth from './components/RequireAuth';
 import RedirectIfAuth from './components/RedirectIfAuth';
@@ -260,11 +261,13 @@ function AppContent() {
 function App() {
   return (
     <LanguageProvider>
-      <AuthProvider>
-        <SocketProvider>
-          <AppContent />
-        </SocketProvider>
-      </AuthProvider>
+      <CurrencyProvider>
+        <AuthProvider>
+          <SocketProvider>
+            <AppContent />
+          </SocketProvider>
+        </AuthProvider>
+      </CurrencyProvider>
     </LanguageProvider>
   );
 }

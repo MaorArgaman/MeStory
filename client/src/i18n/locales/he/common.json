@@ -161,6 +161,13 @@
     "english": "אנגלית",
     "hebrew": "עברית"
   },
+  "currency": {
+    "select": "מטבע",
+    "usd": "דולר אמריקאי (USD)",
+    "ils": "שקל ישראלי (ILS)",
+    "converted_from": "מומר מ-{{currency}}",
+    "exchange_rate": "שער המרה: 1 USD = {{rate}} ILS"
+  },
   "footer": {
     "copyright": "כל הזכויות שמורות",
     "powered_by": "מופעל על ידי Google Gemini 2.5 Flash",
@@ -193,7 +200,7 @@
       },
       "import": {
         "title": "ייבוא כתב יד",
-        "description": "העלה את כתב היד הקיים שלך בפורמט PDF, DOCX או TXT.",
+        "description": "העלה את כתב היד הקיים שלך בפורמט DOCX או TXT.",
         "badge": "עד 50MB"
       }
     },
@@ -225,7 +232,7 @@
         "description": "העלה את כתב היד הקיים שלך ואנחנו נחלץ את הטקסט כדי שתוכל להמשיך לערוך.",
         "button": "בחר קובץ",
         "processing": "מעבד...",
-        "formats": "פורמטים נתמכים: PDF, DOCX, TXT • גודל מקסימלי: 50MB"
+        "formats": "פורמטים נתמכים: DOCX, TXT • גודל מקסימלי: 50MB"
       },
       "quick_create": {
         "title": "התחל מאפס",
@@ -276,7 +283,7 @@
       "transcribing_audio": "מתמלל אודיו עם AI...",
       "book_with_interview": "הספר נוצר עם הקשר הראיון!",
       "enter_title": "אנא הזן שם לספר",
-      "invalid_file_type": "אנא העלה קובץ PDF, DOCX או TXT",
+      "invalid_file_type": "אנא העלה קובץ DOCX או TXT",
       "file_too_large": "גודל הקובץ חייב להיות פחות מ-50MB",
       "invalid_audio_type": "אנא העלה קובץ אודיו תקין (MP3, WAV, M4A)",
       "audio_too_large": "גודל קובץ האודיו חייב להיות פחות מ-25MB",
@@ -985,6 +992,9 @@
       "language_hebrew": "השפה שונתה לעברית",
       "language_english": "Language changed to English",
       "language_failed": "שינוי השפה נכשל",
+      "currency_ils": "המטבע שונה לשקל ישראלי (ILS)",
+      "currency_usd": "המטבע שונה לדולר אמריקאי (USD)",
+      "currency_failed": "שינוי המטבע נכשל",
       "export_success": "הנתונים שלך יוצאו בהצלחה",
       "export_failed": "ייצוא הנתונים נכשל. נסה שוב.",
       "avatar_uploaded": "תמונת הפרופיל הועלתה",
@@ -996,6 +1006,7 @@
       "title": "פרטי פרופיל",
       "language": "שפת המערכת",
       "language_help": "זה ישנה את שפת כל האפליקציה כולל תגובות AI",
+      "currency_help": "זה ישנה את אופן הצגת המחירים בכל האפליקציה",
       "name": "שם מלא",
       "name_placeholder": "השם שלך",
       "email": "כתובת אימייל",

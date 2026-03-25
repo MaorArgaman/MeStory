@@ -21,7 +21,7 @@
     },
     "import": {
       "title": "ייבוא כתב יד",
-      "description": "העלה את כתב היד הקיים שלך בפורמט PDF, DOCX או TXT.",
+      "description": "העלה את כתב היד הקיים שלך בפורמט DOCX או TXT.",
       "button": "עד 50MB"
     }
   },

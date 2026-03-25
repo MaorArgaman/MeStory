@@ -28,6 +28,75 @@ import {
 import { supabaseAdmin } from '../config/supabase';
 
 /**
+ * Split text into chapters based on common patterns
+ * Detects: "Chapter X", "פרק X", "חלק X", numbered headings, etc.
+ */
+function splitTextIntoChapters(text: string): Array<{ title: string; content: string }> {
+  // Patterns for chapter detection (English and Hebrew)
+  const chapterPatterns = [
+    // English patterns
+    /^(?:chapter|part)\s+(?:\d+|[ivxlcdm]+)(?:\s*[-:.]?\s*(.*))?$/im,
+    /^(?:chapter|part)\s+(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)(?:\s*[-:.]?\s*(.*))?$/im,
+    // Hebrew patterns
+    /^(?:פרק|חלק)\s+(?:\d+|[א-ת]{1,2})(?:\s*[-:.]?\s*(.*))?$/m,
+    // Numbered headings
+    /^(\d+)\.\s+(.+)$/m,
+  ];
+
+  // Combined regex for splitting
+  const splitRegex = /\n\s*(?:(?:chapter|part|פרק|חלק)\s+(?:\d+|[ivxlcdm]+|[א-ת]{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)(?:\s*[-:.]?\s*.{0,100})?)\s*\n/gi;
+
+  // Check if text has chapter markers
+  const hasChapterMarkers = splitRegex.test(text);
+  splitRegex.lastIndex = 0; // Reset regex
+
+  if (!hasChapterMarkers) {
+    // No chapter markers found, return as single chapter
+    return [{
+      title: 'Imported Content',
+      content: text,
+    }];
+  }
+
+  // Split by chapter markers
+  const parts = text.split(splitRegex);
+  const matches = text.match(splitRegex) || [];
+
+  const chapters: Array<{ title: string; content: string }> = [];
+
+  // Handle content before first chapter marker
+  if (parts[0] && parts[0].trim().length > 100) {
+    chapters.push({
+      title: 'Introduction',
+      content: parts[0].trim(),
+    });
+  }
+
+  // Process each chapter
+  for (let i = 0; i < matches.length; i++) {
+    const chapterTitle = matches[i].trim().replace(/\n/g, ' ');
+    const chapterContent = parts[i + 1] ? parts[i + 1].trim() : '';
+
+    if (chapterContent.length > 0) {
+      chapters.push({
+        title: chapterTitle || `Chapter ${i + 1}`,
+        content: chapterContent,
+      });
+    }
+  }
+
+  // If no chapters were created, return as single chapter
+  if (chapters.length === 0) {
+    return [{
+      title: 'Imported Content',
+      content: text,
+    }];
+  }
+
+  return chapters;
+}
+
+/**
  * Create a new book
  * POST /api/books
  */
@@ -1623,21 +1692,27 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
       // Calculate word count
       const wordCount = extractedText.trim().split(/\s+/).length;
 
-      // Create new book with extracted content
+      // Auto-detect chapters based on common patterns
+      const chapters = splitTextIntoChapters(extractedText.trim());
+
+      // Detect language (Hebrew or English based on content)
+      const hebrewChars = (extractedText.match(/[\u0590-\u05FF]/g) || []).length;
+      const latinChars = (extractedText.match(/[a-zA-Z]/g) || []).length;
+      const detectedLanguage = hebrewChars > latinChars ? 'he' : 'en';
+
+      // Create new book with extracted content (auto-split into chapters)
       const book = await Book.create({
         title: title.trim(),
         author: req.user.id,
         genre,
         description: `Imported from ${req.file.originalname}`,
-        language: 'en',
-        chapters: [
-          {
-            title: 'Imported Content',
-            content: extractedText.trim(),
-            order: 0,
-            wordCount,
-          },
-        ],
+        language: detectedLanguage,
+        chapters: chapters.map((ch, index) => ({
+          title: ch.title,
+          content: ch.content,
+          order: index,
+          wordCount: ch.content.trim().split(/\s+/).length,
+        })),
         publishingStatus: {
           status: 'draft',
           price: 0,
@@ -1647,7 +1722,7 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
         statistics: {
           wordCount,
           pageCount: Math.ceil(wordCount / 250), // Rough estimate: 250 words per page
-          chapterCount: 1,
+          chapterCount: chapters.length,
           characterCount: 0,
           views: 0,
           purchases: 0,

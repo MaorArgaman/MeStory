@@ -161,6 +161,13 @@
     "english": "English",
     "hebrew": "Hebrew"
   },
+  "currency": {
+    "select": "Currency",
+    "usd": "US Dollar (USD)",
+    "ils": "Israeli Shekel (ILS)",
+    "converted_from": "Converted from {{currency}}",
+    "exchange_rate": "Exchange rate: 1 USD = {{rate}} ILS"
+  },
   "footer": {
     "copyright": "All rights reserved",
     "powered_by": "Powered by Google Gemini 2.5 Flash",
@@ -193,7 +200,7 @@
       },
       "import": {
         "title": "Import Manuscript",
-        "description": "Upload your existing manuscript in PDF, DOCX, or TXT format.",
+        "description": "Upload your existing manuscript in DOCX or TXT format.",
         "badge": "Max 50MB"
       }
     },
@@ -225,7 +232,7 @@
         "description": "Upload your existing manuscript and we'll extract the text for you to continue editing.",
         "button": "Choose File",
         "processing": "Processing...",
-        "formats": "Supported formats: PDF, DOCX, TXT • Max size: 50MB"
+        "formats": "Supported formats: DOCX, TXT • Max size: 50MB"
       },
       "quick_create": {
         "title": "Start from Scratch",
@@ -276,7 +283,7 @@
       "transcribing_audio": "Transcribing audio with AI...",
       "book_with_interview": "Book created with interview context!",
       "enter_title": "Please enter a book title",
-      "invalid_file_type": "Please upload a PDF, DOCX, or TXT file",
+      "invalid_file_type": "Please upload a DOCX or TXT file",
       "file_too_large": "File size must be less than 50MB",
       "invalid_audio_type": "Please upload a valid audio file (MP3, WAV, M4A)",
       "audio_too_large": "Audio file size must be less than 25MB",
@@ -906,6 +913,9 @@
       "language_hebrew": "השפה שונתה לעברית",
       "language_english": "Language changed to English",
       "language_failed": "Failed to change language",
+      "currency_ils": "Currency changed to Israeli Shekel (ILS)",
+      "currency_usd": "Currency changed to US Dollar (USD)",
+      "currency_failed": "Failed to change currency",
       "export_success": "Your data has been exported successfully",
       "export_failed": "Failed to export data. Please try again.",
       "avatar_uploaded": "Profile picture uploaded",
@@ -917,6 +927,7 @@
       "title": "Profile Information",
       "language": "System Language",
       "language_help": "This will change the language of the entire application including AI responses",
+      "currency_help": "This will change how prices are displayed throughout the application",
       "name": "Full Name",
       "name_placeholder": "Your name",
       "email": "Email Address",

@@ -72,12 +72,13 @@ const imageStorage = isVercel
     });
 
 // File filter - only accept specific document types
+// NOTE: PDF temporarily disabled due to Vercel serverless limitations
 const documentFilter = (
   _req: Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
-  const allowedTypes = ['.pdf', '.docx', '.txt', '.doc'];
+  const allowedTypes = ['.docx', '.txt', '.doc'];
   const ext = path.extname(file.originalname).toLowerCase();
 
   if (allowedTypes.includes(ext)) {
@@ -85,7 +86,7 @@ const documentFilter = (
   } else {
     cb(
       new Error(
-        `Invalid file type. Only ${allowedTypes.join(', ')} files are allowed.`
+        `Invalid file type. Only ${allowedTypes.join(', ')} files are allowed. PDF upload is temporarily unavailable.`
       )
     );
   }

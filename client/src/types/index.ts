@@ -1,6 +1,8 @@
 // User types
 export type UserRole = 'free' | 'standard' | 'premium' | 'admin';
 
+export type CurrencyPreference = 'USD' | 'ILS';
+
 export interface User {
   id: string;
   _id?: string; // Alias for MongoDB compatibility
@@ -12,6 +14,8 @@ export interface User {
   profile?: {
     bio?: string;
     avatar?: string;
+    language?: 'en' | 'he';
+    currency?: CurrencyPreference;
   };
   subscription?: {
     tier: UserRole;

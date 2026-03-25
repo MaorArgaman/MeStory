@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { api, paymentApi } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useCurrency } from '../contexts/CurrencyContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   Check,
   Sparkles,
@@ -13,8 +15,10 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { PaymentConfirmationModal } from '../components/payment';
+import { getFriendlyErrorMessage } from '../utils/errorMessages';
 
-// Pricing hero image showing Investment → Work → Return
+// Pricing hero image showing Investment -> Work -> Return
 const pricingHero = '/img/subscription-hero.png';
 
 interface Plan {
@@ -29,9 +33,16 @@ interface Plan {
 export default function SubscriptionPage() {
   const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
+  const { currency, formatCurrency } = useCurrency();
+  const { language } = useLanguage();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState<string | null>(null);
+  const [processingPayment, setProcessingPayment] = useState(false);
+
+  // Confirmation modal state
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -54,7 +65,8 @@ export default function SubscriptionPage() {
           return;
         }
         console.error('Failed to load plans:', error);
-        toast.error('Failed to load subscription plans');
+        const friendlyMessage = getFriendlyErrorMessage(error, language as 'en' | 'he');
+        toast.error(friendlyMessage);
       } finally {
         if (!abortController.signal.aborted) {
           setLoading(false);
@@ -67,11 +79,37 @@ export default function SubscriptionPage() {
     return () => {
       abortController.abort();
     };
-  }, []);
+  }, [language]);
+
+  // Open confirmation modal before payment
+  const handleUpgradeClick = (plan: Plan) => {
+    if (plan.id === 'free') {
+      // Free plan doesn't need confirmation
+      handleUpgrade(plan.id);
+    } else {
+      setSelectedPlan(plan);
+      setShowConfirmModal(true);
+    }
+  };
+
+  // Close confirmation modal
+  const handleCloseModal = () => {
+    if (!processingPayment) {
+      setShowConfirmModal(false);
+      setSelectedPlan(null);
+    }
+  };
+
+  // Process the actual payment
+  const handleConfirmPayment = async () => {
+    if (!selectedPlan) return;
+    await handleUpgrade(selectedPlan.id);
+  };
 
   const handleUpgrade = async (planId: string) => {
     try {
       setUpgrading(planId);
+      setProcessingPayment(true);
 
       // Step 1: Create payment order with idempotency key
       toast.loading('Creating payment order...', { id: 'payment' });
@@ -101,12 +139,16 @@ export default function SubscriptionPage() {
         throw new Error(captureResponse.error || 'Failed to capture payment');
       }
 
-      // Success! Play ka-ching sound (if available)
+      // Success!
       if (mockMode) {
-        toast.success('🎉 Payment successful (Mock Mode)!', { id: 'payment', duration: 3000 });
+        toast.success('Payment successful (Mock Mode)!', { id: 'payment', duration: 3000 });
       } else {
-        toast.success('🎉 Payment successful!', { id: 'payment', duration: 3000 });
+        toast.success('Payment successful!', { id: 'payment', duration: 3000 });
       }
+
+      // Close modal
+      setShowConfirmModal(false);
+      setSelectedPlan(null);
 
       // Refresh user data
       await refreshUser();
@@ -121,11 +163,13 @@ export default function SubscriptionPage() {
         });
       }, 1500);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to upgrade:', error);
-      toast.error(error.response?.data?.error || error.message || 'Payment failed. Please try again.', { id: 'payment' });
+      const friendlyMessage = getFriendlyErrorMessage(error, language as 'en' | 'he');
+      toast.error(friendlyMessage, { id: 'payment' });
     } finally {
       setUpgrading(null);
+      setProcessingPayment(false);
     }
   };
 
@@ -164,6 +208,19 @@ export default function SubscriptionPage() {
 
   return (
     <div className="min-h-screen">
+      {/* Payment Confirmation Modal */}
+      <PaymentConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmPayment}
+        isProcessing={processingPayment}
+        type="subscription"
+        planName={selectedPlan?.id}
+        planPrice={selectedPlan?.price}
+        planPriceILS={selectedPlan?.priceILS}
+        planFeatures={selectedPlan?.features}
+      />
+
       {/* Hero Section */}
       <div className="relative overflow-hidden pt-20 pb-8 sm:pt-24 sm:pb-12">
         <div className="absolute inset-0">
@@ -195,6 +252,7 @@ export default function SubscriptionPage() {
           {plans.map((plan, index) => {
             const premium = isPremiumPlan(plan.id);
             const current = isCurrentPlan(plan.tier);
+            const isUpgrading = upgrading === plan.id;
 
             return (
               <motion.div
@@ -265,14 +323,18 @@ export default function SubscriptionPage() {
                     ) : (
                       <div className="flex items-baseline gap-2">
                         <span className={`text-3xl sm:text-4xl font-bold ${premium ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent' : 'text-white'}`}>
-                          ${plan.price}
+                          {currency === 'ILS'
+                            ? formatCurrency(plan.priceILS, 'ILS')
+                            : formatCurrency(plan.price, 'USD')}
                         </span>
                         <span className="text-gray-400">/month</span>
                       </div>
                     )}
                     {plan.price > 0 && (
                       <div className="text-sm text-gray-400 mt-1">
-                        ₪{plan.priceILS}/month
+                        {currency === 'ILS'
+                          ? formatCurrency(plan.price, 'USD')
+                          : formatCurrency(plan.priceILS, 'ILS')}/month
                       </div>
                     )}
                   </div>
@@ -310,32 +372,38 @@ export default function SubscriptionPage() {
                     </button>
                   ) : plan.id === 'free' ? (
                     <button
-                      onClick={() => handleUpgrade('free')}
-                      disabled={upgrading === 'free'}
-                      aria-disabled={upgrading === 'free'}
-                      aria-label={upgrading === 'free' ? 'Downgrading to Free plan' : 'Downgrade to Free plan'}
-                      className="w-full py-3 sm:py-4 btn-secondary font-semibold text-sm sm:text-base"
+                      onClick={() => handleUpgradeClick(plan)}
+                      disabled={isUpgrading}
+                      aria-disabled={isUpgrading}
+                      aria-label={isUpgrading ? 'Downgrading to Free plan' : 'Downgrade to Free plan'}
+                      className="w-full py-3 sm:py-4 btn-secondary font-semibold text-sm sm:text-base flex items-center justify-center"
                     >
-                      {upgrading === 'free' ? (
-                        <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                      {isUpgrading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                          Processing...
+                        </>
                       ) : (
                         'Downgrade to Free'
                       )}
                     </button>
                   ) : (
                     <button
-                      onClick={() => handleUpgrade(plan.id)}
-                      disabled={upgrading === plan.id}
-                      aria-disabled={upgrading === plan.id}
-                      aria-label={upgrading === plan.id ? `Upgrading to ${plan.tier} plan` : `Upgrade to ${plan.tier} plan`}
+                      onClick={() => handleUpgradeClick(plan)}
+                      disabled={isUpgrading}
+                      aria-disabled={isUpgrading}
+                      aria-label={isUpgrading ? `Upgrading to ${plan.tier} plan` : `Upgrade to ${plan.tier} plan`}
                       className={`w-full py-3 sm:py-4 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all ${
                         premium
                           ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 hover:from-yellow-500 hover:to-yellow-700 shadow-lg shadow-yellow-500/30 hover:shadow-xl hover:shadow-yellow-500/40'
                           : 'btn-primary'
-                      }`}
+                      } ${isUpgrading ? 'opacity-80' : ''}`}
                     >
-                      {upgrading === plan.id ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                      {isUpgrading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Processing...
+                        </>
                       ) : (
                         <>
                           Upgrade Now
@@ -362,7 +430,7 @@ export default function SubscriptionPage() {
             All plans include access to the marketplace and basic writing tools
           </p>
           <p className="text-sm text-gray-500">
-            Cancel anytime • No long-term commitments • Secure payment
+            Cancel anytime - No long-term commitments - Secure payment
           </p>
         </motion.div>
       </div>

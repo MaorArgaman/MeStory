@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { api, paymentRequest } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 import {
   DollarSign,
   Clock,
@@ -90,6 +91,7 @@ interface EarningsData {
 export default function EarningsPage() {
   const { t } = useTranslation('common');
   useAuth(); // Verify user is authenticated
+  const { formatCurrency, getCurrencySymbol } = useCurrency();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -215,7 +217,7 @@ export default function EarningsPage() {
         <div className="bg-gray-800/95 border border-white/20 rounded-lg p-3 shadow-xl backdrop-blur-sm">
           <p className="text-white font-medium text-sm">{label}</p>
           <p className="text-magic-gold text-sm mt-1">
-            ${payload[0].value.toFixed(2)}
+            {formatCurrency(payload[0].value)}
           </p>
           <p className="text-gray-400 text-xs">
             {payload[0].payload.count} {t('earnings.sales')}
@@ -301,7 +303,7 @@ export default function EarningsPage() {
               <TrendingUp className="w-5 h-5 text-green-400" />
             </div>
             <p className="text-gray-400 text-sm mb-1">{t('earnings.total_earned')}</p>
-            <p className="text-2xl font-bold text-white">${summary.totalEarned.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-white">{formatCurrency(summary.totalEarned)}</p>
           </motion.div>
 
           {/* Pending Payout */}
@@ -317,7 +319,7 @@ export default function EarningsPage() {
               </div>
             </div>
             <p className="text-gray-400 text-sm mb-1">{t('earnings.pending_payout')}</p>
-            <p className="text-2xl font-bold text-magic-gold">${summary.pendingPayout.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-magic-gold">{formatCurrency(summary.pendingPayout)}</p>
           </motion.div>
 
           {/* Total Withdrawn */}
@@ -333,7 +335,7 @@ export default function EarningsPage() {
               </div>
             </div>
             <p className="text-gray-400 text-sm mb-1">{t('earnings.total_withdrawn')}</p>
-            <p className="text-2xl font-bold text-white">${summary.totalWithdrawn.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-white">{formatCurrency(summary.totalWithdrawn)}</p>
           </motion.div>
 
           {/* This Month */}
@@ -350,7 +352,7 @@ export default function EarningsPage() {
             </div>
             <p className="text-gray-400 text-sm mb-1">{t('earnings.this_month_sales')}</p>
             <p className="text-2xl font-bold text-white">{summary.thisMonthSales}</p>
-            <p className="text-sm text-gray-500">${summary.thisMonthEarnings?.toFixed(2) || '0.00'}</p>
+            <p className="text-sm text-gray-500">{formatCurrency(summary.thisMonthEarnings || 0)}</p>
           </motion.div>
         </div>
 
@@ -390,7 +392,7 @@ export default function EarningsPage() {
                       tick={{ fill: '#9ca3af', fontSize: 10 }}
                       axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
                       tickLine={false}
-                      tickFormatter={(value) => `$${value}`}
+                      tickFormatter={(value) => `${getCurrencySymbol()}${value}`}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Area
@@ -451,10 +453,10 @@ export default function EarningsPage() {
                             </div>
                           </td>
                           <td className="py-3 text-right text-gray-300">
-                            ${sale.amount.toFixed(2)}
+                            {formatCurrency(sale.amount)}
                           </td>
                           <td className="py-3 text-right text-magic-gold font-medium">
-                            ${sale.authorShare.toFixed(2)}
+                            {formatCurrency(sale.authorShare)}
                           </td>
                           <td className="py-3 text-right text-gray-400 text-sm">
                             {format(parseISO(sale.purchasedAt), 'MMM dd, yyyy')}
@@ -516,10 +518,10 @@ export default function EarningsPage() {
                             {book.totalSales}
                           </td>
                           <td className="py-3 text-right text-gray-300">
-                            ${book.totalRevenue.toFixed(2)}
+                            {formatCurrency(book.totalRevenue)}
                           </td>
                           <td className="py-3 text-right text-magic-gold font-medium">
-                            ${book.authorEarnings.toFixed(2)}
+                            {formatCurrency(book.authorEarnings)}
                           </td>
                           <td className="py-3 text-center">
                             {book.averageRating > 0 ? (
@@ -590,7 +592,7 @@ export default function EarningsPage() {
               {/* Minimum Threshold */}
               <div className="mb-6 p-3 rounded-lg bg-white/5 border border-white/10">
                 <p className="text-gray-400 text-sm">
-                  {t('earnings.min_threshold')}: <span className="text-white font-medium">$10.00</span>
+                  {t('earnings.min_threshold')}: <span className="text-white font-medium">{formatCurrency(10)}</span>
                 </p>
                 <p className="text-gray-500 text-xs mt-1">{t('earnings.you_get_50')}</p>
               </div>
@@ -622,7 +624,7 @@ export default function EarningsPage() {
               )}
               {data?.paypalEmail && summary.pendingPayout < 10 && (
                 <p className="text-gray-500 text-xs text-center mt-2">
-                  {t('earnings.need_minimum', { amount: (10 - summary.pendingPayout).toFixed(2) })}
+                  {t('earnings.need_minimum', { amount: formatCurrency(10 - summary.pendingPayout) })}
                 </p>
               )}
             </motion.div>
@@ -647,7 +649,7 @@ export default function EarningsPage() {
                       className="p-3 rounded-lg bg-white/5 border border-white/10"
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-white font-medium">${payout.amount.toFixed(2)}</span>
+                        <span className="text-white font-medium">{formatCurrency(payout.amount)}</span>
                         <span
                           className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                             payout.status === 'completed'

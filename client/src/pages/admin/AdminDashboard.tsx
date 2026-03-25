@@ -20,8 +20,14 @@ import {
   UserMinus,
   Zap,
   PieChart,
+  Wallet,
+  CreditCard,
+  ArrowUpRight,
+  ArrowDownRight,
+  Calendar,
 } from 'lucide-react';
 import { api } from '../../services/api';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton } from '../../components/ui';
 
@@ -135,9 +141,42 @@ interface RevenueAnalytics {
   revenueBySource: { subscriptions: number; bookSales: number; credits: number };
 }
 
-type Tab = 'overview' | 'users' | 'content' | 'analytics';
+interface DetailedRevenueAnalytics {
+  overview: {
+    totalRevenue: number;
+    thisMonthRevenue: number;
+    platformShare: number;
+    authorPayouts: number;
+  };
+  revenueByPeriod: Array<{ date: string; amount: number }>;
+  revenueByTier: {
+    free: number;
+    standard: number;
+    premium: number;
+  };
+  bookSalesRevenue: number;
+  topEarningBooks: Array<{
+    bookId: string;
+    title: string;
+    authorName: string;
+    totalSales: number;
+    totalRevenue: number;
+    platformShare: number;
+  }>;
+  recentTransactions: Array<{
+    _id: string;
+    date: string;
+    userName: string;
+    type: 'subscription' | 'book_purchase' | 'credit_purchase';
+    amount: number;
+    status: 'completed' | 'pending' | 'refunded';
+  }>;
+}
+
+type Tab = 'overview' | 'users' | 'content' | 'analytics' | 'revenue';
 
 export default function AdminDashboard() {
+  const { formatCurrency, formatCurrencyCompact } = useCurrency();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -154,6 +193,12 @@ export default function AdminDashboard() {
   const [revenueAnalytics, setRevenueAnalytics] = useState<RevenueAnalytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
+  // Revenue tab state
+  const [detailedRevenue, setDetailedRevenue] = useState<DetailedRevenueAnalytics | null>(null);
+  const [revenueLoading, setRevenueLoading] = useState(false);
+  const [revenueError, setRevenueError] = useState<string | null>(null);
+  const [revenuePeriod, setRevenuePeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+
   useEffect(() => {
     loadStats();
   }, []);
@@ -165,8 +210,16 @@ export default function AdminDashboard() {
       loadFlaggedBooks();
     } else if (activeTab === 'analytics') {
       loadAnalytics();
+    } else if (activeTab === 'revenue') {
+      loadRevenueAnalytics();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'revenue') {
+      loadRevenueAnalytics();
+    }
+  }, [revenuePeriod]);
 
   const loadStats = async () => {
     try {
@@ -251,6 +304,41 @@ export default function AdminDashboard() {
       toast.error('Failed to load some analytics data');
     } finally {
       setAnalyticsLoading(false);
+    }
+  };
+
+  const loadRevenueAnalytics = async () => {
+    setRevenueLoading(true);
+    setRevenueError(null);
+    try {
+      const response = await api.get(`/admin/analytics/revenue?period=${revenuePeriod}`);
+      if (response.data.success) {
+        // Transform the API response to match our DetailedRevenueAnalytics interface
+        const data = response.data.data;
+        setDetailedRevenue({
+          overview: {
+            totalRevenue: data.totalRevenue || 0,
+            thisMonthRevenue: data.subscriptionRevenue + data.bookSalesRevenue || 0,
+            platformShare: (data.totalRevenue || 0) * 0.5,
+            authorPayouts: (data.totalRevenue || 0) * 0.5,
+          },
+          revenueByPeriod: data.revenueByDay || [],
+          revenueByTier: {
+            free: 0,
+            standard: data.revenueBySource?.subscriptions * 0.4 || 0,
+            premium: data.revenueBySource?.subscriptions * 0.6 || 0,
+          },
+          bookSalesRevenue: data.revenueBySource?.bookSales || 0,
+          topEarningBooks: data.topEarningBooks || [],
+          recentTransactions: data.recentTransactions || [],
+        });
+      }
+    } catch (error: any) {
+      console.error('Failed to load revenue analytics:', error);
+      setRevenueError(error.response?.data?.error || 'Failed to load revenue analytics');
+      toast.error('Failed to load revenue analytics');
+    } finally {
+      setRevenueLoading(false);
     }
   };
 
@@ -347,6 +435,7 @@ export default function AdminDashboard() {
             { id: 'users' as Tab, label: 'Users', icon: Users },
             { id: 'content' as Tab, label: 'Content Moderation', icon: AlertCircle },
             { id: 'analytics' as Tab, label: 'Analytics', icon: BarChart3 },
+            { id: 'revenue' as Tab, label: 'Revenue', icon: Wallet },
           ].map((tab) => {
             const Icon = tab.icon;
             return (
@@ -402,7 +491,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-gray-400 text-sm mb-1">Platform Revenue</p>
                     <p className="text-3xl font-bold gradient-gold">
-                      ${stats.overview.platformRevenue.toFixed(0)}
+                      {formatCurrencyCompact(stats.overview.platformRevenue)}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">50% from sales</p>
                   </div>
@@ -549,7 +638,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-bold text-green-400">
-                        ${author.totalRevenue.toFixed(2)}
+                        {formatCurrency(author.totalRevenue)}
                       </div>
                       <div className="text-xs text-gray-400">total revenue</div>
                     </div>
@@ -841,7 +930,7 @@ export default function AdminDashboard() {
                         <span className="text-gray-300">Subscriptions</span>
                       </div>
                       <span className="text-white font-bold">
-                        ${revenueAnalytics.revenueBySource?.subscriptions?.toFixed(2) || '0.00'}
+                        {formatCurrency(revenueAnalytics.revenueBySource?.subscriptions || 0)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
@@ -850,7 +939,7 @@ export default function AdminDashboard() {
                         <span className="text-gray-300">Book Sales</span>
                       </div>
                       <span className="text-white font-bold">
-                        ${revenueAnalytics.revenueBySource?.bookSales?.toFixed(2) || '0.00'}
+                        {formatCurrency(revenueAnalytics.revenueBySource?.bookSales || 0)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
@@ -859,20 +948,20 @@ export default function AdminDashboard() {
                         <span className="text-gray-300">Credit Purchases</span>
                       </div>
                       <span className="text-white font-bold">
-                        ${revenueAnalytics.revenueBySource?.credits?.toFixed(2) || '0.00'}
+                        {formatCurrency(revenueAnalytics.revenueBySource?.credits || 0)}
                       </span>
                     </div>
                     <div className="mt-6 pt-4 border-t border-white/10">
                       <div className="flex items-center justify-between">
                         <span className="text-gray-400">Total Revenue ({revenueAnalytics.period})</span>
                         <span className="text-2xl font-bold gradient-gold">
-                          ${revenueAnalytics.totalRevenue?.toFixed(2) || '0.00'}
+                          {formatCurrency(revenueAnalytics.totalRevenue || 0)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between mt-2">
                         <span className="text-gray-400">Avg Order Value</span>
                         <span className="text-white font-semibold">
-                          ${revenueAnalytics.averageOrderValue?.toFixed(2) || '0.00'}
+                          {formatCurrency(revenueAnalytics.averageOrderValue || 0)}
                         </span>
                       </div>
                     </div>
@@ -895,12 +984,12 @@ export default function AdminDashboard() {
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-white font-semibold capitalize">{segment.segment}</span>
                           <span className="text-magic-gold font-bold">
-                            ${segment.averageLTV?.toFixed(2) || '0.00'}
+                            {formatCurrency(segment.averageLTV || 0)}
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-sm text-gray-400">
                           <span>{segment.userCount} users</span>
-                          <span>Total: ${segment.totalRevenue?.toFixed(2) || '0.00'}</span>
+                          <span>Total: {formatCurrency(segment.totalRevenue || 0)}</span>
                         </div>
                         <div className="mt-2 w-full h-2 bg-white/10 rounded-full overflow-hidden">
                           <motion.div
@@ -1039,6 +1128,448 @@ export default function AdminDashboard() {
                   <h3 className="text-xl font-semibold text-white mb-2">No Analytics Data</h3>
                   <p className="text-gray-400">
                     Analytics data will appear here once users start interacting with the platform.
+                  </p>
+                </div>
+              </GlassCard>
+            )}
+          </motion.div>
+        )}
+
+        {/* Revenue Tab */}
+        {activeTab === 'revenue' && (
+          <motion.div
+            key="revenue"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            {/* Header with Refresh and Period Toggle */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h2 className="text-2xl font-display font-bold text-white">Revenue Analytics</h2>
+                <p className="text-gray-400">Track platform revenue and payouts</p>
+              </div>
+              <div className="flex items-center gap-4">
+                {/* Period Toggle */}
+                <div className="flex bg-white/5 rounded-lg p-1">
+                  {(['daily', 'weekly', 'monthly'] as const).map((period) => (
+                    <button
+                      key={period}
+                      type="button"
+                      onClick={() => setRevenuePeriod(period)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        revenuePeriod === period
+                          ? 'bg-magic-gold text-deep-space'
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      {period.charAt(0).toUpperCase() + period.slice(1)}
+                    </button>
+                  ))}
+                </div>
+                <GlowingButton onClick={loadRevenueAnalytics} variant="cosmic" disabled={revenueLoading}>
+                  <RefreshCw className={`w-5 h-5 ${revenueLoading ? 'animate-spin' : ''}`} />
+                  {revenueLoading ? 'Loading...' : 'Refresh'}
+                </GlowingButton>
+              </div>
+            </div>
+
+            {/* Error State */}
+            {revenueError && (
+              <GlassCard>
+                <div className="flex items-center gap-3 text-red-400">
+                  <AlertCircle className="w-6 h-6" />
+                  <p>{revenueError}</p>
+                </div>
+              </GlassCard>
+            )}
+
+            {/* Loading State */}
+            {revenueLoading && !detailedRevenue && (
+              <div className="text-center py-12">
+                <DollarSign className="w-16 h-16 text-magic-gold mx-auto mb-4 animate-pulse" />
+                <p className="text-gray-300 text-lg">Loading revenue data...</p>
+              </div>
+            )}
+
+            {/* Revenue Overview Cards */}
+            {detailedRevenue && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <GlassCard glow="gold">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-gray-400 text-sm mb-1">Total Revenue</p>
+                        <p className="text-3xl font-bold gradient-gold">
+                          ${detailedRevenue.overview.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                        <p className="text-xs text-green-400 mt-1 flex items-center gap-1">
+                          <ArrowUpRight className="w-3 h-3" />
+                          All time earnings
+                        </p>
+                      </div>
+                      <DollarSign className="w-8 h-8 text-magic-gold" />
+                    </div>
+                  </GlassCard>
+
+                  <GlassCard glow="cosmic">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-gray-400 text-sm mb-1">This Month</p>
+                        <p className="text-3xl font-bold gradient-gold">
+                          ${detailedRevenue.overview.thisMonthRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          Current period
+                        </p>
+                      </div>
+                      <TrendingUp className="w-8 h-8 text-cosmic-purple" />
+                    </div>
+                  </GlassCard>
+
+                  <GlassCard glow="purple">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-gray-400 text-sm mb-1">Platform Share (50%)</p>
+                        <p className="text-3xl font-bold text-green-400">
+                          ${detailedRevenue.overview.platformShare.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                          <ArrowUpRight className="w-3 h-3 text-green-400" />
+                          Net platform revenue
+                        </p>
+                      </div>
+                      <Wallet className="w-8 h-8 text-green-400" />
+                    </div>
+                  </GlassCard>
+
+                  <GlassCard glow="gold">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-gray-400 text-sm mb-1">Author Payouts</p>
+                        <p className="text-3xl font-bold text-purple-400">
+                          ${detailedRevenue.overview.authorPayouts.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                          <ArrowDownRight className="w-3 h-3 text-purple-400" />
+                          50% to authors
+                        </p>
+                      </div>
+                      <CreditCard className="w-8 h-8 text-purple-400" />
+                    </div>
+                  </GlassCard>
+                </div>
+
+                {/* Revenue Chart */}
+                <GlassCard>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-display font-bold text-white">
+                      Revenue Over Time ({revenuePeriod})
+                    </h3>
+                    <TrendingUp className="w-5 h-5 text-magic-gold" />
+                  </div>
+                  {detailedRevenue.revenueByPeriod.length > 0 ? (
+                    <div className="h-64 flex items-end justify-between gap-1">
+                      {detailedRevenue.revenueByPeriod.slice(-30).map((day, index) => {
+                        const maxAmount = Math.max(...detailedRevenue.revenueByPeriod.map((d) => d.amount));
+                        const height = maxAmount > 0 ? (day.amount / maxAmount) * 100 : 0;
+
+                        return (
+                          <div key={index} className="flex-1 flex flex-col items-center gap-2 group relative">
+                            <motion.div
+                              initial={{ height: 0 }}
+                              animate={{ height: `${Math.max(height, 5)}%` }}
+                              transition={{ delay: index * 0.02 }}
+                              className="w-full bg-gradient-to-t from-magic-gold to-yellow-600 rounded-t-lg min-h-[8px] hover:from-magic-gold/80 hover:to-yellow-500 cursor-pointer"
+                            />
+                            {/* Tooltip */}
+                            <div className="absolute bottom-full mb-2 hidden group-hover:block bg-deep-space border border-white/20 rounded-lg px-3 py-2 text-sm whitespace-nowrap z-10">
+                              <p className="text-white font-semibold">{formatCurrency(day.amount)}</p>
+                              <p className="text-gray-400 text-xs">{new Date(day.date).toLocaleDateString()}</p>
+                            </div>
+                            {index % Math.ceil(detailedRevenue.revenueByPeriod.length / 10) === 0 && (
+                              <span className="text-xs text-gray-400 absolute -bottom-6">
+                                {new Date(day.date).getDate()}/{new Date(day.date).getMonth() + 1}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="h-64 flex items-center justify-center text-gray-400">
+                      No revenue data for this period
+                    </div>
+                  )}
+                </GlassCard>
+
+                {/* Revenue Breakdown */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* By Subscription Tier */}
+                  <GlassCard>
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-xl font-display font-bold text-white">
+                        Revenue by Source
+                      </h3>
+                      <PieChart className="w-5 h-5 text-magic-gold" />
+                    </div>
+                    <div className="space-y-4">
+                      {/* Pie Chart Visualization */}
+                      <div className="flex justify-center mb-6">
+                        <div className="relative w-48 h-48">
+                          {(() => {
+                            const total = detailedRevenue.revenueByTier.standard +
+                                          detailedRevenue.revenueByTier.premium +
+                                          detailedRevenue.bookSalesRevenue;
+                            if (total === 0) {
+                              return (
+                                <div className="w-full h-full rounded-full bg-white/10 flex items-center justify-center">
+                                  <span className="text-gray-400 text-sm">No data</span>
+                                </div>
+                              );
+                            }
+                            const standardPct = (detailedRevenue.revenueByTier.standard / total) * 100;
+                            const premiumPct = (detailedRevenue.revenueByTier.premium / total) * 100;
+                            const booksPct = (detailedRevenue.bookSalesRevenue / total) * 100;
+
+                            return (
+                              <svg viewBox="0 0 100 100" className="transform -rotate-90">
+                                {/* Standard tier */}
+                                <circle
+                                  cx="50"
+                                  cy="50"
+                                  r="40"
+                                  fill="transparent"
+                                  stroke="#8B5CF6"
+                                  strokeWidth="20"
+                                  strokeDasharray={`${standardPct * 2.51} 251`}
+                                  strokeDashoffset="0"
+                                />
+                                {/* Premium tier */}
+                                <circle
+                                  cx="50"
+                                  cy="50"
+                                  r="40"
+                                  fill="transparent"
+                                  stroke="#DAA520"
+                                  strokeWidth="20"
+                                  strokeDasharray={`${premiumPct * 2.51} 251`}
+                                  strokeDashoffset={`${-standardPct * 2.51}`}
+                                />
+                                {/* Book sales */}
+                                <circle
+                                  cx="50"
+                                  cy="50"
+                                  r="40"
+                                  fill="transparent"
+                                  stroke="#22C55E"
+                                  strokeWidth="20"
+                                  strokeDasharray={`${booksPct * 2.51} 251`}
+                                  strokeDashoffset={`${-(standardPct + premiumPct) * 2.51}`}
+                                />
+                              </svg>
+                            );
+                          })()}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-3 h-3 rounded-full bg-cosmic-purple" />
+                          <span className="text-gray-300">Standard Subscriptions</span>
+                        </div>
+                        <span className="text-white font-bold">
+                          {formatCurrency(detailedRevenue.revenueByTier.standard)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-3 h-3 rounded-full bg-magic-gold" />
+                          <span className="text-gray-300">Premium Subscriptions</span>
+                        </div>
+                        <span className="text-white font-bold">
+                          {formatCurrency(detailedRevenue.revenueByTier.premium)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-3 h-3 rounded-full bg-green-500" />
+                          <span className="text-gray-300">Book Sales</span>
+                        </div>
+                        <span className="text-white font-bold">
+                          {formatCurrency(detailedRevenue.bookSalesRevenue)}
+                        </span>
+                      </div>
+                    </div>
+                  </GlassCard>
+
+                  {/* Top Earning Books */}
+                  <GlassCard>
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-xl font-display font-bold text-white">
+                        Top Earning Books
+                      </h3>
+                      <BookOpen className="w-5 h-5 text-magic-gold" />
+                    </div>
+                    {detailedRevenue.topEarningBooks.length > 0 ? (
+                      <div className="space-y-3">
+                        {detailedRevenue.topEarningBooks.slice(0, 5).map((book, index) => (
+                          <div
+                            key={book.bookId}
+                            className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="text-lg font-bold text-magic-gold">#{index + 1}</div>
+                              <div>
+                                <div className="font-semibold text-white text-sm truncate max-w-[150px]">
+                                  {book.title}
+                                </div>
+                                <div className="text-xs text-gray-400">{book.authorName}</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-bold text-green-400">
+                                {formatCurrency(book.totalRevenue)}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {book.totalSales} sales
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-400">
+                        <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                        <p>No book sales yet</p>
+                      </div>
+                    )}
+                  </GlassCard>
+                </div>
+
+                {/* Top Earning Books Table (Full) */}
+                {detailedRevenue.topEarningBooks.length > 0 && (
+                  <GlassCard>
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-xl font-display font-bold text-white">
+                        All Top Earning Books
+                      </h3>
+                      <BookOpen className="w-5 h-5 text-magic-gold" />
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-white/10">
+                            <th className="text-left py-3 px-4 text-gray-400 font-semibold">#</th>
+                            <th className="text-left py-3 px-4 text-gray-400 font-semibold">Book Title</th>
+                            <th className="text-left py-3 px-4 text-gray-400 font-semibold">Author</th>
+                            <th className="text-right py-3 px-4 text-gray-400 font-semibold">Total Sales</th>
+                            <th className="text-right py-3 px-4 text-gray-400 font-semibold">Total Revenue</th>
+                            <th className="text-right py-3 px-4 text-gray-400 font-semibold">Platform Share</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {detailedRevenue.topEarningBooks.map((book, index) => (
+                            <tr key={book.bookId} className="border-b border-white/5 hover:bg-white/5">
+                              <td className="py-3 px-4 text-magic-gold font-bold">{index + 1}</td>
+                              <td className="py-3 px-4 text-white font-medium">{book.title}</td>
+                              <td className="py-3 px-4 text-gray-300">{book.authorName}</td>
+                              <td className="py-3 px-4 text-right text-gray-300">{book.totalSales}</td>
+                              <td className="py-3 px-4 text-right text-green-400 font-semibold">
+                                {formatCurrency(book.totalRevenue)}
+                              </td>
+                              <td className="py-3 px-4 text-right text-magic-gold font-semibold">
+                                {formatCurrency(book.platformShare)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </GlassCard>
+                )}
+
+                {/* Recent Transactions */}
+                <GlassCard>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-display font-bold text-white">
+                      Recent Transactions
+                    </h3>
+                    <CreditCard className="w-5 h-5 text-magic-gold" />
+                  </div>
+                  {detailedRevenue.recentTransactions.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-white/10">
+                            <th className="text-left py-3 px-4 text-gray-400 font-semibold">Date</th>
+                            <th className="text-left py-3 px-4 text-gray-400 font-semibold">User</th>
+                            <th className="text-left py-3 px-4 text-gray-400 font-semibold">Type</th>
+                            <th className="text-right py-3 px-4 text-gray-400 font-semibold">Amount</th>
+                            <th className="text-center py-3 px-4 text-gray-400 font-semibold">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {detailedRevenue.recentTransactions.slice(0, 10).map((tx) => (
+                            <tr key={tx._id} className="border-b border-white/5 hover:bg-white/5">
+                              <td className="py-3 px-4 text-gray-400 text-sm">
+                                {new Date(tx.date).toLocaleDateString()} {new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </td>
+                              <td className="py-3 px-4 text-white font-medium">{tx.userName}</td>
+                              <td className="py-3 px-4">
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                    tx.type === 'subscription'
+                                      ? 'bg-cosmic-purple/20 text-cosmic-purple'
+                                      : tx.type === 'book_purchase'
+                                      ? 'bg-green-500/20 text-green-400'
+                                      : 'bg-magic-gold/20 text-magic-gold'
+                                  }`}
+                                >
+                                  {tx.type === 'subscription' ? 'Subscription' :
+                                   tx.type === 'book_purchase' ? 'Book Purchase' : 'Credits'}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 text-right text-green-400 font-semibold">
+                                {formatCurrency(tx.amount)}
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                    tx.status === 'completed'
+                                      ? 'bg-green-500/20 text-green-400'
+                                      : tx.status === 'pending'
+                                      ? 'bg-yellow-500/20 text-yellow-400'
+                                      : 'bg-red-500/20 text-red-400'
+                                  }`}
+                                >
+                                  {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-400">
+                      <CreditCard className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p>No recent transactions</p>
+                    </div>
+                  )}
+                </GlassCard>
+              </>
+            )}
+
+            {/* Empty State */}
+            {!revenueLoading && !detailedRevenue && !revenueError && (
+              <GlassCard>
+                <div className="text-center py-12">
+                  <Wallet className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-white mb-2">No Revenue Data</h3>
+                  <p className="text-gray-400">
+                    Revenue data will appear here once transactions start occurring.
                   </p>
                 </div>
               </GlassCard>

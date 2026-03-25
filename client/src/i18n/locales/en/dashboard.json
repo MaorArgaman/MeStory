@@ -21,7 +21,7 @@
     },
     "import": {
       "title": "Import Manuscript",
-      "description": "Upload your existing manuscript in PDF, DOCX, or TXT format.",
+      "description": "Upload your existing manuscript in DOCX or TXT format.",
       "button": "Max 50MB"
     }
   },

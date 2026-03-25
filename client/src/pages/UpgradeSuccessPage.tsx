@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { CheckCircle2, Crown, Sparkles, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Crown, Sparkles, ArrowRight, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function UpgradeSuccessPage() {
@@ -63,63 +63,127 @@ export default function UpgradeSuccessPage() {
         <div className={`glass-strong rounded-3xl p-12 text-center ${
           isPremium ? 'border-2 border-yellow-500/50 shadow-2xl shadow-yellow-500/20' : ''
         }`}>
-          {/* Success Icon */}
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-            className="relative w-32 h-32 mx-auto mb-8"
-          >
-            <div
+          {/* Success Icon with Enhanced Animation */}
+          <div className="relative w-32 h-32 mx-auto mb-8">
+            {/* Ripple Effects */}
+            <motion.div
               className={`absolute inset-0 rounded-full ${
                 isPremium
                   ? 'bg-gradient-to-br from-yellow-400 to-yellow-600'
-                  : 'bg-gradient-to-br from-indigo-500 to-purple-600'
+                  : 'bg-gradient-to-br from-green-400 to-emerald-600'
+              }`}
+              initial={{ scale: 0, opacity: 0.6 }}
+              animate={{ scale: 2.5, opacity: 0 }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+            />
+            <motion.div
+              className={`absolute inset-0 rounded-full ${
+                isPremium
+                  ? 'bg-gradient-to-br from-yellow-400 to-yellow-600'
+                  : 'bg-gradient-to-br from-green-400 to-emerald-600'
+              }`}
+              initial={{ scale: 0, opacity: 0.4 }}
+              animate={{ scale: 2, opacity: 0 }}
+              transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
+            />
+
+            {/* Main Circle */}
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: 'spring', stiffness: 300, damping: 15 }}
+              className={`relative w-full h-full rounded-full ${
+                isPremium
+                  ? 'bg-gradient-to-br from-yellow-400 to-yellow-600'
+                  : 'bg-gradient-to-br from-green-400 to-emerald-600'
               } flex items-center justify-center shadow-2xl ${
-                isPremium ? 'shadow-yellow-500/40' : 'shadow-indigo-500/40'
+                isPremium ? 'shadow-yellow-500/40' : 'shadow-green-500/40'
               }`}
             >
-              {isPremium ? (
-                <Crown className="w-16 h-16 text-gray-900" />
-              ) : (
-                <CheckCircle2 className="w-16 h-16 text-white" />
-              )}
-            </div>
+              {/* Icon with bounce animation */}
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.5 }}
+              >
+                {isPremium ? (
+                  <Crown className="w-16 h-16 text-gray-900" />
+                ) : (
+                  <Check className="w-16 h-16 text-white" strokeWidth={3} />
+                )}
+              </motion.div>
 
-            {/* Floating particles */}
+              {/* Inner Shine */}
+              <motion.div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%)',
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+              />
+            </motion.div>
+
+            {/* Celebration Particles */}
+            {[...Array(12)].map((_, i) => (
+              <motion.div
+                key={i}
+                className={`absolute rounded-full ${
+                  isPremium ? 'bg-yellow-400' : 'bg-green-400'
+                }`}
+                style={{
+                  width: 8,
+                  height: 8,
+                  top: '50%',
+                  left: '50%',
+                }}
+                initial={{ x: 0, y: 0, opacity: 0, scale: 0 }}
+                animate={{
+                  x: Math.cos((i * 30) * (Math.PI / 180)) * 70,
+                  y: Math.sin((i * 30) * (Math.PI / 180)) * 70,
+                  opacity: [0, 1, 0],
+                  scale: [0, 1, 0.5],
+                }}
+                transition={{
+                  duration: 0.8,
+                  delay: 0.4 + i * 0.05,
+                  ease: 'easeOut',
+                }}
+              />
+            ))}
+
+            {/* Orbiting Stars */}
             <motion.div
-              animate={{
-                rotate: 360,
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: 'linear',
-              }}
               className="absolute inset-0"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
             >
-              {[...Array(8)].map((_, i) => (
+              {[0, 120, 240].map((angle, i) => (
                 <motion.div
                   key={i}
-                  className="absolute w-2 h-2 rounded-full bg-yellow-400"
+                  className={`absolute w-2 h-2 rounded-full ${
+                    isPremium ? 'bg-yellow-400' : 'bg-green-400'
+                  }`}
                   style={{
                     top: '50%',
                     left: '50%',
-                    transform: `rotate(${i * 45}deg) translateY(-60px)`,
+                    transform: `rotate(${angle}deg) translateX(55px)`,
                   }}
+                  initial={{ opacity: 0, scale: 0 }}
                   animate={{
-                    scale: [1, 1.5, 1],
-                    opacity: [0.5, 1, 0.5],
+                    opacity: [0.4, 1, 0.4],
+                    scale: [0.8, 1.2, 0.8],
                   }}
                   transition={{
                     duration: 2,
                     repeat: Infinity,
-                    delay: i * 0.1,
+                    delay: i * 0.3 + 0.6,
                   }}
                 />
               ))}
             </motion.div>
-          </motion.div>
+          </div>
 
           {/* Title */}
           <motion.h1
