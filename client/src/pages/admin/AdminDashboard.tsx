@@ -102,7 +102,8 @@ interface RealTimeActivity {
 interface RetentionCohort {
   cohortMonth: string;
   totalUsers: number;
-  retainedByMonth: number[];
+  retainedByWeek?: number[];
+  retainedByMonth?: number[];
 }
 
 interface ChurnRiskUser {
@@ -945,7 +946,7 @@ export default function AdminDashboard() {
                         <tr key={index} className="border-t border-white/5">
                           <td className="py-2 px-3 text-white font-medium">{cohort.cohortMonth}</td>
                           <td className="py-2 px-3 text-center text-gray-300">{cohort.totalUsers}</td>
-                          {cohort.retainedByMonth.slice(0, 6).map((retained, monthIndex) => {
+                          {(cohort.retainedByWeek || cohort.retainedByMonth || []).slice(0, 6).map((retained, monthIndex) => {
                             const percentage = cohort.totalUsers > 0
                               ? (retained / cohort.totalUsers) * 100
                               : 0;
