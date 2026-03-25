@@ -17,8 +17,8 @@ export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction
       return;
     }
 
-    // Check if user has admin role
-    if (req.user.role !== 'admin') {
+    // Check if user has admin role (case-insensitive)
+    if (req.user.role?.toUpperCase() !== 'ADMIN') {
       res.status(403).json({
         success: false,
         error: 'Access denied. Admin privileges required.',

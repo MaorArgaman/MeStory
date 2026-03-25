@@ -6,7 +6,7 @@ import * as analyticsService from '../services/analyticsService';
  * Check if user is admin
  */
 const isAdmin = (req: AuthRequest): boolean => {
-  return req.user?.role === 'admin';
+  return req.user?.role?.toUpperCase() === 'ADMIN';
 };
 
 /**
