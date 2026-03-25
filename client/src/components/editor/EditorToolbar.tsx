@@ -354,6 +354,27 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         >
           <Underline className={smallIconClass} />
         </ToolbarButton>
+
+        {/* Text Color - Always visible */}
+        <div className="relative sm:hidden">
+          <motion.button
+            ref={colorButtonRef}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              setShowColorMenu(!showColorMenu);
+              setShowHighlightMenu(false);
+            }}
+            title={t('editor.toolbar.text_color')}
+            className="p-1.5 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all relative flex items-center justify-center"
+          >
+            <Palette className={smallIconClass} />
+            <div
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2.5 h-0.5 rounded-full"
+              style={{ backgroundColor: editor.getAttributes('textStyle').color || '#ffffff' }}
+            />
+          </motion.button>
+        </div>
       </div>
 
       {/* Desktop only: Additional formatting */}

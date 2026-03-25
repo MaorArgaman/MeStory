@@ -16,6 +16,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { GlassCard, GlowingButton } from '../components/ui';
+import { useLanguage } from '../contexts/LanguageContext';
 // Use new realistic images from public folder
 const heroBg = '/img/landing-hero-new.png';
 const logoIcon = '/img/logo-glow.png';
@@ -23,6 +24,8 @@ const logoIcon = '/img/logo-glow.png';
 export default function LandingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const isHebrew = language === 'he';
   const [booksPublishedToday, setBooksPublishedToday] = useState(127);
   const { scrollY } = useScroll();
 
@@ -65,13 +68,13 @@ export default function LandingPage() {
     },
   ];
 
-  // Success stories with real images
-  const successStories = [
+  // Success stories with real images - language aware
+  const successStoriesHe = [
     {
       image: '/img/success-author.png',
-      name: 'Sarah Jenkins',
-      book: 'The Whispering Oak',
-      quote: 'From first draft to bookstore shelf - my book now stands in the Local Authors section. MeStory made it possible!',
+      name: 'שרה ג\'נקינס',
+      book: 'האלון הלוחש',
+      quote: 'מהטיוטה הראשונה ועד למדף החנות - הספר שלי עכשיו עומד במדור סופרים מקומיים. MeStory הפך את זה לאפשרי!',
     },
     {
       image: '/img/author-portrait.png',
@@ -86,6 +89,29 @@ export default function LandingPage() {
       quote: 'יום ההשקה! לראות את הספר שלי עולה לחנות של MeStory ומגיע לקוראים בכל העולם - חלום שהתגשם!',
     },
   ];
+
+  const successStoriesEn = [
+    {
+      image: '/img/success-author.png',
+      name: 'Sarah Jenkins',
+      book: 'The Whispering Oak',
+      quote: 'From first draft to bookstore shelf - my book now stands in the Local Authors section. MeStory made it possible!',
+    },
+    {
+      image: '/img/author-portrait.png',
+      name: 'Ruth Cohen',
+      book: 'Frontline Poems',
+      quote: 'I wrote my family\'s story and now my grandchildren are reading it. A moving moment!',
+    },
+    {
+      image: '/img/launch-day.png',
+      name: 'Margaret Levy',
+      book: 'My Journey',
+      quote: 'Launch day! Seeing my book go live on MeStory\'s store and reach readers worldwide - a dream come true!',
+    },
+  ];
+
+  const successStories = isHebrew ? successStoriesHe : successStoriesEn;
 
   // Community image
   const communityImage = '/img/community-group.png';
@@ -500,15 +526,15 @@ export default function LandingPage() {
               <div className="flex flex-wrap gap-4">
                 <div className="flex items-center gap-2 text-magic-gold">
                   <Users className="w-5 h-5" />
-                  <span>50K+ Writers</span>
+                  <span>{t('landing.writers_community.writers_count', '50K+ Writers')}</span>
                 </div>
                 <div className="flex items-center gap-2 text-magic-gold">
                   <BookOpen className="w-5 h-5" />
-                  <span>Daily Workshops</span>
+                  <span>{t('landing.writers_community.workshops', 'Daily Workshops')}</span>
                 </div>
                 <div className="flex items-center gap-2 text-magic-gold">
                   <Star className="w-5 h-5" />
-                  <span>Expert Feedback</span>
+                  <span>{t('landing.writers_community.feedback', 'Expert Feedback')}</span>
                 </div>
               </div>
             </motion.div>

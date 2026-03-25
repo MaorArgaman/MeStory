@@ -65,5 +65,9 @@
     "description": "Writing about traumatic experiences can be difficult. Support resources are available.",
     "resources": "Support Resources",
     "hotline": "Crisis Hotline"
+  },
+  "family_legacy": {
+    "title": "Preserve Family Stories",
+    "description": "Every family has stories worth preserving. Create a lasting legacy for future generations with our guided writing tools."
   }
 }

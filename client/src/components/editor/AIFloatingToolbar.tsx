@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Plus, Minus, PlayCircle, Loader2, Check, X } from 'lucide-react';
 import { Editor } from '@tiptap/react';
 import { EnhanceAction } from '../../types/analysis';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface AIFloatingToolbarProps {
   editor: Editor;
@@ -19,34 +20,44 @@ interface AIFloatingToolbarProps {
 interface ActionButton {
   action: EnhanceAction;
   icon: React.ReactNode;
-  label: string;
-  description: string;
+  labelEn: string;
+  labelHe: string;
+  descriptionEn: string;
+  descriptionHe: string;
 }
 
 const actions: ActionButton[] = [
   {
-    action: 'improve',
-    icon: <Sparkles className="w-4 h-4" />,
-    label: 'Improve',
-    description: 'Enhance expression and clarity',
-  },
-  {
-    action: 'expand',
-    icon: <Plus className="w-4 h-4" />,
-    label: 'Expand',
-    description: 'Add details and descriptions',
+    action: 'continue',
+    icon: <PlayCircle className="w-4 h-4" />,
+    labelEn: 'Continue',
+    labelHe: 'המשך',
+    descriptionEn: 'Continue writing from here',
+    descriptionHe: 'המשך לכתוב מכאן',
   },
   {
     action: 'shorten',
     icon: <Minus className="w-4 h-4" />,
-    label: 'Shorten',
-    description: 'Condense while preserving meaning',
+    labelEn: 'Shorten',
+    labelHe: 'קצר',
+    descriptionEn: 'Condense while preserving meaning',
+    descriptionHe: 'קצר תוך שמירה על המשמעות',
   },
   {
-    action: 'continue',
-    icon: <PlayCircle className="w-4 h-4" />,
-    label: 'Continue',
-    description: 'Continue writing from here',
+    action: 'expand',
+    icon: <Plus className="w-4 h-4" />,
+    labelEn: 'Expand',
+    labelHe: 'הרחב',
+    descriptionEn: 'Add details and descriptions',
+    descriptionHe: 'הוסף פרטים ותיאורים',
+  },
+  {
+    action: 'improve',
+    icon: <Sparkles className="w-4 h-4" />,
+    labelEn: 'Improve',
+    labelHe: 'שפר',
+    descriptionEn: 'Enhance expression and clarity',
+    descriptionHe: 'שפר את הביטוי והבהירות',
   },
 ];
 
@@ -57,6 +68,8 @@ export default function AIFloatingToolbar({
   loadingAction,
 }: AIFloatingToolbarProps) {
   const [hoveredAction, setHoveredAction] = useState<EnhanceAction | null>(null);
+  const { language } = useLanguage();
+  const isHebrew = language === 'he';
 
   const handleAction = (action: EnhanceAction) => {
     if (isLoading) return;
@@ -112,7 +125,7 @@ export default function AIFloatingToolbar({
             ) : (
               action.icon
             )}
-            <span className="text-sm font-medium">{action.label}</span>
+            <span className="text-sm font-medium">{isHebrew ? action.labelHe : action.labelEn}</span>
           </motion.button>
 
           {/* Tooltip */}
@@ -124,7 +137,7 @@ export default function AIFloatingToolbar({
                 exit={{ opacity: 0, y: 5 }}
                 className="absolute top-full right-0 mt-2 px-3 py-2 rounded-lg bg-gray-800 border border-white/10 shadow-lg whitespace-nowrap z-50"
               >
-                <p className="text-xs text-gray-300">{action.description}</p>
+                <p className="text-xs text-gray-300">{isHebrew ? action.descriptionHe : action.descriptionEn}</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -158,13 +171,16 @@ export function AIEnhancePreview({
   onCancel,
   isApplying,
 }: AIEnhancePreviewProps) {
+  const { language } = useLanguage();
+  const isHebrew = language === 'he';
+
   if (!isOpen) return null;
 
-  const actionLabels: Record<EnhanceAction, string> = {
-    improve: 'Improvement',
-    expand: 'Expansion',
-    shorten: 'Shortening',
-    continue: 'Continuation',
+  const actionLabels: Record<EnhanceAction, { en: string; he: string }> = {
+    improve: { en: 'Improvement', he: 'שיפור' },
+    expand: { en: 'Expansion', he: 'הרחבה' },
+    shorten: { en: 'Shortening', he: 'קיצור' },
+    continue: { en: 'Continuation', he: 'המשך' },
   };
 
   return (
@@ -182,6 +198,7 @@ export function AIEnhancePreview({
           exit={{ scale: 0.95, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
           className="w-full max-w-2xl bg-deep-space/95 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl overflow-hidden"
+          dir={isHebrew ? 'rtl' : 'ltr'}
         >
           {/* Header */}
           <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
@@ -191,7 +208,7 @@ export function AIEnhancePreview({
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white">
-                  Preview - {actionLabels[action]}
+                  {isHebrew ? 'תצוגה מקדימה' : 'Preview'} - {isHebrew ? actionLabels[action].he : actionLabels[action].en}
                 </h3>
                 <p className="text-sm text-gray-400">{explanation}</p>
               </div>
@@ -209,7 +226,7 @@ export function AIEnhancePreview({
             {/* Original Text */}
             <div>
               <label className="text-sm font-medium text-gray-400 mb-2 block">
-                Original Text
+                {isHebrew ? 'טקסט מקורי' : 'Original Text'}
               </label>
               <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-gray-300 text-sm leading-relaxed">
                 {originalText}
@@ -226,7 +243,7 @@ export function AIEnhancePreview({
             {/* Enhanced Text */}
             <div>
               <label className="text-sm font-medium text-gray-400 mb-2 block">
-                Enhanced Text
+                {isHebrew ? 'טקסט משופר' : 'Enhanced Text'}
               </label>
               <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-white text-sm leading-relaxed">
                 {enhancedText}
@@ -240,7 +257,7 @@ export function AIEnhancePreview({
               onClick={onCancel}
               className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 transition-colors"
             >
-              Cancel
+              {isHebrew ? 'ביטול' : 'Cancel'}
             </button>
             <button
               onClick={onApply}
@@ -252,7 +269,7 @@ export function AIEnhancePreview({
               ) : (
                 <Check className="w-4 h-4" />
               )}
-              Apply Changes
+              {isHebrew ? 'החל שינויים' : 'Apply Changes'}
             </button>
           </div>
         </motion.div>

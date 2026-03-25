@@ -378,7 +378,7 @@ export default function DashboardPage() {
             <div className="absolute inset-0">
               <img
                 src={dashboardIconScratch}
-                alt="Start from Scratch"
+                alt={t('dashboard.cards.scratch.title')}
                 className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
@@ -410,7 +410,7 @@ export default function DashboardPage() {
             <div className="absolute inset-0">
               <img
                 src={dashboardIconInterview}
-                alt="Deep Dive Interview"
+                alt={t('dashboard.cards.interview.title')}
                 className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
@@ -442,7 +442,7 @@ export default function DashboardPage() {
             <div className="absolute inset-0">
               <img
                 src={dashboardIconVoice}
-                alt="Voice Dictation"
+                alt={t('dashboard.cards.voice.title')}
                 className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
@@ -474,7 +474,7 @@ export default function DashboardPage() {
             <div className="absolute inset-0">
               <img
                 src={dashboardIconImport}
-                alt="Import Manuscript"
+                alt={t('dashboard.cards.import.title')}
                 className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
@@ -539,7 +539,7 @@ export default function DashboardPage() {
           >
             <motion.img
               src={emptyDashboard}
-              alt="No books yet"
+              alt={t('dashboard.empty.title')}
               className="w-full max-w-xs md:max-w-sm h-auto object-contain mb-8 opacity-90"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 0.9 }}

@@ -453,6 +453,13 @@
       "authors_earned": "Authors earned",
       "this_week": "this week",
       "reviews_today": "5-star reviews today"
+    },
+    "writers_community": {
+      "title": "Join Our Writers Community",
+      "description": "Connect with fellow authors, share your journey, get feedback, and grow together. Our community spans across ages and genres, united by the love of storytelling.",
+      "writers_count": "50K+ Writers",
+      "workshops": "Daily Workshops",
+      "feedback": "Expert Feedback"
     }
   },
   "colors": {
