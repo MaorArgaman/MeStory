@@ -26,8 +26,8 @@ export default function AdminCheck({ children }: AdminCheckProps) {
     );
   }
 
-  // Check if user has admin role
-  if (!user || user.role !== 'admin') {
+  // Check if user has admin role (case-insensitive check)
+  if (!user || user.role?.toUpperCase() !== 'ADMIN') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-deep-space p-8">
         <div className="max-w-md w-full text-center">
