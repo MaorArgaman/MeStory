@@ -279,7 +279,11 @@
       "file_too_large": "File size must be less than 50MB",
       "invalid_audio_type": "Please upload a valid audio file (MP3, WAV, M4A)",
       "audio_too_large": "Audio file size must be less than 25MB",
-      "load_failed": "Failed to load books"
+      "load_failed": "Failed to load books",
+      "compressing_audio": "Compressing audio...",
+      "drop_here": "Drop file here",
+      "drag_drop": "Drag & drop your file here, or click to browse",
+      "uploading": "Uploading..."
     }
   },
   "marketplace": {

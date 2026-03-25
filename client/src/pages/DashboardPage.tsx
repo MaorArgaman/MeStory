@@ -269,7 +269,7 @@ export default function DashboardPage() {
       // Compress audio if needed (Vercel has 4.5MB limit)
       let audioToUpload: Blob = file;
       if (needsCompression(file)) {
-        toast.loading('Compressing audio...', { id: 'audio-transcribe' });
+        toast.loading(t('dashboard.messages.compressing_audio'), { id: 'audio-transcribe' });
         console.log(`Compressing audio: ${formatFileSize(file.size)}`);
         audioToUpload = await compressAudio(file);
         console.log(`Compressed to: ${formatFileSize(audioToUpload.size)}`);
