@@ -10,6 +10,7 @@ import { getUnreadCount as getMessagesUnreadCount } from '../../services/messagi
 import { getUnreadCount as getNotificationsUnreadCount } from '../../services/notificationApi';
 import ConversationsList from '../messaging/ConversationsList';
 import NotificationCenter from '../notifications/NotificationCenter';
+import OptimizedImage from '../ui/OptimizedImage';
 // MeStory Logo
 const logoIcon = '/img/logo-glow.png';
 
@@ -97,33 +98,35 @@ export default function Navbar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <motion.nav
+    <motion.header
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
       className="fixed top-0 left-0 right-0 z-50 w-full"
       ref={mobileMenuRef}
+      role="banner"
     >
-      <div className="glass-strong border-b-2 border-magic-gold/30 shadow-lg shadow-magic-gold/10 backdrop-blur-2xl bg-gradient-to-r from-[#0a0a12] via-[#0d0d18] to-[#0a0a12]">
+      <nav className="glass-strong border-b-2 border-magic-gold/30 shadow-lg shadow-magic-gold/10 backdrop-blur-2xl bg-gradient-to-r from-[#0a0a12] via-[#0d0d18] to-[#0a0a12]" aria-label="Main navigation">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Logo - Left Side */}
-            <Link to="/dashboard" className="flex items-center group flex-shrink-0">
+            <Link to="/dashboard" className="flex items-center group flex-shrink-0" aria-label="MeStory - Go to dashboard">
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.2 }}
                 className="flex items-center"
               >
-                <img
+                <OptimizedImage
                   src={logoIcon}
                   alt="MeStory"
+                  lazy={false}
                   className="h-10 sm:h-12 w-auto object-contain"
                 />
               </motion.div>
             </Link>
 
             {/* Navigation Links - Centered (Hidden on mobile) */}
-            <div className="hidden lg:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2" role="navigation" aria-label="Primary navigation">
               <Link
                 to="/dashboard"
                 className={`flex items-center gap-2 px-4 xl:px-5 py-2 xl:py-2.5 rounded-xl transition-all duration-300 ${
@@ -169,6 +172,9 @@ export default function Navbar() {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
                 className="lg:hidden p-2 min-h-[44px] min-w-[44px] rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300 flex items-center justify-center"
+                aria-expanded={showMobileMenu}
+                aria-controls="mobile-menu"
+                aria-label={showMobileMenu ? t('nav.close_menu', 'Close menu') : t('nav.open_menu', 'Open menu')}
               >
                 {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </motion.button>
@@ -198,6 +204,7 @@ export default function Navbar() {
                     onClick={() => setShowNotifications(true)}
                     className="relative p-2 sm:p-2.5 min-h-[44px] min-w-[44px] rounded-lg sm:rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300 flex items-center justify-center"
                     title={t('nav.notifications')}
+                    aria-label={t('nav.notifications')}
                   >
                     <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                     {notificationsUnreadCount > 0 && (
@@ -214,6 +221,7 @@ export default function Navbar() {
                 onClick={() => setShowMessages(true)}
                 className="relative p-2 sm:p-2.5 min-h-[44px] min-w-[44px] rounded-lg sm:rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-300 flex items-center justify-center"
                 title={t('nav.messages')}
+                aria-label={t('nav.messages')}
               >
                 <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                 {messagesUnreadCount > 0 && (
@@ -230,14 +238,18 @@ export default function Navbar() {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-1 sm:gap-2 lg:gap-3 px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-gray-200 hover:text-white hover:bg-white/5 transition-all duration-300"
+                  aria-expanded={showUserMenu}
+                  aria-haspopup="true"
+                  aria-label={t('nav.user_menu', 'User menu')}
                 >
                   {/* Avatar with Gold Glow */}
                   <div className="relative">
                     <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold ring-2 ring-magic-gold/30 overflow-hidden">
                       {user?.profile?.avatar ? (
-                        <img
+                        <OptimizedImage
                           src={user.profile.avatar}
-                          alt={user.name}
+                          alt={`Profile picture of ${user.name}`}
+                          lazy={false}
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -338,17 +350,19 @@ export default function Navbar() {
             </div>
           </div>
         </div>
-      </div>
+      </nav>
 
       {/* Mobile Menu Dropdown */}
       <AnimatePresence>
         {showMobileMenu && (
-          <motion.div
+          <motion.nav
+            id="mobile-menu"
             initial={{ opacity: 0, y: -10, height: 0 }}
             animate={{ opacity: 1, y: 0, height: 'auto' }}
             exit={{ opacity: 0, y: -10, height: 0 }}
             transition={{ duration: 0.2 }}
             className="lg:hidden glass-strong border-b border-white/10 shadow-lg overflow-hidden"
+            aria-label="Mobile navigation"
           >
             <div className="p-3 space-y-1">
               {/* Always show marketplace */}
@@ -456,7 +470,7 @@ export default function Navbar() {
                 </>
               )}
             </div>
-          </motion.div>
+          </motion.nav>
         )}
       </AnimatePresence>
 
@@ -489,6 +503,6 @@ export default function Navbar() {
           setSocketNotificationsCount(count);
         }}
       />
-    </motion.nav>
+    </motion.header>
   );
 }

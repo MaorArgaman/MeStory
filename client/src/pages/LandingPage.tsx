@@ -15,7 +15,7 @@ import {
   Award,
   Sparkles,
 } from 'lucide-react';
-import { GlassCard, GlowingButton } from '../components/ui';
+import { GlassCard, GlowingButton, OptimizedImage } from '../components/ui';
 import { useLanguage } from '../contexts/LanguageContext';
 import { SEO } from '../components/seo';
 // Use new realistic images from public folder
@@ -135,12 +135,13 @@ export default function LandingPage() {
       />
 
       {/* Transparent Navbar */}
-      <motion.nav
+      <motion.header
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="fixed top-0 left-0 right-0 z-50 w-full"
+        role="banner"
       >
-        <div className="glass-strong border-b-2 border-magic-gold/30 shadow-lg shadow-magic-gold/10 backdrop-blur-2xl bg-gradient-to-r from-[#0a0a12] via-[#0d0d18] to-[#0a0a12]">
+        <nav className="glass-strong border-b-2 border-magic-gold/30 shadow-lg shadow-magic-gold/10 backdrop-blur-2xl bg-gradient-to-r from-[#0a0a12] via-[#0d0d18] to-[#0a0a12]" aria-label="Main navigation">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             {/* Logo */}
             <motion.div
@@ -149,9 +150,10 @@ export default function LandingPage() {
               className="cursor-pointer flex items-center"
               onClick={() => navigate('/')}
             >
-              <img
+              <OptimizedImage
                 src={logoIcon}
-                alt="MeStory"
+                alt="MeStory - Home"
+                lazy={false}
                 className="h-10 sm:h-12 w-auto object-contain"
               />
             </motion.div>
@@ -172,13 +174,16 @@ export default function LandingPage() {
               </GlowingButton>
             </div>
           </div>
-        </div>
-      </motion.nav>
+        </nav>
+      </motion.header>
+
+      <main role="main">
 
       {/* Hero Section */}
       <motion.section
         style={{ opacity: heroOpacity, scale: heroScale }}
         className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 pt-20"
+        aria-labelledby="hero-heading"
       >
         {/* Background Image */}
         <div
@@ -196,9 +201,11 @@ export default function LandingPage() {
           animate={{ opacity: 0.03 }}
           transition={{ duration: 2 }}
         >
-          <img
+          <OptimizedImage
             src={logoIcon}
             alt=""
+            decorative
+            lazy={false}
             className="w-[800px] h-auto object-contain"
             style={{ filter: 'grayscale(100%) brightness(2)' }}
           />
@@ -212,6 +219,7 @@ export default function LandingPage() {
             transition={{ duration: 0.8 }}
           >
             <motion.h1
+              id="hero-heading"
               className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-display font-bold mb-4 sm:mb-6 leading-tight"
               animate={{
                 backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
@@ -342,7 +350,7 @@ export default function LandingPage() {
       </motion.div>
 
       {/* Features Section */}
-      <section className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6">
+      <section className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6" aria-labelledby="features-heading">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -351,7 +359,7 @@ export default function LandingPage() {
             transition={{ duration: 0.8 }}
             className="text-center mb-10 sm:mb-16 lg:mb-20"
           >
-            <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold gradient-gold mb-4 sm:mb-6">
+            <h2 id="features-heading" className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold gradient-gold mb-4 sm:mb-6">
               {t('landing.features.title')}
             </h2>
             <p className="text-sm sm:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto px-2">
@@ -371,9 +379,9 @@ export default function LandingPage() {
                 <GlassCard hover glow={index === 0 ? 'gold' : index === 1 ? 'purple' : 'cosmic'} className="overflow-hidden p-0">
                   {/* Feature Image */}
                   <div className="relative h-40 sm:h-48 overflow-hidden">
-                    <img
+                    <OptimizedImage
                       src={feature.image}
-                      alt={t(feature.titleKey)}
+                      alt={`Illustration for ${t(feature.titleKey)}`}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-dark-card via-transparent to-transparent" />
@@ -408,7 +416,7 @@ export default function LandingPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 bg-gradient-to-b from-transparent via-indigo-900/20 to-transparent">
+      <section className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 bg-gradient-to-b from-transparent via-indigo-900/20 to-transparent" aria-labelledby="community-heading">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -417,7 +425,7 @@ export default function LandingPage() {
             transition={{ duration: 0.8 }}
             className="text-center mb-10 sm:mb-16 lg:mb-20"
           >
-            <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold gradient-gold mb-4 sm:mb-6">
+            <h2 id="community-heading" className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold gradient-gold mb-4 sm:mb-6">
               {t('landing.community.title')}
             </h2>
             <p className="text-sm sm:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto px-2">
@@ -448,7 +456,7 @@ export default function LandingPage() {
       </section>
 
       {/* Success Stories Section */}
-      <section className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6">
+      <section className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6" aria-labelledby="success-stories-heading">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -457,7 +465,7 @@ export default function LandingPage() {
             transition={{ duration: 0.8 }}
             className="text-center mb-10 sm:mb-16"
           >
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-display font-bold gradient-gold mb-4 sm:mb-6">
+            <h2 id="success-stories-heading" className="text-2xl sm:text-4xl md:text-5xl font-display font-bold gradient-gold mb-4 sm:mb-6">
               {t('landing.success.title', 'Success Stories')}
             </h2>
             <p className="text-sm sm:text-lg text-gray-300 max-w-2xl mx-auto">
@@ -467,7 +475,7 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
             {successStories.map((story, index) => (
-              <motion.div
+              <motion.article
                 key={story.name}
                 initial={{ opacity: 0, x: index === 0 ? -30 : 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -476,15 +484,15 @@ export default function LandingPage() {
               >
                 <GlassCard className="overflow-hidden p-0">
                   <div className="relative h-48 sm:h-56">
-                    <img
+                    <OptimizedImage
                       src={story.image}
-                      alt={story.name}
+                      alt={`${story.name}, author of ${story.book}`}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-dark-card via-dark-card/50 to-transparent" />
                   </div>
                   <div className="p-4 sm:p-6">
-                    <p className="text-gray-300 italic mb-4">"{story.quote}"</p>
+                    <blockquote className="text-gray-300 italic mb-4">"{story.quote}"</blockquote>
                     <div className="flex items-center gap-3">
                       <div>
                         <p className="text-white font-semibold">{story.name}</p>
@@ -493,14 +501,14 @@ export default function LandingPage() {
                     </div>
                   </div>
                 </GlassCard>
-              </motion.div>
+              </motion.article>
             ))}
           </div>
         </div>
       </section>
 
       {/* Community Section */}
-      <section className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 bg-gradient-to-b from-transparent via-purple-900/10 to-transparent">
+      <section className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 bg-gradient-to-b from-transparent via-purple-900/10 to-transparent" aria-labelledby="writers-community-heading">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Image */}
@@ -511,9 +519,9 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="relative rounded-2xl overflow-hidden"
             >
-              <img
+              <OptimizedImage
                 src={communityImage}
-                alt="MeStory Writers Community"
+                alt="MeStory Writers Community - authors collaborating and sharing their work"
                 className="w-full h-64 sm:h-80 lg:h-96 object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-deep-space/60 to-transparent" />
@@ -526,7 +534,7 @@ export default function LandingPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              <h2 className="text-2xl sm:text-4xl font-display font-bold gradient-gold mb-4 sm:mb-6">
+              <h2 id="writers-community-heading" className="text-2xl sm:text-4xl font-display font-bold gradient-gold mb-4 sm:mb-6">
                 {t('landing.writers_community.title', 'Join Our Writers Community')}
               </h2>
               <p className="text-gray-300 mb-6 leading-relaxed">
@@ -552,7 +560,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6">
+      <section className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6" aria-labelledby="cta-heading">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -561,12 +569,12 @@ export default function LandingPage() {
             transition={{ duration: 0.8 }}
           >
             <GlassCard glow="gold" className="text-center p-6 sm:p-8 lg:p-12">
-              <img
+              <OptimizedImage
                 src={logoIcon}
-                alt="MeStory"
+                alt="MeStory logo"
                 className="h-16 sm:h-20 lg:h-24 w-auto mx-auto mb-4 sm:mb-6 object-contain"
               />
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-bold gradient-gold mb-4 sm:mb-6">
+              <h2 id="cta-heading" className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-bold gradient-gold mb-4 sm:mb-6">
                 {t('landing.cta.title')}
               </h2>
               <p className="text-sm sm:text-lg lg:text-xl text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto">
@@ -586,16 +594,18 @@ export default function LandingPage() {
         </div>
       </section>
 
+      </main>
+
       {/* Footer */}
-      <footer className="relative border-t border-white/10 py-10 sm:py-12 lg:py-16 px-4 sm:px-6">
+      <footer className="relative border-t border-white/10 py-10 sm:py-12 lg:py-16 px-4 sm:px-6" role="contentinfo">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-12 mb-8 sm:mb-12">
             {/* Brand */}
             <div className="col-span-2 sm:col-span-2 lg:col-span-2">
               <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                <img
+                <OptimizedImage
                   src={logoIcon}
-                  alt="MeStory"
+                  alt="MeStory logo"
                   className="h-12 sm:h-14 w-auto object-contain"
                 />
               </div>
@@ -605,7 +615,7 @@ export default function LandingPage() {
             </div>
 
             {/* Platform */}
-            <div>
+            <nav aria-label="Platform links">
               <h3 className="font-display font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">{t('landing.footer.platform')}</h3>
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
@@ -629,10 +639,10 @@ export default function LandingPage() {
                   </a>
                 </li>
               </ul>
-            </div>
+            </nav>
 
             {/* Legal */}
-            <div>
+            <nav aria-label="Legal links">
               <h3 className="font-display font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">{t('landing.footer.legal')}</h3>
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
@@ -656,7 +666,7 @@ export default function LandingPage() {
                   </a>
                 </li>
               </ul>
-            </div>
+            </nav>
           </div>
 
           {/* Bottom Bar */}
@@ -664,7 +674,7 @@ export default function LandingPage() {
             <p className="text-gray-400 text-xs sm:text-sm text-center md:text-left">
               {t('landing.footer.copyright')}
             </p>
-            <div className="flex items-center gap-4 sm:gap-6 text-sm">
+            <nav aria-label="Social media links" className="flex items-center gap-4 sm:gap-6 text-sm">
               <a
                 href="https://twitter.com/mestory"
                 target="_blank"
@@ -692,7 +702,7 @@ export default function LandingPage() {
               >
                 GitHub
               </a>
-            </div>
+            </nav>
           </div>
         </div>
       </footer>

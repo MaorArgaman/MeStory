@@ -19,7 +19,9 @@ interface SEOProps {
 
 const DEFAULT_SITE_NAME = 'MeStory';
 const DEFAULT_SITE_URL = 'https://mestory.co.il';
-const DEFAULT_IMAGE = `${DEFAULT_SITE_URL}/img/og-image.jpg`;
+// Using the MeStory logo as the default OG image
+// For best social media display, consider creating a 1200x630 og-image.png in the future
+const DEFAULT_IMAGE = `${DEFAULT_SITE_URL}/img/MeStory-Logo.png`;
 
 const DEFAULT_DESCRIPTIONS = {
   he: 'MeStory - הפלטפורמה המובילה לכתיבת ספרים עם בינה מלאכותית. כתוב, עצב ופרסם את הסיפור שלך בקלות.',
@@ -59,14 +61,29 @@ export function SEO({
   const finalCanonical = canonicalUrl || finalUrl;
 
   // Generate alternate URL for other language
-  const getAlternateUrl = () => {
-    if (!alternateLocale) return null;
-    // Assuming URL structure supports language prefix or query param
-    const baseUrl = finalCanonical.replace(/\/(he|en)\//g, '/');
-    return baseUrl;
+  const getAlternateUrl = (targetLang: string) => {
+    if (!finalCanonical) return null;
+
+    // Check if URL already has a language prefix
+    const langPrefixRegex = /\/(en|he)(\/|$)/;
+    const hasLangPrefix = langPrefixRegex.test(finalCanonical);
+
+    if (hasLangPrefix) {
+      // Replace existing language prefix
+      return finalCanonical.replace(langPrefixRegex, `/${targetLang}$2`);
+    } else {
+      // Add language prefix after the domain
+      const urlParts = finalCanonical.split(DEFAULT_SITE_URL);
+      if (urlParts.length === 2) {
+        const path = urlParts[1] || '/';
+        return `${DEFAULT_SITE_URL}/${targetLang}${path === '/' ? '' : path}`;
+      }
+      return null;
+    }
   };
 
-  const alternateUrl = getAlternateUrl();
+  const alternateUrl = alternateLocale ? getAlternateUrl(altLang) : null;
+  const currentLangUrl = getAlternateUrl(lang);
 
   return (
     <Helmet>
@@ -89,11 +106,11 @@ export function SEO({
       <link rel="canonical" href={finalCanonical} />
 
       {/* Hreflang Tags for Multilingual Support */}
-      <link rel="alternate" hrefLang={lang} href={finalCanonical} />
+      <link rel="alternate" hrefLang={lang} href={currentLangUrl || finalCanonical} />
       {alternateUrl && alternateLocale && (
         <link rel="alternate" hrefLang={altLang} href={alternateUrl} />
       )}
-      <link rel="alternate" hrefLang="x-default" href={DEFAULT_SITE_URL} />
+      <link rel="alternate" hrefLang="x-default" href={`${DEFAULT_SITE_URL}/en`} />
 
       {/* Open Graph Tags */}
       <meta property="og:site_name" content={DEFAULT_SITE_NAME} />
@@ -180,7 +197,8 @@ export function MarketplaceSEO({ locale = 'he_IL' }: { locale?: 'he_IL' | 'en_US
     <SEO
       title={titles[lang]}
       description={descriptions[lang]}
-      url={`${DEFAULT_SITE_URL}/marketplace`}
+      url={`${DEFAULT_SITE_URL}/${lang}/marketplace`}
+      canonicalUrl={`${DEFAULT_SITE_URL}/${lang}/marketplace`}
       locale={locale}
       alternateLocale={locale === 'he_IL' ? 'en_US' : 'he_IL'}
       keywords={lang === 'he'

@@ -16,9 +16,26 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 const LANGUAGE_STORAGE_KEY = 'mestory-language';
+const SUPPORTED_LANGUAGES: Language[] = ['en', 'he'];
 
 const getDirection = (lang: Language): Direction => {
   return lang === 'he' ? 'rtl' : 'ltr';
+};
+
+/**
+ * Extracts language from URL path
+ * Returns null if no valid language prefix is found
+ */
+const getLanguageFromURL = (): Language | null => {
+  const pathname = window.location.pathname;
+  const segments = pathname.split('/').filter(Boolean);
+  const firstSegment = segments[0]?.toLowerCase();
+
+  if (firstSegment && SUPPORTED_LANGUAGES.includes(firstSegment as Language)) {
+    return firstSegment as Language;
+  }
+
+  return null;
 };
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -41,7 +58,17 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const initializeLanguage = async () => {
     try {
-      // First check if user is logged in and has a language preference
+      // First priority: Check URL for language prefix
+      const urlLang = getLanguageFromURL();
+      if (urlLang) {
+        setLanguageState(urlLang);
+        i18n.changeLanguage(urlLang);
+        localStorage.setItem(LANGUAGE_STORAGE_KEY, urlLang);
+        setIsLoading(false);
+        return;
+      }
+
+      // Second priority: Check if user is logged in and has a language preference
       const token = localStorage.getItem('token');
       if (token) {
         try {
@@ -59,7 +86,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
         }
       }
 
-      // Fall back to localStorage
+      // Third priority: Fall back to localStorage
       const storedLang = localStorage.getItem(LANGUAGE_STORAGE_KEY) as Language | null;
       if (storedLang && (storedLang === 'en' || storedLang === 'he')) {
         setLanguageState(storedLang);

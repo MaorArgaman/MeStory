@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { api, paymentApi } from '../services/api';
 import toast from 'react-hot-toast';
-import { GlassCard, GlowingButton } from '../components/ui';
+import { GlassCard, GlowingButton, OptimizedImage, getAuthorProfileAlt } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
@@ -456,9 +456,10 @@ export default function BookDetailsPage() {
             >
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold overflow-hidden">
                 {book.author.profile?.avatar ? (
-                  <img
+                  <OptimizedImage
                     src={book.author.profile.avatar}
-                    alt={book.author.name}
+                    alt={getAuthorProfileAlt(book.author.name)}
+                    lazy={false}
                     className="w-full h-full object-cover"
                   />
                 ) : (

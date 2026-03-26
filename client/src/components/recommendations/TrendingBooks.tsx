@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { TrendingUp, ChevronRight, Star, Eye, Flame } from 'lucide-react';
 import api from '../../services/api';
 import GlassCard from '../ui/GlassCard';
+import OptimizedImage, { getBookCoverAlt } from '../ui/OptimizedImage';
 
 interface Book {
   _id: string;
@@ -146,9 +147,9 @@ export default function TrendingBooks({
                   style={!getCoverUrl(item.book) ? getCoverStyle(item.book) : undefined}
                 >
                   {getCoverUrl(item.book) ? (
-                    <img
+                    <OptimizedImage
                       src={getCoverUrl(item.book)!}
-                      alt={item.book.title}
+                      alt={getBookCoverAlt(item.book.title, item.book.author.name)}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (

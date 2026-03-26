@@ -5,6 +5,7 @@ import { Sparkles, ChevronRight, Star, Eye } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import GlassCard from '../ui/GlassCard';
+import OptimizedImage, { getBookCoverAlt } from '../ui/OptimizedImage';
 
 interface Book {
   _id: string;
@@ -145,9 +146,9 @@ export default function RecommendedForYou({
                   style={!getCoverUrl(rec.book) ? getCoverStyle(rec.book) : undefined}
                 >
                   {getCoverUrl(rec.book) ? (
-                    <img
+                    <OptimizedImage
                       src={getCoverUrl(rec.book)!}
-                      alt={rec.book.title}
+                      alt={getBookCoverAlt(rec.book.title, rec.book.author.name)}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (

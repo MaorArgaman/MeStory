@@ -9,7 +9,9 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <main className="pt-20">{children}</main>
+      <main className="pt-20" role="main" id="main-content">
+        {children}
+      </main>
     </div>
   );
 }

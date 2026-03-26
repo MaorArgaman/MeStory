@@ -6,7 +6,7 @@ import { Search, Sparkles, Star, User, BookOpen, Eye, Heart, Shield, Users } fro
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 import toast from 'react-hot-toast';
-import { GlassCard, GlowingButton, NeonInput } from '../components/ui';
+import { GlassCard, GlowingButton, NeonInput, OptimizedImage, getAuthorProfileAlt } from '../components/ui';
 import {
   RecommendedForYou,
   ContinueReading,
@@ -259,7 +259,13 @@ export default function MarketplacePage() {
       <div className="relative overflow-hidden py-16 sm:py-24 md:py-32 px-4 sm:px-6 md:px-8">
         {/* Background Image */}
         <div className="absolute inset-0">
-          <img src={marketplaceHero} alt="" className="w-full h-full object-cover" />
+          <OptimizedImage
+            src={marketplaceHero}
+            alt=""
+            decorative
+            lazy={false}
+            className="w-full h-full object-cover"
+          />
           <div className="absolute inset-0 bg-gradient-to-b from-deep-space/80 via-deep-space/70 to-deep-space" />
         </div>
         {/* Floating Book Icons Background - hide some on mobile */}
@@ -1278,9 +1284,9 @@ export default function MarketplacePage() {
                     <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">
                       <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-magic-gold/30 to-yellow-600/30 flex items-center justify-center overflow-hidden flex-shrink-0">
                         {book.author.profile?.avatar ? (
-                          <img
+                          <OptimizedImage
                             src={book.author.profile.avatar}
-                            alt={book.author.name}
+                            alt={getAuthorProfileAlt(book.author.name)}
                             className="w-full h-full object-cover"
                           />
                         ) : (

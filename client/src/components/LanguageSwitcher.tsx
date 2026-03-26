@@ -1,6 +1,8 @@
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Globe } from 'lucide-react';
 import { useLanguage, Language } from '../contexts/LanguageContext';
+import { useLocalizedPath } from '../hooks/useLocalizedPath';
 
 interface LanguageSwitcherProps {
   variant?: 'toggle' | 'dropdown';
@@ -14,10 +16,18 @@ export default function LanguageSwitcher({
   className = ''
 }: LanguageSwitcherProps) {
   const { language, setLanguage, isLoading } = useLanguage();
+  const { getPathForLanguage, isLocalizedRoute } = useLocalizedPath();
+  const navigate = useNavigate();
 
   const handleLanguageChange = async (newLang: Language) => {
     if (newLang !== language && !isLoading) {
       await setLanguage(newLang);
+
+      // If we're on a localized route, navigate to the same page with new language prefix
+      if (isLocalizedRoute) {
+        const newPath = getPathForLanguage(newLang);
+        navigate(newPath, { replace: true });
+      }
     }
   };
 

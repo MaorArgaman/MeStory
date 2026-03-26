@@ -30,7 +30,7 @@ export function OrganizationSchema({ locale = 'he' }: OrganizationSchemaProps) {
     name: 'MeStory',
     alternateName: 'MeStory Israel',
     url: DEFAULT_SITE_URL,
-    logo: `${DEFAULT_SITE_URL}/img/logo.svg`,
+    logo: `${DEFAULT_SITE_URL}/img/MeStory-Logo.png`,
     description: descriptions[locale],
     foundingDate: '2024',
     sameAs: [
@@ -330,7 +330,7 @@ export function SoftwareApplicationSchema({ locale = 'he' }: SoftwareApplication
           'Ready-made templates',
           'Real-time editing',
         ],
-    screenshot: `${DEFAULT_SITE_URL}/img/screenshot.jpg`,
+    screenshot: `${DEFAULT_SITE_URL}/img/landing-hero.png`,
     aggregateRating: {
       '@type': 'AggregateRating',
       ratingValue: '4.8',

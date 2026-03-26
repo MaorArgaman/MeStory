@@ -11,6 +11,8 @@ import Layout from './components/layout/Layout';
 import LoadingScreen from './components/LoadingScreen';
 import ErrorBoundary from './components/ErrorBoundary';
 import { HelmetProvider, OrganizationSchema, WebsiteSchema } from './components/seo';
+import { GoogleAnalytics } from './components/analytics';
+import { LanguageRedirect, LanguageRoute } from './components/routing';
 
 // Initialize i18n
 import './i18n';
@@ -42,6 +44,57 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import FAQPage from './pages/FAQPage';
 import AboutPage from './pages/AboutPage';
+import GuidesPage from './pages/GuidesPage';
+import HowToWriteBook from './pages/guides/HowToWriteBook';
+import HowToPublishBook from './pages/guides/HowToPublishBook';
+import HowToEarnMoney from './pages/guides/HowToEarnMoney';
+
+// Localized public routes component factory
+function createLocalizedRoutes() {
+  // Helper to wrap a page with LanguageRoute and Layout
+  const LocalizedLayout = ({ children }: { children: React.ReactNode }) => (
+    <LanguageRoute>
+      <Layout>{children}</Layout>
+    </LanguageRoute>
+  );
+
+  // Helper for landing page (no Layout, has RedirectIfAuth)
+  const LocalizedLanding = () => (
+    <LanguageRoute>
+      <RedirectIfAuth><LandingPage /></RedirectIfAuth>
+    </LanguageRoute>
+  );
+
+  return (
+    <>
+      {/* English routes */}
+      <Route path="/en" element={<LocalizedLanding />} />
+      <Route path="/en/marketplace" element={<LocalizedLayout><MarketplacePage /></LocalizedLayout>} />
+      <Route path="/en/book/:id" element={<LocalizedLayout><BookDetailsPage /></LocalizedLayout>} />
+      <Route path="/en/faq" element={<LocalizedLayout><FAQPage /></LocalizedLayout>} />
+      <Route path="/en/about" element={<LocalizedLayout><AboutPage /></LocalizedLayout>} />
+      <Route path="/en/privacy" element={<LocalizedLayout><PrivacyPolicyPage /></LocalizedLayout>} />
+      <Route path="/en/terms" element={<LocalizedLayout><TermsOfServicePage /></LocalizedLayout>} />
+      <Route path="/en/guides" element={<LocalizedLayout><GuidesPage /></LocalizedLayout>} />
+      <Route path="/en/guides/write-book" element={<LocalizedLayout><HowToWriteBook /></LocalizedLayout>} />
+      <Route path="/en/guides/publish-book" element={<LocalizedLayout><HowToPublishBook /></LocalizedLayout>} />
+      <Route path="/en/guides/earn-money" element={<LocalizedLayout><HowToEarnMoney /></LocalizedLayout>} />
+
+      {/* Hebrew routes */}
+      <Route path="/he" element={<LocalizedLanding />} />
+      <Route path="/he/marketplace" element={<LocalizedLayout><MarketplacePage /></LocalizedLayout>} />
+      <Route path="/he/book/:id" element={<LocalizedLayout><BookDetailsPage /></LocalizedLayout>} />
+      <Route path="/he/faq" element={<LocalizedLayout><FAQPage /></LocalizedLayout>} />
+      <Route path="/he/about" element={<LocalizedLayout><AboutPage /></LocalizedLayout>} />
+      <Route path="/he/privacy" element={<LocalizedLayout><PrivacyPolicyPage /></LocalizedLayout>} />
+      <Route path="/he/terms" element={<LocalizedLayout><TermsOfServicePage /></LocalizedLayout>} />
+      <Route path="/he/guides" element={<LocalizedLayout><GuidesPage /></LocalizedLayout>} />
+      <Route path="/he/guides/write-book" element={<LocalizedLayout><HowToWriteBook /></LocalizedLayout>} />
+      <Route path="/he/guides/publish-book" element={<LocalizedLayout><HowToPublishBook /></LocalizedLayout>} />
+      <Route path="/he/guides/earn-money" element={<LocalizedLayout><HowToEarnMoney /></LocalizedLayout>} />
+    </>
+  );
+}
 
 function AppContent() {
   const { loading } = useAuth();
@@ -58,6 +111,9 @@ function AppContent() {
 
   return (
     <div dir={direction} lang={language}>
+      {/* Google Analytics */}
+      <GoogleAnalytics />
+
       {/* Global SEO Structured Data */}
       <OrganizationSchema locale={locale} />
       <WebsiteSchema locale={locale} />
@@ -76,208 +132,249 @@ function AppContent() {
 
       <AnimatePresence mode="wait">
         <ErrorBoundary>
-          <Routes location={location} key={location.pathname}>
-          {/* Public Routes - Redirect to dashboard if already logged in */}
-          <Route path="/" element={<RedirectIfAuth><LandingPage /></RedirectIfAuth>} />
-          <Route path="/login" element={<RedirectIfAuth><LoginPage /></RedirectIfAuth>} />
-          <Route path="/register" element={<RedirectIfAuth><RegisterPage /></RedirectIfAuth>} />
-          <Route path="/auth-success" element={<AuthSuccessPage />} />
+          <LanguageRedirect>
+            <Routes location={location} key={location.pathname}>
+              {/* Root path - LanguageRedirect handles redirecting to /en or /he */}
+              <Route path="/" element={<RedirectIfAuth><LandingPage /></RedirectIfAuth>} />
 
-        {/* Protected Routes with Layout */}
-        <Route
-          path="/dashboard"
-          element={
-            <RequireAuth>
-              <Layout>
-                <DashboardPage />
-              </Layout>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/editor/:bookId"
-          element={
-            <RequireAuth>
-              <BookWritingPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/design/:bookId"
-          element={
-            <RequireAuth>
-              <DesignStudioPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/layout/:bookId"
-          element={
-            <RequireAuth>
-              <BookLayoutPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/book-design/:bookId"
-          element={
-            <RequireAuth>
-              <BookDesignPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/publish/:bookId"
-          element={
-            <RequireAuth>
-              <Layout>
-                <PublishingPage />
-              </Layout>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/publish-metadata/:bookId"
-          element={
-            <RequireAuth>
-              <Layout>
-                <PublishMetadata />
-              </Layout>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/marketplace"
-          element={
-            <Layout>
-              <MarketplacePage />
-            </Layout>
-          }
-        />
-        <Route
-          path="/subscription"
-          element={
-            <RequireAuth>
-              <Layout>
-                <SubscriptionPage />
-              </Layout>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <RequireAuth>
-              <Layout>
-                <SettingsPage />
-              </Layout>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/success"
-          element={
-            <RequireAuth>
-              <UpgradeSuccessPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/read/:bookId"
-          element={<ReaderPage />}
-        />
-        <Route
-          path="/book/:id"
-          element={
-            <Layout>
-              <BookDetailsPage />
-            </Layout>
-          }
-        />
-        <Route
-          path="/profile/:id"
-          element={
-            <Layout>
-              <AuthorProfilePage />
-            </Layout>
-          }
-        />
+              {/* Language-prefixed public routes (explicit /en and /he) */}
+              {createLocalizedRoutes()}
 
-        {/* Library Route */}
-        <Route
-          path="/library"
-          element={
-            <RequireAuth>
-              <Layout>
-                <LibraryPage />
-              </Layout>
-            </RequireAuth>
-          }
-        />
+              {/* Authentication routes (no language prefix needed) */}
+              <Route path="/login" element={<RedirectIfAuth><LoginPage /></RedirectIfAuth>} />
+              <Route path="/register" element={<RedirectIfAuth><RegisterPage /></RedirectIfAuth>} />
+              <Route path="/auth-success" element={<AuthSuccessPage />} />
 
-        {/* Earnings Route */}
-        <Route
-          path="/earnings"
-          element={
-            <RequireAuth>
-              <Layout>
-                <EarningsPage />
-              </Layout>
-            </RequireAuth>
-          }
-        />
+              {/* Protected Routes with Layout - no language prefix */}
+              <Route
+                path="/dashboard"
+                element={
+                  <RequireAuth>
+                    <Layout>
+                      <DashboardPage />
+                    </Layout>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/editor/:bookId"
+                element={
+                  <RequireAuth>
+                    <BookWritingPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/design/:bookId"
+                element={
+                  <RequireAuth>
+                    <DesignStudioPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/layout/:bookId"
+                element={
+                  <RequireAuth>
+                    <BookLayoutPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/book-design/:bookId"
+                element={
+                  <RequireAuth>
+                    <BookDesignPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/publish/:bookId"
+                element={
+                  <RequireAuth>
+                    <Layout>
+                      <PublishingPage />
+                    </Layout>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/publish-metadata/:bookId"
+                element={
+                  <RequireAuth>
+                    <Layout>
+                      <PublishMetadata />
+                    </Layout>
+                  </RequireAuth>
+                }
+              />
 
-        {/* Legal Pages */}
-        <Route
-          path="/privacy"
-          element={
-            <Layout>
-              <PrivacyPolicyPage />
-            </Layout>
-          }
-        />
-        <Route
-          path="/terms"
-          element={
-            <Layout>
-              <TermsOfServicePage />
-            </Layout>
-          }
-        />
-        <Route
-          path="/faq"
-          element={
-            <Layout>
-              <FAQPage />
-            </Layout>
-          }
-        />
-        <Route
-          path="/about"
-          element={
-            <Layout>
-              <AboutPage />
-            </Layout>
-          }
-        />
+              {/* Backwards compatible public routes (without language prefix) */}
+              <Route
+                path="/marketplace"
+                element={
+                  <Layout>
+                    <MarketplacePage />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/book/:id"
+                element={
+                  <Layout>
+                    <BookDetailsPage />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/faq"
+                element={
+                  <Layout>
+                    <FAQPage />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/about"
+                element={
+                  <Layout>
+                    <AboutPage />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/privacy"
+                element={
+                  <Layout>
+                    <PrivacyPolicyPage />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/terms"
+                element={
+                  <Layout>
+                    <TermsOfServicePage />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/guides"
+                element={
+                  <Layout>
+                    <GuidesPage />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/guides/write-book"
+                element={
+                  <Layout>
+                    <HowToWriteBook />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/guides/publish-book"
+                element={
+                  <Layout>
+                    <HowToPublishBook />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/guides/earn-money"
+                element={
+                  <Layout>
+                    <HowToEarnMoney />
+                  </Layout>
+                }
+              />
 
-        {/* Admin Routes */}
-        <Route
-          path="/admin"
-          element={
-            <RequireAuth>
-              <AdminCheck>
-                <Layout>
-                  <AdminDashboard />
-                </Layout>
-              </AdminCheck>
-            </RequireAuth>
-          }
-        />
+              {/* More protected routes */}
+              <Route
+                path="/subscription"
+                element={
+                  <RequireAuth>
+                    <Layout>
+                      <SubscriptionPage />
+                    </Layout>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <RequireAuth>
+                    <Layout>
+                      <SettingsPage />
+                    </Layout>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/success"
+                element={
+                  <RequireAuth>
+                    <UpgradeSuccessPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/read/:bookId"
+                element={<ReaderPage />}
+              />
+              <Route
+                path="/profile/:id"
+                element={
+                  <Layout>
+                    <AuthorProfilePage />
+                  </Layout>
+                }
+              />
 
-          {/* Catch all - redirect to landing page */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              {/* Library Route */}
+              <Route
+                path="/library"
+                element={
+                  <RequireAuth>
+                    <Layout>
+                      <LibraryPage />
+                    </Layout>
+                  </RequireAuth>
+                }
+              />
+
+              {/* Earnings Route */}
+              <Route
+                path="/earnings"
+                element={
+                  <RequireAuth>
+                    <Layout>
+                      <EarningsPage />
+                    </Layout>
+                  </RequireAuth>
+                }
+              />
+
+              {/* Admin Routes */}
+              <Route
+                path="/admin"
+                element={
+                  <RequireAuth>
+                    <AdminCheck>
+                      <Layout>
+                        <AdminDashboard />
+                      </Layout>
+                    </AdminCheck>
+                  </RequireAuth>
+                }
+              />
+
+              {/* Catch all - redirect to landing page */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </LanguageRedirect>
         </ErrorBoundary>
       </AnimatePresence>
     </div>
