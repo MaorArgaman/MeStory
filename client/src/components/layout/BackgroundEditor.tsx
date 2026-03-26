@@ -4,8 +4,7 @@
  */
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Trash2, Upload, Image as ImageIcon } from 'lucide-react';
+import { Plus, Trash2, Upload } from 'lucide-react';
 import { BackgroundConfig, BackgroundType, GradientColorStop } from '../../types/templates';
 
 interface BackgroundEditorProps {

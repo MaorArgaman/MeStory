@@ -19,7 +19,8 @@ import {
 import toast from 'react-hot-toast';
 
 // Launch day celebration image - warehouse with books + "NOW LIVE"
-const launchDayImage = '/img/launch-day.png';
+const _launchDayImage = '/img/launch-day.png';
+void _launchDayImage; // Reserved for future launch celebration feature
 
 interface QualityScore {
   overallScore: number;

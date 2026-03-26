@@ -27,6 +27,3 @@ export {
 // Breadcrumb Component (visual + structured data)
 export { Breadcrumb } from './Breadcrumb';
 export type { BreadcrumbItem } from './Breadcrumb';
-
-// Re-export HelmetProvider for convenience
-export { HelmetProvider } from 'react-helmet-async';

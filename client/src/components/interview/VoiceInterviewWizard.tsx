@@ -3,7 +3,7 @@
  * Full voice-based interview for book creation
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useModal } from '../../hooks/useModal';
@@ -66,7 +66,7 @@ export default function VoiceInterviewWizard({
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [canCompleteEarly, setCanCompleteEarly] = useState(false);
-  const [summary, setSummary] = useState<InterviewSummary | null>(null);
+  const [_summary, setSummary] = useState<InterviewSummary | null>(null);
   const [responses, setResponses] = useState<InterviewResponse[]>([]);
   const [duration, setDuration] = useState(0);
   const [isTTSEnabled, setIsTTSEnabled] = useState(true);

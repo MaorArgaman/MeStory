@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Flame, Users, Shield, Home } from 'lucide-react';
+import { Heart, Flame, Shield } from 'lucide-react';
 
 interface CategoryCardProps {
   title: string;

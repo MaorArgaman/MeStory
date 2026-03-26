@@ -1124,7 +1124,11 @@ export default function BookLayoutPage() {
       setBook(prev => prev ? {
         ...prev,
         coverDesign: {
-          ...prev.coverDesign,
+          coverColor: prev.coverDesign?.coverColor || '#1a1a2e',
+          textColor: prev.coverDesign?.textColor || '#ffffff',
+          fontFamily: prev.coverDesign?.fontFamily || 'Inter',
+          titlePosition: prev.coverDesign?.titlePosition,
+          authorPosition: prev.coverDesign?.authorPosition,
           imageUrl: coverImageUrls.front,
         },
       } : null);
@@ -2680,8 +2684,9 @@ function PageRenderer({
     // Check for images/placeholders at different positions
     const topImages = [...allImages, ...placeholders].filter(img => img.y < 30);
     const bottomImages = [...allImages, ...placeholders].filter(img => img.y > 60);
-    const leftImages = [...allImages, ...placeholders].filter(img => img.x < 30 && img.y >= 30 && img.y <= 60);
-    const rightImages = [...allImages, ...placeholders].filter(img => img.x > 60 && img.y >= 30 && img.y <= 60);
+    const _leftImages = [...allImages, ...placeholders].filter(img => img.x < 30 && img.y >= 30 && img.y <= 60);
+    const _rightImages = [...allImages, ...placeholders].filter(img => img.x > 60 && img.y >= 30 && img.y <= 60);
+    void _leftImages; void _rightImages; // Reserved for future side image layout
 
     // Reserve space for images at top
     if (topImages.length > 0) {

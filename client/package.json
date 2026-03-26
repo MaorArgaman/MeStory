@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
-    "react-helmet-async": "^2.0.5",
     "@tiptap/extension-bubble-menu": "^3.18.0",
     "@tiptap/extension-character-count": "^3.17.1",
     "@tiptap/extension-color": "^3.17.1",

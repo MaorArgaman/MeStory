@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { api } from '../services/api';
-import { Plus, Loader2, BookOpen, Edit, Palette, Download, Rocket, MessageSquare, Upload, Sparkles, FileText, Mic, PenTool, X, Volume2, Feather, MessageCircle, FileUp, AudioLines } from 'lucide-react';
+import { Plus, Loader2, BookOpen, Edit, Palette, Download, Rocket, Upload, Mic, PenTool, Feather, MessageCircle, FileUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import CreateBookWizard from '../components/dashboard/CreateBookWizard';

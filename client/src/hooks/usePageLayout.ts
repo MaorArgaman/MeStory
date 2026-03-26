@@ -12,7 +12,6 @@ import {
   HeaderFooterConfig,
   Margins,
   TypographySettings,
-  PageSection,
 } from '../types/templates';
 
 // Default layout configuration

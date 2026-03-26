@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import { useSEO } from '../hooks/useSEO';
 import {
   BookOpen,
   Upload,
@@ -112,23 +112,15 @@ export default function GuidesPage() {
     ? ['מדריך כתיבת ספר', 'איך לכתוב ספר', 'פרסום ספר', 'הרווחה מספרים', 'AI כתיבה', 'MeStory מדריך']
     : ['book writing guide', 'how to write a book', 'publish a book', 'earn from books', 'AI writing', 'MeStory guide'];
 
-  return (
-    <>
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription} />
-        <meta name="keywords" content={pageKeywords.join(', ')} />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={pageDescription} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://mestory.co.il/guides" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={pageTitle} />
-        <meta name="twitter:description" content={pageDescription} />
-        <link rel="canonical" href="https://mestory.co.il/guides" />
-      </Helmet>
+  useSEO({
+    title: pageTitle,
+    description: pageDescription,
+    canonicalUrl: 'https://mestory.co.il/guides',
+    keywords: pageKeywords,
+  });
 
-      <div className="min-h-screen py-20 px-4 sm:px-8" dir={isHebrew ? 'rtl' : 'ltr'}>
+  return (
+    <div className="min-h-screen py-20 px-4 sm:px-8" dir={isHebrew ? 'rtl' : 'ltr'}>
         <div className="max-w-6xl mx-auto">
           {/* Breadcrumb Navigation */}
           <div className="mb-8">
@@ -257,6 +249,5 @@ export default function GuidesPage() {
           </motion.section>
         </div>
       </div>
-    </>
   );
 }

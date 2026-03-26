@@ -1,16 +1,29 @@
-import { Helmet } from 'react-helmet-async';
+import { useEffect } from 'react';
 
 const DEFAULT_SITE_URL = 'https://mestory.co.il';
 
 // Helper to render JSON-LD script
-function JsonLd({ data }: { data: object }) {
-  return (
-    <Helmet>
-      <script type="application/ld+json">
-        {JSON.stringify(data)}
-      </script>
-    </Helmet>
-  );
+function useJsonLd(data: object, id: string) {
+  useEffect(() => {
+    const scriptId = `json-ld-${id}`;
+    let script = document.getElementById(scriptId) as HTMLScriptElement;
+
+    if (!script) {
+      script = document.createElement('script');
+      script.id = scriptId;
+      script.type = 'application/ld+json';
+      document.head.appendChild(script);
+    }
+
+    script.textContent = JSON.stringify(data);
+
+    return () => {
+      const existingScript = document.getElementById(scriptId);
+      if (existingScript) {
+        existingScript.remove();
+      }
+    };
+  }, [data, id]);
 }
 
 // Organization Schema
@@ -51,7 +64,8 @@ export function OrganizationSchema({ locale = 'he' }: OrganizationSchemaProps) {
     },
   };
 
-  return <JsonLd data={data} />;
+  useJsonLd(data, 'organization');
+  return null;
 }
 
 // Book Schema
@@ -135,7 +149,8 @@ export function BookSchema({
     };
   }
 
-  return <JsonLd data={data} />;
+  useJsonLd(data, `book-${title.replace(/\s+/g, '-').toLowerCase()}`);
+  return null;
 }
 
 // FAQ Schema
@@ -162,7 +177,8 @@ export function FAQSchema({ items }: FAQSchemaProps) {
     })),
   };
 
-  return <JsonLd data={data} />;
+  useJsonLd(data, 'faq');
+  return null;
 }
 
 // HowTo Schema
@@ -222,7 +238,8 @@ export function HowToSchema({
     }));
   }
 
-  return <JsonLd data={data} />;
+  useJsonLd(data, `howto-${name.replace(/\s+/g, '-').toLowerCase()}`);
+  return null;
 }
 
 // Author/Person Schema
@@ -262,7 +279,8 @@ export function AuthorSchema({
   if (description) data.description = description;
   if (sameAs) data.sameAs = sameAs;
 
-  return <JsonLd data={data} />;
+  useJsonLd(data, `author-${name.replace(/\s+/g, '-').toLowerCase()}`);
+  return null;
 }
 
 // Breadcrumb Schema
@@ -287,7 +305,8 @@ export function BreadcrumbSchema({ items }: BreadcrumbSchemaProps) {
     })),
   };
 
-  return <JsonLd data={data} />;
+  useJsonLd(data, 'breadcrumb');
+  return null;
 }
 
 // Software Application Schema
@@ -340,7 +359,8 @@ export function SoftwareApplicationSchema({ locale = 'he' }: SoftwareApplication
     },
   };
 
-  return <JsonLd data={data} />;
+  useJsonLd(data, 'software-application');
+  return null;
 }
 
 // WebSite Schema with SearchAction
@@ -371,7 +391,8 @@ export function WebsiteSchema({ locale = 'he' }: WebsiteSchemaProps) {
     },
   };
 
-  return <JsonLd data={data} />;
+  useJsonLd(data, 'website');
+  return null;
 }
 
 // Product Schema (for book marketplace)
@@ -429,7 +450,8 @@ export function ProductSchema({
     };
   }
 
-  return <JsonLd data={data} />;
+  useJsonLd(data, `product-${name.replace(/\s+/g, '-').toLowerCase()}`);
+  return null;
 }
 
 // Export default FAQ items in both languages for common use

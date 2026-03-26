@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Layout, Check, Sparkles, Plus, Trash2 } from 'lucide-react';
 import { useModal } from '../../hooks/useModal';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { bookTemplates, templateCategories, BookTemplate, getCustomTemplates, saveCustomTemplate, deleteCustomTemplate, getAllTemplates } from '../../data/bookTemplates';
+import { bookTemplates, templateCategories, BookTemplate, getCustomTemplates, saveCustomTemplate, deleteCustomTemplate } from '../../data/bookTemplates';
 import CustomTemplateBuilder from './CustomTemplateBuilder';
 import toast from 'react-hot-toast';
 

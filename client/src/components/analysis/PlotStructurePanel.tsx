@@ -10,7 +10,6 @@ import {
   BookOpen,
   Loader2,
   RefreshCw,
-  ChevronDown,
   ChevronUp,
   AlertCircle,
   CheckCircle,

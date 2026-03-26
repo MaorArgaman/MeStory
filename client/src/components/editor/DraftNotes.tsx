@@ -4,13 +4,11 @@ import { useTranslation } from 'react-i18next';
 import {
   StickyNote,
   Plus,
-  X,
   GripVertical,
   Trash2,
   ChevronLeft,
   ChevronRight,
   Edit3,
-  Check,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -107,7 +105,7 @@ export default function DraftNotes({
     setDraggedId(id);
   };
 
-  const handleDrag = (e: React.MouseEvent, id: string) => {
+  const _handleDrag = (e: React.MouseEvent, id: string) => {
     if (!draggedId || !containerRef.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
@@ -116,9 +114,10 @@ export default function DraftNotes({
 
     // RTL-aware x position calculation (for future horizontal positioning)
     // In RTL mode, x position is calculated from the right side
-    const x = isHebrew
+    const _x = isHebrew
       ? ((rect.right - e.clientX) / rect.width) * 100
       : ((e.clientX - rect.left) / rect.width) * 100;
+    void _x; // Reserved for future horizontal positioning
 
     setNotes(notes.map(note =>
       note.id === id ? { ...note, position: clampedY } : note
@@ -128,6 +127,9 @@ export default function DraftNotes({
   const handleDragEnd = () => {
     setDraggedId(null);
   };
+
+  // Suppress unused variable warnings for future use
+  void _handleDrag;
 
   return (
     <div

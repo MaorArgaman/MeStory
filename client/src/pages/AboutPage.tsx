@@ -1,5 +1,5 @@
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import { useSEO } from '../hooks/useSEO';
 import {
   BookOpen,
   Users,
@@ -256,21 +256,14 @@ export default function AboutPage() {
     { name: isHebrew ? 'אודות' : 'About', url: 'https://mestory.co.il/about' },
   ];
 
+  useSEO({
+    title: t.seo.title,
+    description: t.seo.description,
+    canonicalUrl: 'https://mestory.co.il/about',
+  });
+
   return (
     <>
-      <Helmet>
-        <title>{t.seo.title}</title>
-        <meta name="description" content={t.seo.description} />
-        <meta property="og:title" content={t.seo.title} />
-        <meta property="og:description" content={t.seo.description} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://mestory.co.il/about" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={t.seo.title} />
-        <meta name="twitter:description" content={t.seo.description} />
-        <link rel="canonical" href="https://mestory.co.il/about" />
-      </Helmet>
-
       {/* Structured Data for SEO */}
       <OrganizationSchema locale={locale} />
       <BreadcrumbSchema items={breadcrumbs} />

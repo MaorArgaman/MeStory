@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import { useSEO } from '../../hooks/useSEO';
 import {
   BookOpen,
   Lightbulb,
@@ -189,22 +189,16 @@ export default function HowToWriteBook() {
     ? ['איך לכתוב ספר', 'כתיבת ספר עם AI', 'מדריך כתיבה', 'כלי כתיבה AI', 'MeStory', 'פרסום ספר']
     : ['how to write a book', 'AI book writing', 'writing guide', 'AI writing tools', 'MeStory', 'book publishing'];
 
+  useSEO({
+    title: pageTitle,
+    description: pageDescription,
+    canonicalUrl: 'https://mestory.co.il/guides/write-book',
+    keywords: pageKeywords,
+    ogType: 'article',
+  });
+
   return (
     <>
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription} />
-        <meta name="keywords" content={pageKeywords.join(', ')} />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={pageDescription} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://mestory.co.il/guides/write-book" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={pageTitle} />
-        <meta name="twitter:description" content={pageDescription} />
-        <link rel="canonical" href="https://mestory.co.il/guides/write-book" />
-      </Helmet>
-
       {/* HowTo Schema for AEO/SEO */}
       <HowToSchema
         name={isHebrew ? 'איך לכתוב ספר עם AI' : 'How to Write a Book with AI'}

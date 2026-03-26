@@ -11,10 +11,15 @@ import { io, Socket } from 'socket.io-client';
 // Socket instance
 let socket: Socket | null = null;
 
-// Connection state
+// Connection state (isConnecting tracked for future connection status UI)
 let isConnecting = false;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 5;
+
+// Export function to check connection status
+export function getConnectionState() {
+  return { isConnecting, reconnectAttempts, maxAttempts: MAX_RECONNECT_ATTEMPTS };
+}
 
 // Get the API URL from environment
 const getSocketURL = (): string => {
@@ -63,7 +68,7 @@ export function initializeSocket(token: string): Socket {
     reconnectAttempts = 0;
   });
 
-  socket.on('connect_error', (error) => {
+  socket.on('connect_error', (error: Error) => {
     console.error('[Socket] Connection error:', error.message);
     isConnecting = false;
     reconnectAttempts++;
@@ -73,7 +78,7 @@ export function initializeSocket(token: string): Socket {
     }
   });
 
-  socket.on('disconnect', (reason) => {
+  socket.on('disconnect', (reason: string) => {
     console.log('[Socket] Disconnected:', reason);
 
     // If server disconnected us, try to reconnect
@@ -82,7 +87,7 @@ export function initializeSocket(token: string): Socket {
     }
   });
 
-  socket.on('reconnect', (attemptNumber) => {
+  socket.on('reconnect', (attemptNumber: number) => {
     console.log('[Socket] Reconnected after', attemptNumber, 'attempts');
     reconnectAttempts = 0;
   });

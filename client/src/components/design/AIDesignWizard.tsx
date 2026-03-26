@@ -93,14 +93,18 @@ export default function AIDesignWizard({
           setDesign({
             typography: premiumData.typography,
             layout: premiumData.layout,
-            cover: premiumData.coverDesign,
             covers: {
-              front: {
+              front: premiumData.covers?.frontImageUrl ? {
+                backgroundColor: '#1a1a2e',
+                imagePrompt: '',
                 generatedImageUrl: premiumData.covers?.frontImageUrl,
-              },
-              back: {
+                title: { position: 'center', fontSize: 48, color: '#ffffff' },
+                author: { position: 'bottom', fontSize: 24, color: '#cccccc' },
+              } : undefined,
+              back: premiumData.covers?.backImageUrl ? {
+                backgroundColor: '#1a1a2e',
                 generatedImageUrl: premiumData.covers?.backImageUrl,
-              },
+              } : undefined,
             },
             imagePlacements: premiumData.imagePlacements || [],
             reasoning: premiumData.theme?.primaryTheme,

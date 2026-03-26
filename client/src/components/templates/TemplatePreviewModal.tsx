@@ -12,7 +12,6 @@ import {
   ChevronRight,
   BookOpen,
   Type,
-  Palette,
   Layout,
   Sparkles,
   Star,

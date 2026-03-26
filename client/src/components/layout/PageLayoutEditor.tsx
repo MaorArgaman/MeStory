@@ -48,7 +48,7 @@ export default function PageLayoutEditor({
   onReset,
   isRTL = true,
 }: PageLayoutEditorProps) {
-  const [activeTab, setActiveTab] = useState<EditorTab>('columns');
+  const [_activeTab, _setActiveTab] = useState<EditorTab>('columns');
   const [showPreview, setShowPreview] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     columns: true,
@@ -58,13 +58,14 @@ export default function PageLayoutEditor({
     headerFooter: false,
   });
 
-  const tabs: { id: EditorTab; label: string; icon: React.ReactNode }[] = [
+  const _tabs: { id: EditorTab; label: string; icon: React.ReactNode }[] = [
     { id: 'columns', label: 'Columns', icon: <Columns className="w-4 h-4" /> },
     { id: 'split', label: 'Page Split', icon: <SplitSquareVertical className="w-4 h-4" /> },
     { id: 'typography', label: 'Typography', icon: <Type className="w-4 h-4" /> },
     { id: 'background', label: 'Background', icon: <Palette className="w-4 h-4" /> },
     { id: 'header-footer', label: 'Headers', icon: <Settings className="w-4 h-4" /> },
   ];
+  void _activeTab; void _setActiveTab; void _tabs; // Reserved for future tab navigation
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({

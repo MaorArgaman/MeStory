@@ -24,7 +24,6 @@ import {
   Type,
   Layout,
   Wand2,
-  Play,
   Eye,
   ArrowRight,
   BookMarked,
@@ -137,7 +136,7 @@ export default function AICompleteDesignWizard({
   book,
   onDesignComplete,
 }: AICompleteDesignWizardProps) {
-  const { t, i18n } = useTranslation('common');
+  const { i18n } = useTranslation('common');
   const isHebrew = i18n.language === 'he';
 
   useModal(isOpen, onClose);
@@ -360,7 +359,9 @@ export default function AICompleteDesignWizard({
         lineHeight: design.typography.lineHeight,
         columns: 1,
         paragraphStyle: 'vertical',
-        pageNumberPosition: design.layout.pageNumberPosition,
+        pageNumberPosition: design.layout.pageNumberPosition === 'bottom-outer' || design.layout.pageNumberPosition === 'top-outer'
+          ? 'bottom-outside' as const
+          : design.layout.pageNumberPosition as 'none' | 'top-left' | 'top-right' | 'bottom-center' | 'bottom-outside',
         margins: {
           top: design.layout.margins.top,
           bottom: design.layout.margins.bottom,
@@ -381,9 +382,10 @@ export default function AICompleteDesignWizard({
         previewGradient: `linear-gradient(135deg, ${design.typography.colors.accent}40, ${design.typography.colors.heading}40)`,
         coverStyle: {
           backgroundColor: design.cover.spine.backgroundColor,
+          titlePosition: 'center' as const,
+          titleAlignment: 'center' as const,
           titleColor: design.cover.front.title.color,
           authorColor: design.cover.front.author.color,
-          pattern: 'none',
         },
         creativeImageLayout: {
           pattern: 'custom' as any,

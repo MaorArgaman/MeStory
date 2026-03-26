@@ -1028,7 +1028,7 @@ export const bookTemplates: BookTemplate[] = [
       titleAlignment: 'center',
       titleColor: '#f0f9ff',
       authorColor: '#bae6fd',
-      overlayPattern: 'waves',
+      overlayPattern: 'lines',
       borderStyle: 'simple',
     },
     textColor: '#0c4a6e',

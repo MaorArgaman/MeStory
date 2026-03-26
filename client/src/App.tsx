@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AnimatePresence } from 'framer-motion';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -10,7 +10,7 @@ import RedirectIfAuth from './components/RedirectIfAuth';
 import Layout from './components/layout/Layout';
 import LoadingScreen from './components/LoadingScreen';
 import ErrorBoundary from './components/ErrorBoundary';
-import { HelmetProvider, OrganizationSchema, WebsiteSchema } from './components/seo';
+import { OrganizationSchema, WebsiteSchema } from './components/seo';
 import { GoogleAnalytics } from './components/analytics';
 import { LanguageRedirect, LanguageRoute } from './components/routing';
 
@@ -48,6 +48,7 @@ import GuidesPage from './pages/GuidesPage';
 import HowToWriteBook from './pages/guides/HowToWriteBook';
 import HowToPublishBook from './pages/guides/HowToPublishBook';
 import HowToEarnMoney from './pages/guides/HowToEarnMoney';
+import NotFoundPage from './pages/NotFoundPage';
 
 // Localized public routes component factory
 function createLocalizedRoutes() {
@@ -372,7 +373,7 @@ function AppContent() {
               />
 
               {/* Catch all - redirect to landing page */}
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<Layout><NotFoundPage /></Layout>} />
             </Routes>
           </LanguageRedirect>
         </ErrorBoundary>
@@ -383,17 +384,15 @@ function AppContent() {
 
 function App() {
   return (
-    <HelmetProvider>
-      <LanguageProvider>
-        <CurrencyProvider>
-          <AuthProvider>
-            <SocketProvider>
-              <AppContent />
-            </SocketProvider>
-          </AuthProvider>
-        </CurrencyProvider>
-      </LanguageProvider>
-    </HelmetProvider>
+    <LanguageProvider>
+      <CurrencyProvider>
+        <AuthProvider>
+          <SocketProvider>
+            <AppContent />
+          </SocketProvider>
+        </AuthProvider>
+      </CurrencyProvider>
+    </LanguageProvider>
   );
 }
 

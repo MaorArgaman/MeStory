@@ -7,7 +7,6 @@ import {
   Plus,
   Save,
   BarChart3,
-  ArrowLeft,
   Loader2,
   Check,
   Palette,
@@ -55,6 +54,7 @@ interface BookData {
   id: string;
   title: string;
   genre: string;
+  language?: string;
   chapters: Chapter[];
   statistics: {
     wordCount: number;

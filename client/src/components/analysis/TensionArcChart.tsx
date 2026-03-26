@@ -6,8 +6,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -25,7 +23,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { TensionAnalysis, ChapterTension } from '../../types/analysis';
+import { TensionAnalysis } from '../../types/analysis';
 import { analyzeTension } from '../../services/analysisApi';
 
 interface TensionArcChartProps {

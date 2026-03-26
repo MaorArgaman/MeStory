@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSEO } from '../hooks/useSEO';
 import {
   HelpCircle,
   ChevronDown,
@@ -307,20 +307,14 @@ export default function FAQPage() {
     ? 'מצאו תשובות לשאלות נפוצות על MeStory - פלטפורמת הכתיבה והפרסום המונעת בינה מלאכותית. למדו על תמחור, תכונות AI, פרסום ספרים, רווחים ועוד.'
     : 'Find answers to frequently asked questions about MeStory - the AI-powered book writing and publishing platform. Learn about pricing, AI features, book publishing, earnings, and more.';
 
+  useSEO({
+    title: pageTitle,
+    description: pageDescription,
+    canonicalUrl: 'https://mestory.co.il/faq',
+  });
+
   return (
     <>
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription} />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={pageDescription} />
-        <meta property="og:type" content="website" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={pageTitle} />
-        <meta name="twitter:description" content={pageDescription} />
-        <link rel="canonical" href="https://mestory.co.il/faq" />
-      </Helmet>
-
       {/* FAQ Structured Data for SEO */}
       <FAQSchema items={faqSchemaItems} />
 

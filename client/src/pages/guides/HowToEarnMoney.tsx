@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import { useSEO } from '../../hooks/useSEO';
 import {
   DollarSign,
   PiggyBank,
@@ -159,22 +159,16 @@ export default function HowToEarnMoney() {
     ? ['איך להרוויח כסף מספרים', 'הכנסה מכתיבה', 'תמלוגי סופר', 'פרסום עצמי הכנסה', 'PayPal סופרים', 'MeStory']
     : ['how to earn money from books', 'writing income', 'author royalties', 'self-publishing income', 'PayPal authors', 'MeStory'];
 
+  useSEO({
+    title: pageTitle,
+    description: pageDescription,
+    canonicalUrl: 'https://mestory.co.il/guides/earn-money',
+    keywords: pageKeywords,
+    ogType: 'article',
+  });
+
   return (
     <>
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription} />
-        <meta name="keywords" content={pageKeywords.join(', ')} />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={pageDescription} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://mestory.co.il/guides/earn-money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={pageTitle} />
-        <meta name="twitter:description" content={pageDescription} />
-        <link rel="canonical" href="https://mestory.co.il/guides/earn-money" />
-      </Helmet>
-
       {/* HowTo Schema for AEO/SEO */}
       <HowToSchema
         name={isHebrew ? 'איך להרוויח כסף כסופר' : 'How to Earn Money as an Author'}

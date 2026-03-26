@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import { useSEO } from '../../hooks/useSEO';
 import {
   Upload,
   FileText,
@@ -175,22 +175,16 @@ export default function HowToPublishBook() {
     ? ['איך לפרסם ספר', 'פרסום עצמי', 'מדריך פרסום', 'תמחור ספר', 'עיצוב כריכה', 'MeStory']
     : ['how to publish a book', 'self-publishing', 'publishing guide', 'book pricing', 'cover design', 'MeStory'];
 
+  useSEO({
+    title: pageTitle,
+    description: pageDescription,
+    canonicalUrl: 'https://mestory.co.il/guides/publish-book',
+    keywords: pageKeywords,
+    ogType: 'article',
+  });
+
   return (
     <>
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription} />
-        <meta name="keywords" content={pageKeywords.join(', ')} />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={pageDescription} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content="https://mestory.co.il/guides/publish-book" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={pageTitle} />
-        <meta name="twitter:description" content={pageDescription} />
-        <link rel="canonical" href="https://mestory.co.il/guides/publish-book" />
-      </Helmet>
-
       {/* HowTo Schema for AEO/SEO */}
       <HowToSchema
         name={isHebrew ? 'איך לפרסם את הספר שלך' : 'How to Publish Your Book'}

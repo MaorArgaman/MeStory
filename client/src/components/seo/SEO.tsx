@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+import { useEffect } from 'react';
 
 interface SEOProps {
   title?: string;
@@ -19,8 +19,6 @@ interface SEOProps {
 
 const DEFAULT_SITE_NAME = 'MeStory';
 const DEFAULT_SITE_URL = 'https://mestory.co.il';
-// Using the MeStory logo as the default OG image
-// For best social media display, consider creating a 1200x630 og-image.png in the future
 const DEFAULT_IMAGE = `${DEFAULT_SITE_URL}/img/MeStory-Logo.png`;
 
 const DEFAULT_DESCRIPTIONS = {
@@ -32,6 +30,42 @@ const DEFAULT_TITLES = {
   he: 'MeStory - כתוב את הסיפור שלך',
   en: 'MeStory - Write Your Story',
 };
+
+// Helper to set or update a meta tag
+function setMetaTag(name: string, content: string, isProperty = false) {
+  const attribute = isProperty ? 'property' : 'name';
+  let meta = document.querySelector(`meta[${attribute}="${name}"]`) as HTMLMetaElement;
+
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.setAttribute(attribute, name);
+    document.head.appendChild(meta);
+  }
+
+  meta.setAttribute('content', content);
+}
+
+// Helper to set or update a link tag
+function setLinkTag(rel: string, href: string, extraAttrs?: Record<string, string>) {
+  const selector = extraAttrs
+    ? `link[rel="${rel}"]${Object.entries(extraAttrs).map(([k, v]) => `[${k}="${v}"]`).join('')}`
+    : `link[rel="${rel}"]`;
+
+  let link = document.querySelector(selector) as HTMLLinkElement;
+
+  if (!link) {
+    link = document.createElement('link');
+    link.setAttribute('rel', rel);
+    if (extraAttrs) {
+      Object.entries(extraAttrs).forEach(([key, value]) => {
+        link.setAttribute(key, value);
+      });
+    }
+    document.head.appendChild(link);
+  }
+
+  link.setAttribute('href', href);
+}
 
 export function SEO({
   title,
@@ -64,15 +98,12 @@ export function SEO({
   const getAlternateUrl = (targetLang: string) => {
     if (!finalCanonical) return null;
 
-    // Check if URL already has a language prefix
     const langPrefixRegex = /\/(en|he)(\/|$)/;
     const hasLangPrefix = langPrefixRegex.test(finalCanonical);
 
     if (hasLangPrefix) {
-      // Replace existing language prefix
       return finalCanonical.replace(langPrefixRegex, `/${targetLang}$2`);
     } else {
-      // Add language prefix after the domain
       const urlParts = finalCanonical.split(DEFAULT_SITE_URL);
       if (urlParts.length === 2) {
         const path = urlParts[1] || '/';
@@ -85,71 +116,79 @@ export function SEO({
   const alternateUrl = alternateLocale ? getAlternateUrl(altLang) : null;
   const currentLangUrl = getAlternateUrl(lang);
 
-  return (
-    <Helmet>
-      {/* Basic Meta Tags */}
-      <html lang={lang} dir={lang === 'he' ? 'rtl' : 'ltr'} />
-      <title>{finalTitle}</title>
-      <meta name="description" content={finalDescription} />
-      {keywords.length > 0 && (
-        <meta name="keywords" content={keywords.join(', ')} />
-      )}
+  useEffect(() => {
+    // Set document title
+    document.title = finalTitle;
 
-      {/* Robots */}
-      {noIndex ? (
-        <meta name="robots" content="noindex, nofollow" />
-      ) : (
-        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-      )}
+    // Set HTML attributes
+    document.documentElement.setAttribute('lang', lang);
+    document.documentElement.setAttribute('dir', lang === 'he' ? 'rtl' : 'ltr');
 
-      {/* Canonical URL */}
-      <link rel="canonical" href={finalCanonical} />
+    // Basic Meta Tags
+    setMetaTag('description', finalDescription);
+    if (keywords.length > 0) {
+      setMetaTag('keywords', keywords.join(', '));
+    }
 
-      {/* Hreflang Tags for Multilingual Support */}
-      <link rel="alternate" hrefLang={lang} href={currentLangUrl || finalCanonical} />
-      {alternateUrl && alternateLocale && (
-        <link rel="alternate" hrefLang={altLang} href={alternateUrl} />
-      )}
-      <link rel="alternate" hrefLang="x-default" href={`${DEFAULT_SITE_URL}/en`} />
+    // Robots
+    if (noIndex) {
+      setMetaTag('robots', 'noindex, nofollow');
+    } else {
+      setMetaTag('robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
+    }
 
-      {/* Open Graph Tags */}
-      <meta property="og:site_name" content={DEFAULT_SITE_NAME} />
-      <meta property="og:title" content={finalTitle} />
-      <meta property="og:description" content={finalDescription} />
-      <meta property="og:image" content={image} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
-      <meta property="og:url" content={finalUrl} />
-      <meta property="og:type" content={type} />
-      <meta property="og:locale" content={locale} />
-      {alternateLocale && (
-        <meta property="og:locale:alternate" content={alternateLocale} />
-      )}
+    // Canonical URL
+    setLinkTag('canonical', finalCanonical);
 
-      {/* Article-specific OG tags */}
-      {type === 'article' && publishedTime && (
-        <meta property="article:published_time" content={publishedTime} />
-      )}
-      {type === 'article' && modifiedTime && (
-        <meta property="article:modified_time" content={modifiedTime} />
-      )}
-      {type === 'article' && author && (
-        <meta property="article:author" content={author} />
-      )}
+    // Hreflang Tags
+    setLinkTag('alternate', currentLangUrl || finalCanonical, { hreflang: lang });
+    if (alternateUrl && alternateLocale) {
+      setLinkTag('alternate', alternateUrl, { hreflang: altLang });
+    }
+    setLinkTag('alternate', `${DEFAULT_SITE_URL}/en`, { hreflang: 'x-default' });
 
-      {/* Twitter Card Tags */}
-      <meta name="twitter:card" content={twitterCard} />
-      <meta name="twitter:site" content="@mestory_il" />
-      <meta name="twitter:title" content={finalTitle} />
-      <meta name="twitter:description" content={finalDescription} />
-      <meta name="twitter:image" content={image} />
+    // Open Graph Tags
+    setMetaTag('og:site_name', DEFAULT_SITE_NAME, true);
+    setMetaTag('og:title', finalTitle, true);
+    setMetaTag('og:description', finalDescription, true);
+    setMetaTag('og:image', image, true);
+    setMetaTag('og:image:width', '1200', true);
+    setMetaTag('og:image:height', '630', true);
+    setMetaTag('og:url', finalUrl, true);
+    setMetaTag('og:type', type, true);
+    setMetaTag('og:locale', locale, true);
+    if (alternateLocale) {
+      setMetaTag('og:locale:alternate', alternateLocale, true);
+    }
 
-      {/* Additional Meta Tags */}
-      <meta name="application-name" content={DEFAULT_SITE_NAME} />
-      <meta name="apple-mobile-web-app-title" content={DEFAULT_SITE_NAME} />
-      <meta name="theme-color" content="#111123" />
-    </Helmet>
-  );
+    // Article-specific OG tags
+    if (type === 'article' && publishedTime) {
+      setMetaTag('article:published_time', publishedTime, true);
+    }
+    if (type === 'article' && modifiedTime) {
+      setMetaTag('article:modified_time', modifiedTime, true);
+    }
+    if (type === 'article' && author) {
+      setMetaTag('article:author', author, true);
+    }
+
+    // Twitter Card Tags
+    setMetaTag('twitter:card', twitterCard);
+    setMetaTag('twitter:site', '@mestory_il');
+    setMetaTag('twitter:title', finalTitle);
+    setMetaTag('twitter:description', finalDescription);
+    setMetaTag('twitter:image', image);
+
+    // Additional Meta Tags
+    setMetaTag('application-name', DEFAULT_SITE_NAME);
+    setMetaTag('apple-mobile-web-app-title', DEFAULT_SITE_NAME);
+    setMetaTag('theme-color', '#111123');
+
+  }, [finalTitle, finalDescription, image, finalUrl, type, locale, alternateLocale,
+      canonicalUrl, publishedTime, modifiedTime, author, keywords, noIndex, twitterCard,
+      lang, altLang, finalCanonical, alternateUrl, currentLangUrl]);
+
+  return null;
 }
 
 // Pre-configured SEO components for common pages
@@ -162,8 +201,8 @@ export function HomeSEO({ locale = 'he_IL' }: { locale?: 'he_IL' | 'en_US' }) {
   };
 
   const descriptions = {
-    he: 'צור ספרים מקצועיים בקלות עם הכלים החכמים של MeStory. כתיבה, עיצוב ופרסום - הכל במקום אחד.',
-    en: 'Create professional books easily with MeStory\'s smart tools. Writing, design, and publishing - all in one place.',
+    he: 'צור ספרים מקצועיים בקלות עם הכלים החכמים של MeStory. כתיבה, עיצוב ופרסום - הכל במקום אחד. הצטרף לאלפי סופרים ישראלים שכבר יצרו את הסיפור שלהם.',
+    en: 'Create professional books easily with MeStory\'s smart AI tools. Writing, design, and publishing - all in one place. Join thousands of Israeli authors who already created their story.',
   };
 
   return (
@@ -173,8 +212,8 @@ export function HomeSEO({ locale = 'he_IL' }: { locale?: 'he_IL' | 'en_US' }) {
       locale={locale}
       alternateLocale={locale === 'he_IL' ? 'en_US' : 'he_IL'}
       keywords={lang === 'he'
-        ? ['כתיבת ספרים', 'בינה מלאכותית', 'פרסום עצמי', 'עיצוב ספרים', 'MeStory']
-        : ['book writing', 'AI', 'self-publishing', 'book design', 'MeStory']
+        ? ['כתיבת ספרים', 'בינה מלאכותית', 'פרסום עצמי', 'עיצוב ספרים', 'MeStory', 'ספרים בעברית']
+        : ['book writing', 'AI', 'self-publishing', 'book design', 'MeStory', 'Hebrew books']
       }
     />
   );
@@ -189,8 +228,8 @@ export function MarketplaceSEO({ locale = 'he_IL' }: { locale?: 'he_IL' | 'en_US
   };
 
   const descriptions = {
-    he: 'גלה ספרים מדהימים מיוצרים ישראליים. קנה, קרא ותמוך ביוצרים מקומיים.',
-    en: 'Discover amazing books from Israeli creators. Buy, read, and support local authors.',
+    he: 'גלה מאות ספרים מדהימים מיוצרים ישראליים בחנות MeStory. סיפורים מקוריים, רומנים, ספרי ילדים ועוד. קנה, קרא ותמוך ביוצרים מקומיים.',
+    en: 'Discover hundreds of amazing books from Israeli creators in the MeStory marketplace. Original stories, novels, children\'s books and more. Buy, read, and support local authors.',
   };
 
   return (
@@ -202,8 +241,8 @@ export function MarketplaceSEO({ locale = 'he_IL' }: { locale?: 'he_IL' | 'en_US
       locale={locale}
       alternateLocale={locale === 'he_IL' ? 'en_US' : 'he_IL'}
       keywords={lang === 'he'
-        ? ['ספרים', 'חנות ספרים', 'ספרים ישראליים', 'קריאה', 'MeStory']
-        : ['books', 'bookstore', 'Israeli books', 'reading', 'MeStory']
+        ? ['ספרים', 'חנות ספרים', 'ספרים ישראליים', 'קריאה', 'MeStory', 'ספרים דיגיטליים']
+        : ['books', 'bookstore', 'Israeli books', 'reading', 'MeStory', 'digital books']
       }
     />
   );

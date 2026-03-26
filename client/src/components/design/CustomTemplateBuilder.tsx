@@ -18,20 +18,14 @@ import {
   RotateCcw,
   Eye,
   Settings2,
-  Columns,
-  AlignLeft,
-  AlignCenter,
-  AlignJustify,
   Circle,
   Square,
   RectangleHorizontal,
   Check,
   Sparkles,
-  ChevronDown,
-  ChevronUp,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { BookTemplate, availableFonts } from '../../data/bookTemplates';
+import { BookTemplate } from '../../data/bookTemplates';
 import toast from 'react-hot-toast';
 
 interface ImagePlaceholder {
@@ -130,7 +124,7 @@ export default function CustomTemplateBuilder({
   onSave,
   existingTemplate,
 }: CustomTemplateBuilderProps) {
-  const { t, i18n } = useTranslation('common');
+  const { i18n } = useTranslation('common');
   const isRTL = i18n.language === 'he';
 
   const [template, setTemplate] = useState<CustomTemplateData>(

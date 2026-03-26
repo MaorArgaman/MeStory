@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, Square, X, Send, Loader2, AlertCircle } from 'lucide-react';
+import { Mic, X, Send, Loader2, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useVoiceRecorder } from '../../hooks/useVoiceRecorder';
 import { formatDuration } from '../../services/voiceService';
@@ -37,7 +37,7 @@ export default function VoiceRecorder({
   const {
     isRecording,
     isSupported,
-    audioBlob,
+    audioBlob: _audioBlob,
     duration,
     error,
     startRecording,

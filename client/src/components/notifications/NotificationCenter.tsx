@@ -3,7 +3,7 @@
  * Shows all user notifications with filters
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useModal } from '../../hooks/useModal';
 import { useNavigate } from 'react-router-dom';
@@ -25,7 +25,6 @@ import {
   Archive,
   Loader2,
   Filter,
-  User,
   Wifi,
 } from 'lucide-react';
 import {
@@ -82,7 +81,10 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
           message: lastNotification.message,
           data: lastNotification.data,
           isRead: lastNotification.isRead,
+          isArchived: false,
           createdAt: lastNotification.createdAt,
+          updatedAt: lastNotification.createdAt,
+          recipient: '',
           sender: lastNotification.sender ? {
             _id: lastNotification.sender._id,
             name: lastNotification.sender.name,

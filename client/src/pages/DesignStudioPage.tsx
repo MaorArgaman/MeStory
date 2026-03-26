@@ -438,7 +438,6 @@ export default function DesignStudioPage() {
         imageUrl: imageUrl || undefined,
         titlePosition,
         authorPosition,
-        synopsisPosition,
         front: {
           type: 'uploaded',
           imageUrl: imageUrl || undefined,
@@ -461,7 +460,6 @@ export default function DesignStudioPage() {
         back: {
           imageUrl: backCoverImageUrl || undefined,
           backgroundColor: spineColor || coverColor,
-          synopsisPosition,
         },
         spine: {
           color: spineColor || undefined,

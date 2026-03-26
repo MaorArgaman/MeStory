@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Crop,
   Circle,
   Square,
   Layers,
@@ -13,8 +12,6 @@ import {
   Trash2,
   Copy,
   X,
-  ChevronDown,
-  Type,
   Image as ImageIcon,
 } from 'lucide-react';
 import { useTabKeyboardNavigation } from '../../hooks/useModal';
