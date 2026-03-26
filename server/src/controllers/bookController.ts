@@ -1184,16 +1184,26 @@ export const exportBookPDF = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     // Generate PDF using the new comprehensive export service
-    const pdfBuffer = await exportBook(id, 'pdf');
+    const exportResult = await exportBook(id, 'pdf');
+
+    // Log any warnings that occurred during export
+    if (exportResult.warnings.length > 0) {
+      console.log(`Export warnings for book ${id}:`, exportResult.warnings);
+    }
 
     // Set response headers for PDF download
     const filename = book.title.replace(/[^a-zA-Z0-9\u0590-\u05FF]/g, '_');
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}.pdf"`);
-    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader('Content-Length', exportResult.buffer.length);
+
+    // Include warnings in response header if any (for debugging)
+    if (exportResult.warnings.length > 0) {
+      res.setHeader('X-Export-Warnings', JSON.stringify(exportResult.warnings));
+    }
 
     // Send the PDF buffer
-    res.send(pdfBuffer);
+    res.send(exportResult.buffer);
   } catch (error: any) {
     console.error('Export book error:', error);
 
@@ -2154,7 +2164,12 @@ export const exportBookToFormat = async (req: AuthRequest, res: Response): Promi
     }
 
     // Generate export file
-    const buffer = await exportBook(id, format as 'pdf' | 'docx');
+    const exportResult = await exportBook(id, format as 'pdf' | 'docx');
+
+    // Log any warnings that occurred during export
+    if (exportResult.warnings.length > 0) {
+      console.log(`Export warnings for book ${id}:`, exportResult.warnings);
+    }
 
     // Set response headers
     const filename = book.title.replace(/[^a-zA-Z0-9\u0590-\u05FF]/g, '_');
@@ -2164,9 +2179,14 @@ export const exportBookToFormat = async (req: AuthRequest, res: Response): Promi
 
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}.${format}"`);
-    res.setHeader('Content-Length', buffer.length);
+    res.setHeader('Content-Length', exportResult.buffer.length);
 
-    res.send(buffer);
+    // Include warnings in response header if any (for debugging)
+    if (exportResult.warnings.length > 0) {
+      res.setHeader('X-Export-Warnings', JSON.stringify(exportResult.warnings));
+    }
+
+    res.send(exportResult.buffer);
   } catch (error: any) {
     console.error('Export book error:', error);
     res.status(500).json({

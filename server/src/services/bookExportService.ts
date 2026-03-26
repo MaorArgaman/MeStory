@@ -504,10 +504,36 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
     : { r: 26, g: 26, b: 46 }; // Default dark blue
 }
 
+// Global warnings collector for export process
+let exportWarnings: string[] = [];
+
+/**
+ * Clear export warnings
+ */
+function clearExportWarnings(): void {
+  exportWarnings = [];
+}
+
+/**
+ * Add export warning
+ */
+function addExportWarning(warning: string): void {
+  exportWarnings.push(warning);
+  console.warn(`[Export Warning] ${warning}`);
+}
+
+/**
+ * Get all export warnings
+ */
+function getExportWarnings(): string[] {
+  return [...exportWarnings];
+}
+
 /**
  * Fetch image from URL and return as buffer
+ * Logs warnings when images fail to load
  */
-async function fetchImageAsBuffer(url: string): Promise<Buffer | null> {
+async function fetchImageAsBuffer(url: string, context?: string): Promise<Buffer | null> {
   try {
     if (!url) return null;
 
@@ -516,6 +542,9 @@ async function fetchImageAsBuffer(url: string): Promise<Buffer | null> {
       const localPath = path.join(__dirname, '../../public', url);
       if (fs.existsSync(localPath)) {
         return fs.readFileSync(localPath);
+      } else {
+        addExportWarning(`Image not found: ${url} ${context ? `(${context})` : ''}`);
+        return null;
       }
     }
 
@@ -534,8 +563,9 @@ async function fetchImageAsBuffer(url: string): Promise<Buffer | null> {
       },
     });
     return Buffer.from(response.data);
-  } catch (error) {
-    console.error('Error fetching image:', url, error);
+  } catch (error: any) {
+    const errorMsg = error.message || 'Unknown error';
+    addExportWarning(`Failed to load image: ${url} - ${errorMsg} ${context ? `(${context})` : ''}`);
     return null;
   }
 }
@@ -809,16 +839,17 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
   };
 
   // Fetch cover images
-  const frontCoverImage = await fetchImageAsBuffer(bookData.coverDesign.frontImageUrl || '');
-  const backCoverImage = await fetchImageAsBuffer(bookData.coverDesign.backImageUrl || '');
+  const frontCoverImage = await fetchImageAsBuffer(bookData.coverDesign.frontImageUrl || '', 'Front Cover');
+  const backCoverImage = await fetchImageAsBuffer(bookData.coverDesign.backImageUrl || '', 'Back Cover');
 
   // Fetch chapter images
   const chapterImages: Map<number, Buffer[]> = new Map();
   for (let i = 0; i < bookData.chapters.length; i++) {
     const chapter = bookData.chapters[i];
     const images: Buffer[] = [];
-    for (const img of chapter.images) {
-      const buffer = await fetchImageAsBuffer(img.url);
+    for (let j = 0; j < chapter.images.length; j++) {
+      const img = chapter.images[j];
+      const buffer = await fetchImageAsBuffer(img.url, `Chapter ${i + 1} "${chapter.title}" - Image ${j + 1}`);
       if (buffer) {
         images.push(buffer);
       }
@@ -853,14 +884,21 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
 
     let mainFont = 'Helvetica';
     let boldFont = 'Helvetica-Bold';
+    let hebrewFontAvailable = false;
 
     if (fs.existsSync(fontPath)) {
       doc.registerFont('Hebrew', fontPath);
       mainFont = 'Hebrew';
+      hebrewFontAvailable = true;
+    } else {
+      addExportWarning('Hebrew font (NotoSansHebrew-Regular.ttf) not found. Using Helvetica as fallback - Hebrew text may not display correctly.');
     }
     if (fs.existsSync(boldFontPath)) {
       doc.registerFont('Hebrew-Bold', boldFontPath);
       boldFont = 'Hebrew-Bold';
+    } else if (hebrewFontAvailable) {
+      addExportWarning('Hebrew bold font (NotoSansHebrew-Bold.ttf) not found. Bold text will use regular Hebrew font.');
+      boldFont = 'Hebrew';
     }
 
     const coverColor = hexToRgb(bookData.coverDesign.coverColor);
@@ -1451,15 +1489,16 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
   };
 
   // Fetch cover images for DOCX
-  const frontCoverImage = await fetchImageAsBuffer(bookData.coverDesign.frontImageUrl || '');
+  const frontCoverImage = await fetchImageAsBuffer(bookData.coverDesign.frontImageUrl || '', 'DOCX Front Cover');
 
   // Fetch chapter images
   const chapterImageBuffers: Map<number, Buffer[]> = new Map();
   for (let i = 0; i < bookData.chapters.length; i++) {
     const chapter = bookData.chapters[i];
     const buffers: Buffer[] = [];
-    for (const img of chapter.images) {
-      const buffer = await fetchImageAsBuffer(img.url);
+    for (let j = 0; j < chapter.images.length; j++) {
+      const img = chapter.images[j];
+      const buffer = await fetchImageAsBuffer(img.url, `DOCX Chapter ${i + 1} "${chapter.title}" - Image ${j + 1}`);
       if (buffer) {
         buffers.push(buffer);
       }
@@ -2189,15 +2228,33 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
 // ============================================================================
 
 /**
+ * Export result with buffer and optional warnings
+ */
+export interface ExportResult {
+  buffer: Buffer;
+  warnings: string[];
+}
+
+/**
  * Export book to specified format
+ * Returns buffer and any warnings that occurred during export
  */
 export async function exportBook(
   bookId: string,
   format: 'pdf' | 'docx'
-): Promise<Buffer> {
+): Promise<ExportResult> {
+  // Clear warnings from previous export
+  clearExportWarnings();
+
+  let buffer: Buffer;
   if (format === 'pdf') {
-    return generatePDF(bookId);
+    buffer = await generatePDF(bookId);
   } else {
-    return generateDOCX(bookId);
+    buffer = await generateDOCX(bookId);
   }
+
+  return {
+    buffer,
+    warnings: getExportWarnings(),
+  };
 }

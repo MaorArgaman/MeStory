@@ -1,8 +1,11 @@
 import { motion } from 'framer-motion';
 import { Shield, Lock, Eye, Database, UserCheck, Mail, Globe, FileText } from 'lucide-react';
 import { GlassCard } from '../components/ui';
+import { useLanguage } from '../contexts/LanguageContext';
+import { SEO } from '../components/seo';
 
 export default function PrivacyPolicyPage() {
+  const { language } = useLanguage();
   const lastUpdated = '23 בפברואר 2026';
 
   const sections = [
@@ -149,6 +152,14 @@ export default function PrivacyPolicyPage() {
 
   return (
     <div className="min-h-screen py-20 px-8" dir="rtl">
+      <SEO
+        title="Privacy Policy | MeStory"
+        description="Learn how MeStory protects your privacy and handles your personal data. Our commitment to keeping your information safe and secure."
+        type="website"
+        locale={language === 'he' ? 'he_IL' : 'en_US'}
+        url="/privacy"
+      />
+
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div

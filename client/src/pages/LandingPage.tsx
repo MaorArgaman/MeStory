@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { GlassCard, GlowingButton } from '../components/ui';
 import { useLanguage } from '../contexts/LanguageContext';
+import { SEO } from '../components/seo';
 // Use new realistic images from public folder
 const heroBg = '/img/landing-hero-new.png';
 const logoIcon = '/img/logo-glow.png';
@@ -125,6 +126,14 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen overflow-hidden">
+      <SEO
+        title="MeStory - AI-Powered Book Writing Platform"
+        description="Write, publish, and earn from your books with AI-powered tools. MeStory helps authors create beautiful stories, design stunning covers, and reach readers worldwide."
+        type="website"
+        locale={language === 'he' ? 'he_IL' : 'en_US'}
+        url="/"
+      />
+
       {/* Transparent Navbar */}
       <motion.nav
         initial={{ y: -100, opacity: 0 }}

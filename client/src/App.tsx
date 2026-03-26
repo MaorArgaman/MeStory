@@ -10,6 +10,7 @@ import RedirectIfAuth from './components/RedirectIfAuth';
 import Layout from './components/layout/Layout';
 import LoadingScreen from './components/LoadingScreen';
 import ErrorBoundary from './components/ErrorBoundary';
+import { HelmetProvider, OrganizationSchema, WebsiteSchema } from './components/seo';
 
 // Initialize i18n
 import './i18n';
@@ -39,6 +40,8 @@ import LibraryPage from './pages/LibraryPage';
 import EarningsPage from './pages/EarningsPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
+import FAQPage from './pages/FAQPage';
+import AboutPage from './pages/AboutPage';
 
 function AppContent() {
   const { loading } = useAuth();
@@ -50,8 +53,15 @@ function AppContent() {
     return <LoadingScreen />;
   }
 
+  // Get locale for SEO schemas
+  const locale = language === 'he' ? 'he' : 'en';
+
   return (
     <div dir={direction} lang={language}>
+      {/* Global SEO Structured Data */}
+      <OrganizationSchema locale={locale} />
+      <WebsiteSchema locale={locale} />
+
       <Toaster
         position="top-right"
         toastOptions={{
@@ -234,6 +244,22 @@ function AppContent() {
             </Layout>
           }
         />
+        <Route
+          path="/faq"
+          element={
+            <Layout>
+              <FAQPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/about"
+          element={
+            <Layout>
+              <AboutPage />
+            </Layout>
+          }
+        />
 
         {/* Admin Routes */}
         <Route
@@ -260,15 +286,17 @@ function AppContent() {
 
 function App() {
   return (
-    <LanguageProvider>
-      <CurrencyProvider>
-        <AuthProvider>
-          <SocketProvider>
-            <AppContent />
-          </SocketProvider>
-        </AuthProvider>
-      </CurrencyProvider>
-    </LanguageProvider>
+    <HelmetProvider>
+      <LanguageProvider>
+        <CurrencyProvider>
+          <AuthProvider>
+            <SocketProvider>
+              <AppContent />
+            </SocketProvider>
+          </AuthProvider>
+        </CurrencyProvider>
+      </LanguageProvider>
+    </HelmetProvider>
   );
 }
 

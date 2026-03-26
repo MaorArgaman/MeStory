@@ -21,6 +21,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { PaymentConfirmationModal, PaymentSuccessAnimation } from '../components/payment';
 import { getFriendlyErrorMessage } from '../utils/errorMessages';
+import { SEO, BookSchema, Breadcrumb } from '../components/seo';
 
 interface Book {
   _id: string;
@@ -307,6 +308,47 @@ export default function BookDetailsPage() {
 
   return (
     <div className="min-h-screen pt-32 pb-20">
+      {/* Breadcrumb Navigation */}
+      <div className="max-w-7xl mx-auto px-6 mb-6">
+        <Breadcrumb
+          items={[
+            { name: language === 'he' ? 'שוק הספרים' : 'Marketplace', url: '/marketplace' },
+            { name: book.title, url: `/book/${book._id}` },
+          ]}
+        />
+      </div>
+
+      <SEO
+        title={book.title}
+        description={book.synopsis || `Read "${book.title}" by ${book.author.name} on MeStory`}
+        type="book"
+        image={coverImage}
+        locale={language === 'he' ? 'he_IL' : 'en_US'}
+        url={`/book/${book._id}`}
+        author={book.author.name}
+        publishedTime={book.createdAt}
+      />
+      <BookSchema
+        title={book.title}
+        description={book.synopsis}
+        author={{
+          name: book.author.name,
+          url: `/profile/${book.author._id}`,
+        }}
+        image={coverImage}
+        datePublished={book.createdAt}
+        genre={book.genre ? [book.genre] : undefined}
+        numberOfPages={book.statistics.pageCount}
+        inLanguage={language === 'he' ? 'he' : 'en'}
+        price={book.publishingStatus.isFree ? undefined : book.publishingStatus.price}
+        currency="USD"
+        url={`/book/${book._id}`}
+        rating={book.statistics.averageRating && book.statistics.totalReviews ? {
+          value: book.statistics.averageRating,
+          count: book.statistics.totalReviews,
+        } : undefined}
+      />
+
       {/* Payment Confirmation Modal */}
       <PaymentConfirmationModal
         isOpen={showConfirmModal}

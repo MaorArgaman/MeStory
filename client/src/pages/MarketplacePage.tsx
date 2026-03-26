@@ -13,6 +13,7 @@ import {
   TrendingBooks,
   FeaturedBooks,
 } from '../components/recommendations';
+import { SEO } from '../components/seo';
 // Realistic genre banners from public folder
 const genreBanners: Record<string, string> = {
   'Romance': '/img/genre-romance.png',
@@ -246,6 +247,14 @@ export default function MarketplacePage() {
 
   return (
     <div className="min-h-screen relative">
+      <SEO
+        title="Book Marketplace | MeStory"
+        description="Discover amazing books from talented authors. Browse, read, and purchase unique stories across all genres in the MeStory marketplace."
+        type="website"
+        locale={language === 'he' ? 'he_IL' : 'en_US'}
+        url="/marketplace"
+      />
+
       {/* Hero Section with Background Image */}
       <div className="relative overflow-hidden py-16 sm:py-24 md:py-32 px-4 sm:px-6 md:px-8">
         {/* Background Image */}

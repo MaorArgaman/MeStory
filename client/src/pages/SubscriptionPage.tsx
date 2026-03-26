@@ -17,6 +17,7 @@ import {
 import toast from 'react-hot-toast';
 import { PaymentConfirmationModal } from '../components/payment';
 import { getFriendlyErrorMessage } from '../utils/errorMessages';
+import { SEO, Breadcrumb } from '../components/seo';
 
 // Pricing hero image showing Investment -> Work -> Return
 const pricingHero = '/img/subscription-hero.png';
@@ -208,6 +209,23 @@ export default function SubscriptionPage() {
 
   return (
     <div className="min-h-screen">
+      {/* Breadcrumb Navigation */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-20">
+        <Breadcrumb
+          items={[
+            { name: language === 'he' ? 'תמחור' : 'Pricing', url: '/pricing' },
+          ]}
+        />
+      </div>
+
+      <SEO
+        title="Pricing & Plans | MeStory"
+        description="Choose the perfect plan for your writing journey. Unlock AI-powered tools, unlimited credits, and premium features to bring your stories to life."
+        type="website"
+        locale={language === 'he' ? 'he_IL' : 'en_US'}
+        url="/pricing"
+      />
+
       {/* Payment Confirmation Modal */}
       <PaymentConfirmationModal
         isOpen={showConfirmModal}

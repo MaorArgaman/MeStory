@@ -1,8 +1,11 @@
 import { motion } from 'framer-motion';
 import { FileText, Scale, Book, DollarSign, Users, Shield, AlertTriangle, Gavel, Mail, CheckCircle } from 'lucide-react';
 import { GlassCard } from '../components/ui';
+import { useLanguage } from '../contexts/LanguageContext';
+import { SEO } from '../components/seo';
 
 export default function TermsOfServicePage() {
+  const { language } = useLanguage();
   const lastUpdated = '23 בפברואר 2026';
 
   const sections = [
@@ -218,6 +221,14 @@ export default function TermsOfServicePage() {
 
   return (
     <div className="min-h-screen py-20 px-8" dir="rtl">
+      <SEO
+        title="Terms of Service | MeStory"
+        description="Read the terms and conditions for using MeStory. Understanding our policies on content, payments, and user responsibilities."
+        type="website"
+        locale={language === 'he' ? 'he_IL' : 'en_US'}
+        url="/terms"
+      />
+
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div

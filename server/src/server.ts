@@ -38,6 +38,7 @@ import bookPurchaseRoutes from './routes/bookPurchaseRoutes';
 import webhookRoutes from './routes/webhookRoutes';
 import refundRoutes from './routes/refundRoutes';
 import invoiceRoutes from './routes/invoiceRoutes';
+import sitemapRoutes from './routes/sitemapRoutes';
 import { initializeDefaultTemplates } from './services/templateService';
 import { initializeSubscriptionJobs } from './jobs/subscriptionJobs';
 import { initializeCleanupJobs } from './jobs/cleanupJobs';
@@ -282,6 +283,12 @@ app.get('/health', async (_req, res) => {
     }
   });
 });
+
+// ============================================
+// SEO Routes (no authentication required)
+// ============================================
+// Sitemap and robots.txt for search engines
+app.use('/', sitemapRoutes);
 
 // ============================================
 // API Routes (require initialization)
