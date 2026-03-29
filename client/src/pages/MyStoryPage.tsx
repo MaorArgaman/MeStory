@@ -1,12 +1,32 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
-  BookOpen, Sparkles, ArrowRight,
+  BookOpen, Sparkles, ArrowRight, Eye, Star,
   Pen, Quote, ChevronDown, Mic, FileText
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useCurrency } from '../contexts/CurrencyContext';
+import { api } from '../services/api';
 import { SEO } from '../components/seo';
+import { OptimizedImage } from '../components/ui';
+
+interface StoryBook {
+  id: string;
+  title: string;
+  authorName: string;
+  authorId: string;
+  coverImage?: string;
+  genre: string;
+  statistics: {
+    views: number;
+    averageRating: number;
+  };
+  publishingStatus: {
+    price: number;
+    isFree: boolean;
+  };
+}
 
 // Story categories with emotional icons
 const STORY_CATEGORIES = [
@@ -85,25 +105,25 @@ const STORY_CATEGORIES = [
 // Ways to write your story
 const WRITING_METHODS = [
   {
+    id: 'scratch',
+    icon: Pen,
+    name: { en: 'Write from Scratch', he: 'כתיבה מאפס' },
+    description: { en: 'Write your story in your own words, at your own pace', he: 'כתוב את הסיפור שלך במילים שלך, בקצב שלך' },
+    color: 'from-amber-500 to-orange-500'
+  },
+  {
     id: 'interview',
     icon: Mic,
-    name: { en: 'Voice Interview', he: 'ראיון קולי' },
-    description: { en: 'Tell your story out loud and we\'ll help you write it', he: 'ספר את הסיפור שלך בקול ואנחנו נעזור לך לכתוב אותו' },
+    name: { en: 'Guided Interview', he: 'ראיון מונחה' },
+    description: { en: 'Answer questions and we\'ll help shape your story', he: 'ענה על שאלות ואנחנו נעזור לעצב את הסיפור שלך' },
     color: 'from-purple-500 to-pink-500'
   },
   {
-    id: 'guided',
+    id: 'upload',
     icon: FileText,
-    name: { en: 'Guided Questions', he: 'שאלות מנחות' },
-    description: { en: 'Answer questions that help bring your story to life', he: 'ענה על שאלות שעוזרות להחיות את הסיפור שלך' },
+    name: { en: 'Upload File', he: 'העלאת קובץ' },
+    description: { en: 'Upload a text or audio file and convert it to a book', he: 'העלה קובץ טקסט או אודיו והפוך אותו לספר' },
     color: 'from-blue-500 to-cyan-500'
-  },
-  {
-    id: 'write',
-    icon: Pen,
-    name: { en: 'Free Writing', he: 'כתיבה חופשית' },
-    description: { en: 'Write your story in your own words, your way', he: 'כתוב את הסיפור שלך במילים שלך, בדרך שלך' },
-    color: 'from-amber-500 to-orange-500'
   },
 ];
 
@@ -147,9 +167,12 @@ const STATS = [
 
 export default function MyStoryPage() {
   const { language } = useLanguage();
+  const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [stories, setStories] = useState<StoryBook[]>([]);
+  const [loadingStories, setLoadingStories] = useState(true);
 
   const isHebrew = language === 'he';
 
@@ -161,13 +184,37 @@ export default function MyStoryPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Fetch true stories from the marketplace
+  useEffect(() => {
+    const fetchStories = async () => {
+      try {
+        setLoadingStories(true);
+        const response = await api.get('/books', {
+          params: {
+            category: 'TrueStory',
+            limit: 8,
+            sortBy: 'createdAt'
+          }
+        });
+        setStories(response.data.books || []);
+      } catch (error) {
+        console.error('Error fetching stories:', error);
+      } finally {
+        setLoadingStories(false);
+      }
+    };
+    fetchStories();
+  }, []);
+
   const handleStartWriting = (method?: string) => {
-    if (method === 'interview') {
-      navigate('/dashboard?mode=voice');
-    } else if (method === 'guided') {
-      navigate('/dashboard?mode=interview');
-    } else {
+    if (method === 'scratch') {
       navigate('/dashboard?mode=scratch');
+    } else if (method === 'interview') {
+      navigate('/dashboard?mode=interview');
+    } else if (method === 'upload') {
+      navigate('/dashboard?mode=import');
+    } else {
+      navigate('/dashboard');
     }
   };
 
@@ -421,6 +468,160 @@ export default function MyStoryPage() {
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+      </section>
+
+      {/* Featured Stories Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-deep-space via-amber-900/10 to-deep-space">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-16 bg-gradient-to-r from-transparent to-amber-400/50" />
+              <span className="text-amber-400 text-sm font-medium">
+                {isHebrew ? 'סיפורים שנכתבו על ידי אנשים אמיתיים' : 'Stories Written by Real People'}
+              </span>
+              <div className="h-px w-16 bg-gradient-to-l from-transparent to-amber-400/50" />
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+              {isHebrew ? 'גלה סיפורים אמיתיים' : 'Discover True Stories'}
+            </h2>
+            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+              {isHebrew
+                ? 'קרא סיפורים מרגשים של אנשים שבחרו לשתף את החוויות שלהם עם העולם'
+                : 'Read moving stories from people who chose to share their experiences with the world'}
+            </p>
+          </motion.div>
+
+          {/* Stories Grid */}
+          {loadingStories ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="aspect-[3/4] bg-white/10 rounded-xl mb-3" />
+                  <div className="h-4 bg-white/10 rounded w-3/4 mb-2" />
+                  <div className="h-3 bg-white/10 rounded w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : stories.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {stories.map((story, index) => (
+                <motion.div
+                  key={story.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Link
+                    to={`/book/${story.id}`}
+                    className="group block"
+                  >
+                    {/* Book Cover */}
+                    <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-3 bg-gradient-to-br from-amber-900/30 to-orange-900/30 border border-amber-500/20 group-hover:border-amber-400/50 transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(251,191,36,0.2)]">
+                      {story.coverImage ? (
+                        <OptimizedImage
+                          src={story.coverImage}
+                          alt={story.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <BookOpen className="w-12 h-12 text-amber-400/40" />
+                        </div>
+                      )}
+
+                      {/* Overlay on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                        <span className="text-white text-sm font-medium flex items-center gap-2">
+                          <Eye className="w-4 h-4" />
+                          {isHebrew ? 'קרא עכשיו' : 'Read Now'}
+                        </span>
+                      </div>
+
+                      {/* Price badge */}
+                      <div className="absolute top-2 right-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          story.publishingStatus?.isFree
+                            ? 'bg-green-500/90 text-white'
+                            : 'bg-amber-500/90 text-white'
+                        }`}>
+                          {story.publishingStatus?.isFree
+                            ? (isHebrew ? 'חינם' : 'Free')
+                            : formatCurrency(story.publishingStatus?.price || 0)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Book Info */}
+                    <h3 className="font-semibold text-white group-hover:text-amber-300 transition-colors line-clamp-2 mb-1">
+                      {story.title}
+                    </h3>
+                    <p className="text-sm text-gray-400">
+                      {isHebrew ? 'מאת' : 'by'} {story.authorName}
+                    </p>
+
+                    {/* Stats */}
+                    <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-3 h-3" />
+                        {story.statistics?.views || 0}
+                      </span>
+                      {story.statistics?.averageRating > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Star className="w-3 h-3 text-amber-400" />
+                          {story.statistics.averageRating.toFixed(1)}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-amber-500/20 flex items-center justify-center">
+                <BookOpen className="w-10 h-10 text-amber-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">
+                {isHebrew ? 'היה הראשון לכתוב סיפור!' : 'Be the First to Write a Story!'}
+              </h3>
+              <p className="text-gray-400 mb-6">
+                {isHebrew
+                  ? 'עדיין אין סיפורים בקטגוריה הזו. הסיפור שלך יכול להיות הראשון.'
+                  : 'No stories in this category yet. Your story could be the first.'}
+              </p>
+              <button
+                onClick={() => handleStartWriting()}
+                className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-full hover:shadow-[0_0_30px_rgba(251,191,36,0.4)] transition-all"
+              >
+                {isHebrew ? 'התחל לכתוב' : 'Start Writing'}
+              </button>
+            </div>
+          )}
+
+          {/* View All Button */}
+          {stories.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="text-center mt-12"
+            >
+              <Link
+                to="/marketplace?category=TrueStory"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 text-white font-semibold rounded-full border border-amber-400/30 hover:bg-amber-500/20 hover:border-amber-400/50 transition-all duration-300 group"
+              >
+                {isHebrew ? 'גלה עוד סיפורים' : 'Discover More Stories'}
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </motion.div>
+          )}
         </div>
       </section>
 
