@@ -16,7 +16,7 @@ import {
 import { SEO } from '../components/seo';
 // Realistic genre banners from public folder
 const genreBanners: Record<string, string> = {
-  'TrueStory': '/img/TrueStory.png',
+  'TrueStory': '/img/TrueStory2.png',
   'Romance': '/img/Romance.png',
   'Children': '/img/Children.png',
   'Biography': '/img/Biography.png',
