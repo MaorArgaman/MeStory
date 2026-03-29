@@ -127,10 +127,11 @@ const WRITING_METHODS = [
   },
 ];
 
-// Testimonials
+// Testimonials with images
 const TESTIMONIALS = [
   {
     id: 1,
+    image: '/img/testimonial-elder.png',
     quote: {
       en: "I never thought my story mattered until I wrote it down. Now my grandchildren will know where they came from.",
       he: "מעולם לא חשבתי שהסיפור שלי חשוב עד שכתבתי אותו. עכשיו הנכדים שלי יידעו מאיפה הם באו."
@@ -140,6 +141,7 @@ const TESTIMONIALS = [
   },
   {
     id: 2,
+    image: '/img/success-writer.png',
     quote: {
       en: "Writing about my recovery helped me heal. Now my story helps others going through the same thing.",
       he: "לכתוב על ההחלמה שלי עזר לי להירפא. עכשיו הסיפור שלי עוזר לאחרים שעוברים את אותו הדבר."
@@ -149,6 +151,7 @@ const TESTIMONIALS = [
   },
   {
     id: 3,
+    image: '/img/success-young.png',
     quote: {
       en: "My immigration story is my children's heritage. Thanks to MeStory, it will never be forgotten.",
       he: "סיפור העלייה שלי הוא המורשת של הילדים שלי. בזכות MeStory, הוא לעולם לא יישכח."
@@ -714,33 +717,48 @@ export default function MyStoryPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -50 }}
                 transition={{ duration: 0.5 }}
-                className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-3xl p-8 md:p-12 border border-amber-400/20"
+                className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-3xl overflow-hidden border border-amber-400/20"
               >
-                <Quote className="w-12 h-12 text-amber-400/40 mb-6" />
-                <p className="text-xl md:text-2xl text-white font-light leading-relaxed mb-8">
-                  "{TESTIMONIALS[activeTestimonial].quote[language]}"
-                </p>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-amber-400 font-semibold">
-                      {TESTIMONIALS[activeTestimonial].author[language]}
-                    </div>
-                    <div className="text-gray-400 text-sm">
-                      {TESTIMONIALS[activeTestimonial].category[language]}
-                    </div>
+                <div className="flex flex-col md:flex-row">
+                  {/* Image */}
+                  <div className="md:w-1/3 h-48 md:h-auto relative">
+                    <img
+                      src={TESTIMONIALS[activeTestimonial].image}
+                      alt={TESTIMONIALS[activeTestimonial].author[language]}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-amber-900/50 md:bg-gradient-to-l" />
                   </div>
-                  <div className="flex gap-2">
-                    {TESTIMONIALS.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setActiveTestimonial(index)}
-                        className={`w-2 h-2 rounded-full transition-all ${
-                          index === activeTestimonial
-                            ? 'w-8 bg-amber-400'
-                            : 'bg-white/30 hover:bg-white/50'
-                        }`}
-                      />
-                    ))}
+
+                  {/* Content */}
+                  <div className="md:w-2/3 p-8 md:p-12">
+                    <Quote className="w-10 h-10 text-amber-400/40 mb-4" />
+                    <p className="text-lg md:text-xl text-white font-light leading-relaxed mb-6">
+                      "{TESTIMONIALS[activeTestimonial].quote[language]}"
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-amber-400 font-semibold text-lg">
+                          {TESTIMONIALS[activeTestimonial].author[language]}
+                        </div>
+                        <div className="text-gray-400 text-sm">
+                          {TESTIMONIALS[activeTestimonial].category[language]}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        {TESTIMONIALS.map((_, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setActiveTestimonial(index)}
+                            className={`w-2 h-2 rounded-full transition-all ${
+                              index === activeTestimonial
+                                ? 'w-8 bg-amber-400'
+                                : 'bg-white/30 hover:bg-white/50'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
