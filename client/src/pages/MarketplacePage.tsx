@@ -23,11 +23,11 @@ const genreBanners: Record<string, string> = {
   'Fantasy': '/img/Fantasy.png',
   'Sci-Fi': '/img/Sci-Fi.png',
   'Mystery': '/img/Mystery.png',
-  'Young Adult': '/img/Young Adult.png',
+  'Young Adult': '/img/Young%20Adult.png',
   'Historical': '/img/Historical.png',
   'Thriller': '/img/Thriller.png',
   'Horror': '/img/Horror.png',
-  'Literary Fiction': '/img/Literary Fiction.png',
+  'Literary Fiction': '/img/Literary%20Fiction.png',
   'Adventure': '/img/Adventure.png',
 };
 const marketplaceHero = '/img/marketplace-hero.png';
@@ -87,6 +87,9 @@ const BASE_CATEGORIES: Record<string, Record<'en' | 'he', string>> = {
   'Literary Fiction': { en: 'Literary Fiction', he: 'ספרות יפה' },
   'Young Adult': { en: 'Young Adult', he: 'נוער' },
   'Adventure': { en: 'Adventure', he: 'הרפתקאות' },
+  'Children': { en: 'Children', he: 'ילדים' },
+  'Biography': { en: 'Biography', he: 'ביוגרפיה' },
+  'Self-Help': { en: 'Self-Help', he: 'עזרה עצמית' },
 };
 
 const CATEGORY_KEYS = Object.keys(BASE_CATEGORIES);
