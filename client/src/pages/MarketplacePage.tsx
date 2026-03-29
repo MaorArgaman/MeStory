@@ -89,20 +89,6 @@ const BASE_CATEGORIES: Record<string, Record<'en' | 'he', string>> = {
   'Self-Help': { en: 'Self-Help', he: 'עזרה עצמית' },
 };
 
-// Special category - True Story (the heart of MeStory)
-const TRUE_STORY_SUBCATEGORIES = [
-  { id: 'TrueStory_Family', name: { en: 'Family Stories', he: 'סיפורי משפחה' }, icon: '👨‍👩‍👧‍👦', tags: ['משפחה', 'מורשת', 'דורות', 'שורשים'] },
-  { id: 'TrueStory_Overcoming', name: { en: 'Overcoming Challenges', he: 'התמודדות והתגברות' }, icon: '💪', tags: ['התמודדות', 'חוסן', 'התגברות', 'כוח'] },
-  { id: 'TrueStory_Love', name: { en: 'Love & Relationships', he: 'אהבה ויחסים' }, icon: '❤️', tags: ['אהבה', 'זוגיות', 'יחסים', 'פרידה'] },
-  { id: 'TrueStory_Military', name: { en: 'Service & Military', he: 'שירות וצבא' }, icon: '🎖️', tags: ['צבא', 'שירות', 'לוחמים', 'גבורה'] },
-  { id: 'TrueStory_Immigration', name: { en: 'Immigration & Roots', he: 'היגרציה ושורשים' }, icon: '🌍', tags: ['עלייה', 'היגרציה', 'גלות', 'שורשים'] },
-  { id: 'TrueStory_Career', name: { en: 'Career & Entrepreneurship', he: 'קריירה ויזמות' }, icon: '💼', tags: ['קריירה', 'יזמות', 'הצלחה', 'עסקים'] },
-  { id: 'TrueStory_Health', name: { en: 'Health & Recovery', he: 'בריאות והחלמה' }, icon: '🏥', tags: ['מחלה', 'החלמה', 'בריאות', 'רפואה'] },
-  { id: 'TrueStory_Growth', name: { en: 'Personal Growth', he: 'צמיחה אישית' }, icon: '🌱', tags: ['צמיחה', 'התפתחות', 'שינוי', 'מסע'] },
-  { id: 'TrueStory_Moments', name: { en: 'Life-Changing Moments', he: 'רגעים שעיצבו אותי' }, icon: '✨', tags: ['רגעים', 'נקודות מפנה', 'גילויים', 'תובנות'] },
-  { id: 'TrueStory_Childhood', name: { en: 'Childhood Memories', he: 'זיכרונות ילדות' }, icon: '💎', tags: ['ילדות', 'זיכרונות', 'נוסטלגיה', 'גדילה'] },
-];
-
 const CATEGORY_KEYS = Object.keys(BASE_CATEGORIES);
 
 // Israeli-specific categories for Hebrew users (with trauma-informed design)
@@ -484,51 +470,6 @@ export default function MarketplacePage() {
             ))}
           </div>
 
-          {/* True Story Subcategories Section - Clean Grid Layout */}
-          {selectedCategory === 'TrueStory' && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="mt-6"
-            >
-              {/* Section header */}
-              <div className="flex items-center gap-3 mb-5">
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
-                <span className="text-amber-300 text-sm font-medium flex items-center gap-2">
-                  <span>📖</span>
-                  {language === 'he' ? 'בחר את סוג הסיפור שלך' : 'Choose Your Story Type'}
-                </span>
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
-              </div>
-
-              {/* True Story Subcategories - Organized Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3">
-                {TRUE_STORY_SUBCATEGORIES.map((sub, index) => (
-                  <motion.button
-                    key={sub.id}
-                    onClick={() => setSelectedCategory(sub.id)}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.35 + index * 0.03 }}
-                    whileHover={{ scale: 1.03, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`relative px-3 py-2.5 rounded-lg text-sm transition-all duration-300 border text-center ${
-                      selectedCategory === sub.id
-                        ? 'bg-gradient-to-r from-amber-500/25 to-orange-500/25 border-amber-400/50 text-amber-200 shadow-[0_0_15px_rgba(251,191,36,0.25)]'
-                        : 'bg-white/5 border-white/10 text-gray-300 hover:bg-amber-500/10 hover:border-amber-400/30'
-                    }`}
-                  >
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="text-base">{sub.icon}</span>
-                      <span className="font-medium truncate">{sub.name[language]}</span>
-                    </span>
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
           {/* Israeli Memorial Categories Section (Hebrew only) - Visual Card Layout */}
           {isHebrew && (
             <motion.div
@@ -640,7 +581,7 @@ export default function MarketplacePage() {
                     transition={{ duration: 0.4, ease: 'easeInOut' }}
                     className="overflow-hidden"
                   >
-                    <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-b from-slate-800/60 to-slate-900/60 border border-amber-500/25 backdrop-blur-sm">
+                    <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-b from-slate-800/60 to-slate-900/60 border border-amber-500/25 backdrop-blur-sm" dir="rtl">
                       {/* Subcategory section title */}
                       <div className="flex items-center gap-3 mb-4">
                         <span className="text-amber-300/80 text-sm font-medium">
@@ -648,7 +589,7 @@ export default function MarketplacePage() {
                           {expandedIsraeliCategory === 'IsraelWars' && 'נושאים במלחמות ישראל'}
                           {expandedIsraeliCategory === 'HolocaustSurvivors' && 'נושאים בסיפורי ניצולי שואה'}
                         </span>
-                        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-amber-500/30" />
+                        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-amber-500/30" />
                       </div>
 
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
