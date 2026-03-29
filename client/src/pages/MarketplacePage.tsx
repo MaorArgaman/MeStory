@@ -16,6 +16,7 @@ import {
 import { SEO } from '../components/seo';
 // Realistic genre banners from public folder
 const genreBanners: Record<string, string> = {
+  'TrueStory': '/img/TrueStory.png',
   'Romance': '/img/Romance.png',
   'Children': '/img/Children.png',
   'Biography': '/img/Biography.png',
@@ -77,6 +78,7 @@ interface BookItem {
 // Base categories for all languages with translations
 const BASE_CATEGORIES: Record<string, Record<'en' | 'he', string>> = {
   'All': { en: 'All', he: 'הכל' },
+  'TrueStory': { en: 'True Story', he: 'סיפור אמיתי' },
   'Fantasy': { en: 'Fantasy', he: 'פנטזיה' },
   'Sci-Fi': { en: 'Sci-Fi', he: 'מדע בדיוני' },
   'Romance': { en: 'Romance', he: 'רומנטיקה' },
@@ -91,6 +93,20 @@ const BASE_CATEGORIES: Record<string, Record<'en' | 'he', string>> = {
   'Biography': { en: 'Biography', he: 'ביוגרפיה' },
   'Self-Help': { en: 'Self-Help', he: 'עזרה עצמית' },
 };
+
+// Special category - True Story (the heart of MeStory)
+const TRUE_STORY_SUBCATEGORIES = [
+  { id: 'TrueStory_Family', name: { en: 'Family Stories', he: 'סיפורי משפחה' }, icon: '👨‍👩‍👧‍👦', tags: ['משפחה', 'מורשת', 'דורות', 'שורשים'] },
+  { id: 'TrueStory_Overcoming', name: { en: 'Overcoming Challenges', he: 'התמודדות והתגברות' }, icon: '💪', tags: ['התמודדות', 'חוסן', 'התגברות', 'כוח'] },
+  { id: 'TrueStory_Love', name: { en: 'Love & Relationships', he: 'אהבה ויחסים' }, icon: '❤️', tags: ['אהבה', 'זוגיות', 'יחסים', 'פרידה'] },
+  { id: 'TrueStory_Military', name: { en: 'Service & Military', he: 'שירות וצבא' }, icon: '🎖️', tags: ['צבא', 'שירות', 'לוחמים', 'גבורה'] },
+  { id: 'TrueStory_Immigration', name: { en: 'Immigration & Roots', he: 'היגרציה ושורשים' }, icon: '🌍', tags: ['עלייה', 'היגרציה', 'גלות', 'שורשים'] },
+  { id: 'TrueStory_Career', name: { en: 'Career & Entrepreneurship', he: 'קריירה ויזמות' }, icon: '💼', tags: ['קריירה', 'יזמות', 'הצלחה', 'עסקים'] },
+  { id: 'TrueStory_Health', name: { en: 'Health & Recovery', he: 'בריאות והחלמה' }, icon: '🏥', tags: ['מחלה', 'החלמה', 'בריאות', 'רפואה'] },
+  { id: 'TrueStory_Growth', name: { en: 'Personal Growth', he: 'צמיחה אישית' }, icon: '🌱', tags: ['צמיחה', 'התפתחות', 'שינוי', 'מסע'] },
+  { id: 'TrueStory_Moments', name: { en: 'Life-Changing Moments', he: 'רגעים שעיצבו אותי' }, icon: '✨', tags: ['רגעים', 'נקודות מפנה', 'גילויים', 'תובנות'] },
+  { id: 'TrueStory_Childhood', name: { en: 'Childhood Memories', he: 'זיכרונות ילדות' }, icon: '💎', tags: ['ילדות', 'זיכרונות', 'נוסטלגיה', 'גדילה'] },
+];
 
 const CATEGORY_KEYS = Object.keys(BASE_CATEGORIES);
 
@@ -397,13 +413,31 @@ export default function MarketplacePage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 + index * 0.05 }}
-                className="relative px-3 sm:px-5 py-2 sm:py-2.5 rounded-full font-medium whitespace-nowrap text-sm sm:text-base"
+                className={`relative px-3 sm:px-5 py-2 sm:py-2.5 rounded-full font-medium whitespace-nowrap text-sm sm:text-base ${
+                  categoryKey === 'TrueStory' ? 'ring-2 ring-amber-400/50 shadow-[0_0_15px_rgba(251,191,36,0.3)]' : ''
+                }`}
               >
+                {/* Special glow for TrueStory */}
+                {categoryKey === 'TrueStory' && selectedCategory !== 'TrueStory' && (
+                  <motion.div
+                    className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20"
+                    style={{ zIndex: 0 }}
+                    animate={{
+                      boxShadow: ['0 0 10px rgba(251,191,36,0.3)', '0 0 20px rgba(251,191,36,0.5)', '0 0 10px rgba(251,191,36,0.3)']
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                )}
+
                 {/* Sliding pill background for active tab */}
                 {selectedCategory === categoryKey && !expandedIsraeliCategory && (
                   <motion.div
                     layoutId="activeCategoryIndicator"
-                    className="absolute inset-0 bg-gradient-to-r from-purple-600/90 to-amber-500/90 rounded-full shadow-[0_0_20px_rgba(255,215,0,0.4)]"
+                    className={`absolute inset-0 rounded-full shadow-[0_0_20px_rgba(255,215,0,0.4)] ${
+                      categoryKey === 'TrueStory'
+                        ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-red-500'
+                        : 'bg-gradient-to-r from-purple-600/90 to-amber-500/90'
+                    }`}
                     style={{ zIndex: 0 }}
                     transition={{
                       type: 'spring',
@@ -414,7 +448,7 @@ export default function MarketplacePage() {
                 )}
 
                 {/* Hover glow effect for inactive tabs */}
-                {selectedCategory !== categoryKey && (
+                {selectedCategory !== categoryKey && categoryKey !== 'TrueStory' && (
                   <motion.div
                     className="absolute inset-0 rounded-full bg-white/0 hover:bg-white/10 transition-colors duration-200"
                     style={{ zIndex: 0 }}
@@ -425,18 +459,81 @@ export default function MarketplacePage() {
 
                 {/* Tab text - always on top */}
                 <span
-                  className={`relative font-semibold transition-colors duration-200 ${
+                  className={`relative font-semibold transition-colors duration-200 flex items-center gap-1.5 ${
                     selectedCategory === categoryKey && !expandedIsraeliCategory
                       ? 'text-white drop-shadow-md'
-                      : 'text-gray-400 hover:text-gray-200'
+                      : categoryKey === 'TrueStory'
+                        ? 'text-amber-300 hover:text-amber-200'
+                        : 'text-gray-400 hover:text-gray-200'
                   }`}
                   style={{ zIndex: 10 }}
                 >
+                  {categoryKey === 'TrueStory' && <span>✨</span>}
                   {BASE_CATEGORIES[categoryKey][language]}
                 </span>
               </motion.button>
             ))}
           </div>
+
+          {/* True Story Subcategories Section */}
+          {selectedCategory === 'TrueStory' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mt-6"
+            >
+              {/* Section header */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
+                <span className="text-amber-300 text-sm font-medium flex items-center gap-2">
+                  <span>📖</span>
+                  {language === 'he' ? 'בחר את סוג הסיפור שלך' : 'Choose Your Story Type'}
+                </span>
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
+              </div>
+
+              {/* True Story Subcategories */}
+              <div className="flex flex-wrap justify-center gap-3">
+                {TRUE_STORY_SUBCATEGORIES.map((sub, index) => (
+                  <motion.button
+                    key={sub.id}
+                    onClick={() => setSelectedCategory(sub.id)}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.4 + index * 0.05 }}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`relative px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 border ${
+                      selectedCategory === sub.id
+                        ? 'bg-gradient-to-r from-amber-500/30 to-orange-500/30 border-amber-400/60 text-amber-200 shadow-[0_0_20px_rgba(251,191,36,0.3)]'
+                        : 'bg-white/5 border-amber-500/20 text-gray-300 hover:bg-amber-500/10 hover:border-amber-400/40'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="text-lg">{sub.icon}</span>
+                      {sub.name[language]}
+                    </span>
+                  </motion.button>
+                ))}
+              </div>
+
+              {/* Tags preview */}
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                {TRUE_STORY_SUBCATEGORIES.flatMap(sub => sub.tags).filter((tag, i, arr) => arr.indexOf(tag) === i).slice(0, 12).map((tag, index) => (
+                  <motion.span
+                    key={tag}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 + index * 0.03 }}
+                    className="px-3 py-1 rounded-full text-xs bg-amber-500/10 text-amber-400/70 border border-amber-500/20"
+                  >
+                    #{tag}
+                  </motion.span>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
           {/* Israeli Memorial Categories Section (Hebrew only) */}
           {isHebrew && (
@@ -536,6 +633,111 @@ export default function MarketplacePage() {
             </motion.div>
           )}
         </motion.div>
+
+        {/* TRUE STORY - Premium Hero Banner */}
+        {(selectedCategory === 'TrueStory' || selectedCategory.startsWith('TrueStory_')) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ duration: 0.6 }}
+            className="mb-12 relative overflow-hidden"
+          >
+            <div
+              className="relative w-full h-64 md:h-80 lg:h-96 rounded-2xl bg-cover bg-center shadow-2xl"
+              style={{
+                backgroundImage: `url(${genreBanners['TrueStory']})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
+              {/* Premium Golden Border */}
+              <div className="absolute inset-0 rounded-2xl ring-2 ring-amber-400/50 shadow-[0_0_40px_rgba(251,191,36,0.3)]" />
+
+              {/* Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-deep-space/90 via-deep-space/70 to-transparent rounded-2xl" />
+
+              {/* Animated Particles */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-2 h-2 bg-amber-400/60 rounded-full"
+                    style={{
+                      left: `${10 + i * 12}%`,
+                      top: `${20 + (i % 3) * 30}%`,
+                    }}
+                    animate={{
+                      y: [-20, 20, -20],
+                      opacity: [0.3, 0.8, 0.3],
+                      scale: [0.5, 1, 0.5],
+                    }}
+                    transition={{
+                      duration: 4 + i * 0.5,
+                      repeat: Infinity,
+                      delay: i * 0.3,
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Content */}
+              <div className="relative z-10 h-full flex flex-col justify-center p-6 sm:p-8 md:p-12 max-w-2xl">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="mb-2"
+                >
+                  <span className="px-3 py-1 bg-amber-500/20 text-amber-300 text-xs sm:text-sm font-semibold rounded-full border border-amber-400/30">
+                    ✨ {language === 'he' ? 'הקטגוריה המובילה' : 'Featured Category'}
+                  </span>
+                </motion.div>
+
+                <motion.h1
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3, duration: 0.6 }}
+                  className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4"
+                  style={{
+                    background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    fontFamily: "'Playfair Display', serif",
+                  }}
+                >
+                  {language === 'he' ? 'מבוסס על סיפור אמיתי' : 'Based on a True Story'}
+                </motion.h1>
+
+                <motion.p
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5, duration: 0.6 }}
+                  className="text-base sm:text-lg md:text-xl text-gray-200 font-light mb-6 leading-relaxed"
+                >
+                  {language === 'he'
+                    ? 'לכל אחד יש סיפור. זה המקום לספר את שלך. שתף את החוויות, הרגעים והמסע שעיצבו את מי שאתה היום.'
+                    : 'Everyone has a story. This is the place to tell yours. Share the experiences, moments, and journey that shaped who you are today.'}
+                </motion.p>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                  className="flex flex-wrap gap-3"
+                >
+                  <a
+                    href="/dashboard"
+                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-full hover:shadow-[0_0_30px_rgba(251,191,36,0.5)] transition-all duration-300 flex items-center gap-2"
+                  >
+                    <BookOpen className="w-5 h-5" />
+                    {language === 'he' ? 'התחל לכתוב את הסיפור שלך' : 'Start Writing Your Story'}
+                  </a>
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Fantasy Category Banner */}
         {selectedCategory === 'Fantasy' && (
