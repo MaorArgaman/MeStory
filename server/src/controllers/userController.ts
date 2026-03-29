@@ -511,6 +511,67 @@ export const getUserProfile = async (req: AuthRequest, res: Response): Promise<v
 };
 
 /**
+ * Update user currency preference
+ * PUT /api/user/currency
+ */
+export const updateCurrency = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: 'Authentication required',
+      });
+      return;
+    }
+
+    const { currency } = req.body;
+
+    // Validate currency
+    const validCurrencies = ['USD', 'EUR', 'GBP', 'ILS'];
+    if (!currency || !validCurrencies.includes(currency)) {
+      res.status(400).json({
+        success: false,
+        error: `Invalid currency. Must be one of: ${validCurrencies.join(', ')}`,
+      });
+      return;
+    }
+
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: 'User not found',
+      });
+      return;
+    }
+
+    // Build updated profile with currency
+    const currentProfile = user.profile || {};
+    await User.findByIdAndUpdate(req.user.id, {
+      profile: {
+        ...currentProfile,
+        currency,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Currency preference updated successfully',
+      data: {
+        currency,
+      },
+    });
+  } catch (error) {
+    console.error('Update currency error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update currency preference',
+    });
+  }
+};
+
+/**
  * Update user language preference
  * PUT /api/user/language
  */

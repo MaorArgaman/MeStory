@@ -8,6 +8,7 @@ import {
   getUserProfile,
   followUser,
   updateLanguage,
+  updateCurrency,
   exportUserData,
   uploadAvatar,
 } from '../controllers/userController';
@@ -54,6 +55,9 @@ router.post('/avatar', uploadImage.single('avatar'), handleUploadError as any, u
 
 // PUT /api/user/language - Update language preference
 router.put('/language', updateLanguage as any);
+
+// PUT /api/user/currency - Update currency preference
+router.put('/currency', updateCurrency as any);
 
 // PUT /api/user/password - Change password
 // BUG-032: Apply rate limiting to prevent brute force attacks
