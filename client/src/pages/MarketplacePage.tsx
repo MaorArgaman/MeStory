@@ -16,19 +16,19 @@ import {
 import { SEO } from '../components/seo';
 // Realistic genre banners from public folder
 const genreBanners: Record<string, string> = {
-  'Romance': '/img/genre-romance.png',
-  'Children': '/img/genre-children.png',
-  'Biography': '/img/genre-biography.png',
-  'Self-Help': '/img/genre-selfhelp.png',
-  'Fantasy': '/img/genre-fantasy.png',
-  'Sci-Fi': '/img/genre-scifi.png',
-  'Mystery': '/img/genre-mystery.png',
-  'Young Adult': '/img/young-writers.png',
-  'Historical': '/img/grandmother-author.png',
-  'Thriller': '/img/dashboard-hero.png',
-  'Horror': '/img/memorial-hero.png',
-  'Literary Fiction': '/img/genre-classic.png',
-  'Adventure': '/img/launch-day.png',
+  'Romance': '/img/Romance.png',
+  'Children': '/img/Children.png',
+  'Biography': '/img/Biography.png',
+  'Self-Help': '/img/Self-Help.png',
+  'Fantasy': '/img/Fantasy.png',
+  'Sci-Fi': '/img/Sci-Fi.png',
+  'Mystery': '/img/Mystery.png',
+  'Young Adult': '/img/Young Adult.png',
+  'Historical': '/img/Historical.png',
+  'Thriller': '/img/Thriller.png',
+  'Horror': '/img/Horror.png',
+  'Literary Fiction': '/img/Literary Fiction.png',
+  'Adventure': '/img/Adventure.png',
 };
 const marketplaceHero = '/img/marketplace-hero.png';
 
