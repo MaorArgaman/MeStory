@@ -4,6 +4,9 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Enable trigram extension for text search
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 -- =====================================================
 -- ENUMS
 -- =====================================================
@@ -106,10 +109,11 @@ CREATE TABLE users (
 );
 
 -- User indexes
-CREATE INDEX idx_users_email ON users(email);
+-- Note: idx_users_email not needed - UNIQUE constraint creates index automatically
 CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_users_subscription_tier ON users((subscription->>'tier'));
 CREATE INDEX idx_users_created_at ON users(created_at DESC);
+CREATE INDEX idx_users_name_trgm ON users USING GIN(name gin_trgm_ops);
 
 -- =====================================================
 -- BOOKS TABLE
@@ -310,6 +314,7 @@ CREATE INDEX idx_books_purchases ON books(((statistics->>'purchases')::integer) 
 CREATE INDEX idx_books_created_at ON books(created_at DESC);
 CREATE INDEX idx_books_tags ON books USING GIN(tags);
 CREATE INDEX idx_books_published_public ON books((publishing_status->>'status'), (publishing_status->>'isPublic'));
+CREATE INDEX idx_books_title_trgm ON books USING GIN(title gin_trgm_ops);
 
 -- =====================================================
 -- SUMMARIES TABLE
@@ -368,6 +373,7 @@ CREATE INDEX idx_summaries_converted ON summaries(converted_to_book);
 CREATE INDEX idx_summaries_created_at ON summaries(created_at DESC);
 CREATE INDEX idx_summaries_user_status ON summaries(user_id, status);
 CREATE INDEX idx_summaries_user_converted ON summaries(user_id, converted_to_book);
+CREATE INDEX idx_summaries_book_source ON summaries(book_id, source_type);
 
 -- =====================================================
 -- TRANSACTIONS TABLE
@@ -398,6 +404,7 @@ CREATE INDEX idx_transactions_order ON transactions(order_id);
 CREATE INDEX idx_transactions_paypal_order ON transactions(paypal_order_id);
 CREATE INDEX idx_transactions_user_created ON transactions(user_id, created_at DESC);
 CREATE INDEX idx_transactions_status_created ON transactions(status, created_at DESC);
+CREATE INDEX idx_transactions_user_plan ON transactions(user_id, plan);
 
 -- =====================================================
 -- CONVERSATIONS TABLE
