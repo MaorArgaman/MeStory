@@ -9,7 +9,6 @@ import {
   AlertCircle,
   DollarSign,
   Target,
-  Tag,
   Sparkles,
   ArrowRight,
   ArrowLeft,
@@ -17,6 +16,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { TagSelector } from '../components/ui';
 
 // Launch day celebration image - warehouse with books + "NOW LIVE"
 const _launchDayImage = '/img/launch-day.png';
@@ -82,7 +82,7 @@ export default function PublishingPage() {
   const [targetAudience, setTargetAudience] = useState('');
   const [description, setDescription] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [tags, setTags] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -103,7 +103,7 @@ export default function PublishingPage() {
           setTargetAudience(bookData.publishingStatus.marketingStrategy?.targetAudience || '');
           setDescription(bookData.publishingStatus.marketingStrategy?.description || bookData.description || '');
           setSelectedCategories(bookData.publishingStatus.marketingStrategy?.categories || [bookData.genre]);
-          setTags(bookData.publishingStatus.marketingStrategy?.tags?.join(', ') || '');
+          setTags(bookData.publishingStatus.marketingStrategy?.tags || []);
         }
       } catch (error: unknown) {
         // Ignore abort errors
@@ -143,7 +143,7 @@ export default function PublishingPage() {
             targetAudience,
             description,
             categories: selectedCategories,
-            tags: tags.split(',').map(t => t.trim()).filter(t => t),
+            tags: tags,
           },
         },
       });
@@ -487,12 +487,10 @@ export default function PublishingPage() {
                 {/* Tags */}
                 <div>
                   <label className="block text-sm font-medium mb-2">{t('publishing.pricing.tags')}</label>
-                  <input
-                    type="text"
-                    value={tags}
-                    onChange={(e) => setTags(e.target.value)}
-                    className="input"
-                    placeholder={t('publishing.pricing.tags_placeholder')}
+                  <TagSelector
+                    selectedTags={tags}
+                    onChange={setTags}
+                    maxTags={15}
                   />
                 </div>
               </div>
