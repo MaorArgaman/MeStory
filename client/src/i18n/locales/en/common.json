@@ -354,6 +354,10 @@
       "masterpiece": "MASTERPIECE",
       "score": "SCORE"
     },
+    "sections": {
+      "editors_choice": "Editor's Choice",
+      "trending": "Trending Now"
+    },
     "messages": {
       "load_failed": "Failed to load marketplace books"
     }

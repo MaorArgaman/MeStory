@@ -2,14 +2,12 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
-import { Search, Sparkles, Star, User, BookOpen, Eye, Heart, Shield, Users } from 'lucide-react';
+import { Search, Sparkles, Star, User, BookOpen, Eye, Shield } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton, NeonInput, OptimizedImage, getAuthorProfileAlt } from '../components/ui';
 import {
-  RecommendedForYou,
-  ContinueReading,
   TrendingBooks,
   FeaturedBooks,
 } from '../components/recommendations';
@@ -32,9 +30,6 @@ const genreBanners: Record<string, string> = {
   'Adventure': '/img/Adventure.png',
 };
 const marketplaceHero = '/img/marketplace-hero.png';
-
-// Check if user is logged in
-const isAuthenticated = () => !!localStorage.getItem('token');
 
 interface BookItem {
   _id: string;
@@ -112,43 +107,43 @@ const CATEGORY_KEYS = Object.keys(BASE_CATEGORIES);
 
 // Israeli-specific categories for Hebrew users (with trauma-informed design)
 const ISRAELI_CATEGORIES = [
-  { id: 'October7', name: 'אירועי השבעה באוקטובר', icon: 'candle', hasSubcategories: true, isMemorial: true },
-  { id: 'IsraelWars', name: 'מלחמות ישראל', icon: 'shield', hasSubcategories: true },
-  { id: 'HolocaustSurvivors', name: 'סיפורי ניצולי שואה', icon: 'users', hasSubcategories: true, isMemorial: true },
+  { id: 'October7', name: 'אירועי השבעה באוקטובר', icon: 'candle', hasSubcategories: true, isMemorial: true, image: '/img-isr/ארועי השבעה באוקטובר - קטגוריה ראשית.png' },
+  { id: 'IsraelWars', name: 'מלחמות ישראל', icon: 'shield', hasSubcategories: true, image: '/img-isr/מלחמות ישראל - קטגוריה ראשית.png' },
+  { id: 'HolocaustSurvivors', name: 'סיפורי ניצולי שואה', icon: 'users', hasSubcategories: true, isMemorial: true, image: '/img-isr/סיפורי ניצולי שואה - קטגוריה ראשית.png' },
 ];
 
 // October 7th subcategories - trauma-informed taxonomy
 const OCTOBER7_SUBCATEGORIES = [
-  { id: 'October7_Hostages', name: 'סיפורי חטופים ושבים', icon: 'heart' },
-  { id: 'October7_Soldiers', name: 'סיפורי לוחמים וחיילים', icon: 'shield' },
-  { id: 'October7_BereavedFamilies', name: 'משפחות שכולות', icon: 'candle' },
-  { id: 'October7_HostageFamilies', name: 'משפחות החטופים', icon: 'heart' },
-  { id: 'October7_MissingFamilies', name: 'משפחות נעדרים', icon: 'search' },
-  { id: 'October7_EvacuatedCommunities', name: 'קהילות מפונות', icon: 'home' },
-  { id: 'October7_Rescue', name: 'חילוץ והצלה', icon: 'first-aid' },
-  { id: 'October7_CommunityResilience', name: 'חוסן קהילתי והתנדבות', icon: 'hands' },
-  { id: 'October7_Memorial', name: 'הנצחה וזיכרון', icon: 'candle' },
+  { id: 'October7_Hostages', name: 'סיפורי חטופים ושבים', icon: 'heart', image: '/img-isr/סיפורי חטופים ושבים.png' },
+  { id: 'October7_Soldiers', name: 'סיפורי לוחמים וחיילים', icon: 'shield', image: '/img-isr/סיפורי לוחמים וחיילים.png' },
+  { id: 'October7_BereavedFamilies', name: 'משפחות שכולות', icon: 'candle', image: '/img-isr/משפחות שכולות.png' },
+  { id: 'October7_HostageFamilies', name: 'משפחות החטופים', icon: 'heart', image: '/img-isr/משפחות החטופים.png' },
+  { id: 'October7_MissingFamilies', name: 'משפחות נעדרים', icon: 'search', image: '/img-isr/משפחות נעדרים.png' },
+  { id: 'October7_EvacuatedCommunities', name: 'קהילות מפונות', icon: 'home', image: '/img-isr/קהילות מפונות.png' },
+  { id: 'October7_Rescue', name: 'חילוץ והצלה', icon: 'first-aid', image: '/img-isr/חילוץ והצלה.png' },
+  { id: 'October7_CommunityResilience', name: 'חוסן קהילתי והתנדבות', icon: 'hands', image: '/img-isr/חוסן קהילתי והתנדבות.png' },
+  { id: 'October7_Memorial', name: 'הנצחה וזיכרון', icon: 'candle', image: '/img-isr/הנצחה וזיכרון.png' },
 ];
 
 // Subcategories for Israel Wars
 const ISRAEL_WARS_SUBCATEGORIES = [
-  { id: 'IsraelWars_Independence', name: 'מלחמת העצמאות', icon: 'flag' },
-  { id: 'IsraelWars_SixDay', name: 'מלחמת ששת הימים', icon: 'star' },
-  { id: 'IsraelWars_YomKippur', name: 'מלחמת יום כיפור', icon: 'shield' },
-  { id: 'IsraelWars_Lebanon', name: 'מלחמות לבנון', icon: 'shield' },
-  { id: 'IsraelWars_Operations', name: 'מבצעים צבאיים', icon: 'target' },
-  { id: 'IsraelWars_IDF', name: 'סיפורי צה"ל', icon: 'shield' },
-  { id: 'IsraelWars_Memorial', name: 'הנצחה וזיכרון', icon: 'candle' },
+  { id: 'IsraelWars_Independence', name: 'מלחמת העצמאות', icon: 'flag', image: '/img-isr/מלחמת העצמאות.png' },
+  { id: 'IsraelWars_SixDay', name: 'מלחמת ששת הימים', icon: 'star', image: '/img-isr/מלחמת ששת הימים.png' },
+  { id: 'IsraelWars_YomKippur', name: 'מלחמת יום כיפור', icon: 'shield', image: '/img-isr/מלחמת יום כיפור.png' },
+  { id: 'IsraelWars_Lebanon', name: 'מלחמות לבנון', icon: 'shield', image: '/img-isr/מלחמות לבנון.png' },
+  { id: 'IsraelWars_Operations', name: 'מבצעים צבאיים', icon: 'target', image: '/img-isr/מבצעים צבאיים.png' },
+  { id: 'IsraelWars_IDF', name: 'סיפורי צה"ל', icon: 'shield', image: '/img-isr/סיפורי צהל.png' },
+  { id: 'IsraelWars_Memorial', name: 'הנצחה וזיכרון', icon: 'candle', image: '/img-isr/הנצחה וזיכרון - צהל.png' },
 ];
 
 // Subcategories for Holocaust Survivors
 const HOLOCAUST_SUBCATEGORIES = [
-  { id: 'Holocaust_Testimonies', name: 'עדויות', icon: 'mic' },
-  { id: 'Holocaust_Survival', name: 'סיפורי הישרדות', icon: 'heart' },
-  { id: 'Holocaust_Families', name: 'סיפורי משפחות', icon: 'users' },
-  { id: 'Holocaust_Children', name: 'ילדי השואה', icon: 'child' },
-  { id: 'Holocaust_SecondGen', name: 'דור שני ושלישי', icon: 'generations' },
-  { id: 'Holocaust_Heritage', name: 'מורשת וזיכרון', icon: 'candle' },
+  { id: 'Holocaust_Testimonies', name: 'עדויות', icon: 'mic', image: '/img-isr/עדויות.png' },
+  { id: 'Holocaust_Survival', name: 'סיפורי הישרדות', icon: 'heart', image: '/img-isr/סיפורי הישרדות.png' },
+  { id: 'Holocaust_Families', name: 'סיפורי משפחות', icon: 'users', image: '/img-isr/סיפורי משפחות.png' },
+  { id: 'Holocaust_Children', name: 'ילדי השואה', icon: 'child', image: '/img-isr/סיפורי משפחות.png' },
+  { id: 'Holocaust_SecondGen', name: 'דור שני ושלישי', icon: 'generations', image: '/img-isr/דור שני ושלישי.png' },
+  { id: 'Holocaust_Heritage', name: 'מורשת וזיכרון', icon: 'candle', image: '/img-isr/מורשת וזיכרון.png' },
 ];
 
 export default function MarketplacePage() {
@@ -178,6 +173,31 @@ export default function MarketplacePage() {
       default:
         return [];
     }
+  };
+
+  // Get image for Israeli category or subcategory
+  const getIsraeliCategoryImage = (categoryId: string): string | null => {
+    // Check main categories
+    const mainCategory = ISRAELI_CATEGORIES.find(c => c.id === categoryId);
+    if (mainCategory?.image) return encodeURI(mainCategory.image);
+
+    // Check subcategories
+    const allSubcategories = [...OCTOBER7_SUBCATEGORIES, ...ISRAEL_WARS_SUBCATEGORIES, ...HOLOCAUST_SUBCATEGORIES];
+    const subcategory = allSubcategories.find(s => s.id === categoryId);
+    if (subcategory?.image) return encodeURI(subcategory.image);
+
+    // Return parent category image if subcategory selected
+    if (categoryId.startsWith('October7_')) {
+      return encodeURI(ISRAELI_CATEGORIES[0].image);
+    }
+    if (categoryId.startsWith('IsraelWars_')) {
+      return encodeURI(ISRAELI_CATEGORIES[1].image);
+    }
+    if (categoryId.startsWith('Holocaust_')) {
+      return encodeURI(ISRAELI_CATEGORIES[2].image);
+    }
+
+    return null;
   };
 
   // Handle Israeli category click - toggle subcategories
@@ -377,17 +397,6 @@ export default function MarketplacePage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 md:px-8 pb-12 sm:pb-20">
-        {/* Personalized Recommendation Sections (for logged-in users) */}
-        {isAuthenticated() && (
-          <div className="mb-8 sm:mb-12">
-            {/* Continue Reading */}
-            <ContinueReading limit={4} title={t('dashboard.sections.continue_reading')} />
-
-            {/* Recommended For You */}
-            <RecommendedForYou limit={8} showReasons={true} title={t('dashboard.sections.recommended')} />
-          </div>
-        )}
-
         {/* Featured Books - Editor's Choice */}
         <FeaturedBooks limit={4} title={t('marketplace.sections.editors_choice')} />
 
@@ -475,7 +484,7 @@ export default function MarketplacePage() {
             ))}
           </div>
 
-          {/* True Story Subcategories Section */}
+          {/* True Story Subcategories Section - Clean Grid Layout */}
           {selectedCategory === 'TrueStory' && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -484,7 +493,7 @@ export default function MarketplacePage() {
               className="mt-6"
             >
               {/* Section header */}
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-5">
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
                 <span className="text-amber-300 text-sm font-medium flex items-center gap-2">
                   <span>📖</span>
@@ -493,136 +502,203 @@ export default function MarketplacePage() {
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
               </div>
 
-              {/* True Story Subcategories */}
-              <div className="flex flex-wrap justify-center gap-3">
+              {/* True Story Subcategories - Organized Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3">
                 {TRUE_STORY_SUBCATEGORIES.map((sub, index) => (
                   <motion.button
                     key={sub.id}
                     onClick={() => setSelectedCategory(sub.id)}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.4 + index * 0.05 }}
-                    whileHover={{ scale: 1.05, y: -2 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.35 + index * 0.03 }}
+                    whileHover={{ scale: 1.03, y: -2 }}
                     whileTap={{ scale: 0.98 }}
-                    className={`relative px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 border ${
+                    className={`relative px-3 py-2.5 rounded-lg text-sm transition-all duration-300 border text-center ${
                       selectedCategory === sub.id
-                        ? 'bg-gradient-to-r from-amber-500/30 to-orange-500/30 border-amber-400/60 text-amber-200 shadow-[0_0_20px_rgba(251,191,36,0.3)]'
-                        : 'bg-white/5 border-amber-500/20 text-gray-300 hover:bg-amber-500/10 hover:border-amber-400/40'
+                        ? 'bg-gradient-to-r from-amber-500/25 to-orange-500/25 border-amber-400/50 text-amber-200 shadow-[0_0_15px_rgba(251,191,36,0.25)]'
+                        : 'bg-white/5 border-white/10 text-gray-300 hover:bg-amber-500/10 hover:border-amber-400/30'
                     }`}
                   >
-                    <span className="flex items-center gap-2">
-                      <span className="text-lg">{sub.icon}</span>
-                      {sub.name[language]}
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="text-base">{sub.icon}</span>
+                      <span className="font-medium truncate">{sub.name[language]}</span>
                     </span>
                   </motion.button>
-                ))}
-              </div>
-
-              {/* Tags preview */}
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
-                {TRUE_STORY_SUBCATEGORIES.flatMap(sub => sub.tags).filter((tag, i, arr) => arr.indexOf(tag) === i).slice(0, 12).map((tag, index) => (
-                  <motion.span
-                    key={tag}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 + index * 0.03 }}
-                    className="px-3 py-1 rounded-full text-xs bg-amber-500/10 text-amber-400/70 border border-amber-500/20"
-                  >
-                    #{tag}
-                  </motion.span>
                 ))}
               </div>
             </motion.div>
           )}
 
-          {/* Israeli Memorial Categories Section (Hebrew only) */}
+          {/* Israeli Memorial Categories Section (Hebrew only) - Visual Card Layout */}
           {isHebrew && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="mt-6"
+              className="mt-8 mb-4"
             >
-              {/* Section header */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
-                <span className="text-amber-400/80 text-sm font-medium flex items-center gap-2">
-                  <span className="text-amber-400">🕯️</span>
-                  סיפורים ישראליים
-                </span>
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
+              {/* Section header with emotional styling */}
+              <div className="flex items-center gap-4 mb-6">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+                <div className="text-center">
+                  <span className="text-amber-300 text-lg font-medium flex items-center gap-2 justify-center">
+                    <span className="text-2xl">🕯️</span>
+                    סיפורים ישראליים
+                  </span>
+                  <p className="text-gray-400 text-xs mt-1">לזכור, להנציח, לספר</p>
+                </div>
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
               </div>
 
-              {/* Israeli Categories */}
-              <div className="flex flex-wrap items-center justify-center gap-3 mb-4">
+              {/* Israeli Categories - Large Visual Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
                 {ISRAELI_CATEGORIES.map((category, index) => (
                   <motion.button
                     key={category.id}
                     onClick={() => handleIsraeliCategoryClick(category.id)}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.7 + index * 0.1 }}
-                    className={`relative px-5 py-3 rounded-xl font-medium whitespace-nowrap text-sm transition-all duration-300 ${
-                      category.isMemorial
-                        ? 'border border-amber-500/40 hover:border-amber-400/60'
-                        : 'border border-white/20 hover:border-white/40'
-                    } ${
+                    whileHover={{ scale: 1.02, y: -4 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`relative overflow-hidden rounded-2xl aspect-[16/9] sm:aspect-[4/3] group transition-all duration-400 ${
                       selectedCategory === category.id || expandedIsraeliCategory === category.id
-                        ? category.isMemorial
-                          ? 'bg-gradient-to-r from-amber-900/40 to-amber-800/30 text-amber-200 shadow-[0_0_20px_rgba(245,158,11,0.2)]'
-                          : 'bg-gradient-to-r from-purple-900/40 to-blue-900/30 text-white'
-                        : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                        ? 'ring-2 ring-amber-400 shadow-[0_0_30px_rgba(245,158,11,0.25)]'
+                        : 'ring-1 ring-white/10 hover:ring-amber-400/50 shadow-lg'
                     }`}
                   >
-                    <span className="flex items-center gap-2">
-                      {category.isMemorial && <span className="text-amber-400">🕯️</span>}
-                      {category.id === 'IsraelWars' && <Shield className="w-4 h-4" />}
-                      {category.name}
-                      {category.hasSubcategories && (
+                    {/* Background Image */}
+                    <div
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                      style={{ backgroundImage: `url(${encodeURI(category.image)})` }}
+                    />
+
+                    {/* Gradient Overlay */}
+                    <div className={`absolute inset-0 transition-all duration-400 ${
+                      selectedCategory === category.id || expandedIsraeliCategory === category.id
+                        ? 'bg-gradient-to-t from-amber-900/95 via-black/60 to-black/20'
+                        : 'bg-gradient-to-t from-black/90 via-black/50 to-black/10 group-hover:from-amber-900/80'
+                    }`} />
+
+                    {/* Memorial candle effect for memorial categories */}
+                    {category.isMemorial && (
+                      <div className="absolute top-3 right-3 text-2xl opacity-80">
+                        <motion.span
+                          animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.1, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          🕯️
+                        </motion.span>
+                      </div>
+                    )}
+
+                    {/* Content */}
+                    <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-5">
+                      <h3 className={`text-lg sm:text-xl font-bold text-right leading-tight transition-colors duration-300 ${
+                        selectedCategory === category.id || expandedIsraeliCategory === category.id
+                          ? 'text-amber-200'
+                          : 'text-white group-hover:text-amber-100'
+                      }`}>
+                        {category.name}
+                      </h3>
+                      <p className="text-gray-300 text-xs sm:text-sm text-right mt-1 opacity-80">
+                        {category.id === 'October7' && 'סיפורי גבורה, כאב ותקווה'}
+                        {category.id === 'IsraelWars' && 'סיפורי לוחמים ומשפחות'}
+                        {category.id === 'HolocaustSurvivors' && 'עדויות וזיכרונות מהשואה'}
+                      </p>
+
+                      {/* Expand indicator */}
+                      <div className={`flex items-center justify-end gap-2 mt-2 text-xs transition-colors duration-300 ${
+                        expandedIsraeliCategory === category.id ? 'text-amber-300' : 'text-gray-400'
+                      }`}>
+                        <span>{expandedIsraeliCategory === category.id ? 'סגור' : 'הצג נושאים'}</span>
                         <motion.span
                           animate={{ rotate: expandedIsraeliCategory === category.id ? 180 : 0 }}
-                          className="text-xs opacity-60"
                         >
                           ▼
                         </motion.span>
-                      )}
-                    </span>
+                      </div>
+                    </div>
+
+                    {/* Selected indicator */}
+                    {(selectedCategory === category.id || expandedIsraeliCategory === category.id) && (
+                      <div className="absolute top-3 left-3">
+                        <div className="w-3 h-3 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.7)]" />
+                      </div>
+                    )}
                   </motion.button>
                 ))}
               </div>
 
-              {/* Subcategories (expandable) */}
+              {/* Subcategories (expandable) - Visual Image Grid */}
               <AnimatePresence>
                 {expandedIsraeliCategory && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: 'auto', marginTop: 20 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    transition={{ duration: 0.4, ease: 'easeInOut' }}
                     className="overflow-hidden"
                   >
-                    <div className="p-4 rounded-xl bg-gradient-to-b from-slate-800/50 to-slate-900/50 border border-amber-500/20">
-                      <div className="flex flex-wrap justify-center gap-2">
+                    <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-b from-slate-800/60 to-slate-900/60 border border-amber-500/25 backdrop-blur-sm">
+                      {/* Subcategory section title */}
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-amber-300/80 text-sm font-medium">
+                          {expandedIsraeliCategory === 'October7' && 'נושאים באירועי השבעה באוקטובר'}
+                          {expandedIsraeliCategory === 'IsraelWars' && 'נושאים במלחמות ישראל'}
+                          {expandedIsraeliCategory === 'HolocaustSurvivors' && 'נושאים בסיפורי ניצולי שואה'}
+                        </span>
+                        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-amber-500/30" />
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                         {getSubcategories(expandedIsraeliCategory).map((sub, index) => (
                           <motion.button
                             key={sub.id}
                             onClick={() => setSelectedCategory(sub.id)}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ delay: index * 0.04, duration: 0.3 }}
+                            whileHover={{ scale: 1.04, y: -4 }}
+                            whileTap={{ scale: 0.97 }}
+                            className={`relative overflow-hidden rounded-xl aspect-[4/3] group transition-all duration-300 ${
                               selectedCategory === sub.id
-                                ? 'bg-amber-500/30 text-amber-200 border border-amber-400/50 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
-                                : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 hover:text-gray-200'
+                                ? 'ring-2 ring-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.35)]'
+                                : 'ring-1 ring-white/15 hover:ring-amber-400/60 shadow-md'
                             }`}
                           >
-                            <span className="flex items-center gap-2">
-                              {sub.icon === 'candle' && <span>🕯️</span>}
-                              {sub.icon === 'heart' && <Heart className="w-3.5 h-3.5" />}
-                              {sub.icon === 'shield' && <Shield className="w-3.5 h-3.5" />}
-                              {sub.icon === 'users' && <Users className="w-3.5 h-3.5" />}
-                              {sub.name}
-                            </span>
+                            {/* Background Image */}
+                            <div
+                              className="absolute inset-0 bg-cover bg-center transition-transform duration-600 group-hover:scale-115"
+                              style={{ backgroundImage: `url(${encodeURI(sub.image)})` }}
+                            />
+
+                            {/* Gradient Overlay */}
+                            <div className={`absolute inset-0 transition-all duration-300 ${
+                              selectedCategory === sub.id
+                                ? 'bg-gradient-to-t from-amber-900/95 via-black/55 to-transparent'
+                                : 'bg-gradient-to-t from-black/85 via-black/45 to-transparent group-hover:from-amber-900/75'
+                            }`} />
+
+                            {/* Content */}
+                            <div className="absolute inset-0 flex flex-col justify-end p-3">
+                              <span className={`text-sm font-semibold text-right leading-tight transition-colors duration-300 drop-shadow-lg ${
+                                selectedCategory === sub.id ? 'text-amber-200' : 'text-white group-hover:text-amber-100'
+                              }`}>
+                                {sub.name}
+                              </span>
+                            </div>
+
+                            {/* Selected indicator */}
+                            {selectedCategory === sub.id && (
+                              <div className="absolute top-2 left-2">
+                                <motion.div
+                                  className="w-3 h-3 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.7)]"
+                                  animate={{ scale: [1, 1.2, 1] }}
+                                  transition={{ duration: 1.5, repeat: Infinity }}
+                                />
+                              </div>
+                            )}
                           </motion.button>
                         ))}
                       </div>
@@ -951,11 +1027,14 @@ export default function MarketplacePage() {
             className="mb-12 relative overflow-hidden"
           >
             <div
-              className="relative w-full h-48 md:h-56 lg:h-64 rounded-2xl shadow-2xl"
+              className="relative w-full h-48 md:h-56 lg:h-64 rounded-2xl shadow-2xl bg-cover bg-center"
               style={{
-                background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)',
+                backgroundImage: `url(${getIsraeliCategoryImage(selectedCategory) || getIsraeliCategoryImage('October7')})`,
               }}
             >
+              {/* Dark overlay for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40 rounded-2xl" />
+
               {/* Subtle gold border glow */}
               <div className="absolute inset-0 rounded-2xl ring-1 ring-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.15)]" />
 
@@ -1050,11 +1129,14 @@ export default function MarketplacePage() {
             className="mb-12 relative overflow-hidden"
           >
             <div
-              className="relative w-full h-48 md:h-56 lg:h-64 rounded-2xl shadow-2xl"
+              className="relative w-full h-48 md:h-56 lg:h-64 rounded-2xl shadow-2xl bg-cover bg-center"
               style={{
-                background: 'linear-gradient(135deg, #1a1a2e 0%, #1f1f3a 50%, #0f0f23 100%)',
+                backgroundImage: `url(${getIsraeliCategoryImage(selectedCategory) || getIsraeliCategoryImage('HolocaustSurvivors')})`,
               }}
             >
+              {/* Dark overlay for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40 rounded-2xl" />
+
               {/* Subtle border */}
               <div className="absolute inset-0 rounded-2xl ring-1 ring-amber-600/20" />
 
@@ -1123,16 +1205,16 @@ export default function MarketplacePage() {
             className="mb-12 relative overflow-hidden"
           >
             <div
-              className="relative w-full h-48 md:h-56 lg:h-64 rounded-2xl shadow-2xl"
+              className="relative w-full h-48 md:h-56 lg:h-64 rounded-2xl shadow-2xl bg-cover bg-center"
               style={{
-                background: 'linear-gradient(135deg, #1a2744 0%, #1e3a5f 50%, #0d1b2a 100%)',
+                backgroundImage: `url(${getIsraeliCategoryImage(selectedCategory) || getIsraeliCategoryImage('IsraelWars')})`,
               }}
             >
+              {/* Dark overlay for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40 rounded-2xl" />
+
               {/* Subtle border */}
               <div className="absolute inset-0 rounded-2xl ring-1 ring-blue-500/20" />
-
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent rounded-2xl" />
 
               {/* Shield icon animation */}
               <div className="absolute inset-0 pointer-events-none">
