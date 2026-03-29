@@ -49,6 +49,7 @@ import HowToWriteBook from './pages/guides/HowToWriteBook';
 import HowToPublishBook from './pages/guides/HowToPublishBook';
 import HowToEarnMoney from './pages/guides/HowToEarnMoney';
 import NotFoundPage from './pages/NotFoundPage';
+import MyStoryPage from './pages/MyStoryPage';
 
 // Localized public routes component factory
 function createLocalizedRoutes() {
@@ -70,6 +71,7 @@ function createLocalizedRoutes() {
     <>
       {/* English routes */}
       <Route path="/en" element={<LocalizedLanding />} />
+      <Route path="/en/my-story" element={<LocalizedLayout><MyStoryPage /></LocalizedLayout>} />
       <Route path="/en/marketplace" element={<LocalizedLayout><MarketplacePage /></LocalizedLayout>} />
       <Route path="/en/book/:id" element={<LocalizedLayout><BookDetailsPage /></LocalizedLayout>} />
       <Route path="/en/faq" element={<LocalizedLayout><FAQPage /></LocalizedLayout>} />
@@ -83,6 +85,7 @@ function createLocalizedRoutes() {
 
       {/* Hebrew routes */}
       <Route path="/he" element={<LocalizedLanding />} />
+      <Route path="/he/my-story" element={<LocalizedLayout><MyStoryPage /></LocalizedLayout>} />
       <Route path="/he/marketplace" element={<LocalizedLayout><MarketplacePage /></LocalizedLayout>} />
       <Route path="/he/book/:id" element={<LocalizedLayout><BookDetailsPage /></LocalizedLayout>} />
       <Route path="/he/faq" element={<LocalizedLayout><FAQPage /></LocalizedLayout>} />
@@ -211,6 +214,14 @@ function AppContent() {
               />
 
               {/* Backwards compatible public routes (without language prefix) */}
+              <Route
+                path="/my-story"
+                element={
+                  <Layout>
+                    <MyStoryPage />
+                  </Layout>
+                }
+              />
               <Route
                 path="/marketplace"
                 element={
