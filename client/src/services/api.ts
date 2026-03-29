@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import toast from 'react-hot-toast';
 
 /**
@@ -15,6 +15,91 @@ export function generateIdempotencyKey(): string {
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
+}
+
+/**
+ * Retry Logic Configuration
+ * Like Waze - recalculate route, don't drive through a building
+ */
+interface RetryConfig {
+  maxRetries: number;       // Maximum retry attempts (3-5)
+  baseDelay: number;        // Initial delay in ms
+  maxDelay: number;         // Maximum delay cap
+  retryableStatuses: number[]; // HTTP statuses worth retrying (5xx, not 4xx)
+}
+
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxRetries: 3,
+  baseDelay: 1000,          // Start with 1 second
+  maxDelay: 10000,          // Cap at 10 seconds
+  retryableStatuses: [500, 502, 503, 504], // Server errors only, not client errors
+};
+
+/**
+ * Check if an error is retryable
+ * 500 errors = yes, 400 errors = no (client's fault)
+ */
+function isRetryableError(error: AxiosError): boolean {
+  // Network errors (no response) are retryable
+  if (!error.response) {
+    return true;
+  }
+
+  // Only retry server errors (5xx), not client errors (4xx)
+  const status = error.response.status;
+  return DEFAULT_RETRY_CONFIG.retryableStatuses.includes(status);
+}
+
+/**
+ * Calculate delay with exponential backoff
+ * Each retry waits longer: 1s -> 2s -> 4s -> 8s (capped at maxDelay)
+ */
+function calculateDelay(attempt: number, config: RetryConfig): number {
+  const delay = config.baseDelay * Math.pow(2, attempt);
+  // Add jitter (±20%) to prevent thundering herd
+  const jitter = delay * 0.2 * (Math.random() - 0.5);
+  return Math.min(delay + jitter, config.maxDelay);
+}
+
+/**
+ * Sleep utility
+ */
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Execute request with retry logic
+ */
+export async function withRetry<T>(
+  requestFn: () => Promise<AxiosResponse<T>>,
+  config: Partial<RetryConfig> = {}
+): Promise<AxiosResponse<T>> {
+  const retryConfig = { ...DEFAULT_RETRY_CONFIG, ...config };
+  let lastError: AxiosError | null = null;
+
+  for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
+    try {
+      return await requestFn();
+    } catch (error) {
+      lastError = error as AxiosError;
+
+      // Don't retry if it's not a retryable error
+      if (!isRetryableError(lastError)) {
+        throw error;
+      }
+
+      // Don't retry if we've exhausted attempts
+      if (attempt === retryConfig.maxRetries) {
+        console.warn(`[Retry] Max retries (${retryConfig.maxRetries}) exhausted`);
+        throw error;
+      }
+
+      const delay = calculateDelay(attempt, retryConfig);
+      console.log(`[Retry] Attempt ${attempt + 1}/${retryConfig.maxRetries} failed, retrying in ${Math.round(delay)}ms...`);
+      await sleep(delay);
+    }
+  }
+
+  throw lastError;
 }
 
 // In production, use the server URL
@@ -116,8 +201,9 @@ export const uploadAvatar = async (file: File): Promise<string> => {
 };
 
 /**
- * Make a payment request with idempotency support
+ * Make a payment request with idempotency support AND retry logic
  * Automatically generates and includes an idempotency key to prevent duplicate charges
+ * Retries on network/server errors with exponential backoff
  *
  * @param url - API endpoint
  * @param data - Request body
@@ -131,14 +217,38 @@ export async function paymentRequest<T = any>(
 ): Promise<T> {
   const idempotencyKey = generateIdempotencyKey();
 
-  const response = await api.post(url, data, {
-    ...config,
-    headers: {
-      ...config?.headers,
-      'X-Idempotency-Key': idempotencyKey,
-    },
-  });
+  // Use retry logic for payment requests (critical operations)
+  const response = await withRetry(
+    () => api.post(url, data, {
+      ...config,
+      headers: {
+        ...config?.headers,
+        'X-Idempotency-Key': idempotencyKey,
+      },
+    }),
+    {
+      maxRetries: 3,        // Payment requests get 3 retries
+      baseDelay: 1500,      // Start with 1.5s for payments
+    }
+  );
 
+  return response.data;
+}
+
+/**
+ * Make a critical API request with retry logic
+ * Use this for important operations that should survive temporary failures
+ */
+export async function criticalRequest<T = any>(
+  method: 'get' | 'post' | 'put' | 'delete',
+  url: string,
+  data?: any,
+  config?: AxiosRequestConfig
+): Promise<T> {
+  const response = await withRetry(
+    () => api[method](url, method === 'get' || method === 'delete' ? config : data, config),
+    { maxRetries: 3 }
+  );
   return response.data;
 }
 
