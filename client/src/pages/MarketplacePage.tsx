@@ -23,12 +23,12 @@ const genreBanners: Record<string, string> = {
   'Fantasy': '/img/genre-fantasy.png',
   'Sci-Fi': '/img/genre-scifi.png',
   'Mystery': '/img/genre-mystery.png',
-  'Young Adult': '/img/genre-children.png',
-  'Historical': '/img/genre-biography.png',
-  'Thriller': '/img/genre-mystery.png',
-  'Horror': '/img/genre-mystery.png',
+  'Young Adult': '/img/young-writers.png',
+  'Historical': '/img/grandmother-author.png',
+  'Thriller': '/img/dashboard-hero.png',
+  'Horror': '/img/memorial-hero.png',
   'Literary Fiction': '/img/genre-classic.png',
-  'Adventure': '/img/genre-fantasy.png',
+  'Adventure': '/img/launch-day.png',
 };
 const marketplaceHero = '/img/marketplace-hero.png';
 
@@ -1109,7 +1109,7 @@ export default function MarketplacePage() {
                     transition={{ delay: 0.2, duration: 0.5 }}
                     className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold gradient-gold mb-2"
                   >
-                    {selectedCategory}
+                    {BASE_CATEGORIES[selectedCategory]?.[language] || selectedCategory}
                   </motion.h1>
                   <motion.p
                     initial={{ opacity: 0, x: -30 }}
@@ -1117,7 +1117,9 @@ export default function MarketplacePage() {
                     transition={{ delay: 0.3, duration: 0.5 }}
                     className="text-gray-300 text-sm sm:text-base md:text-lg max-w-2xl"
                   >
-                    {t(`marketplace.banners.${selectedCategory.toLowerCase().replace(/\s+/g, '_')}.subtitle`, `Discover amazing ${selectedCategory} books`)}
+                    {language === 'he'
+                      ? `גלה ספרי ${BASE_CATEGORIES[selectedCategory]?.he || selectedCategory} מדהימים`
+                      : `Discover amazing ${selectedCategory} books`}
                   </motion.p>
                 </div>
               </div>
