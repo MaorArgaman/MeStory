@@ -1354,6 +1354,19 @@
     "status_failed": "Failed",
     "error_loading": "Failed to load earnings data"
   },
+  "accessibility": {
+    "skip_to_content": "Skip to main content",
+    "show_password": "Show password",
+    "hide_password": "Hide password",
+    "close_dialog": "Close dialog",
+    "close_menu": "Close menu",
+    "open_menu": "Open menu",
+    "loading": "Loading, please wait",
+    "new_notifications": "{{count}} new notifications",
+    "new_messages": "{{count}} new messages",
+    "required_field": "Required field",
+    "error_in_form": "There are errors in the form"
+  },
   "common": {
     "retry": "Retry",
     "cancel": "Cancel"

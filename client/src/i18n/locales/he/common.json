@@ -1433,6 +1433,19 @@
     "status_failed": "נכשל",
     "error_loading": "טעינת נתוני ההכנסות נכשלה"
   },
+  "accessibility": {
+    "skip_to_content": "דלג לתוכן הראשי",
+    "show_password": "הצג סיסמה",
+    "hide_password": "הסתר סיסמה",
+    "close_dialog": "סגור חלון",
+    "close_menu": "סגור תפריט",
+    "open_menu": "פתח תפריט",
+    "loading": "טוען, אנא המתן",
+    "new_notifications": "{{count}} התראות חדשות",
+    "new_messages": "{{count}} הודעות חדשות",
+    "required_field": "שדה חובה",
+    "error_in_form": "יש שגיאות בטופס"
+  },
   "common": {
     "retry": "נסה שוב",
     "cancel": "ביטול"
