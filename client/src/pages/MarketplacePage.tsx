@@ -89,6 +89,19 @@ const BASE_CATEGORIES: Record<string, Record<'en' | 'he', string>> = {
   'Self-Help': { en: 'Self-Help', he: 'עזרה עצמית' },
 };
 
+// Personal story subcategories for True Story
+const TRUE_STORY_SUBCATEGORIES = [
+  { id: 'TrueStory_Family', name: { en: 'Family Stories', he: 'סיפורי משפחה' }, icon: '👨‍👩‍👧‍👦' },
+  { id: 'TrueStory_Overcoming', name: { en: 'Overcoming Challenges', he: 'התמודדות והתגברות' }, icon: '💪' },
+  { id: 'TrueStory_Love', name: { en: 'Love & Relationships', he: 'אהבה ויחסים' }, icon: '❤️' },
+  { id: 'TrueStory_Military', name: { en: 'Service & Military', he: 'שירות וצבא' }, icon: '🎖️' },
+  { id: 'TrueStory_Immigration', name: { en: 'Immigration & Roots', he: 'היגרציה ושורשים' }, icon: '🌍' },
+  { id: 'TrueStory_Career', name: { en: 'Career & Business', he: 'קריירה ויזמות' }, icon: '💼' },
+  { id: 'TrueStory_Health', name: { en: 'Health & Recovery', he: 'בריאות והחלמה' }, icon: '🏥' },
+  { id: 'TrueStory_Growth', name: { en: 'Personal Growth', he: 'צמיחה אישית' }, icon: '🌱' },
+  { id: 'TrueStory_Childhood', name: { en: 'Childhood Memories', he: 'זיכרונות ילדות' }, icon: '💎' },
+];
+
 const CATEGORY_KEYS = Object.keys(BASE_CATEGORIES);
 
 // Israeli-specific categories for Hebrew users (with trauma-informed design)
@@ -753,6 +766,35 @@ export default function MarketplacePage() {
                 </motion.div>
               </div>
             </div>
+
+            {/* Personal Story Categories - Subtle Tags */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="mt-6 flex flex-wrap gap-2 justify-center"
+              dir={language === 'he' ? 'rtl' : 'ltr'}
+            >
+              {TRUE_STORY_SUBCATEGORIES.map((sub, index) => (
+                <motion.button
+                  key={sub.id}
+                  onClick={() => setSelectedCategory(sub.id)}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.85 + index * 0.03 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`px-3 py-1.5 rounded-full text-sm transition-all duration-300 flex items-center gap-1.5 ${
+                    selectedCategory === sub.id
+                      ? 'bg-amber-500/30 text-amber-200 border border-amber-400/50'
+                      : 'bg-white/10 text-gray-300 border border-white/20 hover:bg-amber-500/20 hover:text-amber-200 hover:border-amber-400/40'
+                  }`}
+                >
+                  <span>{sub.icon}</span>
+                  <span>{sub.name[language]}</span>
+                </motion.button>
+              ))}
+            </motion.div>
           </motion.div>
         )}
 
