@@ -483,8 +483,8 @@ export default function MarketplacePage() {
             ))}
           </div>
 
-          {/* Israeli Memorial Categories Section (Hebrew only) - Visual Card Layout */}
-          {isHebrew && (
+          {/* Israeli Memorial Categories Section (Hebrew only, when True Story is selected) */}
+          {isHebrew && (selectedCategory === 'TrueStory' || selectedCategory.startsWith('TrueStory_')) && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
