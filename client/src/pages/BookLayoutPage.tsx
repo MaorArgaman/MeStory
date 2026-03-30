@@ -1865,57 +1865,66 @@ export default function BookLayoutPage() {
               }}
             >
               {spreadPages.left && typeof spreadPages.left !== 'string' ? (
-                <PageRenderer
-                  page={spreadPages.left}
-                  pageIndex={pages.findIndex(p => p.id === spreadPages.left?.id)}
-                  settings={settings}
-                  isRTL={isBookRTL}
-                  isSelected={selectedPageIndex === pages.findIndex(p => p.id === spreadPages.left?.id)}
-                  onImageSelect={setSelectedImageId}
-                  selectedImageId={selectedImageId}
-                  onImageUpdate={(imageId, updates) => {
-                    const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
-                    if (idx !== -1) updateImagePosition(idx, imageId, updates);
-                  }}
-                  onImageDelete={(imageId) => {
-                    const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
-                    if (idx !== -1) deleteImage(idx, imageId);
-                  }}
-                  onImageDuplicate={(imageId) => {
-                    const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
-                    if (idx !== -1) duplicateImage(idx, imageId);
-                  }}
-                  pageNumber={currentSpread > 0 ? (currentSpread - 1) * 2 + 1 : undefined}
-                  bookTitle={book.title}
-                  showHeader={aiDesign?.layout?.headerStyle !== 'none'}
-                  headerStyle={aiDesign?.layout?.headerStyle as 'book-title' | 'chapter-title' | 'none'}
-                  aiImagePlacements={
-                    spreadPages.left?.type === 'chapter' && spreadPages.left?.chapterIndex !== undefined
-                      ? (aiDesign?.imagePlacements || []).filter(
-                          (p: any) => p.chapterIndex === spreadPages.left?.chapterIndex
-                        )
-                      : []
-                  }
-                  language={language}
-                  editingPageIndex={editingPageIndex}
-                  editingContent={editingContent}
-                  editableRef={editableRef}
-                  onStartEditing={handleStartEditing}
-                  onFinishEditing={handleFinishEditing}
-                  onCancelEditing={handleCancelEditing}
-                  onImageAdded={(imageUrl, imageData) => {
-                    const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
-                    if (idx !== -1) handleImageFromPlaceholder(idx, imageUrl, imageData);
-                  }}
-                  bookId={bookId}
-                  bookContext={book ? {
-                    title: book.title,
-                    genre: book.genre,
-                    chapterTitle: spreadPages.left?.chapterIndex !== undefined
-                      ? book.chapters[spreadPages.left.chapterIndex]?.title
-                      : undefined,
-                  } : undefined}
-                />
+                spreadPages.left.type === 'summary' ? (
+                  <BackCoverPreview
+                    book={book}
+                    backCoverImageUrl={backCoverImageUrl}
+                    synopsis={spreadPages.left.content}
+                    language={language}
+                  />
+                ) : (
+                  <PageRenderer
+                    page={spreadPages.left}
+                    pageIndex={pages.findIndex(p => p.id === spreadPages.left?.id)}
+                    settings={settings}
+                    isRTL={isBookRTL}
+                    isSelected={selectedPageIndex === pages.findIndex(p => p.id === spreadPages.left?.id)}
+                    onImageSelect={setSelectedImageId}
+                    selectedImageId={selectedImageId}
+                    onImageUpdate={(imageId, updates) => {
+                      const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
+                      if (idx !== -1) updateImagePosition(idx, imageId, updates);
+                    }}
+                    onImageDelete={(imageId) => {
+                      const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
+                      if (idx !== -1) deleteImage(idx, imageId);
+                    }}
+                    onImageDuplicate={(imageId) => {
+                      const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
+                      if (idx !== -1) duplicateImage(idx, imageId);
+                    }}
+                    pageNumber={currentSpread > 0 ? (currentSpread - 1) * 2 + 1 : undefined}
+                    bookTitle={book.title}
+                    showHeader={aiDesign?.layout?.headerStyle !== 'none'}
+                    headerStyle={aiDesign?.layout?.headerStyle as 'book-title' | 'chapter-title' | 'none'}
+                    aiImagePlacements={
+                      spreadPages.left?.type === 'chapter' && spreadPages.left?.chapterIndex !== undefined
+                        ? (aiDesign?.imagePlacements || []).filter(
+                            (p: any) => p.chapterIndex === spreadPages.left?.chapterIndex
+                          )
+                        : []
+                    }
+                    language={language}
+                    editingPageIndex={editingPageIndex}
+                    editingContent={editingContent}
+                    editableRef={editableRef}
+                    onStartEditing={handleStartEditing}
+                    onFinishEditing={handleFinishEditing}
+                    onCancelEditing={handleCancelEditing}
+                    onImageAdded={(imageUrl, imageData) => {
+                      const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
+                      if (idx !== -1) handleImageFromPlaceholder(idx, imageUrl, imageData);
+                    }}
+                    bookId={bookId}
+                    bookContext={book ? {
+                      title: book.title,
+                      genre: book.genre,
+                      chapterTitle: spreadPages.left?.chapterIndex !== undefined
+                        ? book.chapters[spreadPages.left.chapterIndex]?.title
+                        : undefined,
+                    } : undefined}
+                  />
+                )
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-300 text-sm">
                   {currentSpread === 0 ? '' : t('book_layout.blank_page')}
@@ -1952,57 +1961,66 @@ export default function BookLayoutPage() {
                   onAuthorPositionChange={handleAuthorPositionChange}
                 />
               ) : spreadPages.right ? (
-                <PageRenderer
-                  page={spreadPages.right}
-                  pageIndex={pages.findIndex(p => p.id === spreadPages.right!.id)}
-                  settings={settings}
-                  isRTL={isBookRTL}
-                  isSelected={selectedPageIndex === pages.findIndex(p => p.id === spreadPages.right!.id)}
-                  onImageSelect={setSelectedImageId}
-                  selectedImageId={selectedImageId}
-                  onImageUpdate={(imageId, updates) => {
-                    const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
-                    if (idx !== -1) updateImagePosition(idx, imageId, updates);
-                  }}
-                  onImageDelete={(imageId) => {
-                    const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
-                    if (idx !== -1) deleteImage(idx, imageId);
-                  }}
-                  onImageDuplicate={(imageId) => {
-                    const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
-                    if (idx !== -1) duplicateImage(idx, imageId);
-                  }}
-                  pageNumber={currentSpread > 0 ? (currentSpread - 1) * 2 + 2 : undefined}
-                  bookTitle={book.title}
-                  showHeader={aiDesign?.layout?.headerStyle !== 'none'}
-                  headerStyle={aiDesign?.layout?.headerStyle as 'book-title' | 'chapter-title' | 'none'}
-                  aiImagePlacements={
-                    spreadPages.right?.type === 'chapter' && spreadPages.right?.chapterIndex !== undefined
-                      ? (aiDesign?.imagePlacements || []).filter(
-                          (p: any) => p.chapterIndex === spreadPages.right?.chapterIndex
-                        )
-                      : []
-                  }
-                  language={language}
-                  editingPageIndex={editingPageIndex}
-                  editingContent={editingContent}
-                  editableRef={editableRef}
-                  onStartEditing={handleStartEditing}
-                  onFinishEditing={handleFinishEditing}
-                  onCancelEditing={handleCancelEditing}
-                  onImageAdded={(imageUrl, imageData) => {
-                    const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
-                    if (idx !== -1) handleImageFromPlaceholder(idx, imageUrl, imageData);
-                  }}
-                  bookId={bookId}
-                  bookContext={book ? {
-                    title: book.title,
-                    genre: book.genre,
-                    chapterTitle: spreadPages.right?.chapterIndex !== undefined
-                      ? book.chapters[spreadPages.right.chapterIndex]?.title
-                      : undefined,
-                  } : undefined}
-                />
+                spreadPages.right.type === 'summary' ? (
+                  <BackCoverPreview
+                    book={book}
+                    backCoverImageUrl={backCoverImageUrl}
+                    synopsis={spreadPages.right.content}
+                    language={language}
+                  />
+                ) : (
+                  <PageRenderer
+                    page={spreadPages.right}
+                    pageIndex={pages.findIndex(p => p.id === spreadPages.right!.id)}
+                    settings={settings}
+                    isRTL={isBookRTL}
+                    isSelected={selectedPageIndex === pages.findIndex(p => p.id === spreadPages.right!.id)}
+                    onImageSelect={setSelectedImageId}
+                    selectedImageId={selectedImageId}
+                    onImageUpdate={(imageId, updates) => {
+                      const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
+                      if (idx !== -1) updateImagePosition(idx, imageId, updates);
+                    }}
+                    onImageDelete={(imageId) => {
+                      const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
+                      if (idx !== -1) deleteImage(idx, imageId);
+                    }}
+                    onImageDuplicate={(imageId) => {
+                      const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
+                      if (idx !== -1) duplicateImage(idx, imageId);
+                    }}
+                    pageNumber={currentSpread > 0 ? (currentSpread - 1) * 2 + 2 : undefined}
+                    bookTitle={book.title}
+                    showHeader={aiDesign?.layout?.headerStyle !== 'none'}
+                    headerStyle={aiDesign?.layout?.headerStyle as 'book-title' | 'chapter-title' | 'none'}
+                    aiImagePlacements={
+                      spreadPages.right?.type === 'chapter' && spreadPages.right?.chapterIndex !== undefined
+                        ? (aiDesign?.imagePlacements || []).filter(
+                            (p: any) => p.chapterIndex === spreadPages.right?.chapterIndex
+                          )
+                        : []
+                    }
+                    language={language}
+                    editingPageIndex={editingPageIndex}
+                    editingContent={editingContent}
+                    editableRef={editableRef}
+                    onStartEditing={handleStartEditing}
+                    onFinishEditing={handleFinishEditing}
+                    onCancelEditing={handleCancelEditing}
+                    onImageAdded={(imageUrl, imageData) => {
+                      const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
+                      if (idx !== -1) handleImageFromPlaceholder(idx, imageUrl, imageData);
+                    }}
+                    bookId={bookId}
+                    bookContext={book ? {
+                      title: book.title,
+                      genre: book.genre,
+                      chapterTitle: spreadPages.right?.chapterIndex !== undefined
+                        ? book.chapters[spreadPages.right.chapterIndex]?.title
+                        : undefined,
+                    } : undefined}
+                  />
+                )
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-300 text-sm">
                   Blank page
@@ -3244,6 +3262,80 @@ function CoverPreview({
           {book.author?.name}
         </p>
       </DraggableCoverText>
+    </div>
+  );
+}
+
+// Back Cover Preview Component (for summary pages)
+function BackCoverPreview({
+  book,
+  backCoverImageUrl,
+  synopsis,
+  language,
+}: {
+  book: BookData;
+  backCoverImageUrl?: string | null;
+  synopsis?: string;
+  language?: string;
+}) {
+  const coverDesign = book.coverDesign as any || {};
+  const isRTL = language === 'he' || language === 'ar';
+
+  // Get back cover settings
+  const backColor = coverDesign.back?.backgroundColor || coverDesign.coverColor || '#1a1a2e';
+  const textColor = coverDesign.textColor || coverDesign.front?.title?.color || '#ffffff';
+  const fontFamily = coverDesign.fontFamily || coverDesign.front?.title?.font || 'Arial';
+
+  // Use book's synopsis or the passed synopsis
+  const displaySynopsis = synopsis || book.synopsis || book.description || '';
+
+  return (
+    <div
+      className="h-full w-full relative overflow-hidden"
+      style={{
+        background: backCoverImageUrl ? 'transparent' : backColor,
+        color: textColor,
+        fontFamily: fontFamily,
+        direction: isRTL ? 'rtl' : 'ltr',
+      }}
+    >
+      {/* Back cover image */}
+      {backCoverImageUrl && (
+        <img
+          src={backCoverImageUrl}
+          alt="Back Cover"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      )}
+
+      {/* Dark overlay for text readability */}
+      {backCoverImageUrl && (
+        <div className="absolute inset-0 bg-black/50" />
+      )}
+
+      {/* Synopsis content */}
+      <div className="relative z-10 h-full flex flex-col p-6">
+        <div className="flex-1 overflow-hidden">
+          <p
+            className="text-sm leading-relaxed text-white/90 drop-shadow-md"
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: 12,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}
+          >
+            {displaySynopsis || (language === 'he' ? 'תקציר הספר יופיע כאן...' : 'Book synopsis will appear here...')}
+          </p>
+        </div>
+
+        {/* Author at bottom */}
+        <div className="pt-4 border-t border-white/20 mt-4">
+          <p className="text-sm text-white/80">
+            {language === 'he' ? 'מאת: ' : 'By: '}{book.author?.name || (language === 'he' ? 'מחבר לא ידוע' : 'Unknown Author')}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
