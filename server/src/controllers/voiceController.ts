@@ -280,12 +280,32 @@ export const transcribeVoice = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
+    // Log file info for debugging
+    console.log('🎤 Audio file received:', {
+      originalname: audioFile.originalname,
+      mimetype: audioFile.mimetype,
+      size: audioFile.size,
+      hasBuffer: !!audioFile.buffer,
+      hasPath: !!audioFile.path,
+    });
+
+    // Validate file size
+    if (audioFile.size < 100) {
+      res.status(400).json({
+        success: false,
+        error: 'Audio file is too small or empty',
+      });
+      return;
+    }
+
     // Get file path (handle both disk and memory storage)
     const { filePath, tempFile: tempFilePath } = await getAudioFilePath(audioFile);
     tempFile = tempFilePath;
 
     // Get language from request body (default to Hebrew)
     const requestLanguage = req.body?.language || 'he';
+
+    console.log('🎤 Transcribing audio:', { filePath, language: requestLanguage });
 
     // Transcribe audio
     const transcription = await transcribeAudio(filePath, requestLanguage);

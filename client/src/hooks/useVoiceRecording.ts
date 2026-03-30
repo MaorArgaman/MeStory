@@ -50,6 +50,20 @@ export function useVoiceRecording({
     };
   }, []);
 
+  // Get file extension from MIME type
+  const getFileExtension = (mimeType: string): string => {
+    const extensions: Record<string, string> = {
+      'audio/webm': 'webm',
+      'audio/webm;codecs=opus': 'webm',
+      'audio/mp4': 'm4a',
+      'audio/ogg': 'ogg',
+      'audio/ogg;codecs=opus': 'ogg',
+      'audio/wav': 'wav',
+      'audio/mpeg': 'mp3',
+    };
+    return extensions[mimeType] || 'webm';
+  };
+
   // Send audio chunk for transcription
   const transcribeChunk = useCallback(async (audioBlob: Blob) => {
     if (audioBlob.size < 1000) {
@@ -59,8 +73,12 @@ export function useVoiceRecording({
 
     setIsTranscribing(true);
     try {
+      // Get the correct file extension based on blob type
+      const extension = getFileExtension(audioBlob.type);
+      const fileName = `recording.${extension}`;
+
       const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
+      formData.append('audio', audioBlob, fileName);
       formData.append('language', language);
 
       const response = await api.post('/voice/transcribe', formData, {
@@ -115,11 +133,31 @@ export function useVoiceRecording({
 
       streamRef.current = stream;
 
-      // Create MediaRecorder
+      // Create MediaRecorder with fallback formats
+      // Safari doesn't support webm, so we try multiple formats
+      const mimeTypes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/ogg;codecs=opus',
+        'audio/ogg',
+        'audio/wav',
+      ];
+
+      let selectedMimeType = '';
+      for (const mimeType of mimeTypes) {
+        if (MediaRecorder.isTypeSupported(mimeType)) {
+          selectedMimeType = mimeType;
+          break;
+        }
+      }
+
+      if (!selectedMimeType) {
+        throw new Error('No supported audio format found in this browser');
+      }
+
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-          ? 'audio/webm;codecs=opus'
-          : 'audio/webm',
+        mimeType: selectedMimeType,
       });
 
       mediaRecorderRef.current = mediaRecorder;
