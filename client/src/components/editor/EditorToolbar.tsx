@@ -309,9 +309,8 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         <button
           ref={buttonRef}
           type="button"
-          onPointerDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
             setShowHeadingMenu(!showHeadingMenu);
             setShowColorMenu(false);
             setShowHighlightMenu(false);
@@ -340,7 +339,8 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           >
             <button
               type="button"
-              onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setHeading('paragraph'); }}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setHeading('paragraph')}
               className={`w-full px-4 py-3 text-left hover:bg-white/10 flex items-center gap-3 touch-manipulation active:bg-white/20 ${
                 editor.isActive('paragraph') ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-300'
               }`}
@@ -350,7 +350,8 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             </button>
             <button
               type="button"
-              onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setHeading(1); }}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setHeading(1)}
               className={`w-full px-4 py-3 text-left hover:bg-white/10 flex items-center gap-3 touch-manipulation active:bg-white/20 ${
                 editor.isActive('heading', { level: 1 }) ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-300'
               }`}
@@ -360,7 +361,8 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             </button>
             <button
               type="button"
-              onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setHeading(2); }}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setHeading(2)}
               className={`w-full px-4 py-3 text-left hover:bg-white/10 flex items-center gap-3 touch-manipulation active:bg-white/20 ${
                 editor.isActive('heading', { level: 2 }) ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-300'
               }`}
@@ -370,7 +372,8 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             </button>
             <button
               type="button"
-              onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setHeading(3); }}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setHeading(3)}
               className={`w-full px-4 py-3 text-left hover:bg-white/10 flex items-center gap-3 touch-manipulation active:bg-white/20 ${
                 editor.isActive('heading', { level: 3 }) ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-300'
               }`}
@@ -417,9 +420,8 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           <button
             ref={colorButtonMobileRef}
             type="button"
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
               setShowColorMenu(!showColorMenu);
               setShowHighlightMenu(false);
               setShowMoreMenu(false);
@@ -453,9 +455,8 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           <button
             ref={colorButtonRef}
             type="button"
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
               setShowColorMenu(!showColorMenu);
               setShowHighlightMenu(false);
               setShowHeadingMenu(false);
@@ -476,9 +477,8 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           <button
             ref={highlightButtonRef}
             type="button"
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
               setShowHighlightMenu(!showHighlightMenu);
               setShowColorMenu(false);
               setShowHeadingMenu(false);
@@ -556,9 +556,8 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         <button
           ref={moreButtonRef}
           type="button"
-          onPointerDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
             setShowMoreMenu(!showMoreMenu);
             setShowColorMenu(false);
             setShowHighlightMenu(false);
@@ -740,9 +739,8 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               <button
                 key={item.color}
                 type="button"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
                   editor.chain().focus().setColor(item.color).run();
                   setShowColorMenu(false);
                 }}
@@ -754,9 +752,8 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           </div>
           <button
             type="button"
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
               editor.chain().focus().unsetColor().run();
               setShowColorMenu(false);
             }}
@@ -788,9 +785,8 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               <button
                 key={item.color}
                 type="button"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
                   if (item.color === 'transparent') {
                     editor.chain().focus().unsetHighlight().run();
                   } else {
