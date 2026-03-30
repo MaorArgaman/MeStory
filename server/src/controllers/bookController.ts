@@ -467,7 +467,13 @@ export const createBook = async (req: AuthRequest, res: Response): Promise<void>
         purchases: 0,
         revenue: 0,
         totalReviews: 0,
+        averageRating: 0,
+        completionRate: 0,
+        readingTime: 0,
+        shares: 0,
+        comments: 0,
       },
+      translations: {},
     });
 
     // Update user's writing statistics
@@ -779,6 +785,10 @@ export const updateBook = async (req: AuthRequest, res: Response): Promise<void>
       'tags',
       'ageRating',
       'publishingStatus',
+      'aiDesignState',
+      'templateId',
+      'storyContext',
+      'translations',
     ];
 
     // Build update object
@@ -817,9 +827,23 @@ export const updateBook = async (req: AuthRequest, res: Response): Promise<void>
           genre: updatedBook.genre,
           description: updatedBook.description,
           synopsis: updatedBook.synopsis,
+          language: updatedBook.language,
           chapters: updatedBook.chapters,
           characters: updatedBook.characters,
+          plotStructure: updatedBook.plotStructure,
+          coverDesign: updatedBook.coverDesign,
+          pageLayout: updatedBook.pageLayout,
+          pageImages: updatedBook.pageImages,
+          tags: updatedBook.tags,
+          ageRating: updatedBook.ageRating,
+          publishingStatus: updatedBook.publishingStatus,
           statistics: updatedBook.statistics,
+          qualityScore: updatedBook.qualityScore,
+          aiDesignState: updatedBook.aiDesignState,
+          templateId: updatedBook.templateId,
+          storyContext: updatedBook.storyContext,
+          translations: updatedBook.translations,
+          createdAt: updatedBook.created_at,
           updatedAt: updatedBook.updated_at,
         },
       },
@@ -1064,12 +1088,21 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
+    // Validate cover design exists
+    if (!book.coverDesign || !book.coverDesign.front?.imageUrl) {
+      res.status(400).json({
+        success: false,
+        error: 'Please design a cover for your book before publishing',
+      });
+      return;
+    }
+
     // Validate pricing (Section 9.2: Max $25)
-    if (!isFree && price) {
-      if (price < 0 || price > 25) {
+    if (!isFree) {
+      if (typeof price !== 'number' || price < 0.01 || price > 25) {
         res.status(400).json({
           success: false,
-          error: 'Price must be between $0 and $25',
+          error: 'Paid books must have a price between $0.01 and $25',
         });
         return;
       }
@@ -1080,7 +1113,7 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
       ...book.publishingStatus,
       status: 'published',
       isPublic: true,
-      publishedAt: new Date(),
+      publishedAt: new Date().toISOString(),
       isFree: isFree || false,
       price: isFree ? 0 : price || 0,
     };
@@ -1117,7 +1150,23 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
         book: {
           id: updatedBook?.id || book.id,
           title: book.title,
+          author: book.author,
+          genre: book.genre,
+          description: book.description,
+          synopsis: book.synopsis,
+          language: book.language,
+          chapters: book.chapters,
+          characters: book.characters,
+          coverDesign: book.coverDesign,
+          pageLayout: book.pageLayout,
+          pageImages: book.pageImages,
+          tags: book.tags,
+          ageRating: book.ageRating,
           publishingStatus: updatedPublishingStatus,
+          statistics: book.statistics,
+          translations: book.translations,
+          createdAt: book.created_at,
+          updatedAt: book.updated_at,
         },
       },
     });
