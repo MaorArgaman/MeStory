@@ -88,6 +88,8 @@ export default function PublishingPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [mentions, setMentions] = useState<Mention[]>([]);
+  const [contentConfirmed, setContentConfirmed] = useState(false);
+  const [notARobot, setNotARobot] = useState(false);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -574,9 +576,35 @@ export default function PublishingPage() {
                   </p>
                 </div>
 
+                {/* Content Declaration & Robot Check */}
+                <div className="p-3 sm:p-4 bg-gray-800/50 border border-gray-700 rounded-lg space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={contentConfirmed}
+                      onChange={(e) => setContentConfirmed(e.target.checked)}
+                      className="mt-1 w-4 h-4 rounded border-gray-600 bg-gray-700 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-0"
+                    />
+                    <span className="text-xs sm:text-sm text-gray-300">
+                      {t('publishing.content_declaration', 'אני מאשר/ת כי הספר אינו מכיל תוכן לקידום עבודה זרה או תוכן המפר את תנאי השימוש של הפלטפורמה.')}
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={notARobot}
+                      onChange={(e) => setNotARobot(e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-0"
+                    />
+                    <span className="text-xs sm:text-sm text-gray-300">
+                      {t('publishing.not_a_robot', 'אני לא רובוט')}
+                    </span>
+                  </label>
+                </div>
+
                 <button
                   onClick={handlePublish}
-                  disabled={publishing}
+                  disabled={publishing || !contentConfirmed || !notARobot}
                   className="w-full btn-primary py-3 sm:py-4 text-base sm:text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {publishing ? (

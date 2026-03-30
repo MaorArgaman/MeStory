@@ -1102,7 +1102,9 @@
       "load_failed": "Failed to load book",
       "publish_success": "Book published successfully!",
       "publish_failed": "Failed to publish book"
-    }
+    },
+    "content_declaration": "I confirm that this book does not contain content promoting idolatry or content that violates the platform's terms of service.",
+    "not_a_robot": "I'm not a robot"
   },
   "authorProfile": {
     "loading": "Loading profile...",
