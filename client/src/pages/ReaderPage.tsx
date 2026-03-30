@@ -495,16 +495,26 @@ export default function ReaderPage() {
 
   // Translate the book
   const handleTranslateBook = async () => {
+    console.log('[DEBUG] handleTranslateBook called', {
+      hasBook: !!book,
+      bookId,
+      showTranslation,
+      hasTranslatedBook: !!translatedBook,
+      bookTranslations: book?.translations ? Object.keys(book.translations) : 'none',
+    });
+
     if (!book || !bookId) return;
 
     // If already showing translation, toggle back to original
     if (showTranslation && translatedBook) {
+      console.log('[DEBUG] Toggling translation OFF');
       setShowTranslation(false);
       return;
     }
 
     // If we already have a translation in state, just show it
     if (translatedBook) {
+      console.log('[DEBUG] Using existing translatedBook, showing translation');
       setShowTranslation(true);
       return;
     }
