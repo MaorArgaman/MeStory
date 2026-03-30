@@ -31,19 +31,20 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 // Predefined color palette - keys are used for translation
+// Text colors for light background editor (no white - invisible on white bg)
 const TEXT_COLORS = [
   { color: '#000000', nameKey: 'black' },
   { color: '#374151', nameKey: 'gray' },
+  { color: '#1f2937', nameKey: 'dark_gray' },
   { color: '#DC2626', nameKey: 'red' },
   { color: '#EA580C', nameKey: 'orange' },
   { color: '#D97706', nameKey: 'amber' },
-  { color: '#CA8A04', nameKey: 'yellow' },
   { color: '#16A34A', nameKey: 'green' },
   { color: '#0891B2', nameKey: 'cyan' },
   { color: '#2563EB', nameKey: 'blue' },
   { color: '#7C3AED', nameKey: 'purple' },
   { color: '#DB2777', nameKey: 'pink' },
-  { color: '#FFFFFF', nameKey: 'white' },
+  { color: '#064E3B', nameKey: 'dark_green' },
 ];
 
 const HIGHLIGHT_COLORS = [
@@ -104,17 +105,23 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   useEffect(() => {
     if (showColorMenu && colorButtonRef.current) {
       const rect = colorButtonRef.current.getBoundingClientRect();
-      if (isRTL) {
-        setColorMenuPosition({
-          top: rect.bottom + 4,
-          left: Math.max(8, window.innerWidth - rect.right - 60),
-        });
+      const menuWidth = 180; // Approximate menu width
+      const isMobile = window.innerWidth < 640;
+
+      let leftPos: number;
+      if (isMobile) {
+        // Center on mobile
+        leftPos = Math.max(8, Math.min((window.innerWidth - menuWidth) / 2, window.innerWidth - menuWidth - 8));
+      } else if (isRTL) {
+        leftPos = Math.max(8, window.innerWidth - rect.right - 60);
       } else {
-        setColorMenuPosition({
-          top: rect.bottom + 4,
-          left: Math.max(8, rect.left - 60),
-        });
+        leftPos = Math.max(8, rect.left - 60);
       }
+
+      setColorMenuPosition({
+        top: rect.bottom + 4,
+        left: leftPos,
+      });
     }
   }, [showColorMenu, isRTL]);
 
@@ -122,17 +129,23 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   useEffect(() => {
     if (showHighlightMenu && highlightButtonRef.current) {
       const rect = highlightButtonRef.current.getBoundingClientRect();
-      if (isRTL) {
-        setHighlightMenuPosition({
-          top: rect.bottom + 4,
-          left: Math.max(8, window.innerWidth - rect.right - 40),
-        });
+      const menuWidth = 140; // Approximate menu width
+      const isMobile = window.innerWidth < 640;
+
+      let leftPos: number;
+      if (isMobile) {
+        // Center on mobile
+        leftPos = Math.max(8, Math.min((window.innerWidth - menuWidth) / 2, window.innerWidth - menuWidth - 8));
+      } else if (isRTL) {
+        leftPos = Math.max(8, window.innerWidth - rect.right - 40);
       } else {
-        setHighlightMenuPosition({
-          top: rect.bottom + 4,
-          left: Math.max(8, rect.left - 40),
-        });
+        leftPos = Math.max(8, rect.left - 40);
       }
+
+      setHighlightMenuPosition({
+        top: rect.bottom + 4,
+        left: leftPos,
+      });
     }
   }, [showHighlightMenu, isRTL]);
 

@@ -178,6 +178,7 @@
   "dashboard": {
     "title": "מרכז היצירה",
     "welcome": "ברוך הבא, {{name}}! יש לך {{credits}} קרדיטים.",
+    "default_chapter_title": "פרק 1",
     "hero": {
       "title": "התחל את יצירת המופת הבאה שלך",
       "subtitle": "בחר איך אתה רוצה להפיח חיים בסיפור שלך"

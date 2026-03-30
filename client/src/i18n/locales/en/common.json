@@ -178,6 +178,7 @@
   "dashboard": {
     "title": "Creation Hub",
     "welcome": "Welcome back, {{name}}! You have {{credits}} credits remaining.",
+    "default_chapter_title": "Chapter 1",
     "hero": {
       "title": "Begin Your Next Masterpiece",
       "subtitle": "Choose how you want to bring your story to life"
