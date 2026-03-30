@@ -537,6 +537,7 @@ export const getBookById = async (req: AuthRequest, res: Response): Promise<void
             statistics: book.statistics,
             tags: book.tags,
             ageRating: book.ageRating,
+            translations: book.translations,
             createdAt: book.created_at,
             updatedAt: book.updated_at,
           },
@@ -556,7 +557,9 @@ export const getBookById = async (req: AuthRequest, res: Response): Promise<void
         genre: book.genre,
         synopsis: book.synopsis,
         description: book.description,
+        language: book.language,
         chapters: book.chapters || [], // Include chapters for reading
+        translations: book.translations, // Include pre-generated translations
         coverDesign: book.coverDesign,
         qualityScore: book.qualityScore,
         publishingStatus: {
