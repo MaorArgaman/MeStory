@@ -378,6 +378,7 @@ export default function BookLayoutPage() {
   // AI Design state (for applying stored designs)
   const [aiDesign, setAiDesign] = useState<CompleteBookDesign | null>(null);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const [backCoverImageUrl, setBackCoverImageUrl] = useState<string | null>(null);
   const [showAIDesignWizard, setShowAIDesignWizard] = useState(false);
 
   // Save as Template state
@@ -490,6 +491,12 @@ export default function BookLayoutPage() {
           if (resolvedImageUrl) {
             console.log('📚 Setting coverImageUrl to:', resolvedImageUrl);
             setCoverImageUrl(resolvedImageUrl);
+          }
+          // Load back cover image URL
+          const resolvedBackCoverUrl = cd.back?.imageUrl || null;
+          if (resolvedBackCoverUrl) {
+            console.log('📚 Setting backCoverImageUrl to:', resolvedBackCoverUrl);
+            setBackCoverImageUrl(resolvedBackCoverUrl);
           }
           // Update book state with cover design
           setBook(prev => prev ? {
