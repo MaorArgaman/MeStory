@@ -3355,3 +3355,221 @@ export const getBookSocialStats = async (req: Request, res: Response): Promise<v
     });
   }
 };
+
+/**
+ * Add a mention (tag) to a book
+ * POST /api/books/:id/mention
+ */
+export const addMention = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: 'Authentication required',
+      });
+      return;
+    }
+
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    if (!isValidUUID(id)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid book ID',
+      });
+      return;
+    }
+
+    if (!userId || !isValidUUID(userId)) {
+      res.status(400).json({
+        success: false,
+        error: 'Valid user ID is required',
+      });
+      return;
+    }
+
+    const book = await Book.findById(id);
+    if (!book) {
+      res.status(404).json({
+        success: false,
+        error: 'Book not found',
+      });
+      return;
+    }
+
+    // Only book author can add mentions
+    if (book.author !== req.user.id) {
+      res.status(403).json({
+        success: false,
+        error: 'Only the book author can add mentions',
+      });
+      return;
+    }
+
+    // Get the user to mention
+    const userToMention = await User.findById(userId);
+    if (!userToMention) {
+      res.status(404).json({
+        success: false,
+        error: 'User to mention not found',
+      });
+      return;
+    }
+
+    // Check if already mentioned
+    const mentions = book.mentions || [];
+    if (mentions.some((m) => m.userId === userId)) {
+      res.status(400).json({
+        success: false,
+        error: 'User is already mentioned in this book',
+      });
+      return;
+    }
+
+    // Add the mention
+    const newMention = {
+      userId: userToMention.id,
+      userName: userToMention.name,
+      userAvatar: userToMention.profile?.avatar || undefined,
+      addedAt: new Date().toISOString(),
+    };
+
+    const updatedMentions = [...mentions, newMention];
+
+    await Book.findByIdAndUpdate(id, {
+      mentions: updatedMentions,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'User mentioned successfully',
+      data: {
+        mention: newMention,
+        totalMentions: updatedMentions.length,
+      },
+    });
+  } catch (error) {
+    console.error('Add mention error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to add mention',
+    });
+  }
+};
+
+/**
+ * Remove a mention from a book
+ * DELETE /api/books/:id/mention/:userId
+ */
+export const removeMention = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: 'Authentication required',
+      });
+      return;
+    }
+
+    const { id, userId } = req.params;
+
+    if (!isValidUUID(id) || !isValidUUID(userId)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid ID format',
+      });
+      return;
+    }
+
+    const book = await Book.findById(id);
+    if (!book) {
+      res.status(404).json({
+        success: false,
+        error: 'Book not found',
+      });
+      return;
+    }
+
+    // Only book author can remove mentions
+    if (book.author !== req.user.id) {
+      res.status(403).json({
+        success: false,
+        error: 'Only the book author can remove mentions',
+      });
+      return;
+    }
+
+    const mentions = book.mentions || [];
+    const mentionIndex = mentions.findIndex((m) => m.userId === userId);
+
+    if (mentionIndex === -1) {
+      res.status(404).json({
+        success: false,
+        error: 'Mention not found',
+      });
+      return;
+    }
+
+    mentions.splice(mentionIndex, 1);
+
+    await Book.findByIdAndUpdate(id, {
+      mentions,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Mention removed successfully',
+      data: {
+        totalMentions: mentions.length,
+      },
+    });
+  } catch (error) {
+    console.error('Remove mention error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to remove mention',
+    });
+  }
+};
+
+/**
+ * Get mentions for a book
+ * GET /api/books/:id/mentions
+ */
+export const getBookMentions = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidUUID(id)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid book ID',
+      });
+      return;
+    }
+
+    const book = await Book.findById(id);
+    if (!book) {
+      res.status(404).json({
+        success: false,
+        error: 'Book not found',
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        mentions: book.mentions || [],
+        totalMentions: (book.mentions || []).length,
+      },
+    });
+  } catch (error) {
+    console.error('Get mentions error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get mentions',
+    });
+  }
+};

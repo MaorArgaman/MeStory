@@ -1377,6 +1377,24 @@
   },
   "common": {
     "retry": "Retry",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "free": "Free"
+  },
+  "mentions": {
+    "title": "Tagged People",
+    "description": "Tag people mentioned in your book",
+    "search_placeholder": "Search users to mention...",
+    "no_results": "No users found",
+    "no_mentions": "No one tagged yet. Search above to add mentions.",
+    "user_mentioned": "{{name}} mentioned",
+    "mention_removed": "Mention removed",
+    "add_failed": "Failed to add mention",
+    "remove_failed": "Failed to remove mention",
+    "library": "Library",
+    "library_load_error": "Failed to load library",
+    "no_books": "No published books yet",
+    "no_books_subtitle": "This author has not published any books",
+    "total_books": "{{count}} published books",
+    "about_people": "This story features"
   }
 }

@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { TagSelector } from '../components/ui';
+import { MentionSelector } from '../components/mentions';
+import { Mention } from '../services/userApi';
 
 // Launch day celebration image - warehouse with books + "NOW LIVE"
 const _launchDayImage = '/img/launch-day.png';
@@ -41,6 +43,7 @@ interface BookData {
   title: string;
   genre: string;
   qualityScore?: QualityScore;
+  mentions?: Mention[];
   publishingStatus: {
     status: string;
     price: number;
@@ -83,6 +86,7 @@ export default function PublishingPage() {
   const [description, setDescription] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
+  const [mentions, setMentions] = useState<Mention[]>([]);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -104,6 +108,7 @@ export default function PublishingPage() {
           setDescription(bookData.publishingStatus.marketingStrategy?.description || bookData.description || '');
           setSelectedCategories(bookData.publishingStatus.marketingStrategy?.categories || [bookData.genre]);
           setTags(bookData.publishingStatus.marketingStrategy?.tags || []);
+          setMentions(bookData.mentions || []);
         }
       } catch (error: unknown) {
         // Ignore abort errors
@@ -493,6 +498,17 @@ export default function PublishingPage() {
                     maxTags={15}
                   />
                 </div>
+
+                {/* Mentions - Tag people in your book */}
+                {bookId && (
+                  <div className="pt-4 border-t border-white/10">
+                    <MentionSelector
+                      bookId={bookId}
+                      mentions={mentions}
+                      onMentionsChange={setMentions}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 sm:gap-4 mt-6 sm:mt-8">

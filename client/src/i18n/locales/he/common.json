@@ -1452,6 +1452,24 @@
   },
   "common": {
     "retry": "נסה שוב",
-    "cancel": "ביטול"
+    "cancel": "ביטול",
+    "free": "חינם"
+  },
+  "mentions": {
+    "title": "אנשים מתויגים",
+    "description": "תייג אנשים שמוזכרים בספר שלך",
+    "search_placeholder": "חפש משתמשים לתיוג...",
+    "no_results": "לא נמצאו משתמשים",
+    "no_mentions": "עדיין לא תויגו אנשים. חפש למעלה כדי להוסיף תיוגים.",
+    "user_mentioned": "{{name}} תויג",
+    "mention_removed": "התיוג הוסר",
+    "add_failed": "הוספת התיוג נכשלה",
+    "remove_failed": "הסרת התיוג נכשלה",
+    "library": "ספרייה",
+    "library_load_error": "טעינת הספרייה נכשלה",
+    "no_books": "עדיין אין ספרים מפורסמים",
+    "no_books_subtitle": "הסופר הזה לא פרסם ספרים עדיין",
+    "total_books": "{{count}} ספרים מפורסמים",
+    "about_people": "הסיפור הזה מספר על"
   }
 }

@@ -14,6 +14,9 @@ import {
   updateReview,
   deleteReview,
   getBookReviews,
+  addMention,
+  removeMention,
+  getBookMentions,
   uploadCoverImage,
   uploadManuscript,
   uploadAudio,
@@ -49,6 +52,9 @@ router.get('/public', getPublicBooks as any);
 
 // GET /api/books/:id/reviews - Get all reviews for a book
 router.get('/:id/reviews', runValidation(mongoIdValidation), getBookReviews as any);
+
+// GET /api/books/:id/mentions - Get all mentions for a book (public)
+router.get('/:id/mentions', runValidation(mongoIdValidation), getBookMentions as any);
 
 // POST /api/books/:id/view - Record a book view (public)
 router.post('/:id/view', runValidation(mongoIdValidation), recordBookView as any);
@@ -162,6 +168,19 @@ router.delete(
   '/:id/review',
   runValidation(mongoIdValidation),
   deleteReview as any
+);
+
+// POST /api/books/:id/mention - Add a mention to a book
+router.post(
+  '/:id/mention',
+  runValidation(mongoIdValidation),
+  addMention as any
+);
+
+// DELETE /api/books/:id/mention/:userId - Remove a mention from a book
+router.delete(
+  '/:id/mention/:userId',
+  removeMention as any
 );
 
 // POST /api/books/:id/upload-cover - Upload cover image

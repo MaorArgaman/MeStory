@@ -214,12 +214,11 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
       }
     };
 
-    // Add both mouse and touch event listeners for mobile support
+    // Use only mousedown - React normalizes touch to click events
+    // touchstart was causing race condition (closing menu before onClick fires)
     document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside, { passive: true });
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
     };
   }, []);
 
@@ -307,10 +306,10 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
 
       {/* Paragraph/Heading Dropdown - Compact */}
       <div className="relative flex-shrink-0">
-        <motion.button
+        <button
           ref={buttonRef}
-          whileHover={{ scale: 1.02 }}
-          onClick={(e) => {
+          type="button"
+          onPointerDown={(e) => {
             e.preventDefault();
             e.stopPropagation();
             setShowHeadingMenu(!showHeadingMenu);
@@ -318,14 +317,14 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             setShowHighlightMenu(false);
             setShowMoreMenu(false);
           }}
-          className="flex items-center gap-1 px-1.5 sm:px-2 py-1.5 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all text-xs font-medium touch-manipulation"
+          className="flex items-center gap-1 px-2 py-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all text-xs font-medium touch-manipulation active:scale-95"
         >
-          <Type className="w-3.5 h-3.5" />
-          <span className="hidden xs:inline">{getCurrentHeading()}</span>
-          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <Type className="w-4 h-4" />
+          <span>{getCurrentHeading()}</span>
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
-        </motion.button>
+        </button>
 
         {showHeadingMenu && createPortal(
           <motion.div
@@ -341,43 +340,43 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           >
             <button
               type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setHeading('paragraph'); }}
-              className={`w-full px-3 py-2.5 text-left hover:bg-white/10 flex items-center gap-2 touch-manipulation ${
+              onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setHeading('paragraph'); }}
+              className={`w-full px-4 py-3 text-left hover:bg-white/10 flex items-center gap-3 touch-manipulation active:bg-white/20 ${
                 editor.isActive('paragraph') ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-300'
               }`}
             >
-              <Pilcrow className="w-3.5 h-3.5" />
+              <Pilcrow className="w-4 h-4" />
               <span className="text-sm">{t('editor.toolbar.normal_text')}</span>
             </button>
             <button
               type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setHeading(1); }}
-              className={`w-full px-3 py-2.5 text-left hover:bg-white/10 flex items-center gap-2 touch-manipulation ${
+              onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setHeading(1); }}
+              className={`w-full px-4 py-3 text-left hover:bg-white/10 flex items-center gap-3 touch-manipulation active:bg-white/20 ${
                 editor.isActive('heading', { level: 1 }) ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-300'
               }`}
             >
-              <Heading1 className="w-3.5 h-3.5" />
+              <Heading1 className="w-4 h-4" />
               <span className="text-base font-bold">{t('editor.toolbar.heading1')}</span>
             </button>
             <button
               type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setHeading(2); }}
-              className={`w-full px-3 py-2.5 text-left hover:bg-white/10 flex items-center gap-2 touch-manipulation ${
+              onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setHeading(2); }}
+              className={`w-full px-4 py-3 text-left hover:bg-white/10 flex items-center gap-3 touch-manipulation active:bg-white/20 ${
                 editor.isActive('heading', { level: 2 }) ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-300'
               }`}
             >
-              <Heading2 className="w-3.5 h-3.5" />
+              <Heading2 className="w-4 h-4" />
               <span className="text-sm font-bold">{t('editor.toolbar.heading2')}</span>
             </button>
             <button
               type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setHeading(3); }}
-              className={`w-full px-3 py-2.5 text-left hover:bg-white/10 flex items-center gap-2 touch-manipulation ${
+              onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setHeading(3); }}
+              className={`w-full px-4 py-3 text-left hover:bg-white/10 flex items-center gap-3 touch-manipulation active:bg-white/20 ${
                 editor.isActive('heading', { level: 3 }) ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-300'
               }`}
             >
-              <Heading3 className="w-3.5 h-3.5" />
-              <span className="text-xs font-semibold">{t('editor.toolbar.heading3')}</span>
+              <Heading3 className="w-4 h-4" />
+              <span className="text-sm font-semibold">{t('editor.toolbar.heading3')}</span>
             </button>
           </motion.div>,
           document.body
@@ -415,26 +414,26 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
 
         {/* Text Color - Mobile only */}
         <div className="relative sm:hidden">
-          <motion.button
+          <button
             ref={colorButtonMobileRef}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={(e) => {
+            type="button"
+            onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
               setShowColorMenu(!showColorMenu);
               setShowHighlightMenu(false);
               setShowMoreMenu(false);
+              setShowHeadingMenu(false);
             }}
             title={t('editor.toolbar.text_color')}
-            className="p-1.5 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all relative flex items-center justify-center"
+            className="p-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all relative flex items-center justify-center touch-manipulation active:scale-95"
           >
-            <Palette className={smallIconClass} />
+            <Palette className="w-4 h-4" />
             <div
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2.5 h-0.5 rounded-full"
+              className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full"
               style={{ backgroundColor: editor.getAttributes('textStyle').color || '#374151' }}
             />
-          </motion.button>
+          </button>
         </div>
       </div>
 
@@ -451,44 +450,44 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
 
         {/* Text Color - Desktop */}
         <div className="relative">
-          <motion.button
+          <button
             ref={colorButtonRef}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={(e) => {
+            type="button"
+            onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
               setShowColorMenu(!showColorMenu);
               setShowHighlightMenu(false);
+              setShowHeadingMenu(false);
             }}
             title={t('editor.toolbar.text_color')}
-            className="p-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all relative flex items-center justify-center"
+            className="p-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all relative flex items-center justify-center touch-manipulation active:scale-95"
           >
-            <Palette className={smallIconClass} />
+            <Palette className="w-4 h-4" />
             <div
               className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full"
               style={{ backgroundColor: editor.getAttributes('textStyle').color || '#374151' }}
             />
-          </motion.button>
+          </button>
         </div>
 
         {/* Highlight Color */}
         <div className="relative">
-          <motion.button
+          <button
             ref={highlightButtonRef}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={(e) => {
+            type="button"
+            onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
               setShowHighlightMenu(!showHighlightMenu);
               setShowColorMenu(false);
+              setShowHeadingMenu(false);
             }}
             title={t('editor.toolbar.highlight')}
-            className="p-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center"
+            className="p-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center touch-manipulation active:scale-95"
           >
-            <Highlighter className={smallIconClass} />
-          </motion.button>
+            <Highlighter className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
@@ -554,11 +553,10 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
 
       {/* More Button - Always visible on mobile, hidden on lg+ */}
       <div className="lg:hidden relative flex-shrink-0">
-        <motion.button
+        <button
           ref={moreButtonRef}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={(e) => {
+          type="button"
+          onPointerDown={(e) => {
             e.preventDefault();
             e.stopPropagation();
             setShowMoreMenu(!showMoreMenu);
@@ -566,12 +564,12 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             setShowHighlightMenu(false);
             setShowHeadingMenu(false);
           }}
-          className={`p-1.5 sm:p-2 rounded-lg transition-all flex items-center justify-center touch-manipulation ${
+          className={`p-2 rounded-lg transition-all flex items-center justify-center touch-manipulation active:scale-95 ${
             showMoreMenu ? 'bg-indigo-600 text-white' : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
           }`}
         >
-          {showMoreMenu ? <X className={smallIconClass} /> : <MoreHorizontal className={smallIconClass} />}
-        </motion.button>
+          {showMoreMenu ? <X className="w-4 h-4" /> : <MoreHorizontal className="w-4 h-4" />}
+        </button>
       </div>
 
       {/* More Menu - Portal */}
@@ -742,27 +740,27 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               <button
                 key={item.color}
                 type="button"
-                onClick={(e) => {
+                onPointerDown={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   editor.chain().focus().setColor(item.color).run();
                   setShowColorMenu(false);
                 }}
                 title={t(`colors.${item.nameKey}`)}
-                className="w-7 h-7 rounded-md border border-white/20 hover:scale-110 transition-transform touch-manipulation active:scale-95"
+                className="w-8 h-8 rounded-md border border-white/20 hover:scale-110 transition-transform touch-manipulation active:scale-90"
                 style={{ backgroundColor: item.color }}
               />
             ))}
           </div>
           <button
             type="button"
-            onClick={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
               editor.chain().focus().unsetColor().run();
               setShowColorMenu(false);
             }}
-            className="w-full mt-2 px-2 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-white/10 rounded touch-manipulation"
+            className="w-full mt-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/10 rounded-lg touch-manipulation active:bg-white/20"
           >
             {t('colors.reset_color')}
           </button>
@@ -790,7 +788,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               <button
                 key={item.color}
                 type="button"
-                onClick={(e) => {
+                onPointerDown={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   if (item.color === 'transparent') {
@@ -801,12 +799,12 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
                   setShowHighlightMenu(false);
                 }}
                 title={t(`colors.${item.nameKey}`)}
-                className={`w-7 h-7 rounded-md border hover:scale-110 transition-transform touch-manipulation active:scale-95 ${
+                className={`w-8 h-8 rounded-md border hover:scale-110 transition-transform touch-manipulation active:scale-90 flex items-center justify-center ${
                   item.color === 'transparent' ? 'border-dashed border-gray-500' : 'border-white/20'
                 }`}
                 style={{ backgroundColor: item.color === 'transparent' ? 'transparent' : item.color }}
               >
-                {item.color === 'transparent' && <span className="text-gray-500 text-xs">✕</span>}
+                {item.color === 'transparent' && <span className="text-gray-500 text-sm">✕</span>}
               </button>
             ))}
           </div>

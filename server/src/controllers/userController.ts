@@ -1036,3 +1036,136 @@ export const exportUserData = async (req: AuthRequest, res: Response): Promise<v
     });
   }
 };
+
+/**
+ * Search users by name
+ * GET /api/user/search?q=name&limit=10
+ */
+export const searchUsers = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { q, limit = 10 } = req.query;
+
+    if (!q || typeof q !== 'string' || q.trim().length < 2) {
+      res.status(400).json({
+        success: false,
+        error: 'Search query must be at least 2 characters',
+      });
+      return;
+    }
+
+    const searchTerm = q.trim().toLowerCase();
+    const maxResults = Math.min(Math.max(1, parseInt(limit as string) || 10), 50);
+
+    // Search users by name using ilike (case-insensitive)
+    const { data: users, error } = await supabaseAdmin
+      .from('users')
+      .select('id, name, profile')
+      .ilike('name', `%${searchTerm}%`)
+      .limit(maxResults);
+
+    if (error) {
+      console.error('Search users error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to search users',
+      });
+      return;
+    }
+
+    // Format results - only return public info
+    const results = (users || []).map((user: any) => ({
+      id: user.id,
+      name: user.name,
+      avatar: user.profile?.avatar || null,
+      bio: user.profile?.bio?.substring(0, 100) || null,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        users: results,
+        total: results.length,
+      },
+    });
+  } catch (error) {
+    console.error('Search users error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to search users',
+    });
+  }
+};
+
+/**
+ * Get user's public library (published books)
+ * GET /api/user/:id/library
+ */
+export const getUserLibrary = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    // Validate UUID format
+    if (!UUID_REGEX.test(id)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid user ID format',
+      });
+      return;
+    }
+
+    // Get user info
+    const user = await User.findById(id);
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: 'User not found',
+      });
+      return;
+    }
+
+    // Get user's published books
+    const books = await Book.find({
+      author: id,
+      'publishingStatus.status': 'published',
+      'publishingStatus.isPublic': true,
+    });
+
+    // Format book data for display
+    const formattedBooks = books.map((book) => ({
+      id: book.id,
+      title: book.title,
+      genre: book.genre,
+      synopsis: book.synopsis?.substring(0, 200) || book.description?.substring(0, 200),
+      coverImage: book.coverDesign?.front?.imageUrl,
+      statistics: {
+        views: book.statistics?.views || 0,
+        likes: book.likes || 0,
+        rating: book.statistics?.averageRating || 0,
+        reviews: book.statistics?.totalReviews || 0,
+      },
+      price: book.publishingStatus?.price || 0,
+      isFree: book.publishingStatus?.isFree || false,
+      publishedAt: book.publishingStatus?.publishedAt,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user: {
+          id: user.id,
+          name: user.name,
+          avatar: user.profile?.avatar,
+          bio: user.profile?.bio,
+        },
+        books: formattedBooks,
+        totalBooks: formattedBooks.length,
+      },
+    });
+  } catch (error) {
+    console.error('Get user library error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get user library',
+    });
+  }
+};

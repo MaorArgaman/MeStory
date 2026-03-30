@@ -342,6 +342,14 @@ export interface IReview {
   updatedAt?: string;
 }
 
+// Mention interface - for tagging users in books
+export interface IMention {
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  addedAt: string;
+}
+
 // Translated chapter interface
 export interface ITranslatedChapter {
   _id: string;
@@ -395,6 +403,7 @@ export interface IBook {
   likes: number;
   likedBy: string[];
   reviews: IReview[];
+  mentions?: IMention[];
   created_at: string;
   updated_at: string;
   createdAt?: string;
@@ -429,6 +438,7 @@ interface BookRow {
   likes: number;
   liked_by: string[];
   reviews: IReview[];
+  mentions: IMention[];
   created_at: string;
   updated_at: string;
 }
@@ -463,6 +473,7 @@ function rowToBook(row: BookRow): IBook {
     likes: row.likes || 0,
     likedBy: row.liked_by || [],
     reviews: row.reviews || [],
+    mentions: row.mentions || [],
     created_at: row.created_at,
     updated_at: row.updated_at,
     createdAt: row.created_at,
@@ -535,6 +546,7 @@ export class Book {
       likes: bookData.likes || 0,
       liked_by: bookData.likedBy || [],
       reviews: bookData.reviews || [],
+      mentions: bookData.mentions || [],
       created_at: now,
       updated_at: now,
     };

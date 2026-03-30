@@ -11,6 +11,8 @@ import {
   updateCurrency,
   exportUserData,
   uploadAvatar,
+  searchUsers,
+  getUserLibrary,
 } from '../controllers/userController';
 import { authenticate } from '../middleware/auth';
 import { uploadImage, handleUploadError } from '../middleware/uploadMiddleware';
@@ -36,6 +38,12 @@ const passwordChangeRateLimiter = rateLimit({
 // Public routes
 // GET /api/user/profile/:id - Get user profile (public)
 router.get('/profile/:id', getUserProfile as any);
+
+// GET /api/user/:id/library - Get user's public library (books they wrote)
+router.get('/:id/library', getUserLibrary as any);
+
+// GET /api/user/search - Search users by name
+router.get('/search', searchUsers as any);
 
 // All remaining routes require authentication
 router.use(authenticate as any);
