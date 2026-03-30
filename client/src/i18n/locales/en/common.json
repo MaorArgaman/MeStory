@@ -1306,7 +1306,10 @@
     "translated": "Translated",
     "translating": "Translating...",
     "show_original": "Show original",
-    "show_translated": "Show translated"
+    "show_translated": "Show translated",
+    "no_audio": "Audio narration not available for this chapter",
+    "male_voice": "Male",
+    "female_voice": "Female"
   },
   "earnings": {
     "title": "Author Earnings",

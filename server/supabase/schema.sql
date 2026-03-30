@@ -299,6 +299,9 @@ CREATE TABLE books (
     -- Reviews
     reviews JSONB DEFAULT '[]'::jsonb,
 
+    -- Pre-generated translations (title and chapters in both English and Hebrew)
+    translations JSONB DEFAULT NULL,
+
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

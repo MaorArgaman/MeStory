@@ -2,6 +2,27 @@ import { supabaseAdmin } from '../config/supabase';
 import crypto from 'crypto';
 const uuidv4 = () => crypto.randomUUID();
 
+// Chapter Audio interface - supports both languages and both genders
+export interface IAudioTrack {
+  url: string;
+  duration: number;
+  voice: string;
+  language: 'en' | 'he';
+  generatedAt: string;
+}
+
+export interface IChapterAudio {
+  // English voices
+  maleVoiceEn?: IAudioTrack;
+  femaleVoiceEn?: IAudioTrack;
+  // Hebrew voices
+  maleVoiceHe?: IAudioTrack;
+  femaleVoiceHe?: IAudioTrack;
+  // Legacy fields for backwards compatibility
+  maleVoice?: IAudioTrack;
+  femaleVoice?: IAudioTrack;
+}
+
 // Chapter interface
 export interface IChapter {
   _id?: string;
@@ -9,6 +30,7 @@ export interface IChapter {
   content: string;
   order: number;
   wordCount: number;
+  audio?: IChapterAudio;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -320,6 +342,29 @@ export interface IReview {
   updatedAt?: string;
 }
 
+// Translated chapter interface
+export interface ITranslatedChapter {
+  _id: string;
+  title: string;
+  content: string;
+  order: number;
+}
+
+// Translation storage interface
+export interface IBookTranslations {
+  // Store pre-generated translations
+  english?: {
+    title: string;
+    chapters: ITranslatedChapter[];
+    generatedAt: string;
+  };
+  hebrew?: {
+    title: string;
+    chapters: ITranslatedChapter[];
+    generatedAt: string;
+  };
+}
+
 // Book interface
 export interface IBook {
   id: string;
@@ -345,6 +390,7 @@ export interface IBook {
   statistics: IStatistics;
   tags?: string[];
   language: string;
+  translations?: IBookTranslations;
   ageRating?: 'G' | 'PG' | 'PG-13' | 'R' | '18+';
   likes: number;
   likedBy: string[];
@@ -378,6 +424,7 @@ interface BookRow {
   statistics: IStatistics;
   tags: string[];
   language: string;
+  translations: IBookTranslations | null;
   age_rating: string | null;
   likes: number;
   liked_by: string[];
@@ -411,6 +458,7 @@ function rowToBook(row: BookRow): IBook {
     statistics: row.statistics || { wordCount: 0, pageCount: 0, chapterCount: 0, characterCount: 0, views: 0, purchases: 0, revenue: 0, totalReviews: 0, shares: 0, comments: 0 },
     tags: row.tags || [],
     language: row.language || 'en',
+    translations: row.translations || undefined,
     ageRating: row.age_rating as IBook['ageRating'],
     likes: row.likes || 0,
     likedBy: row.liked_by || [],
@@ -693,9 +741,9 @@ export class Book {
       return {
         ...book,
         author: data || { id: book.author, name: 'Unknown' },
-      };
+      } as IBook & { author: any };
     }
-    return book as any;
+    return book as IBook & { author: any };
   }
 
   // Update statistics helper

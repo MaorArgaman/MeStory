@@ -26,6 +26,215 @@ import {
   sendSaleNotificationToAuthor,
 } from '../services/emailService';
 import { supabaseAdmin } from '../config/supabase';
+import {
+  generateChapterAudio,
+  GeminiVoiceName,
+} from '../services/geminiTTSService';
+import { translateChapter } from '../services/geminiService';
+import { IChapter, IChapterAudio, IBookTranslations, ITranslatedChapter } from '../models/Book';
+
+// Default voices for pre-generation
+const DEFAULT_MALE_VOICE: GeminiVoiceName = 'Charon';
+const DEFAULT_FEMALE_VOICE: GeminiVoiceName = 'Aoede';
+
+/**
+ * Generate TTS audio for all chapters
+ * Creates 4 versions for each chapter: English male/female + Hebrew male/female
+ * Runs asynchronously to not block the publish process
+ */
+async function generateAllChapterAudio(
+  bookId: string,
+  chapters: IChapter[]
+): Promise<void> {
+  console.log(`Starting TTS generation for book ${bookId} with ${chapters.length} chapters (4 versions each)`);
+
+  const updatedChapters: IChapter[] = [];
+
+  for (const chapter of chapters) {
+    const chapterId = chapter._id || `chapter-${chapter.order}`;
+    const audio: IChapterAudio = chapter.audio || {};
+
+    // Generate all 4 versions: English male, English female, Hebrew male, Hebrew female
+
+    // 1. English male voice
+    if (!audio.maleVoiceEn?.url) {
+      try {
+        console.log(`Generating English male voice for chapter: ${chapter.title}`);
+        const result = await generateChapterAudio(
+          bookId,
+          `${chapterId}-en-male`,
+          chapter.content || '',
+          { voice: DEFAULT_MALE_VOICE, authorGender: 'male', language: 'en' }
+        );
+        audio.maleVoiceEn = {
+          url: result.audioUrl,
+          duration: result.duration,
+          voice: result.voice,
+          language: 'en',
+          generatedAt: new Date().toISOString(),
+        };
+        audio.maleVoice = audio.maleVoiceEn; // Legacy
+      } catch (err) {
+        console.error(`Failed to generate English male voice for chapter ${chapter.title}:`, err);
+      }
+    }
+
+    // 2. English female voice
+    if (!audio.femaleVoiceEn?.url) {
+      try {
+        console.log(`Generating English female voice for chapter: ${chapter.title}`);
+        const result = await generateChapterAudio(
+          bookId,
+          `${chapterId}-en-female`,
+          chapter.content || '',
+          { voice: DEFAULT_FEMALE_VOICE, authorGender: 'female', language: 'en' }
+        );
+        audio.femaleVoiceEn = {
+          url: result.audioUrl,
+          duration: result.duration,
+          voice: result.voice,
+          language: 'en',
+          generatedAt: new Date().toISOString(),
+        };
+        audio.femaleVoice = audio.femaleVoiceEn; // Legacy
+      } catch (err) {
+        console.error(`Failed to generate English female voice for chapter ${chapter.title}:`, err);
+      }
+    }
+
+    // 3. Hebrew male voice
+    if (!audio.maleVoiceHe?.url) {
+      try {
+        console.log(`Generating Hebrew male voice for chapter: ${chapter.title}`);
+        const result = await generateChapterAudio(
+          bookId,
+          `${chapterId}-he-male`,
+          chapter.content || '',
+          { voice: DEFAULT_MALE_VOICE, authorGender: 'male', language: 'he' }
+        );
+        audio.maleVoiceHe = {
+          url: result.audioUrl,
+          duration: result.duration,
+          voice: result.voice,
+          language: 'he',
+          generatedAt: new Date().toISOString(),
+        };
+      } catch (err) {
+        console.error(`Failed to generate Hebrew male voice for chapter ${chapter.title}:`, err);
+      }
+    }
+
+    // 4. Hebrew female voice
+    if (!audio.femaleVoiceHe?.url) {
+      try {
+        console.log(`Generating Hebrew female voice for chapter: ${chapter.title}`);
+        const result = await generateChapterAudio(
+          bookId,
+          `${chapterId}-he-female`,
+          chapter.content || '',
+          { voice: DEFAULT_FEMALE_VOICE, authorGender: 'female', language: 'he' }
+        );
+        audio.femaleVoiceHe = {
+          url: result.audioUrl,
+          duration: result.duration,
+          voice: result.voice,
+          language: 'he',
+          generatedAt: new Date().toISOString(),
+        };
+      } catch (err) {
+        console.error(`Failed to generate Hebrew female voice for chapter ${chapter.title}:`, err);
+      }
+    }
+
+    updatedChapters.push({
+      ...chapter,
+      audio,
+    });
+  }
+
+  // Update book with audio URLs
+  try {
+    await Book.findByIdAndUpdate(bookId, {
+      chapters: updatedChapters,
+    });
+    console.log(`TTS generation completed for book ${bookId}`);
+  } catch (err) {
+    console.error(`Failed to update book with audio URLs:`, err);
+  }
+}
+
+/**
+ * Generate translations for a book
+ * If book is in Hebrew, translate to English and vice versa
+ * Runs asynchronously to not block the publish process
+ */
+async function generateBookTranslations(
+  bookId: string,
+  bookTitle: string,
+  chapters: IChapter[],
+  bookLanguage: string
+): Promise<void> {
+  console.log(`Starting translation generation for book ${bookId} (language: ${bookLanguage})`);
+
+  // Determine target language (opposite of book language)
+  const targetLanguage = bookLanguage === 'he' ? 'english' : 'hebrew';
+
+  try {
+    // Translate book title
+    const titleTranslation = await translateChapter(bookTitle, bookTitle, targetLanguage);
+
+    // Translate all chapters
+    const translatedChapters: ITranslatedChapter[] = [];
+    for (const chapter of chapters) {
+      try {
+        const translation = await translateChapter(
+          chapter.content || '',
+          chapter.title || `Chapter ${chapter.order}`,
+          targetLanguage
+        );
+        translatedChapters.push({
+          _id: chapter._id || `chapter-${chapter.order}`,
+          title: translation.translatedTitle,
+          content: translation.translatedContent,
+          order: chapter.order,
+        });
+      } catch (err) {
+        console.error(`Failed to translate chapter ${chapter.title}:`, err);
+        // Add original content as fallback
+        translatedChapters.push({
+          _id: chapter._id || `chapter-${chapter.order}`,
+          title: chapter.title,
+          content: chapter.content || '',
+          order: chapter.order,
+        });
+      }
+    }
+
+    // Build translations object
+    const translations: IBookTranslations = {};
+    if (targetLanguage === 'english') {
+      translations.english = {
+        title: titleTranslation.translatedTitle,
+        chapters: translatedChapters,
+        generatedAt: new Date().toISOString(),
+      };
+    } else {
+      translations.hebrew = {
+        title: titleTranslation.translatedTitle,
+        chapters: translatedChapters,
+        generatedAt: new Date().toISOString(),
+      };
+    }
+
+    // Update book with translations
+    await Book.findByIdAndUpdate(bookId, {
+      translations,
+    });
+    console.log(`Translation generation completed for book ${bookId}`);
+  } catch (err) {
+    console.error(`Failed to generate translations for book ${bookId}:`, err);
+  }
+}
 
 /**
  * Split text into chapters based on common patterns
@@ -755,6 +964,18 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
     const updatedBook = await Book.findByIdAndUpdate(id, {
       publishingStatus: updatedPublishingStatus,
     });
+
+    // Generate TTS audio for all chapters (4 versions: EN/HE x male/female)
+    // This runs in the background to not block the publish response
+    generateAllChapterAudio(id, book.chapters).catch((err) =>
+      console.error('Failed to generate chapter audio:', err)
+    );
+
+    // Generate translations (Hebrew books get English translation and vice versa)
+    // This runs in the background to not block the publish response
+    generateBookTranslations(id, book.title, book.chapters, book.language || 'en').catch((err) =>
+      console.error('Failed to generate book translations:', err)
+    );
 
     // Update user's author profile
     const user = await User.findById(req.user.id);

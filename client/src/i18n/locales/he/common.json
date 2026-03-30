@@ -1381,7 +1381,10 @@
     "translated": "מתורגם",
     "translating": "מתרגם...",
     "show_original": "הצג מקור",
-    "show_translated": "הצג תרגום"
+    "show_translated": "הצג תרגום",
+    "no_audio": "הקראה אינה זמינה לפרק זה",
+    "male_voice": "קול גברי",
+    "female_voice": "קול נשי"
   },
   "earnings": {
     "title": "הכנסות מחבר",

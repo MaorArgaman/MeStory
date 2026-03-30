@@ -30,12 +30,33 @@ import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton } from '../components/ui';
 import ChatModal from '../components/messaging/ChatModal';
 import ShareModal from '../components/social/ShareModal';
+import AudioPlayer from '../components/reader/AudioPlayer';
+
+interface AudioTrack {
+  url: string;
+  duration: number;
+  voice: string;
+  language?: 'en' | 'he';
+  generatedAt: string;
+}
+
+interface ChapterAudio {
+  // Language-specific voices
+  maleVoiceEn?: AudioTrack;
+  femaleVoiceEn?: AudioTrack;
+  maleVoiceHe?: AudioTrack;
+  femaleVoiceHe?: AudioTrack;
+  // Legacy fields
+  maleVoice?: AudioTrack;
+  femaleVoice?: AudioTrack;
+}
 
 interface Chapter {
   _id: string;
   title: string;
   content: string;
   order: number;
+  audio?: ChapterAudio;
 }
 
 interface Book {
@@ -47,6 +68,7 @@ interface Book {
   };
   chapters: Chapter[];
   genre: string;
+  language?: 'en' | 'he';
 }
 
 type Theme = 'dark-space' | 'old-paper';
@@ -1163,6 +1185,33 @@ export default function ReaderPage() {
         bookTitle={book.title}
         authorName={book.author.name}
       />
+
+      {/* Audio Player */}
+      {currentChapter?.audio && (
+        currentChapter.audio.maleVoice?.url ||
+        currentChapter.audio.femaleVoice?.url ||
+        currentChapter.audio.maleVoiceEn?.url ||
+        currentChapter.audio.femaleVoiceEn?.url ||
+        currentChapter.audio.maleVoiceHe?.url ||
+        currentChapter.audio.femaleVoiceHe?.url
+      ) && (
+        <AudioPlayer
+          bookId={book._id}
+          chapterId={currentChapter._id}
+          chapterTitle={currentChapter.title}
+          chapterAudio={currentChapter.audio}
+          bookLanguage={book.language || 'en'}
+          onChapterChange={(direction) => {
+            if (direction === 'next') {
+              goToNextChapter();
+            } else {
+              goToPrevChapter();
+            }
+          }}
+          hasNextChapter={currentChapterIndex < (book.chapters?.length || 1) - 1}
+          hasPrevChapter={currentChapterIndex > 0}
+        />
+      )}
 
       <style>{`
         .perspective-1000 {
