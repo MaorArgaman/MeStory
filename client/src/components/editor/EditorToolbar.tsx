@@ -81,17 +81,13 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
     }
   };
 
-  const restoreSelectionAndRun = (command: () => void) => {
-    if (editor && savedSelection.current) {
+  // Get chain builder that restores selection first
+  const getChainWithSelection = () => {
+    if (savedSelection.current) {
       const { from, to } = savedSelection.current;
-      editor.chain().focus().setTextSelection({ from, to }).run();
-      // Small delay to ensure selection is set before command runs
-      setTimeout(() => {
-        command();
-      }, 0);
-    } else {
-      command();
+      return editor.chain().focus().setTextSelection({ from, to });
     }
+    return editor.chain().focus();
   };
   const headingMenuRef = useRef<HTMLDivElement>(null);
   const colorMenuRef = useRef<HTMLDivElement>(null);
@@ -296,13 +292,11 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
 
   const setHeading = (level: HeadingLevel | 'paragraph') => {
     setShowHeadingMenu(false);
-    restoreSelectionAndRun(() => {
-      if (level === 'paragraph') {
-        editor.chain().focus().setParagraph().run();
-      } else {
-        editor.chain().focus().toggleHeading({ level }).run();
-      }
-    });
+    if (level === 'paragraph') {
+      getChainWithSelection().setParagraph().run();
+    } else {
+      getChainWithSelection().toggleHeading({ level }).run();
+    }
   };
 
   return (
@@ -772,9 +766,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
                   setShowColorMenu(false);
-                  restoreSelectionAndRun(() => {
-                    editor.chain().focus().setColor(item.color).run();
-                  });
+                  getChainWithSelection().setColor(item.color).run();
                 }}
                 title={t(`colors.${item.nameKey}`)}
                 className="w-8 h-8 rounded-md border border-white/20 hover:scale-110 transition-transform touch-manipulation active:scale-90"
@@ -787,9 +779,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               setShowColorMenu(false);
-              restoreSelectionAndRun(() => {
-                editor.chain().focus().unsetColor().run();
-              });
+              getChainWithSelection().unsetColor().run();
             }}
             className="w-full mt-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/10 rounded-lg touch-manipulation active:bg-white/20"
           >
@@ -822,13 +812,11 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
                   setShowHighlightMenu(false);
-                  restoreSelectionAndRun(() => {
-                    if (item.color === 'transparent') {
-                      editor.chain().focus().unsetHighlight().run();
-                    } else {
-                      editor.chain().focus().toggleHighlight({ color: item.color }).run();
-                    }
-                  });
+                  if (item.color === 'transparent') {
+                    getChainWithSelection().unsetHighlight().run();
+                  } else {
+                    getChainWithSelection().toggleHighlight({ color: item.color }).run();
+                  }
                 }}
                 title={t(`colors.${item.nameKey}`)}
                 className={`w-8 h-8 rounded-md border hover:scale-110 transition-transform touch-manipulation active:scale-90 flex items-center justify-center ${
