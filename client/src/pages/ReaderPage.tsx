@@ -673,29 +673,6 @@ export default function ReaderPage() {
                 />
               </motion.button>
 
-              {/* Narration Button */}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                onClick={() => {
-                  if (isNarrating) {
-                    setShowNarrationControls(!showNarrationControls);
-                  } else {
-                    startNarration();
-                  }
-                  setShowToolbar(false);
-                }}
-                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all hover:bg-white/10 ${
-                  isNarrating ? 'bg-green-500/20' : ''
-                }`}
-                title={t('reader.narration')}
-              >
-                {isNarrating ? (
-                  <Volume2 className="w-5 h-5 text-green-400" />
-                ) : (
-                  <Mic2 className="w-5 h-5" style={{ color: currentTheme.accent }} />
-                )}
-              </motion.button>
-
               {/* Chat with Author Button */}
               <motion.button
                 whileHover={{ scale: 1.1 }}
