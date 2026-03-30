@@ -36,17 +36,11 @@ export function useVoiceRecording({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const allChunksRef = useRef<Blob[]>([]); // Keep all chunks for valid file creation
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const mimeTypeRef = useRef<string>('audio/webm');
-  const lastSentIndexRef = useRef<number>(0); // Track which chunks we've sent
 
   // Clean up on unmount
   useEffect(() => {
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
@@ -113,23 +107,6 @@ export function useVoiceRecording({
     }
   }, [language, onTranscription, onError]);
 
-  // Process accumulated chunks - send full recording for valid file format
-  const processChunks = useCallback(async () => {
-    // Only process if we have new chunks since last send
-    if (allChunksRef.current.length === 0) return;
-    if (allChunksRef.current.length <= lastSentIndexRef.current) return;
-
-    // Create blob from ALL chunks (includes header from first chunk)
-    const audioBlob = new Blob(allChunksRef.current, { type: mimeTypeRef.current });
-
-    // Update the last sent index
-    lastSentIndexRef.current = allChunksRef.current.length;
-
-    console.log('📤 Sending audio blob:', audioBlob.size, 'bytes,', allChunksRef.current.length, 'chunks');
-
-    await transcribeChunk(audioBlob);
-  }, [transcribeChunk]);
-
   const startRecording = useCallback(async () => {
     try {
       setError(null);
@@ -186,32 +163,22 @@ export function useVoiceRecording({
       // Get actual MIME type from recorder (in case browser chose default)
       mimeTypeRef.current = mediaRecorder.mimeType || selectedMimeType || 'audio/webm';
       chunksRef.current = [];
-      allChunksRef.current = []; // Reset all chunks for new recording
-      lastSentIndexRef.current = 0; // Reset sent index
 
-      console.log('🎤 Recording with MIME type:', selectedMimeType);
+      console.log('🎤 Recording with MIME type:', mimeTypeRef.current);
 
-      // Handle data available - add to both refs
+      // Handle data available
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           chunksRef.current.push(event.data);
-          allChunksRef.current.push(event.data);
         }
       };
 
-      // Start recording
-      mediaRecorder.start(1000); // Collect data every second
+      // Start recording - collect data every second
+      mediaRecorder.start(1000);
       setIsRecording(true);
 
-      // Set up interval for periodic transcription
-      intervalRef.current = setInterval(() => {
-        if (mediaRecorderRef.current?.state === 'recording') {
-          // Request data from recorder
-          mediaRecorderRef.current.requestData();
-          // Process accumulated chunks
-          processChunks();
-        }
-      }, transcriptionInterval);
+      // Note: We only transcribe when recording stops to avoid duplicates
+      // Live transcription would require tracking already-transcribed portions
 
     } catch (err: any) {
       console.error('Start recording error:', err);
@@ -228,25 +195,18 @@ export function useVoiceRecording({
       setError(errorMessage);
       onError?.(errorMessage);
     }
-  }, [processChunks, transcriptionInterval, onError]);
+  }, [onError]);
 
   const stopRecording = useCallback(() => {
-    // Clear interval
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-
-    // Stop media recorder
+    // Stop media recorder and transcribe
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
 
-      // Process final recording with all chunks
+      // Transcribe the complete recording when stopped
       mediaRecorderRef.current.onstop = async () => {
-        if (allChunksRef.current.length > 0) {
-          // Send the complete recording
-          const finalBlob = new Blob(allChunksRef.current, { type: mimeTypeRef.current });
-          console.log('📤 Sending final recording:', finalBlob.size, 'bytes');
+        if (chunksRef.current.length > 0) {
+          const finalBlob = new Blob(chunksRef.current, { type: mimeTypeRef.current });
+          console.log('📤 Sending recording:', finalBlob.size, 'bytes,', chunksRef.current.length, 'chunks');
           await transcribeChunk(finalBlob);
         }
       };
