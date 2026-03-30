@@ -59,6 +59,17 @@ interface Chapter {
   audio?: ChapterAudio;
 }
 
+interface TranslatedContent {
+  title: string;
+  chapters: Array<{
+    _id: string;
+    title: string;
+    content: string;
+    order: number;
+  }>;
+  generatedAt?: string;
+}
+
 interface Book {
   _id: string;
   title: string;
@@ -69,6 +80,10 @@ interface Book {
   chapters: Chapter[];
   genre: string;
   language?: 'en' | 'he';
+  translations?: {
+    english?: TranslatedContent;
+    hebrew?: TranslatedContent;
+  };
 }
 
 type Theme = 'dark-space' | 'old-paper';
@@ -482,7 +497,7 @@ export default function ReaderPage() {
       return;
     }
 
-    // If we already have a translation, just show it
+    // If we already have a translation in state, just show it
     if (translatedBook) {
       setShowTranslation(true);
       return;
@@ -493,6 +508,28 @@ export default function ReaderPage() {
     const currentLanguage = detectLanguage(firstChapterContent);
     const targetLanguage = currentLanguage === 'hebrew' ? 'english' : 'hebrew';
 
+    // Check if book already has pre-saved translation
+    const savedTranslation = targetLanguage === 'english'
+      ? book.translations?.english
+      : book.translations?.hebrew;
+
+    if (savedTranslation && savedTranslation.chapters?.length > 0) {
+      // Use saved translation directly - instant!
+      setTranslatedBook({
+        title: savedTranslation.title,
+        chapters: savedTranslation.chapters,
+        targetLanguage,
+      });
+      setShowTranslation(true);
+      toast.success(
+        targetLanguage === 'hebrew'
+          ? t('reader.translated_to_hebrew')
+          : t('reader.translated_to_english')
+      );
+      return;
+    }
+
+    // No saved translation, call API
     setIsTranslating(true);
     try {
       const response = await api.post(`/ai/translate-book/${bookId}`, {
