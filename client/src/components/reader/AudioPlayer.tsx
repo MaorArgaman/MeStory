@@ -12,8 +12,6 @@ import {
   Pause,
   SkipBack,
   SkipForward,
-  Volume2,
-  VolumeX,
   ChevronDown,
   ChevronUp,
   Mic2,
@@ -73,8 +71,6 @@ export default function AudioPlayer({
   const [selectedGender, setSelectedGender] = useState<'male' | 'female'>('male');
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(initialPosition);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -187,14 +183,13 @@ export default function AudioPlayer({
     };
   }, [hasNextChapter, onChapterChange, onPositionChange]);
 
-  // Update audio element when settings change
+  // Update audio element when playback rate changes
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
-      audio.volume = isMuted ? 0 : volume;
       audio.playbackRate = playbackRate;
     }
-  }, [volume, isMuted, playbackRate]);
+  }, [playbackRate]);
 
   // Play/Pause toggle
   const togglePlayPause = () => {
@@ -287,9 +282,12 @@ export default function AudioPlayer({
                 {/* Audio player controls */}
                 {hasAudio && (
                   <div className="space-y-2 sm:space-y-3">
-                    {/* Progress bar - draggable */}
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <span className="text-[10px] sm:text-xs text-gray-400 w-10 sm:w-12 text-right">
+                    {/* Progress bar - draggable, RTL for Hebrew */}
+                    <div
+                      className="flex items-center gap-2 sm:gap-3"
+                      dir={bookLanguage === 'he' ? 'rtl' : 'ltr'}
+                    >
+                      <span className="text-[10px] sm:text-xs text-gray-400 w-10 sm:w-12 text-center">
                         {formatTime(currentTime)}
                       </span>
                       <input
@@ -311,10 +309,13 @@ export default function AudioPlayer({
                           [&::-webkit-slider-thumb]:hover:bg-indigo-400
                           [&::-webkit-slider-thumb]:transition-colors"
                         style={{
-                          background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${(currentTime / duration) * 100}%, #374151 ${(currentTime / duration) * 100}%, #374151 100%)`
+                          background: bookLanguage === 'he'
+                            ? `linear-gradient(to left, #6366f1 0%, #6366f1 ${(currentTime / duration) * 100}%, #374151 ${(currentTime / duration) * 100}%, #374151 100%)`
+                            : `linear-gradient(to right, #6366f1 0%, #6366f1 ${(currentTime / duration) * 100}%, #374151 ${(currentTime / duration) * 100}%, #374151 100%)`,
+                          direction: bookLanguage === 'he' ? 'rtl' : 'ltr',
                         }}
                       />
-                      <span className="text-[10px] sm:text-xs text-gray-400 w-10 sm:w-12">
+                      <span className="text-[10px] sm:text-xs text-gray-400 w-10 sm:w-12 text-center">
                         {formatTime(duration)}
                       </span>
                     </div>
@@ -375,29 +376,21 @@ export default function AudioPlayer({
                     </div>
 
                     {/* Secondary controls - responsive layout */}
-                    <div className="flex items-center justify-between px-1 sm:px-4 gap-2">
-                      {/* Volume - show slider only on desktop */}
-                      <div className="flex items-center gap-1 sm:gap-2">
-                        <button
-                          onClick={() => setIsMuted(!isMuted)}
-                          className="p-1 text-gray-400 hover:text-white active:text-white"
-                        >
-                          {isMuted ? (
-                            <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />
-                          ) : (
-                            <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                          )}
-                        </button>
-                        <input
-                          type="range"
-                          min={0}
-                          max={1}
-                          step={0.1}
-                          value={volume}
-                          onChange={(e) => setVolume(parseFloat(e.target.value))}
-                          className="hidden sm:block w-16 sm:w-20 h-1 bg-gray-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
-                        />
-                      </div>
+                    <div className="flex items-center justify-center gap-4 sm:gap-6 px-1 sm:px-4">
+                      {/* Voice Gender Selector */}
+                      {hasBothVoices && (
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <Mic2 className="hidden sm:block w-4 h-4 text-gray-400" />
+                          <select
+                            value={selectedGender}
+                            onChange={(e) => setSelectedGender(e.target.value as 'male' | 'female')}
+                            className="bg-slate-700 text-white text-[10px] sm:text-xs rounded px-1.5 sm:px-2 py-1"
+                          >
+                            <option value="male">{t('reader.male_voice', 'Male')}</option>
+                            <option value="female">{t('reader.female_voice', 'Female')}</option>
+                          </select>
+                        </div>
+                      )}
 
                       {/* Playback speed */}
                       <div className="flex items-center gap-1 sm:gap-2">
@@ -414,21 +407,6 @@ export default function AudioPlayer({
                           ))}
                         </select>
                       </div>
-
-                      {/* Voice Gender Selector */}
-                      {hasBothVoices && (
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          <Mic2 className="hidden sm:block w-4 h-4 text-gray-400" />
-                          <select
-                            value={selectedGender}
-                            onChange={(e) => setSelectedGender(e.target.value as 'male' | 'female')}
-                            className="bg-slate-700 text-white text-[10px] sm:text-xs rounded px-1.5 sm:px-2 py-1"
-                          >
-                            <option value="male">{t('reader.male_voice', 'Male')}</option>
-                            <option value="female">{t('reader.female_voice', 'Female')}</option>
-                          </select>
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
