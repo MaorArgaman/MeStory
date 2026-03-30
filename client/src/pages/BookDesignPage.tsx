@@ -326,7 +326,7 @@ export default function BookDesignPage() {
           currentStep="design"
           progress={{
             hasContent: (book.chapters || []).some((ch) => ch.content && ch.content.length > 50),
-            hasDesign: !!book.coverDesign?.front?.imageUrl,
+            hasDesign: !!(book.coverDesign?.front?.imageUrl || book.coverDesign?.coverColor || (book as any).aiDesignState?.status === 'completed'),
             hasLayout: !!(book as any).pageLayout,
             isPublished: (book as any).publishingStatus?.status === 'published',
             wordCount: book.chapters?.reduce((acc, ch) => acc + (ch.wordCount || 0), 0) || 0,

@@ -1710,7 +1710,7 @@ export default function BookLayoutPage() {
           currentStep="layout"
           progress={{
             hasContent: (book.chapters || []).some((ch: any) => ch.content && ch.content.length > 50),
-            hasDesign: !!(book as any).coverDesign?.front?.imageUrl,
+            hasDesign: !!((book as any).coverDesign?.front?.imageUrl || (book as any).coverDesign?.coverColor || (book as any).aiDesignState?.status === 'completed'),
             hasLayout: !!(book as any).pageLayout || pages.length > 0,
             isPublished: (book as any).publishingStatus?.status === 'published',
             wordCount: (book.chapters || []).reduce((acc: number, ch: any) => acc + (ch.wordCount || 0), 0),

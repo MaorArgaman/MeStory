@@ -633,7 +633,7 @@ export default function BookWritingPage() {
           currentStep="editor"
           progress={{
             hasContent: (book.chapters || []).some((ch: Chapter) => ch.content && ch.content.length > 50),
-            hasDesign: !!(book as any).coverDesign?.front?.imageUrl,
+            hasDesign: !!((book as any).coverDesign?.front?.imageUrl || (book as any).coverDesign?.coverColor || (book as any).aiDesignState?.status === 'completed'),
             hasLayout: !!(book as any).pageLayout,
             isPublished: (book as any).publishingStatus?.status === 'published',
             wordCount: book.statistics?.wordCount || 0,
