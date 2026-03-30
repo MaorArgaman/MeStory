@@ -3285,10 +3285,15 @@ function BackCoverPreview({
   synopsis?: string;
   language?: string;
 }) {
+  console.log('📕 BackCoverPreview rendering with backCoverImageUrl:', backCoverImageUrl);
+  console.log('📕 book.coverDesign:', book.coverDesign);
+  console.log('📕 book.coverDesign?.back:', (book.coverDesign as any)?.back);
+
   const coverDesign = book.coverDesign as any || {};
   const isRTL = language === 'he' || language === 'ar';
 
-  // Get back cover settings
+  // Get back cover settings - also check coverDesign.back.imageUrl directly
+  const backImageUrl = backCoverImageUrl || coverDesign.back?.imageUrl;
   const backColor = coverDesign.back?.backgroundColor || coverDesign.coverColor || '#1a1a2e';
   const textColor = coverDesign.textColor || coverDesign.front?.title?.color || '#ffffff';
   const fontFamily = coverDesign.fontFamily || coverDesign.front?.title?.font || 'Arial';
@@ -3300,23 +3305,23 @@ function BackCoverPreview({
     <div
       className="h-full w-full relative overflow-hidden"
       style={{
-        background: backCoverImageUrl ? 'transparent' : backColor,
+        background: backImageUrl ? 'transparent' : backColor,
         color: textColor,
         fontFamily: fontFamily,
         direction: isRTL ? 'rtl' : 'ltr',
       }}
     >
       {/* Back cover image */}
-      {backCoverImageUrl && (
+      {backImageUrl && (
         <img
-          src={backCoverImageUrl}
+          src={backImageUrl}
           alt="Back Cover"
           className="absolute inset-0 w-full h-full object-cover"
         />
       )}
 
       {/* Dark overlay for text readability */}
-      {backCoverImageUrl && (
+      {backImageUrl && (
         <div className="absolute inset-0 bg-black/50" />
       )}
 
