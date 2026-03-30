@@ -493,7 +493,14 @@ export default function BookLayoutPage() {
             setCoverImageUrl(resolvedImageUrl);
           }
           // Load back cover image URL
-          const resolvedBackCoverUrl = cd.back?.imageUrl || null;
+          let resolvedBackCoverUrl = cd.back?.imageUrl || null;
+          if (resolvedBackCoverUrl && !resolvedBackCoverUrl.startsWith('http') && !resolvedBackCoverUrl.startsWith('data:')) {
+            // Convert relative URL to absolute
+            const apiUrl = import.meta.env.VITE_API_URL ||
+              (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
+            const serverBaseUrl = apiUrl.replace('/api', '');
+            resolvedBackCoverUrl = `${serverBaseUrl}${resolvedBackCoverUrl}`;
+          }
           if (resolvedBackCoverUrl) {
             console.log('📚 Setting backCoverImageUrl to:', resolvedBackCoverUrl);
             setBackCoverImageUrl(resolvedBackCoverUrl);
