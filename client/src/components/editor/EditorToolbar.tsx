@@ -76,6 +76,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const colorButtonRef = useRef<HTMLButtonElement>(null);
+  const colorButtonMobileRef = useRef<HTMLButtonElement>(null);
   const highlightButtonRef = useRef<HTMLButtonElement>(null);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -103,8 +104,11 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
 
   // Calculate color menu position
   useEffect(() => {
-    if (showColorMenu && colorButtonRef.current) {
-      const rect = colorButtonRef.current.getBoundingClientRect();
+    if (showColorMenu) {
+      const buttonEl = colorButtonMobileRef.current || colorButtonRef.current;
+      if (!buttonEl) return;
+
+      const rect = buttonEl.getBoundingClientRect();
       const menuWidth = 180; // Approximate menu width
       const isMobile = window.innerWidth < 640;
 
@@ -177,31 +181,46 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   }, [showMoreMenu, isRTL]);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       const target = event.target as Node;
-      const isOutsideButton = buttonRef.current && !buttonRef.current.contains(target);
-      const isOutsideMenu = headingMenuRef.current && !headingMenuRef.current.contains(target);
-      if (isOutsideButton && isOutsideMenu) {
+
+      // Check heading menu
+      const isOutsideHeadingButton = buttonRef.current && !buttonRef.current.contains(target);
+      const isOutsideHeadingMenu = headingMenuRef.current && !headingMenuRef.current.contains(target);
+      if (isOutsideHeadingButton && isOutsideHeadingMenu) {
         setShowHeadingMenu(false);
       }
-      const isOutsideColorButton = colorButtonRef.current && !colorButtonRef.current.contains(target);
-      const isOutsideColorMenu = colorMenuRef.current && !colorMenuRef.current.contains(target);
-      if (isOutsideColorButton && isOutsideColorMenu) {
+
+      // Check color menu (both desktop and mobile buttons)
+      const isOutsideColorButtonDesktop = !colorButtonRef.current || !colorButtonRef.current.contains(target);
+      const isOutsideColorButtonMobile = !colorButtonMobileRef.current || !colorButtonMobileRef.current.contains(target);
+      const isOutsideColorMenu = !colorMenuRef.current || !colorMenuRef.current.contains(target);
+      if (isOutsideColorButtonDesktop && isOutsideColorButtonMobile && isOutsideColorMenu) {
         setShowColorMenu(false);
       }
-      const isOutsideHighlightButton = highlightButtonRef.current && !highlightButtonRef.current.contains(target);
-      const isOutsideHighlightMenu = highlightMenuRef.current && !highlightMenuRef.current.contains(target);
+
+      // Check highlight menu
+      const isOutsideHighlightButton = !highlightButtonRef.current || !highlightButtonRef.current.contains(target);
+      const isOutsideHighlightMenu = !highlightMenuRef.current || !highlightMenuRef.current.contains(target);
       if (isOutsideHighlightButton && isOutsideHighlightMenu) {
         setShowHighlightMenu(false);
       }
-      const isOutsideMoreButton = moreButtonRef.current && !moreButtonRef.current.contains(target);
-      const isOutsideMoreMenu = moreMenuRef.current && !moreMenuRef.current.contains(target);
+
+      // Check more menu
+      const isOutsideMoreButton = !moreButtonRef.current || !moreButtonRef.current.contains(target);
+      const isOutsideMoreMenu = !moreMenuRef.current || !moreMenuRef.current.contains(target);
       if (isOutsideMoreButton && isOutsideMoreMenu) {
         setShowMoreMenu(false);
       }
     };
+
+    // Add both mouse and touch event listeners for mobile support
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   if (!editor) {
@@ -291,8 +310,15 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         <motion.button
           ref={buttonRef}
           whileHover={{ scale: 1.02 }}
-          onClick={() => setShowHeadingMenu(!showHeadingMenu)}
-          className="flex items-center gap-1 px-1.5 sm:px-2 py-1.5 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all text-xs font-medium"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowHeadingMenu(!showHeadingMenu);
+            setShowColorMenu(false);
+            setShowHighlightMenu(false);
+            setShowMoreMenu(false);
+          }}
+          className="flex items-center gap-1 px-1.5 sm:px-2 py-1.5 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all text-xs font-medium touch-manipulation"
         >
           <Type className="w-3.5 h-3.5" />
           <span className="hidden xs:inline">{getCurrentHeading()}</span>
@@ -314,8 +340,9 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             }}
           >
             <button
-              onClick={() => setHeading('paragraph')}
-              className={`w-full px-3 py-2 text-left hover:bg-white/10 flex items-center gap-2 ${
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setHeading('paragraph'); }}
+              className={`w-full px-3 py-2.5 text-left hover:bg-white/10 flex items-center gap-2 touch-manipulation ${
                 editor.isActive('paragraph') ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-300'
               }`}
             >
@@ -323,8 +350,9 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               <span className="text-sm">{t('editor.toolbar.normal_text')}</span>
             </button>
             <button
-              onClick={() => setHeading(1)}
-              className={`w-full px-3 py-2 text-left hover:bg-white/10 flex items-center gap-2 ${
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setHeading(1); }}
+              className={`w-full px-3 py-2.5 text-left hover:bg-white/10 flex items-center gap-2 touch-manipulation ${
                 editor.isActive('heading', { level: 1 }) ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-300'
               }`}
             >
@@ -332,8 +360,9 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               <span className="text-base font-bold">{t('editor.toolbar.heading1')}</span>
             </button>
             <button
-              onClick={() => setHeading(2)}
-              className={`w-full px-3 py-2 text-left hover:bg-white/10 flex items-center gap-2 ${
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setHeading(2); }}
+              className={`w-full px-3 py-2.5 text-left hover:bg-white/10 flex items-center gap-2 touch-manipulation ${
                 editor.isActive('heading', { level: 2 }) ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-300'
               }`}
             >
@@ -341,8 +370,9 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               <span className="text-sm font-bold">{t('editor.toolbar.heading2')}</span>
             </button>
             <button
-              onClick={() => setHeading(3)}
-              className={`w-full px-3 py-2 text-left hover:bg-white/10 flex items-center gap-2 ${
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setHeading(3); }}
+              className={`w-full px-3 py-2.5 text-left hover:bg-white/10 flex items-center gap-2 touch-manipulation ${
                 editor.isActive('heading', { level: 3 }) ? 'bg-indigo-500/20 text-indigo-300' : 'text-gray-300'
               }`}
             >
@@ -383,15 +413,18 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           <Underline className={smallIconClass} />
         </ToolbarButton>
 
-        {/* Text Color - Always visible */}
+        {/* Text Color - Mobile only */}
         <div className="relative sm:hidden">
           <motion.button
-            ref={colorButtonRef}
+            ref={colorButtonMobileRef}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               setShowColorMenu(!showColorMenu);
               setShowHighlightMenu(false);
+              setShowMoreMenu(false);
             }}
             title={t('editor.toolbar.text_color')}
             className="p-1.5 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all relative flex items-center justify-center"
@@ -399,7 +432,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             <Palette className={smallIconClass} />
             <div
               className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2.5 h-0.5 rounded-full"
-              style={{ backgroundColor: editor.getAttributes('textStyle').color || '#ffffff' }}
+              style={{ backgroundColor: editor.getAttributes('textStyle').color || '#374151' }}
             />
           </motion.button>
         </div>
@@ -416,13 +449,15 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           <Strikethrough className={smallIconClass} />
         </ToolbarButton>
 
-        {/* Text Color */}
+        {/* Text Color - Desktop */}
         <div className="relative">
           <motion.button
             ref={colorButtonRef}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               setShowColorMenu(!showColorMenu);
               setShowHighlightMenu(false);
             }}
@@ -432,7 +467,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             <Palette className={smallIconClass} />
             <div
               className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full"
-              style={{ backgroundColor: editor.getAttributes('textStyle').color || '#ffffff' }}
+              style={{ backgroundColor: editor.getAttributes('textStyle').color || '#374151' }}
             />
           </motion.button>
         </div>
@@ -443,7 +478,9 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             ref={highlightButtonRef}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               setShowHighlightMenu(!showHighlightMenu);
               setShowColorMenu(false);
             }}
@@ -521,8 +558,15 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           ref={moreButtonRef}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => setShowMoreMenu(!showMoreMenu)}
-          className={`p-1.5 sm:p-2 rounded-lg transition-all flex items-center justify-center ${
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowMoreMenu(!showMoreMenu);
+            setShowColorMenu(false);
+            setShowHighlightMenu(false);
+            setShowHeadingMenu(false);
+          }}
+          className={`p-1.5 sm:p-2 rounded-lg transition-all flex items-center justify-center touch-manipulation ${
             showMoreMenu ? 'bg-indigo-600 text-white' : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
           }`}
         >
@@ -687,47 +731,38 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           className="fixed bg-slate-800 border border-white/10 rounded-lg shadow-2xl p-3"
           style={{
             top: colorMenuPosition.top,
-            ...(isRTL ? { right: colorMenuPosition.left } : { left: colorMenuPosition.left }),
+            left: colorMenuPosition.left,
             zIndex: 9999,
           }}
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="text-xs text-gray-400 mb-2">{t('colors.text_color')}</div>
-          <div className="grid grid-cols-6 gap-1.5">
+          <div className="grid grid-cols-6 gap-2">
             {TEXT_COLORS.map((item) => (
               <button
                 key={item.color}
-                onClick={() => {
-                  try {
-                    const chain = editor.chain().focus();
-                    if ('setColor' in chain) {
-                      (chain as any).setColor(item.color).run();
-                    } else {
-                      editor.chain().focus().setMark('textStyle', { color: item.color }).run();
-                    }
-                  } catch (e) {
-                    console.warn('setColor not available:', e);
-                  }
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  editor.chain().focus().setColor(item.color).run();
                   setShowColorMenu(false);
                 }}
                 title={t(`colors.${item.nameKey}`)}
-                className="w-6 h-6 rounded-md border border-white/20 hover:scale-110 transition-transform"
+                className="w-7 h-7 rounded-md border border-white/20 hover:scale-110 transition-transform touch-manipulation active:scale-95"
                 style={{ backgroundColor: item.color }}
               />
             ))}
           </div>
           <button
-            onClick={() => {
-              try {
-                const chain = editor.chain().focus();
-                if ('unsetColor' in chain) {
-                  (chain as any).unsetColor().run();
-                }
-              } catch (e) {
-                console.warn('unsetColor not available:', e);
-              }
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              editor.chain().focus().unsetColor().run();
               setShowColorMenu(false);
             }}
-            className="w-full mt-2 px-2 py-1 text-xs text-gray-400 hover:text-white hover:bg-white/10 rounded"
+            className="w-full mt-2 px-2 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-white/10 rounded touch-manipulation"
           >
             {t('colors.reset_color')}
           </button>
@@ -744,34 +779,29 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           className="fixed bg-slate-800 border border-white/10 rounded-lg shadow-2xl p-3"
           style={{
             top: highlightMenuPosition.top,
-            ...(isRTL ? { right: highlightMenuPosition.left } : { left: highlightMenuPosition.left }),
+            left: highlightMenuPosition.left,
             zIndex: 9999,
           }}
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="text-xs text-gray-400 mb-2">{t('colors.highlight')}</div>
-          <div className="grid grid-cols-4 gap-1.5">
+          <div className="grid grid-cols-4 gap-2">
             {HIGHLIGHT_COLORS.map((item) => (
               <button
                 key={item.color}
-                onClick={() => {
-                  try {
-                    const chain = editor.chain().focus();
-                    if (item.color === 'transparent') {
-                      if ('unsetHighlight' in chain) {
-                        (chain as any).unsetHighlight().run();
-                      }
-                    } else {
-                      if ('toggleHighlight' in chain) {
-                        (chain as any).toggleHighlight({ color: item.color }).run();
-                      }
-                    }
-                  } catch (e) {
-                    console.warn('Highlight not available:', e);
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (item.color === 'transparent') {
+                    editor.chain().focus().unsetHighlight().run();
+                  } else {
+                    editor.chain().focus().toggleHighlight({ color: item.color }).run();
                   }
                   setShowHighlightMenu(false);
                 }}
                 title={t(`colors.${item.nameKey}`)}
-                className={`w-6 h-6 rounded-md border hover:scale-110 transition-transform ${
+                className={`w-7 h-7 rounded-md border hover:scale-110 transition-transform touch-manipulation active:scale-95 ${
                   item.color === 'transparent' ? 'border-dashed border-gray-500' : 'border-white/20'
                 }`}
                 style={{ backgroundColor: item.color === 'transparent' ? 'transparent' : item.color }}

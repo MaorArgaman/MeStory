@@ -25,10 +25,9 @@ import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import CharacterCount from '@tiptap/extension-character-count';
-// TODO: Install these packages: npm install @tiptap/extension-text-style @tiptap/extension-color @tiptap/extension-highlight
-// import TextStyle from '@tiptap/extension-text-style';
-// import Color from '@tiptap/extension-color';
-// import Highlight from '@tiptap/extension-highlight';
+import TextStyle from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
+import Highlight from '@tiptap/extension-highlight';
 import AICopilot from '../components/editor/AICopilot';
 import EditorToolbar from '../components/editor/EditorToolbar';
 import DraftNotes from '../components/editor/DraftNotes';
@@ -155,11 +154,11 @@ export default function BookWritingPage() {
         alignments: ['left', 'center', 'right', 'justify'],
       }),
       CharacterCount,
-      // TextStyle,
-      // Color,
-      // Highlight.configure({
-      //   multicolor: true,
-      // }),
+      TextStyle,
+      Color,
+      Highlight.configure({
+        multicolor: true,
+      }),
     ],
     content: '',
     editorProps: {
