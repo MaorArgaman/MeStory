@@ -24,6 +24,7 @@ import {
   MessageCircle,
   Languages,
   Loader2,
+  Menu,
 } from 'lucide-react';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
@@ -114,6 +115,7 @@ export default function ReaderPage() {
   const [currentChapterIndex, setCurrentChapterIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showControls, setShowControls] = useState(false);
+  const [showToolbar, setShowToolbar] = useState(false);
   const [theme, setTheme] = useState<Theme>('dark-space');
   const [fontSize, setFontSize] = useState(18);
   const [fontFamily, setFontFamily] = useState<'merriweather' | 'crimson'>('merriweather');
@@ -647,107 +649,127 @@ export default function ReaderPage() {
         <X className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: currentTheme.accent }} />
       </motion.button>
 
-      {/* Left Control Buttons - Stack vertically on mobile */}
-      <div className="fixed top-3 sm:top-6 left-3 sm:left-6 z-50 flex flex-col sm:flex-row gap-2 sm:gap-3">
-        {/* Settings Button */}
+      {/* Top Menu Bar */}
+      <div className="fixed top-3 sm:top-4 left-3 sm:left-4 z-50">
+        {/* Menu Toggle Button */}
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           whileHover={{ scale: 1.1 }}
-          onClick={() => setShowControls(!showControls)}
-          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold"
+          onClick={() => setShowToolbar(!showToolbar)}
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold"
           style={{
-            background: 'rgba(0, 0, 0, 0.3)',
+            background: 'rgba(0, 0, 0, 0.5)',
             border: `1px solid ${currentTheme.accent}`,
           }}
         >
-          <Settings
-            className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform ${showControls ? 'rotate-90' : ''}`}
+          <Menu
+            className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform ${showToolbar ? 'rotate-90' : ''}`}
             style={{ color: currentTheme.accent }}
           />
         </motion.button>
 
-        {/* Narration Button */}
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          whileHover={{ scale: 1.1 }}
-          onClick={() => {
-            if (isNarrating) {
-              setShowNarrationControls(!showNarrationControls);
-            } else {
-              startNarration();
-            }
-          }}
-          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold ${
-            isNarrating ? 'animate-pulse' : ''
-          }`}
-          style={{
-            background: isNarrating ? 'rgba(34, 197, 94, 0.3)' : 'rgba(0, 0, 0, 0.3)',
-            border: `1px solid ${isNarrating ? '#22c55e' : currentTheme.accent}`,
-          }}
-        >
-          {isNarrating ? (
-            <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" />
-          ) : (
-            <Mic2 className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: currentTheme.accent }} />
+        {/* Expandable Toolbar */}
+        <AnimatePresence>
+          {showToolbar && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="absolute top-12 left-0 backdrop-blur-md rounded-xl p-2 flex flex-row gap-2"
+              style={{
+                background: 'rgba(0, 0, 0, 0.7)',
+                border: `1px solid ${currentTheme.accent}40`,
+              }}
+            >
+              {/* Settings Button */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                onClick={() => {
+                  setShowControls(!showControls);
+                  setShowToolbar(false);
+                }}
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all hover:bg-white/10"
+                title={t('reader.settings')}
+              >
+                <Settings
+                  className={`w-5 h-5 transition-transform ${showControls ? 'rotate-90' : ''}`}
+                  style={{ color: currentTheme.accent }}
+                />
+              </motion.button>
+
+              {/* Narration Button */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                onClick={() => {
+                  if (isNarrating) {
+                    setShowNarrationControls(!showNarrationControls);
+                  } else {
+                    startNarration();
+                  }
+                  setShowToolbar(false);
+                }}
+                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all hover:bg-white/10 ${
+                  isNarrating ? 'bg-green-500/20' : ''
+                }`}
+                title={t('reader.narration')}
+              >
+                {isNarrating ? (
+                  <Volume2 className="w-5 h-5 text-green-400" />
+                ) : (
+                  <Mic2 className="w-5 h-5" style={{ color: currentTheme.accent }} />
+                )}
+              </motion.button>
+
+              {/* Chat with Author Button */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                onClick={() => {
+                  setShowChatModal(true);
+                  setShowToolbar(false);
+                }}
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all hover:bg-white/10"
+                title={`Chat with ${book.author.name}`}
+              >
+                <MessageCircle className="w-5 h-5" style={{ color: currentTheme.accent }} />
+              </motion.button>
+
+              {/* Share Button */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                onClick={() => {
+                  setShowShareModal(true);
+                  setShowToolbar(false);
+                }}
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all hover:bg-white/10"
+                title={t('reader.share')}
+              >
+                <Share2 className="w-5 h-5" style={{ color: currentTheme.accent }} />
+              </motion.button>
+
+              {/* Translate Button */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                onClick={() => {
+                  handleTranslateBook();
+                  setShowToolbar(false);
+                }}
+                disabled={isTranslating}
+                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all hover:bg-white/10 ${
+                  isTranslating ? 'cursor-wait' : ''
+                } ${showTranslation ? 'bg-green-500/20 ring-1 ring-green-400' : ''}`}
+                title={t('reader.translate_book')}
+              >
+                {isTranslating ? (
+                  <Loader2 className="w-5 h-5 animate-spin" style={{ color: currentTheme.accent }} />
+                ) : (
+                  <Languages className="w-5 h-5" style={{ color: showTranslation ? '#22c55e' : currentTheme.accent }} />
+                )}
+              </motion.button>
+            </motion.div>
           )}
-        </motion.button>
-
-        {/* Chat with Author Button */}
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          whileHover={{ scale: 1.1 }}
-          onClick={() => setShowChatModal(true)}
-          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold group"
-          style={{
-            background: 'rgba(0, 0, 0, 0.3)',
-            border: `1px solid ${currentTheme.accent}`,
-          }}
-          title={`Chat with ${book.author.name}`}
-        >
-          <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: currentTheme.accent }} />
-        </motion.button>
-
-        {/* Share Button */}
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          whileHover={{ scale: 1.1 }}
-          onClick={() => setShowShareModal(true)}
-          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold group"
-          style={{
-            background: 'rgba(0, 0, 0, 0.3)',
-            border: `1px solid ${currentTheme.accent}`,
-          }}
-          title="Share this book"
-        >
-          <Share2 className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: currentTheme.accent }} />
-        </motion.button>
-
-        {/* Translate Button */}
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          whileHover={{ scale: 1.1 }}
-          onClick={handleTranslateBook}
-          disabled={isTranslating}
-          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all hover:shadow-glow-gold group ${
-            isTranslating ? 'cursor-wait' : ''
-          } ${showTranslation ? 'ring-2 ring-green-400' : ''}`}
-          style={{
-            background: showTranslation ? 'rgba(34, 197, 94, 0.3)' : 'rgba(0, 0, 0, 0.3)',
-            border: `1px solid ${showTranslation ? '#22c55e' : currentTheme.accent}`,
-          }}
-          title={t('reader.translate_book')}
-        >
-          {isTranslating ? (
-            <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" style={{ color: currentTheme.accent }} />
-          ) : (
-            <Languages className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: showTranslation ? '#22c55e' : currentTheme.accent }} />
-          )}
-        </motion.button>
+        </AnimatePresence>
       </div>
 
       {/* Control Panel */}
@@ -757,7 +779,7 @@ export default function ReaderPage() {
             initial={{ x: -300, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -300, opacity: 0 }}
-            className="fixed top-32 sm:top-24 left-3 sm:left-6 z-40 max-w-[calc(100vw-24px)] sm:max-w-none"
+            className="fixed top-16 sm:top-20 left-3 sm:left-4 z-40 max-w-[calc(100vw-24px)] sm:max-w-none"
           >
             <GlassCard className="w-64 sm:w-72 p-4 sm:p-6 space-y-4 sm:space-y-6 max-h-[70vh] overflow-y-auto">
               {/* Theme Selection */}
