@@ -162,7 +162,7 @@ export class User {
 
     if (error || !data) return null;
 
-    const user = rowToUser(data as UserRow);
+    const user = rowToUser(data as unknown as UserRow);
     if (!includePassword) {
       user.password = '';
     }
@@ -183,7 +183,7 @@ export class User {
 
     if (error || !data) return null;
 
-    const user = rowToUser(data as UserRow);
+    const user = rowToUser(data as unknown as UserRow);
     if (!includePassword) {
       user.password = '';
     }
