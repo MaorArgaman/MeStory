@@ -393,6 +393,11 @@ export default function ReaderPage() {
     return book?.chapters?.[currentChapterIndex];
   };
 
+  // Get original chapter (always from the original book - used for audio)
+  const getOriginalChapter = () => {
+    return book?.chapters?.[currentChapterIndex];
+  };
+
   // Get current book title (original or translated)
   const getCurrentTitle = () => {
     if (showTranslation && translatedBook) {
@@ -401,7 +406,17 @@ export default function ReaderPage() {
     return book?.title || '';
   };
 
+  // Get the language being displayed (for audio selection)
+  const getDisplayLanguage = (): 'en' | 'he' => {
+    if (showTranslation) {
+      // If showing translation, the language is opposite of original
+      return book?.language === 'he' ? 'en' : 'he';
+    }
+    return book?.language || 'en';
+  };
+
   const currentChapter = getCurrentChapter();
+  const originalChapter = getOriginalChapter();
   const displayTitle = getCurrentTitle();
   const progress = book?.chapters?.length ? ((currentChapterIndex + 1) / book.chapters.length) * 100 : 0;
 
@@ -967,10 +982,12 @@ export default function ReaderPage() {
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="font-display font-bold mb-4 sm:mb-6 lg:mb-8 text-center sm:text-left"
+                  className="font-display font-bold mb-4 sm:mb-6 lg:mb-8"
+                  dir={getDisplayLanguage() === 'he' ? 'rtl' : 'ltr'}
                   style={{
                     color: currentTheme.accent,
                     fontSize: `${Math.max(fontSize * 1.2, fontSize * 1.8 * 0.7)}px`,
+                    textAlign: getDisplayLanguage() === 'he' ? 'right' : 'left',
                   }}
                 >
                   {currentChapter.title}
@@ -982,12 +999,15 @@ export default function ReaderPage() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5 }}
                   className="prose prose-lg max-w-none"
+                  dir={getDisplayLanguage() === 'he' ? 'rtl' : 'ltr'}
                   style={{
                     color: currentTheme.text,
                     fontSize: `${fontSize}px`,
                     lineHeight: 1.8,
-                    fontFamily:
-                      fontFamily === 'merriweather' ? 'Merriweather, serif' : 'Crimson Text, serif',
+                    textAlign: getDisplayLanguage() === 'he' ? 'right' : 'left',
+                    fontFamily: getDisplayLanguage() === 'he'
+                      ? '"Heebo", "David Libre", "Noto Sans Hebrew", sans-serif'
+                      : fontFamily === 'merriweather' ? 'Merriweather, serif' : 'Crimson Text, serif',
                   }}
                   dangerouslySetInnerHTML={{ __html: currentChapter.content }}
                 />
@@ -1186,21 +1206,21 @@ export default function ReaderPage() {
         authorName={book.author.name}
       />
 
-      {/* Audio Player */}
-      {currentChapter?.audio && (
-        currentChapter.audio.maleVoice?.url ||
-        currentChapter.audio.femaleVoice?.url ||
-        currentChapter.audio.maleVoiceEn?.url ||
-        currentChapter.audio.femaleVoiceEn?.url ||
-        currentChapter.audio.maleVoiceHe?.url ||
-        currentChapter.audio.femaleVoiceHe?.url
+      {/* Audio Player - always use original chapter for audio data */}
+      {originalChapter?.audio && (
+        originalChapter.audio.maleVoice?.url ||
+        originalChapter.audio.femaleVoice?.url ||
+        originalChapter.audio.maleVoiceEn?.url ||
+        originalChapter.audio.femaleVoiceEn?.url ||
+        originalChapter.audio.maleVoiceHe?.url ||
+        originalChapter.audio.femaleVoiceHe?.url
       ) && (
         <AudioPlayer
           bookId={book._id}
-          chapterId={currentChapter._id}
-          chapterTitle={currentChapter.title}
-          chapterAudio={currentChapter.audio}
-          bookLanguage={book.language || 'en'}
+          chapterId={originalChapter._id}
+          chapterTitle={currentChapter?.title || originalChapter.title}
+          chapterAudio={originalChapter.audio}
+          bookLanguage={getDisplayLanguage()}
           onChapterChange={(direction) => {
             if (direction === 'next') {
               goToNextChapter();
