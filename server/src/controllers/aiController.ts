@@ -391,7 +391,50 @@ export const translateBook = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // Translate book title
+    // Determine book's original language
+    const bookOriginalLang = book.language === 'he' ? 'hebrew' : 'english';
+
+    // If translating back to original language, return original content
+    if (targetLanguage === bookOriginalLang) {
+      res.status(200).json({
+        success: true,
+        data: {
+          translatedTitle: book.title,
+          translatedChapters: book.chapters.map((ch: any) => ({
+            _id: ch._id,
+            order: ch.order,
+            title: ch.title,
+            content: ch.content,
+          })),
+          targetLanguage,
+          sourceLanguage: targetLanguage === 'hebrew' ? 'english' : 'hebrew',
+          isOriginal: true,
+        },
+      });
+      return;
+    }
+
+    // Check if we have cached translations
+    const cachedTranslation = targetLanguage === 'english'
+      ? book.translations?.english
+      : book.translations?.hebrew;
+
+    if (cachedTranslation && cachedTranslation.chapters.length > 0) {
+      // Use cached translation
+      res.status(200).json({
+        success: true,
+        data: {
+          translatedTitle: cachedTranslation.title,
+          translatedChapters: cachedTranslation.chapters,
+          targetLanguage,
+          sourceLanguage: targetLanguage === 'hebrew' ? 'english' : 'hebrew',
+          cached: true,
+        },
+      });
+      return;
+    }
+
+    // No cached translation, generate new one
     const titleTranslation = await translateChapter(book.title, book.title, targetLanguage);
 
     // Translate all chapters
@@ -409,6 +452,25 @@ export const translateBook = async (req: Request, res: Response): Promise<void> 
         content: translation.translatedContent,
       });
     }
+
+    // Save translation for future use
+    const translations = book.translations || {};
+    if (targetLanguage === 'english') {
+      translations.english = {
+        title: titleTranslation.translatedTitle,
+        chapters: translatedChapters,
+        generatedAt: new Date().toISOString(),
+      };
+    } else {
+      translations.hebrew = {
+        title: titleTranslation.translatedTitle,
+        chapters: translatedChapters,
+        generatedAt: new Date().toISOString(),
+      };
+    }
+
+    // Update book with new translations
+    await Book.findByIdAndUpdate(bookId, { translations });
 
     res.status(200).json({
       success: true,

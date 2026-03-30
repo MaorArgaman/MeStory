@@ -124,6 +124,21 @@ export default function AudioPlayer({
     }
   }, [chapterId, audioDuration, initialPosition]);
 
+  // Reset and reload when language changes (e.g., when translation is toggled)
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      // Pause current audio
+      audio.pause();
+      setIsPlaying(false);
+      // Reset position
+      setCurrentTime(0);
+      audio.currentTime = 0;
+      // Load new source
+      audio.load();
+    }
+  }, [bookLanguage]);
+
   // Set initial position when audio loads
   useEffect(() => {
     const audio = audioRef.current;
