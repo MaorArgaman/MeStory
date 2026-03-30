@@ -230,6 +230,7 @@ export default function DesignStudioPage() {
   const navigate = useNavigate();
   const { t } = useTranslation('common');
   const { language } = useLanguage();
+  const isRTL = language === 'he';
   const [book, setBook] = useState<BookData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -1068,7 +1069,7 @@ export default function DesignStudioPage() {
       </div>
 
       {/* Mobile Controls Toggle */}
-      <div className="lg:hidden fixed bottom-6 left-4 z-40">
+      <div className={`lg:hidden fixed bottom-6 ${isRTL ? 'right-4' : 'left-4'} z-40`}>
         <button
           onClick={() => setShowMobileControls(!showMobileControls)}
           className="glass-strong p-4 rounded-full border border-magic-gold/30 shadow-lg shadow-magic-gold/10 min-w-[56px] min-h-[56px] flex items-center justify-center active:scale-95 transition-transform"
@@ -1088,12 +1089,13 @@ export default function DesignStudioPage() {
 
       {/* Split Screen Layout */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Left Panel - Controls */}
+        {/* Left Panel - Controls (Right in RTL) */}
         <div className={`
-          ${showMobileControls ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          ${showMobileControls ? 'translate-x-0' : isRTL ? 'translate-x-full' : '-translate-x-full'} lg:translate-x-0
           fixed lg:relative z-50 lg:z-auto
+          ${isRTL ? 'right-0 lg:right-auto' : 'left-0 lg:left-auto'}
           w-4/5 max-w-[320px] sm:w-80 lg:w-80 xl:w-96 h-full max-h-screen
-          glass-strong border-r border-white/10 p-4 sm:p-6 overflow-y-auto
+          glass-strong ${isRTL ? 'border-l lg:border-r lg:border-l-0' : 'border-r'} border-white/10 p-4 sm:p-6 overflow-y-auto
           transition-transform duration-300 ease-in-out
         `}>
           {/* Mobile Close Button */}
