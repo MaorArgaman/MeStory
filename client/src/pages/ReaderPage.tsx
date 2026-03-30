@@ -483,35 +483,27 @@ export default function ReaderPage() {
 
   // Detect if book content is primarily Hebrew or English
   const detectLanguage = (text: string): 'hebrew' | 'english' => {
-    const hebrewRegex = /[\u0590-\u05FF]/;
-    const hebrewMatches = (text.match(hebrewRegex) || []).length;
-    const englishRegex = /[a-zA-Z]/;
-    const englishMatches = (text.match(englishRegex) || []).length;
+    // Strip HTML tags first to avoid counting tag names as English
+    const textWithoutHtml = text.replace(/<[^>]*>/g, '');
+    const hebrewRegex = /[\u0590-\u05FF]/g;
+    const hebrewMatches = (textWithoutHtml.match(hebrewRegex) || []).length;
+    const englishRegex = /[a-zA-Z]/g;
+    const englishMatches = (textWithoutHtml.match(englishRegex) || []).length;
     return hebrewMatches > englishMatches ? 'hebrew' : 'english';
   };
 
   // Translate the book
   const handleTranslateBook = async () => {
-    console.log('[DEBUG] handleTranslateBook called', {
-      hasBook: !!book,
-      bookId,
-      showTranslation,
-      hasTranslatedBook: !!translatedBook,
-      bookTranslations: book?.translations ? Object.keys(book.translations) : 'none',
-    });
-
     if (!book || !bookId) return;
 
     // If already showing translation, toggle back to original
     if (showTranslation && translatedBook) {
-      console.log('[DEBUG] Toggling translation OFF');
       setShowTranslation(false);
       return;
     }
 
     // If we already have a translation in state, just show it
     if (translatedBook) {
-      console.log('[DEBUG] Using existing translatedBook, showing translation');
       setShowTranslation(true);
       return;
     }
@@ -526,16 +518,8 @@ export default function ReaderPage() {
       ? book.translations?.english
       : book.translations?.hebrew;
 
-    console.log('[DEBUG] Translation check:', {
-      targetLanguage,
-      hasTranslations: !!book.translations,
-      savedTranslation: savedTranslation ? { title: savedTranslation.title, chaptersCount: savedTranslation.chapters?.length } : null,
-      firstChapterContent: savedTranslation?.chapters?.[0]?.content?.substring(0, 100),
-    });
-
     if (savedTranslation && savedTranslation.chapters?.length > 0) {
       // Use saved translation directly - instant!
-      alert('Setting translatedBook - first chapter: ' + savedTranslation.chapters[0]?.content?.substring(0, 100));
       setTranslatedBook({
         title: savedTranslation.title,
         chapters: savedTranslation.chapters,
