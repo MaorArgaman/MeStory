@@ -391,7 +391,6 @@ export default function ReaderPage() {
       if (response.data.success) {
         // Handle both owner format (data.book) and public format (data directly)
         const bookData = response.data.data.book || response.data.data;
-        console.log('[Book Debug] API response - translations:', bookData.translations);
         setBook(bookData);
       }
     } catch (error) {
@@ -405,15 +404,10 @@ export default function ReaderPage() {
 
   // Get current chapter (original or translated)
   const getCurrentChapter = () => {
-    console.log('[getCurrentChapter] showTranslation:', showTranslation, 'translatedBook:', !!translatedBook);
     if (showTranslation && translatedBook) {
-      const chapter = translatedBook.chapters[currentChapterIndex];
-      console.log('[getCurrentChapter] Returning TRANSLATED chapter:', chapter?.title, chapter?.content?.substring(0, 50));
-      return chapter;
+      return translatedBook.chapters[currentChapterIndex];
     }
-    const chapter = book?.chapters?.[currentChapterIndex];
-    console.log('[getCurrentChapter] Returning ORIGINAL chapter:', chapter?.title);
-    return chapter;
+    return book?.chapters?.[currentChapterIndex];
   };
 
   // Get original chapter (always from the original book - used for audio)
@@ -516,38 +510,18 @@ export default function ReaderPage() {
     const currentLanguage = detectLanguage(firstChapterContent);
     const targetLanguage = currentLanguage === 'hebrew' ? 'english' : 'hebrew';
 
-    // Debug logging
-    console.log('[Translation Debug]', {
-      bookLanguage: book.language,
-      detectedLanguage: currentLanguage,
-      targetLanguage,
-      hasTranslations: !!book.translations,
-      translationKeys: book.translations ? Object.keys(book.translations) : [],
-      englishTranslation: book.translations?.english ? `${book.translations.english.chapters?.length} chapters` : 'none',
-      hebrewTranslation: book.translations?.hebrew ? `${book.translations.hebrew.chapters?.length} chapters` : 'none',
-    });
-
     // Check if book already has pre-saved translation
     const savedTranslation = targetLanguage === 'english'
       ? book.translations?.english
       : book.translations?.hebrew;
 
-    console.log('[Translation Debug] savedTranslation:', savedTranslation ? `found ${savedTranslation.chapters?.length} chapters` : 'NOT FOUND');
-    if (savedTranslation) {
-      console.log('[Translation Debug] savedTranslation.title:', savedTranslation.title);
-      console.log('[Translation Debug] savedTranslation.chapters[0]:', savedTranslation.chapters?.[0]?.title, savedTranslation.chapters?.[0]?.content?.substring(0, 100));
-    }
-
     if (savedTranslation && savedTranslation.chapters?.length > 0) {
       // Use saved translation directly - instant!
-      console.log('[Translation Debug] Setting translatedBook with saved translation');
-      const translatedData = {
+      setTranslatedBook({
         title: savedTranslation.title,
         chapters: savedTranslation.chapters,
         targetLanguage,
-      };
-      console.log('[Translation Debug] translatedData:', translatedData);
-      setTranslatedBook(translatedData);
+      });
       setShowTranslation(true);
       toast.success(
         targetLanguage === 'hebrew'

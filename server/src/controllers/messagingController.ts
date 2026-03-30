@@ -15,20 +15,11 @@ import { sendMessageNotification } from '../services/socketService';
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * BUG-005: HTML escape function to prevent XSS attacks
- * Escapes dangerous HTML characters in user input
+ * Note: XSS protection is handled by React on the client side.
+ * React automatically escapes text content when rendering.
+ * No server-side escaping is needed for content that will be displayed via React.
+ * This avoids double-escaping issues where "&lt;" would display as "&lt;" instead of "<".
  */
-const escapeHtml = (text: string): string => {
-  const htmlEscapes: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#x27;',
-    '/': '&#x2F;',
-  };
-  return text.replace(/[&<>"'/]/g, (char) => htmlEscapes[char]);
-};
 
 /**
  * Start or get existing conversation with an author about a book
@@ -193,14 +184,14 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    // BUG-005: Sanitize content to prevent XSS attacks
-    const sanitizedContent = escapeHtml(content.trim());
+    // Content is stored as-is; XSS protection is handled by React on the client
+    const messageContent = content.trim();
 
     // Create message
     const message = await Message.create({
       conversation: conversationId,
       sender: req.user.id,
-      content: sanitizedContent,
+      content: messageContent,
     });
 
     // Update conversation's last message and unread count
@@ -225,7 +216,7 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
         otherParticipantId,
         req.user!.id,
         conversationId,
-        sanitizedContent,
+        messageContent,
         bookTitle
       ).catch((err) => console.error('Failed to send message notification:', err));
 
@@ -236,7 +227,7 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
           conversationId,
           message: {
             _id: message._id,
-            content: sanitizedContent,
+            content: messageContent,
             sender: {
               _id: sender.id,
               name: sender.name,
@@ -251,7 +242,7 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
     // Update conversation with lastMessage and unreadCount
     await Conversation.findByIdAndUpdate(conversationId, {
       lastMessage: {
-        content: sanitizedContent.substring(0, 100),
+        content: messageContent.substring(0, 100),
         sender: req.user.id,
         sentAt: new Date().toISOString(),
       },

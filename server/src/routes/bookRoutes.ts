@@ -11,6 +11,8 @@ import {
   getPublicBooks,
   likeBook,
   addReview,
+  updateReview,
+  deleteReview,
   getBookReviews,
   uploadCoverImage,
   uploadManuscript,
@@ -146,6 +148,20 @@ router.post(
   '/:id/review',
   runValidation(mongoIdValidation),
   addReview as any
+);
+
+// PUT /api/books/:id/review - Update user's review
+router.put(
+  '/:id/review',
+  runValidation(mongoIdValidation),
+  updateReview as any
+);
+
+// DELETE /api/books/:id/review - Delete user's review
+router.delete(
+  '/:id/review',
+  runValidation(mongoIdValidation),
+  deleteReview as any
 );
 
 // POST /api/books/:id/upload-cover - Upload cover image

@@ -38,129 +38,250 @@ const DEFAULT_MALE_VOICE: GeminiVoiceName = 'Charon';
 const DEFAULT_FEMALE_VOICE: GeminiVoiceName = 'Aoede';
 
 /**
- * Generate TTS audio for all chapters
- * Creates 4 versions for each chapter: English male/female + Hebrew male/female
+ * Generate translations and TTS audio for a book
+ * CORRECT ORDER:
+ * 1. Generate audio for ORIGINAL language (male + female)
+ * 2. Generate translation to OTHER language
+ * 3. Generate audio for TRANSLATED content (male + female)
+ *
  * Runs asynchronously to not block the publish process
  */
-async function generateAllChapterAudio(
+async function generateTranslationsAndAudio(
   bookId: string,
-  chapters: IChapter[]
+  bookTitle: string,
+  chapters: IChapter[],
+  bookLanguage: string
 ): Promise<void> {
-  console.log(`Starting TTS generation for book ${bookId} with ${chapters.length} chapters (4 versions each)`);
+  console.log(`[Publish] Starting translation & audio generation for book ${bookId}`);
+  console.log(`[Publish] Book language: ${bookLanguage}, Chapters: ${chapters.length}`);
 
-  const updatedChapters: IChapter[] = [];
+  const isHebrew = bookLanguage === 'he' || bookLanguage === 'hebrew';
+  const targetLanguage = isHebrew ? 'english' : 'hebrew';
+  const translationKey = isHebrew ? 'english' : 'hebrew';
+
+  // STEP 1: Generate audio for ORIGINAL language
+  console.log(`[Publish] STEP 1: Generating audio for original language (${bookLanguage})...`);
+
+  let updatedChapters: IChapter[] = [];
 
   for (const chapter of chapters) {
     const chapterId = chapter._id || `chapter-${chapter.order}`;
-    const audio: IChapterAudio = chapter.audio || {};
+    const audio: IChapterAudio = {};
+    const originalContent = chapter.content || '';
 
-    // Generate all 4 versions: English male, English female, Hebrew male, Hebrew female
-
-    // 1. English male voice
-    if (!audio.maleVoiceEn?.url) {
+    if (isHebrew) {
+      // Book is in Hebrew - generate Hebrew audio from original content
       try {
-        console.log(`Generating English male voice for chapter: ${chapter.title}`);
+        console.log(`  - Hebrew male voice for: ${chapter.title}`);
         const result = await generateChapterAudio(
-          bookId,
-          `${chapterId}-en-male`,
-          chapter.content || '',
-          { voice: DEFAULT_MALE_VOICE, authorGender: 'male', language: 'en' }
-        );
-        audio.maleVoiceEn = {
-          url: result.audioUrl,
-          duration: result.duration,
-          voice: result.voice,
-          language: 'en',
-          generatedAt: new Date().toISOString(),
-        };
-        audio.maleVoice = audio.maleVoiceEn; // Legacy
-      } catch (err) {
-        console.error(`Failed to generate English male voice for chapter ${chapter.title}:`, err);
-      }
-    }
-
-    // 2. English female voice
-    if (!audio.femaleVoiceEn?.url) {
-      try {
-        console.log(`Generating English female voice for chapter: ${chapter.title}`);
-        const result = await generateChapterAudio(
-          bookId,
-          `${chapterId}-en-female`,
-          chapter.content || '',
-          { voice: DEFAULT_FEMALE_VOICE, authorGender: 'female', language: 'en' }
-        );
-        audio.femaleVoiceEn = {
-          url: result.audioUrl,
-          duration: result.duration,
-          voice: result.voice,
-          language: 'en',
-          generatedAt: new Date().toISOString(),
-        };
-        audio.femaleVoice = audio.femaleVoiceEn; // Legacy
-      } catch (err) {
-        console.error(`Failed to generate English female voice for chapter ${chapter.title}:`, err);
-      }
-    }
-
-    // 3. Hebrew male voice
-    if (!audio.maleVoiceHe?.url) {
-      try {
-        console.log(`Generating Hebrew male voice for chapter: ${chapter.title}`);
-        const result = await generateChapterAudio(
-          bookId,
-          `${chapterId}-he-male`,
-          chapter.content || '',
+          bookId, `${chapterId}-he-male`, originalContent,
           { voice: DEFAULT_MALE_VOICE, authorGender: 'male', language: 'he' }
         );
         audio.maleVoiceHe = {
-          url: result.audioUrl,
-          duration: result.duration,
-          voice: result.voice,
-          language: 'he',
-          generatedAt: new Date().toISOString(),
+          url: result.audioUrl, duration: result.duration, voice: result.voice,
+          language: 'he', generatedAt: new Date().toISOString(),
         };
       } catch (err) {
-        console.error(`Failed to generate Hebrew male voice for chapter ${chapter.title}:`, err);
+        console.error(`    Failed: ${err}`);
       }
-    }
 
-    // 4. Hebrew female voice
-    if (!audio.femaleVoiceHe?.url) {
       try {
-        console.log(`Generating Hebrew female voice for chapter: ${chapter.title}`);
+        console.log(`  - Hebrew female voice for: ${chapter.title}`);
         const result = await generateChapterAudio(
-          bookId,
-          `${chapterId}-he-female`,
-          chapter.content || '',
+          bookId, `${chapterId}-he-female`, originalContent,
           { voice: DEFAULT_FEMALE_VOICE, authorGender: 'female', language: 'he' }
         );
         audio.femaleVoiceHe = {
-          url: result.audioUrl,
-          duration: result.duration,
-          voice: result.voice,
-          language: 'he',
-          generatedAt: new Date().toISOString(),
+          url: result.audioUrl, duration: result.duration, voice: result.voice,
+          language: 'he', generatedAt: new Date().toISOString(),
         };
       } catch (err) {
-        console.error(`Failed to generate Hebrew female voice for chapter ${chapter.title}:`, err);
+        console.error(`    Failed: ${err}`);
+      }
+    } else {
+      // Book is in English - generate English audio from original content
+      try {
+        console.log(`  - English male voice for: ${chapter.title}`);
+        const result = await generateChapterAudio(
+          bookId, `${chapterId}-en-male`, originalContent,
+          { voice: DEFAULT_MALE_VOICE, authorGender: 'male', language: 'en' }
+        );
+        audio.maleVoiceEn = {
+          url: result.audioUrl, duration: result.duration, voice: result.voice,
+          language: 'en', generatedAt: new Date().toISOString(),
+        };
+        audio.maleVoice = audio.maleVoiceEn; // Legacy
+      } catch (err) {
+        console.error(`    Failed: ${err}`);
+      }
+
+      try {
+        console.log(`  - English female voice for: ${chapter.title}`);
+        const result = await generateChapterAudio(
+          bookId, `${chapterId}-en-female`, originalContent,
+          { voice: DEFAULT_FEMALE_VOICE, authorGender: 'female', language: 'en' }
+        );
+        audio.femaleVoiceEn = {
+          url: result.audioUrl, duration: result.duration, voice: result.voice,
+          language: 'en', generatedAt: new Date().toISOString(),
+        };
+        audio.femaleVoice = audio.femaleVoiceEn; // Legacy
+      } catch (err) {
+        console.error(`    Failed: ${err}`);
       }
     }
 
-    updatedChapters.push({
-      ...chapter,
-      audio,
-    });
+    updatedChapters.push({ ...chapter, audio });
   }
 
-  // Update book with audio URLs
+  // Save original audio to database
+  await Book.findByIdAndUpdate(bookId, { chapters: updatedChapters });
+  console.log(`[Publish] Original language audio saved.`);
+
+  // STEP 2: Generate translation
+  console.log(`[Publish] STEP 2: Generating translation to ${targetLanguage}...`);
+
+  const translatedChapters: any[] = [];
+  let translatedTitle = '';
+
   try {
-    await Book.findByIdAndUpdate(bookId, {
-      chapters: updatedChapters,
-    });
-    console.log(`TTS generation completed for book ${bookId}`);
+    // Translate title
+    const titleTranslation = await translateChapter(bookTitle, bookTitle, targetLanguage);
+    translatedTitle = titleTranslation.translatedTitle;
+    console.log(`  Title: "${bookTitle}" → "${translatedTitle}"`);
+
+    // Translate chapters
+    for (const chapter of chapters) {
+      try {
+        console.log(`  Translating: ${chapter.title}...`);
+        const translation = await translateChapter(
+          chapter.content || '',
+          chapter.title || `Chapter ${chapter.order}`,
+          targetLanguage
+        );
+        translatedChapters.push({
+          _id: chapter._id || `chapter-${chapter.order}`,
+          title: translation.translatedTitle,
+          content: translation.translatedContent,
+          order: chapter.order,
+        });
+        console.log(`    → ${translation.translatedTitle}`);
+      } catch (err) {
+        console.error(`    Failed: ${err}`);
+        translatedChapters.push({
+          _id: chapter._id || `chapter-${chapter.order}`,
+          title: chapter.title,
+          content: chapter.content || '',
+          order: chapter.order,
+        });
+      }
+    }
+
+    // Save translations to database
+    const translations: IBookTranslations = {};
+    translations[translationKey as keyof IBookTranslations] = {
+      title: translatedTitle,
+      chapters: translatedChapters,
+      generatedAt: new Date().toISOString(),
+    };
+    await Book.findByIdAndUpdate(bookId, { translations });
+    console.log(`[Publish] Translation saved.`);
   } catch (err) {
-    console.error(`Failed to update book with audio URLs:`, err);
+    console.error(`[Publish] Translation failed:`, err);
+    return; // Can't continue without translation
   }
+
+  // STEP 3: Generate audio for TRANSLATED content
+  console.log(`[Publish] STEP 3: Generating audio for translated content (${targetLanguage})...`);
+
+  // Re-fetch book to get latest chapters with original audio
+  const bookWithAudio = await Book.findById(bookId);
+  if (!bookWithAudio) {
+    console.error(`[Publish] Book not found after audio generation`);
+    return;
+  }
+
+  const finalChapters: IChapter[] = [];
+
+  for (let i = 0; i < bookWithAudio.chapters.length; i++) {
+    const chapter = bookWithAudio.chapters[i];
+    const translatedChapter = translatedChapters[i];
+    const translatedContent = translatedChapter?.content || '';
+    const audio: IChapterAudio = chapter.audio || {};
+    const chapterId = chapter._id || `chapter-${chapter.order}`;
+
+    if (isHebrew) {
+      // Book is in Hebrew - generate English audio from TRANSLATED content
+      if (translatedContent) {
+        try {
+          console.log(`  - English male voice (translated) for: ${chapter.title}`);
+          const result = await generateChapterAudio(
+            bookId, `${chapterId}-en-male`, translatedContent,
+            { voice: DEFAULT_MALE_VOICE, authorGender: 'male', language: 'en' }
+          );
+          audio.maleVoiceEn = {
+            url: result.audioUrl, duration: result.duration, voice: result.voice,
+            language: 'en', generatedAt: new Date().toISOString(),
+          };
+          audio.maleVoice = audio.maleVoiceEn; // Legacy
+        } catch (err) {
+          console.error(`    Failed: ${err}`);
+        }
+
+        try {
+          console.log(`  - English female voice (translated) for: ${chapter.title}`);
+          const result = await generateChapterAudio(
+            bookId, `${chapterId}-en-female`, translatedContent,
+            { voice: DEFAULT_FEMALE_VOICE, authorGender: 'female', language: 'en' }
+          );
+          audio.femaleVoiceEn = {
+            url: result.audioUrl, duration: result.duration, voice: result.voice,
+            language: 'en', generatedAt: new Date().toISOString(),
+          };
+          audio.femaleVoice = audio.femaleVoiceEn; // Legacy
+        } catch (err) {
+          console.error(`    Failed: ${err}`);
+        }
+      }
+    } else {
+      // Book is in English - generate Hebrew audio from TRANSLATED content
+      if (translatedContent) {
+        try {
+          console.log(`  - Hebrew male voice (translated) for: ${chapter.title}`);
+          const result = await generateChapterAudio(
+            bookId, `${chapterId}-he-male`, translatedContent,
+            { voice: DEFAULT_MALE_VOICE, authorGender: 'male', language: 'he' }
+          );
+          audio.maleVoiceHe = {
+            url: result.audioUrl, duration: result.duration, voice: result.voice,
+            language: 'he', generatedAt: new Date().toISOString(),
+          };
+        } catch (err) {
+          console.error(`    Failed: ${err}`);
+        }
+
+        try {
+          console.log(`  - Hebrew female voice (translated) for: ${chapter.title}`);
+          const result = await generateChapterAudio(
+            bookId, `${chapterId}-he-female`, translatedContent,
+            { voice: DEFAULT_FEMALE_VOICE, authorGender: 'female', language: 'he' }
+          );
+          audio.femaleVoiceHe = {
+            url: result.audioUrl, duration: result.duration, voice: result.voice,
+            language: 'he', generatedAt: new Date().toISOString(),
+          };
+        } catch (err) {
+          console.error(`    Failed: ${err}`);
+        }
+      }
+    }
+
+    finalChapters.push({ ...chapter, audio });
+  }
+
+  // Save final chapters with all audio
+  await Book.findByIdAndUpdate(bookId, { chapters: finalChapters });
+  console.log(`[Publish] All audio saved. Translation & audio generation complete!`);
 }
 
 /**
@@ -968,16 +1089,11 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
       publishingStatus: updatedPublishingStatus,
     });
 
-    // Generate TTS audio for all chapters (4 versions: EN/HE x male/female)
+    // Generate translations and TTS audio (4 versions: EN/HE x male/female)
+    // CORRECT ORDER: Original audio → Translation → Translated audio
     // This runs in the background to not block the publish response
-    generateAllChapterAudio(id, book.chapters).catch((err) =>
-      console.error('Failed to generate chapter audio:', err)
-    );
-
-    // Generate translations (Hebrew books get English translation and vice versa)
-    // This runs in the background to not block the publish response
-    generateBookTranslations(id, book.title, book.chapters, book.language || 'en').catch((err) =>
-      console.error('Failed to generate book translations:', err)
+    generateTranslationsAndAudio(id, book.title, book.chapters, book.language || 'en').catch((err) =>
+      console.error('Failed to generate translations and audio:', err)
     );
 
     // Update user's author profile
@@ -1586,6 +1702,15 @@ export const addReview = async (req: AuthRequest, res: Response): Promise<void> 
       return;
     }
 
+    // Authors cannot review their own books
+    if (book.author === req.user.id) {
+      res.status(400).json({
+        success: false,
+        error: 'Authors cannot review their own books',
+      });
+      return;
+    }
+
     // Check if user already reviewed this book
     const reviews = book.reviews || [];
     const existingReview = reviews.find(
@@ -1616,7 +1741,7 @@ export const addReview = async (req: AuthRequest, res: Response): Promise<void> 
       userName: user.name,
       rating,
       comment: comment.trim(),
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     };
     const updatedReviews = [...reviews, newReview];
 
@@ -1698,6 +1823,199 @@ export const getBookReviews = async (req: Request, res: Response): Promise<void>
     res.status(500).json({
       success: false,
       error: 'Failed to get reviews',
+    });
+  }
+};
+
+/**
+ * Update a review
+ * PUT /api/books/:id/review
+ */
+export const updateReview = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: 'Authentication required',
+      });
+      return;
+    }
+
+    const { id } = req.params;
+    const { rating, comment } = req.body;
+
+    // Validation
+    if (rating !== undefined && (rating < 1 || rating > 5)) {
+      res.status(400).json({
+        success: false,
+        error: 'Rating must be between 1 and 5',
+      });
+      return;
+    }
+
+    if (comment !== undefined && comment.length > 1000) {
+      res.status(400).json({
+        success: false,
+        error: 'Comment must not exceed 1000 characters',
+      });
+      return;
+    }
+
+    if (!isValidUUID(id)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid book ID',
+      });
+      return;
+    }
+
+    const book = await Book.findById(id);
+
+    if (!book) {
+      res.status(404).json({
+        success: false,
+        error: 'Book not found',
+      });
+      return;
+    }
+
+    // Find user's review
+    const reviews = book.reviews || [];
+    const reviewIndex = reviews.findIndex(
+      (review: any) => review.user === req.user!.id
+    );
+
+    if (reviewIndex === -1) {
+      res.status(404).json({
+        success: false,
+        error: 'Review not found',
+      });
+      return;
+    }
+
+    // Update review
+    const updatedReview = {
+      ...reviews[reviewIndex],
+      rating: rating !== undefined ? rating : reviews[reviewIndex].rating,
+      comment: comment !== undefined ? comment.trim() : reviews[reviewIndex].comment,
+      updatedAt: new Date().toISOString(),
+    };
+    reviews[reviewIndex] = updatedReview;
+
+    // Recalculate statistics
+    const totalReviews = reviews.length;
+    const totalRating = reviews.reduce((sum: number, review: any) => sum + review.rating, 0);
+    const averageRating = totalRating / totalReviews;
+
+    const updatedStatistics = {
+      ...book.statistics,
+      totalReviews,
+      averageRating,
+    };
+
+    await Book.findByIdAndUpdate(id, {
+      reviews,
+      statistics: updatedStatistics,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Review updated successfully',
+      data: {
+        review: updatedReview,
+        averageRating,
+        totalReviews,
+      },
+    });
+  } catch (error) {
+    console.error('Update review error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update review',
+    });
+  }
+};
+
+/**
+ * Delete a review
+ * DELETE /api/books/:id/review
+ */
+export const deleteReview = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        error: 'Authentication required',
+      });
+      return;
+    }
+
+    const { id } = req.params;
+
+    if (!isValidUUID(id)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid book ID',
+      });
+      return;
+    }
+
+    const book = await Book.findById(id);
+
+    if (!book) {
+      res.status(404).json({
+        success: false,
+        error: 'Book not found',
+      });
+      return;
+    }
+
+    // Find user's review
+    const reviews = book.reviews || [];
+    const reviewIndex = reviews.findIndex(
+      (review: any) => review.user === req.user!.id
+    );
+
+    if (reviewIndex === -1) {
+      res.status(404).json({
+        success: false,
+        error: 'Review not found',
+      });
+      return;
+    }
+
+    // Remove review
+    reviews.splice(reviewIndex, 1);
+
+    // Recalculate statistics
+    const totalReviews = reviews.length;
+    const totalRating = reviews.reduce((sum: number, review: any) => sum + review.rating, 0);
+    const averageRating = totalReviews > 0 ? totalRating / totalReviews : 0;
+
+    const updatedStatistics = {
+      ...book.statistics,
+      totalReviews,
+      averageRating,
+    };
+
+    await Book.findByIdAndUpdate(id, {
+      reviews,
+      statistics: updatedStatistics,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Review deleted successfully',
+      data: {
+        averageRating,
+        totalReviews,
+      },
+    });
+  } catch (error) {
+    console.error('Delete review error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete review',
     });
   }
 };
