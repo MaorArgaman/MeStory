@@ -389,6 +389,7 @@ export default function ReaderPage() {
       if (response.data.success) {
         // Handle both owner format (data.book) and public format (data directly)
         const bookData = response.data.data.book || response.data.data;
+        console.log('[Book Debug] API response - translations:', bookData.translations);
         setBook(bookData);
       }
     } catch (error) {
@@ -508,10 +509,23 @@ export default function ReaderPage() {
     const currentLanguage = detectLanguage(firstChapterContent);
     const targetLanguage = currentLanguage === 'hebrew' ? 'english' : 'hebrew';
 
+    // Debug logging
+    console.log('[Translation Debug]', {
+      bookLanguage: book.language,
+      detectedLanguage: currentLanguage,
+      targetLanguage,
+      hasTranslations: !!book.translations,
+      translationKeys: book.translations ? Object.keys(book.translations) : [],
+      englishTranslation: book.translations?.english ? `${book.translations.english.chapters?.length} chapters` : 'none',
+      hebrewTranslation: book.translations?.hebrew ? `${book.translations.hebrew.chapters?.length} chapters` : 'none',
+    });
+
     // Check if book already has pre-saved translation
     const savedTranslation = targetLanguage === 'english'
       ? book.translations?.english
       : book.translations?.hebrew;
+
+    console.log('[Translation Debug] savedTranslation:', savedTranslation ? `found ${savedTranslation.chapters?.length} chapters` : 'NOT FOUND');
 
     if (savedTranslation && savedTranslation.chapters?.length > 0) {
       // Use saved translation directly - instant!
