@@ -405,9 +405,13 @@ export default function ReaderPage() {
   // Get current chapter (original or translated)
   const getCurrentChapter = () => {
     if (showTranslation && translatedBook) {
-      return translatedBook.chapters[currentChapterIndex];
+      const chapter = translatedBook.chapters[currentChapterIndex];
+      console.log('[DEBUG] getCurrentChapter returning TRANSLATED:', chapter?.title, chapter?.content?.substring(0, 50));
+      return chapter;
     }
-    return book?.chapters?.[currentChapterIndex];
+    const chapter = book?.chapters?.[currentChapterIndex];
+    console.log('[DEBUG] getCurrentChapter returning ORIGINAL:', chapter?.title);
+    return chapter;
   };
 
   // Get original chapter (always from the original book - used for audio)
@@ -515,8 +519,19 @@ export default function ReaderPage() {
       ? book.translations?.english
       : book.translations?.hebrew;
 
+    console.log('[DEBUG] Translation check:', {
+      targetLanguage,
+      hasTranslations: !!book.translations,
+      savedTranslation: savedTranslation ? { title: savedTranslation.title, chaptersCount: savedTranslation.chapters?.length } : null,
+      firstChapterContent: savedTranslation?.chapters?.[0]?.content?.substring(0, 100),
+    });
+
     if (savedTranslation && savedTranslation.chapters?.length > 0) {
       // Use saved translation directly - instant!
+      console.log('[DEBUG] Setting translatedBook with:', {
+        title: savedTranslation.title,
+        chapters: savedTranslation.chapters.map(c => ({ title: c.title, contentPreview: c.content?.substring(0, 50) })),
+      });
       setTranslatedBook({
         title: savedTranslation.title,
         chapters: savedTranslation.chapters,
