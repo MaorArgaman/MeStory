@@ -271,7 +271,7 @@
   }
 
   .editor-content {
-    @apply bg-transparent text-gray-800 p-8 md:p-12 rounded-lg focus:outline-none resize-none leading-relaxed;
+    @apply bg-transparent text-black p-8 md:p-12 rounded-lg focus:outline-none resize-none leading-relaxed;
     font-family: 'Merriweather', 'Crimson Text', Georgia, serif;
     font-size: 18px;
     line-height: 1.8;
@@ -279,11 +279,11 @@
 
   /* TipTap Editor Styles - Clean Google Docs typography */
   .ProseMirror {
-    @apply bg-transparent text-gray-800 px-4 py-6 sm:px-6 sm:py-8 md:px-12 md:py-10 focus:outline-none;
+    @apply bg-transparent px-4 py-6 sm:px-6 sm:py-8 md:px-12 md:py-10 focus:outline-none;
     font-family: 'Merriweather', 'Crimson Text', Georgia, serif;
     font-size: 16px;
     line-height: 1.85;
-    color: #1f2937;
+    color: #000000;
     caret-color: #4f46e5;
     min-height: 300px;
   }
@@ -299,7 +299,7 @@
     @apply mb-3 sm:mb-4;
     font-size: 16px;
     line-height: 1.75;
-    color: #374151;
+    color: #000000;
   }
 
   @media (min-width: 640px) {
@@ -312,7 +312,7 @@
   .ProseMirror h1 {
     @apply text-2xl sm:text-4xl font-bold mb-4 sm:mb-6 mt-6 sm:mt-8 pb-2 sm:pb-3;
     font-family: 'Merriweather', Georgia, serif;
-    color: #111827;
+    color: #000000;
     border-bottom: 2px solid #e5e7eb;
     line-height: 1.3;
   }
@@ -320,27 +320,27 @@
   .ProseMirror h2 {
     @apply text-xl sm:text-3xl font-bold mb-4 sm:mb-5 mt-5 sm:mt-7;
     font-family: 'Merriweather', Georgia, serif;
-    color: #1f2937;
+    color: #000000;
     line-height: 1.35;
   }
 
   .ProseMirror h3 {
     @apply text-lg sm:text-2xl font-semibold mb-3 sm:mb-4 mt-4 sm:mt-6;
     font-family: 'Merriweather', Georgia, serif;
-    color: #374151;
+    color: #000000;
     line-height: 1.4;
   }
 
   .ProseMirror h4 {
     @apply text-xl font-semibold mb-3 mt-5;
     font-family: 'Merriweather', Georgia, serif;
-    color: #4b5563;
+    color: #000000;
     line-height: 1.4;
   }
 
   .ProseMirror strong {
     @apply font-bold;
-    color: #111827;
+    color: #000000;
   }
 
   .ProseMirror em {
@@ -367,7 +367,7 @@
   }
 
   .ProseMirror li {
-    @apply text-gray-700;
+    @apply text-black;
     font-size: 18px;
     line-height: 1.75;
   }
@@ -485,8 +485,22 @@
     --tw-prose-td-borders: currentColor;
   }
 
-  .book-page-content.prose * {
-    color: inherit !important;
+  /* Base text elements inherit color from container */
+  .book-page-content.prose p,
+  .book-page-content.prose li,
+  .book-page-content.prose h1,
+  .book-page-content.prose h2,
+  .book-page-content.prose h3,
+  .book-page-content.prose blockquote {
+    color: inherit;
+  }
+
+  /* Spans with inline styles (from editor color picker) are NOT overridden */
+  /* The inline style="color:..." on spans will naturally take precedence */
+
+  /* Preserve mark/highlight styling from editor */
+  .book-page-content.prose mark {
+    background-color: inherit;
   }
 
   /* Lists in book pages */

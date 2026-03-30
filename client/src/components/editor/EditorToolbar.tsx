@@ -485,6 +485,12 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             />
           </button>
         </div>
+
+        {/* Voice Recording Button - Always visible */}
+        <VoiceRecordButton
+          onTranscription={handleVoiceTranscription}
+          className="p-1.5"
+        />
       </div>
 
       {/* Desktop only: Additional formatting */}
@@ -858,14 +864,6 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         </motion.div>,
         document.body
       )}
-
-      {/* Voice Recording Button */}
-      <div className="flex-shrink-0">
-        <VoiceRecordButton
-          onTranscription={handleVoiceTranscription}
-          className="p-1.5"
-        />
-      </div>
 
       {/* Word Count - Right aligned */}
       <div className={`${isRTL ? 'mr-auto' : 'ml-auto'} flex items-center text-[10px] sm:text-xs text-gray-400 px-1 sm:px-2 flex-shrink-0`}>

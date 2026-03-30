@@ -57,7 +57,7 @@ export default function VoiceRecordButton({
       className={`relative p-2 rounded-lg transition-all duration-200 ${
         isRecording
           ? 'bg-red-500/20 text-red-400 border border-red-500/50'
-          : 'btn-ghost hover:bg-white/10'
+          : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border border-purple-500/30'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
       whileHover={!disabled ? { scale: 1.05 } : {}}
       whileTap={!disabled ? { scale: 0.95 } : {}}
