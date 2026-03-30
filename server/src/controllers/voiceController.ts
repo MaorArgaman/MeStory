@@ -284,8 +284,11 @@ export const transcribeVoice = async (req: AuthRequest, res: Response): Promise<
     const { filePath, tempFile: tempFilePath } = await getAudioFilePath(audioFile);
     tempFile = tempFilePath;
 
+    // Get language from request body (default to Hebrew)
+    const requestLanguage = req.body?.language || 'he';
+
     // Transcribe audio
-    const transcription = await transcribeAudio(filePath, 'he');
+    const transcription = await transcribeAudio(filePath, requestLanguage);
 
     // Clean up temp file if created
     await cleanupTempFile(tempFile);

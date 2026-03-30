@@ -26,8 +26,9 @@ export default function TagSelector({
   maxTags = 15,
   className = ''
 }: TagSelectorProps) {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation(); // Reserved for future label translations
   const { language } = useLanguage();
+  void _t;
   const lang = language as 'en' | 'he';
 
   const [searchQuery, setSearchQuery] = useState('');

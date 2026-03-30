@@ -52,7 +52,7 @@ interface AudioPlayerProps {
 }
 
 export default function AudioPlayer({
-  bookId,
+  bookId: _bookId, // Reserved for future analytics/tracking
   chapterId,
   chapterTitle,
   chapterAudio,

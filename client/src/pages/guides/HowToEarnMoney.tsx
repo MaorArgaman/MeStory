@@ -17,7 +17,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { GlassCard } from '../../components/ui';
-import { HowToSchema, Breadcrumb } from '../../components/seo';
+import { HowToSchema, Breadcrumb, ArticleSchema } from '../../components/seo';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 interface Step {
@@ -169,6 +169,18 @@ export default function HowToEarnMoney() {
 
   return (
     <>
+      {/* Article Schema for SEO/GEO/AEO */}
+      <ArticleSchema
+        headline={isHebrew ? 'איך להרוויח כסף ממכירת ספרים' : 'How to Earn Money from Selling Books'}
+        description={pageDescription}
+        datePublished="2024-02-01"
+        dateModified="2024-12-01"
+        url="https://mestory.co.il/guides/earn-money"
+        articleType="HowTo"
+        wordCount={1800}
+        speakable={['.gradient-gold', 'h2', 'h3']}
+      />
+
       {/* HowTo Schema for AEO/SEO */}
       <HowToSchema
         name={isHebrew ? 'איך להרוויח כסף כסופר' : 'How to Earn Money as an Author'}

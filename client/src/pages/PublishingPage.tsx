@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   Rocket,
   Loader2,
+  Tag,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { TagSelector } from '../components/ui';

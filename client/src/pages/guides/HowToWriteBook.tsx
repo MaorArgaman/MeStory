@@ -15,7 +15,7 @@ import {
   Clock
 } from 'lucide-react';
 import { GlassCard } from '../../components/ui';
-import { HowToSchema, Breadcrumb } from '../../components/seo';
+import { HowToSchema, Breadcrumb, ArticleSchema } from '../../components/seo';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 interface Step {
@@ -199,6 +199,18 @@ export default function HowToWriteBook() {
 
   return (
     <>
+      {/* Article Schema for SEO/GEO/AEO */}
+      <ArticleSchema
+        headline={isHebrew ? 'איך לכתוב ספר עם AI - מדריך שלב אחר שלב' : 'How to Write a Book with AI - Step by Step Guide'}
+        description={pageDescription}
+        datePublished="2024-01-15"
+        dateModified="2024-12-01"
+        url="https://mestory.co.il/guides/write-book"
+        articleType="HowTo"
+        wordCount={2500}
+        speakable={['.gradient-gold', 'h2', 'h3']}
+      />
+
       {/* HowTo Schema for AEO/SEO */}
       <HowToSchema
         name={isHebrew ? 'איך לכתוב ספר עם AI' : 'How to Write a Book with AI'}

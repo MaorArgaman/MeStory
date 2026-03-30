@@ -20,7 +20,7 @@ import {
   Search
 } from 'lucide-react';
 import { GlassCard } from '../components/ui';
-import { FAQSchema, Breadcrumb } from '../components/seo';
+import { FAQSchema, Breadcrumb, PricingComparisonTable, DefinitionList, MESTORY_DEFINITIONS } from '../components/seo';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface FAQItem {
@@ -479,6 +479,38 @@ export default function FAQPage() {
                 </p>
               </motion.div>
             )}
+          </motion.section>
+
+          {/* Pricing Comparison Table - Featured Snippet Optimized */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="mt-12"
+            aria-labelledby="pricing-comparison-heading"
+          >
+            <GlassCard className="p-8">
+              <h2 id="pricing-comparison-heading" className="text-2xl font-display font-bold gradient-gold mb-6 text-center">
+                {isHebrew ? 'השוואת מסלולים' : 'Plan Comparison'}
+              </h2>
+              <PricingComparisonTable />
+            </GlassCard>
+          </motion.section>
+
+          {/* Definitions Section - Featured Snippet Optimized */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.28 }}
+            className="mt-12"
+            aria-labelledby="definitions-heading"
+          >
+            <GlassCard className="p-8">
+              <h2 id="definitions-heading" className="text-2xl font-display font-bold gradient-gold mb-6">
+                {isHebrew ? 'מושגים חשובים' : 'Key Terms'}
+              </h2>
+              <DefinitionList definitions={MESTORY_DEFINITIONS[language]} />
+            </GlassCard>
           </motion.section>
 
           {/* Contact CTA */}

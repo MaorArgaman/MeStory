@@ -28,8 +28,9 @@ interface BookProgressStepperProps {
 
 export default function BookProgressStepper({ bookId, progress, currentStep }: BookProgressStepperProps) {
   const navigate = useNavigate();
-  const location = useLocation();
+  const _location = useLocation(); // Reserved for future route-based logic
   const { language } = useLanguage();
+  void _location;
   const isHebrew = language === 'he';
 
   const steps = [

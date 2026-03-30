@@ -17,7 +17,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { GlassCard } from '../../components/ui';
-import { HowToSchema, Breadcrumb } from '../../components/seo';
+import { HowToSchema, Breadcrumb, ArticleSchema } from '../../components/seo';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 interface Step {
@@ -185,6 +185,18 @@ export default function HowToPublishBook() {
 
   return (
     <>
+      {/* Article Schema for SEO/GEO/AEO */}
+      <ArticleSchema
+        headline={isHebrew ? 'איך לפרסם ספר ב-MeStory - מדריך מלא' : 'How to Publish a Book on MeStory - Complete Guide'}
+        description={pageDescription}
+        datePublished="2024-01-20"
+        dateModified="2024-12-01"
+        url="https://mestory.co.il/guides/publish-book"
+        articleType="HowTo"
+        wordCount={2000}
+        speakable={['.gradient-gold', 'h2', 'h3']}
+      />
+
       {/* HowTo Schema for AEO/SEO */}
       <HowToSchema
         name={isHebrew ? 'איך לפרסם את הספר שלך' : 'How to Publish Your Book'}

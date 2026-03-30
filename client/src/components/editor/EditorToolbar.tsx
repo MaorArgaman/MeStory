@@ -25,10 +25,11 @@ import {
   X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
+import VoiceRecordButton from './VoiceRecordButton';
 
 // Predefined color palette - keys are used for translation
 // Text colors for light background editor (no white - invisible on white bg)
@@ -66,6 +67,9 @@ type HeadingLevel = 1 | 2 | 3;
 export default function EditorToolbar({ editor }: EditorToolbarProps) {
   const { t } = useTranslation('common');
   const { isRTL } = useLanguage();
+
+  // Return null if editor is not initialized
+  if (!editor) return null;
   const [showHeadingMenu, setShowHeadingMenu] = useState(false);
   const [showColorMenu, setShowColorMenu] = useState(false);
   const [showHighlightMenu, setShowHighlightMenu] = useState(false);
@@ -81,13 +85,16 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
     }
   };
 
+  // Editor is guaranteed non-null by early return above - cast to ensure TypeScript knows
+  const safeEditor = editor as Editor;
+
   // Get chain builder that restores selection first
   const getChainWithSelection = () => {
     if (savedSelection.current) {
       const { from, to } = savedSelection.current;
-      return editor.chain().focus().setTextSelection({ from, to });
+      return safeEditor.chain().focus().setTextSelection({ from, to });
     }
-    return editor.chain().focus();
+    return safeEditor.chain().focus();
   };
   const headingMenuRef = useRef<HTMLDivElement>(null);
   const colorMenuRef = useRef<HTMLDivElement>(null);
@@ -298,6 +305,26 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
       getChainWithSelection().toggleHeading({ level }).run();
     }
   };
+
+  // Handle voice transcription - insert text at cursor without overwriting
+  const handleVoiceTranscription = useCallback((text: string) => {
+    if (!editor) return;
+
+    // Get current cursor position
+    const { to } = editor.state.selection;
+
+    // Add a space before the new text if there's content before cursor
+    const currentContent = editor.state.doc.textBetween(0, to);
+    const needsSpace = currentContent.length > 0 && !currentContent.endsWith(' ') && !currentContent.endsWith('\n');
+    const textToInsert = needsSpace ? ` ${text}` : text;
+
+    // Insert at current cursor position (end of selection)
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(to, textToInsert)
+      .run();
+  }, [editor]);
 
   return (
     <div className="bg-slate-800/90 backdrop-blur-md rounded-xl p-1.5 sm:p-2 mb-3 flex items-center gap-1 border border-white/10 shadow-lg">
@@ -831,6 +858,14 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         </motion.div>,
         document.body
       )}
+
+      {/* Voice Recording Button */}
+      <div className="flex-shrink-0">
+        <VoiceRecordButton
+          onTranscription={handleVoiceTranscription}
+          className="p-1.5"
+        />
+      </div>
 
       {/* Word Count - Right aligned */}
       <div className={`${isRTL ? 'mr-auto' : 'ml-auto'} flex items-center text-[10px] sm:text-xs text-gray-400 px-1 sm:px-2 flex-shrink-0`}>

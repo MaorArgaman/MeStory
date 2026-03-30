@@ -1,0 +1,208 @@
+/**
+ * Voice Recording Hook
+ * Real-time voice recording with Whisper transcription
+ */
+
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { api } from '../services/api';
+
+interface UseVoiceRecordingOptions {
+  onTranscription?: (text: string) => void;
+  onError?: (error: string) => void;
+  language?: string;
+  // Interval in ms to send audio chunks for transcription (default: 3000ms)
+  transcriptionInterval?: number;
+}
+
+interface UseVoiceRecordingReturn {
+  isRecording: boolean;
+  isTranscribing: boolean;
+  error: string | null;
+  startRecording: () => Promise<void>;
+  stopRecording: () => void;
+  toggleRecording: () => Promise<void>;
+}
+
+export function useVoiceRecording({
+  onTranscription,
+  onError,
+  language = 'he',
+  transcriptionInterval = 4000,
+}: UseVoiceRecordingOptions = {}): UseVoiceRecordingReturn {
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
+  // Send audio chunk for transcription
+  const transcribeChunk = useCallback(async (audioBlob: Blob) => {
+    if (audioBlob.size < 1000) {
+      // Skip very small chunks (likely silence)
+      return;
+    }
+
+    setIsTranscribing(true);
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'recording.webm');
+      formData.append('language', language);
+
+      const response = await api.post('/voice/transcribe', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.success && response.data.data?.text) {
+        const text = response.data.data.text.trim();
+        if (text && text.length > 0) {
+          onTranscription?.(text);
+        }
+      }
+    } catch (err: any) {
+      console.error('Transcription error:', err);
+      const errorMessage = err.response?.data?.error || err.message || 'Transcription failed';
+      setError(errorMessage);
+      onError?.(errorMessage);
+    } finally {
+      setIsTranscribing(false);
+    }
+  }, [language, onTranscription, onError]);
+
+  // Process accumulated chunks
+  const processChunks = useCallback(async () => {
+    if (chunksRef.current.length === 0) return;
+
+    const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
+    chunksRef.current = []; // Clear chunks for next batch
+
+    await transcribeChunk(audioBlob);
+  }, [transcribeChunk]);
+
+  const startRecording = useCallback(async () => {
+    try {
+      setError(null);
+
+      // Check for browser support
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Voice recording is not supported in this browser');
+      }
+
+      // Request microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 16000,
+        },
+      });
+
+      streamRef.current = stream;
+
+      // Create MediaRecorder
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : 'audio/webm',
+      });
+
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+
+      // Handle data available
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
+        }
+      };
+
+      // Start recording
+      mediaRecorder.start(1000); // Collect data every second
+      setIsRecording(true);
+
+      // Set up interval for periodic transcription
+      intervalRef.current = setInterval(() => {
+        if (mediaRecorderRef.current?.state === 'recording') {
+          // Request data from recorder
+          mediaRecorderRef.current.requestData();
+          // Process accumulated chunks
+          processChunks();
+        }
+      }, transcriptionInterval);
+
+    } catch (err: any) {
+      console.error('Start recording error:', err);
+      let errorMessage = 'Failed to start recording';
+
+      if (err.name === 'NotAllowedError') {
+        errorMessage = 'Microphone access denied. Please allow microphone access.';
+      } else if (err.name === 'NotFoundError') {
+        errorMessage = 'No microphone found. Please connect a microphone.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
+      onError?.(errorMessage);
+    }
+  }, [processChunks, transcriptionInterval, onError]);
+
+  const stopRecording = useCallback(() => {
+    // Clear interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    // Stop media recorder
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+
+      // Process any remaining chunks
+      mediaRecorderRef.current.onstop = () => {
+        processChunks();
+      };
+    }
+
+    // Stop all tracks
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+
+    setIsRecording(false);
+  }, [processChunks]);
+
+  const toggleRecording = useCallback(async () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      await startRecording();
+    }
+  }, [isRecording, startRecording, stopRecording]);
+
+  return {
+    isRecording,
+    isTranscribing,
+    error,
+    startRecording,
+    stopRecording,
+    toggleRecording,
+  };
+}

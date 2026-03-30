@@ -192,6 +192,11 @@ interface BookData {
     imageUrl?: string;
     titlePosition?: { x: number; y: number };
     authorPosition?: { x: number; y: number };
+    back?: {
+      backgroundColor?: string;
+      text?: string;
+      imageUrl?: string;
+    };
   };
   pageLayout?: {
     pages: PageContent[];
@@ -468,8 +473,19 @@ export default function BookLayoutPage() {
               images: [...existingImages, ...newImages],
             };
           });
+          // Ensure summary page exists if includeBackCover is enabled
+          const loadedSettings = { ...defaultSettings, ...bookData.pageLayout.settings };
+          const hasSummaryPage = pagesWithImages.some((p: any) => p.type === 'summary');
+          if (loadedSettings.includeBackCover && !hasSummaryPage) {
+            pagesWithImages.push({
+              id: `page-summary`,
+              type: 'summary',
+              content: bookData.synopsis || bookData.description || '',
+              images: [],
+            });
+          }
           setPages(pagesWithImages);
-          setSettings({ ...defaultSettings, ...bookData.pageLayout.settings });
+          setSettings(loadedSettings);
         } else {
           generatePagesFromChapters(bookData);
         }
@@ -482,14 +498,10 @@ export default function BookLayoutPage() {
         // Also apply coverDesign from DesignStudioPage (if no AI design or as fallback)
         if (bookData.coverDesign) {
           const cd = bookData.coverDesign;
-          console.log('📚 Loading coverDesign from database:', cd);
-          console.log('📚 imageUrl:', cd.imageUrl);
-          console.log('📚 front?.imageUrl:', cd.front?.imageUrl);
 
           // Apply cover settings
           const resolvedImageUrl = cd.imageUrl || cd.front?.imageUrl || null;
           if (resolvedImageUrl) {
-            console.log('📚 Setting coverImageUrl to:', resolvedImageUrl);
             setCoverImageUrl(resolvedImageUrl);
           }
           // Load back cover image URL
@@ -502,10 +514,9 @@ export default function BookLayoutPage() {
             resolvedBackCoverUrl = `${serverBaseUrl}${resolvedBackCoverUrl}`;
           }
           if (resolvedBackCoverUrl) {
-            console.log('📚 Setting backCoverImageUrl to:', resolvedBackCoverUrl);
             setBackCoverImageUrl(resolvedBackCoverUrl);
           }
-          // Update book state with cover design
+          // Update book state with cover design (including back cover)
           setBook(prev => prev ? {
             ...prev,
             coverDesign: {
@@ -514,10 +525,9 @@ export default function BookLayoutPage() {
               textColor: cd.textColor || cd.front?.title?.color || prev.coverDesign?.textColor,
               fontFamily: cd.fontFamily || cd.front?.title?.font || prev.coverDesign?.fontFamily,
               imageUrl: resolvedImageUrl || prev.coverDesign?.imageUrl,
+              back: cd.back || prev.coverDesign?.back, // Include back cover data
             },
           } : null);
-        } else {
-          console.log('📚 No coverDesign found in book data');
         }
 
         // Apply pageLayout settings if available
@@ -3285,10 +3295,6 @@ function BackCoverPreview({
   synopsis?: string;
   language?: string;
 }) {
-  console.log('📕 BackCoverPreview rendering with backCoverImageUrl:', backCoverImageUrl);
-  console.log('📕 book.coverDesign:', book.coverDesign);
-  console.log('📕 book.coverDesign?.back:', (book.coverDesign as any)?.back);
-
   const coverDesign = book.coverDesign as any || {};
   const isRTL = language === 'he' || language === 'ar';
 

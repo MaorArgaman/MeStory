@@ -486,6 +486,199 @@ export const DEFAULT_FAQ_ITEMS = {
   ],
 };
 
+// Article Schema (for guides, blog posts, news)
+interface ArticleSchemaProps {
+  headline: string;
+  description: string;
+  image?: string;
+  datePublished: string;
+  dateModified?: string;
+  author?: {
+    name: string;
+    url?: string;
+  };
+  publisher?: {
+    name: string;
+    logo?: string;
+  };
+  url?: string;
+  articleType?: 'Article' | 'BlogPosting' | 'NewsArticle' | 'TechArticle' | 'HowTo';
+  wordCount?: number;
+  speakable?: string[]; // CSS selectors for speakable content
+}
+
+export function ArticleSchema({
+  headline,
+  description,
+  image,
+  datePublished,
+  dateModified,
+  author = { name: 'MeStory', url: DEFAULT_SITE_URL },
+  publisher = { name: 'MeStory', logo: `${DEFAULT_SITE_URL}/img/MeStory-Logo.png` },
+  url,
+  articleType = 'Article',
+  wordCount,
+  speakable,
+}: ArticleSchemaProps) {
+  const data: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': articleType,
+    headline,
+    description,
+    url: url || DEFAULT_SITE_URL,
+    datePublished,
+    dateModified: dateModified || datePublished,
+    author: {
+      '@type': 'Person',
+      name: author.name,
+      url: author.url,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: publisher.name,
+      logo: {
+        '@type': 'ImageObject',
+        url: publisher.logo,
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': url || DEFAULT_SITE_URL,
+    },
+  };
+
+  if (image) data.image = image;
+  if (wordCount) data.wordCount = wordCount;
+
+  // Add speakable specification for voice search optimization
+  if (speakable && speakable.length > 0) {
+    data.speakable = {
+      '@type': 'SpeakableSpecification',
+      cssSelector: speakable,
+    };
+  }
+
+  useJsonLd(data, `article-${headline.replace(/\s+/g, '-').toLowerCase().slice(0, 50)}`);
+  return null;
+}
+
+// Speakable Schema (for voice search / AEO optimization)
+interface SpeakableSchemaProps {
+  name: string;
+  cssSelectors: string[];
+  url?: string;
+}
+
+export function SpeakableSchema({
+  name,
+  cssSelectors,
+  url = DEFAULT_SITE_URL,
+}: SpeakableSchemaProps) {
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name,
+    url,
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: cssSelectors,
+    },
+  };
+
+  useJsonLd(data, `speakable-${name.replace(/\s+/g, '-').toLowerCase()}`);
+  return null;
+}
+
+// Video Schema (for video content / GEO optimization)
+interface VideoSchemaProps {
+  name: string;
+  description: string;
+  thumbnailUrl: string;
+  uploadDate: string;
+  duration?: string; // ISO 8601 duration e.g., "PT5M30S"
+  contentUrl?: string;
+  embedUrl?: string;
+  interactionCount?: number;
+}
+
+export function VideoSchema({
+  name,
+  description,
+  thumbnailUrl,
+  uploadDate,
+  duration,
+  contentUrl,
+  embedUrl,
+  interactionCount,
+}: VideoSchemaProps) {
+  const data: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name,
+    description,
+    thumbnailUrl,
+    uploadDate,
+  };
+
+  if (duration) data.duration = duration;
+  if (contentUrl) data.contentUrl = contentUrl;
+  if (embedUrl) data.embedUrl = embedUrl;
+  if (interactionCount) {
+    data.interactionStatistic = {
+      '@type': 'InteractionCounter',
+      interactionType: 'https://schema.org/WatchAction',
+      userInteractionCount: interactionCount,
+    };
+  }
+
+  useJsonLd(data, `video-${name.replace(/\s+/g, '-').toLowerCase()}`);
+  return null;
+}
+
+// Review Schema (for book reviews / ratings)
+interface ReviewSchemaProps {
+  itemReviewed: {
+    name: string;
+    type: 'Book' | 'Product' | 'SoftwareApplication';
+  };
+  author: string;
+  reviewRating: number;
+  reviewBody: string;
+  datePublished?: string;
+}
+
+export function ReviewSchema({
+  itemReviewed,
+  author,
+  reviewRating,
+  reviewBody,
+  datePublished = new Date().toISOString().split('T')[0],
+}: ReviewSchemaProps) {
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'Review',
+    itemReviewed: {
+      '@type': itemReviewed.type,
+      name: itemReviewed.name,
+    },
+    author: {
+      '@type': 'Person',
+      name: author,
+    },
+    reviewRating: {
+      '@type': 'Rating',
+      ratingValue: reviewRating,
+      bestRating: 5,
+      worstRating: 1,
+    },
+    reviewBody,
+    datePublished,
+  };
+
+  useJsonLd(data, `review-${itemReviewed.name.replace(/\s+/g, '-').toLowerCase()}`);
+  return null;
+}
+
 // Export default HowTo steps for creating a book
 export const DEFAULT_HOWTO_STEPS = {
   he: [

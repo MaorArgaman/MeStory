@@ -20,6 +20,10 @@ export {
   SoftwareApplicationSchema,
   WebsiteSchema,
   ProductSchema,
+  ArticleSchema,
+  SpeakableSchema,
+  VideoSchema,
+  ReviewSchema,
   DEFAULT_FAQ_ITEMS,
   DEFAULT_HOWTO_STEPS,
 } from './StructuredData';
@@ -27,3 +31,13 @@ export {
 // Breadcrumb Component (visual + structured data)
 export { Breadcrumb } from './Breadcrumb';
 export type { BreadcrumbItem } from './Breadcrumb';
+
+// Featured Snippet Components (optimized for Google Featured Snippets & AI Search)
+export {
+  DefinitionList,
+  PricingComparisonTable,
+  StepsList,
+  KeyFactsBox,
+  MESTORY_DEFINITIONS,
+  MESTORY_KEY_FACTS,
+} from './FeaturedSnippets';

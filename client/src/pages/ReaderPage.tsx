@@ -20,7 +20,6 @@ import {
   Square,
   SkipForward,
   SkipBack,
-  Mic2,
   MessageCircle,
   Languages,
   Loader2,
@@ -841,7 +840,6 @@ export default function ReaderPage() {
               {/* Narration Section */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Mic2 className="w-5 h-5 text-magic-gold" />
                   <h3 className="font-display font-semibold text-white">{t('reader.narration')}</h3>
                 </div>
                 {!isNarrating ? (
@@ -1270,9 +1268,9 @@ export default function ReaderPage() {
           bookLanguage={getDisplayLanguage()}
           onChapterChange={(direction) => {
             if (direction === 'next') {
-              goToNextChapter();
+              nextChapter();
             } else {
-              goToPrevChapter();
+              prevChapter();
             }
           }}
           hasNextChapter={currentChapterIndex < (book.chapters?.length || 1) - 1}
