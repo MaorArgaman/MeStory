@@ -1,5 +1,6 @@
-import OpenAI from 'openai';
+import OpenAI, { toFile } from 'openai';
 import fs from 'fs';
+import path from 'path';
 
 // Lazy-initialize OpenAI client (only when API key is available)
 let openaiClient: OpenAI | null = null;
@@ -43,8 +44,16 @@ export async function transcribeAudio(
 
     console.log(`🎤 Starting audio transcription for file: ${filePath}`);
 
-    // Create a readable stream from the file
-    const audioFile = fs.createReadStream(filePath);
+    // Get the filename with extension for OpenAI to detect format
+    const filename = path.basename(filePath);
+    console.log(`📁 File name: ${filename}`);
+
+    // Read file as buffer and convert to File object with proper name
+    const fileBuffer = fs.readFileSync(filePath);
+    console.log(`📊 File size: ${fileBuffer.length} bytes`);
+
+    // Use OpenAI's toFile helper to create a proper file object
+    const audioFile = await toFile(fileBuffer, filename);
 
     // Call Whisper API
     const openai = getOpenAIClient();
