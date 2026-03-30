@@ -159,7 +159,8 @@ const audioFilter = (
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
-  const allowedTypes = ['.mp3', '.wav', '.m4a', '.mp4', '.mpeg', '.mpga', '.webm'];
+  // All formats supported by OpenAI Whisper API
+  const allowedTypes = ['.mp3', '.wav', '.m4a', '.mp4', '.mpeg', '.mpga', '.webm', '.ogg', '.oga', '.flac'];
   const ext = path.extname(file.originalname).toLowerCase();
 
   if (allowedTypes.includes(ext)) {

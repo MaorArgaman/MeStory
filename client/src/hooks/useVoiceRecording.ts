@@ -37,6 +37,7 @@ export function useVoiceRecording({
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const mimeTypeRef = useRef<string>('audio/webm');
 
   // Clean up on unmount
   useEffect(() => {
@@ -107,7 +108,8 @@ export function useVoiceRecording({
   const processChunks = useCallback(async () => {
     if (chunksRef.current.length === 0) return;
 
-    const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
+    // Use the actual MIME type from the MediaRecorder
+    const audioBlob = new Blob(chunksRef.current, { type: mimeTypeRef.current });
     chunksRef.current = []; // Clear chunks for next batch
 
     await transcribeChunk(audioBlob);
@@ -161,7 +163,10 @@ export function useVoiceRecording({
       });
 
       mediaRecorderRef.current = mediaRecorder;
+      mimeTypeRef.current = selectedMimeType; // Store the actual MIME type
       chunksRef.current = [];
+
+      console.log('🎤 Recording with MIME type:', selectedMimeType);
 
       // Handle data available
       mediaRecorder.ondataavailable = (event) => {
