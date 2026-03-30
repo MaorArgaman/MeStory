@@ -403,10 +403,15 @@ export default function ReaderPage() {
 
   // Get current chapter (original or translated)
   const getCurrentChapter = () => {
+    console.log('[getCurrentChapter] showTranslation:', showTranslation, 'translatedBook:', !!translatedBook);
     if (showTranslation && translatedBook) {
-      return translatedBook.chapters[currentChapterIndex];
+      const chapter = translatedBook.chapters[currentChapterIndex];
+      console.log('[getCurrentChapter] Returning TRANSLATED chapter:', chapter?.title, chapter?.content?.substring(0, 50));
+      return chapter;
     }
-    return book?.chapters?.[currentChapterIndex];
+    const chapter = book?.chapters?.[currentChapterIndex];
+    console.log('[getCurrentChapter] Returning ORIGINAL chapter:', chapter?.title);
+    return chapter;
   };
 
   // Get original chapter (always from the original book - used for audio)
@@ -526,14 +531,21 @@ export default function ReaderPage() {
       : book.translations?.hebrew;
 
     console.log('[Translation Debug] savedTranslation:', savedTranslation ? `found ${savedTranslation.chapters?.length} chapters` : 'NOT FOUND');
+    if (savedTranslation) {
+      console.log('[Translation Debug] savedTranslation.title:', savedTranslation.title);
+      console.log('[Translation Debug] savedTranslation.chapters[0]:', savedTranslation.chapters?.[0]?.title, savedTranslation.chapters?.[0]?.content?.substring(0, 100));
+    }
 
     if (savedTranslation && savedTranslation.chapters?.length > 0) {
       // Use saved translation directly - instant!
-      setTranslatedBook({
+      console.log('[Translation Debug] Setting translatedBook with saved translation');
+      const translatedData = {
         title: savedTranslation.title,
         chapters: savedTranslation.chapters,
         targetLanguage,
-      });
+      };
+      console.log('[Translation Debug] translatedData:', translatedData);
+      setTranslatedBook(translatedData);
       setShowTranslation(true);
       toast.success(
         targetLanguage === 'hebrew'
