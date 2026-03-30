@@ -1,4 +1,4 @@
-import OpenAI, { toFile } from 'openai';
+import OpenAI from 'openai';
 import fs from 'fs';
 import path from 'path';
 
@@ -46,19 +46,52 @@ export async function transcribeAudio(
 
     // Get the filename with extension for OpenAI to detect format
     const filename = path.basename(filePath);
-    console.log(`📁 File name: ${filename}`);
+    const ext = path.extname(filename).toLowerCase();
+    console.log(`📁 File name: ${filename}, extension: ${ext}`);
 
-    // Read file as buffer and convert to File object with proper name
+    // Determine MIME type from extension
+    const mimeTypes: Record<string, string> = {
+      '.webm': 'audio/webm',
+      '.mp3': 'audio/mpeg',
+      '.mp4': 'audio/mp4',
+      '.m4a': 'audio/mp4',
+      '.wav': 'audio/wav',
+      '.ogg': 'audio/ogg',
+      '.oga': 'audio/ogg',
+      '.flac': 'audio/flac',
+    };
+    const mimeType = mimeTypes[ext] || 'audio/webm';
+    console.log(`🎵 MIME type: ${mimeType}`);
+
+    // Read file and check size
     const fileBuffer = fs.readFileSync(filePath);
     console.log(`📊 File size: ${fileBuffer.length} bytes`);
 
-    // Use OpenAI's toFile helper to create a proper file object
-    const audioFile = await toFile(fileBuffer, filename);
+    if (fileBuffer.length < 100) {
+      throw new Error('Audio file is too small or empty');
+    }
+
+    // Create a File object using Node.js File API (available in Node 20+)
+    // For older Node versions, we use the Blob approach
+    let audioFile: File | Blob;
+
+    if (typeof File !== 'undefined') {
+      // Node.js 20+ has native File support
+      audioFile = new File([fileBuffer], filename, { type: mimeType });
+      console.log('📦 Using native File API');
+    } else {
+      // Fallback: Create a Blob-like object with name property
+      const blob = new Blob([fileBuffer], { type: mimeType });
+      // @ts-ignore - Adding name property for OpenAI SDK
+      blob.name = filename;
+      audioFile = blob;
+      console.log('📦 Using Blob with name property');
+    }
 
     // Call Whisper API
     const openai = getOpenAIClient();
     const transcription = await openai.audio.transcriptions.create({
-      file: audioFile,
+      file: audioFile as any,
       model: 'whisper-1',
       language: language || undefined, // Auto-detect if not specified
       response_format: 'verbose_json', // Get detailed response with language detection
