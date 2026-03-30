@@ -373,6 +373,7 @@ export const translateBook = async (req: Request, res: Response): Promise<void> 
     }
 
     // Fetch book with chapters
+    console.log(`[translateBook] Fetching book ${bookId}, target: ${targetLanguage}`);
     const book = await Book.findById(bookId);
     if (!book) {
       res.status(404).json({
@@ -381,6 +382,8 @@ export const translateBook = async (req: Request, res: Response): Promise<void> 
       });
       return;
     }
+
+    console.log(`[translateBook] Found: "${book.title}", translations:`, book.translations ? Object.keys(book.translations) : 'none');
 
     // Validate book has content
     if (!book.chapters || book.chapters.length === 0) {
@@ -419,8 +422,11 @@ export const translateBook = async (req: Request, res: Response): Promise<void> 
       ? book.translations?.english
       : book.translations?.hebrew;
 
+    console.log(`[translateBook] Cached translation for ${targetLanguage}:`, cachedTranslation ? `${cachedTranslation.chapters?.length} chapters` : 'NOT FOUND');
+
     if (cachedTranslation && cachedTranslation.chapters.length > 0) {
       // Use cached translation
+      console.log(`[translateBook] Using cached translation!`);
       res.status(200).json({
         success: true,
         data: {
