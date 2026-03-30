@@ -23,6 +23,7 @@ import TemplateSelector from '../components/design/TemplateSelector';
 import AIDesignWizard from '../components/design/AIDesignWizard';
 import Book3DPreview from '../components/design/Book3DPreview';
 import BrandWatermark from '../components/common/BrandWatermark';
+import BookProgressStepper from '../components/common/BookProgressStepper';
 
 // Book data interface
 interface BookData {
@@ -317,6 +318,22 @@ export default function BookDesignPage() {
           </div>
         </div>
       </header>
+
+      {/* Progress Stepper */}
+      <div className="container mx-auto px-3 sm:px-4 pt-4">
+        <BookProgressStepper
+          bookId={bookId || ''}
+          currentStep="design"
+          progress={{
+            hasContent: (book.chapters || []).some((ch) => ch.content && ch.content.length > 50),
+            hasDesign: !!book.coverDesign?.front?.imageUrl,
+            hasLayout: !!(book as any).pageLayout,
+            isPublished: (book as any).publishingStatus?.status === 'published',
+            wordCount: book.chapters?.reduce((acc, ch) => acc + (ch.wordCount || 0), 0) || 0,
+            chapterCount: book.chapters?.length || 0,
+          }}
+        />
+      </div>
 
       {/* Main Content */}
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">

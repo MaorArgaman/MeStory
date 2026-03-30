@@ -39,6 +39,7 @@ import WritingTechniquesCard from '../components/analysis/WritingTechniquesCard'
 import WritingGuidanceAlert, { useWritingGuidance } from '../components/analysis/WritingGuidanceAlert';
 import { useLanguage } from '../contexts/LanguageContext';
 import BrandWatermark from '../components/common/BrandWatermark';
+import BookProgressStepper from '../components/common/BookProgressStepper';
 
 interface Chapter {
   _id?: string;
@@ -623,6 +624,22 @@ export default function BookWritingPage() {
             </button>
           </div>
         )}
+      </div>
+
+      {/* Progress Stepper */}
+      <div className="px-3 sm:px-6 py-2">
+        <BookProgressStepper
+          bookId={bookId || ''}
+          currentStep="editor"
+          progress={{
+            hasContent: (book.chapters || []).some((ch: Chapter) => ch.content && ch.content.length > 50),
+            hasDesign: !!(book as any).coverDesign?.front?.imageUrl,
+            hasLayout: !!(book as any).pageLayout,
+            isPublished: (book as any).publishingStatus?.status === 'published',
+            wordCount: book.statistics?.wordCount || 0,
+            chapterCount: book.chapters?.length || 0,
+          }}
+        />
       </div>
 
       {/* Three-Column Layout */}

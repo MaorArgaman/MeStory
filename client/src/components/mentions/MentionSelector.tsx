@@ -11,7 +11,6 @@ import {
   User,
   UserPlus,
   Loader2,
-  Check,
 } from 'lucide-react';
 import {
   searchUsers,

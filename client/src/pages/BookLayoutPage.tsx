@@ -39,6 +39,7 @@ import ImageEditToolbar from '../components/layout/ImageEditToolbar';
 import ImagePlaceholder from '../components/layout/ImagePlaceholder';
 import AICompleteDesignWizard from '../components/design/AICompleteDesignWizard';
 import BrandWatermark from '../components/common/BrandWatermark';
+import BookProgressStepper from '../components/common/BookProgressStepper';
 
 interface PageImage {
   id: string;
@@ -1693,6 +1694,22 @@ export default function BookLayoutPage() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Progress Stepper */}
+      <div className="px-3 sm:px-6 py-2">
+        <BookProgressStepper
+          bookId={bookId || ''}
+          currentStep="layout"
+          progress={{
+            hasContent: (book.chapters || []).some((ch: any) => ch.content && ch.content.length > 50),
+            hasDesign: !!(book as any).coverDesign?.front?.imageUrl,
+            hasLayout: !!(book as any).pageLayout || pages.length > 0,
+            isPublished: (book as any).publishingStatus?.status === 'published',
+            wordCount: (book.chapters || []).reduce((acc: number, ch: any) => acc + (ch.wordCount || 0), 0),
+            chapterCount: (book.chapters || []).length,
+          }}
+        />
       </div>
 
       {/* Main Content */}

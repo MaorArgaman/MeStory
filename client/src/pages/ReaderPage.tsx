@@ -32,6 +32,8 @@ import { GlassCard, GlowingButton } from '../components/ui';
 import ChatModal from '../components/messaging/ChatModal';
 import ShareModal from '../components/social/ShareModal';
 import AudioPlayer from '../components/reader/AudioPlayer';
+import { MentionDisplay } from '../components/mentions';
+import { Mention } from '../services/userApi';
 
 interface AudioTrack {
   url: string;
@@ -78,6 +80,7 @@ interface Book {
     _id: string;
     name: string;
   };
+  mentions?: Mention[];
   chapters: Chapter[];
   genre: string;
   language?: 'en' | 'he';
@@ -829,6 +832,11 @@ export default function ReaderPage() {
                   {t('reader.complete', { percent: Math.round(progress) })}
                 </div>
               </div>
+
+              {/* Tagged People */}
+              {book.mentions && book.mentions.length > 0 && (
+                <MentionDisplay mentions={book.mentions} />
+              )}
 
               {/* Narration Section */}
               <div>
