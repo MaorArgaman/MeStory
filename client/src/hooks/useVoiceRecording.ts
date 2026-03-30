@@ -55,16 +55,23 @@ export function useVoiceRecording({
 
   // Get file extension from MIME type
   const getFileExtension = (mimeType: string): string => {
+    // Normalize mimeType (remove codecs and extra params)
+    const baseMime = mimeType.split(';')[0].trim().toLowerCase();
+
     const extensions: Record<string, string> = {
       'audio/webm': 'webm',
-      'audio/webm;codecs=opus': 'webm',
       'audio/mp4': 'm4a',
+      'audio/x-m4a': 'm4a',
+      'audio/aac': 'm4a',
       'audio/ogg': 'ogg',
-      'audio/ogg;codecs=opus': 'ogg',
       'audio/wav': 'wav',
       'audio/mpeg': 'mp3',
+      'audio/mp3': 'mp3',
     };
-    return extensions[mimeType] || 'webm';
+
+    const ext = extensions[baseMime] || 'webm';
+    console.log(`🎵 MIME type: ${mimeType} -> extension: ${ext}`);
+    return ext;
   };
 
   // Send audio chunk for transcription
@@ -144,34 +151,40 @@ export function useVoiceRecording({
       streamRef.current = stream;
 
       // Create MediaRecorder with fallback formats
-      // Safari doesn't support webm, so we try multiple formats
+      // Safari/iOS doesn't support webm, needs mp4 or specific codecs
       const mimeTypes = [
         'audio/webm;codecs=opus',
         'audio/webm',
+        'audio/mp4;codecs=mp4a.40.2', // AAC-LC codec for Safari
         'audio/mp4',
+        'audio/aac',
+        'audio/x-m4a',
         'audio/ogg;codecs=opus',
         'audio/ogg',
         'audio/wav',
+        'audio/mpeg',
       ];
 
-      let selectedMimeType = '';
-      for (const mimeType of mimeTypes) {
-        if (MediaRecorder.isTypeSupported(mimeType)) {
-          selectedMimeType = mimeType;
-          break;
-        }
-      }
+      // Log all supported formats for debugging
+      const supportedFormats = mimeTypes.filter(m => MediaRecorder.isTypeSupported(m));
+      console.log('🎵 Supported audio formats:', supportedFormats);
+
+      let selectedMimeType = supportedFormats[0] || '';
 
       if (!selectedMimeType) {
-        throw new Error('No supported audio format found in this browser');
+        // Try without specifying mimeType - let browser choose default
+        console.log('⚠️ No specific format supported, using browser default');
+        selectedMimeType = '';
       }
 
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: selectedMimeType,
-      });
+      // Create MediaRecorder - use default if no specific format works
+      const mediaRecorder = selectedMimeType
+        ? new MediaRecorder(stream, { mimeType: selectedMimeType })
+        : new MediaRecorder(stream);
 
       mediaRecorderRef.current = mediaRecorder;
-      mimeTypeRef.current = selectedMimeType; // Store the actual MIME type
+      // Get actual MIME type from recorder (in case browser chose default)
+      mimeTypeRef.current = mediaRecorder.mimeType || selectedMimeType || 'audio/webm';
       chunksRef.current = [];
       allChunksRef.current = []; // Reset all chunks for new recording
       lastSentIndexRef.current = 0; // Reset sent index
