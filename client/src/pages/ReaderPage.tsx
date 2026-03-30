@@ -496,7 +496,8 @@ export default function ReaderPage() {
   // Translate the book
   const handleTranslateBook = async () => {
     // Debug with alert to ensure function is called
-    alert('Translations: ' + JSON.stringify(book?.translations ? Object.keys(book.translations) : 'NONE'));
+    const engTrans = book?.translations?.english;
+    alert('English translation first chapter content (first 100 chars): ' + (engTrans?.chapters?.[0]?.content?.substring(0, 100) || 'NOT FOUND'));
     console.log('[DEBUG] handleTranslateBook called', {
       hasBook: !!book,
       bookId,
