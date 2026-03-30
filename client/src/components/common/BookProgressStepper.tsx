@@ -78,7 +78,7 @@ export default function BookProgressStepper({ bookId, progress, currentStep }: B
   const currentStepIndex = steps.findIndex(s => s.id === currentStep);
 
   return (
-    <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-3 sm:p-4">
+    <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-lg sm:rounded-xl p-2 sm:p-3">
       {/* Mobile: Compact horizontal stepper */}
       <div className="sm:hidden">
         <div className="flex items-center justify-between mb-2">
@@ -140,9 +140,9 @@ export default function BookProgressStepper({ bookId, progress, currentStep }: B
         </div>
       </div>
 
-      {/* Desktop: Full horizontal stepper */}
+      {/* Desktop: Compact horizontal stepper */}
       <div className="hidden sm:block">
-        <div className="flex items-center justify-between" dir={isHebrew ? 'rtl' : 'ltr'}>
+        <div className="flex items-center justify-center gap-1" dir={isHebrew ? 'rtl' : 'ltr'}>
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = step.id === currentStep;
@@ -150,11 +150,11 @@ export default function BookProgressStepper({ bookId, progress, currentStep }: B
             const isPast = index < currentStepIndex;
 
             return (
-              <div key={step.id} className="flex items-center flex-1">
+              <div key={step.id} className="flex items-center">
                 {/* Step */}
                 <motion.button
                   onClick={() => navigate(step.path)}
-                  className={`flex flex-col items-center gap-2 p-2 rounded-xl transition-all flex-1 ${
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all ${
                     isActive
                       ? 'bg-purple-500/20 border border-purple-500/50'
                       : 'hover:bg-white/5'
@@ -163,7 +163,7 @@ export default function BookProgressStepper({ bookId, progress, currentStep }: B
                   whileTap={{ scale: 0.98 }}
                 >
                   {/* Icon with status */}
-                  <div className={`relative w-10 h-10 rounded-full flex items-center justify-center ${
+                  <div className={`relative w-6 h-6 rounded-full flex items-center justify-center ${
                     isCompleted
                       ? 'bg-green-500/20 text-green-400'
                       : isActive
@@ -171,38 +171,23 @@ export default function BookProgressStepper({ bookId, progress, currentStep }: B
                       : 'bg-white/10 text-gray-400'
                   }`}>
                     {isCompleted ? (
-                      <Check className="w-5 h-5" />
+                      <Check className="w-3.5 h-3.5" />
                     ) : (
-                      <Icon className="w-5 h-5" />
+                      <Icon className="w-3.5 h-3.5" />
                     )}
-                    {/* Step number badge */}
-                    <span className={`absolute -top-1 ${isHebrew ? '-left-1' : '-right-1'} w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-bold ${
-                      isCompleted
-                        ? 'bg-green-500 text-white'
-                        : isActive
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-white/20 text-gray-400'
-                    }`}>
-                      {index + 1}
-                    </span>
                   </div>
 
                   {/* Label */}
-                  <span className={`text-sm font-medium ${
+                  <span className={`text-xs font-medium ${
                     isActive ? 'text-purple-300' : isCompleted ? 'text-green-300' : 'text-gray-400'
                   }`}>
                     {step.label}
-                  </span>
-
-                  {/* Details */}
-                  <span className="text-[10px] text-gray-500 text-center leading-tight max-w-[100px]">
-                    {step.details}
                   </span>
                 </motion.button>
 
                 {/* Connector line (except last) */}
                 {index < steps.length - 1 && (
-                  <div className={`w-8 h-0.5 mx-1 rounded-full ${
+                  <div className={`w-6 h-0.5 mx-0.5 rounded-full ${
                     isPast || isCompleted ? 'bg-green-500/50' : 'bg-white/10'
                   }`} />
                 )}
