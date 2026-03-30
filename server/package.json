@@ -4,7 +4,7 @@
   "description": "MeStory API Server",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node src/server.ts",
+    "dev": "nodemon --exec \"ts-node --transpile-only\" src/server.ts",
     "build": "echo 'Build skipped'",
     "start": "node dist/server.js",
     "test": "jest",
