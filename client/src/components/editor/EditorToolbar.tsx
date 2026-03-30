@@ -70,6 +70,29 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   const [showColorMenu, setShowColorMenu] = useState(false);
   const [showHighlightMenu, setShowHighlightMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+  // Save selection when opening menus (to restore before applying commands in portals)
+  const savedSelection = useRef<{ from: number; to: number } | null>(null);
+
+  const saveSelection = () => {
+    if (editor) {
+      const { from, to } = editor.state.selection;
+      savedSelection.current = { from, to };
+    }
+  };
+
+  const restoreSelectionAndRun = (command: () => void) => {
+    if (editor && savedSelection.current) {
+      const { from, to } = savedSelection.current;
+      editor.chain().focus().setTextSelection({ from, to }).run();
+      // Small delay to ensure selection is set before command runs
+      setTimeout(() => {
+        command();
+      }, 0);
+    } else {
+      command();
+    }
+  };
   const headingMenuRef = useRef<HTMLDivElement>(null);
   const colorMenuRef = useRef<HTMLDivElement>(null);
   const highlightMenuRef = useRef<HTMLDivElement>(null);
@@ -272,12 +295,14 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   };
 
   const setHeading = (level: HeadingLevel | 'paragraph') => {
-    if (level === 'paragraph') {
-      editor.chain().focus().setParagraph().run();
-    } else {
-      editor.chain().focus().toggleHeading({ level }).run();
-    }
     setShowHeadingMenu(false);
+    restoreSelectionAndRun(() => {
+      if (level === 'paragraph') {
+        editor.chain().focus().setParagraph().run();
+      } else {
+        editor.chain().focus().toggleHeading({ level }).run();
+      }
+    });
   };
 
   return (
@@ -311,6 +336,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => {
+            if (!showHeadingMenu) saveSelection();
             setShowHeadingMenu(!showHeadingMenu);
             setShowColorMenu(false);
             setShowHighlightMenu(false);
@@ -422,6 +448,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
+              if (!showColorMenu) saveSelection();
               setShowColorMenu(!showColorMenu);
               setShowHighlightMenu(false);
               setShowMoreMenu(false);
@@ -457,6 +484,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
+              if (!showColorMenu) saveSelection();
               setShowColorMenu(!showColorMenu);
               setShowHighlightMenu(false);
               setShowHeadingMenu(false);
@@ -479,6 +507,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
+              if (!showHighlightMenu) saveSelection();
               setShowHighlightMenu(!showHighlightMenu);
               setShowColorMenu(false);
               setShowHeadingMenu(false);
@@ -558,6 +587,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => {
+            if (!showMoreMenu) saveSelection();
             setShowMoreMenu(!showMoreMenu);
             setShowColorMenu(false);
             setShowHighlightMenu(false);
@@ -622,14 +652,14 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
                   <Strikethrough className={smallIconClass} />
                 </ToolbarButton>
                 <ToolbarButton
-                  onClick={() => { setShowColorMenu(!showColorMenu); setShowMoreMenu(false); }}
+                  onClick={() => { saveSelection(); setShowColorMenu(!showColorMenu); setShowMoreMenu(false); }}
                   title={t('editor.toolbar.text_color')}
                   size="small"
                 >
                   <Palette className={smallIconClass} />
                 </ToolbarButton>
                 <ToolbarButton
-                  onClick={() => { setShowHighlightMenu(!showHighlightMenu); setShowMoreMenu(false); }}
+                  onClick={() => { saveSelection(); setShowHighlightMenu(!showHighlightMenu); setShowMoreMenu(false); }}
                   title={t('editor.toolbar.highlight')}
                   size="small"
                 >
@@ -741,8 +771,10 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
-                  editor.chain().focus().setColor(item.color).run();
                   setShowColorMenu(false);
+                  restoreSelectionAndRun(() => {
+                    editor.chain().focus().setColor(item.color).run();
+                  });
                 }}
                 title={t(`colors.${item.nameKey}`)}
                 className="w-8 h-8 rounded-md border border-white/20 hover:scale-110 transition-transform touch-manipulation active:scale-90"
@@ -754,8 +786,10 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
-              editor.chain().focus().unsetColor().run();
               setShowColorMenu(false);
+              restoreSelectionAndRun(() => {
+                editor.chain().focus().unsetColor().run();
+              });
             }}
             className="w-full mt-3 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/10 rounded-lg touch-manipulation active:bg-white/20"
           >
@@ -787,12 +821,14 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
-                  if (item.color === 'transparent') {
-                    editor.chain().focus().unsetHighlight().run();
-                  } else {
-                    editor.chain().focus().toggleHighlight({ color: item.color }).run();
-                  }
                   setShowHighlightMenu(false);
+                  restoreSelectionAndRun(() => {
+                    if (item.color === 'transparent') {
+                      editor.chain().focus().unsetHighlight().run();
+                    } else {
+                      editor.chain().focus().toggleHighlight({ color: item.color }).run();
+                    }
+                  });
                 }}
                 title={t(`colors.${item.nameKey}`)}
                 className={`w-8 h-8 rounded-md border hover:scale-110 transition-transform touch-manipulation active:scale-90 flex items-center justify-center ${
