@@ -17,7 +17,7 @@ function getGeminiModel(): GenerativeModel {
     genAIClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   }
   if (!modelInstance) {
-    modelInstance = genAIClient.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    modelInstance = genAIClient.getGenerativeModel({ model: 'gemini-2.5-flash' });
   }
   return modelInstance;
 }
@@ -34,8 +34,8 @@ function getGeminiImageModel(): GenerativeModel {
     genAIClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   }
   if (!imageModelInstance) {
-    // Try the image generation model - use imagen-3.0 or gemini-2.0-flash-exp
-    const modelName = process.env.GEMINI_IMAGE_MODEL || 'gemini-2.0-flash-exp';
+    // Try the image generation model - use gemini-2.5-flash or imagen-3.0
+    const modelName = process.env.GEMINI_IMAGE_MODEL || 'gemini-2.5-flash';
     console.log(`🍌 Using Gemini image model: ${modelName}`);
     imageModelInstance = genAIClient.getGenerativeModel({
       model: modelName,
@@ -493,15 +493,15 @@ async function generateWithStabilityAI(prompt: string, request: ImageGenerationR
 /**
  * Generate image using Nano Banana 2 (Gemini 3.1 Flash Image Preview)
  * Model: gemini-3.1-flash-image-preview
- * Fallback models: gemini-2.0-flash-exp, imagen-3.0-generate-002
+ * Fallback models: gemini-2.5-flash, imagen-3.0-generate-002
  * Docs: https://ai.google.dev/gemini-api/docs/image-generation
  */
 async function generateWithNanoBananaPro(prompt: string, aspectRatio?: string): Promise<string> {
   // Try multiple model names in order of preference
   const MODEL_OPTIONS = [
     'gemini-3.1-flash-image-preview',  // Nano Banana 2
-    'gemini-2.0-flash-exp',            // Gemini 2.0 experimental with image gen
-    'gemini-2.5-flash-preview-05-20',  // Latest preview
+    'gemini-2.5-flash',                // Gemini 2.5 Flash (stable)
+    'gemini-2.5-pro',                  // Gemini 2.5 Pro (fallback)
   ];
 
   console.log(`🍌 Nano Banana 2: Starting image generation`);
