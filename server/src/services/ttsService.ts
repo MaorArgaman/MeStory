@@ -1,7 +1,7 @@
 /**
  * Text-to-Speech Service
  * Provides AI-powered narration for books
- * Supports multiple TTS providers: Browser API, Google Cloud TTS, ElevenLabs
+ * Supports multiple TTS providers: Browser API, Google Cloud TTS, Gemini TTS
  */
 
 import axios from 'axios';
@@ -10,7 +10,7 @@ import path from 'path';
 import crypto from 'crypto';
 
 // TTS Provider types
-export type TTSProvider = 'browser' | 'google' | 'elevenlabs';
+export type TTSProvider = 'browser' | 'google';
 
 export interface TTSRequest {
   text: string;
@@ -51,14 +51,6 @@ const VOICES: Record<string, VoiceOption[]> = {
     { id: 'en-US-Neural2-A', name: 'English US Female', language: 'en', gender: 'female', provider: 'google' },
     { id: 'en-US-Neural2-D', name: 'English US Male', language: 'en', gender: 'male', provider: 'google' },
   ],
-  elevenlabs: [
-    { id: 'rachel', name: 'Rachel (Calm)', language: 'en', gender: 'female', provider: 'elevenlabs' },
-    { id: 'domi', name: 'Domi (Strong)', language: 'en', gender: 'female', provider: 'elevenlabs' },
-    { id: 'bella', name: 'Bella (Soft)', language: 'en', gender: 'female', provider: 'elevenlabs' },
-    { id: 'antoni', name: 'Antoni (Well-rounded)', language: 'en', gender: 'male', provider: 'elevenlabs' },
-    { id: 'josh', name: 'Josh (Young)', language: 'en', gender: 'male', provider: 'elevenlabs' },
-    { id: 'arnold', name: 'Arnold (Deep)', language: 'en', gender: 'male', provider: 'elevenlabs' },
-  ],
 };
 
 /**
@@ -67,7 +59,7 @@ const VOICES: Record<string, VoiceOption[]> = {
 export function getAvailableVoices(language: string, provider?: TTSProvider): VoiceOption[] {
   const allVoices: VoiceOption[] = [];
 
-  const providers = provider ? [provider] : ['browser', 'google', 'elevenlabs'];
+  const providers = provider ? [provider] : ['browser', 'google'];
 
   providers.forEach(p => {
     const providerVoices = VOICES[p] || [];
@@ -148,70 +140,6 @@ async function generateWithGoogleTTS(request: TTSRequest): Promise<TTSResponse> 
 }
 
 /**
- * Generate speech using ElevenLabs
- */
-async function generateWithElevenLabs(request: TTSRequest): Promise<TTSResponse> {
-  const apiKey = process.env.ELEVENLABS_API_KEY;
-
-  if (!apiKey) {
-    return {
-      success: false,
-      provider: 'elevenlabs',
-      error: 'ElevenLabs API key not configured',
-    };
-  }
-
-  try {
-    const voiceId = request.voice || 'rachel';
-
-    const response = await axios.post(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
-      {
-        text: request.text,
-        model_id: 'eleven_multilingual_v2', // Supports Hebrew
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75,
-          style: 0.5,
-          use_speaker_boost: true,
-        },
-      },
-      {
-        headers: {
-          'xi-api-key': apiKey,
-          'Content-Type': 'application/json',
-          Accept: 'audio/mpeg',
-        },
-        responseType: 'arraybuffer',
-      }
-    );
-
-    // Save audio to file
-    const uploadDir = process.env.UPLOAD_DIR || './uploads';
-    const audioDir = path.join(uploadDir, 'audio');
-    await fs.mkdir(audioDir, { recursive: true });
-
-    const filename = `tts-${crypto.randomUUID()}.mp3`;
-    const filePath = path.join(audioDir, filename);
-
-    await fs.writeFile(filePath, response.data);
-
-    return {
-      success: true,
-      audioUrl: `/uploads/audio/${filename}`,
-      provider: 'elevenlabs',
-    };
-  } catch (error: any) {
-    console.error('ElevenLabs TTS error:', error.response?.data || error.message);
-    return {
-      success: false,
-      provider: 'elevenlabs',
-      error: error.response?.data?.detail?.message || 'Failed to generate speech',
-    };
-  }
-}
-
-/**
  * Generate speech - main function
  * Falls back to browser API info if no server-side provider is configured
  */
@@ -221,9 +149,6 @@ export async function generateSpeech(request: TTSRequest): Promise<TTSResponse> 
   switch (provider) {
     case 'google':
       return generateWithGoogleTTS(request);
-
-    case 'elevenlabs':
-      return generateWithElevenLabs(request);
 
     case 'browser':
     default:
