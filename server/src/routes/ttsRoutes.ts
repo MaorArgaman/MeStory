@@ -1,41 +1,31 @@
 /**
- * TTS Routes
+ * TTS Routes - DISABLED
  * Text-to-Speech API endpoints
+ *
+ * TTS has been disabled due to high costs (~$32 per book)
+ * All endpoints return 503 Service Unavailable
  */
 
-import { Router } from 'express';
-import { authenticate } from '../middleware/auth';
-import {
-  generateAudio,
-  getVoices,
-  deleteAudioCache,
-  getAudioStatus,
-  generateBookAudio,
-  migrateAllBooksAudio,
-  migrateAllBooksTranslations,
-} from '../controllers/ttsController';
+import { Router, Request, Response } from 'express';
 
 const router = Router();
 
-// Get available voices (public)
-router.get('/voices', getVoices as any);
+// TTS service disabled message
+const ttsDisabledResponse = (_req: Request, res: Response) => {
+  return res.status(503).json({
+    success: false,
+    error: 'TTS service is currently disabled',
+    message: 'Text-to-Speech has been disabled to reduce costs. Use browser-based TTS instead.',
+  });
+};
 
-// Get audio status for a book (public)
-router.get('/status/:bookId', getAudioStatus as any);
-
-// Generate audio for a single chapter (requires auth)
-router.post('/generate', authenticate as any, generateAudio as any);
-
-// Generate audio for entire book (requires auth)
-router.post('/generate-book/:bookId', authenticate as any, generateBookAudio as any);
-
-// Migrate all published books - generate audio (requires auth)
-router.post('/migrate-all', authenticate as any, migrateAllBooksAudio as any);
-
-// Migrate all published books - generate translations (requires auth)
-router.post('/migrate-translations', authenticate as any, migrateAllBooksTranslations as any);
-
-// Delete cached audio (requires auth)
-router.delete('/cache', authenticate as any, deleteAudioCache as any);
+// All routes return disabled message
+router.get('/voices', ttsDisabledResponse);
+router.get('/status/:bookId', ttsDisabledResponse);
+router.post('/generate', ttsDisabledResponse);
+router.post('/generate-book/:bookId', ttsDisabledResponse);
+router.post('/migrate-all', ttsDisabledResponse);
+router.post('/migrate-translations', ttsDisabledResponse);
+router.delete('/cache', ttsDisabledResponse);
 
 export default router;

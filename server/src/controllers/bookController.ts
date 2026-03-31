@@ -1122,12 +1122,12 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
       publishingStatus: updatedPublishingStatus,
     });
 
-    // Generate translations and TTS audio (4 versions: EN/HE x male/female)
-    // CORRECT ORDER: Original audio → Translation → Translated audio
-    // This runs in the background to not block the publish response
-    generateTranslationsAndAudio(id, book.title, book.chapters, book.language || 'en').catch((err) =>
-      console.error('Failed to generate translations and audio:', err)
-    );
+    // TTS DISABLED - Too expensive ($32+ per book)
+    // Was generating 8 audio versions automatically (2 languages × 2 genders × 2 versions)
+    // To re-enable, uncomment the following:
+    // generateTranslationsAndAudio(id, book.title, book.chapters, book.language || 'en').catch((err) =>
+    //   console.error('Failed to generate translations and audio:', err)
+    // );
 
     // Update user's author profile
     const user = await User.findById(req.user.id);
