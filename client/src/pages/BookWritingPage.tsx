@@ -27,6 +27,7 @@ import Underline from '@tiptap/extension-underline';
 import CharacterCount from '@tiptap/extension-character-count';
 import { TextStyle, Color } from '@tiptap/extension-text-style';
 import Highlight from '@tiptap/extension-highlight';
+import Image from '@tiptap/extension-image';
 import AICopilot from '../components/editor/AICopilot';
 import EditorToolbar from '../components/editor/EditorToolbar';
 import DraftNotes from '../components/editor/DraftNotes';
@@ -85,6 +86,12 @@ export default function BookWritingPage() {
 
   // Ref for debounced auto-save timer
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Autosave versioning to prevent out-of-order saves
+  const saveVersionRef = useRef(0);
+  const pendingSaveRef = useRef(false);
+  const retryCountRef = useRef(0);
+  const MAX_RETRIES = 3;
 
   // Focus management for sidebars (accessibility)
   useEffect(() => {
@@ -158,6 +165,13 @@ export default function BookWritingPage() {
       Color,
       Highlight.configure({
         multicolor: true,
+      }),
+      Image.configure({
+        inline: false,
+        allowBase64: true,
+        HTMLAttributes: {
+          class: 'editor-image max-w-full h-auto rounded-lg my-4',
+        },
       }),
     ],
     content: '',
@@ -276,8 +290,15 @@ export default function BookWritingPage() {
     }
   };
 
-  const saveBook = async () => {
-    if (!book || !editor || saving) return;
+  const saveBook = async (isRetry = false) => {
+    if (!book || !editor) return;
+
+    // Prevent concurrent saves
+    if (pendingSaveRef.current && !isRetry) return;
+
+    // Increment version for this save
+    const currentVersion = ++saveVersionRef.current;
+    pendingSaveRef.current = true;
 
     setSaving(true);
     try {
@@ -292,19 +313,48 @@ export default function BookWritingPage() {
         };
       }
 
+      // Backup to localStorage before saving
+      try {
+        localStorage.setItem(`mestory_backup_${bookId}_${selectedChapterIndex}`, JSON.stringify({
+          content,
+          timestamp: Date.now(),
+          version: currentVersion,
+        }));
+      } catch (e) {
+        console.warn('Failed to backup to localStorage:', e);
+      }
+
       const response = await api.put(`/books/${bookId}`, {
         chapters: updatedChapters,
       });
 
-      if (response.data.success) {
+      // Only apply if this is still the latest save
+      if (currentVersion === saveVersionRef.current && response.data.success) {
         setBook(response.data.data.book);
         setSaved(true);
-        toast.success('Saved!', { duration: 1500 });
+        retryCountRef.current = 0;
+        // Clear backup on successful save
+        try {
+          localStorage.removeItem(`mestory_backup_${bookId}_${selectedChapterIndex}`);
+        } catch (e) {
+          // Ignore
+        }
+        toast.success(t('status.saved'), { duration: 1500 });
       }
     } catch (error) {
       console.error('Failed to save book:', error);
-      toast.error('Failed to save');
+
+      // Retry logic
+      if (retryCountRef.current < MAX_RETRIES) {
+        retryCountRef.current++;
+        toast.error(t('errors.save_failed_retrying', { attempt: retryCountRef.current, max: MAX_RETRIES }), { duration: 2000 });
+        setTimeout(() => saveBook(true), 2000 * retryCountRef.current);
+      } else {
+        retryCountRef.current = 0;
+        toast.error(t('errors.save_failed_backup'), { duration: 5000 });
+      }
     } finally {
+      pendingSaveRef.current = false;
       setSaving(false);
     }
   };
@@ -558,7 +608,7 @@ export default function BookWritingPage() {
 
             {/* Save Button */}
             <button
-              onClick={saveBook}
+              onClick={() => saveBook()}
               disabled={saving || saved}
               className="btn-primary flex items-center gap-2"
             >
@@ -582,7 +632,7 @@ export default function BookWritingPage() {
 
             {/* Save Button */}
             <button
-              onClick={saveBook}
+              onClick={() => saveBook()}
               disabled={saving || saved}
               className="btn-primary p-2"
             >

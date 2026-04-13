@@ -147,7 +147,10 @@
     "network": "Network error. Please check your connection.",
     "not_found": "Not found",
     "unauthorized": "Please log in to continue",
-    "forbidden": "You don't have permission to access this"
+    "forbidden": "You don't have permission to access this",
+    "save_failed_retrying": "Save failed. Retrying ({{attempt}}/{{max}})...",
+    "save_failed_backup": "Save failed. Your work is backed up locally. Please try again later.",
+    "auto_save_failed": "Auto-save failed. Click save to retry."
   },
   "user": {
     "signed_in_as": "Signed in as",
@@ -851,9 +854,12 @@
     "add_toc": "Add TOC",
     "edit_content": "Edit content",
     "content_saved": "Content saved",
+    "auto_save_failed": "Auto-save failed",
     "messages": {
       "layout_saved": "Layout saved successfully",
-      "save_failed": "Failed to save layout"
+      "save_failed": "Failed to save layout",
+      "save_success": "Layout saved successfully!",
+      "save_error": "Error saving layout"
     }
   },
   "book_details": {
@@ -1137,6 +1143,31 @@
     "transcribing": "Transcribing...",
     "recordVoice": "Record voice",
     "typeYourAnswer": "Type your answer..."
+  },
+  "voice_interview": {
+    "title": "AI Voice Interview",
+    "description": "I'll ask you questions about the book you want to write. Answer by voice or text, and at the end we'll get a comprehensive summary to help you with your writing.",
+    "checking_mic": "Checking microphone permissions...",
+    "mic_available": "Microphone available",
+    "mic_unavailable": "Cannot access microphone - you can type responses",
+    "voice_enabled": "Voice enabled",
+    "voice_disabled": "Voice disabled",
+    "starting": "Starting...",
+    "start": "Start Interview",
+    "progress": "Progress",
+    "complete_early": "Complete Interview Early",
+    "summary_title": "Interview Summary",
+    "edit": "Edit",
+    "tone": "Tone",
+    "topic_theme": "Theme & Message",
+    "topic_characters": "Characters",
+    "topic_plot": "Plot",
+    "topic_setting": "Setting",
+    "edit_summary": "Edit Summary",
+    "save_changes": "Save Changes",
+    "cancel": "Cancel",
+    "complete": "Complete",
+    "create_book": "Create Book"
   },
   "voiceRecorder": {
     "notSupported": "Voice recording is not supported by your browser",

@@ -147,7 +147,10 @@
     "network": "שגיאת רשת. אנא בדוק את החיבור שלך.",
     "not_found": "לא נמצא",
     "unauthorized": "אנא התחבר כדי להמשיך",
-    "forbidden": "אין לך הרשאה לגשת לזה"
+    "forbidden": "אין לך הרשאה לגשת לזה",
+    "save_failed_retrying": "השמירה נכשלה. מנסה שוב ({{attempt}}/{{max}})...",
+    "save_failed_backup": "השמירה נכשלה. העבודה שלך גובתה מקומית. אנא נסה שוב מאוחר יותר.",
+    "auto_save_failed": "השמירה האוטומטית נכשלה. לחץ על שמור לניסיון חוזר."
   },
   "user": {
     "signed_in_as": "מחובר בתור",
@@ -926,9 +929,12 @@
     "add_toc": "הוסף תוכן עניינים",
     "edit_content": "ערוך תוכן",
     "content_saved": "התוכן נשמר",
+    "auto_save_failed": "השמירה האוטומטית נכשלה",
     "messages": {
       "layout_saved": "הפריסה נשמרה בהצלחה",
-      "save_failed": "נכשל בשמירת הפריסה"
+      "save_failed": "נכשל בשמירת הפריסה",
+      "save_success": "הפריסה נשמרה בהצלחה!",
+      "save_error": "שגיאה בשמירת הפריסה"
     }
   },
   "book_details": {
@@ -1212,6 +1218,31 @@
     "transcribing": "מתמלל...",
     "recordVoice": "הקלט קול",
     "typeYourAnswer": "הקלד את תשובתך..."
+  },
+  "voice_interview": {
+    "title": "ראיון קולי עם AI",
+    "description": "אשאל אותך שאלות על הספר שאתה רוצה לכתוב. ענה בקול או בטקסט, ובסוף נקבל סיכום מקיף שיעזור לך בכתיבה.",
+    "checking_mic": "בודק הרשאות מיקרופון...",
+    "mic_available": "מיקרופון זמין",
+    "mic_unavailable": "לא ניתן לגשת למיקרופון - אתה יכול להקליד תשובות",
+    "voice_enabled": "קול מופעל",
+    "voice_disabled": "קול מושבת",
+    "starting": "מתחיל...",
+    "start": "התחל ראיון",
+    "progress": "התקדמות",
+    "complete_early": "סיים ראיון מוקדם",
+    "summary_title": "סיכום הראיון",
+    "edit": "ערוך",
+    "tone": "טון",
+    "topic_theme": "נושא ומסר",
+    "topic_characters": "דמויות",
+    "topic_plot": "עלילה",
+    "topic_setting": "סביבה",
+    "edit_summary": "ערוך סיכום",
+    "save_changes": "שמור שינויים",
+    "cancel": "ביטול",
+    "complete": "סיים",
+    "create_book": "צור ספר"
   },
   "voiceRecorder": {
     "notSupported": "הקלטת קול אינה נתמכת בדפדפן שלך",
