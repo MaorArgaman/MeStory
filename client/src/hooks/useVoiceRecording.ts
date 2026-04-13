@@ -27,8 +27,9 @@ export function useVoiceRecording({
   onTranscription,
   onError,
   language = 'he',
-  transcriptionInterval = 4000,
+  transcriptionInterval: _transcriptionInterval = 4000, // Reserved for chunked transcription
 }: UseVoiceRecordingOptions = {}): UseVoiceRecordingReturn {
+  void _transcriptionInterval;
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [error, setError] = useState<string | null>(null);

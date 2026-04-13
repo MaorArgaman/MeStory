@@ -18,10 +18,11 @@ import {
   RecommendedForYou,
 } from '../components/recommendations';
 import MemorialSection from '../components/memorial/MemorialSection';
+import MyCollaborationsSection from '../components/collaboration/MyCollaborationsSection';
 
-// Realistic dashboard images from public folder
-const emptyDashboard = '/img/empty-notebook.png';
-const dashboardHero = '/img/dashboard-hero.png';
+// Memorial-themed dashboard images from public folder
+const emptyDashboard = '/img/memorial-hero.png';
+const dashboardHero = '/img/memorial-family.png';
 const dashboardIconScratch = '/img/empty-notebook.png';
 const dashboardIconInterview = '/img/interview-speaker.png';
 const dashboardIconVoice = '/img/voice-interview.png';
@@ -342,14 +343,19 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Header with Background Image */}
-      <div className="relative overflow-hidden pt-20 pb-8 sm:pt-24 sm:pb-12 px-4 sm:px-6 lg:px-8">
-        <div className="absolute inset-0">
-          <img src={dashboardHero} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-b from-deep-space/60 via-deep-space/80 to-deep-space" />
+      <div className="relative overflow-hidden pt-24 pb-6 sm:pt-28 sm:pb-8 px-4 sm:px-6 lg:px-8 bg-deep-space">
+        <div className="absolute inset-0 z-0">
+          <img
+            src={dashboardHero}
+            alt=""
+            className="w-full h-full object-cover opacity-40"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-deep-space/60 to-deep-space" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto">
-          <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-1 sm:mb-2">{t('dashboard.title')}</h1>
-          <p className="text-sm sm:text-base text-gray-400">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">{t('dashboard.title')}</h1>
+          <p className="text-sm sm:text-base text-gray-300">
             {t('dashboard.welcome', { name: user?.name, credits: user?.credits })}
           </p>
         </div>
@@ -436,7 +442,7 @@ export default function DashboardPage() {
             onClick={() => setShowVoiceModal(true)}
             whileHover={{ scale: 1.02, y: -8 }}
             whileTap={{ scale: 0.98 }}
-            className="glass rounded-xl sm:rounded-2xl overflow-hidden group cursor-pointer relative h-[220px] sm:h-[280px] lg:h-[340px] border border-white/10 hover:border-magic-gold/50 transition-all duration-500"
+            className="glass rounded-xl sm:rounded-2xl overflow-hidden group cursor-pointer relative h-[220px] sm:h-[280px] lg:h-[340px] border border-white/10 hover:border-memorial-gold/50 transition-all duration-500"
           >
             {/* Background Image */}
             <div className="absolute inset-0">
@@ -455,9 +461,9 @@ export default function DashboardPage() {
               <p className="text-gray-300 text-xs sm:text-sm leading-relaxed mb-2 sm:mb-3 line-clamp-2 sm:line-clamp-none">
                 {t('dashboard.cards.voice.description')}
               </p>
-              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-magic-gold/20 border border-magic-gold/30">
-                <Mic className="w-3 h-3 sm:w-4 sm:h-4 text-magic-gold" />
-                <span className="text-[10px] sm:text-xs text-magic-gold font-medium">{t('dashboard.cards.voice.badge')}</span>
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-memorial-gold/20 border border-memorial-gold/30">
+                <Mic className="w-3 h-3 sm:w-4 sm:h-4 text-memorial-gold" />
+                <span className="text-[10px] sm:text-xs text-memorial-gold font-medium">{t('dashboard.cards.voice.badge')}</span>
               </div>
             </div>
           </motion.button>
@@ -503,6 +509,11 @@ export default function DashboardPage() {
           <MemorialSection />
         </div>
       )}
+
+      {/* My Collaborations Section */}
+      <div className="max-w-7xl mx-auto px-4">
+        <MyCollaborationsSection />
+      </div>
 
       {/* Continue Reading & Writing Sections */}
       <div className="max-w-7xl mx-auto mb-12">
