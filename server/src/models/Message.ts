@@ -219,7 +219,11 @@ export class Conversation {
       queryBuilder = queryBuilder.eq('book_id', query.book);
     }
     if (query.participants) {
-      queryBuilder = queryBuilder.contains('participants', query.participants);
+      // Ensure participants is always an array for the contains query
+      const participantsArray = Array.isArray(query.participants)
+        ? query.participants
+        : [query.participants];
+      queryBuilder = queryBuilder.contains('participants', participantsArray);
     }
 
     const { data, error } = await queryBuilder.limit(1).single();
@@ -261,7 +265,11 @@ export class Conversation {
     let queryBuilder = supabaseAdmin.from('conversations').select('*');
 
     if (query.participants) {
-      queryBuilder = queryBuilder.contains('participants', query.participants);
+      // Ensure participants is always an array for the contains query
+      const participantsArray = Array.isArray(query.participants)
+        ? query.participants
+        : [query.participants];
+      queryBuilder = queryBuilder.contains('participants', participantsArray);
     }
     if (query.book) {
       queryBuilder = queryBuilder.eq('book_id', query.book);
@@ -312,19 +320,4 @@ export class Conversation {
     if (error) return null;
     return rowToConversation(data as ConversationRow);
   }
-
-  static async findByIdAndDelete(id: string): Promise<IConversation | null> {
-    const conversation = await this.findById(id);
-    if (!conversation) return null;
-
-    const { error } = await supabaseAdmin
-      .from('conversations')
-      .delete()
-      .eq('id', id);
-
-    if (error) return null;
-    return conversation;
-  }
 }
-
-export default { Message, Conversation };

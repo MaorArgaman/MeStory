@@ -23,8 +23,8 @@ function getGeminiModel(): GenerativeModel {
   return modelInstance;
 }
 
-// Interview topics
-export type InterviewTopic = 'theme' | 'characters' | 'plot' | 'setting';
+// Interview topics - Memorial focused
+export type InterviewTopic = 'person' | 'memories' | 'impact' | 'legacy';
 
 // Interview response interface
 export interface InterviewResponse {
@@ -57,50 +57,61 @@ export interface AnalysisResult {
   extractedInfo: string;
 }
 
-// Interview summary interfaces
-export interface CharacterSummary {
+// Interview summary interfaces - Memorial focused
+export interface PersonSummary {
   name: string;
-  role: 'protagonist' | 'antagonist' | 'supporting' | 'minor';
+  relationship: string;
+  birthDate?: string;
+  passingDate?: string;
+  occupation?: string;
   traits: string[];
   description: string;
 }
 
 export interface InterviewSummary {
-  theme: {
-    mainTheme: string;
-    subThemes: string[];
-    tone: string;
-    genre: string;
+  person: {
+    name: string;
+    relationship: string;
+    lifeSpan: string;
+    occupation: string;
+    personalityTraits: string[];
+    definingQualities: string;
   };
-  characters: CharacterSummary[];
-  plot: {
-    premise: string;
-    conflict: string;
-    stakes: string;
-    keyEvents: string[];
+  memories: {
+    favoriteMemories: string[];
+    funnyStories: string[];
+    significantMoments: string[];
+    traditions: string[];
   };
-  setting: {
-    world: string;
-    timePeriod: string;
-    atmosphere: string;
-    locations: string[];
+  impact: {
+    lessonsTaught: string[];
+    howTheyChangedLives: string;
+    whatTheyWouldWant: string;
+    lastingInfluence: string;
+  };
+  legacy: {
+    forFutureGenerations: string;
+    howToPreserveMemory: string;
+    keyMessage: string;
+    dedication: string;
   };
   writingGuidelines: string[];
 }
 
-// Topic configurations
+// Topic configurations - Memorial focused
 const TOPIC_CONFIG: Record<InterviewTopic, {
   minQuestions: number;
   maxQuestions: number;
   hebrewName: string;
+  englishName: string;
 }> = {
-  theme: { minQuestions: 3, maxQuestions: 5, hebrewName: 'נושא הספר' },
-  characters: { minQuestions: 3, maxQuestions: 5, hebrewName: 'דמויות' },
-  plot: { minQuestions: 3, maxQuestions: 5, hebrewName: 'עלילה' },
-  setting: { minQuestions: 2, maxQuestions: 3, hebrewName: 'סביבה' },
+  person: { minQuestions: 3, maxQuestions: 5, hebrewName: 'על האדם', englishName: 'About the Person' },
+  memories: { minQuestions: 3, maxQuestions: 5, hebrewName: 'זיכרונות', englishName: 'Memories' },
+  impact: { minQuestions: 3, maxQuestions: 5, hebrewName: 'השפעה', englishName: 'Impact' },
+  legacy: { minQuestions: 2, maxQuestions: 3, hebrewName: 'מורשת', englishName: 'Legacy' },
 };
 
-const TOPIC_ORDER: InterviewTopic[] = ['theme', 'characters', 'plot', 'setting'];
+const TOPIC_ORDER: InterviewTopic[] = ['person', 'memories', 'impact', 'legacy'];
 
 /**
  * Create a new interview state
@@ -112,13 +123,13 @@ export function createInterviewState(
 ): InterviewState {
   return {
     id,
-    currentTopic: 'theme',
+    currentTopic: 'person',
     questionsAsked: 0,
     questionsPerTopic: {
-      theme: 0,
-      characters: 0,
-      plot: 0,
-      setting: 0,
+      person: 0,
+      memories: 0,
+      impact: 0,
+      legacy: 0,
     },
     responses: [],
     isComplete: false,
@@ -132,18 +143,19 @@ export function createInterviewState(
  * Get the first question to start the interview
  */
 export async function getFirstQuestion(state: InterviewState): Promise<string> {
-  const genreContext = state.genre ? `בז'אנר ${state.genre}` : '';
-  const audienceContext = state.targetAudience ? `לקהל יעד ${state.targetAudience}` : '';
+  const genreContext = state.genre ? `מסוג ${state.genre}` : '';
+  const audienceContext = state.targetAudience ? `עבור ${state.targetAudience}` : '';
 
-  const prompt = `אתה מראיין מקצועי שעוזר למחברים לפתח את הסיפור שלהם ${genreContext} ${audienceContext}.
+  const prompt = `אתה מלווה רגיש ומקצועי שעוזר למשפחות לכתוב ספר הנצחה ${genreContext} ${audienceContext}.
 
-זו תחילת הראיון. צור שאלת פתיחה חמה וידידותית שתעזור למחבר לספר על הרעיון המרכזי של הספר שלו.
+זו תחילת הראיון. צור שאלת פתיחה חמה, מכבדת ואמפתית שתעזור לאדם לספר על היקיר/ה שהוא רוצה להנציח.
 
 דרישות:
 - שאלה קצרה וברורה (עד 25 מילים)
 - בעברית
-- טון ידידותי ומעודד
+- טון חם, מכבד ורגיש
 - מזמינה תשובה פתוחה
+- מתאימה למצב של אבל או הנצחה
 
 תחזיר רק את השאלה, ללא הסברים.`;
 
@@ -172,7 +184,7 @@ export async function generateNextQuestion(
     .map(r => `[${TOPIC_CONFIG[r.topic].hebrewName}] ${r.answer}`)
     .join('\n');
 
-  const prompt = `אתה מראיין מקצועי שעוזר למחברים לפתח את הסיפור שלהם.
+  const prompt = `אתה מלווה רגיש ומקצועי שעוזר למשפחות לכתוב ספר הנצחה.
 
 הקשר הראיון עד כה:
 ${allContext || 'טרם נשאלו שאלות'}
@@ -183,15 +195,16 @@ ${lastResponse ? `תשובה אחרונה: ${lastResponse}` : ''}
 
 ${relevantResponses ? `שיחה קודמת בנושא:\n${relevantResponses}` : ''}
 
-צור שאלה אחת ממוקדת שתעזור למחבר להרחיב על ${topicConfig.hebrewName}.
+צור שאלה אחת ממוקדת שתעזור לאדם לספר יותר על ${topicConfig.hebrewName}.
 
 הנחיות:
-- אם התשובה האחרונה הייתה קצרה מדי (פחות מ-20 מילים), בקש הרחבה או דוגמה
-- אם המחבר סטה מהנושא, החזר אותו בעדינות לנושא ${topicConfig.hebrewName}
+- אם התשובה האחרונה הייתה קצרה מדי (פחות מ-20 מילים), בקש הרחבה או דוגמה ספציפית
+- אם האדם סטה מהנושא, החזר אותו בעדינות ובכבוד לנושא ${topicConfig.hebrewName}
 - שאל על היבטים שעדיין לא נדונו
 - השאלה צריכה להיות קצרה וברורה (עד 25 מילים)
 - בעברית
-- מעודדת תשובה מפורטת
+- טון חם, מכבד ורגיש - זכור שמדובר בספר הנצחה
+- עזור להוציא זיכרונות, רגשות וסיפורים אישיים
 
 החזר JSON בפורמט הבא:
 {
@@ -220,27 +233,27 @@ ${relevantResponses ? `שיחה קודמת בנושא:\n${relevantResponses}` : 
     };
   } catch (error) {
     console.error('Error generating question:', error);
-    // Fallback questions per topic
+    // Fallback questions per topic - Memorial focused
     const fallbackQuestions: Record<InterviewTopic, string[]> = {
-      theme: [
-        'מה הרעיון המרכזי של הסיפור שלך?',
-        'איזה מסר אתה רוצה להעביר לקורא?',
-        'מה מיוחד בסיפור הזה לעומת סיפורים אחרים?',
+      person: [
+        'ספר/י לי על האדם שאתה רוצה להנציח',
+        'מה היו התכונות הבולטות שלו/שלה?',
+        'מה היה הדבר הכי מיוחד באישיות שלו/שלה?',
       ],
-      characters: [
-        'ספר לי על הדמות הראשית בסיפור',
-        'מה מניע את הדמות הראשית?',
-        'האם יש דמויות משנה חשובות?',
+      memories: [
+        'מה הזיכרון הכי חזק שיש לך איתו/איתה?',
+        'יש סיפור מצחיק שתמיד מספרים במשפחה?',
+        'מה הרגעים שאתה הכי אוהב לזכור?',
       ],
-      plot: [
-        'מה הקונפליקט המרכזי בסיפור?',
-        'מה עומד על כף המאזניים?',
-        'איך אתה רואה את השיא של הסיפור?',
+      impact: [
+        'איך הוא/היא שינה את החיים שלך?',
+        'מה למדת ממנו/ממנה?',
+        'מה הוא/היא היה רוצה שתזכרו?',
       ],
-      setting: [
-        'איפה ומתי מתרחש הסיפור?',
-        'מה האווירה שאתה רוצה ליצור?',
-        'יש מקומות ספציפיים שחשובים לעלילה?',
+      legacy: [
+        'מה חשוב לך שהדורות הבאים יידעו?',
+        'איך אתה רוצה לשמר את הזיכרון?',
+        'מה המסר שהוא/היא היה רוצה להעביר?',
       ],
     };
 
@@ -422,60 +435,60 @@ export async function generateInterviewSummary(
 ): Promise<InterviewSummary> {
   // Organize responses by topic
   const responsesByTopic: Record<InterviewTopic, string[]> = {
-    theme: [],
-    characters: [],
-    plot: [],
-    setting: [],
+    person: [],
+    memories: [],
+    impact: [],
+    legacy: [],
   };
 
   state.responses.forEach(r => {
     responsesByTopic[r.topic].push(`שאלה: ${r.question}\nתשובה: ${r.answer}`);
   });
 
-  const prompt = `אתה עורך ספרותי מקצועי. נתח את הראיון הבא עם מחבר וצור סיכום מקיף שיעזור בכתיבת הספר.
+  const prompt = `אתה מלווה רגיש שעוזר למשפחות לכתוב ספרי הנצחה. נתח את הראיון הבא וצור סיכום מקיף שיעזור בכתיבת ספר ההנצחה.
 
-## נושא הספר:
-${responsesByTopic.theme.join('\n\n')}
+## על האדם:
+${responsesByTopic.person.join('\n\n')}
 
-## דמויות:
-${responsesByTopic.characters.join('\n\n')}
+## זיכרונות:
+${responsesByTopic.memories.join('\n\n')}
 
-## עלילה:
-${responsesByTopic.plot.join('\n\n')}
+## השפעה:
+${responsesByTopic.impact.join('\n\n')}
 
-## סביבה:
-${responsesByTopic.setting.join('\n\n')}
+## מורשת:
+${responsesByTopic.legacy.join('\n\n')}
 
 צור סיכום מובנה בפורמט JSON הבא:
 {
-  "theme": {
-    "mainTheme": "הנושא המרכזי של הסיפור",
-    "subThemes": ["נושא משנה 1", "נושא משנה 2"],
-    "tone": "הטון הכללי (למשל: דרמטי, הומוריסטי, מתח)",
-    "genre": "הז'אנר המתאים"
+  "person": {
+    "name": "שם האדם המונצח",
+    "relationship": "הקשר של הכותב לאדם",
+    "lifeSpan": "תקופת החיים (אם צוין)",
+    "occupation": "עיסוק או תפקיד",
+    "personalityTraits": ["תכונה 1", "תכונה 2", "תכונה 3"],
+    "definingQualities": "התכונות המגדירות ביותר"
   },
-  "characters": [
-    {
-      "name": "שם הדמות",
-      "role": "protagonist/antagonist/supporting/minor",
-      "traits": ["תכונה 1", "תכונה 2"],
-      "description": "תיאור קצר של הדמות"
-    }
-  ],
-  "plot": {
-    "premise": "הרעיון הבסיסי של הסיפור",
-    "conflict": "הקונפליקט המרכזי",
-    "stakes": "מה עומד על כף המאזניים",
-    "keyEvents": ["אירוע מפתח 1", "אירוע מפתח 2"]
+  "memories": {
+    "favoriteMemories": ["זיכרון אהוב 1", "זיכרון אהוב 2"],
+    "funnyStories": ["סיפור מצחיק 1", "סיפור מצחיק 2"],
+    "significantMoments": ["רגע משמעותי 1", "רגע משמעותי 2"],
+    "traditions": ["מסורת משפחתית 1", "מסורת 2"]
   },
-  "setting": {
-    "world": "תיאור העולם",
-    "timePeriod": "תקופת הזמן",
-    "atmosphere": "האווירה הכללית",
-    "locations": ["מיקום 1", "מיקום 2"]
+  "impact": {
+    "lessonsTaught": ["לקח 1", "לקח 2"],
+    "howTheyChangedLives": "איך שינה/שינתה חיים",
+    "whatTheyWouldWant": "מה היה רוצה שיזכרו",
+    "lastingInfluence": "ההשפעה המתמשכת"
+  },
+  "legacy": {
+    "forFutureGenerations": "מה לדעת לדורות הבאים",
+    "howToPreserveMemory": "איך לשמר את הזיכרון",
+    "keyMessage": "המסר המרכזי",
+    "dedication": "הקדשה מוצעת"
   },
   "writingGuidelines": [
-    "הנחיה לכתיבה 1 - מבוססת על הראיון",
+    "הנחיה לכתיבה רגישה 1",
     "הנחיה לכתיבה 2",
     "הנחיה לכתיבה 3"
   ]
@@ -485,7 +498,8 @@ ${responsesByTopic.setting.join('\n\n')}
 - הכל בעברית
 - התבסס רק על מה שנאמר בראיון
 - אם מידע חסר, כתוב "לא צוין"
-- הנחיות הכתיבה צריכות להיות ספציפיות ושימושיות`;
+- הנחיות הכתיבה צריכות להיות רגישות ומכבדות
+- שמור על טון חם ומכבד לאורך כל הסיכום`;
 
   try {
     const result = await getGeminiModel().generateContent(prompt);
@@ -502,29 +516,36 @@ ${responsesByTopic.setting.join('\n\n')}
 
   // Fallback summary if AI fails
   return {
-    theme: {
-      mainTheme: 'לא זוהה',
-      subThemes: [],
-      tone: 'לא צוין',
-      genre: state.genre || 'לא צוין',
+    person: {
+      name: 'לא צוין',
+      relationship: 'לא צוין',
+      lifeSpan: 'לא צוין',
+      occupation: 'לא צוין',
+      personalityTraits: [],
+      definingQualities: 'לא צוין',
     },
-    characters: [],
-    plot: {
-      premise: 'לא צוין',
-      conflict: 'לא צוין',
-      stakes: 'לא צוין',
-      keyEvents: [],
+    memories: {
+      favoriteMemories: [],
+      funnyStories: [],
+      significantMoments: [],
+      traditions: [],
     },
-    setting: {
-      world: 'לא צוין',
-      timePeriod: 'לא צוין',
-      atmosphere: 'לא צוין',
-      locations: [],
+    impact: {
+      lessonsTaught: [],
+      howTheyChangedLives: 'לא צוין',
+      whatTheyWouldWant: 'לא צוין',
+      lastingInfluence: 'לא צוין',
+    },
+    legacy: {
+      forFutureGenerations: 'לא צוין',
+      howToPreserveMemory: 'לא צוין',
+      keyMessage: 'לא צוין',
+      dedication: 'לא צוין',
     },
     writingGuidelines: [
-      'המשך לפתח את הרעיונות שעלו בראיון',
-      'התמקד בדמויות ובמוטיבציות שלהן',
-      'בנה את העלילה סביב הקונפליקט המרכזי',
+      'ספר את הסיפורים בצורה חמה ואישית',
+      'שמור על כבוד וענווה בכתיבה',
+      'הבא את האדם לחיים דרך דוגמאות וזיכרונות ספציפיים',
     ],
   };
 }
@@ -537,13 +558,13 @@ export function getTopicTransitionMessage(
   toTopic: InterviewTopic
 ): string {
   const transitions: Record<string, string> = {
-    'theme_characters': 'נהדר! עכשיו אני רוצה לשמוע על הדמויות בסיפור שלך.',
-    'characters_plot': 'מצוין! בוא נדבר על העלילה והאירועים בסיפור.',
-    'plot_setting': 'יופי! לסיום, ספר לי על העולם שבו מתרחש הסיפור.',
+    'person_memories': 'תודה רבה. עכשיו אשמח לשמוע על זיכרונות מיוחדים שיש לך.',
+    'memories_impact': 'אלו זיכרונות יפים. ספר לי איך הוא/היא השפיע על חייך.',
+    'impact_legacy': 'זה מרגש. לסיום, מה חשוב לך שהדורות הבאים יידעו?',
   };
 
   const key = `${fromTopic}_${toTopic}`;
-  return transitions[key] || 'בוא נעבור לנושא הבא.';
+  return transitions[key] || 'תודה. בוא נמשיך לנושא הבא.';
 }
 
 /**

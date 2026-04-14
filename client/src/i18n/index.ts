@@ -46,8 +46,9 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'en',
-    supportedLngs: ['en', 'he'],
+    fallbackLng: 'he',  // Hebrew as default
+    lng: 'he',  // Start with Hebrew
+    supportedLngs: ['he', 'en'],
     ns: ['common', 'auth', 'dashboard', 'editor', 'settings', 'marketplace', 'memorial'],
     defaultNS: 'common',
     interpolation: {

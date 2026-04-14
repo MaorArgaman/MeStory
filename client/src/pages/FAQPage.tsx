@@ -336,7 +336,7 @@ export default function FAQPage() {
             className="text-center mb-12"
           >
             <div className="flex items-center justify-center gap-3 mb-4">
-              <HelpCircle className="w-12 h-12 text-magic-gold" />
+              <HelpCircle className="w-12 h-12 text-memorial-gold" />
             </div>
             <h1 className="text-4xl font-display font-bold gradient-gold mb-4">
               {isHebrew ? 'שאלות נפוצות' : 'Frequently Asked Questions'}
@@ -363,7 +363,7 @@ export default function FAQPage() {
                   placeholder={isHebrew ? 'חפשו שאלה...' : 'Search questions...'}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full bg-white/5 border border-white/10 rounded-lg py-3 text-white placeholder-gray-500 focus:outline-none focus:border-magic-gold/50 transition-colors ${isHebrew ? 'pr-12 pl-4' : 'pl-12 pr-4'}`}
+                  className={`w-full bg-white/5 border border-white/10 rounded-lg py-3 text-white placeholder-gray-500 focus:outline-none focus:border-memorial-gold/50 transition-colors ${isHebrew ? 'pr-12 pl-4' : 'pl-12 pr-4'}`}
                 />
               </div>
             </GlassCard>
@@ -383,7 +383,7 @@ export default function FAQPage() {
                   onClick={() => setSelectedCategory(category.id)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                     selectedCategory === category.id
-                      ? 'bg-magic-gold text-deep-space'
+                      ? 'bg-memorial-gold text-deep-space'
                       : 'bg-white/5 text-gray-300 hover:bg-white/10'
                   }`}
                 >
@@ -414,7 +414,7 @@ export default function FAQPage() {
                   >
                     <GlassCard
                       hover={false}
-                      className={`p-0 overflow-hidden transition-all duration-300 ${isExpanded ? 'border-magic-gold/30' : ''}`}
+                      className={`p-0 overflow-hidden transition-all duration-300 ${isExpanded ? 'border-memorial-gold/30' : ''}`}
                     >
                       {/* Question (dt) */}
                       <dt>
@@ -424,8 +424,8 @@ export default function FAQPage() {
                           aria-expanded={isExpanded}
                           aria-controls={`answer-${item.id}`}
                         >
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-magic-gold/20 to-cosmic-purple/20 flex items-center justify-center flex-shrink-0">
-                            <Icon className="w-5 h-5 text-magic-gold" />
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-memorial-gold/20 to-cosmic-purple/20 flex items-center justify-center flex-shrink-0">
+                            <Icon className="w-5 h-5 text-memorial-gold" />
                           </div>
                           <span className="flex-1 text-lg font-semibold text-white">
                             {item.question[language]}
@@ -531,7 +531,7 @@ export default function FAQPage() {
               </p>
               <a
                 href="mailto:support@mestory.com"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space font-semibold rounded-lg hover:brightness-110 transition-all"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-memorial-gold to-yellow-500 text-deep-space font-semibold rounded-lg hover:brightness-110 transition-all"
               >
                 {isHebrew ? 'צרו קשר' : 'Contact Support'}
               </a>
@@ -547,11 +547,11 @@ export default function FAQPage() {
           >
             <p>
               {isHebrew ? 'מידע נוסף זמין ב' : 'More information available in our'}{' '}
-              <a href="/terms" className="text-magic-gold hover:underline">
+              <a href="/terms" className="text-memorial-gold hover:underline">
                 {isHebrew ? 'תנאי שימוש' : 'Terms of Service'}
               </a>
               {' '}{isHebrew ? 'וב' : 'and'}{' '}
-              <a href="/privacy" className="text-magic-gold hover:underline">
+              <a href="/privacy" className="text-memorial-gold hover:underline">
                 {isHebrew ? 'מדיניות פרטיות' : 'Privacy Policy'}
               </a>
             </p>

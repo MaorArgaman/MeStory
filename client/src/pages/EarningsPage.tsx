@@ -216,7 +216,7 @@ export default function EarningsPage() {
       return (
         <div className="bg-gray-800/95 border border-white/20 rounded-lg p-3 shadow-xl backdrop-blur-sm">
           <p className="text-white font-medium text-sm">{label}</p>
-          <p className="text-magic-gold text-sm mt-1">
+          <p className="text-memorial-gold text-sm mt-1">
             {formatCurrency(payload[0].value)}
           </p>
           <p className="text-gray-400 text-xs">
@@ -231,7 +231,7 @@ export default function EarningsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-magic-gold" />
+        <Loader2 className="w-8 h-8 animate-spin text-memorial-gold" />
       </div>
     );
   }
@@ -311,15 +311,15 @@ export default function EarningsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="glass-strong rounded-xl p-6 border border-magic-gold/30"
+            className="glass-strong rounded-xl p-6 border border-memorial-gold/30"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 flex items-center justify-center">
-                <Clock className="w-6 h-6 text-magic-gold" />
+                <Clock className="w-6 h-6 text-memorial-gold" />
               </div>
             </div>
             <p className="text-gray-400 text-sm mb-1">{t('earnings.pending_payout')}</p>
-            <p className="text-2xl font-bold text-magic-gold">{formatCurrency(summary.pendingPayout)}</p>
+            <p className="text-2xl font-bold text-memorial-gold">{formatCurrency(summary.pendingPayout)}</p>
           </motion.div>
 
           {/* Total Withdrawn */}
@@ -367,7 +367,7 @@ export default function EarningsPage() {
               className="glass-strong rounded-xl p-6 border border-white/10"
             >
               <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-magic-gold" />
+                <TrendingUp className="w-5 h-5 text-memorial-gold" />
                 {t('earnings.sales_chart_title')}
               </h2>
 
@@ -422,7 +422,7 @@ export default function EarningsPage() {
               className="glass-strong rounded-xl p-6 border border-white/10"
             >
               <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-magic-gold" />
+                <BookOpen className="w-5 h-5 text-memorial-gold" />
                 {t('earnings.recent_sales')}
               </h2>
 
@@ -455,7 +455,7 @@ export default function EarningsPage() {
                           <td className="py-3 text-right text-gray-300">
                             {formatCurrency(sale.amount)}
                           </td>
-                          <td className="py-3 text-right text-magic-gold font-medium">
+                          <td className="py-3 text-right text-memorial-gold font-medium">
                             {formatCurrency(sale.authorShare)}
                           </td>
                           <td className="py-3 text-right text-gray-400 text-sm">
@@ -483,7 +483,7 @@ export default function EarningsPage() {
               className="glass-strong rounded-xl p-6 border border-white/10"
             >
               <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Star className="w-5 h-5 text-magic-gold" />
+                <Star className="w-5 h-5 text-memorial-gold" />
                 {t('earnings.book_performance')}
               </h2>
 
@@ -520,7 +520,7 @@ export default function EarningsPage() {
                           <td className="py-3 text-right text-gray-300">
                             {formatCurrency(book.totalRevenue)}
                           </td>
-                          <td className="py-3 text-right text-magic-gold font-medium">
+                          <td className="py-3 text-right text-memorial-gold font-medium">
                             {formatCurrency(book.authorEarnings)}
                           </td>
                           <td className="py-3 text-center">
@@ -558,7 +558,7 @@ export default function EarningsPage() {
               className="glass-strong rounded-xl p-6 border border-white/10"
             >
               <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Wallet className="w-5 h-5 text-magic-gold" />
+                <Wallet className="w-5 h-5 text-memorial-gold" />
                 {t('earnings.payout_section')}
               </h2>
 
@@ -603,7 +603,7 @@ export default function EarningsPage() {
                 disabled={!canRequestPayout || requestingPayout}
                 className={`w-full py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
                   canRequestPayout
-                    ? 'bg-gradient-to-r from-magic-gold to-yellow-600 text-gray-900 hover:from-yellow-500 hover:to-yellow-700 shadow-lg shadow-yellow-500/20'
+                    ? 'bg-gradient-to-r from-memorial-gold to-yellow-600 text-gray-900 hover:from-yellow-500 hover:to-yellow-700 shadow-lg shadow-yellow-500/20'
                     : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                 }`}
               >
@@ -637,7 +637,7 @@ export default function EarningsPage() {
               className="glass-strong rounded-xl p-6 border border-white/10"
             >
               <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-magic-gold" />
+                <Calendar className="w-5 h-5 text-memorial-gold" />
                 {t('earnings.payout_history')}
               </h2>
 
@@ -704,7 +704,7 @@ export default function EarningsPage() {
                 value={paypalEmail}
                 onChange={(e) => setPaypalEmail(e.target.value)}
                 placeholder="your@email.com"
-                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-magic-gold/50 transition-colors"
+                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-memorial-gold/50 transition-colors"
               />
             </div>
 

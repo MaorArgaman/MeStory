@@ -11,17 +11,18 @@ import {
   ArrowLeft,
   Loader2,
   Check,
-  Sword,
-  Rocket,
   Heart,
-  Ghost,
-  Briefcase,
-  Lightbulb,
-  Smile,
-  Drama,
   Book,
   TrendingUp,
   Layout,
+  Flame,
+  Users,
+  ScrollText,
+  Star,
+  Feather,
+  MessageCircleHeart,
+  User,
+  UserPlus,
 } from 'lucide-react';
 import { api } from '../../services/api';
 import toast from 'react-hot-toast';
@@ -36,15 +37,16 @@ interface Genre {
   color: string;
 }
 
+// Memorial book categories - קטגוריות ספרי הנצחה
 const genres: Genre[] = [
-  { id: 'fantasy', icon: Sword, color: 'from-purple-500 to-pink-600' },
-  { id: 'sci-fi', icon: Rocket, color: 'from-cyan-500 to-blue-600' },
-  { id: 'romance', icon: Heart, color: 'from-rose-500 to-red-600' },
-  { id: 'mystery', icon: Ghost, color: 'from-indigo-500 to-purple-600' },
-  { id: 'thriller', icon: Drama, color: 'from-red-600 to-orange-600' },
-  { id: 'non-fiction', icon: Briefcase, color: 'from-green-500 to-emerald-600' },
-  { id: 'self-help', icon: Lightbulb, color: 'from-yellow-500 to-amber-600' },
-  { id: 'humor', icon: Smile, color: 'from-pink-500 to-rose-600' },
+  { id: 'fallen_soldier', icon: Flame, color: 'from-amber-600 to-orange-700' },
+  { id: 'life_story', icon: BookOpen, color: 'from-blue-600 to-indigo-700' },
+  { id: 'family_legacy', icon: Users, color: 'from-emerald-600 to-teal-700' },
+  { id: 'tribute', icon: Heart, color: 'from-rose-600 to-pink-700' },
+  { id: 'holocaust_survivor', icon: Star, color: 'from-amber-500 to-yellow-600' },
+  { id: 'shared_memories', icon: MessageCircleHeart, color: 'from-purple-600 to-indigo-700' },
+  { id: 'letters_and_words', icon: Feather, color: 'from-slate-600 to-gray-700' },
+  { id: 'testimony', icon: ScrollText, color: 'from-cyan-600 to-blue-700' },
 ];
 
 interface WritingGoal {
@@ -62,11 +64,12 @@ interface TargetAudience {
   id: string;
 }
 
+// Memorial book audiences - קהלי יעד לספרי הנצחה
 const targetAudiences: TargetAudience[] = [
-  { id: 'children' },
-  { id: 'young-adult' },
-  { id: 'adult' },
-  { id: 'all-ages' },
+  { id: 'family' },
+  { id: 'friends' },
+  { id: 'community' },
+  { id: 'public' },
 ];
 
 interface CreateBookWizardProps {
@@ -89,6 +92,17 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
   const [selectedAudience, setSelectedAudience] = useState<string>('');
   const [selectedTemplate, setSelectedTemplate] = useState<BookTemplate | null>(null);
   const [creating, setCreating] = useState(false);
+
+  // Collaborative book state
+  const [bookType, setBookType] = useState<'personal' | 'collaborative'>('personal');
+  const [memorialDedication, setMemorialDedication] = useState({
+    name: '',
+    relationship: '',
+    birthDate: '',
+    passingDate: '',
+  });
+
+  const isHebrew = t('create_book.wizard_title').includes('ספר');
 
   const handleSelectTemplate = (template: BookTemplate) => {
     setSelectedTemplate(template);
@@ -146,12 +160,26 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
 
     try {
       setCreating(true);
-      const response = await api.post('/books', {
+      const bookData: any = {
         title: title.trim(),
         genre: selectedGenre,
         writingGoal: selectedWritingGoal,
         targetAudience: selectedAudience,
-      });
+        bookType: bookType,
+        isCollaborative: bookType === 'collaborative',
+      };
+
+      // Add memorial dedication for collaborative books
+      if (bookType === 'collaborative' && memorialDedication.name) {
+        bookData.memorialDedication = {
+          name: memorialDedication.name,
+          relationship: memorialDedication.relationship,
+          birthDate: memorialDedication.birthDate || undefined,
+          passingDate: memorialDedication.passingDate || undefined,
+        };
+      }
+
+      const response = await api.post('/books', bookData);
 
       if (response.data.success) {
         const bookId = response.data.data.book.id;
@@ -206,7 +234,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
 
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center mx-auto mb-4 shadow-glow-gold">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-memorial-gold to-yellow-600 flex items-center justify-center mx-auto mb-4 shadow-glow-gold">
               <Sparkles className="w-8 h-8 text-deep-space" />
             </div>
             <h2 id="create-book-wizard-title" className="text-3xl font-display font-bold gradient-gold mb-2">
@@ -222,7 +250,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
                     s === step
-                      ? 'bg-gradient-to-br from-magic-gold to-yellow-600 text-deep-space shadow-glow-gold'
+                      ? 'bg-gradient-to-br from-memorial-gold to-yellow-600 text-deep-space shadow-glow-gold'
                       : s < step
                       ? 'bg-green-500/20 text-green-400 border border-green-500/50'
                       : 'bg-white/5 text-gray-500 border border-white/10'
@@ -291,7 +319,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                           whileTap={{ scale: 0.95 }}
                           className={`relative p-4 rounded-xl transition-all ${
                             isSelected
-                              ? 'bg-white/10 border-2 border-magic-gold shadow-glow-gold'
+                              ? 'bg-white/10 border-2 border-memorial-gold shadow-glow-gold'
                               : 'bg-white/5 border border-white/10 hover:bg-white/10'
                           }`}
                         >
@@ -304,7 +332,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                             {t(`create_book.genres.${genre.id}`)}
                           </div>
                           {isSelected && (
-                            <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-magic-gold flex items-center justify-center">
+                            <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-memorial-gold flex items-center justify-center">
                               <Check className="w-4 h-4 text-deep-space" />
                             </div>
                           )}
@@ -313,6 +341,157 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     })}
                   </div>
                 </div>
+
+                {/* Book Type Selection */}
+                <div>
+                  <label className="block text-sm font-semibold mb-4 text-gray-300">
+                    {isHebrew ? 'סוג הספר' : 'Book Type'}
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <motion.button
+                      onClick={() => setBookType('personal')}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`p-4 rounded-xl transition-all flex items-center gap-3 ${
+                        bookType === 'personal'
+                          ? 'bg-white/10 border-2 border-memorial-gold shadow-glow-gold'
+                          : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
+                        <User className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="text-right flex-1">
+                        <div className="text-sm font-semibold text-white">
+                          {isHebrew ? 'ספר אישי' : 'Personal Book'}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {isHebrew ? 'אני כותב/ת בעצמי' : 'I write it myself'}
+                        </div>
+                      </div>
+                      {bookType === 'personal' && (
+                        <div className="w-6 h-6 rounded-full bg-memorial-gold flex items-center justify-center">
+                          <Check className="w-4 h-4 text-deep-space" />
+                        </div>
+                      )}
+                    </motion.button>
+
+                    <motion.button
+                      onClick={() => setBookType('collaborative')}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`p-4 rounded-xl transition-all flex items-center gap-3 ${
+                        bookType === 'collaborative'
+                          ? 'bg-white/10 border-2 border-memorial-gold shadow-glow-gold'
+                          : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-memorial-gold to-amber-600 flex items-center justify-center">
+                        <UserPlus className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="text-right flex-1">
+                        <div className="text-sm font-semibold text-white">
+                          {isHebrew ? 'ספר שיתופי' : 'Collaborative Book'}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {isHebrew ? 'להזמין אחרים לתרום' : 'Invite others to contribute'}
+                        </div>
+                      </div>
+                      {bookType === 'collaborative' && (
+                        <div className="w-6 h-6 rounded-full bg-memorial-gold flex items-center justify-center">
+                          <Check className="w-4 h-4 text-deep-space" />
+                        </div>
+                      )}
+                    </motion.button>
+                  </div>
+                </div>
+
+                {/* Memorial Dedication (for collaborative books) */}
+                {bookType === 'collaborative' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="bg-memorial-gold/10 rounded-xl p-4 border border-memorial-gold/20"
+                  >
+                    <div className="flex items-center gap-2 mb-4">
+                      <Heart className="w-5 h-5 text-memorial-gold" />
+                      <h4 className="font-semibold text-white">
+                        {isHebrew ? 'הקדשת הספר' : 'Memorial Dedication'}
+                      </h4>
+                    </div>
+                    <p className="text-sm text-gray-400 mb-4">
+                      {isHebrew
+                        ? 'לזכר מי הספר הזה נכתב?'
+                        : 'In whose memory is this book being written?'}
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">
+                          {isHebrew ? 'שם' : 'Name'}
+                        </label>
+                        <input
+                          type="text"
+                          value={memorialDedication.name}
+                          onChange={(e) =>
+                            setMemorialDedication((prev) => ({ ...prev, name: e.target.value }))
+                          }
+                          placeholder={isHebrew ? 'שם מלא' : 'Full name'}
+                          className="input text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">
+                          {isHebrew ? 'קשר' : 'Relationship'}
+                        </label>
+                        <input
+                          type="text"
+                          value={memorialDedication.relationship}
+                          onChange={(e) =>
+                            setMemorialDedication((prev) => ({
+                              ...prev,
+                              relationship: e.target.value,
+                            }))
+                          }
+                          placeholder={isHebrew ? 'אבא, אח, חבר...' : 'Father, brother, friend...'}
+                          className="input text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">
+                          {isHebrew ? 'תאריך לידה' : 'Birth Date'}
+                        </label>
+                        <input
+                          type="date"
+                          value={memorialDedication.birthDate}
+                          onChange={(e) =>
+                            setMemorialDedication((prev) => ({
+                              ...prev,
+                              birthDate: e.target.value,
+                            }))
+                          }
+                          className="input text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">
+                          {isHebrew ? 'תאריך פטירה' : 'Passing Date'}
+                        </label>
+                        <input
+                          type="date"
+                          value={memorialDedication.passingDate}
+                          onChange={(e) =>
+                            setMemorialDedication((prev) => ({
+                              ...prev,
+                              passingDate: e.target.value,
+                            }))
+                          }
+                          className="input text-sm"
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
 
                 {/* Navigation */}
                 <div className="flex justify-end gap-4 pt-6 border-t border-white/10">
@@ -398,7 +577,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                         onClick={() => handleSelectGeneratedTitle(genTitle)}
                         className={`w-full p-4 rounded-xl text-left transition-all ${
                           title === genTitle
-                            ? 'bg-magic-gold/20 border-2 border-magic-gold'
+                            ? 'bg-memorial-gold/20 border-2 border-memorial-gold'
                             : 'bg-white/5 border border-white/10 hover:bg-white/10'
                         }`}
                       >
@@ -407,7 +586,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                             <p className="font-semibold text-white">{genTitle}</p>
                           </div>
                           {title === genTitle && (
-                            <Check className="w-5 h-5 text-magic-gold" />
+                            <Check className="w-5 h-5 text-memorial-gold" />
                           )}
                         </div>
                       </motion.button>
@@ -472,11 +651,11 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                           whileTap={{ scale: 0.98 }}
                           className={`p-6 rounded-xl transition-all ${
                             isSelected
-                              ? 'bg-white/10 border-2 border-magic-gold shadow-glow-gold'
+                              ? 'bg-white/10 border-2 border-memorial-gold shadow-glow-gold'
                               : 'bg-white/5 border border-white/10 hover:bg-white/10'
                           }`}
                         >
-                          <Icon className={`w-8 h-8 mb-3 mx-auto ${isSelected ? 'text-magic-gold' : 'text-gray-400'}`} />
+                          <Icon className={`w-8 h-8 mb-3 mx-auto ${isSelected ? 'text-memorial-gold' : 'text-gray-400'}`} />
                           <div className="font-semibold text-white mb-1">{t(`create_book.writing_goals.${goal.id}`)}</div>
                           <div className="text-sm text-gray-400">{t(`create_book.writing_goals.${goal.id}_desc`)}</div>
                         </motion.button>
@@ -502,7 +681,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                           whileTap={{ scale: 0.98 }}
                           className={`p-4 rounded-xl text-left transition-all ${
                             isSelected
-                              ? 'bg-white/10 border-2 border-magic-gold shadow-glow-gold'
+                              ? 'bg-white/10 border-2 border-memorial-gold shadow-glow-gold'
                               : 'bg-white/5 border border-white/10 hover:bg-white/10'
                           }`}
                         >
@@ -516,7 +695,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                               </div>
                             </div>
                             {isSelected && (
-                              <div className="w-8 h-8 rounded-full bg-magic-gold flex items-center justify-center">
+                              <div className="w-8 h-8 rounded-full bg-memorial-gold flex items-center justify-center">
                                 <Check className="w-5 h-5 text-deep-space" />
                               </div>
                             )}
@@ -531,7 +710,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                 <div className="glass rounded-xl p-6 space-y-2">
                   <p className="text-sm text-gray-400 mb-3">{t('create_book.summary')}</p>
                   <div className="flex items-center gap-2">
-                    <Target className="w-4 h-4 text-magic-gold" />
+                    <Target className="w-4 h-4 text-memorial-gold" />
                     <span className="text-white">
                       <span className="font-semibold">{title}</span> • {t(`create_book.genres.${selectedGenre}`)}
                     </span>
@@ -610,9 +789,9 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     className="glass rounded-xl p-4"
                   >
                     <div className="flex items-center gap-3">
-                      <Layout className="w-5 h-5 text-magic-gold" />
+                      <Layout className="w-5 h-5 text-memorial-gold" />
                       <span className="text-white">
-                        {t('create_book.template_selected_label')} <span className="font-semibold text-magic-gold">{selectedTemplate.name}</span>
+                        {t('create_book.template_selected_label')} <span className="font-semibold text-memorial-gold">{selectedTemplate.name}</span>
                       </span>
                     </div>
                   </motion.div>
@@ -622,7 +801,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                 <div className="glass rounded-xl p-6 space-y-2">
                   <p className="text-sm text-gray-400 mb-3">{t('create_book.summary')}</p>
                   <div className="flex items-center gap-2">
-                    <Target className="w-4 h-4 text-magic-gold" />
+                    <Target className="w-4 h-4 text-memorial-gold" />
                     <span className="text-white">
                       <span className="font-semibold">{title}</span> • {t(`create_book.genres.${selectedGenre}`)}
                     </span>
@@ -639,9 +818,36 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                       {t('create_book.target_audience')} {t(`create_book.audiences.${selectedAudience}`)}
                     </span>
                   </div>
+                  {/* Book Type */}
+                  <div className="flex items-center gap-2">
+                    {bookType === 'collaborative' ? (
+                      <UserPlus className="w-4 h-4 text-memorial-gold" />
+                    ) : (
+                      <User className="w-4 h-4 text-blue-400" />
+                    )}
+                    <span className="text-gray-300">
+                      {bookType === 'collaborative'
+                        ? isHebrew
+                          ? 'ספר שיתופי'
+                          : 'Collaborative Book'
+                        : isHebrew
+                        ? 'ספר אישי'
+                        : 'Personal Book'}
+                    </span>
+                  </div>
+                  {/* Memorial Dedication */}
+                  {bookType === 'collaborative' && memorialDedication.name && (
+                    <div className="flex items-center gap-2">
+                      <Heart className="w-4 h-4 text-memorial-gold" />
+                      <span className="text-memorial-gold">
+                        {isHebrew ? 'לזכר ' : 'In memory of '}
+                        {memorialDedication.name}
+                      </span>
+                    </div>
+                  )}
                   {selectedTemplate && (
                     <div className="flex items-center gap-2">
-                      <Layout className="w-4 h-4 text-magic-gold" />
+                      <Layout className="w-4 h-4 text-memorial-gold" />
                       <span className="text-gray-300">
                         {t('create_book.template')} {selectedTemplate.name}
                       </span>

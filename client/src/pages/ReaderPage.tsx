@@ -586,7 +586,7 @@ export default function ReaderPage() {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-deep-space">
         <div className="text-center">
-          <BookOpen className="w-16 h-16 text-magic-gold mx-auto mb-4 animate-pulse" />
+          <BookOpen className="w-16 h-16 text-memorial-gold mx-auto mb-4 animate-pulse" />
           <p className="text-gray-300 text-lg">{t('reader.loading')}</p>
         </div>
       </div>
@@ -741,7 +741,7 @@ export default function ReaderPage() {
               {/* Theme Selection */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Palette className="w-5 h-5 text-magic-gold" />
+                  <Palette className="w-5 h-5 text-memorial-gold" />
                   <h3 className="font-display font-semibold text-white">{t('reader.theme')}</h3>
                 </div>
                 <div className="space-y-2">
@@ -773,7 +773,7 @@ export default function ReaderPage() {
               {/* Font Family */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Type className="w-5 h-5 text-magic-gold" />
+                  <Type className="w-5 h-5 text-memorial-gold" />
                   <h3 className="font-display font-semibold text-white">{t('reader.font')}</h3>
                 </div>
                 <div className="space-y-2">
@@ -806,7 +806,7 @@ export default function ReaderPage() {
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-display font-semibold text-white">{t('reader.font_size')}</h3>
-                  <span className="text-magic-gold font-bold">{fontSize}px</span>
+                  <span className="text-memorial-gold font-bold">{fontSize}px</span>
                 </div>
                 <input
                   type="range"
@@ -814,7 +814,7 @@ export default function ReaderPage() {
                   max="28"
                   value={fontSize}
                   onChange={(e) => setFontSize(Number(e.target.value))}
-                  className="w-full accent-magic-gold"
+                  className="w-full accent-memorial-gold"
                 />
                 <div className="flex justify-between text-xs text-gray-400 mt-1">
                   <span>{t('reader.small')}</span>
@@ -959,7 +959,7 @@ export default function ReaderPage() {
                       onClick={() => setNarrationSpeed(speed)}
                       className={`min-w-[40px] min-h-[40px] sm:min-w-0 sm:min-h-0 px-2 sm:px-2 py-2 sm:py-1 text-xs rounded transition-colors ${
                         narrationSpeed === speed
-                          ? 'bg-magic-gold text-black font-bold'
+                          ? 'bg-memorial-gold text-black font-bold'
                           : 'bg-white/10 text-gray-300 hover:bg-white/20'
                       }`}
                     >
@@ -1106,7 +1106,7 @@ export default function ReaderPage() {
                               <Star
                                 className={`w-8 h-8 sm:w-10 sm:h-10 transition-all ${
                                   star <= rating
-                                    ? 'fill-magic-gold text-magic-gold drop-shadow-glow-gold'
+                                    ? 'fill-memorial-gold text-memorial-gold drop-shadow-glow-gold'
                                     : 'text-gray-600 hover:text-gray-400'
                                 }`}
                               />
@@ -1120,7 +1120,7 @@ export default function ReaderPage() {
                             value={reviewText}
                             onChange={(e) => setReviewText(e.target.value)}
                             placeholder={t('reader.write_review_placeholder')}
-                            className="w-full h-32 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-magic-gold/50 focus:shadow-glow-gold transition-all resize-none"
+                            className="w-full h-32 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-memorial-gold/50 focus:shadow-glow-gold transition-all resize-none"
                             style={{
                               fontFamily:
                                 fontFamily === 'merriweather'
@@ -1186,7 +1186,7 @@ export default function ReaderPage() {
           onClick={prevChapter}
           disabled={currentChapterIndex === 0}
           className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-full backdrop-blur-md transition-all text-sm sm:text-base min-h-[44px] ${
-            currentChapterIndex === 0 ? 'opacity-50 cursor-not-allowed bg-gray-600/50' : 'bg-magic-gold/20 hover:bg-magic-gold/30 border border-magic-gold/50'
+            currentChapterIndex === 0 ? 'opacity-50 cursor-not-allowed bg-gray-600/50' : 'bg-memorial-gold/20 hover:bg-memorial-gold/30 border border-memorial-gold/50'
           }`}
           style={{ color: currentTheme.accent }}
         >
@@ -1204,7 +1204,7 @@ export default function ReaderPage() {
           onClick={nextChapter}
           disabled={currentChapterIndex === (book.chapters?.length || 1) - 1}
           className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-full backdrop-blur-md transition-all text-sm sm:text-base min-h-[44px] ${
-            currentChapterIndex === (book.chapters?.length || 1) - 1 ? 'opacity-50 cursor-not-allowed bg-gray-600/50' : 'bg-magic-gold/20 hover:bg-magic-gold/30 border border-magic-gold/50'
+            currentChapterIndex === (book.chapters?.length || 1) - 1 ? 'opacity-50 cursor-not-allowed bg-gray-600/50' : 'bg-memorial-gold/20 hover:bg-memorial-gold/30 border border-memorial-gold/50'
           }`}
           style={{ color: currentTheme.accent }}
         >

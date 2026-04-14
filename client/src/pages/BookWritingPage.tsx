@@ -551,7 +551,7 @@ export default function BookWritingPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       {/* Top Bar */}
-      <div className="glass-strong border-b border-magic-gold/20 px-3 sm:px-6 py-2 sm:py-3">
+      <div className="glass-strong border-b border-memorial-gold/20 px-3 sm:px-6 py-2 sm:py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-4">
             {/* Logo */}
@@ -565,7 +565,7 @@ export default function BookWritingPage() {
                 className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.3)]"
               />
             </button>
-            <div className="hidden sm:block h-6 w-px bg-magic-gold/30" />
+            <div className="hidden sm:block h-6 w-px bg-memorial-gold/30" />
             <h1 className="text-sm sm:text-xl font-semibold text-white truncate max-w-[120px] sm:max-w-none">{book.title}</h1>
           </div>
 

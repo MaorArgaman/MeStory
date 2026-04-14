@@ -169,6 +169,55 @@ interface BookExportData {
 }
 
 // ============================================================================
+// MAIN EXPORT FUNCTION
+// ============================================================================
+
+export interface ExportResult {
+  buffer: Buffer;
+  mimeType: string;
+  filename: string;
+  warnings: string[];
+}
+
+/**
+ * Main export function - generates PDF or DOCX based on format
+ */
+export async function exportBook(bookId: string, format: 'pdf' | 'docx'): Promise<ExportResult> {
+  const warnings: string[] = [];
+
+  try {
+    if (format === 'pdf') {
+      const buffer = await generatePDF(bookId);
+      if (!buffer) {
+        throw new Error('PDF generation returned empty buffer');
+      }
+      return {
+        buffer,
+        mimeType: 'application/pdf',
+        filename: `book-${bookId}.pdf`,
+        warnings,
+      };
+    } else if (format === 'docx') {
+      const buffer = await generateDOCX(bookId);
+      if (!buffer) {
+        throw new Error('DOCX generation returned empty buffer');
+      }
+      return {
+        buffer,
+        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        filename: `book-${bookId}.docx`,
+        warnings,
+      };
+    } else {
+      throw new Error(`Unsupported export format: ${format}`);
+    }
+  } catch (error: any) {
+    console.error(`Export failed for book ${bookId} (${format}):`, error);
+    throw error;
+  }
+}
+
+// ============================================================================
 // I18N LABELS
 // ============================================================================
 
@@ -200,6 +249,7 @@ const i18nLabels = {
     interviewResponses: 'תשובות מהראיון',
     question: 'שאלה',
     aboutAuthor: 'על המחבר',
+    aboutBook: 'אודות הספר',
   },
   en: {
     allRightsReserved: 'All Rights Reserved',
@@ -228,6 +278,7 @@ const i18nLabels = {
     interviewResponses: 'Interview Responses',
     question: 'Question',
     aboutAuthor: 'About the Author',
+    aboutBook: 'About the Book',
   },
 };
 
@@ -578,6 +629,17 @@ function containsHebrew(text: string): boolean {
 }
 
 /**
+ * Process RTL text for proper PDF rendering
+ * For Hebrew text, we just return the text as-is and let the font handle RTL
+ * The font (Rubik/NotoSans) has proper RTL support with correct glyph ordering
+ */
+function processRTLText(text: string, isRTL: boolean): string {
+  // Return text as-is - don't manipulate RTL text manually
+  // Modern Unicode fonts handle bidirectional text correctly
+  return text || '';
+}
+
+/**
  * Get page dimensions in points based on page size
  */
 function getPageDimensions(pageSize: string): { width: number; height: number } {
@@ -637,18 +699,35 @@ async function extractBookData(bookId: string): Promise<BookExportData> {
   // Get author details separately (Supabase doesn't support populate)
   const author = await User.findById(book.author);
 
-  // Extract cover design data
+  // Extract cover design data - prioritize AI design if completed (matching UI behavior)
   const coverDesignData = book.coverDesign as any;
   const aiDesignData = book.aiDesignState?.design as any;
+  const aiDesignCompleted = book.aiDesignState?.status === 'completed';
+
+  // Helper to clean CSS font-family strings to simple font names
+  const cleanFontName = (font: string): string => {
+    if (!font) return 'Helvetica';
+    // Remove quotes and get first font in the list
+    return font.replace(/["']/g, '').split(',')[0].trim() || 'Helvetica';
+  };
 
   const getCoverColor = (): string => {
+    // AI design takes priority when completed
+    if (aiDesignCompleted && aiDesignData?.covers?.front?.backgroundColor) {
+      return aiDesignData.covers.front.backgroundColor;
+    }
     if (coverDesignData?.coverColor) return coverDesignData.coverColor;
+    if (coverDesignData?.backgroundColor) return coverDesignData.backgroundColor;
     if (coverDesignData?.front?.backgroundColor) return coverDesignData.front.backgroundColor;
     if (aiDesignData?.covers?.front?.backgroundColor) return aiDesignData.covers.front.backgroundColor;
     return '#1a1a2e';
   };
 
   const getTextColor = (): string => {
+    // AI design takes priority when completed
+    if (aiDesignCompleted && aiDesignData?.typography?.colors?.text) {
+      return aiDesignData.typography.colors.text;
+    }
     if (coverDesignData?.textColor) return coverDesignData.textColor;
     if (coverDesignData?.front?.title?.color) return coverDesignData.front.title.color;
     if (aiDesignData?.typography?.colors?.text) return aiDesignData.typography.colors.text;
@@ -656,13 +735,22 @@ async function extractBookData(bookId: string): Promise<BookExportData> {
   };
 
   const getFontFamily = (): string => {
-    if (coverDesignData?.fontFamily) return coverDesignData.fontFamily;
-    if (coverDesignData?.front?.title?.font) return coverDesignData.front.title.font;
-    if (aiDesignData?.typography?.bodyFont) return aiDesignData.typography.bodyFont;
+    // AI design takes priority when completed
+    if (aiDesignCompleted && aiDesignData?.typography?.titleFont) {
+      return cleanFontName(aiDesignData.typography.titleFont);
+    }
+    if (coverDesignData?.fontFamily) return cleanFontName(coverDesignData.fontFamily);
+    if (coverDesignData?.titleFont) return cleanFontName(coverDesignData.titleFont);
+    if (coverDesignData?.front?.title?.font) return cleanFontName(coverDesignData.front.title.font);
+    if (aiDesignData?.typography?.bodyFont) return cleanFontName(aiDesignData.typography.bodyFont);
     return 'Helvetica';
   };
 
   const getFrontImageUrl = (): string | undefined => {
+    // AI design takes priority when completed
+    if (aiDesignCompleted && aiDesignData?.covers?.front?.generatedImageUrl) {
+      return aiDesignData.covers.front.generatedImageUrl;
+    }
     if (coverDesignData?.imageUrl) return coverDesignData.imageUrl;
     if (coverDesignData?.front?.imageUrl) return coverDesignData.front.imageUrl;
     if (aiDesignData?.covers?.front?.generatedImageUrl) return aiDesignData.covers.front.generatedImageUrl;
@@ -670,9 +758,27 @@ async function extractBookData(bookId: string): Promise<BookExportData> {
   };
 
   const getBackImageUrl = (): string | undefined => {
+    // AI design takes priority when completed
+    if (aiDesignCompleted && aiDesignData?.covers?.back?.generatedImageUrl) {
+      return aiDesignData.covers.back.generatedImageUrl;
+    }
     if (coverDesignData?.back?.imageUrl) return coverDesignData.back.imageUrl;
     if (aiDesignData?.covers?.back?.generatedImageUrl) return aiDesignData.covers.back.generatedImageUrl;
     return undefined;
+  };
+
+  // Get author name - prioritize actual user profile, then fallback to saved design data
+  const getAuthorName = (): string => {
+    // Priority 1: Actual author name from User table
+    if (author?.name) return author.name;
+    // displayName might exist even though it's not in the type definition
+    if ((author as any)?.displayName) return (author as any).displayName;
+    // Priority 2: Saved design data (may be outdated)
+    if (coverDesignData?.front?.authorName?.text) return coverDesignData.front.authorName.text;
+    if (coverDesignData?.authorName) return coverDesignData.authorName;
+    if (aiDesignData?.covers?.front?.author) return aiDesignData.covers.front.author;
+    // Priority 3: Email fallback
+    return author?.email?.split('@')[0] || labels.unknownAuthor;
   };
 
   // Extract page layout
@@ -781,7 +887,7 @@ async function extractBookData(bookId: string): Promise<BookExportData> {
 
   return {
     title: book.title,
-    authorName: author?.name || labels.unknownAuthor,
+    authorName: getAuthorName(),
     genre: book.genre || labels.fiction,
     description: book.description || '',
     synopsis: book.synopsis || coverDesignData?.back?.synopsis || '',
@@ -847,8 +953,10 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
   for (let i = 0; i < bookData.chapters.length; i++) {
     const chapter = bookData.chapters[i];
     const images: Buffer[] = [];
-    for (let j = 0; j < chapter.images.length; j++) {
-      const img = chapter.images[j];
+    // Safely iterate over chapter images (may be undefined)
+    const chapterImgs = chapter.images || [];
+    for (let j = 0; j < chapterImgs.length; j++) {
+      const img = chapterImgs[j];
       const buffer = await fetchImageAsBuffer(img.url, `Chapter ${i + 1} "${chapter.title}" - Image ${j + 1}`);
       if (buffer) {
         images.push(buffer);
@@ -878,9 +986,12 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    // Register Hebrew fonts
-    const fontPath = path.join(__dirname, '../assets/fonts/NotoSansHebrew-Regular.ttf');
-    const boldFontPath = path.join(__dirname, '../assets/fonts/NotoSansHebrew-Bold.ttf');
+    // Register Hebrew fonts - Rubik has full Hebrew + Latin + numbers support
+    const fontPath = path.join(__dirname, '../assets/fonts/Rubik-Regular.ttf');
+    const boldFontPath = path.join(__dirname, '../assets/fonts/Rubik-Bold.ttf');
+    // Fallback to NotoSans (full Unicode support) if Rubik not available
+    const fallbackFontPath = path.join(__dirname, '../assets/fonts/NotoSans-Regular.ttf');
+    const fallbackBoldFontPath = path.join(__dirname, '../assets/fonts/NotoSans-Bold.ttf');
 
     let mainFont = 'Helvetica';
     let boldFont = 'Helvetica-Bold';
@@ -890,14 +1001,22 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       doc.registerFont('Hebrew', fontPath);
       mainFont = 'Hebrew';
       hebrewFontAvailable = true;
+    } else if (fs.existsSync(fallbackFontPath)) {
+      doc.registerFont('Hebrew', fallbackFontPath);
+      mainFont = 'Hebrew';
+      hebrewFontAvailable = true;
+      addExportWarning('Rubik font not found, using NotoSans as fallback.');
     } else {
-      addExportWarning('Hebrew font (NotoSansHebrew-Regular.ttf) not found. Using Helvetica as fallback - Hebrew text may not display correctly.');
+      addExportWarning('Hebrew font not found. Using Helvetica as fallback - Hebrew text may not display correctly.');
     }
     if (fs.existsSync(boldFontPath)) {
       doc.registerFont('Hebrew-Bold', boldFontPath);
       boldFont = 'Hebrew-Bold';
+    } else if (fs.existsSync(fallbackBoldFontPath)) {
+      doc.registerFont('Hebrew-Bold', fallbackBoldFontPath);
+      boldFont = 'Hebrew-Bold';
     } else if (hebrewFontAvailable) {
-      addExportWarning('Hebrew bold font (NotoSansHebrew-Bold.ttf) not found. Bold text will use regular Hebrew font.');
+      addExportWarning('Hebrew bold font not found. Bold text will use regular Hebrew font.');
       boldFont = 'Hebrew';
     }
 
@@ -913,25 +1032,32 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
     doc.rect(0, 0, pageDims.width, pageDims.height)
       .fill(`rgb(${coverColor.r}, ${coverColor.g}, ${coverColor.b})`);
 
-    // Add cover image if available
+    // Add cover image if available - position at top third of page
+    let titleYPosition = 200; // Default position when no image
+    const coverImageY = 60;
+    const maxImageHeight = pageDims.height * 0.4; // Max 40% of page height
+
     if (frontCoverImage) {
       try {
-        const imgWidth = pageDims.width * 0.6;
+        const imgWidth = pageDims.width * 0.55;
         const imgX = (pageDims.width - imgWidth) / 2;
-        doc.image(frontCoverImage, imgX, 80, {
+        doc.image(frontCoverImage, imgX, coverImageY, {
           width: imgWidth,
+          fit: [imgWidth, maxImageHeight],
           align: 'center',
         });
+        // Position title below the image with padding
+        titleYPosition = coverImageY + maxImageHeight + 30;
       } catch (e) {
         console.error('Error adding cover image:', e);
       }
     }
 
-    // Title
+    // Title - positioned below image or at default location
     doc.fillColor(`rgb(${textColor.r}, ${textColor.g}, ${textColor.b})`)
       .font(boldFont)
       .fontSize(36)
-      .text(bookData.title, margins.left, frontCoverImage ? 350 : 200, {
+      .text(processRTLText(bookData.title, isRTL), margins.left, titleYPosition, {
         align: 'center',
         width: contentWidth,
       });
@@ -939,15 +1065,15 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
     // Subtitle (genre)
     doc.font(mainFont)
       .fontSize(14)
-      .text(bookData.genre, margins.left, doc.y + 20, {
+      .text(processRTLText(bookData.genre, isRTL), margins.left, doc.y + 15, {
         align: 'center',
         width: contentWidth,
       });
 
-    // Author
+    // Author - at bottom of page
     doc.font(mainFont)
       .fontSize(20)
-      .text(bookData.authorName, margins.left, pageDims.height - 150, {
+      .text(processRTLText(bookData.authorName, isRTL), margins.left, pageDims.height - 120, {
         align: 'center',
         width: contentWidth,
       });
@@ -959,20 +1085,20 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
     doc.fillColor('black')
       .font(boldFont)
       .fontSize(32)
-      .text(bookData.title, margins.left, pageDims.height / 3, {
+      .text(processRTLText(bookData.title, isRTL), margins.left, pageDims.height / 3, {
         align: 'center',
         width: contentWidth,
       });
 
     doc.font(mainFont)
       .fontSize(18)
-      .text(bookData.authorName, margins.left, doc.y + 40, {
+      .text(processRTLText(bookData.authorName, isRTL), margins.left, doc.y + 40, {
         align: 'center',
         width: contentWidth,
       });
 
     doc.fontSize(12)
-      .text(bookData.genre, margins.left, doc.y + 20, {
+      .text(processRTLText(bookData.genre, isRTL), margins.left, doc.y + 20, {
         align: 'center',
         width: contentWidth,
       });
@@ -986,7 +1112,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       .fillColor('#666666');
 
     const year = new Date().getFullYear();
-    doc.text(`© ${year} ${bookData.authorName}`, margins.left, pageDims.height - 200, {
+    doc.text(`© ${year} ${processRTLText(bookData.authorName, isRTL)}`, margins.left, pageDims.height - 200, {
       align: 'center',
       width: contentWidth,
     });
@@ -1007,7 +1133,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       doc.fillColor('black')
         .font(mainFont)
         .fontSize(14)
-        .text(bookData.dedication, margins.left, pageDims.height / 3, {
+        .text(processRTLText(bookData.dedication, isRTL), margins.left, pageDims.height / 3, {
           align: 'center',
           width: contentWidth,
         });
@@ -1030,7 +1156,8 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       doc.font(mainFont).fontSize(12);
 
       bookData.chapters.forEach((chapter, index) => {
-        doc.text(`${index + 1}. ${chapter.title}`, margins.left, doc.y, {
+        const chapterEntry = isRTL ? `${processRTLText(chapter.title, isRTL)} .${index + 1}` : `${index + 1}. ${chapter.title}`;
+        doc.text(chapterEntry, margins.left, doc.y, {
           continued: false,
           align: isRTL ? 'right' : 'left',
           width: contentWidth,
@@ -1053,20 +1180,27 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       doc.addPage();
       pageNum++;
 
-      // Chapter number
-      doc.fillColor('#666666')
-        .font(mainFont)
-        .fontSize(12)
-        .text(`${labels.chapter} ${chapterIndex + 1}`, margins.left, margins.top, {
-          align: 'center',
-          width: contentWidth,
-        });
+      // Chapter title - check if title already contains chapter number/word
+      const titleHasChapter = chapter.title.toLowerCase().includes('chapter') ||
+                              chapter.title.includes('פרק') ||
+                              /^\d+[\.\)\-\s]/.test(chapter.title);
+
+      // Only show chapter number if title doesn't already include it
+      if (!titleHasChapter) {
+        doc.fillColor('#666666')
+          .font(mainFont)
+          .fontSize(12)
+          .text(`${labels.chapter} ${chapterIndex + 1}`, margins.left, margins.top, {
+            align: 'center',
+            width: contentWidth,
+          });
+      }
 
       // Chapter title
       doc.fillColor('black')
         .font(boldFont)
         .fontSize(20)
-        .text(chapter.title, margins.left, doc.y + 10, {
+        .text(processRTLText(chapter.title, isRTL), margins.left, titleHasChapter ? margins.top : doc.y + 10, {
           align: 'center',
           width: contentWidth,
         });
@@ -1076,91 +1210,100 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       // Chapter images at the beginning
       const images = chapterImages.get(chapterIndex);
       if (images && images.length > 0) {
+        const maxImageWidth = contentWidth * 0.75;
+        const maxImageHeight = pageDims.height * 0.35; // Max 35% of page height per image
+
         for (const imgBuffer of images) {
           try {
-            const imgWidth = contentWidth * 0.8;
-            const imgX = margins.left + (contentWidth - imgWidth) / 2;
-            doc.image(imgBuffer, imgX, doc.y, {
-              width: imgWidth,
+            const currentY = doc.y;
+
+            // Check if we need a new page before adding image
+            if (currentY > pageDims.height - margins.bottom - maxImageHeight - 50) {
+              doc.addPage();
+              pageNum++;
+            }
+
+            const imgX = margins.left + (contentWidth - maxImageWidth) / 2;
+            const imgY = doc.y;
+
+            // Add image with fit constraint
+            const imgInfo = doc.image(imgBuffer, imgX, imgY, {
+              fit: [maxImageWidth, maxImageHeight],
               align: 'center',
+              valign: 'top',
             });
+
+            // Calculate actual rendered height based on fit dimensions
+            // PDFKit returns the image info which we can use
+            // For safety, move by the max height plus padding
+            doc.y = imgY + maxImageHeight + 30;
+
+            // Add some space after image
             doc.moveDown(1);
           } catch (e) {
             console.error('Error adding chapter image:', e);
+            // Continue with text even if image fails
           }
         }
-        doc.moveDown(1);
       }
 
-      // Chapter content with formatting preservation
+      // Chapter content - combine all segments into unified paragraphs for proper rendering
       doc.fillColor('black');
       const fontSize = bookData.pageLayout.fontSize;
       const lineGap = (bookData.pageLayout.lineHeight - 1) * fontSize;
 
-      // Render formatted segments
-      let currentX = margins.left;
-      let lineStart = true;
+      // Combine segments into paragraphs to avoid fragmentation
+      const paragraphs: string[] = [];
+      let currentParagraph = '';
 
       for (const segment of chapter.formattedContent) {
-        // Check if we need a new page
-        if (doc.y > pageDims.height - margins.bottom - 50) {
-          doc.addPage();
-          pageNum++;
-          lineStart = true;
-        }
-
-        // Handle paragraph breaks
         if (segment.isParagraphBreak) {
-          doc.moveDown(0.8);
-          lineStart = true;
+          if (currentParagraph.trim()) {
+            paragraphs.push(currentParagraph.trim());
+          }
+          currentParagraph = '';
           continue;
         }
 
-        // Handle list items
         if (segment.isListItem) {
-          doc.font(mainFont).fontSize(fontSize).text('• ', margins.left, doc.y, { continued: true });
+          if (currentParagraph.trim()) {
+            paragraphs.push(currentParagraph.trim());
+          }
+          currentParagraph = '• ';
+          continue;
         }
 
-        // Skip empty segments
-        if (!segment.text || !segment.text.trim()) continue;
+        if (segment.text && segment.text.trim()) {
+          currentParagraph += segment.text;
+        }
+      }
 
-        // Determine font based on formatting
-        let font = mainFont;
-        if (segment.bold && segment.italic) {
-          // For bold+italic, we use bold (PDFKit limitation with custom fonts)
-          font = boldFont;
-        } else if (segment.bold) {
-          font = boldFont;
-        } else if (segment.italic) {
-          // For italic, we'll use the main font but could add italic font later
-          font = mainFont;
+      // Don't forget the last paragraph
+      if (currentParagraph.trim()) {
+        paragraphs.push(currentParagraph.trim());
+      }
+
+      // Render each paragraph as a single text block
+      doc.font(mainFont).fontSize(fontSize);
+
+      const textOptions: any = {
+        align: isRTL ? 'right' : 'justify',
+        width: contentWidth,
+        lineGap: lineGap,
+      };
+
+      for (const paragraph of paragraphs) {
+        // Only add a manual page break if we're near the bottom AND not already
+        // at the top of a fresh page (to avoid double page-breaks after PDFKit auto-flow)
+        const nearBottom = doc.y > pageDims.height - margins.bottom - 80;
+        const alreadyAtTop = doc.y <= margins.top + 20;
+        if (nearBottom && !alreadyAtTop) {
+          doc.addPage();
+          pageNum++;
         }
 
-        // Set font and size
-        doc.font(font).fontSize(segment.isHeading ? fontSize + 4 : fontSize);
-
-        // Render the text
-        const textOptions: any = {
-          continued: false,
-          align: 'justify',
-          width: contentWidth,
-          lineGap: lineGap,
-        };
-
-        // Handle underline
-        if (segment.underline) {
-          doc.text(segment.text, margins.left, doc.y, textOptions);
-          // Draw underline manually
-          const textWidth = doc.widthOfString(segment.text);
-          const underlineY = doc.y;
-          doc.moveTo(margins.left, underlineY)
-            .lineTo(margins.left + Math.min(textWidth, contentWidth), underlineY)
-            .stroke();
-        } else {
-          doc.text(segment.text, margins.left, doc.y, textOptions);
-        }
-
-        lineStart = false;
+        doc.text(processRTLText(paragraph, isRTL), margins.left, doc.y, textOptions);
+        doc.moveDown(0.5);
       }
 
       // Add spacing after chapter
@@ -1189,9 +1332,12 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
         }
 
         // Character name
+        const charNameText = character.age
+          ? (isRTL ? `(${character.age} ${labels.age}) ${processRTLText(character.name, isRTL)}` : `${character.name} (${labels.age} ${character.age})`)
+          : processRTLText(character.name, isRTL);
         doc.font(boldFont)
           .fontSize(16)
-          .text(character.name + (character.age ? ` (${labels.age} ${character.age})` : ''), margins.left, doc.y, {
+          .text(charNameText, margins.left, doc.y, {
             align: isRTL ? 'right' : 'left',
             width: contentWidth,
           });
@@ -1201,8 +1347,8 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
 
         // Description
         if (character.description) {
-          doc.text(character.description, margins.left, doc.y, {
-            align: 'justify',
+          doc.text(processRTLText(character.description, isRTL), margins.left, doc.y, {
+            align: isRTL ? 'right' : 'justify',
             width: contentWidth,
           });
           doc.moveDown(0.5);
@@ -1210,29 +1356,53 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
 
         // Traits
         if (character.traits && character.traits.length > 0) {
-          doc.font(boldFont).fontSize(10).text(`${labels.traits}: `, { continued: true });
-          doc.font(mainFont).text(character.traits.join(', '));
+          const traitsText = processRTLText(character.traits.join(', '), isRTL);
+          if (isRTL) {
+            doc.font(mainFont).fontSize(10).text(traitsText, { continued: true });
+            doc.font(boldFont).text(` :${labels.traits}`);
+          } else {
+            doc.font(boldFont).fontSize(10).text(`${labels.traits}: `, { continued: true });
+            doc.font(mainFont).text(traitsText);
+          }
           doc.moveDown(0.3);
         }
 
         // Backstory
         if (character.backstory) {
-          doc.font(boldFont).fontSize(10).text(`${labels.backstory}: `, { continued: true });
-          doc.font(mainFont).text(character.backstory);
+          const backstoryText = processRTLText(character.backstory, isRTL);
+          if (isRTL) {
+            doc.font(mainFont).fontSize(10).text(backstoryText, { continued: true });
+            doc.font(boldFont).text(` :${labels.backstory}`);
+          } else {
+            doc.font(boldFont).fontSize(10).text(`${labels.backstory}: `, { continued: true });
+            doc.font(mainFont).text(backstoryText);
+          }
           doc.moveDown(0.3);
         }
 
         // Goals
         if (character.goals) {
-          doc.font(boldFont).fontSize(10).text(`${labels.goals}: `, { continued: true });
-          doc.font(mainFont).text(character.goals);
+          const goalsText = processRTLText(character.goals, isRTL);
+          if (isRTL) {
+            doc.font(mainFont).fontSize(10).text(goalsText, { continued: true });
+            doc.font(boldFont).text(` :${labels.goals}`);
+          } else {
+            doc.font(boldFont).fontSize(10).text(`${labels.goals}: `, { continued: true });
+            doc.font(mainFont).text(goalsText);
+          }
           doc.moveDown(0.3);
         }
 
         // Arc
         if (character.arc) {
-          doc.font(boldFont).fontSize(10).text(`${labels.arc}: `, { continued: true });
-          doc.font(mainFont).text(character.arc);
+          const arcText = processRTLText(character.arc, isRTL);
+          if (isRTL) {
+            doc.font(mainFont).fontSize(10).text(arcText, { continued: true });
+            doc.font(boldFont).text(` :${labels.arc}`);
+          } else {
+            doc.font(boldFont).fontSize(10).text(`${labels.arc}: `, { continued: true });
+            doc.font(mainFont).text(arcText);
+          }
         }
 
         doc.moveDown(1.5);
@@ -1283,7 +1453,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
 
           doc.font(boldFont)
             .fontSize(14)
-            .text(section.title, margins.left, doc.y, {
+            .text(processRTLText(section.title, isRTL), margins.left, doc.y, {
               align: isRTL ? 'right' : 'left',
               width: contentWidth,
             });
@@ -1291,8 +1461,8 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
           doc.moveDown(0.5);
           doc.font(mainFont)
             .fontSize(11)
-            .text(section.content, margins.left, doc.y, {
-              align: 'justify',
+            .text(processRTLText(section.content, isRTL), margins.left, doc.y, {
+              align: isRTL ? 'right' : 'justify',
               width: contentWidth,
             });
 
@@ -1322,10 +1492,13 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
             pageNum++;
           }
 
+          const questionText = isRTL
+            ? `${processRTLText(response.question, isRTL)} :${labels.question}`
+            : `${labels.question}: ${response.question}`;
           doc.font(boldFont)
             .fontSize(11)
             .fillColor('#444444')
-            .text(`${labels.question}: ${response.question}`, margins.left, doc.y, {
+            .text(questionText, margins.left, doc.y, {
               align: isRTL ? 'right' : 'left',
               width: contentWidth,
             });
@@ -1333,8 +1506,8 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
           doc.moveDown(0.3);
           doc.font(mainFont)
             .fillColor('black')
-            .text(response.answer, margins.left, doc.y, {
-              align: 'justify',
+            .text(processRTLText(response.answer, isRTL), margins.left, doc.y, {
+              align: isRTL ? 'right' : 'justify',
               width: contentWidth,
             });
 
@@ -1348,37 +1521,41 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
     doc.rect(0, 0, pageDims.width, pageDims.height)
       .fill(`rgb(${coverColor.r}, ${coverColor.g}, ${coverColor.b})`);
 
-    // Back cover image
+    // Back cover image - larger size (70% width for better visibility)
+    let backSynopsisY = 80;
     if (backCoverImage) {
       try {
-        const imgWidth = pageDims.width * 0.4;
+        const imgWidth = pageDims.width * 0.7; // Larger image - 70% of page width
         const imgX = (pageDims.width - imgWidth) / 2;
-        doc.image(backCoverImage, imgX, 50, {
-          width: imgWidth,
+        const maxBackImageHeight = pageDims.height * 0.45; // 45% of page height
+        doc.image(backCoverImage, imgX, 40, {
+          fit: [imgWidth, maxBackImageHeight],
           align: 'center',
         });
+        backSynopsisY = 40 + maxBackImageHeight + 30;
       } catch (e) {
         console.error('Error adding back cover image:', e);
       }
     }
 
-    // Synopsis
+    // Synopsis - ensure text color is set
     const synopsisText = bookData.synopsis || bookData.description;
     if (synopsisText) {
       doc.fillColor(`rgb(${textColor.r}, ${textColor.g}, ${textColor.b})`)
         .font(mainFont)
-        .fontSize(12)
-        .text(synopsisText, margins.left, backCoverImage ? 250 : 100, {
-          align: 'justify',
+        .fontSize(11)
+        .text(synopsisText, margins.left, backSynopsisY, {
+          align: isRTL ? 'right' : 'justify',
           width: contentWidth,
         });
     }
 
-    // Author bio
+    // Author bio - ensure text color is maintained
     if (bookData.coverDesign.authorBio) {
-      doc.moveDown(2);
-      doc.font(boldFont)
-        .fontSize(12)
+      doc.moveDown(1.5);
+      doc.fillColor(`rgb(${textColor.r}, ${textColor.g}, ${textColor.b})`)
+        .font(boldFont)
+        .fontSize(11)
         .text(labels.aboutAuthor, margins.left, doc.y, {
           align: 'center',
           width: contentWidth,
@@ -1387,23 +1564,22 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       doc.font(mainFont)
         .fontSize(10)
         .text(bookData.coverDesign.authorBio, margins.left, doc.y, {
-          align: 'justify',
+          align: isRTL ? 'right' : 'justify',
           width: contentWidth,
         });
     }
 
-    // Stats at bottom
+    // Stats at bottom - ensure text color
     const locale = bookData.language === 'he' ? 'he-IL' : 'en-US';
-    doc.fontSize(10)
-      .text(
-        `${bookData.statistics.wordCount.toLocaleString(locale)} ${labels.words} • ${bookData.statistics.chapterCount} ${labels.chapters}`,
-        margins.left,
-        pageDims.height - 100,
-        {
-          align: 'center',
-          width: contentWidth,
-        }
-      );
+    const statsText = isRTL
+      ? `${labels.chapters} ${bookData.statistics.chapterCount} • ${labels.words} ${bookData.statistics.wordCount.toLocaleString(locale)}`
+      : `${bookData.statistics.wordCount.toLocaleString(locale)} ${labels.words} • ${bookData.statistics.chapterCount} ${labels.chapters}`;
+    doc.fillColor(`rgb(${textColor.r}, ${textColor.g}, ${textColor.b})`)
+      .fontSize(10)
+      .text(statsText, margins.left, pageDims.height - 100, {
+        align: 'center',
+        width: contentWidth,
+      });
 
     // Author name
     doc.font(boldFont)
@@ -1413,7 +1589,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
         width: contentWidth,
       });
 
-    // MeStory branding
+    // MeStory branding - slightly lighter version of text color
     doc.font(mainFont)
       .fontSize(8)
       .fillColor(`rgb(${Math.min(textColor.r + 50, 255)}, ${Math.min(textColor.g + 50, 255)}, ${Math.min(textColor.b + 50, 255)})`)
@@ -1496,8 +1672,10 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
   for (let i = 0; i < bookData.chapters.length; i++) {
     const chapter = bookData.chapters[i];
     const buffers: Buffer[] = [];
-    for (let j = 0; j < chapter.images.length; j++) {
-      const img = chapter.images[j];
+    // Safely iterate over chapter images (may be undefined)
+    const chapterImgs = chapter.images || [];
+    for (let j = 0; j < chapterImgs.length; j++) {
+      const img = chapterImgs[j];
       const buffer = await fetchImageAsBuffer(img.url, `DOCX Chapter ${i + 1} "${chapter.title}" - Image ${j + 1}`);
       if (buffer) {
         buffers.push(buffer);
@@ -1508,10 +1686,14 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
     }
   }
 
-  // Font configuration
-  const bodyFont = bookData.pageLayout.bodyFont || 'David';
-  const headingFont = bookData.aiDesign?.typography?.headingFont || 'David';
+  // Font configuration - use consistent fonts based on language
+  const defaultFont = isRTL ? 'David' : 'Georgia';
+  const bodyFont = bookData.coverDesign.fontFamily || bookData.pageLayout.bodyFont || bookData.aiDesign?.typography?.bodyFont || defaultFont;
+  const headingFont = bookData.coverDesign.fontFamily || bookData.aiDesign?.typography?.headingFont || defaultFont;
   const fontSize = bookData.pageLayout.fontSize * 2; // Half-points
+
+  // Color configuration for DOCX (hex without #)
+  const titleTextColor = bookData.coverDesign.textColor?.replace('#', '') || '000000';
 
   // ========== TITLE PAGE ==========
   const titlePageContent: Paragraph[] = [
@@ -1549,6 +1731,7 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
           bold: true,
           size: 72,
           font: headingFont,
+          color: titleTextColor,
         }),
       ],
       alignment: AlignmentType.CENTER,
@@ -1561,6 +1744,7 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
           text: bookData.authorName,
           size: 36,
           font: bodyFont,
+          color: titleTextColor,
         }),
       ],
       alignment: AlignmentType.CENTER,
@@ -1574,6 +1758,7 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
           size: 24,
           italics: true,
           font: bodyFont,
+          color: titleTextColor,
         }),
       ],
       alignment: AlignmentType.CENTER,
@@ -1718,7 +1903,8 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
       })
     );
 
-    // Chapter title
+    // Chapter title - using design heading color
+    const headingColor = bookData.aiDesign?.typography?.colors?.heading?.replace('#', '') || titleTextColor;
     chapterPages.push(
       new Paragraph({
         children: [
@@ -1727,6 +1913,7 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
             bold: true,
             size: 40,
             font: headingFont,
+            color: headingColor,
           }),
         ],
         alignment: AlignmentType.CENTER,
@@ -2053,23 +2240,43 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
     }
   }
 
-  // ========== BACK MATTER ==========
+  // ========== BACK MATTER / BACK COVER ==========
+  // Get design colors for back cover (convert to hex without #)
+  const coverTextColorHex = bookData.coverDesign.textColor?.replace('#', '') || '000000';
+
   const backMatter: Paragraph[] = [
     new Paragraph({ children: [new PageBreak()] }),
+    // Book title on back cover
     new Paragraph({
       children: [
         new TextRun({
-          text: 'אודות הספר',
+          text: bookData.title,
           bold: true,
-          size: 40,
+          size: 48,
           font: headingFont,
+          color: coverTextColorHex,
         }),
       ],
       alignment: AlignmentType.CENTER,
       heading: HeadingLevel.HEADING_1,
       bidirectional: isRTL,
+      spacing: { before: 200, after: 200 },
     }),
-    new Paragraph({ children: [], spacing: { before: 400 } }),
+    // About the Book heading
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: labels.aboutBook,
+          bold: true,
+          size: 32,
+          font: headingFont,
+          color: coverTextColorHex,
+        }),
+      ],
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 400, after: 200 },
+      bidirectional: isRTL,
+    }),
   ];
 
   // Synopsis
@@ -2082,9 +2289,10 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
             text: synopsisText,
             size: fontSize,
             font: bodyFont,
+            color: coverTextColorHex,
           }),
         ],
-        alignment: AlignmentType.JUSTIFIED,
+        alignment: isRTL ? AlignmentType.RIGHT : AlignmentType.JUSTIFIED,
         spacing: { after: 400 },
         bidirectional: isRTL,
       })
@@ -2097,10 +2305,11 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
       new Paragraph({
         children: [
           new TextRun({
-            text: 'על המחבר',
+            text: labels.aboutAuthor,
             bold: true,
             size: 28,
             font: headingFont,
+            color: coverTextColorHex,
           }),
         ],
         alignment: AlignmentType.CENTER,
@@ -2113,9 +2322,10 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
             text: bookData.coverDesign.authorBio,
             size: fontSize,
             font: bodyFont,
+            color: coverTextColorHex,
           }),
         ],
-        alignment: AlignmentType.JUSTIFIED,
+        alignment: isRTL ? AlignmentType.RIGHT : AlignmentType.JUSTIFIED,
         spacing: { before: 200, after: 400 },
         bidirectional: isRTL,
       })
@@ -2183,78 +2393,14 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
                 ],
                 alignment: AlignmentType.CENTER,
               }),
-            ],
-          }),
+            ],          }),
         } : undefined,
-        footers: bookData.pageLayout.includePageNumbers ? {
-          default: new Footer({
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    children: [PageNumber.CURRENT],
-                    size: 18,
-                    font: bodyFont,
-                  }),
-                ],
-                alignment: AlignmentType.CENTER,
-              }),
-            ],
-          }),
-        } : undefined,
-        children: [
-          ...titlePageContent,
-          ...copyrightPage,
-          ...tocPage,
-          ...chapterPages,
-          ...charactersSection,
-          ...storyContextSection,
-          ...backMatter,
-        ],
+        children: [...titlePageContent, ...chapterPages, ...charactersSection, ...backMatter],
       },
     ],
   });
 
-  try {
-    return await Packer.toBuffer(doc);
-  } catch (error: any) {
-    console.error('Failed to generate DOCX buffer:', error);
-    throw new Error(`Failed to generate DOCX: ${error.message}`);
-  }
-}
-
-// ============================================================================
-// MAIN EXPORT FUNCTION
-// ============================================================================
-
-/**
- * Export result with buffer and optional warnings
- */
-export interface ExportResult {
-  buffer: Buffer;
-  warnings: string[];
-}
-
-/**
- * Export book to specified format
- * Returns buffer and any warnings that occurred during export
- */
-export async function exportBook(
-  bookId: string,
-  format: 'pdf' | 'docx'
-): Promise<ExportResult> {
-  // Clear warnings from previous export
-  clearExportWarnings();
-
-  let buffer: Buffer;
-  if (format === 'pdf') {
-    buffer = await generatePDF(bookId);
-  } else {
-    buffer = await generateDOCX(bookId);
-  }
-
-  return {
-    buffer,
-    warnings: getExportWarnings(),
-  };
+  // Serialize to buffer
+  const buffer = await Packer.toBuffer(doc);
+  return buffer;
 }

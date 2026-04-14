@@ -258,13 +258,13 @@ export default function AIDesignWizard({
             <div className="mt-4">
               <div className="flex justify-between text-sm text-white/80 mb-2">
                 <span>{progress.stepName}</span>
-                <span>{progress.currentStep}/{progress.totalSteps}</span>
+                <span>{Math.min(progress.currentStep, progress.totalSteps)}/{progress.totalSteps}</span>
               </div>
               <div className="h-2 bg-white/20 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-white rounded-full"
                   initial={{ width: 0 }}
-                  animate={{ width: `${(progress.currentStep / progress.totalSteps) * 100}%` }}
+                  animate={{ width: `${Math.min((progress.currentStep / progress.totalSteps) * 100, 100)}%` }}
                   transition={{ duration: 0.5 }}
                 />
               </div>

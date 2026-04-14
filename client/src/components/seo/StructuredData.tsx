@@ -111,12 +111,12 @@ export function BookSchema({
   const data: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Book',
-    name: title,
+    name: title || 'Untitled',
     description,
     author: {
       '@type': 'Person',
-      name: author.name,
-      url: author.url,
+      name: author?.name || 'Unknown',
+      url: author?.url,
     },
     url,
     image,
@@ -149,7 +149,7 @@ export function BookSchema({
     };
   }
 
-  useJsonLd(data, `book-${title.replace(/\s+/g, '-').toLowerCase()}`);
+  useJsonLd(data, `book-${(title || 'untitled').replace(/\s+/g, '-').toLowerCase()}`);
   return null;
 }
 

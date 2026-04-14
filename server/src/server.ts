@@ -1,4 +1,4 @@
-// MeStory Server
+// MeStory Server - Performance optimized
 import dotenv from 'dotenv';
 dotenv.config(); // Load environment variables FIRST before any other imports
 
@@ -39,6 +39,8 @@ import webhookRoutes from './routes/webhookRoutes';
 import refundRoutes from './routes/refundRoutes';
 import invoiceRoutes from './routes/invoiceRoutes';
 import sitemapRoutes from './routes/sitemapRoutes';
+import collaborationRoutes from './routes/collaborationRoutes';
+import organizationRoutes from './routes/organizationRoutes';
 import { initializeDefaultTemplates } from './services/templateService';
 import { initializeSubscriptionJobs } from './jobs/subscriptionJobs';
 import { initializeCleanupJobs } from './jobs/cleanupJobs';
@@ -297,6 +299,27 @@ app.use('/', sitemapRoutes);
 // Apply rate limiting to all API routes
 app.use('/api', apiLimiter);
 
+// Request timeout middleware - prevent hanging requests
+const REQUEST_TIMEOUT = 55000; // 55 seconds (just under Vercel's 60s limit)
+app.use('/api', (req: Request, res: Response, next: NextFunction) => {
+  // Set a timeout for the request
+  const timeout = setTimeout(() => {
+    if (!res.headersSent) {
+      console.error(`[TIMEOUT] Request timed out: ${req.method} ${req.originalUrl}`);
+      res.status(504).json({
+        success: false,
+        error: 'Request timeout - please try again',
+      });
+    }
+  }, REQUEST_TIMEOUT);
+
+  // Clear timeout when response is finished
+  res.on('finish', () => clearTimeout(timeout));
+  res.on('close', () => clearTimeout(timeout));
+
+  next();
+});
+
 // IMPORTANT: Apply initialization check BEFORE routes
 app.use('/api', ensureInitialized);
 
@@ -320,6 +343,8 @@ app.use('/api/book-purchases', bookPurchaseRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/refunds', refundRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/collaboration', collaborationRoutes);
+app.use('/api/organizations', organizationRoutes);
 
 // ============================================
 // Error Handling (must be last)
@@ -340,29 +365,29 @@ const startServer = async () => {
 
     // Initialize subscription cron jobs (only for non-serverless environments)
     initializeSubscriptionJobs();
-    console.log('✅ Subscription cron jobs initialized');
+    console.log('✅ Subscription jobs initialized');
 
-    // Initialize cleanup cron jobs (expired transactions, old notifications)
+    // Initialize cleanup jobs
     initializeCleanupJobs();
-    console.log('✅ Cleanup cron jobs initialized');
+    console.log('✅ Cleanup jobs initialized');
 
+    // Start listening
     httpServer.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🌐 Client URL: ${process.env.CLIENT_URL || 'http://localhost:5173'}`);
-      console.log(`🔌 WebSocket enabled`);
-      console.log(`⏰ Cron jobs active (subscriptions & cleanup)`);
+      console.log(`🚀 MeStory server running on port ${PORT}`);
+      console.log(`📚 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
+
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);
   }
 };
 
-// Start server for local development (not Vercel)
+// Only start server in non-Vercel environments
 if (!isVercel) {
   startServer();
 }
 
-// Export the Express app for Vercel serverless handler
 export default app;
+// restart Mon Apr 13 21:41:37     2026
+// restart

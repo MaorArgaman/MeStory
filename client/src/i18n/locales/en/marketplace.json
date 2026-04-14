@@ -1,8 +1,8 @@
 {
-  "title": "Marketplace",
-  "subtitle": "Discover amazing books from talented authors",
+  "title": "Memorial Books",
+  "subtitle": "Life stories and family memories written from the heart",
   "search": {
-    "placeholder": "Search books, authors, genres...",
+    "placeholder": "Search memorial books, authors, categories...",
     "no_results": "No books found matching your search",
     "results": "{{count}} books found"
   },
@@ -22,20 +22,14 @@
     "price_high": "Price: High to Low"
   },
   "genres": {
-    "fiction": "Fiction",
-    "non_fiction": "Non-Fiction",
-    "mystery": "Mystery",
-    "romance": "Romance",
-    "sci_fi": "Science Fiction",
-    "fantasy": "Fantasy",
-    "thriller": "Thriller",
-    "horror": "Horror",
-    "biography": "Biography",
-    "history": "History",
-    "self_help": "Self-Help",
-    "children": "Children",
-    "poetry": "Poetry",
-    "memoir": "Memoir"
+    "fallen_soldier": "In Memory of a Fallen Soldier",
+    "life_story": "Life Story",
+    "family_legacy": "Family Legacy",
+    "tribute": "Tribute",
+    "holocaust_survivor": "Holocaust Survivor Testimony",
+    "shared_memories": "Shared Memories",
+    "letters_and_words": "Letters Unspoken",
+    "testimony": "Testimony"
   },
   "book": {
     "by": "by",

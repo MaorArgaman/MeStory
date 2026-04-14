@@ -242,10 +242,10 @@ export default function HowToEarnMoney() {
           >
             <div className="grid md:grid-cols-3 gap-6">
               <GlassCard className="p-6 text-center" glow="gold">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-magic-gold/20 to-yellow-500/20 flex items-center justify-center mx-auto mb-4">
-                  <DollarSign className="w-7 h-7 text-magic-gold" />
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-memorial-gold/20 to-yellow-500/20 flex items-center justify-center mx-auto mb-4">
+                  <DollarSign className="w-7 h-7 text-memorial-gold" />
                 </div>
-                <h3 className="text-3xl font-bold text-magic-gold mb-2">50%</h3>
+                <h3 className="text-3xl font-bold text-memorial-gold mb-2">50%</h3>
                 <p className="text-gray-400 text-sm">
                   {isHebrew ? 'מכל מכירה שלכם' : 'of every sale you make'}
                 </p>
@@ -280,9 +280,9 @@ export default function HowToEarnMoney() {
             transition={{ delay: 0.15 }}
             className="mb-12"
           >
-            <GlassCard className="p-6 border-l-4 border-magic-gold">
+            <GlassCard className="p-6 border-l-4 border-memorial-gold">
               <div className="flex items-start gap-4">
-                <AlertCircle className="w-6 h-6 text-magic-gold flex-shrink-0 mt-1" />
+                <AlertCircle className="w-6 h-6 text-memorial-gold flex-shrink-0 mt-1" />
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-2">
                     {isHebrew ? 'מידע חשוב על תשלומים' : 'Important Payment Information'}
@@ -399,25 +399,25 @@ export default function HowToEarnMoney() {
                       <td className="py-3 px-4 text-white">$4.99</td>
                       <td className="py-3 px-4 text-green-500">$2.50</td>
                       <td className="py-3 px-4 text-white">$25</td>
-                      <td className="py-3 px-4 text-magic-gold font-semibold">$250</td>
+                      <td className="py-3 px-4 text-memorial-gold font-semibold">$250</td>
                     </tr>
                     <tr className="border-b border-white/5">
                       <td className="py-3 px-4 text-white">$9.99</td>
                       <td className="py-3 px-4 text-green-500">$5.00</td>
                       <td className="py-3 px-4 text-white">$50</td>
-                      <td className="py-3 px-4 text-magic-gold font-semibold">$500</td>
+                      <td className="py-3 px-4 text-memorial-gold font-semibold">$500</td>
                     </tr>
                     <tr className="border-b border-white/5">
                       <td className="py-3 px-4 text-white">$14.99</td>
                       <td className="py-3 px-4 text-green-500">$7.50</td>
                       <td className="py-3 px-4 text-white">$75</td>
-                      <td className="py-3 px-4 text-magic-gold font-semibold">$750</td>
+                      <td className="py-3 px-4 text-memorial-gold font-semibold">$750</td>
                     </tr>
                     <tr>
                       <td className="py-3 px-4 text-white">$19.99</td>
                       <td className="py-3 px-4 text-green-500">$10.00</td>
                       <td className="py-3 px-4 text-white">$100</td>
-                      <td className="py-3 px-4 text-magic-gold font-semibold">$1,000</td>
+                      <td className="py-3 px-4 text-memorial-gold font-semibold">$1,000</td>
                     </tr>
                   </tbody>
                 </table>
@@ -469,14 +469,14 @@ export default function HowToEarnMoney() {
           >
             <Link
               to="/guides/publish-book"
-              className="flex items-center gap-2 text-gray-400 hover:text-magic-gold transition-colors"
+              className="flex items-center gap-2 text-gray-400 hover:text-memorial-gold transition-colors"
             >
               {isHebrew ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
               <span>{isHebrew ? 'איך לפרסם ספר' : 'How to Publish'}</span>
             </Link>
             <Link
               to="/guides"
-              className="flex items-center gap-2 text-gray-400 hover:text-magic-gold transition-colors"
+              className="flex items-center gap-2 text-gray-400 hover:text-memorial-gold transition-colors"
             >
               <span>{isHebrew ? 'כל המדריכים' : 'All Guides'}</span>
               <ArrowIcon className="w-4 h-4" />

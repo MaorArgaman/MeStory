@@ -30,19 +30,23 @@ export const getRecommendations = async (req: AuthRequest, res: Response): Promi
       reasonsObj[key] = value;
     });
 
-    res.status(200).json({
-      success: true,
-      data: {
-        books,
-        reasons: reasonsObj,
-      },
-    });
+    if (!res.headersSent) {
+      res.status(200).json({
+        success: true,
+        data: {
+          books,
+          reasons: reasonsObj,
+        },
+      });
+    }
   } catch (error) {
     console.error('Get recommendations error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get recommendations',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get recommendations',
+      });
+    }
   }
 };
 
@@ -56,16 +60,20 @@ export const getTrending = async (req: AuthRequest, res: Response): Promise<void
 
     const { books } = await recommendationService.getTrendingBooks(limit);
 
-    res.status(200).json({
-      success: true,
-      data: { books },
-    });
+    if (!res.headersSent) {
+      res.status(200).json({
+        success: true,
+        data: { books },
+      });
+    }
   } catch (error) {
     console.error('Get trending error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get trending books',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get trending books',
+      });
+    }
   }
 };
 
@@ -80,16 +88,20 @@ export const getNewReleases = async (req: AuthRequest, res: Response): Promise<v
 
     const books = await recommendationService.getNewReleases(limit, minQuality);
 
-    res.status(200).json({
-      success: true,
-      data: { books },
-    });
+    if (!res.headersSent) {
+      res.status(200).json({
+        success: true,
+        data: { books },
+      });
+    }
   } catch (error) {
     console.error('Get new releases error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get new releases',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get new releases',
+      });
+    }
   }
 };
 
@@ -104,16 +116,20 @@ export const getByGenre = async (req: AuthRequest, res: Response): Promise<void>
 
     const books = await recommendationService.getBooksByGenre(genre, limit);
 
-    res.status(200).json({
-      success: true,
-      data: { books },
-    });
+    if (!res.headersSent) {
+      res.status(200).json({
+        success: true,
+        data: { books },
+      });
+    }
   } catch (error) {
     console.error('Get by genre error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get books by genre',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get books by genre',
+      });
+    }
   }
 };
 
@@ -133,16 +149,20 @@ export const getContinueReading = async (req: AuthRequest, res: Response): Promi
 
     const books = await recommendationService.getContinueReading(req.user.id);
 
-    res.status(200).json({
-      success: true,
-      data: { books },
-    });
+    if (!res.headersSent) {
+      res.status(200).json({
+        success: true,
+        data: { books },
+      });
+    }
   } catch (error) {
     console.error('Get continue reading error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get continue reading list',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get continue reading list',
+      });
+    }
   }
 };
 
@@ -162,16 +182,20 @@ export const getContinueWriting = async (req: AuthRequest, res: Response): Promi
 
     const books = await recommendationService.getContinueWriting(req.user.id);
 
-    res.status(200).json({
-      success: true,
-      data: { books },
-    });
+    if (!res.headersSent) {
+      res.status(200).json({
+        success: true,
+        data: { books },
+      });
+    }
   } catch (error) {
     console.error('Get continue writing error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get continue writing list',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get continue writing list',
+      });
+    }
   }
 };
 
@@ -186,16 +210,20 @@ export const getSimilar = async (req: AuthRequest, res: Response): Promise<void>
 
     const books = await recommendationService.getSimilarBooks(bookId, limit);
 
-    res.status(200).json({
-      success: true,
-      data: { books },
-    });
+    if (!res.headersSent) {
+      res.status(200).json({
+        success: true,
+        data: { books },
+      });
+    }
   } catch (error) {
     console.error('Get similar books error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get similar books',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get similar books',
+      });
+    }
   }
 };
 
@@ -209,16 +237,20 @@ export const getTopAuthors = async (req: AuthRequest, res: Response): Promise<vo
 
     const authors = await recommendationService.getTopAuthors(limit);
 
-    res.status(200).json({
-      success: true,
-      data: { authors },
-    });
+    if (!res.headersSent) {
+      res.status(200).json({
+        success: true,
+        data: { authors },
+      });
+    }
   } catch (error) {
     console.error('Get top authors error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get top authors',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get top authors',
+      });
+    }
   }
 };
 
@@ -254,16 +286,20 @@ export const recordInteraction = async (req: AuthRequest, res: Response): Promis
       metadata
     );
 
-    res.status(200).json({
-      success: true,
-      message: 'Interaction recorded',
-    });
+    if (!res.headersSent) {
+      res.status(200).json({
+        success: true,
+        message: 'Interaction recorded',
+      });
+    }
   } catch (error) {
     console.error('Record interaction error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to record interaction',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to record interaction',
+      });
+    }
   }
 };
 
@@ -299,16 +335,20 @@ export const updateReadingProgress = async (req: AuthRequest, res: Response): Pr
       readingTime || 0
     );
 
-    res.status(200).json({
-      success: true,
-      message: 'Reading progress updated',
-    });
+    if (!res.headersSent) {
+      res.status(200).json({
+        success: true,
+        message: 'Reading progress updated',
+      });
+    }
   } catch (error) {
     console.error('Update reading progress error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to update reading progress',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update reading progress',
+      });
+    }
   }
 };
 
@@ -330,16 +370,20 @@ export const getPersonalizedFeed = async (req: AuthRequest, res: Response): Prom
 
     const feed = await mlRecommendationService.getPersonalizedFeed(req.user.id);
 
-    res.status(200).json({
-      success: true,
-      data: feed,
-    });
+    if (!res.headersSent) {
+      res.status(200).json({
+        success: true,
+        data: feed,
+      });
+    }
   } catch (error) {
     console.error('Get personalized feed error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get personalized feed',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get personalized feed',
+      });
+    }
   }
 };
 
@@ -366,16 +410,20 @@ export const getMLRecommendations = async (req: AuthRequest, res: Response): Pro
       diversity
     );
 
-    res.status(200).json({
-      success: true,
-      data: { recommendations },
-    });
+    if (!res.headersSent) {
+      res.status(200).json({
+        success: true,
+        data: { recommendations },
+      });
+    }
   } catch (error) {
     console.error('Get ML recommendations error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get ML recommendations',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get ML recommendations',
+      });
+    }
   }
 };
 
@@ -402,16 +450,20 @@ export const getBecauseYouRead = async (req: AuthRequest, res: Response): Promis
       booksPerSource
     );
 
-    res.status(200).json({
-      success: true,
-      data: { recommendations },
-    });
+    if (!res.headersSent) {
+      res.status(200).json({
+        success: true,
+        data: { recommendations },
+      });
+    }
   } catch (error) {
     console.error('Get because you read error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get because you read recommendations',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get because you read recommendations',
+      });
+    }
   }
 };
 
@@ -426,16 +478,20 @@ export const getContentSimilar = async (req: AuthRequest, res: Response): Promis
 
     const books = await mlRecommendationService.getContentSimilarBooks(bookId, limit);
 
-    res.status(200).json({
-      success: true,
-      data: { books },
-    });
+    if (!res.headersSent) {
+      res.status(200).json({
+        success: true,
+        data: { books },
+      });
+    }
   } catch (error) {
     console.error('Get content similar error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get similar books',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get similar books',
+      });
+    }
   }
 };
 
@@ -455,18 +511,22 @@ export const getReadingProgressDetails = async (req: AuthRequest, res: Response)
 
     const feed = await mlRecommendationService.getPersonalizedFeed(req.user.id);
 
-    res.status(200).json({
-      success: true,
-      data: {
-        continueReading: feed.continueReading,
-        continueWriting: feed.continueWriting,
-      },
-    });
+    if (!res.headersSent) {
+      res.status(200).json({
+        success: true,
+        data: {
+          continueReading: feed.continueReading,
+          continueWriting: feed.continueWriting,
+        },
+      });
+    }
   } catch (error) {
     console.error('Get reading progress details error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get reading progress details',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get reading progress details',
+      });
+    }
   }
 };

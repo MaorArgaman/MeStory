@@ -267,15 +267,15 @@ export default function HowToPublishBook() {
               </p>
               <div className="grid sm:grid-cols-3 gap-4 mt-6">
                 <div className="bg-white/5 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-magic-gold">50%</div>
+                  <div className="text-2xl font-bold text-memorial-gold">50%</div>
                   <div className="text-sm text-gray-400">{isHebrew ? 'מכל מכירה' : 'of every sale'}</div>
                 </div>
                 <div className="bg-white/5 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-magic-gold">24-48h</div>
+                  <div className="text-2xl font-bold text-memorial-gold">24-48h</div>
                   <div className="text-sm text-gray-400">{isHebrew ? 'זמן אישור' : 'approval time'}</div>
                 </div>
                 <div className="bg-white/5 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-magic-gold">100%</div>
+                  <div className="text-2xl font-bold text-memorial-gold">100%</div>
                   <div className="text-sm text-gray-400">{isHebrew ? 'בעלות על הזכויות' : 'rights ownership'}</div>
                 </div>
               </div>
@@ -394,14 +394,14 @@ export default function HowToPublishBook() {
           >
             <Link
               to="/guides/write-book"
-              className="flex items-center gap-2 text-gray-400 hover:text-magic-gold transition-colors"
+              className="flex items-center gap-2 text-gray-400 hover:text-memorial-gold transition-colors"
             >
               {isHebrew ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
               <span>{isHebrew ? 'איך לכתוב ספר' : 'How to Write a Book'}</span>
             </Link>
             <Link
               to="/guides/earn-money"
-              className="flex items-center gap-2 text-gray-400 hover:text-magic-gold transition-colors"
+              className="flex items-center gap-2 text-gray-400 hover:text-memorial-gold transition-colors"
             >
               <span>{isHebrew ? 'המדריך הבא' : 'Next Guide'}</span>
               <ArrowIcon className="w-4 h-4" />

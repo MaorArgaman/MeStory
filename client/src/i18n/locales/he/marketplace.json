@@ -1,8 +1,8 @@
 {
-  "title": "חנות הספרים",
-  "subtitle": "גלה ספרים מדהימים מסופרים מוכשרים",
+  "title": "ספרי הנצחה",
+  "subtitle": "סיפורי חיים וזיכרונות משפחתיים שנכתבו בלב",
   "search": {
-    "placeholder": "חפש ספרים, סופרים, ז'אנרים...",
+    "placeholder": "חפש ספרי הנצחה, מחברים, קטגוריות...",
     "no_results": "לא נמצאו ספרים התואמים לחיפוש שלך",
     "results": "נמצאו {{count}} ספרים"
   },
@@ -22,20 +22,14 @@
     "price_high": "מחיר: מהגבוה לנמוך"
   },
   "genres": {
-    "fiction": "בדיון",
-    "non_fiction": "עיון",
-    "mystery": "מסתורין",
-    "romance": "רומנטיקה",
-    "sci_fi": "מדע בדיוני",
-    "fantasy": "פנטזיה",
-    "thriller": "מותחן",
-    "horror": "אימה",
-    "biography": "ביוגרפיה",
-    "history": "היסטוריה",
-    "self_help": "עזרה עצמית",
-    "children": "ילדים",
-    "poetry": "שירה",
-    "memoir": "זיכרונות"
+    "fallen_soldier": "לזכר חייל/ת שנפל/ה",
+    "life_story": "סיפור חיים",
+    "family_legacy": "מורשת משפחתית",
+    "tribute": "מחווה ליקיר/ה",
+    "holocaust_survivor": "עדות ניצול שואה",
+    "shared_memories": "זיכרונות משותפים",
+    "letters_and_words": "מכתבים ודברים שלא נאמרו",
+    "testimony": "עדות"
   },
   "book": {
     "by": "מאת",

@@ -209,7 +209,7 @@ export default function PublishMetadata() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 text-magic-gold mx-auto mb-4 animate-spin" />
+          <Loader2 className="w-12 h-12 text-memorial-gold mx-auto mb-4 animate-spin" />
           <p className="text-gray-300">Loading book...</p>
         </div>
       </div>
@@ -242,7 +242,7 @@ export default function PublishMetadata() {
             <GlassCard>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-magic-gold" />
+                  <BookOpen className="w-5 h-5 text-memorial-gold" />
                   <h3 className="text-xl font-display font-bold text-white">
                     Book Synopsis
                   </h3>
@@ -289,7 +289,7 @@ export default function PublishMetadata() {
             {/* Tags */}
             <GlassCard>
               <div className="flex items-center gap-2 mb-4">
-                <Tag className="w-5 h-5 text-magic-gold" />
+                <Tag className="w-5 h-5 text-memorial-gold" />
                 <h3 className="text-xl font-display font-bold text-white">Tags</h3>
               </div>
               <div className="flex gap-2 mb-3">
@@ -312,7 +312,7 @@ export default function PublishMetadata() {
                     key={index}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="px-3 py-1 bg-magic-gold/20 border border-magic-gold rounded-full text-magic-gold text-sm flex items-center gap-2"
+                    className="px-3 py-1 bg-memorial-gold/20 border border-memorial-gold rounded-full text-memorial-gold text-sm flex items-center gap-2"
                   >
                     <span>{tag}</span>
                     <button
@@ -335,7 +335,7 @@ export default function PublishMetadata() {
             {/* Category */}
             <GlassCard>
               <div className="flex items-center gap-2 mb-4">
-                <BookOpen className="w-5 h-5 text-magic-gold" />
+                <BookOpen className="w-5 h-5 text-memorial-gold" />
                 <h3 className="text-xl font-display font-bold text-white">Category</h3>
               </div>
               <select
@@ -355,7 +355,7 @@ export default function PublishMetadata() {
             {/* Pricing */}
             <GlassCard>
               <div className="flex items-center gap-2 mb-4">
-                <DollarSign className="w-5 h-5 text-magic-gold" />
+                <DollarSign className="w-5 h-5 text-memorial-gold" />
                 <h3 className="text-xl font-display font-bold text-white">Pricing</h3>
               </div>
 
@@ -375,7 +375,7 @@ export default function PublishMetadata() {
                   onClick={() => setIsFree(false)}
                   className={`flex-1 py-3 rounded-xl font-semibold transition-all ${
                     !isFree
-                      ? 'bg-gradient-to-r from-magic-gold to-yellow-600 text-deep-space'
+                      ? 'bg-gradient-to-r from-memorial-gold to-yellow-600 text-deep-space'
                       : 'bg-white/5 text-gray-400 hover:bg-white/10'
                   }`}
                 >
@@ -479,7 +479,7 @@ export default function PublishMetadata() {
 
                   {/* Quality Badge */}
                   {book.qualityScore && book.qualityScore.overallScore >= 70 && (
-                    <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-gradient-to-r from-magic-gold to-yellow-600 text-deep-space text-xs font-bold shadow-glow-gold flex items-center gap-1">
+                    <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-gradient-to-r from-memorial-gold to-yellow-600 text-deep-space text-xs font-bold shadow-glow-gold flex items-center gap-1">
                       <Sparkles className="w-3 h-3" />
                       {book.qualityScore.ratingLabel}
                     </div>
@@ -536,7 +536,7 @@ export default function PublishMetadata() {
                     <div className="flex items-center gap-4">
                       {book.qualityScore && (
                         <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 text-magic-gold fill-magic-gold" />
+                          <Star className="w-4 h-4 text-memorial-gold fill-memorial-gold" />
                           <span className="text-gray-300">
                             {(book.qualityScore.overallScore / 20).toFixed(1)}
                           </span>
@@ -546,7 +546,7 @@ export default function PublishMetadata() {
                         {book.statistics.wordCount.toLocaleString()} words
                       </div>
                     </div>
-                    <div className="font-bold text-magic-gold">
+                    <div className="font-bold text-memorial-gold">
                       {isFree ? 'Free' : `$${price}`}
                     </div>
                   </div>

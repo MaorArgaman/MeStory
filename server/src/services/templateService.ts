@@ -10,29 +10,48 @@ import { defaultTemplates } from '../data/defaultTemplates';
 // UUID validation helper
 const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
+// Timeout wrapper for promises
+const withTimeout = <T>(promise: Promise<T>, ms: number, errorMsg: string): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(errorMsg)), ms)
+    )
+  ]);
+};
+
 // Initialize default templates in database
 export async function initializeDefaultTemplates(): Promise<void> {
   try {
-    // Check if system templates already exist
-    const existingCount = await BookTemplate.countDocuments({ isSystem: true });
+    // Check if system templates already exist (with 5s timeout)
+    const existingCount = await withTimeout(
+      BookTemplate.countDocuments({ isSystem: true }),
+      5000,
+      'Template check timeout'
+    );
 
     if (existingCount === 0) {
       console.log('Initializing default templates...');
 
       for (const template of defaultTemplates) {
-        await BookTemplate.create({
-          ...template,
-          isSystem: true,
-        });
+        await withTimeout(
+          BookTemplate.create({
+            ...template,
+            isSystem: true,
+          }),
+          5000,
+          'Template creation timeout'
+        );
       }
 
       console.log(`Created ${defaultTemplates.length} default templates`);
     } else {
       console.log(`${existingCount} system templates already exist`);
     }
-  } catch (error) {
-    console.error('Failed to initialize default templates:', error);
-    throw error;
+  } catch (error: any) {
+    console.error('Failed to initialize default templates:', error.message);
+    console.warn('⚠️ Server will continue without default templates');
+    // Don't throw - let server start and templates can be created later
   }
 }
 
@@ -531,10 +550,8 @@ export async function searchTemplates(
     (t.descriptionHe || '').toLowerCase().includes(lowerQuery) ||
     (t.tags || []).some(tag => tag.toLowerCase().includes(lowerQuery))
   );
-
   // Sort by usage count descending
-  templates.sort((a, b) => b.usageCount - a.usageCount);
+  templates = templates.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
 
-  // Limit results
-  return templates.slice(0, options?.limit || 10);
+  return templates;
 }

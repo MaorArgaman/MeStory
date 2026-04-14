@@ -239,7 +239,7 @@ export default function HowToWriteBook() {
             className="text-center mb-12"
           >
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-magic-gold to-yellow-500 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-memorial-gold to-yellow-500 flex items-center justify-center">
                 <BookOpen className="w-8 h-8 text-white" />
               </div>
             </div>
@@ -314,11 +314,11 @@ export default function HowToWriteBook() {
                       <div className="relative">
                         {/* Step Header */}
                         <div className="flex items-start gap-4 mb-4">
-                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-magic-gold/20 to-cosmic-purple/20 flex items-center justify-center flex-shrink-0">
-                            <Icon className="w-6 h-6 text-magic-gold" />
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-memorial-gold/20 to-cosmic-purple/20 flex items-center justify-center flex-shrink-0">
+                            <Icon className="w-6 h-6 text-memorial-gold" />
                           </div>
                           <div>
-                            <span className="text-magic-gold text-sm font-medium">
+                            <span className="text-memorial-gold text-sm font-medium">
                               {isHebrew ? `צעד ${step.number}` : `Step ${step.number}`}
                             </span>
                             <h3 className="text-xl font-display font-bold text-white">
@@ -334,7 +334,7 @@ export default function HowToWriteBook() {
 
                         {/* Tips */}
                         <div className="bg-white/5 rounded-xl p-4">
-                          <h4 className="text-sm font-semibold text-magic-gold mb-3 flex items-center gap-2">
+                          <h4 className="text-sm font-semibold text-memorial-gold mb-3 flex items-center gap-2">
                             <Lightbulb className="w-4 h-4" />
                             {isHebrew ? 'טיפים' : 'Tips'}
                           </h4>
@@ -374,7 +374,7 @@ export default function HowToWriteBook() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   to="/register"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space font-semibold rounded-lg hover:brightness-110 transition-all text-lg"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-memorial-gold to-yellow-500 text-deep-space font-semibold rounded-lg hover:brightness-110 transition-all text-lg"
                 >
                   {isHebrew ? 'התחילו לכתוב עכשיו' : 'Start Writing Now'}
                   <ArrowIcon className="w-5 h-5" />
@@ -399,14 +399,14 @@ export default function HowToWriteBook() {
           >
             <Link
               to="/guides"
-              className="flex items-center gap-2 text-gray-400 hover:text-magic-gold transition-colors"
+              className="flex items-center gap-2 text-gray-400 hover:text-memorial-gold transition-colors"
             >
               {isHebrew ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
               <span>{isHebrew ? 'חזרה למדריכים' : 'Back to Guides'}</span>
             </Link>
             <Link
               to="/guides/publish-book"
-              className="flex items-center gap-2 text-gray-400 hover:text-magic-gold transition-colors"
+              className="flex items-center gap-2 text-gray-400 hover:text-memorial-gold transition-colors"
             >
               <span>{isHebrew ? 'המדריך הבא' : 'Next Guide'}</span>
               <ArrowIcon className="w-4 h-4" />

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import axios from 'axios';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
@@ -12,8 +13,77 @@ if (!supabaseKey) {
   throw new Error('SUPABASE_ANON_KEY environment variable is not set');
 }
 
+// Create a fetch-like function using axios (better Windows compatibility)
+const axiosFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+  const method = init?.method || 'GET';
+  const body = init?.body;
+
+  // Convert Headers to plain object, sanitizing values
+  let headers: Record<string, string> = {};
+  if (init?.headers) {
+    if (init.headers instanceof Headers) {
+      init.headers.forEach((value, key) => {
+        headers[key] = value.replace(/[\r\n]/g, ''); // Remove newlines
+      });
+    } else if (Array.isArray(init.headers)) {
+      init.headers.forEach(([key, value]) => {
+        headers[key] = String(value).replace(/[\r\n]/g, '');
+      });
+    } else {
+      Object.entries(init.headers).forEach(([key, value]) => {
+        headers[key] = String(value).replace(/[\r\n]/g, '');
+      });
+    }
+  }
+
+  try {
+    const response = await axios({
+      url,
+      method,
+      headers,
+      data: body,
+      timeout: 10000, // 10 second timeout
+      validateStatus: () => true, // Don't throw on non-2xx
+    });
+
+    // Convert axios response headers to Headers object
+    const responseHeaders = new Headers();
+    Object.entries(response.headers || {}).forEach(([key, value]) => {
+      if (typeof value === 'string') {
+        responseHeaders.set(key, value);
+      }
+    });
+
+    // Convert axios response to fetch Response-like object
+    return {
+      ok: response.status >= 200 && response.status < 300,
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders,
+      json: async () => response.data,
+      text: async () => typeof response.data === 'string' ? response.data : JSON.stringify(response.data),
+      blob: async () => new Blob([response.data]),
+      arrayBuffer: async () => response.data,
+      clone: () => ({ ...response }) as unknown as Response,
+      body: null,
+      bodyUsed: false,
+      redirected: false,
+      type: 'basic' as ResponseType,
+      url,
+      formData: async () => new FormData(),
+    } as Response;
+  } catch (error: any) {
+    throw new Error(error.message || 'Network request failed');
+  }
+};
+
 // Public client for frontend operations
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  global: {
+    fetch: axiosFetch as unknown as typeof fetch,
+  },
+});
 
 // Service role client for backend operations (bypasses RLS)
 export const supabaseAdmin = createClient(
@@ -23,15 +93,35 @@ export const supabaseAdmin = createClient(
     auth: {
       autoRefreshToken: false,
       persistSession: false
-    }
+    },
+    global: {
+      fetch: axiosFetch as unknown as typeof fetch,
+    },
+    db: {
+      schema: 'public',
+    },
   }
 );
 
-// Connection status check with retry
+// Timeout wrapper for promises
+const withTimeout = <T>(promise: Promise<T>, ms: number, errorMsg: string): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(errorMsg)), ms)
+    )
+  ]);
+};
+
+// Connection status check with retry and timeout
 export const getDatabaseStatus = async (retries = 3) => {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      const { error } = await supabaseAdmin.from('users').select('id').limit(1);
+      const { error } = await withTimeout(
+        supabaseAdmin.from('users').select('id').limit(1),
+        5000, // 5 second timeout per attempt
+        'Connection timeout'
+      );
       return {
         isConnected: !error,
         readyState: error ? 0 : 1,
@@ -66,7 +156,7 @@ export const connectDatabase = async (): Promise<void> => {
   const maxRetries = 3;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    const status = await getDatabaseStatus(1); // Single attempt per getDatabaseStatus call
+    const status = await getDatabaseStatus(1);
     if (status.isConnected) {
       console.log('✅ Supabase connected successfully');
       return;
@@ -76,10 +166,8 @@ export const connectDatabase = async (): Promise<void> => {
       console.log(`⏳ Supabase connection attempt ${attempt}/${maxRetries} failed, retrying...`);
       await new Promise(resolve => setTimeout(resolve, attempt * 1000));
     } else {
-      console.error('❌ Supabase connection failed after all retries:', status.error);
-      throw new Error(`Supabase connection failed: ${status.error}`);
+      console.warn('⚠️ Supabase connection check failed after all retries:', status.error);
+      console.warn('⚠️ Server will start anyway - requests may fail if DB is unavailable');
     }
   }
 };
-
-export default supabaseAdmin;

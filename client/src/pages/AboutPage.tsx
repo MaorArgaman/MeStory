@@ -26,73 +26,73 @@ import { useLanguage } from '../contexts/LanguageContext';
 const content = {
   en: {
     seo: {
-      title: 'About MeStory - Our Story',
-      description: 'Learn about MeStory, the leading AI-powered book writing and publishing platform. Founded in 2024, we democratize book publishing for authors worldwide.',
+      title: 'About MeStory - Memorial Book Platform',
+      description: 'Learn about MeStory, the AI-powered memorial book platform. We help families preserve life stories and honor their loved ones through beautifully crafted memorial books.',
     },
     hero: {
       title: 'About MeStory',
-      subtitle: 'Empowering Every Story to Be Told',
-      mission: 'We believe everyone has a story worth sharing. Our mission is to democratize book publishing by providing AI-powered tools that make writing, designing, and publishing accessible to all.',
+      subtitle: 'Preserving Memories for Generations',
+      mission: 'We believe every life deserves to be remembered. Our mission is to help families create meaningful memorial books that preserve the stories, memories, and legacy of their loved ones for future generations.',
     },
     ourStory: {
       title: 'Our Story',
-      content: 'MeStory was founded in 2024 with a simple yet powerful vision: to break down the barriers that prevent aspiring authors from sharing their stories with the world. We recognized that traditional publishing is often inaccessible, expensive, and time-consuming. Our founders, passionate about both technology and literature, set out to create a platform that combines cutting-edge AI with intuitive design to empower writers at every level.',
+      content: 'MeStory was founded in 2024 with a heartfelt vision: to help families preserve the memories of their loved ones. We recognized that creating a memorial book can be emotionally challenging, and traditional publishing is often inaccessible. Our founders, passionate about both technology and honoring life stories, created a platform that combines sensitive AI guidance with respectful design to help anyone create a beautiful memorial book.',
       founded: 'Founded',
       year: '2024',
       location: 'Israel',
     },
     ourMission: {
       title: 'Our Mission',
-      subtitle: 'Democratizing Book Publishing',
+      subtitle: 'Honoring Lives, Preserving Memories',
       points: [
         {
+          title: 'Sensitivity',
+          description: 'Providing gentle, respectful guidance through the emotional journey of creating a memorial book.',
+        },
+        {
           title: 'Accessibility',
-          description: 'Making professional book publishing tools available to everyone, regardless of technical skills or budget.',
+          description: 'Making professional memorial book creation available to everyone, regardless of writing experience.',
         },
         {
-          title: 'Innovation',
-          description: 'Leveraging the latest AI technology to assist writers without replacing their unique voice and creativity.',
-        },
-        {
-          title: 'Community',
-          description: 'Building a supportive ecosystem where authors can publish, sell, and connect with readers worldwide.',
+          title: 'Family Collaboration',
+          description: 'Enabling families and friends to contribute their own memories and perspectives to create a complete tribute.',
         },
         {
           title: 'Quality',
-          description: 'Ensuring every book published through our platform meets professional standards.',
+          description: 'Ensuring every memorial book is beautifully designed and ready for professional printing.',
         },
       ],
     },
     stats: {
       title: 'By the Numbers',
-      subtitle: 'Trusted by authors worldwide',
+      subtitle: 'Trusted by families preserving memories',
       items: [
-        { value: '50K+', label: 'Authors', icon: Users },
-        { value: '200K+', label: 'Books Created', icon: BookOpen },
-        { value: '500K+', label: 'Readers', icon: Heart },
-        { value: '4.8', label: 'Average Rating', icon: Award },
+        { value: '10K+', label: 'Families', icon: Users },
+        { value: '25K+', label: 'Memorial Books', icon: BookOpen },
+        { value: '100K+', label: 'Memories Preserved', icon: Heart },
+        { value: '4.9', label: 'Average Rating', icon: Award },
       ],
     },
     technology: {
       title: 'Our Technology',
-      subtitle: 'Powered by Advanced AI',
-      description: 'MeStory utilizes state-of-the-art artificial intelligence to enhance your writing experience. Our AI models are trained on millions of published works to provide intelligent suggestions while preserving your unique voice.',
+      subtitle: 'Sensitive AI Guidance',
+      description: 'MeStory uses advanced artificial intelligence to gently guide you through the process of creating a memorial book. Our AI asks thoughtful questions to help bring out memories and stories, while always respecting the emotional nature of the journey.',
       features: [
         {
-          title: 'AI Writing Assistant',
-          description: 'Context-aware suggestions that help overcome writer\'s block and enhance your narrative.',
+          title: 'Guided Interview',
+          description: 'Sensitive questions that help bring out memories, stories, and the essence of who they were.',
         },
         {
-          title: 'Smart Cover Design',
-          description: 'AI-powered cover generation that creates professional designs tailored to your genre.',
+          title: 'Voice Recording',
+          description: 'Tell your stories in your own voice and let AI transcribe them into beautiful text.',
         },
         {
-          title: 'Intelligent Editing',
-          description: 'Advanced grammar, style, and readability analysis to polish your manuscript.',
+          title: 'Respectful Design',
+          description: 'AI-powered cover and page design that creates dignified, beautiful memorial books.',
         },
         {
-          title: 'Quality Scoring',
-          description: 'Comprehensive evaluation system that ensures your book meets publishing standards.',
+          title: 'Print-Ready Export',
+          description: 'Professional PDF export ready for printing at any print shop.',
         },
       ],
     },
@@ -128,73 +128,73 @@ const content = {
   },
   he: {
     seo: {
-      title: 'אודות MeStory - הסיפור שלנו',
-      description: 'למדו על MeStory, הפלטפורמה המובילה לכתיבת ופרסום ספרים מבוססת בינה מלאכותית. נוסדנו ב-2024, אנו מנגישים את פרסום הספרים לכותבים בכל העולם.',
+      title: 'אודות MeStory - פלטפורמת ספרי הנצחה',
+      description: 'למדו על MeStory, הפלטפורמה לכתיבת ספרי הנצחה מבוססת בינה מלאכותית. אנו עוזרים למשפחות לשמר את סיפורי החיים של יקיריהם בספר יפה ומכבד.',
     },
     hero: {
       title: 'אודות MeStory',
-      subtitle: 'מעצימים כל סיפור להיות מסופר',
-      mission: 'אנחנו מאמינים שלכל אחד יש סיפור ששווה לשתף. המשימה שלנו היא להנגיש את פרסום הספרים על ידי אספקת כלים מונעי בינה מלאכותית שהופכים את הכתיבה, העיצוב והפרסום לנגישים לכולם.',
+      subtitle: 'משמרים זיכרונות לדורות',
+      mission: 'אנחנו מאמינים שכל חיים ראויים להיזכר. המשימה שלנו היא לעזור למשפחות ליצור ספרי הנצחה משמעותיים ששומרים את הסיפורים, הזיכרונות והמורשת של יקיריהם לדורות הבאים.',
     },
     ourStory: {
       title: 'הסיפור שלנו',
-      content: 'MeStory נוסדה ב-2024 עם חזון פשוט אך עוצמתי: לשבור את המחסומים שמונעים מכותבים שאפתניים לשתף את הסיפורים שלהם עם העולם. הבנו שהפרסום המסורתי הוא לעתים קרובות בלתי נגיש, יקר וגוזל זמן. המייסדים שלנו, נלהבים מטכנולוגיה וספרות כאחד, יצאו ליצור פלטפורמה המשלבת בינה מלאכותית מתקדמת עם עיצוב אינטואיטיבי כדי להעצים כותבים בכל רמה.',
+      content: 'MeStory נוסדה ב-2024 עם חזון מהלב: לעזור למשפחות לשמר את זיכרונות יקיריהם. הבנו שיצירת ספר הנצחה יכולה להיות אתגר רגשי, והוצאה לאור מסורתית היא לעתים קרובות בלתי נגישה. המייסדים שלנו, נלהבים מטכנולוגיה ומכיבוד סיפורי חיים, יצרו פלטפורמה המשלבת הנחיית AI רגישה עם עיצוב מכבד כדי לעזור לכל אחד ליצור ספר הנצחה יפה.',
       founded: 'נוסדה',
       year: '2024',
       location: 'ישראל',
     },
     ourMission: {
       title: 'המשימה שלנו',
-      subtitle: 'הנגשת פרסום ספרים',
+      subtitle: 'מכבדים חיים, משמרים זיכרונות',
       points: [
         {
+          title: 'רגישות',
+          description: 'הנחיה עדינה ומכבדת לאורך המסע הרגשי של יצירת ספר הנצחה.',
+        },
+        {
           title: 'נגישות',
-          description: 'הפיכת כלי פרסום ספרים מקצועיים לזמינים לכולם, ללא קשר ליכולות טכניות או תקציב.',
+          description: 'הנגשת יצירת ספרי הנצחה מקצועיים לכולם, ללא קשר לניסיון בכתיבה.',
         },
         {
-          title: 'חדשנות',
-          description: 'שימוש בטכנולוגיית AI העדכנית ביותר לסיוע לכותבים מבלי להחליף את הקול והיצירתיות הייחודיים שלהם.',
-        },
-        {
-          title: 'קהילה',
-          description: 'בניית מערכת אקולוגית תומכת שבה מחברים יכולים לפרסם, למכור ולהתחבר לקוראים בכל העולם.',
+          title: 'שיתוף פעולה משפחתי',
+          description: 'מאפשרים למשפחה ולחברים לתרום את הזיכרונות שלהם ליצירת ספר שלם.',
         },
         {
           title: 'איכות',
-          description: 'הבטחה שכל ספר שמתפרסם בפלטפורמה שלנו עומד בסטנדרטים מקצועיים.',
+          description: 'הבטחה שכל ספר הנצחה מעוצב יפה ומוכן להדפסה מקצועית.',
         },
       ],
     },
     stats: {
       title: 'במספרים',
-      subtitle: 'זוכים לאמון מחברים ברחבי העולם',
+      subtitle: 'משפחות שמשמרות זיכרונות',
       items: [
-        { value: '+50K', label: 'מחברים', icon: Users },
-        { value: '+200K', label: 'ספרים נוצרו', icon: BookOpen },
-        { value: '+500K', label: 'קוראים', icon: Heart },
-        { value: '4.8', label: 'דירוג ממוצע', icon: Award },
+        { value: '+10K', label: 'משפחות', icon: Users },
+        { value: '+25K', label: 'ספרי הנצחה', icon: BookOpen },
+        { value: '+100K', label: 'זיכרונות נשמרו', icon: Heart },
+        { value: '4.9', label: 'דירוג ממוצע', icon: Award },
       ],
     },
     technology: {
       title: 'הטכנולוגיה שלנו',
-      subtitle: 'מונע על ידי AI מתקדם',
-      description: 'MeStory משתמשת בבינה מלאכותית מתקדמת לשיפור חוויית הכתיבה שלכם. מודלי ה-AI שלנו מאומנים על מיליוני יצירות מפורסמות כדי לספק הצעות חכמות תוך שמירה על הקול הייחודי שלכם.',
+      subtitle: 'הנחיית AI רגישה',
+      description: 'MeStory משתמשת בבינה מלאכותית מתקדמת כדי ללוות אתכם בעדינות בתהליך יצירת ספר ההנצחה. ה-AI שלנו שואל שאלות מתחשבות שעוזרות להוציא זיכרונות וסיפורים, תוך כיבוד האופי הרגשי של המסע.',
       features: [
         {
-          title: 'עוזר כתיבה AI',
-          description: 'הצעות מודעות הקשר שעוזרות להתגבר על חסימת סופר ולשפר את הנרטיב שלכם.',
+          title: 'ראיון מונחה',
+          description: 'שאלות רגישות שעוזרות להוציא זיכרונות, סיפורים ואת המהות של מי שהיו.',
         },
         {
-          title: 'עיצוב כריכה חכם',
-          description: 'יצירת כריכות מונעת AI שמייצרת עיצובים מקצועיים מותאמים לז\'אנר שלכם.',
+          title: 'הקלטה קולית',
+          description: 'ספרו את הסיפורים שלכם בקול והAI יתמלל אותם לטקסט יפה.',
         },
         {
-          title: 'עריכה אינטליגנטית',
-          description: 'ניתוח מתקדם של דקדוק, סגנון וקריאות לליטוש כתב היד שלכם.',
+          title: 'עיצוב מכבד',
+          description: 'עיצוב עטיפות ועמודים מונע AI שיוצר ספרי הנצחה יפים ומכובדים.',
         },
         {
-          title: 'ציון איכות',
-          description: 'מערכת הערכה מקיפה שמבטיחה שהספר שלכם עומד בסטנדרטים לפרסום.',
+          title: 'ייצוא להדפסה',
+          description: 'ייצוא PDF מקצועי מוכן להדפסה בכל בית דפוס.',
         },
       ],
     },
@@ -278,8 +278,8 @@ export default function AboutPage() {
             className="text-center mb-16"
           >
             <div className="flex items-center justify-center gap-3 mb-6">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-magic-gold/30 to-cosmic-purple/30 flex items-center justify-center">
-                <BookOpen className="w-8 h-8 text-magic-gold" />
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-memorial-gold/30 to-cosmic-purple/30 flex items-center justify-center">
+                <BookOpen className="w-8 h-8 text-memorial-gold" />
               </div>
             </div>
             <h1 className="text-4xl md:text-5xl font-display font-bold gradient-gold mb-4">
@@ -304,7 +304,7 @@ export default function AboutPage() {
               <div className="flex flex-col md:flex-row gap-8 items-center">
                 <div className="flex-1">
                   <h2 id="our-story-heading" className="text-3xl font-display font-bold text-white mb-6 flex items-center gap-3">
-                    <Target className="w-8 h-8 text-magic-gold" />
+                    <Target className="w-8 h-8 text-memorial-gold" />
                     {t.ourStory.title}
                   </h2>
                   <p className="text-gray-300 leading-relaxed text-lg">
@@ -313,14 +313,14 @@ export default function AboutPage() {
                 </div>
                 <div className="flex flex-col gap-4 md:min-w-[200px]">
                   <div className="flex items-center gap-3 bg-white/5 rounded-lg p-4">
-                    <Calendar className="w-6 h-6 text-magic-gold" />
+                    <Calendar className="w-6 h-6 text-memorial-gold" />
                     <div>
                       <p className="text-gray-400 text-sm">{t.ourStory.founded}</p>
                       <p className="text-white font-bold text-xl">{t.ourStory.year}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 bg-white/5 rounded-lg p-4">
-                    <Globe className="w-6 h-6 text-magic-gold" />
+                    <Globe className="w-6 h-6 text-memorial-gold" />
                     <div>
                       <p className="text-gray-400 text-sm">{isHebrew ? 'מיקום' : 'Location'}</p>
                       <p className="text-white font-bold text-xl">{t.ourStory.location}</p>
@@ -354,8 +354,8 @@ export default function AboutPage() {
                 <motion.div key={index} variants={fadeInUp}>
                   <GlassCard hover={false} className="p-6 h-full">
                     <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-magic-gold/20 to-cosmic-purple/20 flex items-center justify-center flex-shrink-0">
-                        <CheckCircle className="w-5 h-5 text-magic-gold" />
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-memorial-gold/20 to-cosmic-purple/20 flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-5 h-5 text-memorial-gold" />
                       </div>
                       <div>
                         <h3 className="text-xl font-bold text-white mb-2">{point.title}</h3>
@@ -393,8 +393,8 @@ export default function AboutPage() {
                       transition={{ delay: 0.4 + index * 0.1 }}
                       className="text-center"
                     >
-                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-magic-gold/20 to-cosmic-purple/20 flex items-center justify-center mx-auto mb-3">
-                        <Icon className="w-7 h-7 text-magic-gold" />
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-memorial-gold/20 to-cosmic-purple/20 flex items-center justify-center mx-auto mb-3">
+                        <Icon className="w-7 h-7 text-memorial-gold" />
                       </div>
                       <p className="text-3xl md:text-4xl font-bold gradient-gold mb-1">{stat.value}</p>
                       <p className="text-gray-400">{stat.label}</p>
@@ -414,7 +414,7 @@ export default function AboutPage() {
           >
             <div className="text-center mb-8">
               <div className="flex items-center justify-center gap-3 mb-4">
-                <Cpu className="w-10 h-10 text-magic-gold" />
+                <Cpu className="w-10 h-10 text-memorial-gold" />
               </div>
               <h2 id="tech-heading" className="text-3xl font-display font-bold gradient-gold mb-2">
                 {t.technology.title}
@@ -434,8 +434,8 @@ export default function AboutPage() {
                 >
                   <GlassCard hover={false} className="p-6 h-full">
                     <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cosmic-purple/30 to-magic-gold/30 flex items-center justify-center flex-shrink-0">
-                        <Sparkles className="w-5 h-5 text-magic-gold" />
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cosmic-purple/30 to-memorial-gold/30 flex items-center justify-center flex-shrink-0">
+                        <Sparkles className="w-5 h-5 text-memorial-gold" />
                       </div>
                       <div>
                         <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
@@ -458,7 +458,7 @@ export default function AboutPage() {
             <GlassCard glow="purple" hover={false} className="p-8">
               <div className="text-center mb-8">
                 <div className="flex items-center justify-center gap-3 mb-4">
-                  <Shield className="w-10 h-10 text-magic-gold" />
+                  <Shield className="w-10 h-10 text-memorial-gold" />
                 </div>
                 <h2 id="trust-heading" className="text-3xl font-display font-bold gradient-gold mb-2">
                   {t.trust.title}
@@ -477,7 +477,7 @@ export default function AboutPage() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.6 + index * 0.1 }}
-                      className="bg-white/5 rounded-xl p-5 text-center border border-white/10 hover:border-magic-gold/30 transition-colors"
+                      className="bg-white/5 rounded-xl p-5 text-center border border-white/10 hover:border-memorial-gold/30 transition-colors"
                     >
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center mx-auto mb-3">
                         <Icon className="w-6 h-6 text-green-400" />
@@ -512,8 +512,8 @@ export default function AboutPage() {
                   transition={{ delay: 0.7 + index * 0.1 }}
                 >
                   <GlassCard hover={false} className="p-6 text-center h-full">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-magic-gold/20 to-cosmic-purple/20 flex items-center justify-center mx-auto mb-4">
-                      <Heart className="w-6 h-6 text-magic-gold" />
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-memorial-gold/20 to-cosmic-purple/20 flex items-center justify-center mx-auto mb-4">
+                      <Heart className="w-6 h-6 text-memorial-gold" />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-2">{value.title}</h3>
                     <p className="text-gray-300">{value.description}</p>
@@ -532,7 +532,7 @@ export default function AboutPage() {
           >
             <GlassCard glow="gold" hover={false} className="p-8 text-center">
               <div className="flex items-center justify-center gap-3 mb-4">
-                <Mail className="w-10 h-10 text-magic-gold" />
+                <Mail className="w-10 h-10 text-memorial-gold" />
               </div>
               <h2 id="contact-heading" className="text-3xl font-display font-bold gradient-gold mb-2">
                 {t.contact.title}
@@ -543,19 +543,19 @@ export default function AboutPage() {
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-6">
                 <div className="flex items-center gap-3 bg-white/5 rounded-lg px-6 py-4">
-                  <Mail className="w-5 h-5 text-magic-gold" />
+                  <Mail className="w-5 h-5 text-memorial-gold" />
                   <div className={`text-${isHebrew ? 'right' : 'left'}`}>
                     <p className="text-gray-400 text-sm">{t.contact.emailLabel}</p>
                     <a
                       href={`mailto:${t.contact.email}`}
-                      className="text-white font-semibold hover:text-magic-gold transition-colors"
+                      className="text-white font-semibold hover:text-memorial-gold transition-colors"
                     >
                       {t.contact.email}
                     </a>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 bg-white/5 rounded-lg px-6 py-4">
-                  <Building className="w-5 h-5 text-magic-gold" />
+                  <Building className="w-5 h-5 text-memorial-gold" />
                   <div className={`text-${isHebrew ? 'right' : 'left'}`}>
                     <p className="text-gray-400 text-sm">{t.contact.companyLabel}</p>
                     <p className="text-white font-semibold">{t.contact.companyName}</p>
@@ -577,11 +577,11 @@ export default function AboutPage() {
           >
             <p>
               {isHebrew ? 'מידע נוסף זמין ב' : 'More information available in our'}{' '}
-              <a href="/terms" className="text-magic-gold hover:underline">
+              <a href="/terms" className="text-memorial-gold hover:underline">
                 {isHebrew ? 'תנאי שימוש' : 'Terms of Service'}
               </a>
               {' '}{isHebrew ? 'וב' : 'and'}{' '}
-              <a href="/privacy" className="text-magic-gold hover:underline">
+              <a href="/privacy" className="text-memorial-gold hover:underline">
                 {isHebrew ? 'מדיניות פרטיות' : 'Privacy Policy'}
               </a>
             </p>

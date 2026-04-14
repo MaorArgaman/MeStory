@@ -168,7 +168,7 @@ export default function PrivacyPolicyPage() {
           className="text-center mb-12"
         >
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Shield className="w-12 h-12 text-magic-gold" />
+            <Shield className="w-12 h-12 text-memorial-gold" />
           </div>
           <h1 className="text-4xl font-display font-bold gradient-gold mb-4">
             מדיניות פרטיות
@@ -205,8 +205,8 @@ export default function PrivacyPolicyPage() {
             >
               <GlassCard className="p-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-magic-gold/20 to-cosmic-purple/20 flex items-center justify-center flex-shrink-0">
-                    <section.icon className="w-6 h-6 text-magic-gold" />
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-memorial-gold/20 to-cosmic-purple/20 flex items-center justify-center flex-shrink-0">
+                    <section.icon className="w-6 h-6 text-memorial-gold" />
                   </div>
                   <div className="flex-1">
                     <h2 className="text-xl font-bold text-white mb-4">{section.title}</h2>

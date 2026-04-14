@@ -91,13 +91,13 @@ export default function VoiceRecorder({
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
               placeholder={t('voiceRecorder.typeAnswerPlaceholder')}
-              className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-magic-gold/50 resize-none"
+              className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-memorial-gold/50 resize-none"
               rows={3}
             />
             <button
               onClick={handleTextSubmit}
               disabled={!textInput.trim()}
-              className="mt-2 w-full py-2 px-4 rounded-xl bg-magic-gold text-deep-space font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-yellow-500 transition-colors"
+              className="mt-2 w-full py-2 px-4 rounded-xl bg-memorial-gold text-deep-space font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-yellow-500 transition-colors"
             >
               {t('voiceRecorder.sendAnswer')}
             </button>
@@ -114,9 +114,9 @@ export default function VoiceRecorder({
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          className="w-16 h-16 rounded-full bg-magic-gold/20 flex items-center justify-center"
+          className="w-16 h-16 rounded-full bg-memorial-gold/20 flex items-center justify-center"
         >
-          <Loader2 className="w-8 h-8 text-magic-gold" />
+          <Loader2 className="w-8 h-8 text-memorial-gold" />
         </motion.div>
         <span className="text-gray-300">{t('voiceRecorder.processingRecording')}</span>
       </div>
@@ -142,7 +142,7 @@ export default function VoiceRecorder({
             <motion.div
               animate={{ opacity: [0.7, 1, 0.7] }}
               transition={{ duration: 1, repeat: Infinity }}
-              className="flex items-center gap-2 text-magic-gold"
+              className="flex items-center gap-2 text-memorial-gold"
             >
               <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
               <span className="font-mono text-lg">{formatDuration(duration)}</span>
@@ -166,7 +166,7 @@ export default function VoiceRecorder({
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={handleStopAndSend}
-                className="w-16 h-16 rounded-full bg-gradient-to-br from-magic-gold to-yellow-500 flex items-center justify-center text-deep-space shadow-lg shadow-magic-gold/30"
+                className="w-16 h-16 rounded-full bg-gradient-to-br from-memorial-gold to-yellow-500 flex items-center justify-center text-deep-space shadow-lg shadow-memorial-gold/30"
               >
                 <Send className="w-7 h-7" />
               </motion.button>
@@ -188,11 +188,11 @@ export default function VoiceRecorder({
               whileTap={{ scale: 0.95 }}
               onClick={startRecording}
               disabled={disabled}
-              className="relative w-20 h-20 rounded-full bg-gradient-to-br from-magic-gold to-yellow-500 flex items-center justify-center text-deep-space shadow-lg shadow-magic-gold/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative w-20 h-20 rounded-full bg-gradient-to-br from-memorial-gold to-yellow-500 flex items-center justify-center text-deep-space shadow-lg shadow-memorial-gold/30 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {/* Pulse animation */}
               <motion.div
-                className="absolute inset-0 rounded-full bg-magic-gold"
+                className="absolute inset-0 rounded-full bg-memorial-gold"
                 animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
@@ -209,7 +209,7 @@ export default function VoiceRecorder({
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
                   placeholder={t('voiceRecorder.typeAnswerPlaceholder')}
-                  className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-magic-gold/50 resize-none"
+                  className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-memorial-gold/50 resize-none"
                   rows={3}
                 />
                 <button

@@ -102,6 +102,7 @@ export interface IUser {
   profile?: IProfile;
   paypal?: IPayPal;
   emailVerification: IEmailVerification;
+  organizationId?: string; // Link to organization (for association members)
   created_at: string;
   updated_at: string;
   // Compatibility aliases
@@ -121,6 +122,7 @@ interface UserRow {
   profile: IProfile | null;
   paypal: IPayPal | null;
   email_verification: IEmailVerification | null;
+  organization_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -139,6 +141,7 @@ function rowToUser(row: UserRow): IUser {
     profile: row.profile || undefined,
     paypal: row.paypal || undefined,
     emailVerification: row.email_verification || { isVerified: false },
+    organizationId: row.organization_id || undefined,
     created_at: row.created_at,
     updated_at: row.updated_at,
     createdAt: row.created_at,
@@ -426,10 +429,8 @@ export class User {
   // Check if user has credits
   static hasCredits(user: IUser): boolean {
     if (user.role === UserRole.PREMIUM || user.role === UserRole.ADMIN) {
-      return true;
+      return true; // Premium/Admin users have unlimited credits
     }
-    return user.credits > 0;
+    return (user.credits || 0) > 0;
   }
 }
-
-export default User;

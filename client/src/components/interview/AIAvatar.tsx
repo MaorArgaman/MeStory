@@ -49,8 +49,8 @@ export default function AIAvatar({
       glow: 'rgba(156, 163, 175, 0.3)',
     },
     speaking: {
-      bg: 'from-magic-gold to-yellow-500',
-      ring: 'border-magic-gold/50',
+      bg: 'from-memorial-gold to-yellow-500',
+      ring: 'border-memorial-gold/50',
       glow: 'rgba(255, 215, 0, 0.4)',
     },
     listening: {

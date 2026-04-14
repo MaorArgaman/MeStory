@@ -136,6 +136,11 @@ api.interceptors.response.use(
     return response;
   },
   (error: AxiosError<{ error: string; message?: string }>) => {
+    // Ignore canceled requests - don't show any error
+    if (axios.isCancel(error) || error.code === 'ERR_CANCELED' || error.name === 'CanceledError') {
+      return Promise.reject(error);
+    }
+
     const url = error.config?.url || '';
     const isAuthCheck = url.includes('/auth/me');
 

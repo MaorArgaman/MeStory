@@ -237,7 +237,7 @@ export default function TermsOfServicePage() {
           className="text-center mb-12"
         >
           <div className="flex items-center justify-center gap-3 mb-4">
-            <FileText className="w-12 h-12 text-magic-gold" />
+            <FileText className="w-12 h-12 text-memorial-gold" />
           </div>
           <h1 className="text-4xl font-display font-bold gradient-gold mb-4">
             תנאי שימוש
@@ -258,7 +258,7 @@ export default function TermsOfServicePage() {
               ברוכים הבאים ל-MeStory - פלטפורמה לכתיבה, פרסום ומכירת ספרים דיגיטליים.
               תנאי שימוש אלה מגדירים את הכללים והמגבלות החלים על השימוש באתר ובשירותים שלנו.
               <br /><br />
-              <strong className="text-magic-gold">חשוב:</strong> קרא תנאים אלה בעיון לפני השימוש באתר.
+              <strong className="text-memorial-gold">חשוב:</strong> קרא תנאים אלה בעיון לפני השימוש באתר.
               בשימוש באתר, הנך מסכים לתנאים אלה במלואם.
             </p>
           </GlassCard>
@@ -270,8 +270,8 @@ export default function TermsOfServicePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
         >
-          <GlassCard className="p-6 mb-8 border-magic-gold/30">
-            <h2 className="text-xl font-bold text-magic-gold mb-4">נקודות עיקריות</h2>
+          <GlassCard className="p-6 mb-8 border-memorial-gold/30">
+            <h2 className="text-xl font-bold text-memorial-gold mb-4">נקודות עיקריות</h2>
             <ul className="space-y-2 text-gray-300">
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
@@ -308,8 +308,8 @@ export default function TermsOfServicePage() {
             >
               <GlassCard className="p-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-magic-gold/20 to-cosmic-purple/20 flex items-center justify-center flex-shrink-0">
-                    <section.icon className="w-6 h-6 text-magic-gold" />
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-memorial-gold/20 to-cosmic-purple/20 flex items-center justify-center flex-shrink-0">
+                    <section.icon className="w-6 h-6 text-memorial-gold" />
                   </div>
                   <div className="flex-1">
                     <h2 className="text-xl font-bold text-white mb-4">{section.title}</h2>
@@ -340,9 +340,9 @@ export default function TermsOfServicePage() {
             בשימוש באתר MeStory, הנך מאשר שקראת, הבנת והסכמת לתנאי השימוש ולמדיניות הפרטיות שלנו.
             <br />
             <br />
-            <a href="/privacy" className="text-magic-gold hover:underline">מדיניות פרטיות</a>
+            <a href="/privacy" className="text-memorial-gold hover:underline">מדיניות פרטיות</a>
             {' | '}
-            <a href="mailto:legal@mestory.com" className="text-magic-gold hover:underline">פנייה משפטית</a>
+            <a href="mailto:legal@mestory.com" className="text-memorial-gold hover:underline">פנייה משפטית</a>
           </p>
         </motion.div>
       </div>

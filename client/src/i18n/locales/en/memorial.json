@@ -1,7 +1,8 @@
 {
-  "title": "Personal Stories",
+  "title": "Memorial Books",
   "subtitle": "Preserving memories, honoring lives",
-  "description": "A dedicated space to document and share personal stories of significance - from Holocaust memories to the events of October 7th.",
+  "description": "Write a memorial book for your loved ones. From family memories, through survivor testimonies, to honoring fallen soldiers.",
+  "hero_cta": "Start Writing a Memorial Book",
   "categories": {
     "holocaust": {
       "title": "Holocaust Memories",
@@ -69,5 +70,47 @@
   "family_legacy": {
     "title": "Preserve Family Stories",
     "description": "Every family has stories worth preserving. Create a lasting legacy for future generations with our guided writing tools."
+  },
+  "collaborative": {
+    "title": "Collaborative Book",
+    "description": "Invite family members and friends to write a memorial book together",
+    "invite_contributors": "Invite Contributors",
+    "contributors": "Book Contributors",
+    "invite_message": "You've been invited to write a chapter in this memorial book",
+    "write_chapter": "Write Chapter",
+    "pending_invitations": "Pending Invitations",
+    "accept_invitation": "Accept Invitation",
+    "decline_invitation": "Decline Invitation",
+    "relationship": "What's your relationship to the loved one?",
+    "relationships": {
+      "parent": "Parent",
+      "child": "Child",
+      "sibling": "Sibling",
+      "spouse": "Spouse",
+      "friend": "Friend",
+      "commander": "Commander",
+      "colleague": "Colleague",
+      "other": "Other"
+    }
+  },
+  "book_types": {
+    "personal": "Personal Book",
+    "personal_desc": "I write alone",
+    "collaborative": "Collaborative Book",
+    "collaborative_desc": "Invite others to contribute"
+  },
+  "dedication": {
+    "title": "Who is this book dedicated to?",
+    "name": "Full Name",
+    "your_relationship": "What's your relationship to them?"
+  },
+  "prompts": {
+    "title": "Guiding Questions",
+    "first_memory": "What's the first memory that comes to mind when you think of them?",
+    "special_trait": "What was the most special thing about...",
+    "childhood": "What were they like as a child?",
+    "personality": "What did people love most about...",
+    "dreams": "What did they dream of?",
+    "message": "What would you want people to know?"
   }
 }

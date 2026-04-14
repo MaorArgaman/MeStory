@@ -19,8 +19,8 @@ import { PaymentConfirmationModal } from '../components/payment';
 import { getFriendlyErrorMessage } from '../utils/errorMessages';
 import { SEO, Breadcrumb } from '../components/seo';
 
-// Pricing hero image showing Investment -> Work -> Return
-const pricingHero = '/img/subscription-hero.png';
+// Memorial platform subscription hero
+const pricingHero = '/img/memorial-hero.png';
 
 interface Plan {
   id: string;

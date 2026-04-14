@@ -362,9 +362,10 @@ export const getLibrary = async (req: AuthRequest, res: Response): Promise<void>
     const readingHistory = user.profile?.readingHistory || [];
     const bookIds = readingHistory.map((item) => item.bookId);
 
-    // Get full book details
-    const allBooks = await Book.find({});
-    const books = allBooks.filter(book => bookIds.includes(book.id));
+    // Get only the specific books from reading history (not ALL books!)
+    const books = bookIds.length > 0
+      ? await Book.findByIds(bookIds)
+      : [];
 
     // Also get user's own books
     const allOwnBooks = await Book.find({ author: req.user.id });

@@ -341,7 +341,7 @@ const defaultSettings = {
   margins: { top: 60, bottom: 60, left: 50, right: 50 },
   showPageNumbers: true,
   includeToc: true,
-  includeBackCover: true,
+  includeBackCover: false,
   textColor: '#000000',
   backgroundColor: '#ffffff',
   accentColor: '#6366f1',
@@ -368,11 +368,13 @@ export default function BookLayoutPage() {
 
   // Page navigation
   const [currentSpread, setCurrentSpread] = useState(0); // 0 = cover, 1 = pages 1-2, etc.
+  const [isFlipping, setIsFlipping] = useState<'left' | 'right' | null>(null); // Page flip animation direction
   const [pages, setPages] = useState<PageContent[]>([]);
   const [settings, setSettings] = useState(defaultSettings);
 
   // UI state
   const [showSettings, setShowSettings] = useState(false);
+  const [showBookStructureHelp, setShowBookStructureHelp] = useState(false); // RTL book structure help overlay
   const [showImageModal, setShowImageModal] = useState(false);
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
   const [selectedPageIndex, setSelectedPageIndex] = useState<number | null>(null);
@@ -402,6 +404,14 @@ export default function BookLayoutPage() {
 
   // Determine text direction based on book language
   const isBookRTL = book ? isRTL(book.title) || book.language === 'he' || book.language === 'ar' : false;
+
+  // Debug RTL detection
+  console.log('RTL Debug:', {
+    bookTitle: book?.title,
+    bookLanguage: book?.language,
+    isRTLResult: book ? isRTL(book.title) : null,
+    isBookRTL
+  });
 
   // Auto-save timer
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -1570,20 +1580,31 @@ export default function BookLayoutPage() {
   };
   void _updatePageContent; // Suppress unused warning
 
-  // Navigate spreads
+  // Navigate spreads with page flip animation
   const totalSpreads = Math.ceil(((pages?.length || 0) + 1) / 2); // +1 for cover
   const goToNextSpread = () => {
-    if (currentSpread < totalSpreads - 1) {
-      setCurrentSpread(currentSpread + 1);
+    if (currentSpread < totalSpreads - 1 && !isFlipping) {
+      // For LTR: flip left page to the left; For RTL: flip right page to the right
+      setIsFlipping(isBookRTL ? 'right' : 'left');
+      setTimeout(() => {
+        setCurrentSpread(currentSpread + 1);
+        setTimeout(() => setIsFlipping(null), 300);
+      }, 300);
     }
   };
   const goToPrevSpread = () => {
-    if (currentSpread > 0) {
-      setCurrentSpread(currentSpread - 1);
+    if (currentSpread > 0 && !isFlipping) {
+      // For LTR: flip right page to the right; For RTL: flip left page to the left
+      setIsFlipping(isBookRTL ? 'left' : 'right');
+      setTimeout(() => {
+        setCurrentSpread(currentSpread - 1);
+        setTimeout(() => setIsFlipping(null), 300);
+      }, 300);
     }
   };
 
   // Get pages for current spread
+  // For RTL books (Hebrew/Arabic), swap left and right pages
   const getSpreadPages = (): { left: PageContent | null; right: PageContent | null; isCover: boolean } => {
     // Handle empty pages array
     if (!pages || pages.length === 0) {
@@ -1593,9 +1614,21 @@ export default function BookLayoutPage() {
       return { left: null, right: null, isCover: true };
     }
     const startIndex = (currentSpread - 1) * 2;
+    const firstPage = pages[startIndex] || null;
+    const secondPage = pages[startIndex + 1] || null;
+
+    // For RTL: first page (odd) goes on right, second page (even) goes on left
+    // For LTR: first page (odd) goes on left, second page (even) goes on right
+    if (isBookRTL) {
+      return {
+        left: secondPage,  // Even page on left in RTL
+        right: firstPage,  // Odd page on right in RTL
+        isCover: false,
+      };
+    }
     return {
-      left: pages[startIndex] || null,
-      right: pages[startIndex + 1] || null,
+      left: firstPage,
+      right: secondPage,
       isCover: false,
     };
   };
@@ -1628,7 +1661,7 @@ export default function BookLayoutPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-magic-gold" />
+        <Loader2 className="w-12 h-12 animate-spin text-memorial-gold" />
       </div>
     );
   }
@@ -1640,7 +1673,7 @@ export default function BookLayoutPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-deep-space via-deep-space to-cosmic-purple/20">
       {/* Top Toolbar */}
-      <div className="glass-strong border-b border-magic-gold/20 px-3 sm:px-6 py-2 sm:py-3">
+      <div className="glass-strong border-b border-memorial-gold/20 px-3 sm:px-6 py-2 sm:py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-4">
             {/* Logo */}
@@ -1654,7 +1687,7 @@ export default function BookLayoutPage() {
                 className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.3)]"
               />
             </button>
-            <div className="hidden sm:block h-6 w-px bg-magic-gold/30" />
+            <div className="hidden sm:block h-6 w-px bg-memorial-gold/30" />
 
             {/* Mobile Pages Toggle */}
             <button
@@ -1673,7 +1706,7 @@ export default function BookLayoutPage() {
             </button>
             <div className="hidden sm:block h-6 w-px bg-gray-700" />
             <h1 className="hidden md:block text-lg sm:text-xl font-semibold text-white truncate max-w-[200px]">{book.title}</h1>
-            <span className="hidden lg:inline px-2 py-1 rounded bg-magic-gold/20 text-magic-gold text-xs font-medium">
+            <span className="hidden lg:inline px-2 py-1 rounded bg-memorial-gold/20 text-memorial-gold text-xs font-medium">
               {isBookRTL ? t('book_layout.hebrew_rtl') : t('book_layout.english_ltr')}
             </span>
           </div>
@@ -1698,6 +1731,17 @@ export default function BookLayoutPage() {
                 </>
               ) : null}
             </div>
+
+            {/* Book Structure Help Button - shows for RTL books */}
+            {isBookRTL && (
+              <button
+                onClick={() => setShowBookStructureHelp(true)}
+                className="btn-ghost p-1.5 sm:p-2 text-memorial-gold hover:bg-memorial-gold/20"
+                title="הסבר מבנה הספר"
+              >
+                <span className="text-xs font-bold">?</span>
+              </button>
+            )}
 
             {/* Settings Button */}
             <button
@@ -1742,10 +1786,10 @@ export default function BookLayoutPage() {
         <div className="lg:hidden fixed bottom-6 left-4 z-40 flex flex-col gap-3">
           <button
             onClick={() => setShowMobilePages(!showMobilePages)}
-            className="glass-strong p-4 rounded-full border border-magic-gold/30 shadow-lg shadow-magic-gold/10 active:scale-95 transition-transform"
+            className="glass-strong p-4 rounded-full border border-memorial-gold/30 shadow-lg shadow-memorial-gold/10 active:scale-95 transition-transform"
             aria-label="Pages"
           >
-            <Layers className="w-6 h-6 text-magic-gold" />
+            <Layers className="w-6 h-6 text-memorial-gold" />
           </button>
         </div>
         <div className="lg:hidden fixed bottom-6 right-4 z-40 flex flex-col gap-3">
@@ -1794,7 +1838,7 @@ export default function BookLayoutPage() {
               }}
               className={`w-full aspect-[3/4] rounded-lg border-2 transition-all ${
                 currentSpread === 0
-                  ? 'border-magic-gold bg-magic-gold/20'
+                  ? 'border-memorial-gold bg-memorial-gold/20'
                   : 'border-white/10 hover:border-white/30'
               }`}
             >
@@ -1813,7 +1857,7 @@ export default function BookLayoutPage() {
                 }}
                 className={`w-full aspect-[3/4] rounded-lg border-2 transition-all ${
                   currentSpread === i + 1
-                    ? 'border-magic-gold bg-magic-gold/20'
+                    ? 'border-memorial-gold bg-memorial-gold/20'
                     : 'border-white/10 hover:border-white/30'
                 }`}
               >
@@ -1838,41 +1882,78 @@ export default function BookLayoutPage() {
 
         {/* Center - Page Spread View */}
         <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 lg:p-8 overflow-hidden">
-          {/* Navigation */}
+          {/* Navigation with RTL-aware labels */}
           <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-4">
             <button
               onClick={isBookRTL ? goToNextSpread : goToPrevSpread}
               disabled={isBookRTL ? currentSpread >= totalSpreads - 1 : currentSpread === 0}
-              className="btn-ghost p-1.5 sm:p-2 disabled:opacity-30"
+              className="btn-ghost p-1.5 sm:p-2 disabled:opacity-30 hover:scale-110 transition-transform"
+              title={isBookRTL ? "הדף הבא" : "Previous"}
             >
               <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <span className="text-gray-400 text-xs sm:text-sm">
-              {currentSpread === 0 ? t('book_layout.cover') : `${(currentSpread - 1) * 2 + 1}-${(currentSpread - 1) * 2 + 2}`}
-            </span>
+
+            {/* Page indicator with RTL-aware formatting */}
+            <div className="flex flex-col items-center">
+              <span className="text-gray-400 text-xs sm:text-sm font-medium">
+                {currentSpread === 0
+                  ? t('book_layout.cover')
+                  : isBookRTL
+                    ? `${(currentSpread - 1) * 2 + 2} - ${(currentSpread - 1) * 2 + 1}` // RTL: even-odd (left-right)
+                    : `${(currentSpread - 1) * 2 + 1} - ${(currentSpread - 1) * 2 + 2}` // LTR: odd-even (left-right)
+                }
+              </span>
+              {currentSpread > 0 && (
+                <span className="text-memorial-gold/60 text-[10px]">
+                  {isBookRTL ? '→ כיוון הקריאה' : 'Reading direction →'}
+                </span>
+              )}
+            </div>
+
             <button
               onClick={isBookRTL ? goToPrevSpread : goToNextSpread}
               disabled={isBookRTL ? currentSpread === 0 : currentSpread >= totalSpreads - 1}
-              className="btn-ghost p-1.5 sm:p-2 disabled:opacity-30"
+              className="btn-ghost p-1.5 sm:p-2 disabled:opacity-30 hover:scale-110 transition-transform"
+              title={isBookRTL ? "הדף הקודם" : "Next"}
             >
               <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
 
-          {/* Book Spread - responsive scaling */}
+          {/* Cover labels when viewing cover spread */}
+          {spreadPages.isCover && (
+            <div className="flex flex-row gap-1 sm:gap-2 mb-2 transform scale-[0.35] xs:scale-[0.45] sm:scale-[0.55] md:scale-[0.7] lg:scale-[0.85] xl:scale-100 origin-center">
+              <div className="text-center text-memorial-gold text-sm font-medium" style={{ width: '350px' }}>
+                {/* Left side: Back cover for RTL, Front cover for LTR */}
+                {isBookRTL ? t('book_layout.front_cover') : t('book_layout.back_cover')}
+              </div>
+              <div className="w-2 sm:w-4" />
+              <div className="text-center text-memorial-gold text-sm font-medium" style={{ width: '350px' }}>
+                {/* Right side: Front cover for RTL, Back cover for LTR */}
+                {isBookRTL ? t('book_layout.back_cover') : t('book_layout.front_cover')}
+              </div>
+            </div>
+          )}
+
+          {/* Book Spread - responsive scaling with animations */}
           <div
-            className={`flex ${isBookRTL ? 'flex-row-reverse' : 'flex-row'} gap-1 sm:gap-2 perspective-1000 transform scale-[0.35] xs:scale-[0.45] sm:scale-[0.55] md:scale-[0.7] lg:scale-[0.85] xl:scale-100 origin-center`}
+            className="flex flex-row gap-1 sm:gap-2 transform scale-[0.35] xs:scale-[0.45] sm:scale-[0.55] md:scale-[0.7] lg:scale-[0.85] xl:scale-100 origin-center transition-all duration-500 ease-out"
+            style={{ perspective: '2000px' }}
           >
-            {/* Left Page */}
+            {/* Left Page (Even page for RTL, Odd page for LTR) */}
             <div
-              className={`relative rounded-lg shadow-2xl overflow-hidden ${
-                currentSpread === 0 ? 'opacity-30' : ''
-              }`}
+              className="relative rounded-lg shadow-2xl overflow-hidden transition-all duration-300 hover:shadow-memorial-gold/20"
               style={{
                 width: '350px',
                 height: '500px',
                 direction: isBookRTL ? 'rtl' : 'ltr',
                 backgroundColor: settings.backgroundColor || '#ffffff',
+                transformOrigin: 'right center',
+                transform: isFlipping === 'left' ? 'rotateY(-30deg)' : 'rotateY(0deg)',
+                transition: 'transform 0.3s ease-in-out',
+                boxShadow: isBookRTL
+                  ? 'inset -3px 0 10px rgba(0,0,0,0.1), 5px 5px 15px rgba(0,0,0,0.3)'
+                  : 'inset 3px 0 10px rgba(0,0,0,0.1), -5px 5px 15px rgba(0,0,0,0.3)',
               }}
               onClick={() => {
                 if (spreadPages.left && typeof spreadPages.left !== 'string') {
@@ -1881,7 +1962,24 @@ export default function BookLayoutPage() {
                 }
               }}
             >
-              {spreadPages.left && typeof spreadPages.left !== 'string' ? (
+              {spreadPages.isCover ? (
+                // For RTL: Front cover on left, For LTR: Back cover on left
+                isBookRTL ? (
+                  <CoverPreview
+                    book={book}
+                    coverImageUrl={coverImageUrl}
+                    onTitlePositionChange={handleTitlePositionChange}
+                    onAuthorPositionChange={handleAuthorPositionChange}
+                  />
+                ) : (
+                  <BackCoverPreview
+                    book={book}
+                    backCoverImageUrl={backCoverImageUrl}
+                    synopsis={book.synopsis || book.description}
+                    language={language}
+                  />
+                )
+              ) : spreadPages.left && typeof spreadPages.left !== 'string' ? (
                 spreadPages.left.type === 'summary' ? (
                   <BackCoverPreview
                     book={book}
@@ -1910,7 +2008,7 @@ export default function BookLayoutPage() {
                       const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
                       if (idx !== -1) duplicateImage(idx, imageId);
                     }}
-                    pageNumber={currentSpread > 0 ? (currentSpread - 1) * 2 + 1 : undefined}
+                    pageNumber={currentSpread > 0 ? (isBookRTL ? (currentSpread - 1) * 2 + 2 : (currentSpread - 1) * 2 + 1) : undefined}
                     bookTitle={book.title}
                     showHeader={aiDesign?.layout?.headerStyle !== 'none'}
                     headerStyle={aiDesign?.layout?.headerStyle as 'book-title' | 'chapter-title' | 'none'}
@@ -1944,22 +2042,41 @@ export default function BookLayoutPage() {
                 )
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-300 text-sm">
-                  {currentSpread === 0 ? '' : t('book_layout.blank_page')}
+                  {t('book_layout.blank_page')}
                 </div>
               )}
             </div>
 
-            {/* Spine */}
-            <div className="w-2 sm:w-4 bg-gradient-to-r from-gray-300 to-gray-400 rounded shadow-inner" />
-
-            {/* Right Page */}
+            {/* Spine with 3D effect */}
             <div
-              className="relative rounded-lg shadow-2xl overflow-hidden"
+              className="w-3 sm:w-5 rounded shadow-inner relative"
+              style={{
+                background: 'linear-gradient(90deg, #8B7355 0%, #A0826D 25%, #C4A882 50%, #A0826D 75%, #8B7355 100%)',
+                boxShadow: 'inset 0 0 10px rgba(0,0,0,0.4), 0 0 5px rgba(0,0,0,0.2)',
+              }}
+            >
+              {/* Spine highlight lines */}
+              <div className="absolute inset-0 flex flex-col justify-center">
+                <div className="h-[1px] bg-amber-100/30 mx-1"></div>
+                <div className="h-[1px] bg-amber-100/30 mx-1 mt-2"></div>
+                <div className="h-[1px] bg-amber-100/30 mx-1 mt-2"></div>
+              </div>
+            </div>
+
+            {/* Right Page (Odd page for RTL, Even page for LTR) */}
+            <div
+              className="relative rounded-lg shadow-2xl overflow-hidden transition-all duration-300 hover:shadow-memorial-gold/20"
               style={{
                 width: '350px',
                 height: '500px',
                 direction: isBookRTL ? 'rtl' : 'ltr',
                 backgroundColor: settings.backgroundColor || '#ffffff',
+                transformOrigin: 'left center',
+                transform: isFlipping === 'right' ? 'rotateY(30deg)' : 'rotateY(0deg)',
+                transition: 'transform 0.3s ease-in-out',
+                boxShadow: isBookRTL
+                  ? 'inset 3px 0 10px rgba(0,0,0,0.1), -5px 5px 15px rgba(0,0,0,0.3)'
+                  : 'inset -3px 0 10px rgba(0,0,0,0.1), 5px 5px 15px rgba(0,0,0,0.3)',
               }}
               onClick={() => {
                 if (spreadPages.isCover) {
@@ -1971,12 +2088,22 @@ export default function BookLayoutPage() {
               }}
             >
               {spreadPages.isCover ? (
-                <CoverPreview
-                  book={book}
-                  coverImageUrl={coverImageUrl}
-                  onTitlePositionChange={handleTitlePositionChange}
-                  onAuthorPositionChange={handleAuthorPositionChange}
-                />
+                // For RTL: Back cover on right, For LTR: Front cover on right
+                isBookRTL ? (
+                  <BackCoverPreview
+                    book={book}
+                    backCoverImageUrl={backCoverImageUrl}
+                    synopsis={book.synopsis || book.description}
+                    language={language}
+                  />
+                ) : (
+                  <CoverPreview
+                    book={book}
+                    coverImageUrl={coverImageUrl}
+                    onTitlePositionChange={handleTitlePositionChange}
+                    onAuthorPositionChange={handleAuthorPositionChange}
+                  />
+                )
               ) : spreadPages.right ? (
                 spreadPages.right.type === 'summary' ? (
                   <BackCoverPreview
@@ -2006,7 +2133,7 @@ export default function BookLayoutPage() {
                       const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
                       if (idx !== -1) duplicateImage(idx, imageId);
                     }}
-                    pageNumber={currentSpread > 0 ? (currentSpread - 1) * 2 + 2 : undefined}
+                    pageNumber={currentSpread > 0 ? (isBookRTL ? (currentSpread - 1) * 2 + 1 : (currentSpread - 1) * 2 + 2) : undefined}
                     bookTitle={book.title}
                     showHeader={aiDesign?.layout?.headerStyle !== 'none'}
                     headerStyle={aiDesign?.layout?.headerStyle as 'book-title' | 'chapter-title' | 'none'}
@@ -2046,6 +2173,50 @@ export default function BookLayoutPage() {
             </div>
           </div>
 
+          {/* Reading Direction Indicator - shows for RTL books */}
+          {currentSpread > 0 && isBookRTL && (
+            <div className="flex items-center justify-center gap-4 mt-3 text-memorial-gold/70 text-xs animate-pulse">
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                {t('book_layout.start_reading', 'התחל כאן')}
+              </span>
+              <div className="flex items-center gap-1">
+                <span>←</span>
+                <span>←</span>
+                <span>←</span>
+              </div>
+              <span>{t('book_layout.continue_reading', 'המשך')}</span>
+            </div>
+          )}
+
+          {/* Page Labels - show which page is which in the spread */}
+          {currentSpread > 0 && (
+            <div className="flex items-center justify-center mt-2 transform scale-[0.35] xs:scale-[0.45] sm:scale-[0.55] md:scale-[0.7] lg:scale-[0.85] xl:scale-100">
+              <div className="flex items-center gap-4" style={{ width: '716px' }}>
+                {/* Left page label */}
+                <div className="flex-1 text-center">
+                  <span className="text-gray-400 text-xs px-2 py-1 rounded bg-deep-space/50">
+                    {isBookRTL
+                      ? `עמוד ${(currentSpread - 1) * 2 + 2} (זוגי)`
+                      : `Page ${(currentSpread - 1) * 2 + 1} (odd)`
+                    }
+                  </span>
+                </div>
+                {/* Spine space */}
+                <div className="w-5"></div>
+                {/* Right page label */}
+                <div className="flex-1 text-center">
+                  <span className="text-gray-400 text-xs px-2 py-1 rounded bg-deep-space/50">
+                    {isBookRTL
+                      ? `עמוד ${(currentSpread - 1) * 2 + 1} (אי-זוגי)`
+                      : `Page ${(currentSpread - 1) * 2 + 2} (even)`
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Page Actions */}
           {selectedPageIndex !== null && (
             <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 mt-2 sm:mt-4">
@@ -2084,6 +2255,90 @@ export default function BookLayoutPage() {
             Ctrl+Enter = Add page | Ctrl+S = Save | Arrows = Navigate
           </div>
         </div>
+
+        {/* Book Structure Help Overlay for RTL books */}
+        <AnimatePresence>
+          {showBookStructureHelp && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+              onClick={() => setShowBookStructureHelp(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-deep-space border border-memorial-gold/30 rounded-2xl p-6 max-w-2xl w-full"
+                onClick={(e) => e.stopPropagation()}
+                dir="rtl"
+              >
+                <h2 className="text-2xl font-bold text-memorial-gold mb-4 text-center">
+                  מבנה ספר עברי - דו-צדדי
+                </h2>
+
+                <div className="space-y-4 text-white">
+                  {/* Visual explanation */}
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <div className="flex justify-center items-center gap-4 mb-4">
+                      {/* Mini book spread visualization */}
+                      <div className="flex gap-1">
+                        <div className="w-20 h-28 bg-white rounded border-2 border-memorial-gold/50 flex flex-col items-center justify-center text-deep-space text-xs p-1">
+                          <span className="font-bold text-sm">2</span>
+                          <span className="text-[8px]">(זוגי)</span>
+                          <span className="text-[8px] text-gray-500">צד שמאל</span>
+                        </div>
+                        <div className="w-2 h-28 bg-gradient-to-r from-amber-600 to-amber-800 rounded"></div>
+                        <div className="w-20 h-28 bg-white rounded border-2 border-green-500 flex flex-col items-center justify-center text-deep-space text-xs p-1">
+                          <span className="font-bold text-sm">1</span>
+                          <span className="text-[8px]">(אי-זוגי)</span>
+                          <span className="text-[8px] text-green-600">התחל כאן!</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-center gap-2 text-memorial-gold animate-pulse">
+                      <span className="text-lg">→</span>
+                      <span className="text-lg">→</span>
+                      <span className="text-lg">→</span>
+                      <span className="font-medium">כיוון הקריאה</span>
+                    </div>
+                  </div>
+
+                  {/* Explanation points */}
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <span className="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-bold shrink-0">1</span>
+                      <p>בספר עברי, הקריאה מתחילה מ<strong>עמוד 1 בצד ימין</strong> (אי-זוגי)</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="w-6 h-6 rounded-full bg-memorial-gold text-deep-space flex items-center justify-center text-sm font-bold shrink-0">2</span>
+                      <p>כשהופכים דף, <strong>עמוד 2 (זוגי) יופיע משמאל</strong></p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold shrink-0">3</span>
+                      <p>בהדפסה דו-צדדית: <strong>עמודים אי-זוגיים מודפסים מימין, זוגיים משמאל</strong></p>
+                    </div>
+                  </div>
+
+                  {/* Print note */}
+                  <div className="bg-memorial-gold/10 border border-memorial-gold/30 rounded-lg p-3 text-sm">
+                    <span className="text-memorial-gold font-bold">טיפ להדפסה: </span>
+                    כשתייצא את הספר ל-PDF ותדפיס דו-צדדי, העמודים יסודרו אוטומטית בצורה נכונה!
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowBookStructureHelp(false)}
+                  className="mt-6 w-full btn-primary py-3 text-lg"
+                >
+                  הבנתי, תודה!
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Settings Overlay for mobile */}
         {showSettings && (
@@ -2438,7 +2693,7 @@ export default function BookLayoutPage() {
                 <div>
                   <h2 className="text-lg sm:text-xl font-bold text-white">Add Image</h2>
                   {selectedPageIndex !== null && (
-                    <p className="text-xs text-magic-gold mt-1">
+                    <p className="text-xs text-memorial-gold mt-1">
                       Adding to: Page {selectedPageIndex + 1} ({pages[selectedPageIndex]?.type || 'unknown'})
                     </p>
                   )}
@@ -2454,7 +2709,7 @@ export default function BookLayoutPage() {
               {/* Upload Option */}
               <div className="mb-4 sm:mb-6">
                 <h3 className="text-sm font-semibold text-gray-300 mb-2 sm:mb-3">Upload Image</h3>
-                <label className="flex flex-col items-center justify-center w-full h-28 sm:h-32 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer hover:border-magic-gold transition">
+                <label className="flex flex-col items-center justify-center w-full h-28 sm:h-32 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer hover:border-memorial-gold transition">
                   <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mb-2" />
                   <span className="text-xs sm:text-sm text-gray-400">Click to upload image</span>
                   <span className="text-xs text-gray-500">PNG, JPG up to 10MB</span>
@@ -2846,7 +3101,7 @@ function PageRenderer({
   return (
     <div
       ref={containerRef}
-      className={`relative h-full ${isSelected ? 'ring-2 ring-magic-gold' : ''}`}
+      className={`relative h-full ${isSelected ? 'ring-2 ring-memorial-gold' : ''}`}
       style={{
         padding: `${settings.margins.top}px ${settings.margins.right}px ${settings.margins.bottom}px ${settings.margins.left}px`,
         fontFamily: settings.fontFamily,
@@ -2882,7 +3137,7 @@ function PageRenderer({
             ref={editableRef}
             contentEditable
             suppressContentEditableWarning
-            className="h-full overflow-auto book-page-content prose prose-sm max-w-none outline-none focus:ring-2 focus:ring-magic-gold/50 rounded relative"
+            className="h-full overflow-auto book-page-content prose prose-sm max-w-none outline-none focus:ring-2 focus:ring-memorial-gold/50 rounded relative"
             dangerouslySetInnerHTML={{ __html: editingContent }}
             style={{
               color: settings.textColor || '#000000',
@@ -2902,7 +3157,7 @@ function PageRenderer({
             </button>
             <button
               onClick={onFinishEditing}
-              className="px-2 py-1 bg-magic-gold hover:bg-yellow-500 text-black text-xs rounded shadow font-medium"
+              className="px-2 py-1 bg-memorial-gold hover:bg-yellow-500 text-black text-xs rounded shadow font-medium"
             >
               {t('common.save', 'Save')}
             </button>
@@ -2941,7 +3196,7 @@ function PageRenderer({
           {page.type === 'chapter' && (
             <button
               onClick={() => onStartEditing(pageIndex)}
-              className="absolute top-2 right-2 p-1.5 bg-magic-gold/90 hover:bg-magic-gold text-black rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
+              className="absolute top-2 right-2 p-1.5 bg-memorial-gold/90 hover:bg-memorial-gold text-black rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
               title={t('book_layout.edit_content', 'Edit content')}
             >
               <Edit3 className="w-3.5 h-3.5" />
@@ -3221,10 +3476,12 @@ function CoverPreview({
   onAuthorPositionChange?: (pos: { x: number; y: number }) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // Use consistent font - prefer Hebrew fonts for Hebrew books
+  const defaultFont = book.language === 'he' ? 'David Libre' : 'Georgia';
   const coverDesign = book.coverDesign as any || {
     coverColor: '#1a1a2e',
     textColor: '#ffffff',
-    fontFamily: 'Arial',
+    fontFamily: defaultFont,
   };
 
   // Get positions with defaults (center for title, bottom-center for author)
@@ -3241,7 +3498,7 @@ function CoverPreview({
       style={{
         background: imageUrl ? 'transparent' : (coverDesign.coverColor || coverDesign.front?.backgroundColor || '#1a1a2e'),
         color: coverDesign.textColor || coverDesign.front?.title?.color || '#ffffff',
-        fontFamily: coverDesign.fontFamily || coverDesign.front?.title?.font || 'Arial',
+        fontFamily: coverDesign.fontFamily || coverDesign.front?.title?.font || defaultFont,
       }}
     >
       {imageUrl && (
@@ -3263,7 +3520,19 @@ function CoverPreview({
         containerRef={containerRef as React.RefObject<HTMLDivElement>}
         className="z-10"
       >
-        <h1 className="text-2xl font-bold text-center text-white drop-shadow-lg whitespace-nowrap">
+        <h1
+          className="font-bold text-center text-white drop-shadow-lg"
+          style={{
+            fontSize: book.title.length > 30 ? '0.875rem' : book.title.length > 20 ? '1rem' : '1.25rem',
+            lineHeight: '1.3',
+            display: '-webkit-box',
+            WebkitLineClamp: 4,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            maxWidth: '90%',
+            wordBreak: 'keep-all',
+          }}
+        >
           {book.title}
         </h1>
       </DraggableCoverText>
@@ -3275,8 +3544,11 @@ function CoverPreview({
         containerRef={containerRef as React.RefObject<HTMLDivElement>}
         className="z-10"
       >
-        <p className="text-lg text-white drop-shadow-lg whitespace-nowrap">
-          {book.author?.name}
+        <p
+          className="text-white drop-shadow-lg text-center"
+          style={{ fontSize: 'clamp(0.75rem, 3vw, 1rem)' }}
+        >
+          {book.author?.name || (book.coverDesign as any)?.front?.authorName?.text || ''}
         </p>
       </DraggableCoverText>
     </div>
@@ -3298,11 +3570,14 @@ function BackCoverPreview({
   const coverDesign = book.coverDesign as any || {};
   const isRTL = language === 'he' || language === 'ar';
 
+  // Use consistent font - prefer Hebrew fonts for Hebrew books
+  const defaultFont = isRTL ? 'David Libre' : 'Georgia';
+
   // Get back cover settings - also check coverDesign.back.imageUrl directly
   const backImageUrl = backCoverImageUrl || coverDesign.back?.imageUrl;
   const backColor = coverDesign.back?.backgroundColor || coverDesign.coverColor || '#1a1a2e';
   const textColor = coverDesign.textColor || coverDesign.front?.title?.color || '#ffffff';
-  const fontFamily = coverDesign.fontFamily || coverDesign.front?.title?.font || 'Arial';
+  const fontFamily = coverDesign.fontFamily || coverDesign.front?.title?.font || defaultFont;
 
   // Use book's synopsis or the passed synopsis
   const displaySynopsis = synopsis || book.synopsis || book.description || '';

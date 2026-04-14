@@ -85,7 +85,7 @@ export default function NotFoundPage() {
               transition={{ delay: 0.3 }}
               className="absolute -bottom-2 left-1/2 -translate-x-1/2"
             >
-              <AlertTriangle className="w-12 h-12 text-magic-gold" />
+              <AlertTriangle className="w-12 h-12 text-memorial-gold" />
             </motion.div>
           </div>
         </motion.div>
@@ -99,7 +99,7 @@ export default function NotFoundPage() {
           <h1 className="text-3xl sm:text-4xl font-display font-bold text-white mb-4">
             {content.title[language]}
           </h1>
-          <p className="text-xl text-magic-gold mb-4">
+          <p className="text-xl text-memorial-gold mb-4">
             {content.subtitle[language]}
           </p>
           <p className="text-gray-400 mb-8 max-w-md mx-auto">
@@ -116,7 +116,7 @@ export default function NotFoundPage() {
         >
           <Link
             to="/"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space font-semibold rounded-lg hover:brightness-110 transition-all"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-memorial-gold to-yellow-500 text-deep-space font-semibold rounded-lg hover:brightness-110 transition-all"
           >
             <Home className="w-5 h-5" />
             {content.homeButton[language]}
@@ -144,11 +144,11 @@ export default function NotFoundPage() {
                 <Link key={index} to={item.link}>
                   <GlassCard hover className="p-6 text-left group">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-magic-gold/20 to-cosmic-purple/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                        <Icon className="w-6 h-6 text-magic-gold" />
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-memorial-gold/20 to-cosmic-purple/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                        <Icon className="w-6 h-6 text-memorial-gold" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-white font-semibold mb-1 group-hover:text-magic-gold transition-colors flex items-center gap-2">
+                        <h3 className="text-white font-semibold mb-1 group-hover:text-memorial-gold transition-colors flex items-center gap-2">
                           {item.title[language]}
                           <ArrowIcon className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </h3>

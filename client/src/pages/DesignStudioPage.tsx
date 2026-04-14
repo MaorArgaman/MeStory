@@ -122,7 +122,17 @@ const FONT_OPTIONS = [
   { name: 'Bebas Neue', value: '"Bebas Neue", cursive', category: 'Display' },
   { name: 'Caveat', value: '"Caveat", cursive', category: 'Handwriting' },
   { name: 'JetBrains Mono', value: '"JetBrains Mono", monospace', category: 'Monospace' },
+  // Hebrew fonts
+  { name: 'David Libre', value: '"David Libre", serif', category: 'Hebrew' },
+  { name: 'Rubik', value: '"Rubik", sans-serif', category: 'Hebrew' },
+  { name: 'Heebo', value: '"Heebo", sans-serif', category: 'Hebrew' },
+  { name: 'Assistant', value: '"Assistant", sans-serif', category: 'Hebrew' },
 ];
+
+// Get default font based on language
+const getDefaultFont = (language: string) => {
+  return language === 'he' ? '"David Libre", serif' : '"Playfair Display", serif';
+};
 
 // Preset color palettes
 const COLOR_PRESETS = [
@@ -355,7 +365,7 @@ export default function DesignStudioPage() {
           const coverDesign = bookData.coverDesign;
           setCoverColor(coverDesign.front?.backgroundColor || coverDesign.coverColor || '#1a1a2e');
           setTextColor(coverDesign.front?.title?.color || coverDesign.textColor || '#ffffff');
-          setFontFamily(coverDesign.front?.title?.font || coverDesign.fontFamily || FONT_OPTIONS[0].value);
+          setFontFamily(coverDesign.front?.title?.font || coverDesign.fontFamily || getDefaultFont(bookData.language));
 
           // Handle image URL - check both new format (front.imageUrl) and old format (imageUrl)
           let existingImageUrl = coverDesign.front?.imageUrl || coverDesign.imageUrl || '';
@@ -384,6 +394,9 @@ export default function DesignStudioPage() {
             existingBackCoverUrl = `${serverBaseUrl}${existingBackCoverUrl}`;
           }
           if (existingBackCoverUrl) setBackCoverImageUrl(existingBackCoverUrl);
+        } else {
+          // No cover design exists - use language-based default font
+          setFontFamily(getDefaultFont(bookData.language));
         }
       }
     } catch (error) {
@@ -937,7 +950,7 @@ export default function DesignStudioPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       {/* Top Bar */}
-      <div className="glass-strong border-b border-magic-gold/20 px-3 sm:px-6 py-2 sm:py-3">
+      <div className="glass-strong border-b border-memorial-gold/20 px-3 sm:px-6 py-2 sm:py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-4">
             {/* Logo */}
@@ -951,7 +964,7 @@ export default function DesignStudioPage() {
                 className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.3)]"
               />
             </button>
-            <div className="hidden sm:block h-6 w-px bg-magic-gold/30" />
+            <div className="hidden sm:block h-6 w-px bg-memorial-gold/30" />
             <button
               onClick={() => navigate(`/editor/${bookId}`)}
               className="btn-ghost flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
@@ -1072,10 +1085,10 @@ export default function DesignStudioPage() {
       <div className={`lg:hidden fixed bottom-6 ${isRTL ? 'right-4' : 'left-4'} z-40`}>
         <button
           onClick={() => setShowMobileControls(!showMobileControls)}
-          className="glass-strong p-4 rounded-full border border-magic-gold/30 shadow-lg shadow-magic-gold/10 min-w-[56px] min-h-[56px] flex items-center justify-center active:scale-95 transition-transform"
+          className="glass-strong p-4 rounded-full border border-memorial-gold/30 shadow-lg shadow-memorial-gold/10 min-w-[56px] min-h-[56px] flex items-center justify-center active:scale-95 transition-transform"
           aria-label={showMobileControls ? 'Hide controls' : 'Show controls'}
         >
-          {showMobileControls ? <Eye className="w-6 h-6 text-magic-gold" /> : <Settings className="w-6 h-6 text-magic-gold" />}
+          {showMobileControls ? <Eye className="w-6 h-6 text-memorial-gold" /> : <Settings className="w-6 h-6 text-memorial-gold" />}
         </button>
       </div>
 
@@ -1507,15 +1520,15 @@ export default function DesignStudioPage() {
               <div className="mb-4">
                 <div className="flex justify-between text-sm text-gray-400 mb-2">
                   <span>
-                    {language === 'he' ? 'שלב' : 'Step'} {wizardProgress.currentStep}/{wizardProgress.totalSteps}
+                    {language === 'he' ? 'שלב' : 'Step'} {Math.min(wizardProgress.currentStep, wizardProgress.totalSteps)}/{wizardProgress.totalSteps}
                   </span>
-                  <span>{Math.round((wizardProgress.currentStep / wizardProgress.totalSteps) * 100)}%</span>
+                  <span>{Math.min(Math.round((wizardProgress.currentStep / wizardProgress.totalSteps) * 100), 100)}%</span>
                 </div>
                 <div className="h-3 bg-white/10 rounded-full overflow-hidden">
                   <motion.div
                     className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500"
                     initial={{ width: 0 }}
-                    animate={{ width: `${(wizardProgress.currentStep / wizardProgress.totalSteps) * 100}%` }}
+                    animate={{ width: `${Math.min((wizardProgress.currentStep / wizardProgress.totalSteps) * 100, 100)}%` }}
                     transition={{ duration: 0.5 }}
                   />
                 </div>
@@ -1557,7 +1570,7 @@ export default function DesignStudioPage() {
               {/* Header */}
               <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-memorial-gold to-yellow-600 flex items-center justify-center flex-shrink-0">
                     <Rocket className="w-5 h-5 sm:w-6 sm:h-6 text-deep-space" />
                   </div>
                   <div className="min-w-0">
@@ -1575,15 +1588,15 @@ export default function DesignStudioPage() {
 
               {loadingStrategy ? (
                 <div className="text-center py-12">
-                  <Loader2 className="w-12 h-12 animate-spin text-magic-gold mx-auto mb-4" />
+                  <Loader2 className="w-12 h-12 animate-spin text-memorial-gold mx-auto mb-4" />
                   <p className="text-gray-300">{t('design_studio.publish_modal.analyzing')}</p>
                 </div>
               ) : pricingStrategy ? (
                 <div className="space-y-6">
                   {/* AI Recommendation */}
-                  <div className="p-4 bg-gradient-to-r from-magic-gold/10 to-yellow-500/10 border border-magic-gold/30 rounded-xl">
+                  <div className="p-4 bg-gradient-to-r from-memorial-gold/10 to-yellow-500/10 border border-memorial-gold/30 rounded-xl">
                     <div className="flex items-start gap-3">
-                      <Sparkles className="w-6 h-6 text-magic-gold flex-shrink-0 mt-1" />
+                      <Sparkles className="w-6 h-6 text-memorial-gold flex-shrink-0 mt-1" />
                       <div>
                         <h3 className="font-bold text-white mb-1">{t('design_studio.publish_modal.ai_recommendation')}</h3>
                         <p className="text-gray-300 text-sm">{pricingStrategy.reasoning}</p>
@@ -1594,7 +1607,7 @@ export default function DesignStudioPage() {
                   {/* Author Stats */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="glass rounded-lg p-3 text-center">
-                      <BookOpen className="w-5 h-5 text-magic-gold mx-auto mb-1" />
+                      <BookOpen className="w-5 h-5 text-memorial-gold mx-auto mb-1" />
                       <p className="text-2xl font-bold text-white">{pricingStrategy.authorStats.publishedBooks}</p>
                       <p className="text-xs text-gray-400">{t('design_studio.publish_modal.published_books')}</p>
                     </div>
@@ -1626,13 +1639,13 @@ export default function DesignStudioPage() {
                         }}
                         className={`flex-1 py-4 px-4 rounded-xl border-2 transition-all ${
                           isFree
-                            ? 'border-magic-gold bg-magic-gold/20 text-white'
+                            ? 'border-memorial-gold bg-memorial-gold/20 text-white'
                             : 'border-gray-700 text-gray-400 hover:border-gray-600'
                         }`}
                       >
                         <span className="text-lg font-bold">{t('design_studio.publish_modal.free')}</span>
                         {pricingStrategy.recommendFree && (
-                          <span className="block text-xs text-magic-gold mt-1">{t('design_studio.publish_modal.recommended_by_ai')}</span>
+                          <span className="block text-xs text-memorial-gold mt-1">{t('design_studio.publish_modal.recommended_by_ai')}</span>
                         )}
                       </button>
                       <button
@@ -1642,13 +1655,13 @@ export default function DesignStudioPage() {
                         }}
                         className={`flex-1 py-4 px-4 rounded-xl border-2 transition-all ${
                           !isFree
-                            ? 'border-magic-gold bg-magic-gold/20 text-white'
+                            ? 'border-memorial-gold bg-memorial-gold/20 text-white'
                             : 'border-gray-700 text-gray-400 hover:border-gray-600'
                         }`}
                       >
                         <span className="text-lg font-bold">{t('design_studio.publish_modal.paid')}</span>
                         {!pricingStrategy.recommendFree && (
-                          <span className="block text-xs text-magic-gold mt-1">{t('design_studio.publish_modal.recommended_by_ai')}</span>
+                          <span className="block text-xs text-memorial-gold mt-1">{t('design_studio.publish_modal.recommended_by_ai')}</span>
                         )}
                       </button>
                     </div>
@@ -1675,7 +1688,7 @@ export default function DesignStudioPage() {
                               onClick={() => setSelectedPrice(price)}
                               className={`flex-1 py-2 rounded-lg text-sm transition ${
                                 selectedPrice === price
-                                  ? 'bg-magic-gold/30 text-magic-gold border border-magic-gold/50'
+                                  ? 'bg-memorial-gold/30 text-memorial-gold border border-memorial-gold/50'
                                   : 'bg-white/5 text-gray-400 hover:bg-white/10'
                               }`}
                             >
@@ -1791,7 +1804,7 @@ export default function DesignStudioPage() {
                   onClick={() => setExportFormat('pdf')}
                   className={`w-full p-4 rounded-xl border-2 transition-all text-right ${
                     exportFormat === 'pdf'
-                      ? 'border-magic-gold bg-magic-gold/20'
+                      ? 'border-memorial-gold bg-memorial-gold/20'
                       : 'border-gray-700 hover:border-gray-600'
                   }`}
                 >
@@ -1808,7 +1821,7 @@ export default function DesignStudioPage() {
                       </p>
                     </div>
                     {exportFormat === 'pdf' && (
-                      <CheckCircle2 className="w-6 h-6 text-magic-gold" />
+                      <CheckCircle2 className="w-6 h-6 text-memorial-gold" />
                     )}
                   </div>
                 </button>
@@ -1817,7 +1830,7 @@ export default function DesignStudioPage() {
                   onClick={() => setExportFormat('docx')}
                   className={`w-full p-4 rounded-xl border-2 transition-all text-right ${
                     exportFormat === 'docx'
-                      ? 'border-magic-gold bg-magic-gold/20'
+                      ? 'border-memorial-gold bg-memorial-gold/20'
                       : 'border-gray-700 hover:border-gray-600'
                   }`}
                 >
@@ -1834,7 +1847,7 @@ export default function DesignStudioPage() {
                       </p>
                     </div>
                     {exportFormat === 'docx' && (
-                      <CheckCircle2 className="w-6 h-6 text-magic-gold" />
+                      <CheckCircle2 className="w-6 h-6 text-memorial-gold" />
                     )}
                   </div>
                 </button>

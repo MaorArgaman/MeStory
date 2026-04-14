@@ -117,7 +117,7 @@ export default function InterviewWizard({ onClose, onSuccess }: InterviewWizardP
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
           >
-            <Sparkles className="w-16 h-16 text-magic-gold" />
+            <Sparkles className="w-16 h-16 text-memorial-gold" />
           </motion.div>
           <p className="text-xl text-white">{t('interview.creating_book', 'Creating your book...')}</p>
           <p className="text-gray-400">{t('interview.setting_up_foundation', 'Setting up your story foundation')}</p>
@@ -204,19 +204,14 @@ export default function InterviewWizard({ onClose, onSuccess }: InterviewWizardP
                 onChange={(e) => setBookGenre(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
               >
-                <option value="Fiction">{t('genres.fiction', 'Fiction')}</option>
-                <option value="Fantasy">{t('genres.fantasy', 'Fantasy')}</option>
-                <option value="Science Fiction">{t('genres.science_fiction', 'Science Fiction')}</option>
-                <option value="Mystery">{t('genres.mystery', 'Mystery')}</option>
-                <option value="Thriller">{t('genres.thriller', 'Thriller')}</option>
-                <option value="Romance">{t('genres.romance', 'Romance')}</option>
-                <option value="Horror">{t('genres.horror', 'Horror')}</option>
-                <option value="Adventure">{t('genres.adventure', 'Adventure')}</option>
-                <option value="Historical Fiction">{t('genres.historical_fiction', 'Historical Fiction')}</option>
-                <option value="Non-Fiction">{t('genres.non_fiction', 'Non-Fiction')}</option>
-                <option value="Biography">{t('genres.biography', 'Biography')}</option>
-                <option value="Self-Help">{t('genres.self_help', 'Self-Help')}</option>
-                <option value="Other">{t('genres.other', 'Other')}</option>
+                <option value="fallen_soldier">{t('genres.fallen_soldier', 'לזכר חייל/ת שנפל/ה')}</option>
+                <option value="life_story">{t('genres.life_story', 'סיפור חיים')}</option>
+                <option value="family_legacy">{t('genres.family_legacy', 'מורשת משפחתית')}</option>
+                <option value="tribute">{t('genres.tribute', 'מחווה ליקיר/ה')}</option>
+                <option value="holocaust_survivor">{t('genres.holocaust_survivor', 'עדות ניצול שואה')}</option>
+                <option value="shared_memories">{t('genres.shared_memories', 'זיכרונות משותפים')}</option>
+                <option value="letters_and_words">{t('genres.letters_and_words', 'מכתבים ודברים שלא נאמרו')}</option>
+                <option value="testimony">{t('genres.testimony', 'עדות')}</option>
               </select>
             </div>
           </div>

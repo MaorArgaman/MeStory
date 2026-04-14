@@ -22,7 +22,7 @@ import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton } from '../components/ui';
 
 // Library hero image - bookshelf
-const libraryHero = '/img/library-hero.png';
+const libraryHero = '/img/memorial-family.png';
 
 interface BookItem {
   _id: string;
@@ -292,7 +292,7 @@ export default function LibraryPage() {
         {type === 'purchased' && book.readingProgress !== undefined && book.readingProgress > 0 && (
           <div className="absolute top-0 left-0 right-0 h-1 bg-gray-700 rounded-t-xl overflow-hidden z-10">
             <motion.div
-              className="h-full bg-gradient-to-r from-magic-gold to-cosmic-purple"
+              className="h-full bg-gradient-to-r from-memorial-gold to-cosmic-purple"
               initial={{ width: 0 }}
               animate={{ width: `${book.readingProgress}%` }}
               transition={{ duration: 1, delay: 0.3 }}
@@ -438,7 +438,7 @@ export default function LibraryPage() {
                   {book.lastRead ? formatDate(book.lastRead) : t('library.book.not_read')}
                 </span>
                 {book.readingProgress !== undefined && (
-                  <span className="flex items-center gap-1 text-magic-gold">
+                  <span className="flex items-center gap-1 text-memorial-gold">
                     <TrendingUp className="w-3 h-3" />
                     {book.readingProgress}%
                   </span>
@@ -459,7 +459,7 @@ export default function LibraryPage() {
                     {t('user.free')}
                   </span>
                 ) : (
-                  <span className="text-magic-gold font-bold">
+                  <span className="text-memorial-gold font-bold">
                     ${book.publishingStatus.price.toFixed(2)}
                   </span>
                 )}
@@ -508,7 +508,7 @@ export default function LibraryPage() {
         </GlassCard>
 
         <GlassCard className="text-center p-6">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-memorial-gold to-yellow-600 flex items-center justify-center">
             <Wallet className="w-8 h-8 text-white" />
           </div>
           <h3 className="text-2xl font-bold text-white mb-1">
@@ -532,7 +532,7 @@ export default function LibraryPage() {
       <GlassCard className="p-6">
         <h3 className="text-xl font-bold text-white mb-4 text-right flex items-center justify-end gap-2">
           <span>{t('library.earnings.connect_paypal')}</span>
-          <CreditCard className="w-5 h-5 text-magic-gold" />
+          <CreditCard className="w-5 h-5 text-memorial-gold" />
         </h3>
 
         {earnings?.hasPayPalConnected ? (
@@ -576,7 +576,7 @@ export default function LibraryPage() {
             <p className="text-gray-400">
               {t('library.earnings.connect_paypal_desc')}
               <br />
-              <span className="text-magic-gold">
+              <span className="text-memorial-gold">
                 {t('library.earnings.you_get_50')}
               </span>
             </p>
@@ -587,7 +587,7 @@ export default function LibraryPage() {
                 value={paypalEmail}
                 onChange={(e) => setPaypalEmail(e.target.value)}
                 placeholder="your-email@paypal.com"
-                className="flex-1 px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-magic-gold text-left"
+                className="flex-1 px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-memorial-gold text-left"
                 dir="ltr"
               />
               <GlowingButton
@@ -685,7 +685,7 @@ export default function LibraryPage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4"
           >
-            <Library className="w-8 h-8 sm:w-10 sm:h-10 text-magic-gold flex-shrink-0" />
+            <Library className="w-8 h-8 sm:w-10 sm:h-10 text-memorial-gold flex-shrink-0" />
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold gradient-gold">
               {t('library.title')}
             </h1>
@@ -712,7 +712,7 @@ export default function LibraryPage() {
                 flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium transition-all duration-300 whitespace-nowrap flex-shrink-0 text-sm sm:text-base
                 ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-magic-gold to-cosmic-purple text-white shadow-glow-gold'
+                    ? 'bg-gradient-to-r from-memorial-gold to-cosmic-purple text-white shadow-glow-gold'
                     : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
                 }
               `}

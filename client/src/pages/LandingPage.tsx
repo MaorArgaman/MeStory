@@ -18,8 +18,8 @@ import {
 import { GlassCard, GlowingButton, OptimizedImage } from '../components/ui';
 import { useLanguage } from '../contexts/LanguageContext';
 import { SEO } from '../components/seo';
-// Use new realistic images from public folder
-const heroBg = '/img/landing-hero-new.png';
+// Memorial-themed images from public folder
+const heroBg = '/img/memorial-hero.png';
 const logoIcon = '/img/logo-glow.png';
 
 export default function LandingPage() {
@@ -45,7 +45,7 @@ export default function LandingPage() {
   const features = [
     {
       icon: Zap,
-      image: '/img/feature-ai-writing.png',
+      image: '/img/memorial-family.png',
       titleKey: 'landing.features.ai_copilot.title',
       descriptionKey: 'landing.features.ai_copilot.description',
       color: 'from-yellow-400 to-yellow-600',
@@ -56,12 +56,12 @@ export default function LandingPage() {
       image: '/img/feature-cover-studio.png',
       titleKey: 'landing.features.cover_studio.title',
       descriptionKey: 'landing.features.cover_studio.description',
-      color: 'from-purple-400 to-purple-600',
-      glow: 'shadow-glow-cosmic',
+      color: 'from-amber-400 to-amber-600',
+      glow: 'shadow-glow-gold',
     },
     {
       icon: Globe,
-      image: '/img/young-writers.png',
+      image: '/img/community-group.png',
       titleKey: 'landing.features.marketplace.title',
       descriptionKey: 'landing.features.marketplace.description',
       color: 'from-blue-400 to-blue-600',
@@ -69,53 +69,53 @@ export default function LandingPage() {
     },
   ];
 
-  // Success stories with real images - language aware
+  // Success stories with real images - language aware (memorial-focused)
   const successStoriesHe = [
     {
-      image: '/img/success-author.png',
-      name: 'שרה ג\'נקינס',
-      book: 'האלון הלוחש',
-      quote: 'מהטיוטה הראשונה ועד למדף החנות - הספר שלי עכשיו עומד במדור סופרים מקומיים. MeStory הפך את זה לאפשרי!',
+      image: '/img/testimonial-elder.png',
+      name: 'רחל לוי',
+      book: 'לזכר אבא',
+      quote: 'יצרנו ספר הנצחה לאבא ז"ל עם כל המשפחה. כל אחד תרם זיכרון, והתוצאה מרגשת עד דמעות.',
     },
     {
-      image: '/img/author-portrait.png',
-      name: 'רות כהן',
-      book: 'שירי החזית',
-      quote: 'כתבתי את סיפור המשפחה שלי ועכשיו הנכדים קוראים אותו. רגע מרגש!',
+      image: '/img/memorial-family.png',
+      name: 'משפחת כהן',
+      book: 'גיבור שלנו',
+      quote: 'הנצחנו את בננו שנפל בקרב. הספר הפך למקור נחמה למשפחה ולחברים.',
     },
     {
-      image: '/img/launch-day.png',
-      name: 'מרגרט לוי',
-      book: 'המסע שלי',
-      quote: 'יום ההשקה! לראות את הספר שלי עולה לחנות של MeStory ומגיע לקוראים בכל העולם - חלום שהתגשם!',
+      image: '/img/grandmother-author.png',
+      name: 'שרה גולדשטיין',
+      book: 'מסע חיים',
+      quote: 'בגיל 87 סיפרתי את סיפור השואה שלי. הנכדים עכשיו יידעו מאיפה הם באו.',
     },
   ];
 
   const successStoriesEn = [
     {
-      image: '/img/success-author.png',
-      name: 'Sarah Jenkins',
-      book: 'The Whispering Oak',
-      quote: 'From first draft to bookstore shelf - my book now stands in the Local Authors section. MeStory made it possible!',
+      image: '/img/testimonial-elder.png',
+      name: 'Rachel Levy',
+      book: 'In Memory of Father',
+      quote: 'We created a memorial book for our late father with the whole family. Everyone contributed a memory, and the result is deeply moving.',
     },
     {
-      image: '/img/author-portrait.png',
-      name: 'Ruth Cohen',
-      book: 'Frontline Poems',
-      quote: 'I wrote my family\'s story and now my grandchildren are reading it. A moving moment!',
+      image: '/img/memorial-family.png',
+      name: 'The Cohen Family',
+      book: 'Our Hero',
+      quote: 'We commemorated our son who fell in battle. The book became a source of comfort for family and friends.',
     },
     {
-      image: '/img/launch-day.png',
-      name: 'Margaret Levy',
-      book: 'My Journey',
-      quote: 'Launch day! Seeing my book go live on MeStory\'s store and reach readers worldwide - a dream come true!',
+      image: '/img/grandmother-author.png',
+      name: 'Sarah Goldstein',
+      book: 'A Life\'s Journey',
+      quote: 'At 87, I told my Holocaust story. My grandchildren will now know where they came from.',
     },
   ];
 
   const successStories = isHebrew ? successStoriesHe : successStoriesEn;
 
-  // Community image
-  const communityImage = '/img/community-group.png';
+  // Community image - memorial community
+  const communityImage = '/img/memorial-family.png';
 
   const stats = [
     { icon: Users, value: '50K+', labelKey: 'landing.stats.active_authors' },
@@ -127,8 +127,8 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen overflow-hidden">
       <SEO
-        title="MeStory - AI-Powered Book Writing Platform"
-        description="Write, publish, and earn from your books with AI-powered tools. MeStory helps authors create beautiful stories, design stunning covers, and reach readers worldwide."
+        title="MeStory - Memorial Book Writing Platform"
+        description="Create meaningful memorial books to honor your loved ones. AI-guided writing, respectful design, and print-ready PDF export. Preserve their memory for generations."
         type="website"
         locale={language === 'he' ? 'he_IL' : 'en_US'}
         url="/"
@@ -141,7 +141,7 @@ export default function LandingPage() {
         className="fixed top-0 left-0 right-0 z-50 w-full"
         role="banner"
       >
-        <nav className="glass-strong border-b-2 border-magic-gold/30 shadow-lg shadow-magic-gold/10 backdrop-blur-2xl bg-gradient-to-r from-[#0a0a12] via-[#0d0d18] to-[#0a0a12]" aria-label="Main navigation">
+        <nav className="glass-strong border-b border-memorial-gold/20 shadow-lg shadow-memorial-gold/5 backdrop-blur-2xl bg-gradient-to-r from-deep-space via-[#1e2436] to-deep-space" aria-label="Main navigation">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             {/* Logo */}
             <motion.div
@@ -226,7 +226,7 @@ export default function LandingPage() {
               }}
               transition={{ duration: 8, repeat: Infinity }}
               style={{
-                background: 'linear-gradient(90deg, #FFD700, #FFA500, #FFD700)',
+                background: 'linear-gradient(90deg, #c9a227, #e3c56f, #c9a227)',
                 backgroundSize: '200% 200%',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -280,15 +280,15 @@ export default function LandingPage() {
               className="mt-8 sm:mt-12 lg:mt-16 flex flex-col sm:flex-row flex-wrap items-center justify-center gap-4 sm:gap-6 lg:gap-8 text-xs sm:text-sm text-gray-400"
             >
               <div className="flex items-center gap-2">
-                <Award className="w-4 h-4 sm:w-5 sm:h-5 text-magic-gold" />
+                <Award className="w-4 h-4 sm:w-5 sm:h-5 text-memorial-gold" />
                 <span>{t('landing.trust.no_credit_card')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-magic-gold" />
+                <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-memorial-gold" />
                 <span>{t('landing.trust.free_credits')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-magic-gold" />
+                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-memorial-gold" />
                 <span>{t('landing.trust.authors_trust')}</span>
               </div>
             </motion.div>
@@ -302,11 +302,11 @@ export default function LandingPage() {
           transition={{ delay: 1.5, duration: 2, repeat: Infinity }}
           className="absolute bottom-6 sm:bottom-12 left-1/2 -translate-x-1/2 z-20 hidden sm:block"
         >
-          <div className="w-6 h-10 rounded-full border-2 border-magic-gold/50 flex items-start justify-center p-2">
+          <div className="w-6 h-10 rounded-full border-2 border-memorial-gold/50 flex items-start justify-center p-2">
             <motion.div
               animate={{ y: [0, 12, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
-              className="w-1.5 h-1.5 rounded-full bg-magic-gold"
+              className="w-1.5 h-1.5 rounded-full bg-memorial-gold"
             />
           </div>
         </motion.div>
@@ -317,7 +317,7 @@ export default function LandingPage() {
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
-        className="relative overflow-hidden bg-gradient-to-r from-magic-gold/20 via-purple-500/20 to-magic-gold/20 border-y border-white/10"
+        className="relative overflow-hidden bg-gradient-to-r from-memorial-gold/10 via-primary-900/30 to-memorial-gold/10 border-y border-memorial-gold/10"
       >
         <motion.div
           animate={{ x: ['0%', '-50%'] }}
@@ -327,9 +327,9 @@ export default function LandingPage() {
           {[...Array(2)].map((_, i) => (
             <div key={i} className="flex items-center gap-12 px-12">
               <div className="flex items-center gap-3">
-                <Sparkles className="w-5 h-5 text-magic-gold" />
+                <Sparkles className="w-5 h-5 text-memorial-gold" />
                 <span className="text-white font-semibold">
-                  <span className="text-magic-gold">{booksPublishedToday}</span> {t('landing.ticker.books_today')}
+                  <span className="text-memorial-gold">{booksPublishedToday}</span> {t('landing.ticker.books_today')}
                 </span>
               </div>
               <div className="flex items-center gap-3">
@@ -402,7 +402,7 @@ export default function LandingPage() {
 
                     <motion.div
                       whileHover={{ x: 5 }}
-                      className="mt-4 sm:mt-6 flex items-center gap-2 text-magic-gold font-semibold cursor-pointer text-sm sm:text-base"
+                      className="mt-4 sm:mt-6 flex items-center gap-2 text-memorial-gold font-semibold cursor-pointer text-sm sm:text-base"
                     >
                       {t('landing.features.learn_more')}
                       <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -443,8 +443,8 @@ export default function LandingPage() {
                 transition={{ delay: index * 0.1, duration: 0.5 }}
               >
                 <GlassCard className="text-center p-3 sm:p-4 lg:p-6">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 rounded-full bg-gradient-to-br from-magic-gold/20 to-purple-500/20 flex items-center justify-center mx-auto mb-2 sm:mb-4">
-                    <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-magic-gold" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 rounded-full bg-gradient-to-br from-memorial-gold/20 to-primary-900/30 flex items-center justify-center mx-auto mb-2 sm:mb-4">
+                    <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-memorial-gold" />
                   </div>
                   <div className="text-xl sm:text-2xl lg:text-4xl font-bold gradient-gold mb-1 sm:mb-2">{stat.value}</div>
                   <div className="text-gray-400 text-xs sm:text-sm">{t(stat.labelKey)}</div>
@@ -496,7 +496,7 @@ export default function LandingPage() {
                     <div className="flex items-center gap-3">
                       <div>
                         <p className="text-white font-semibold">{story.name}</p>
-                        <p className="text-magic-gold text-sm">{story.book}</p>
+                        <p className="text-memorial-gold text-sm">{story.book}</p>
                       </div>
                     </div>
                   </div>
@@ -541,15 +541,15 @@ export default function LandingPage() {
                 {t('landing.writers_community.description', 'Connect with fellow authors, share your journey, get feedback, and grow together. Our community spans across ages and genres, united by the love of storytelling.')}
               </p>
               <div className="flex flex-wrap gap-4">
-                <div className="flex items-center gap-2 text-magic-gold">
+                <div className="flex items-center gap-2 text-memorial-gold">
                   <Users className="w-5 h-5" />
                   <span>{t('landing.writers_community.writers_count', '50K+ Writers')}</span>
                 </div>
-                <div className="flex items-center gap-2 text-magic-gold">
+                <div className="flex items-center gap-2 text-memorial-gold">
                   <BookOpen className="w-5 h-5" />
                   <span>{t('landing.writers_community.workshops', 'Daily Workshops')}</span>
                 </div>
-                <div className="flex items-center gap-2 text-magic-gold">
+                <div className="flex items-center gap-2 text-memorial-gold">
                   <Star className="w-5 h-5" />
                   <span>{t('landing.writers_community.feedback', 'Expert Feedback')}</span>
                 </div>
@@ -619,22 +619,22 @@ export default function LandingPage() {
               <h3 className="font-display font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">{t('landing.footer.platform')}</h3>
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
-                  <a href="/features" className="hover:text-magic-gold transition-colors" aria-label="View platform features">
+                  <a href="/features" className="hover:text-memorial-gold transition-colors" aria-label="View platform features">
                     {t('landing.footer.features')}
                   </a>
                 </li>
                 <li>
-                  <a href="/pricing" className="hover:text-magic-gold transition-colors" aria-label="View pricing plans">
+                  <a href="/pricing" className="hover:text-memorial-gold transition-colors" aria-label="View pricing plans">
                     {t('landing.footer.pricing')}
                   </a>
                 </li>
                 <li>
-                  <a href="/marketplace" className="hover:text-magic-gold transition-colors" aria-label="Browse the marketplace">
+                  <a href="/marketplace" className="hover:text-memorial-gold transition-colors" aria-label="Browse the marketplace">
                     {t('landing.footer.marketplace')}
                   </a>
                 </li>
                 <li>
-                  <a href="/api-docs" className="hover:text-magic-gold transition-colors" aria-label="View API documentation">
+                  <a href="/api-docs" className="hover:text-memorial-gold transition-colors" aria-label="View API documentation">
                     {t('landing.footer.api')}
                   </a>
                 </li>
@@ -646,22 +646,22 @@ export default function LandingPage() {
               <h3 className="font-display font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">{t('landing.footer.legal')}</h3>
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li>
-                  <a href="/terms" className="hover:text-magic-gold transition-colors" aria-label="Read terms of service">
+                  <a href="/terms" className="hover:text-memorial-gold transition-colors" aria-label="Read terms of service">
                     {t('footer.terms')}
                   </a>
                 </li>
                 <li>
-                  <a href="/privacy" className="hover:text-magic-gold transition-colors" aria-label="Read privacy policy">
+                  <a href="/privacy" className="hover:text-memorial-gold transition-colors" aria-label="Read privacy policy">
                     {t('footer.privacy')}
                   </a>
                 </li>
                 <li>
-                  <a href="/library" className="hover:text-magic-gold transition-colors" aria-label="View your library">
+                  <a href="/library" className="hover:text-memorial-gold transition-colors" aria-label="View your library">
                     {t('nav.library')}
                   </a>
                 </li>
                 <li>
-                  <a href="mailto:support@mestory.com" className="hover:text-magic-gold transition-colors" aria-label="Contact support via email">
+                  <a href="mailto:support@mestory.com" className="hover:text-memorial-gold transition-colors" aria-label="Contact support via email">
                     {t('footer.contact')}
                   </a>
                 </li>
@@ -679,7 +679,7 @@ export default function LandingPage() {
                 href="https://twitter.com/mestory"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-magic-gold transition-colors"
+                className="text-gray-400 hover:text-memorial-gold transition-colors"
                 aria-label="Follow MeStory on Twitter"
               >
                 Twitter
@@ -688,7 +688,7 @@ export default function LandingPage() {
                 href="https://linkedin.com/company/mestory"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-magic-gold transition-colors"
+                className="text-gray-400 hover:text-memorial-gold transition-colors"
                 aria-label="Connect with MeStory on LinkedIn"
               >
                 LinkedIn
@@ -697,7 +697,7 @@ export default function LandingPage() {
                 href="https://github.com/mestory"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-magic-gold transition-colors"
+                className="text-gray-400 hover:text-memorial-gold transition-colors"
                 aria-label="View MeStory on GitHub"
               >
                 GitHub

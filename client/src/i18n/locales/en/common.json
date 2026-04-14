@@ -1,6 +1,6 @@
 {
   "app_name": "MeStory",
-  "tagline": "Unleash Your Inner Author",
+  "tagline": "Preserve Your Loved One's Life Story",
   "nav": {
     "my_books": "My Books",
     "marketplace": "Marketplace",
@@ -179,32 +179,32 @@
     "contact": "Contact Us"
   },
   "dashboard": {
-    "title": "Creation Hub",
+    "title": "Memorial Hub",
     "welcome": "Welcome back, {{name}}! You have {{credits}} credits remaining.",
     "default_chapter_title": "Chapter 1",
     "hero": {
-      "title": "Begin Your Next Masterpiece",
-      "subtitle": "Choose how you want to bring your story to life"
+      "title": "Create a Memorial Book",
+      "subtitle": "Choose how you want to preserve their life story"
     },
     "cards": {
       "scratch": {
         "title": "Start from Scratch",
-        "description": "Create a blank book and dive straight into writing your masterpiece.",
+        "description": "Create a blank memorial book and start writing the memories.",
         "badge": "Quick Start"
       },
       "interview": {
-        "title": "Deep Dive Interview",
-        "description": "AI-guided chat to build your story's foundation across 8 key elements.",
-        "badge": "AI Chat Interview"
+        "title": "Guided Interview",
+        "description": "A sensitive AI guides you with questions to bring out memories and stories.",
+        "badge": "AI Interview"
       },
       "voice": {
-        "title": "Voice Dictation",
-        "description": "Speak your story and let AI transcribe it into text automatically.",
+        "title": "Voice Recording",
+        "description": "Tell the memories in your voice and AI will transcribe them to text.",
         "badge": "Voice to Text"
       },
       "import": {
-        "title": "Import Manuscript",
-        "description": "Upload your existing manuscript in DOCX or TXT format.",
+        "title": "Import Text",
+        "description": "Upload existing text - letters, diaries, or stories already written.",
         "badge": "Max 50MB"
       }
     },
@@ -212,13 +212,13 @@
       "continue_reading": "Continue Reading",
       "continue_writing": "Continue Writing",
       "recommended": "Recommended For You",
-      "your_library": "Your Library",
-      "your_library_subtitle": "Your ongoing projects and completed works"
+      "your_library": "Your Memorial Books",
+      "your_library_subtitle": "The books you are working on"
     },
     "empty": {
-      "title": "Your Masterpiece Awaits",
-      "subtitle": "Begin your storytelling journey today. Every great story starts with a single word.",
-      "create_first": "Create Your First Book"
+      "title": "Their Memory Deserves to Be Preserved",
+      "subtitle": "Start writing the memorial book. Every memory you save will last for generations.",
+      "create_first": "Create Your First Memorial Book"
     },
     "book_card": {
       "create_new": "Create New Book",
@@ -270,7 +270,16 @@
       "non_fiction": "Non-Fiction",
       "biography": "Biography",
       "self_help": "Self-Help",
-      "other": "Other"
+      "other": "Other",
+      "fallen_soldier": "In Memory of a Fallen Soldier",
+      "life_story": "Life Story",
+      "family_legacy": "Family Legacy",
+      "tribute": "Tribute",
+      "holocaust_survivor": "Holocaust Survivor Testimony",
+      "shared_memories": "Shared Memories",
+      "letters_and_words": "Letters Unspoken",
+      "testimony": "Testimony",
+      "collaborative": "Collaborative Book"
     },
     "messages": {
       "generating_pdf": "Generating PDF...",
@@ -300,25 +309,24 @@
   },
   "marketplace": {
     "hero": {
-      "title": "Discover Worlds Unseen",
-      "subtitle": "Explore a universe of stories crafted by visionary authors.",
-      "highlight": "Every book is a portal."
+      "title": "Life Stories Preserved Forever",
+      "subtitle": "Memorial and tribute books written by families and friends",
+      "highlight": "Every story is a testament to a meaningful life"
     },
     "search": {
-      "placeholder": "Search for books, authors, or genres...",
+      "placeholder": "Search for memorial books or stories...",
       "button": "Search"
     },
     "categories": {
       "all": "All",
-      "fantasy": "Fantasy",
-      "scifi": "Sci-Fi",
-      "romance": "Romance",
-      "mystery": "Mystery",
-      "thriller": "Thriller",
-      "horror": "Horror",
-      "historical": "Historical",
-      "literary_fiction": "Literary Fiction",
-      "young_adult": "Young Adult",
+      "fallen_soldier": "Fallen Soldiers",
+      "life_story": "Life Stories",
+      "family_legacy": "Family Legacy",
+      "tribute": "Tributes",
+      "holocaust_survivor": "Holocaust Testimonies",
+      "shared_memories": "Shared Memories",
+      "letters_and_words": "Letters",
+      "testimony": "Testimonies",
       "adventure": "Adventure"
     },
     "banners": {
@@ -412,70 +420,70 @@
   },
   "landing": {
     "hero": {
-      "title": "Your Story Deserves to Be Heard",
-      "subtitle": "Write, publish, and earn from your story. Digital books for instant sales + export to mass printing at publishing houses. Everyone has a story - now everyone can tell it.",
-      "cta_primary": "Start Writing for Free",
-      "cta_secondary": "Explore Books"
+      "title": "Preserve Your Loved One's Life Story",
+      "subtitle": "Write a memorial book that will last for generations. Guided writing with AI, dignified design, and a printed book to share with family and friends.",
+      "cta_primary": "Start Writing",
+      "cta_secondary": "View Memorial Books"
     },
     "trust": {
-      "no_credit_card": "No Credit Card Required",
-      "free_credits": "100 Free AI Credits",
-      "authors_trust": "50,000+ Authors Trust Us"
+      "no_credit_card": "Start for Free",
+      "free_credits": "AI-Guided Writing",
+      "authors_trust": "Hundreds of Families Have Memorialized"
     },
     "features": {
-      "title": "From Idea to Digital & Printed Book",
-      "subtitle": "Write with AI assistance, publish to the digital store, and export for mass printing. Sales pay back your subscription cost - and beyond.",
+      "title": "From Memories to a Book That Lasts",
+      "subtitle": "Guided writing, dignified design, and a print-ready book. Anyone can write - even if you've never written before.",
       "ai_copilot": {
-        "title": "AI Co-Pilot",
-        "description": "Never face writer's block again. Our Gemini-powered AI assists you with plot development, character creation, and real-time writing suggestions."
+        "title": "AI-Guided Writing",
+        "description": "Our AI helps you bring out the memories - with guiding questions, voice interviews that become text, and sensitive, respectful editing assistance."
       },
       "cover_studio": {
-        "title": "Digital + Print Studio",
-        "description": "Create digital books for online sales AND export print-ready files for mass production at any publishing house or print shop."
+        "title": "Dignified Design + Print Export",
+        "description": "Beautiful and respectful covers, professional page layouts, and PDF export ready for print. Your book - digital and printed."
       },
       "marketplace": {
-        "title": "Sell & Earn Back",
-        "description": "Sell your digital books in our marketplace and earn back your subscription cost - and more. Set your price, keep 50% of every sale."
+        "title": "Collaborative Book",
+        "description": "Invite family members and friends to contribute their own chapters. Each person writes from their perspective - together creating a rich, complete book."
       },
       "learn_more": "Learn More"
     },
     "stats": {
-      "active_authors": "Active Authors",
-      "books_published": "Books Published",
+      "active_authors": "Writing Families",
+      "books_published": "Memorial Books Written",
       "average_rating": "Average Rating",
-      "author_earnings": "Author Earnings"
+      "author_earnings": "Books Shared"
     },
     "community": {
-      "title": "Everyone Has a Story",
-      "subtitle": "Grandmothers sharing life stories, survivors preserving memories, young creators building new worlds. Your voice matters."
+      "title": "Every Story Deserves to Be Preserved",
+      "subtitle": "Bereaved families, Holocaust survivors, parents and children - all preserving the life stories of their loved ones. Your story is next."
     },
     "cta": {
-      "title": "Ready to Write Your Story?",
-      "subtitle": "Start writing today with 100 free AI credits. No credit card required.",
-      "button": "Create Your Free Account"
+      "title": "Their Memory Deserves to Be Preserved",
+      "subtitle": "Start writing the book. Invite others to contribute. Create a book that will last for generations.",
+      "button": "Start Writing Now"
     },
     "footer": {
-      "description": "Digital + Print publishing for everyone. Write your story, sell it online, export for mass printing. Your voice deserves to be heard.",
+      "description": "Preserve your loved one's life story. A memorial book that will last for generations.",
       "platform": "Platform",
       "features": "Features",
       "pricing": "Pricing",
-      "marketplace": "Marketplace",
-      "api": "API",
+      "marketplace": "Memorial Books",
+      "api": "For Organizations",
       "legal": "Legal",
-      "copyright": "© 2026 MeStory. All rights reserved. Powered by Google Gemini 2.5 Flash."
+      "copyright": "© 2026 MeStory. All rights reserved."
     },
     "ticker": {
-      "books_today": "books published today",
-      "authors_earned": "Authors earned",
+      "books_today": "memorial books written today",
+      "authors_earned": "chapters added",
       "this_week": "this week",
-      "reviews_today": "5-star reviews today"
+      "reviews_today": "families joined today"
     },
     "writers_community": {
-      "title": "Join Our Writers Community",
-      "description": "Connect with fellow authors, share your journey, get feedback, and grow together. Our community spans across ages and genres, united by the love of storytelling.",
-      "writers_count": "50K+ Writers",
-      "workshops": "Daily Workshops",
-      "feedback": "Expert Feedback"
+      "title": "A Community That Understands",
+      "description": "Join families going through the same journey. Mutual support, writing advice, and inspiration from others' stories.",
+      "writers_count": "Supportive Community",
+      "workshops": "Personal Guidance",
+      "feedback": "Writing Help"
     }
   },
   "colors": {
@@ -869,7 +877,7 @@
     "words": "words",
     "synopsis": "Synopsis",
     "read_now": "Read Now",
-    "buy_for": "Buy for ${{price}}",
+    "buy_for": "Buy for {{price}}",
     "published_on": "Published {{date}}",
     "reviews_section": "Reviews",
     "reviews": {
@@ -1260,32 +1268,32 @@
     "creating": "Creating...",
     "create_my_book": "Create My Book",
     "genres": {
-      "fantasy": "Fantasy",
-      "sci-fi": "Science Fiction",
-      "romance": "Romance",
-      "mystery": "Mystery",
-      "thriller": "Thriller",
-      "non-fiction": "Non-Fiction",
-      "self-help": "Self Help",
-      "humor": "Humor"
+      "fallen_soldier": "In Memory of a Fallen Soldier",
+      "life_story": "Life Story",
+      "family_legacy": "Family Legacy",
+      "tribute": "Tribute",
+      "holocaust_survivor": "Holocaust Survivor Testimony",
+      "shared_memories": "Shared Memories",
+      "letters_and_words": "Letters Unspoken",
+      "testimony": "Testimony"
     },
     "writing_goals": {
-      "short-story": "Short Story",
-      "short-story_desc": "5,000 - 20,000 words",
-      "novella": "Novella",
-      "novella_desc": "20,000 - 50,000 words",
-      "novel": "Novel",
-      "novel_desc": "50,000+ words"
+      "short-story": "Short Memories",
+      "short-story_desc": "Up to 20 pages",
+      "novella": "Memorial Book",
+      "novella_desc": "20-100 pages",
+      "novel": "Full Life Story",
+      "novel_desc": "100+ pages"
     },
     "audiences": {
-      "children": "Children",
-      "children_desc": "Ages 5-12",
-      "young-adult": "Young Adult",
-      "young-adult_desc": "Ages 13-18",
-      "adult": "Adults",
-      "adult_desc": "Ages 18+",
-      "all-ages": "All Ages",
-      "all-ages_desc": "Universal audience"
+      "family": "Family",
+      "family_desc": "For close family only",
+      "friends": "Friends",
+      "friends_desc": "For friends and relatives",
+      "community": "Community",
+      "community_desc": "For wider community",
+      "public": "Public",
+      "public_desc": "For everyone"
     }
   },
   "pagination": {

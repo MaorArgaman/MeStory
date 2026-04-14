@@ -42,7 +42,7 @@ export default function LanguageSwitcher({
             onClick={() => handleLanguageChange('en')}
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
               language === 'en'
-                ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                ? 'bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 text-memorial-gold border border-memorial-gold/30'
                 : 'text-gray-400 hover:text-white'
             }`}
             disabled={isLoading}
@@ -55,7 +55,7 @@ export default function LanguageSwitcher({
             onClick={() => handleLanguageChange('he')}
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
               language === 'he'
-                ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                ? 'bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 text-memorial-gold border border-memorial-gold/30'
                 : 'text-gray-400 hover:text-white'
             }`}
             disabled={isLoading}
@@ -76,7 +76,7 @@ export default function LanguageSwitcher({
           value={language}
           onChange={(e) => handleLanguageChange(e.target.value as Language)}
           disabled={isLoading}
-          className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-magic-gold/50 cursor-pointer appearance-none min-w-[150px]"
+          className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-memorial-gold/50 cursor-pointer appearance-none min-w-[150px]"
           style={{ direction: 'ltr' }}
         >
           <option value="en" className="bg-deep-space text-white">English</option>

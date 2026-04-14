@@ -240,7 +240,7 @@ export default function BookDesignPage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white" dir={isHebrew ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <header className="glass-strong border-b border-magic-gold/20 sticky top-0 z-50">
+      <header className="glass-strong border-b border-memorial-gold/20 sticky top-0 z-50">
         <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between">
             {/* Left side */}
@@ -257,7 +257,7 @@ export default function BookDesignPage() {
                   className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.3)]"
                 />
               </button>
-              <div className="hidden sm:block h-6 w-px bg-magic-gold/30" />
+              <div className="hidden sm:block h-6 w-px bg-memorial-gold/30" />
               <button
                 type="button"
                 onClick={goToEditor}
@@ -548,7 +548,7 @@ export default function BookDesignPage() {
                   author={book.author?.name || 'Author'}
                   coverColor={book.coverDesign?.front?.backgroundColor || book.coverDesign?.coverColor || '#1a1a2e'}
                   textColor={book.coverDesign?.front?.title?.color || book.coverDesign?.textColor || '#ffffff'}
-                  fontFamily={book.coverDesign?.front?.title?.font || book.coverDesign?.fontFamily || 'Georgia'}
+                  fontFamily={book.coverDesign?.front?.title?.font || book.coverDesign?.fontFamily || (book.language === 'he' ? 'David Libre' : 'Georgia')}
                   imageUrl={book.coverDesign?.front?.imageUrl || book.coverDesign?.imageUrl}
                   language={book.language}
                 />

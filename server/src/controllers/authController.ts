@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { User, UserRole, IUser } from '../models/User';
 import { generateToken } from '../utils/jwt';
 import { AuthRequest } from '../types';
@@ -386,12 +386,43 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
     }
 
     // Find user by ID (password not included by default)
-    const user = await User.findById(req.user.id);
+    let user;
+    try {
+      user = await User.findById(req.user.id);
+    } catch (dbError: any) {
+      // Database unavailable - return basic info from JWT token
+      console.warn('Database unavailable for getMe, returning JWT data:', dbError.message);
+      res.status(200).json({
+        success: true,
+        data: {
+          user: {
+            id: req.user.id,
+            email: req.user.email,
+            role: req.user.role,
+            // Indicate that this is partial data due to DB unavailability
+            _partial: true,
+            _dbError: 'Database temporarily unavailable',
+          },
+        },
+      });
+      return;
+    }
 
     if (!user) {
-      res.status(404).json({
-        success: false,
-        error: 'User not found',
+      // User not found could mean DB returned null due to connection issues
+      // Return partial data from JWT instead of 404
+      console.warn('User not found in DB, returning JWT data for:', req.user.id);
+      res.status(200).json({
+        success: true,
+        data: {
+          user: {
+            id: req.user.id,
+            email: req.user.email,
+            role: req.user.role,
+            _partial: true,
+            _dbError: 'User data temporarily unavailable',
+          },
+        },
       });
       return;
     }

@@ -48,8 +48,10 @@ import GuidesPage from './pages/GuidesPage';
 import HowToWriteBook from './pages/guides/HowToWriteBook';
 import HowToPublishBook from './pages/guides/HowToPublishBook';
 import HowToEarnMoney from './pages/guides/HowToEarnMoney';
+import HowToCollaborate from './pages/guides/HowToCollaborate';
 import NotFoundPage from './pages/NotFoundPage';
 import MyStoryPage from './pages/MyStoryPage';
+import InvitationPage from './pages/InvitationPage';
 
 // Localized public routes component factory
 function createLocalizedRoutes() {
@@ -71,6 +73,8 @@ function createLocalizedRoutes() {
     <>
       {/* English routes */}
       <Route path="/en" element={<LocalizedLanding />} />
+      <Route path="/en/login" element={<LanguageRoute><RedirectIfAuth><LoginPage /></RedirectIfAuth></LanguageRoute>} />
+      <Route path="/en/register" element={<LanguageRoute><RedirectIfAuth><RegisterPage /></RedirectIfAuth></LanguageRoute>} />
       <Route path="/en/my-story" element={<LocalizedLayout><MyStoryPage /></LocalizedLayout>} />
       <Route path="/en/marketplace" element={<LocalizedLayout><MarketplacePage /></LocalizedLayout>} />
       <Route path="/en/book/:id" element={<LocalizedLayout><BookDetailsPage /></LocalizedLayout>} />
@@ -82,9 +86,12 @@ function createLocalizedRoutes() {
       <Route path="/en/guides/write-book" element={<LocalizedLayout><HowToWriteBook /></LocalizedLayout>} />
       <Route path="/en/guides/publish-book" element={<LocalizedLayout><HowToPublishBook /></LocalizedLayout>} />
       <Route path="/en/guides/earn-money" element={<LocalizedLayout><HowToEarnMoney /></LocalizedLayout>} />
+      <Route path="/en/guides/collaborate" element={<LocalizedLayout><HowToCollaborate /></LocalizedLayout>} />
 
       {/* Hebrew routes */}
       <Route path="/he" element={<LocalizedLanding />} />
+      <Route path="/he/login" element={<LanguageRoute><RedirectIfAuth><LoginPage /></RedirectIfAuth></LanguageRoute>} />
+      <Route path="/he/register" element={<LanguageRoute><RedirectIfAuth><RegisterPage /></RedirectIfAuth></LanguageRoute>} />
       <Route path="/he/my-story" element={<LocalizedLayout><MyStoryPage /></LocalizedLayout>} />
       <Route path="/he/marketplace" element={<LocalizedLayout><MarketplacePage /></LocalizedLayout>} />
       <Route path="/he/book/:id" element={<LocalizedLayout><BookDetailsPage /></LocalizedLayout>} />
@@ -96,6 +103,7 @@ function createLocalizedRoutes() {
       <Route path="/he/guides/write-book" element={<LocalizedLayout><HowToWriteBook /></LocalizedLayout>} />
       <Route path="/he/guides/publish-book" element={<LocalizedLayout><HowToPublishBook /></LocalizedLayout>} />
       <Route path="/he/guides/earn-money" element={<LocalizedLayout><HowToEarnMoney /></LocalizedLayout>} />
+      <Route path="/he/guides/collaborate" element={<LocalizedLayout><HowToCollaborate /></LocalizedLayout>} />
     </>
   );
 }
@@ -148,6 +156,9 @@ function AppContent() {
               <Route path="/login" element={<RedirectIfAuth><LoginPage /></RedirectIfAuth>} />
               <Route path="/register" element={<RedirectIfAuth><RegisterPage /></RedirectIfAuth>} />
               <Route path="/auth-success" element={<AuthSuccessPage />} />
+
+              {/* Invitation route (accessible without auth, will redirect to login if needed) */}
+              <Route path="/invitation/:token" element={<InvitationPage />} />
 
               {/* Protected Routes with Layout - no language prefix */}
               <Route
@@ -299,6 +310,14 @@ function AppContent() {
                 element={
                   <Layout>
                     <HowToEarnMoney />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/guides/collaborate"
+                element={
+                  <Layout>
+                    <HowToCollaborate />
                   </Layout>
                 }
               />

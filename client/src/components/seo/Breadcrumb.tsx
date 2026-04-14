@@ -113,7 +113,7 @@ export function Breadcrumb({ items, className = '' }: BreadcrumbProps) {
                 // Clickable breadcrumb link
                 <Link
                   to={item.url}
-                  className="hover:text-magic-gold transition-colors duration-200 flex items-center truncate max-w-[150px] sm:max-w-none"
+                  className="hover:text-memorial-gold transition-colors duration-200 flex items-center truncate max-w-[150px] sm:max-w-none"
                 >
                   {isFirst && (
                     <Home

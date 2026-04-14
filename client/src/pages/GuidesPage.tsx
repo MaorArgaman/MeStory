@@ -9,7 +9,8 @@ import {
   ArrowLeft,
   Sparkles,
   Clock,
-  FileText
+  FileText,
+  Users
 } from 'lucide-react';
 import { GlassCard } from '../components/ui';
 import { Breadcrumb } from '../components/seo';
@@ -53,7 +54,7 @@ const guides: GuideItem[] = [
       he: '15 דקות קריאה',
     },
     steps: 8,
-    color: 'from-magic-gold to-yellow-500',
+    color: 'from-memorial-gold to-yellow-500',
   },
   {
     id: 'publish-book',
@@ -92,6 +93,25 @@ const guides: GuideItem[] = [
     },
     steps: 6,
     color: 'from-green-500 to-emerald-400',
+  },
+  {
+    id: 'collaborate',
+    slug: 'collaborate',
+    icon: Users,
+    title: {
+      en: 'How to Write Together',
+      he: 'איך לכתוב ספר יחד',
+    },
+    description: {
+      en: 'Learn how to collaborate with friends and family on writing a book together.',
+      he: 'למדו איך לשתף פעולה עם חברים ומשפחה בכתיבת ספר משותף.',
+    },
+    duration: {
+      en: '5 min read',
+      he: '5 דקות קריאה',
+    },
+    steps: 4,
+    color: 'from-blue-500 to-cyan-400',
   },
 ];
 
@@ -138,7 +158,7 @@ export default function GuidesPage() {
             className="text-center mb-16"
           >
             <div className="flex items-center justify-center gap-3 mb-4">
-              <FileText className="w-12 h-12 text-magic-gold" />
+              <FileText className="w-12 h-12 text-memorial-gold" />
             </div>
             <h1 className="text-4xl md:text-5xl font-display font-bold gradient-gold mb-4">
               {isHebrew ? 'מדריכים' : 'Guides & Tutorials'}
@@ -171,7 +191,7 @@ export default function GuidesPage() {
                     <Link to={`/guides/${guide.slug}`}>
                       <GlassCard
                         hover
-                        className="h-full p-8 group transition-all duration-300 hover:border-magic-gold/30"
+                        className="h-full p-8 group transition-all duration-300 hover:border-memorial-gold/30"
                       >
                         {/* Icon */}
                         <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${guide.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
@@ -179,7 +199,7 @@ export default function GuidesPage() {
                         </div>
 
                         {/* Title */}
-                        <h2 className="text-xl font-display font-bold text-white mb-3 group-hover:text-magic-gold transition-colors">
+                        <h2 className="text-xl font-display font-bold text-white mb-3 group-hover:text-memorial-gold transition-colors">
                           {guide.title[language]}
                         </h2>
 
@@ -203,7 +223,7 @@ export default function GuidesPage() {
                         </div>
 
                         {/* CTA */}
-                        <div className="flex items-center gap-2 text-magic-gold font-medium group-hover:gap-3 transition-all">
+                        <div className="flex items-center gap-2 text-memorial-gold font-medium group-hover:gap-3 transition-all">
                           <span>{isHebrew ? 'קרא עכשיו' : 'Read Now'}</span>
                           <ArrowIcon className="w-4 h-4" />
                         </div>
@@ -240,7 +260,7 @@ export default function GuidesPage() {
                 </Link>
                 <a
                   href="mailto:support@mestory.com"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space font-semibold rounded-lg hover:brightness-110 transition-all"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-memorial-gold to-yellow-500 text-deep-space font-semibold rounded-lg hover:brightness-110 transition-all"
                 >
                   {isHebrew ? 'צרו קשר' : 'Contact Support'}
                 </a>

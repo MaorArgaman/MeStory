@@ -39,8 +39,9 @@ export interface QualityAnalysis {
   suggestions?: string[];
 }
 
-// Voice Interview Summary interface for context
+// Voice Interview Summary interface for memorial context
 interface VoiceInterviewContext {
+  // Legacy structure (for backward compatibility)
   theme?: {
     mainTheme?: string;
     tone?: string;
@@ -58,6 +59,33 @@ interface VoiceInterviewContext {
   setting?: {
     world?: string;
     atmosphere?: string;
+  };
+  // Memorial structure (new)
+  person?: {
+    name?: string;
+    relationship?: string;
+    lifeSpan?: string;
+    occupation?: string;
+    personalityTraits?: string[];
+    definingQualities?: string;
+  };
+  memories?: {
+    favoriteMemories?: string[];
+    funnyStories?: string[];
+    significantMoments?: string[];
+    traditions?: string[];
+  };
+  impact?: {
+    lessonsTaught?: string[];
+    howTheyChangedLives?: string;
+    whatTheyWouldWant?: string;
+    lastingInfluence?: string;
+  };
+  legacy?: {
+    forFutureGenerations?: string;
+    howToPreserveMemory?: string;
+    keyMessage?: string;
+    dedication?: string;
   };
   writingGuidelines?: string[];
 }
@@ -88,11 +116,30 @@ export async function generateContinuations(
   // Auto-detect language from text if not provided
   const lang = language || detectLanguage(currentText);
   try {
-    // Build voice interview context if available
+    // Build voice interview context if available (Memorial focused)
     let voiceInterviewPrompt = '';
     if (context?.storyContext?.voiceInterview?.summary) {
       const vi = context.storyContext.voiceInterview.summary;
-      voiceInterviewPrompt = `
+
+      // Check if it's memorial format (new) or legacy format
+      if (vi.person) {
+        // Memorial format
+        voiceInterviewPrompt = `
+MEMORIAL BOOK CONTEXT (from family interview):
+${vi.person?.name ? `Person Being Remembered: ${vi.person.name}` : ''}
+${vi.person?.relationship ? `Relationship: ${vi.person.relationship}` : ''}
+${vi.person?.occupation ? `Occupation/Role: ${vi.person.occupation}` : ''}
+${vi.person?.definingQualities ? `Defining Qualities: ${vi.person.definingQualities}` : ''}
+${vi.person?.personalityTraits && vi.person.personalityTraits.length > 0 ? `Personality Traits: ${vi.person.personalityTraits.join(', ')}` : ''}
+${vi.memories?.favoriteMemories && vi.memories.favoriteMemories.length > 0 ? `Favorite Memories: ${vi.memories.favoriteMemories.join('; ')}` : ''}
+${vi.impact?.howTheyChangedLives ? `Impact on Lives: ${vi.impact.howTheyChangedLives}` : ''}
+${vi.impact?.lessonsTaught && vi.impact.lessonsTaught.length > 0 ? `Lessons Taught: ${vi.impact.lessonsTaught.join(', ')}` : ''}
+${vi.legacy?.keyMessage ? `Key Message: ${vi.legacy.keyMessage}` : ''}
+${vi.writingGuidelines && vi.writingGuidelines.length > 0 ? `Writing Guidelines:\n${vi.writingGuidelines.map(g => `- ${g}`).join('\n')}` : ''}
+`;
+      } else {
+        // Legacy format (for backward compatibility)
+        voiceInterviewPrompt = `
 STORY BACKGROUND (from author interview):
 ${vi.theme?.mainTheme ? `Theme: ${vi.theme.mainTheme}` : ''}
 ${vi.theme?.tone ? `Tone: ${vi.theme.tone}` : ''}
@@ -103,6 +150,7 @@ ${vi.setting?.atmosphere ? `Atmosphere: ${vi.setting.atmosphere}` : ''}
 ${vi.characters && vi.characters.length > 0 ? `Main Characters: ${vi.characters.map(c => `${c.name} (${c.role})`).join(', ')}` : ''}
 ${vi.writingGuidelines && vi.writingGuidelines.length > 0 ? `Writing Guidelines:\n${vi.writingGuidelines.map(g => `- ${g}`).join('\n')}` : ''}
 `;
+      }
     } else if (context?.storyContext) {
       // Fallback to regular story context
       const sc = context.storyContext;
@@ -117,7 +165,35 @@ ${sc.characters ? `Characters: ${sc.characters}` : ''}
 
     const langInstruction = getLanguageInstruction(lang);
 
-    const prompt = `You are a professional ${genre} author and writing assistant.
+    // Determine if this is a memorial book genre
+    const memorialGenres = ['fallen_soldier', 'life_story', 'family_legacy', 'tribute', 'holocaust_survivor', 'shared_memories', 'letters_and_words', 'testimony'];
+    const isMemorial = memorialGenres.includes(genre);
+
+    const prompt = isMemorial
+      ? `You are a sensitive and respectful writer helping families create memorial books to honor their loved ones.
+${langInstruction}
+
+CONTEXT:
+${context?.bookTitle ? `Memorial Book: "${context.bookTitle}"` : ''}
+${context?.chapterTitle ? `Chapter: "${context.chapterTitle}"` : ''}
+${voiceInterviewPrompt}
+
+CURRENT TEXT:
+${currentText.slice(-500)}
+
+TASK:
+Continue the memorial text from where it left off. Generate exactly 3 different continuation options (50-100 words each).
+Each option should:
+- Maintain a warm, respectful, and sensitive tone
+- Be a natural continuation that honors the memory
+- Help bring the person to life through memories and stories
+- Be written in the SAME LANGUAGE as the current text
+- Avoid clichés and generic phrases - be specific and personal
+${context?.storyContext?.voiceInterview ? '- Align with the family interview context provided' : ''}
+
+Respond ONLY with a JSON array of 3 strings, nothing else:
+["option1", "option2", "option3"]`
+      : `You are a professional ${genre} author and writing assistant.
 ${langInstruction}
 
 CONTEXT:

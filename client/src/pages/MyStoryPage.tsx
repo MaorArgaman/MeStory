@@ -28,77 +28,63 @@ interface StoryBook {
   };
 }
 
-// Story categories with emotional icons
+// Memorial book categories with emotional icons
 const STORY_CATEGORIES = [
   {
-    id: 'family',
-    icon: '👨‍👩‍👧‍👦',
-    name: { en: 'Family Stories', he: 'סיפורי משפחה' },
-    description: { en: 'Stories of generations, heritage, and bonds that last forever', he: 'סיפורים של דורות, מורשת וקשרים שנשארים לנצח' },
-    tags: ['משפחה', 'מורשת', 'דורות', 'שורשים', 'הורים', 'ילדים']
-  },
-  {
-    id: 'overcoming',
-    icon: '💪',
-    name: { en: 'Overcoming Challenges', he: 'התמודדות והתגברות' },
-    description: { en: 'Stories of strength, resilience, and triumph over adversity', he: 'סיפורים של כוח, חוסן וניצחון על קשיים' },
-    tags: ['התמודדות', 'חוסן', 'התגברות', 'כוח', 'אתגרים']
-  },
-  {
-    id: 'love',
-    icon: '❤️',
-    name: { en: 'Love & Relationships', he: 'אהבה ויחסים' },
-    description: { en: 'Stories of love found, lost, and everything in between', he: 'סיפורים של אהבה שנמצאה, אבדה וכל מה שביניהם' },
-    tags: ['אהבה', 'זוגיות', 'יחסים', 'פרידה', 'מפגש']
-  },
-  {
-    id: 'military',
+    id: 'fallen_soldier',
     icon: '🎖️',
-    name: { en: 'Service & Military', he: 'שירות וצבא' },
-    description: { en: 'Stories of service, sacrifice, and brotherhood', he: 'סיפורים של שירות, הקרבה ואחווה' },
-    tags: ['צבא', 'שירות', 'לוחמים', 'גבורה', 'חברות']
+    name: { en: 'Fallen Soldiers', he: 'חללי צה"ל' },
+    description: { en: 'Honoring heroes who gave their lives for our country', he: 'הנצחת גיבורים שנתנו את חייהם למען מדינתנו' },
+    tags: ['חיילים', 'נופלים', 'גבורה', 'מלחמה', 'הקרבה']
   },
   {
-    id: 'immigration',
-    icon: '🌍',
-    name: { en: 'Immigration & Roots', he: 'היגרציה ושורשים' },
-    description: { en: 'Stories of journeys, new beginnings, and finding home', he: 'סיפורים של מסעות, התחלות חדשות ומציאת בית' },
-    tags: ['עלייה', 'היגרציה', 'גלות', 'שורשים', 'מולדת']
+    id: 'life_story',
+    icon: '📖',
+    name: { en: 'Life Story', he: 'סיפור חיים' },
+    description: { en: 'Documenting a life journey, from beginning to end', he: 'תיעוד מסע חיים, מההתחלה ועד הסוף' },
+    tags: ['ביוגרפיה', 'חיים', 'מסע', 'סיפור']
   },
   {
-    id: 'health',
-    icon: '🏥',
-    name: { en: 'Health & Recovery', he: 'בריאות והחלמה' },
-    description: { en: 'Stories of healing, hope, and the human spirit', he: 'סיפורים של ריפוי, תקווה והרוח האנושית' },
-    tags: ['מחלה', 'החלמה', 'בריאות', 'רפואה', 'תקווה']
+    id: 'family_legacy',
+    icon: '👨‍👩‍👧‍👦',
+    name: { en: 'Family Legacy', he: 'מורשת משפחתית' },
+    description: { en: 'Preserving family history for future generations', he: 'שימור ההיסטוריה המשפחתית לדורות הבאים' },
+    tags: ['משפחה', 'מורשת', 'דורות', 'שורשים']
   },
   {
-    id: 'career',
-    icon: '💼',
-    name: { en: 'Career & Dreams', he: 'קריירה וחלומות' },
-    description: { en: 'Stories of ambition, success, and following your passion', he: 'סיפורים של שאיפות, הצלחה ומרדף אחרי החלום' },
-    tags: ['קריירה', 'יזמות', 'הצלחה', 'חלומות', 'עסקים']
+    id: 'holocaust_survivor',
+    icon: '✡️',
+    name: { en: 'Holocaust Survivors', he: 'ניצולי שואה' },
+    description: { en: 'Preserving testimonies of Holocaust survivors', he: 'שימור עדויות ניצולי השואה' },
+    tags: ['שואה', 'עדות', 'זיכרון', 'ניצולים']
   },
   {
-    id: 'growth',
-    icon: '🌱',
-    name: { en: 'Personal Growth', he: 'צמיחה אישית' },
-    description: { en: 'Stories of transformation, self-discovery, and becoming', he: 'סיפורים של שינוי, גילוי עצמי והתהוות' },
-    tags: ['צמיחה', 'התפתחות', 'שינוי', 'מסע', 'תובנות']
+    id: 'tribute',
+    icon: '🕯️',
+    name: { en: 'Tribute & Honor', he: 'מחווה והוקרה' },
+    description: { en: 'A tribute to a loved one who has passed', he: 'מחווה ליקיר שהלך לעולמו' },
+    tags: ['הוקרה', 'מחווה', 'כבוד', 'אהבה']
   },
   {
-    id: 'moments',
-    icon: '✨',
-    name: { en: 'Defining Moments', he: 'רגעים מעצבים' },
-    description: { en: 'Stories of the moments that changed everything', he: 'סיפורים על הרגעים ששינו הכל' },
-    tags: ['רגעים', 'נקודות מפנה', 'גילויים', 'החלטות']
+    id: 'shared_memories',
+    icon: '💝',
+    name: { en: 'Shared Memories', he: 'זיכרונות משותפים' },
+    description: { en: 'Collective memories from family and friends', he: 'זיכרונות משותפים מהמשפחה והחברים' },
+    tags: ['זיכרונות', 'סיפורים', 'חברים', 'משפחה']
   },
   {
-    id: 'childhood',
-    icon: '💎',
-    name: { en: 'Childhood Memories', he: 'זיכרונות ילדות' },
-    description: { en: 'Stories from the days that shaped who we are', he: 'סיפורים מהימים שעיצבו את מי שאנחנו' },
-    tags: ['ילדות', 'זיכרונות', 'נוסטלגיה', 'גדילה']
+    id: 'letters_and_words',
+    icon: '✉️',
+    name: { en: 'Letters & Words', he: 'מכתבים ודברים' },
+    description: { en: 'Collection of letters, poems, and personal writings', he: 'אוסף מכתבים, שירים וכתבים אישיים' },
+    tags: ['מכתבים', 'שירים', 'דברים', 'כתיבה']
+  },
+  {
+    id: 'testimony',
+    icon: '🎙️',
+    name: { en: 'Testimony', he: 'עדות' },
+    description: { en: 'Personal testimonies and historical documentation', he: 'עדויות אישיות ותיעוד היסטורי' },
+    tags: ['עדות', 'תיעוד', 'היסטוריה', 'סיפור']
   },
 ];
 
@@ -127,37 +113,37 @@ const WRITING_METHODS = [
   },
 ];
 
-// Testimonials with images
+// Testimonials with images - memorial focused
 const TESTIMONIALS = [
   {
     id: 1,
     image: '/img/testimonial-elder.png',
     quote: {
-      en: "I never thought my story mattered until I wrote it down. Now my grandchildren will know where they came from.",
-      he: "מעולם לא חשבתי שהסיפור שלי חשוב עד שכתבתי אותו. עכשיו הנכדים שלי יידעו מאיפה הם באו."
+      en: "We created a memorial book for our father with the whole family. Each person contributed a memory. The result moved us to tears.",
+      he: "יצרנו ספר הנצחה לאבא עם כל המשפחה. כל אחד תרם זיכרון. התוצאה הניעה אותנו לדמעות."
     },
-    author: { en: "Sarah, 78", he: "שרה, 78" },
-    category: { en: "Family Story", he: "סיפור משפחתי" }
+    author: { en: "The Levy Family", he: "משפחת לוי" },
+    category: { en: "Memorial Book", he: "ספר הנצחה" }
   },
   {
     id: 2,
-    image: '/img/success-writer.png',
+    image: '/img/memorial-family.png',
     quote: {
-      en: "Writing about my recovery helped me heal. Now my story helps others going through the same thing.",
-      he: "לכתוב על ההחלמה שלי עזר לי להירפא. עכשיו הסיפור שלי עוזר לאחרים שעוברים את אותו הדבר."
+      en: "Our son fell in battle. Thanks to MeStory, we collected stories from his friends and commanders. His memory will live forever.",
+      he: "הבן שלנו נפל בקרב. בזכות MeStory, אספנו סיפורים מחבריו ומפקדיו. זכרו יחיה לעד."
     },
-    author: { en: "David, 45", he: "דוד, 45" },
-    category: { en: "Health & Recovery", he: "בריאות והחלמה" }
+    author: { en: "The Cohen Family", he: "משפחת כהן" },
+    category: { en: "Fallen Soldier", he: "חלל צה\"ל" }
   },
   {
     id: 3,
-    image: '/img/success-young.png',
+    image: '/img/grandmother-author.png',
     quote: {
-      en: "My immigration story is my children's heritage. Thanks to MeStory, it will never be forgotten.",
-      he: "סיפור העלייה שלי הוא המורשת של הילדים שלי. בזכות MeStory, הוא לעולם לא יישכח."
+      en: "At 87, I finally told my Holocaust story. My grandchildren will now know where they came from and what our family survived.",
+      he: "בגיל 87 סיפרתי סוף סוף את סיפור השואה שלי. הנכדים שלי עכשיו יידעו מאיפה הם באו ומה המשפחה שלנו עברה."
     },
-    author: { en: "Maria, 62", he: "מריה, 62" },
-    category: { en: "Immigration", he: "היגרציה" }
+    author: { en: "Sarah, 87", he: "שרה, 87" },
+    category: { en: "Holocaust Survivor", he: "ניצולת שואה" }
   },
 ];
 
@@ -237,7 +223,7 @@ export default function MyStoryPage() {
         <div className="absolute inset-0">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-30"
-            style={{ backgroundImage: 'url(/img/TrueStory.png)' }}
+            style={{ backgroundImage: 'url(/img/memorial-hero.png)' }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-deep-space/50 via-deep-space/80 to-deep-space" />
         </div>
@@ -479,7 +465,7 @@ export default function MyStoryPage() {
         {/* Background Image */}
         <div
           className="absolute inset-0 bg-cover bg-center opacity-10"
-          style={{ backgroundImage: 'url(/img/TrueStory2.png)' }}
+          style={{ backgroundImage: 'url(/img/memorial-family.png)' }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-deep-space via-deep-space/95 to-deep-space" />
 
@@ -640,7 +626,7 @@ export default function MyStoryPage() {
         {/* Background Image */}
         <div
           className="absolute inset-0 bg-cover bg-center opacity-5"
-          style={{ backgroundImage: 'url(/img/TrueStory3.png)' }}
+          style={{ backgroundImage: 'url(/img/community-group.png)' }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-deep-space via-amber-500/5 to-deep-space" />
 
@@ -772,7 +758,7 @@ export default function MyStoryPage() {
         {/* Background Image */}
         <div
           className="absolute inset-0 bg-cover bg-center opacity-15"
-          style={{ backgroundImage: 'url(/img/TrueStory4.png)' }}
+          style={{ backgroundImage: 'url(/img/october7.png)' }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/90 to-deep-space" />
 

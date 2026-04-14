@@ -9,7 +9,7 @@ import _loginSideImageLegacy from '../assets/images/login-side-image.png';
 import _logoIconLegacy from '../assets/images/logo-icon.png';
 
 // Use new realistic images from public folder
-const loginSideImage = '/img/login-side.png';
+const loginSideImage = '/img/memorial-family.png';
 const logoIcon = '/img/logo-glow.png';
 
 export default function LoginPage() {
@@ -80,7 +80,7 @@ export default function LoginPage() {
                   delay: i * 0.3,
                 }}
               >
-                <Sparkles className="w-6 h-6 text-magic-gold" />
+                <Sparkles className="w-6 h-6 text-memorial-gold" />
               </motion.div>
             ))}
           </div>

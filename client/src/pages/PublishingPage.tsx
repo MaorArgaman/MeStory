@@ -58,17 +58,16 @@ interface BookData {
   };
 }
 
+// Memorial book categories - קטגוריות ספרי הנצחה
 const GENRE_CATEGORIES = [
-  'Fantasy',
-  'Sci-Fi',
-  'Romance',
-  'Mystery',
-  'Thriller',
-  'Horror',
-  'Historical',
-  'Literary Fiction',
-  'Young Adult',
-  'Adventure',
+  'fallen_soldier',
+  'life_story',
+  'family_legacy',
+  'tribute',
+  'holocaust_survivor',
+  'shared_memories',
+  'letters_and_words',
+  'testimony',
 ];
 
 export default function PublishingPage() {

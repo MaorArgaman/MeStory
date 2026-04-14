@@ -18,7 +18,7 @@ export default function AdminCheck({ children }: AdminCheckProps) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-deep-space">
         <div className="text-center">
-          <Shield className="w-16 h-16 text-magic-gold mx-auto mb-4 animate-pulse" />
+          <Shield className="w-16 h-16 text-memorial-gold mx-auto mb-4 animate-pulse" />
           <p className="text-gray-300 text-lg">Verifying admin access...</p>
         </div>
       </div>

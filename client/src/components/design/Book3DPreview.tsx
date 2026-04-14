@@ -294,7 +294,7 @@ export default function Book3DPreview({
                 left: `${titlePosition.x}%`,
                 top: `${titlePosition.y}%`,
                 transform: 'translate(-50%, -50%)',
-                maxWidth: '80%',
+                maxWidth: '85%',
               }}
               onMouseDown={handleTitleMouseDown}
               onTouchStart={handleTitleTouchStart}
@@ -302,13 +302,17 @@ export default function Book3DPreview({
               <h1
                 style={{
                   fontFamily: fontFamily,
-                  fontSize: '32px',
+                  fontSize: title.length > 30 ? '16px' : title.length > 20 ? '20px' : '26px',
                   fontWeight: 'bold',
                   color: textColor,
                   textShadow: '2px 2px 8px rgba(0,0,0,0.8)',
-                  lineHeight: '1.2',
-                  wordWrap: 'break-word',
+                  lineHeight: '1.3',
                   textAlign: 'center',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 4,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  wordBreak: 'keep-all',
                 }}
               >
                 {title || 'Book Title'}

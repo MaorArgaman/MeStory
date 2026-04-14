@@ -25,7 +25,7 @@ export function DefinitionList({ title, definitions, className = '' }: Definitio
       <dl className="space-y-4">
         {definitions.map((item, index) => (
           <div key={index} className="border-b border-white/10 pb-3 last:border-0">
-            <dt className="font-medium text-magic-gold mb-1">{item.term}</dt>
+            <dt className="font-medium text-memorial-gold mb-1">{item.term}</dt>
             <dd className="text-gray-300 text-sm leading-relaxed">{item.definition}</dd>
           </div>
         ))}
@@ -99,7 +99,7 @@ export function PricingComparisonTable({ className = '' }: PricingComparisonTabl
               {isHebrew ? 'תכונה' : 'Feature'}
             </th>
             <th className="p-3 text-center text-white font-semibold">{plans.free}</th>
-            <th className="p-3 text-center text-magic-gold font-semibold">{plans.pro}</th>
+            <th className="p-3 text-center text-memorial-gold font-semibold">{plans.pro}</th>
             <th className="p-3 text-center text-cosmic-purple font-semibold">{plans.premium}</th>
           </tr>
         </thead>
@@ -169,7 +169,7 @@ export function KeyFactsBox({ title, facts, className = '' }: KeyFactsBoxProps) 
         {facts.map((fact, index) => (
           <div key={index} className="flex flex-col">
             <dt className="text-xs text-gray-500 uppercase">{fact.label}</dt>
-            <dd className="text-lg font-semibold text-magic-gold">{fact.value}</dd>
+            <dd className="text-lg font-semibold text-memorial-gold">{fact.value}</dd>
           </div>
         ))}
       </dl>

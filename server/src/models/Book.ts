@@ -2,6 +2,11 @@ import { supabaseAdmin } from '../config/supabase';
 import crypto from 'crypto';
 const uuidv4 = () => crypto.randomUUID();
 
+// Helper function to convert camelCase to snake_case
+const camelToSnake = (str: string): string => {
+  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+};
+
 // Chapter Audio interface - supports both languages and both genders
 export interface IAudioTrack {
   url: string;
@@ -350,6 +355,54 @@ export interface IMention {
   addedAt: string;
 }
 
+// ===== COLLABORATIVE BOOK INTERFACES =====
+
+// Collaborator role and status
+export type CollaboratorRole = 'owner' | 'editor' | 'contributor';
+export type CollaboratorStatus = 'pending' | 'active' | 'completed' | 'declined';
+export type InvitationStatus = 'pending' | 'accepted' | 'declined' | 'expired';
+
+// Collaborator interface - someone contributing to a memorial book
+export interface ICollaborator {
+  id: string;
+  userId?: string;  // Set when they accept and have an account
+  email: string;
+  name: string;
+  role: CollaboratorRole;
+  relationship: string;  // "אח", "חבר", "מפקד", etc.
+  assignedChapters: string[];  // Chapter IDs they can edit
+  contributedChapters: string[];  // Chapters they wrote
+  status: CollaboratorStatus;
+  joinedAt?: string;
+  completedAt?: string;
+  invitedAt: string;
+  invitedBy: string;  // User ID of who invited them
+}
+
+// Invitation to join a collaborative book
+export interface IBookInvitation {
+  id: string;
+  email: string;
+  name: string;
+  relationship: string;
+  personalMessage?: string;
+  token: string;  // Unique token for invitation link
+  status: InvitationStatus;
+  expiresAt: string;
+  createdAt: string;
+  respondedAt?: string;
+}
+
+// Memorial book dedication - who the book is for
+export interface IMemorialDedication {
+  name: string;  // Name of the person being memorialized
+  relationship: string;  // Creator's relationship to them
+  birthDate?: string;
+  passingDate?: string;
+  photoUrl?: string;
+  shortBio?: string;
+}
+
 // Translated chapter interface
 export interface ITranslatedChapter {
   _id: string;
@@ -381,7 +434,7 @@ export interface IBook {
   author: string;
   genre: string;
   writingGoal?: 'short-story' | 'novella' | 'novel';
-  targetAudience?: 'children' | 'young-adult' | 'adult' | 'all-ages';
+  targetAudience?: 'children' | 'young-adult' | 'adult' | 'all-ages' | 'family' | 'friends' | 'community' | 'public';
   description?: string;
   synopsis?: string;
   storyContext?: IStoryContext;
@@ -404,6 +457,14 @@ export interface IBook {
   likedBy: string[];
   reviews: IReview[];
   mentions?: IMention[];
+
+  // ===== COLLABORATIVE BOOK FIELDS =====
+  isCollaborative?: boolean;
+  collaborators?: ICollaborator[];
+  invitations?: IBookInvitation[];
+  memorialDedication?: IMemorialDedication;
+  bookType?: 'personal' | 'collaborative' | 'memorial';
+
   created_at: string;
   updated_at: string;
   createdAt?: string;
@@ -439,6 +500,12 @@ interface BookRow {
   liked_by: string[];
   reviews: IReview[];
   mentions: IMention[];
+  // Collaborative book fields
+  is_collaborative: boolean | null;
+  collaborators: ICollaborator[] | null;
+  invitations: IBookInvitation[] | null;
+  memorial_dedication: IMemorialDedication | null;
+  book_type: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -474,6 +541,12 @@ function rowToBook(row: BookRow): IBook {
     likedBy: row.liked_by || [],
     reviews: row.reviews || [],
     mentions: row.mentions || [],
+    // Collaborative book fields
+    isCollaborative: row.is_collaborative || false,
+    collaborators: row.collaborators || [],
+    invitations: row.invitations || [],
+    memorialDedication: row.memorial_dedication || undefined,
+    bookType: row.book_type as IBook['bookType'] || 'personal',
     created_at: row.created_at,
     updated_at: row.updated_at,
     createdAt: row.created_at,
@@ -541,12 +614,11 @@ export class Book {
       publishing_status: bookData.publishingStatus || { status: 'draft', price: 0, isFree: true, isPublic: false },
       statistics: bookData.statistics || { wordCount: 0, pageCount: 0, chapterCount: 0, characterCount: 0, views: 0, purchases: 0, revenue: 0, totalReviews: 0, shares: 0, comments: 0 },
       tags: bookData.tags || [],
-      language: bookData.language || 'en',
+      language: bookData.language || 'he',  // Default to Hebrew for memorial books
       age_rating: bookData.ageRating || null,
       likes: bookData.likes || 0,
       liked_by: bookData.likedBy || [],
       reviews: bookData.reviews || [],
-      mentions: bookData.mentions || [],
       created_at: now,
       updated_at: now,
     };
@@ -696,18 +768,9 @@ export class Book {
     if (query._sort) {
       const sortField = camelToSnake(query._sort);
       queryBuilder = queryBuilder.order(sortField, { ascending: query._order !== 'desc' });
-    } else {
-      queryBuilder = queryBuilder.order('created_at', { ascending: false });
     }
 
-    // Handle pagination
-    if (query._limit) {
-      queryBuilder = queryBuilder.limit(query._limit);
-    }
-    if (query._skip) {
-      queryBuilder = queryBuilder.range(query._skip, query._skip + (query._limit || 10) - 1);
-    }
-
+    // Execute query
     const { data, error } = await queryBuilder;
 
     if (error) {
@@ -715,7 +778,26 @@ export class Book {
       return [];
     }
 
-    return (data || []).map(row => rowToBook(row as BookRow));
+    return (data || []).map((row: any) => rowToBook(row));
+  }
+
+  // Find multiple books by IDs efficiently
+  static async findByIds(ids: string[]): Promise<IBook[]> {
+    if (!ids || ids.length === 0) {
+      return [];
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('books')
+      .select('*')
+      .in('id', ids);
+
+    if (error) {
+      console.error('Error finding books by IDs:', error);
+      return [];
+    }
+
+    return (data || []).map((row: any) => rowToBook(row));
   }
 
   // Count books
@@ -724,76 +806,108 @@ export class Book {
       .from('books')
       .select('id', { count: 'exact', head: true });
 
-    if (query.author) {
-      queryBuilder = queryBuilder.eq('author_id', query.author);
+    if (query.authorId) {
+      queryBuilder = (queryBuilder as any).eq('author_id', query.authorId);
     }
     if (query['publishingStatus.status']) {
-      queryBuilder = queryBuilder.filter('publishing_status->>status', 'eq', query['publishingStatus.status']);
+      queryBuilder = (queryBuilder as any).eq('publishing_status->>status', query['publishingStatus.status']);
     }
 
     const { count, error } = await queryBuilder;
-
-    if (error) {
-      console.error('Error counting books:', error);
-      return 0;
-    }
-
+    if (error) return 0;
     return count || 0;
   }
 
-  // Populate author data
-  static async populate(book: IBook, field: string): Promise<IBook & { author: any }> {
-    if (field === 'author') {
-      const { data } = await supabaseAdmin
-        .from('users')
-        .select('id, name, email, profile')
-        .eq('id', book.author)
-        .single();
+  // Find books where user is a collaborator - efficient JSONB query
+  static async findByCollaboratorId(userId: string): Promise<IBook[]> {
+    if (!userId) return [];
 
-      return {
-        ...book,
-        author: data || { id: book.author, name: 'Unknown' },
-      } as IBook & { author: any };
+    const { data, error } = await supabaseAdmin
+      .from('books')
+      .select('*')
+      .eq('is_collaborative', true)
+      .contains('collaborators', JSON.stringify([{ userId }]));
+
+    if (error) {
+      console.error('Error finding books by collaborator:', error);
+      // Fallback: try broader search with filter
+      const { data: fallbackData, error: fallbackError } = await supabaseAdmin
+        .from('books')
+        .select('*')
+        .eq('is_collaborative', true);
+
+      if (fallbackError) {
+        console.error('Fallback query also failed:', fallbackError);
+        return [];
+      }
+
+      // Filter in code as fallback
+      return (fallbackData || [])
+        .filter((row: any) => {
+          const collaborators = row.collaborators || [];
+          return collaborators.some((c: any) => c.userId === userId);
+        })
+        .map((row: any) => rowToBook(row));
     }
-    return book as IBook & { author: any };
+
+    return (data || []).map((row: any) => rowToBook(row));
   }
 
-  // Update statistics helper
-  static calculateStatistics(book: Partial<IBook>): Partial<IStatistics> {
-    const chapters = book.chapters || [];
-    const characters = book.characters || [];
+  // Find books with pending invitations for a specific email - efficient JSONB query
+  static async findByPendingInvitationEmail(email: string): Promise<IBook[]> {
+    if (!email) return [];
 
-    const wordCount = chapters.reduce((total, chapter) => total + (chapter.wordCount || 0), 0);
-    let pageCount = Math.ceil(wordCount / 250);
+    // Note: Supabase JSONB @> (contains) works for exact object match
+    // For email filter in array of objects, we need to use raw SQL or filter in code
+    // For now, we'll use a more targeted query with limited results
+    const { data, error } = await supabaseAdmin
+      .from('books')
+      .select('id, title, invitations, memorial_dedication')
+      .not('invitations', 'is', null);
 
-    // Ensure page count is divisible by 4 for binding
-    const remainder = pageCount % 4;
-    if (remainder !== 0) {
-      pageCount += 4 - remainder;
+    if (error) {
+      console.error('Error finding books by invitation:', error);
+      return [];
     }
 
-    return {
-      chapterCount: chapters.length,
-      characterCount: characters.length,
-      wordCount,
-      pageCount,
-      readingTime: Math.ceil(wordCount / 250),
-    };
+    // Filter in code for exact email match in pending invitations
+    // This is still more efficient than loading full book data for all books
+    const matchingBooks = (data || []).filter((row: any) => {
+      const invitations = row.invitations || [];
+      return invitations.some((inv: any) => inv.email === email && inv.status === 'pending');
+    });
+
+    // Load full book data only for matching books
+    if (matchingBooks.length === 0) return [];
+
+    const bookIds = matchingBooks.map((b: any) => b.id);
+    return Book.findByIds(bookIds);
   }
 
-  // Virtual getters
-  static isPublished(book: IBook): boolean {
-    return book.publishingStatus.status === 'published' && book.publishingStatus.isPublic;
-  }
+  // Find a book by invitation token - efficient query
+  static async findByInvitationToken(token: string): Promise<IBook | null> {
+    if (!token) return null;
 
-  static formattedPrice(book: IBook): string {
-    return book.publishingStatus.isFree ? 'Free' : `$${book.publishingStatus.price}`;
+    // Query books that have invitations, selecting only needed fields for filtering
+    const { data, error } = await supabaseAdmin
+      .from('books')
+      .select('id, invitations')
+      .not('invitations', 'is', null);
+
+    if (error) {
+      console.error('Error finding book by invitation token:', error);
+      return null;
+    }
+
+    // Find the book with matching invitation token
+    const matchingBook = (data || []).find((row: any) => {
+      const invitations = row.invitations || [];
+      return invitations.some((inv: any) => inv.token === token);
+    });
+
+    if (!matchingBook) return null;
+
+    // Load full book data for the matching book
+    return Book.findById(matchingBook.id);
   }
 }
-
-// Helper to convert camelCase to snake_case
-function camelToSnake(str: string): string {
-  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-}
-
-export default Book;

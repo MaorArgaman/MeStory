@@ -9,6 +9,7 @@ import {
   purchaseBook,
   exportBookPDF,
   getPublicBooks,
+  getPublicBookById,
   likeBook,
   addReview,
   updateReview,
@@ -49,6 +50,9 @@ const router = Router();
 // Public routes (no authentication required)
 // GET /api/books/public - Get all published books for marketplace
 router.get('/public', getPublicBooks as any);
+
+// GET /api/books/public/:id - Get a single published book by ID
+router.get('/public/:id', runValidation(mongoIdValidation), getPublicBookById as any);
 
 // GET /api/books/:id/reviews - Get all reviews for a book
 router.get('/:id/reviews', runValidation(mongoIdValidation), getBookReviews as any);

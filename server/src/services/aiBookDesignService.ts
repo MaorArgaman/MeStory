@@ -514,7 +514,17 @@ Respond with ONLY valid JSON:
       throw new Error('Invalid response format');
     }
 
-    return JSON.parse(jsonMatch[0]) as CoverDesign;
+    const aiDesign = JSON.parse(jsonMatch[0]) as CoverDesign;
+
+    // IMPORTANT: Override AI-generated text with actual book data to ensure consistency
+    // The AI might generate shortened/modified versions of the title/author
+    aiDesign.front.title.text = input.title;
+    aiDesign.front.author.text = input.authorName;
+    aiDesign.back.author.text = input.authorName;
+    aiDesign.spine.title = input.title;
+    aiDesign.spine.author = input.authorName;
+
+    return aiDesign;
   } catch (error) {
     console.error('Cover design generation error:', error);
     // Return default cover design

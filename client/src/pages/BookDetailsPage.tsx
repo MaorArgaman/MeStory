@@ -98,7 +98,7 @@ export default function BookDetailsPage() {
     const loadBook = async () => {
       try {
         setLoading(true);
-        const response = await api.get(`/books/${id}`, {
+        const response = await api.get(`/books/public/${id}`, {
           signal: abortController.signal,
         });
         if (response.data.success) {
@@ -144,7 +144,7 @@ export default function BookDetailsPage() {
   // Separate reload function for use after submitting reviews
   const reloadBook = useCallback(async () => {
     try {
-      const response = await api.get(`/books/${id}`);
+      const response = await api.get(`/books/public/${id}`);
       if (response.data.success) {
         const bookData = response.data.data;
         setBook(bookData);
@@ -222,7 +222,7 @@ export default function BookDetailsPage() {
   const handleReadOrBuy = () => {
     if (!book) return;
 
-    if (book.publishingStatus.isFree) {
+    if (book.publishingStatus?.isFree) {
       window.location.href = `/read/${book._id}`;
     } else {
       // Show confirmation modal for paid books
@@ -292,7 +292,7 @@ export default function BookDetailsPage() {
     return (
       <div className="min-h-screen pt-32 flex items-center justify-center">
         <div className="text-center">
-          <BookOpen className="w-16 h-16 text-magic-gold mx-auto mb-4 animate-pulse" />
+          <BookOpen className="w-16 h-16 text-memorial-gold mx-auto mb-4 animate-pulse" />
           <p className="text-gray-300 text-lg">{t('book_details.loading')}</p>
         </div>
       </div>
@@ -320,30 +320,30 @@ export default function BookDetailsPage() {
 
       <SEO
         title={book.title}
-        description={book.synopsis || `Read "${book.title}" by ${book.author.name} on MeStory`}
+        description={book.synopsis || `Read "${book.title}" by ${book.author?.name || 'Unknown'} on MeStory`}
         type="book"
         image={coverImage}
         locale={language === 'he' ? 'he_IL' : 'en_US'}
         url={`/book/${book._id}`}
-        author={book.author.name}
+        author={book.author?.name || 'Unknown'}
         publishedTime={book.createdAt}
       />
       <BookSchema
         title={book.title}
         description={book.synopsis}
         author={{
-          name: book.author.name,
-          url: `/profile/${book.author._id}`,
+          name: book.author?.name || 'Unknown',
+          url: book.author?._id ? `/profile/${book.author._id}` : '#',
         }}
         image={coverImage}
         datePublished={book.createdAt}
         genre={book.genre ? [book.genre] : undefined}
-        numberOfPages={book.statistics.pageCount}
+        numberOfPages={book.statistics?.pageCount}
         inLanguage={language === 'he' ? 'he' : 'en'}
-        price={book.publishingStatus.isFree ? undefined : book.publishingStatus.price}
+        price={book.publishingStatus?.isFree ? undefined : book.publishingStatus?.price}
         currency="USD"
         url={`/book/${book._id}`}
-        rating={book.statistics.averageRating && book.statistics.totalReviews ? {
+        rating={book.statistics?.averageRating && book.statistics?.totalReviews ? {
           value: book.statistics.averageRating,
           count: book.statistics.totalReviews,
         } : undefined}
@@ -357,8 +357,8 @@ export default function BookDetailsPage() {
         isProcessing={isPurchasing}
         type="book"
         bookTitle={book.title}
-        bookAuthor={book.author.name}
-        bookPrice={book.publishingStatus.price}
+        bookAuthor={book.author?.name || 'Unknown'}
+        bookPrice={book.publishingStatus?.price || 0}
         bookCover={coverImage}
       />
 
@@ -417,7 +417,7 @@ export default function BookDetailsPage() {
                   className="absolute -top-2 -right-2 sm:-top-4 sm:-right-4"
                 >
                   <div className="relative">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-memorial-gold to-yellow-600 flex items-center justify-center shadow-glow-gold">
                       <div className="text-center">
                         <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-deep-space mx-auto mb-1" />
                         <p className="text-[10px] sm:text-xs font-bold text-deep-space">
@@ -451,14 +451,14 @@ export default function BookDetailsPage() {
 
             {/* Author */}
             <Link
-              to={`/profile/${book.author._id}`}
+              to={book.author?._id ? `/profile/${book.author._id}` : '#'}
               className="flex items-center gap-3 mb-6 group w-fit"
             >
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold overflow-hidden">
-                {book.author.profile?.avatar ? (
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-memorial-gold to-yellow-600 flex items-center justify-center shadow-glow-gold overflow-hidden">
+                {book.author?.profile?.avatar ? (
                   <OptimizedImage
-                    src={book.author.profile.avatar}
-                    alt={getAuthorProfileAlt(book.author.name)}
+                    src={book.author?.profile?.avatar}
+                    alt={getAuthorProfileAlt(book.author?.name || 'Author')}
                     lazy={false}
                     className="w-full h-full object-cover"
                   />
@@ -468,8 +468,8 @@ export default function BookDetailsPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-400">{t('book_details.written_by')}</p>
-                <p className="text-xl font-semibold text-white group-hover:text-magic-gold transition-colors">
-                  {book.author.name}
+                <p className="text-xl font-semibold text-white group-hover:text-memorial-gold transition-colors">
+                  {book.author?.name || 'Unknown Author'}
                 </p>
               </div>
             </Link>
@@ -477,14 +477,14 @@ export default function BookDetailsPage() {
             {/* Stats Row */}
             <div className="flex flex-wrap gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
               {/* Rating */}
-              {book.statistics.averageRating && (
+              {book.statistics?.averageRating && (
                 <div className="flex items-center gap-2">
-                  <Star className="w-5 h-5 text-magic-gold fill-magic-gold" />
+                  <Star className="w-5 h-5 text-memorial-gold fill-memorial-gold" />
                   <span className="text-white font-semibold">
                     {book.statistics.averageRating.toFixed(1)}
                   </span>
                   <span className="text-gray-400 text-sm">
-                    ({book.statistics.totalReviews} {t('book_details.reviews.title')})
+                    ({book.statistics?.totalReviews || 0} {t('book_details.reviews.title')})
                   </span>
                 </div>
               )}
@@ -492,14 +492,14 @@ export default function BookDetailsPage() {
               {/* Views */}
               <div className="flex items-center gap-2">
                 <Eye className="w-5 h-5 text-gray-400" />
-                <span className="text-gray-300">{book.statistics.views} {t('book_details.views')}</span>
+                <span className="text-gray-300">{book.statistics?.views || 0} {t('book_details.views')}</span>
               </div>
 
               {/* Word Count */}
               <div className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-gray-400" />
                 <span className="text-gray-300">
-                  {book.statistics.wordCount.toLocaleString()} {t('book_details.words')}
+                  {(book.statistics?.wordCount || 0).toLocaleString()} {t('book_details.words')}
                 </span>
               </div>
             </div>
@@ -521,9 +521,9 @@ export default function BookDetailsPage() {
                 ) : (
                   <>
                     <BookOpen className="w-5 h-5" />
-                    {book.publishingStatus.isFree
+                    {book.publishingStatus?.isFree
                       ? t('book_details.read_now')
-                      : t('book_details.buy_for', { price: formatCurrency(book.publishingStatus.price) })}
+                      : t('book_details.buy_for', { price: formatCurrency(book.publishingStatus?.price || 0) })}
                   </>
                 )}
               </GlowingButton>
@@ -553,18 +553,20 @@ export default function BookDetailsPage() {
             </div>
 
             {/* Published Date */}
-            <div className="flex items-center gap-2 text-gray-400 text-sm">
-              <Calendar className="w-4 h-4" />
-              <span>
-                {t('book_details.published_on', {
-                  date: new Date(book.createdAt).toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })
-                })}
-              </span>
-            </div>
+            {book.createdAt && !isNaN(new Date(book.createdAt).getTime()) && (
+              <div className="flex items-center gap-2 text-gray-400 text-sm">
+                <Calendar className="w-4 h-4" />
+                <span>
+                  {t('book_details.published_on', {
+                    date: new Date(book.createdAt).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })
+                  })}
+                </span>
+              </div>
+            )}
           </motion.div>
         </div>
 
@@ -577,7 +579,7 @@ export default function BookDetailsPage() {
             className="mb-16"
           >
             <GlassCard>
-              <h2 className="text-3xl font-display font-bold text-magic-gold mb-6">
+              <h2 className="text-3xl font-display font-bold text-memorial-gold mb-6">
                 {t('book_details.synopsis')}
               </h2>
               <p className="text-gray-300 text-lg leading-relaxed whitespace-pre-line">
@@ -595,12 +597,12 @@ export default function BookDetailsPage() {
         >
           <GlassCard>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-display font-bold text-magic-gold flex items-center gap-3">
+              <h2 className="text-3xl font-display font-bold text-memorial-gold flex items-center gap-3">
                 <MessageCircle className="w-8 h-8" />
-                {t('book_details.reviews_section')} ({book.statistics.totalReviews})
+                {t('book_details.reviews_section')} ({book.statistics?.totalReviews || 0})
               </h2>
 
-              {user && !book.reviews.some((r) => r.user === user._id) && (
+              {user && !book.reviews?.some((r) => r.user === user._id) && (
                 <GlowingButton
                   variant="cosmic"
                   size="md"
@@ -635,7 +637,7 @@ export default function BookDetailsPage() {
                             whileHover={{ scale: 1.2 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setReviewRating(star)}
-                            className="focus:outline-none focus:ring-2 focus:ring-magic-gold focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
+                            className="focus:outline-none focus:ring-2 focus:ring-memorial-gold focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
                             aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
                             aria-checked={reviewRating === star}
                             role="radio"
@@ -643,7 +645,7 @@ export default function BookDetailsPage() {
                             <Star
                               className={`w-8 h-8 transition-all ${
                                 star <= reviewRating
-                                  ? 'fill-magic-gold text-magic-gold'
+                                  ? 'fill-memorial-gold text-memorial-gold'
                                   : 'text-gray-600 hover:text-gray-400'
                               }`}
                             />
@@ -659,7 +661,7 @@ export default function BookDetailsPage() {
                         value={reviewComment}
                         onChange={(e) => setReviewComment(e.target.value)}
                         placeholder={t('book_details.reviews.comment_placeholder')}
-                        className="w-full h-32 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-magic-gold/50 focus:shadow-glow-gold transition-all resize-none"
+                        className="w-full h-32 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-memorial-gold/50 focus:shadow-glow-gold transition-all resize-none"
                         maxLength={1000}
                       />
                       <p className="text-xs text-gray-500 mt-1">
@@ -699,7 +701,7 @@ export default function BookDetailsPage() {
 
             {/* Reviews List */}
             <div className="space-y-6">
-              {book.reviews.length === 0 ? (
+              {!book.reviews || book.reviews.length === 0 ? (
                 <div className="text-center py-12">
                   <MessageCircle className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                   <p className="text-gray-400">
@@ -734,7 +736,7 @@ export default function BookDetailsPage() {
                             key={star}
                             className={`w-4 h-4 ${
                               star <= review.rating
-                                ? 'fill-magic-gold text-magic-gold'
+                                ? 'fill-memorial-gold text-memorial-gold'
                                 : 'text-gray-600'
                             }`}
                           />

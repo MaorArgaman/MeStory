@@ -156,7 +156,7 @@ export default function EmailVerificationModal({
           aria-modal="true"
         >
           {/* Header */}
-          <div className="relative p-2 sm:p-6 bg-gradient-to-br from-magic-gold/20 to-yellow-500/10 border-b border-white/10">
+          <div className="relative p-2 sm:p-6 bg-gradient-to-br from-memorial-gold/20 to-yellow-500/10 border-b border-white/10">
             <button
               onClick={onClose}
               className="absolute top-4 left-4 p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
@@ -165,12 +165,12 @@ export default function EmailVerificationModal({
             </button>
 
             <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-magic-gold/30 to-yellow-500/20 flex items-center justify-center">
-                <Mail className="w-8 h-8 text-magic-gold" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-memorial-gold/30 to-yellow-500/20 flex items-center justify-center">
+                <Mail className="w-8 h-8 text-memorial-gold" />
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">Verify Your Email</h2>
               <p className="text-gray-400 text-sm">
-                We sent a verification code to <span className="text-magic-gold">{email}</span>
+                We sent a verification code to <span className="text-memorial-gold">{email}</span>
               </p>
             </div>
           </div>
@@ -198,10 +198,10 @@ export default function EmailVerificationModal({
                       ${error
                         ? 'border-red-500 bg-red-500/10'
                         : digit
-                        ? 'border-magic-gold bg-magic-gold/10 text-magic-gold'
+                        ? 'border-memorial-gold bg-memorial-gold/10 text-memorial-gold'
                         : 'border-white/20 bg-white/5 text-white'
                       }
-                      focus:outline-none focus:border-magic-gold focus:ring-2 focus:ring-magic-gold/20
+                      focus:outline-none focus:border-memorial-gold focus:ring-2 focus:ring-memorial-gold/20
                       disabled:opacity-50 disabled:cursor-not-allowed`}
                   />
                 ))}
@@ -224,7 +224,7 @@ export default function EmailVerificationModal({
             <button
               onClick={() => handleVerify(code.join(''))}
               disabled={isVerifying || code.some((d) => !d)}
-              className="w-full py-3 px-4 rounded-xl font-bold text-deep-space bg-gradient-to-r from-magic-gold to-yellow-500 hover:from-yellow-500 hover:to-magic-gold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 px-4 rounded-xl font-bold text-deep-space bg-gradient-to-r from-memorial-gold to-yellow-500 hover:from-yellow-500 hover:to-memorial-gold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isVerifying ? (
                 <>
@@ -245,7 +245,7 @@ export default function EmailVerificationModal({
               <button
                 onClick={handleResend}
                 disabled={isResending || countdown > 0}
-                className="text-magic-gold hover:text-yellow-400 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto"
+                className="text-memorial-gold hover:text-yellow-400 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto"
               >
                 {isResending ? (
                   <>

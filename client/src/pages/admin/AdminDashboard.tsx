@@ -30,6 +30,8 @@ import { api } from '../../services/api';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton } from '../../components/ui';
+import OrganizationsManager from '../../components/admin/OrganizationsManager';
+import { Building2 } from 'lucide-react';
 
 interface Stats {
   overview: {
@@ -173,7 +175,7 @@ interface DetailedRevenueAnalytics {
   }>;
 }
 
-type Tab = 'overview' | 'users' | 'content' | 'analytics' | 'revenue';
+type Tab = 'overview' | 'users' | 'content' | 'analytics' | 'revenue' | 'organizations';
 
 export default function AdminDashboard() {
   const { formatCurrency, formatCurrencyCompact } = useCurrency();
@@ -405,7 +407,7 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen pt-32 flex items-center justify-center">
         <div className="text-center">
-          <Shield className="w-16 h-16 text-magic-gold mx-auto mb-4 animate-pulse" />
+          <Shield className="w-16 h-16 text-memorial-gold mx-auto mb-4 animate-pulse" />
           <p className="text-gray-300 text-lg">Loading admin dashboard...</p>
         </div>
       </div>
@@ -418,7 +420,7 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-memorial-gold to-yellow-600 flex items-center justify-center">
               <Shield className="w-6 h-6 text-deep-space" />
             </div>
             <div>
@@ -433,6 +435,7 @@ export default function AdminDashboard() {
           {[
             { id: 'overview' as Tab, label: 'Overview', icon: Activity },
             { id: 'users' as Tab, label: 'Users', icon: Users },
+            { id: 'organizations' as Tab, label: 'Organizations', icon: Building2 },
             { id: 'content' as Tab, label: 'Content Moderation', icon: AlertCircle },
             { id: 'analytics' as Tab, label: 'Analytics', icon: BarChart3 },
             { id: 'revenue' as Tab, label: 'Revenue', icon: Wallet },
@@ -452,7 +455,7 @@ export default function AdminDashboard() {
                 {activeTab === tab.id && (
                   <motion.div
                     layoutId="activeAdminTab"
-                    className="absolute inset-0 bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 border border-magic-gold/30 rounded-xl shadow-glow-gold"
+                    className="absolute inset-0 bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 border border-memorial-gold/30 rounded-xl shadow-glow-gold"
                   />
                 )}
                 <Icon className="w-5 h-5 relative z-10" />
@@ -482,7 +485,7 @@ export default function AdminDashboard() {
                       +{stats.overview.recentSignups} this week
                     </p>
                   </div>
-                  <Users className="w-8 h-8 text-magic-gold" />
+                  <Users className="w-8 h-8 text-memorial-gold" />
                 </div>
               </GlassCard>
 
@@ -534,7 +537,7 @@ export default function AdminDashboard() {
                   <h3 className="text-xl font-display font-bold text-white">
                     Signups (Last 30 Days)
                   </h3>
-                  <TrendingUp className="w-5 h-5 text-magic-gold" />
+                  <TrendingUp className="w-5 h-5 text-memorial-gold" />
                 </div>
                 <div className="h-64 flex items-end justify-between gap-2">
                   {stats.signupTrend.slice(-15).map((day, index) => {
@@ -547,7 +550,7 @@ export default function AdminDashboard() {
                           initial={{ height: 0 }}
                           animate={{ height: `${height}%` }}
                           transition={{ delay: index * 0.05 }}
-                          className="w-full bg-gradient-to-t from-magic-gold to-yellow-600 rounded-t-lg min-h-[20px]"
+                          className="w-full bg-gradient-to-t from-memorial-gold to-yellow-600 rounded-t-lg min-h-[20px]"
                           title={`${day._id}: ${day.count} signups`}
                         />
                         <span className="text-xs text-gray-400">
@@ -608,7 +611,7 @@ export default function AdminDashboard() {
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${(stats.users.premium / stats.users.total) * 100}%` }}
-                        className="h-full bg-gradient-to-r from-magic-gold to-yellow-600"
+                        className="h-full bg-gradient-to-r from-memorial-gold to-yellow-600"
                       />
                     </div>
                   </div>
@@ -628,7 +631,7 @@ export default function AdminDashboard() {
                     className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="text-2xl font-bold text-magic-gold">#{index + 1}</div>
+                      <div className="text-2xl font-bold text-memorial-gold">#{index + 1}</div>
                       <div>
                         <div className="font-semibold text-white">{author.authorName}</div>
                         <div className="text-sm text-gray-400">
@@ -708,7 +711,7 @@ export default function AdminDashboard() {
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-semibold ${
                               user.role === 'premium'
-                                ? 'bg-gradient-to-r from-magic-gold to-yellow-600 text-deep-space'
+                                ? 'bg-gradient-to-r from-memorial-gold to-yellow-600 text-deep-space'
                                 : user.role === 'standard'
                                 ? 'bg-cosmic-purple/20 text-cosmic-purple'
                                 : user.role === 'admin'
@@ -729,7 +732,7 @@ export default function AdminDashboard() {
                               <button
                                 type="button"
                                 onClick={() => handlePromoteUser(user._id, 'premium')}
-                                className="p-2 rounded-lg bg-magic-gold/20 text-magic-gold hover:bg-magic-gold/30 transition"
+                                className="p-2 rounded-lg bg-memorial-gold/20 text-memorial-gold hover:bg-memorial-gold/30 transition"
                                 title="Promote to Premium"
                               >
                                 <Crown className="w-4 h-4" />
@@ -906,7 +909,7 @@ export default function AdminDashboard() {
                       </p>
                       <p className="text-xs text-gray-400 mt-1">Last 24 hours</p>
                     </div>
-                    <Users className="w-8 h-8 text-magic-gold" />
+                    <Users className="w-8 h-8 text-memorial-gold" />
                   </div>
                 </GlassCard>
               </div>
@@ -921,12 +924,12 @@ export default function AdminDashboard() {
                     <h3 className="text-xl font-display font-bold text-white">
                       Revenue Breakdown
                     </h3>
-                    <PieChart className="w-5 h-5 text-magic-gold" />
+                    <PieChart className="w-5 h-5 text-memorial-gold" />
                   </div>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 rounded-full bg-magic-gold" />
+                        <div className="w-3 h-3 rounded-full bg-memorial-gold" />
                         <span className="text-gray-300">Subscriptions</span>
                       </div>
                       <span className="text-white font-bold">
@@ -976,14 +979,14 @@ export default function AdminDashboard() {
                     <h3 className="text-xl font-display font-bold text-white">
                       Lifetime Value by Segment
                     </h3>
-                    <TrendingUp className="w-5 h-5 text-magic-gold" />
+                    <TrendingUp className="w-5 h-5 text-memorial-gold" />
                   </div>
                   <div className="space-y-4">
                     {ltvSegments.map((segment, index) => (
                       <div key={index} className="p-4 bg-white/5 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-white font-semibold capitalize">{segment.segment}</span>
-                          <span className="text-magic-gold font-bold">
+                          <span className="text-memorial-gold font-bold">
                             {formatCurrency(segment.averageLTV || 0)}
                           </span>
                         </div>
@@ -995,7 +998,7 @@ export default function AdminDashboard() {
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${Math.min((segment.averageLTV / 100) * 100, 100)}%` }}
-                            className="h-full bg-gradient-to-r from-magic-gold to-yellow-600"
+                            className="h-full bg-gradient-to-r from-memorial-gold to-yellow-600"
                           />
                         </div>
                       </div>
@@ -1015,7 +1018,7 @@ export default function AdminDashboard() {
                     </h3>
                     <p className="text-gray-400 text-sm">User retention by signup month</p>
                   </div>
-                  <Clock className="w-5 h-5 text-magic-gold" />
+                  <Clock className="w-5 h-5 text-memorial-gold" />
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -1159,7 +1162,7 @@ export default function AdminDashboard() {
                       onClick={() => setRevenuePeriod(period)}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                         revenuePeriod === period
-                          ? 'bg-magic-gold text-deep-space'
+                          ? 'bg-memorial-gold text-deep-space'
                           : 'text-gray-400 hover:text-white'
                       }`}
                     >
@@ -1187,7 +1190,7 @@ export default function AdminDashboard() {
             {/* Loading State */}
             {revenueLoading && !detailedRevenue && (
               <div className="text-center py-12">
-                <DollarSign className="w-16 h-16 text-magic-gold mx-auto mb-4 animate-pulse" />
+                <DollarSign className="w-16 h-16 text-memorial-gold mx-auto mb-4 animate-pulse" />
                 <p className="text-gray-300 text-lg">Loading revenue data...</p>
               </div>
             )}
@@ -1208,7 +1211,7 @@ export default function AdminDashboard() {
                           All time earnings
                         </p>
                       </div>
-                      <DollarSign className="w-8 h-8 text-magic-gold" />
+                      <DollarSign className="w-8 h-8 text-memorial-gold" />
                     </div>
                   </GlassCard>
 
@@ -1267,7 +1270,7 @@ export default function AdminDashboard() {
                     <h3 className="text-xl font-display font-bold text-white">
                       Revenue Over Time ({revenuePeriod})
                     </h3>
-                    <TrendingUp className="w-5 h-5 text-magic-gold" />
+                    <TrendingUp className="w-5 h-5 text-memorial-gold" />
                   </div>
                   {detailedRevenue.revenueByPeriod.length > 0 ? (
                     <div className="h-64 flex items-end justify-between gap-1">
@@ -1281,7 +1284,7 @@ export default function AdminDashboard() {
                               initial={{ height: 0 }}
                               animate={{ height: `${Math.max(height, 5)}%` }}
                               transition={{ delay: index * 0.02 }}
-                              className="w-full bg-gradient-to-t from-magic-gold to-yellow-600 rounded-t-lg min-h-[8px] hover:from-magic-gold/80 hover:to-yellow-500 cursor-pointer"
+                              className="w-full bg-gradient-to-t from-memorial-gold to-yellow-600 rounded-t-lg min-h-[8px] hover:from-memorial-gold/80 hover:to-yellow-500 cursor-pointer"
                             />
                             {/* Tooltip */}
                             <div className="absolute bottom-full mb-2 hidden group-hover:block bg-deep-space border border-white/20 rounded-lg px-3 py-2 text-sm whitespace-nowrap z-10">
@@ -1312,7 +1315,7 @@ export default function AdminDashboard() {
                       <h3 className="text-xl font-display font-bold text-white">
                         Revenue by Source
                       </h3>
-                      <PieChart className="w-5 h-5 text-magic-gold" />
+                      <PieChart className="w-5 h-5 text-memorial-gold" />
                     </div>
                     <div className="space-y-4">
                       {/* Pie Chart Visualization */}
@@ -1385,7 +1388,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
                         <div className="flex items-center gap-3">
-                          <div className="w-3 h-3 rounded-full bg-magic-gold" />
+                          <div className="w-3 h-3 rounded-full bg-memorial-gold" />
                           <span className="text-gray-300">Premium Subscriptions</span>
                         </div>
                         <span className="text-white font-bold">
@@ -1410,7 +1413,7 @@ export default function AdminDashboard() {
                       <h3 className="text-xl font-display font-bold text-white">
                         Top Earning Books
                       </h3>
-                      <BookOpen className="w-5 h-5 text-magic-gold" />
+                      <BookOpen className="w-5 h-5 text-memorial-gold" />
                     </div>
                     {detailedRevenue.topEarningBooks.length > 0 ? (
                       <div className="space-y-3">
@@ -1420,7 +1423,7 @@ export default function AdminDashboard() {
                             className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="text-lg font-bold text-magic-gold">#{index + 1}</div>
+                              <div className="text-lg font-bold text-memorial-gold">#{index + 1}</div>
                               <div>
                                 <div className="font-semibold text-white text-sm truncate max-w-[150px]">
                                   {book.title}
@@ -1455,7 +1458,7 @@ export default function AdminDashboard() {
                       <h3 className="text-xl font-display font-bold text-white">
                         All Top Earning Books
                       </h3>
-                      <BookOpen className="w-5 h-5 text-magic-gold" />
+                      <BookOpen className="w-5 h-5 text-memorial-gold" />
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full">
@@ -1472,14 +1475,14 @@ export default function AdminDashboard() {
                         <tbody>
                           {detailedRevenue.topEarningBooks.map((book, index) => (
                             <tr key={book.bookId} className="border-b border-white/5 hover:bg-white/5">
-                              <td className="py-3 px-4 text-magic-gold font-bold">{index + 1}</td>
+                              <td className="py-3 px-4 text-memorial-gold font-bold">{index + 1}</td>
                               <td className="py-3 px-4 text-white font-medium">{book.title}</td>
                               <td className="py-3 px-4 text-gray-300">{book.authorName}</td>
                               <td className="py-3 px-4 text-right text-gray-300">{book.totalSales}</td>
                               <td className="py-3 px-4 text-right text-green-400 font-semibold">
                                 {formatCurrency(book.totalRevenue)}
                               </td>
-                              <td className="py-3 px-4 text-right text-magic-gold font-semibold">
+                              <td className="py-3 px-4 text-right text-memorial-gold font-semibold">
                                 {formatCurrency(book.platformShare)}
                               </td>
                             </tr>
@@ -1496,7 +1499,7 @@ export default function AdminDashboard() {
                     <h3 className="text-xl font-display font-bold text-white">
                       Recent Transactions
                     </h3>
-                    <CreditCard className="w-5 h-5 text-magic-gold" />
+                    <CreditCard className="w-5 h-5 text-memorial-gold" />
                   </div>
                   {detailedRevenue.recentTransactions.length > 0 ? (
                     <div className="overflow-x-auto">
@@ -1524,7 +1527,7 @@ export default function AdminDashboard() {
                                       ? 'bg-cosmic-purple/20 text-cosmic-purple'
                                       : tx.type === 'book_purchase'
                                       ? 'bg-green-500/20 text-green-400'
-                                      : 'bg-magic-gold/20 text-magic-gold'
+                                      : 'bg-memorial-gold/20 text-memorial-gold'
                                   }`}
                                 >
                                   {tx.type === 'subscription' ? 'Subscription' :
@@ -1574,6 +1577,18 @@ export default function AdminDashboard() {
                 </div>
               </GlassCard>
             )}
+          </motion.div>
+        )}
+
+        {/* Organizations Tab */}
+        {activeTab === 'organizations' && (
+          <motion.div
+            key="organizations"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <OrganizationsManager />
           </motion.div>
         )}
       </div>

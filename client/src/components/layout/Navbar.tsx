@@ -106,7 +106,7 @@ export default function Navbar() {
       ref={mobileMenuRef}
       role="banner"
     >
-      <nav className="glass-strong border-b-2 border-magic-gold/30 shadow-lg shadow-magic-gold/10 backdrop-blur-2xl bg-gradient-to-r from-[#0a0a12] via-[#0d0d18] to-[#0a0a12]" aria-label="Main navigation">
+      <nav className="glass-strong border-b-2 border-memorial-gold/30 shadow-lg shadow-memorial-gold/10 backdrop-blur-2xl bg-gradient-to-r from-[#0a0a12] via-[#0d0d18] to-[#0a0a12]" aria-label="Main navigation">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Logo - Left Side */}
@@ -131,7 +131,7 @@ export default function Navbar() {
                 to="/dashboard"
                 className={`flex items-center gap-2 px-4 xl:px-5 py-2 xl:py-2.5 rounded-xl transition-all duration-300 ${
                   isActive('/dashboard')
-                    ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30 shadow-glow-gold'
+                    ? 'bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 text-memorial-gold border border-memorial-gold/30 shadow-glow-gold'
                     : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -143,7 +143,7 @@ export default function Navbar() {
                 to="/marketplace"
                 className={`flex items-center gap-2 px-4 xl:px-5 py-2 xl:py-2.5 rounded-xl transition-all duration-300 ${
                   isActive('/marketplace')
-                    ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30 shadow-glow-gold'
+                    ? 'bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 text-memorial-gold border border-memorial-gold/30 shadow-glow-gold'
                     : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -155,7 +155,7 @@ export default function Navbar() {
                 to="/library"
                 className={`flex items-center gap-2 px-4 xl:px-5 py-2 xl:py-2.5 rounded-xl transition-all duration-300 ${
                   isActive('/library')
-                    ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30 shadow-glow-gold'
+                    ? 'bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 text-memorial-gold border border-memorial-gold/30 shadow-glow-gold'
                     : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -190,7 +190,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     to="/register"
-                    className="px-3 sm:px-4 py-2 text-sm font-medium bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space rounded-lg hover:shadow-glow-gold transition-all"
+                    className="px-3 sm:px-4 py-2 text-sm font-medium bg-gradient-to-r from-memorial-gold to-yellow-500 text-deep-space rounded-lg hover:shadow-glow-gold transition-all"
                   >
                     {t('nav.get_started', 'Get Started')}
                   </Link>
@@ -208,7 +208,7 @@ export default function Navbar() {
                   >
                     <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                     {notificationsUnreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space text-[10px] sm:text-xs flex items-center justify-center font-bold">
+                      <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-r from-memorial-gold to-yellow-500 text-deep-space text-[10px] sm:text-xs flex items-center justify-center font-bold">
                         {notificationsUnreadCount > 9 ? '9+' : notificationsUnreadCount}
                       </span>
                     )}
@@ -244,7 +244,7 @@ export default function Navbar() {
                 >
                   {/* Avatar with Gold Glow */}
                   <div className="relative">
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold ring-2 ring-magic-gold/30 overflow-hidden">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-memorial-gold to-yellow-600 flex items-center justify-center shadow-glow-gold ring-2 ring-memorial-gold/30 overflow-hidden">
                       {user?.profile?.avatar ? (
                         <OptimizedImage
                           src={user.profile.avatar}
@@ -289,7 +289,7 @@ export default function Navbar() {
                           <div
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
                               user?.role === 'premium'
-                                ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 text-magic-gold border border-magic-gold/30'
+                                ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 text-memorial-gold border border-memorial-gold/30'
                                 : user?.role === 'standard'
                                 ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
                                 : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
@@ -299,7 +299,7 @@ export default function Navbar() {
                             {t(`user.${user?.role || 'free'}`)}
                           </div>
                           <div className="text-xs text-gray-300 font-medium">
-                            <span className="text-magic-gold font-bold">{user?.credits}</span> {t('user.credits')}
+                            <span className="text-memorial-gold font-bold">{user?.credits}</span> {t('user.credits')}
                           </div>
                         </div>
                       </div>
@@ -309,7 +309,7 @@ export default function Navbar() {
                         <Link
                           to="/subscription"
                           onClick={() => setShowUserMenu(false)}
-                          className={`flex items-center gap-3 px-5 py-3 text-gray-300 hover:text-magic-gold hover:bg-magic-gold/10 transition-all duration-300 ${isRTL ? 'flex-row-reverse' : ''}`}
+                          className={`flex items-center gap-3 px-5 py-3 text-gray-300 hover:text-memorial-gold hover:bg-memorial-gold/10 transition-all duration-300 ${isRTL ? 'flex-row-reverse' : ''}`}
                         >
                           <Crown className="w-4 h-4" />
                           <span className="font-medium">{t('nav.upgrade')}</span>
@@ -318,7 +318,7 @@ export default function Navbar() {
                         <Link
                           to="/earnings"
                           onClick={() => setShowUserMenu(false)}
-                          className={`flex items-center gap-3 px-5 py-3 text-gray-300 hover:text-magic-gold hover:bg-magic-gold/10 transition-all duration-300 ${isRTL ? 'flex-row-reverse' : ''}`}
+                          className={`flex items-center gap-3 px-5 py-3 text-gray-300 hover:text-memorial-gold hover:bg-memorial-gold/10 transition-all duration-300 ${isRTL ? 'flex-row-reverse' : ''}`}
                         >
                           <DollarSign className="w-4 h-4" />
                           <span className="font-medium">{t('nav.earnings', 'My Earnings')}</span>
@@ -370,7 +370,7 @@ export default function Navbar() {
                 to="/marketplace"
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
                   isActive('/marketplace')
-                    ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                    ? 'bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 text-memorial-gold border border-memorial-gold/30'
                     : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -385,7 +385,7 @@ export default function Navbar() {
                     to="/dashboard"
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
                       isActive('/dashboard')
-                        ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                        ? 'bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 text-memorial-gold border border-memorial-gold/30'
                         : 'text-gray-300 hover:text-white hover:bg-white/5'
                     }`}
                   >
@@ -397,7 +397,7 @@ export default function Navbar() {
                     to="/library"
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
                       isActive('/library')
-                        ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                        ? 'bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 text-memorial-gold border border-memorial-gold/30'
                         : 'text-gray-300 hover:text-white hover:bg-white/5'
                     }`}
                   >
@@ -411,7 +411,7 @@ export default function Navbar() {
                     to="/earnings"
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
                       isActive('/earnings')
-                        ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                        ? 'bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 text-memorial-gold border border-memorial-gold/30'
                         : 'text-gray-300 hover:text-white hover:bg-white/5'
                     }`}
                   >
@@ -423,7 +423,7 @@ export default function Navbar() {
                     to="/subscription"
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
                       isActive('/subscription')
-                        ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                        ? 'bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 text-memorial-gold border border-memorial-gold/30'
                         : 'text-gray-300 hover:text-white hover:bg-white/5'
                     }`}
                   >
@@ -435,7 +435,7 @@ export default function Navbar() {
                     to="/settings"
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
                       isActive('/settings')
-                        ? 'bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 text-magic-gold border border-magic-gold/30'
+                        ? 'bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 text-memorial-gold border border-memorial-gold/30'
                         : 'text-gray-300 hover:text-white hover:bg-white/5'
                     }`}
                   >
@@ -463,7 +463,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     to="/register"
-                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space font-semibold hover:shadow-glow-gold transition-all duration-300"
+                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gradient-to-r from-memorial-gold to-yellow-500 text-deep-space font-semibold hover:shadow-glow-gold transition-all duration-300"
                   >
                     <span>{t('nav.get_started', 'Get Started')}</span>
                   </Link>

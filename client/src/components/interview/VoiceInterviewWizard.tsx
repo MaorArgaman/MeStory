@@ -241,7 +241,7 @@ export default function VoiceInterviewWizard({
           onClick={() => setIsTTSEnabled(!isTTSEnabled)}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
             isTTSEnabled
-              ? 'bg-magic-gold/20 text-magic-gold border border-magic-gold/30'
+              ? 'bg-memorial-gold/20 text-memorial-gold border border-memorial-gold/30'
               : 'bg-white/5 text-gray-400 border border-white/10'
           }`}
         >
@@ -267,7 +267,7 @@ export default function VoiceInterviewWizard({
       <button
         onClick={handleStartInterview}
         disabled={isProcessing}
-        className="w-full max-w-sm py-4 px-6 rounded-xl bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space font-bold text-lg hover:from-yellow-500 hover:to-magic-gold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full max-w-sm py-4 px-6 rounded-xl bg-gradient-to-r from-memorial-gold to-yellow-500 text-deep-space font-bold text-lg hover:from-yellow-500 hover:to-memorial-gold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {isProcessing ? (
           <>
@@ -300,7 +300,7 @@ export default function VoiceInterviewWizard({
         </div>
         <div className="h-2 bg-white/10 rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-magic-gold to-yellow-500"
+            className="h-full bg-gradient-to-r from-memorial-gold to-yellow-500"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.5 }}
@@ -310,7 +310,7 @@ export default function VoiceInterviewWizard({
 
       {/* Current topic */}
       {interviewState && (
-        <div className="flex items-center gap-2 mb-4 text-magic-gold">
+        <div className="flex items-center gap-2 mb-4 text-memorial-gold">
           <span className="text-lg">{getTopicIcon(interviewState.currentTopic)}</span>
           <span className="font-medium">{getTopicDisplayName(interviewState.currentTopic)}</span>
         </div>
@@ -344,7 +344,7 @@ export default function VoiceInterviewWizard({
       {canCompleteEarly && !isProcessing && (
         <button
           onClick={handleCompleteInterview}
-          className="text-magic-gold hover:text-yellow-400 text-sm flex items-center gap-1"
+          className="text-memorial-gold hover:text-yellow-400 text-sm flex items-center gap-1"
         >
           <CheckCircle className="w-4 h-4" />
           <span>{t('voice_interview.complete_early', 'Complete Interview Early')}</span>
@@ -365,7 +365,7 @@ export default function VoiceInterviewWizard({
         <h2 className="text-2xl font-bold text-white">{t('voice_interview.summary_title', 'Interview Summary')}</h2>
         <button
           onClick={() => setStep('editing')}
-          className="flex items-center gap-2 text-magic-gold hover:text-yellow-400 transition-colors"
+          className="flex items-center gap-2 text-memorial-gold hover:text-yellow-400 transition-colors"
         >
           <Edit3 className="w-4 h-4" />
           <span>{t('voice_interview.edit', 'Edit')}</span>
@@ -376,7 +376,7 @@ export default function VoiceInterviewWizard({
         <div className="space-y-6">
           {/* Theme */}
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <h3 className="text-magic-gold font-medium mb-2 flex items-center gap-2">
+            <h3 className="text-memorial-gold font-medium mb-2 flex items-center gap-2">
               {getTopicIcon('theme')} {getTopicDisplayName('theme')}
             </h3>
             <p className="text-white">{editingSummary.theme.mainTheme}</p>
@@ -394,14 +394,14 @@ export default function VoiceInterviewWizard({
 
           {/* Characters */}
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <h3 className="text-magic-gold font-medium mb-2 flex items-center gap-2">
+            <h3 className="text-memorial-gold font-medium mb-2 flex items-center gap-2">
               {getTopicIcon('characters')} {getTopicDisplayName('characters')}
             </h3>
             {editingSummary.characters.map((char, i) => (
               <div key={i} className="mb-3 last:mb-0">
                 <div className="flex items-center gap-2">
                   <span className="text-white font-medium">{char.name}</span>
-                  <span className="text-xs bg-magic-gold/20 text-magic-gold px-2 py-0.5 rounded">
+                  <span className="text-xs bg-memorial-gold/20 text-memorial-gold px-2 py-0.5 rounded">
                     {char.role === 'protagonist'
                       ? t('voice_interview.protagonist', 'Protagonist')
                       : char.role === 'antagonist'
@@ -416,7 +416,7 @@ export default function VoiceInterviewWizard({
 
           {/* Plot */}
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <h3 className="text-magic-gold font-medium mb-2 flex items-center gap-2">
+            <h3 className="text-memorial-gold font-medium mb-2 flex items-center gap-2">
               {getTopicIcon('plot')} {getTopicDisplayName('plot')}
             </h3>
             <div className="space-y-2 text-sm">
@@ -437,7 +437,7 @@ export default function VoiceInterviewWizard({
 
           {/* Setting */}
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <h3 className="text-magic-gold font-medium mb-2 flex items-center gap-2">
+            <h3 className="text-memorial-gold font-medium mb-2 flex items-center gap-2">
               {getTopicIcon('setting')} {getTopicDisplayName('setting')}
             </h3>
             <p className="text-white">{editingSummary.setting.world}</p>
@@ -448,12 +448,12 @@ export default function VoiceInterviewWizard({
 
           {/* Writing guidelines */}
           {editingSummary.writingGuidelines.length > 0 && (
-            <div className="bg-magic-gold/10 rounded-xl p-4 border border-magic-gold/30">
-              <h3 className="text-magic-gold font-medium mb-2">{t('voice_interview.writing_guidelines', 'Writing Guidelines')}</h3>
+            <div className="bg-memorial-gold/10 rounded-xl p-4 border border-memorial-gold/30">
+              <h3 className="text-memorial-gold font-medium mb-2">{t('voice_interview.writing_guidelines', 'Writing Guidelines')}</h3>
               <ul className="space-y-1">
                 {editingSummary.writingGuidelines.map((guide, i) => (
                   <li key={i} className="text-gray-300 text-sm flex items-start gap-2">
-                    <span className="text-magic-gold">•</span>
+                    <span className="text-memorial-gold">•</span>
                     <span>{guide}</span>
                   </li>
                 ))}
@@ -473,7 +473,7 @@ export default function VoiceInterviewWizard({
         </button>
         <button
           onClick={handleSaveAndComplete}
-          className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space font-bold hover:from-yellow-500 hover:to-magic-gold transition-all flex items-center justify-center gap-2"
+          className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-memorial-gold to-yellow-500 text-deep-space font-bold hover:from-yellow-500 hover:to-memorial-gold transition-all flex items-center justify-center gap-2"
         >
           <Save className="w-5 h-5" />
           <span>{t('voice_interview.save_continue', 'Save & Continue')}</span>
@@ -501,7 +501,7 @@ export default function VoiceInterviewWizard({
         <div className="space-y-6">
           {/* Theme editing */}
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <label className="block text-magic-gold font-medium mb-2">{t('voice_interview.main_theme', 'Main Theme')}</label>
+            <label className="block text-memorial-gold font-medium mb-2">{t('voice_interview.main_theme', 'Main Theme')}</label>
             <textarea
               value={editingSummary.theme.mainTheme}
               onChange={(e) =>
@@ -510,14 +510,14 @@ export default function VoiceInterviewWizard({
                   theme: { ...editingSummary.theme, mainTheme: e.target.value },
                 })
               }
-              className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-white resize-none focus:outline-none focus:ring-2 focus:ring-magic-gold/50"
+              className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-white resize-none focus:outline-none focus:ring-2 focus:ring-memorial-gold/50"
               rows={2}
             />
           </div>
 
           {/* Conflict editing */}
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <label className="block text-magic-gold font-medium mb-2">{t('voice_interview.conflict', 'Conflict')}</label>
+            <label className="block text-memorial-gold font-medium mb-2">{t('voice_interview.conflict', 'Conflict')}</label>
             <textarea
               value={editingSummary.plot.conflict}
               onChange={(e) =>
@@ -526,14 +526,14 @@ export default function VoiceInterviewWizard({
                   plot: { ...editingSummary.plot, conflict: e.target.value },
                 })
               }
-              className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-white resize-none focus:outline-none focus:ring-2 focus:ring-magic-gold/50"
+              className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-white resize-none focus:outline-none focus:ring-2 focus:ring-memorial-gold/50"
               rows={2}
             />
           </div>
 
           {/* Setting editing */}
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <label className="block text-magic-gold font-medium mb-2">{t('voice_interview.story_world', 'Story World')}</label>
+            <label className="block text-memorial-gold font-medium mb-2">{t('voice_interview.story_world', 'Story World')}</label>
             <textarea
               value={editingSummary.setting.world}
               onChange={(e) =>
@@ -542,7 +542,7 @@ export default function VoiceInterviewWizard({
                   setting: { ...editingSummary.setting, world: e.target.value },
                 })
               }
-              className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-white resize-none focus:outline-none focus:ring-2 focus:ring-magic-gold/50"
+              className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-white resize-none focus:outline-none focus:ring-2 focus:ring-memorial-gold/50"
               rows={2}
             />
           </div>
@@ -558,7 +558,7 @@ export default function VoiceInterviewWizard({
         </button>
         <button
           onClick={handleSaveAndComplete}
-          className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-magic-gold to-yellow-500 text-deep-space font-bold hover:from-yellow-500 hover:to-magic-gold transition-all flex items-center justify-center gap-2"
+          className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-memorial-gold to-yellow-500 text-deep-space font-bold hover:from-yellow-500 hover:to-memorial-gold transition-all flex items-center justify-center gap-2"
         >
           <Save className="w-5 h-5" />
           <span>{t('voice_interview.save_continue', 'Save & Continue')}</span>

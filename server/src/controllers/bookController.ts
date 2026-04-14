@@ -440,7 +440,18 @@ export const createBook = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    const { title, genre, description, language, storyContext, chapters } = req.body;
+    const {
+      title,
+      genre,
+      description,
+      language,
+      storyContext,
+      chapters,
+      // Collaborative book fields
+      bookType,
+      isCollaborative,
+      memorialDedication,
+    } = req.body;
 
     // Create new book
     const book = await Book.create({
@@ -448,10 +459,16 @@ export const createBook = async (req: AuthRequest, res: Response): Promise<void>
       author: req.user.id,
       genre,
       description,
-      language: language || 'en',
+      language: language || 'he', // Default to Hebrew for memorial books
       storyContext: storyContext || undefined, // Story context from Deep Dive Interview
       chapters: chapters || [],
       characters: [],
+      // Collaborative book fields
+      bookType: bookType || 'personal',
+      isCollaborative: isCollaborative || false,
+      memorialDedication: memorialDedication || undefined,
+      collaborators: [],
+      invitations: [],
       publishingStatus: {
         status: 'draft',
         price: 0,
@@ -641,86 +658,104 @@ export const getBookById = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
+    // Fetch author info for both owner and public views
+    const author = await User.findById(book.author);
+
     // If owner, return full book data
     if (isOwner) {
-      res.status(200).json({
-        success: true,
-        data: {
-          book: {
-            id: book.id,
-            title: book.title,
-            genre: book.genre,
-            description: book.description,
-            synopsis: book.synopsis,
-            language: book.language,
-            chapters: book.chapters,
-            characters: book.characters,
-            plotStructure: book.plotStructure,
-            qualityScore: book.qualityScore,
-            coverDesign: book.coverDesign,
-            pageLayout: book.pageLayout,
-            pageImages: book.pageImages || [],
-            publishingStatus: book.publishingStatus,
-            statistics: book.statistics,
-            tags: book.tags,
-            ageRating: book.ageRating,
-            translations: book.translations,
-            createdAt: book.created_at,
-            updatedAt: book.updated_at,
+      if (!res.headersSent) {
+        res.status(200).json({
+          success: true,
+          data: {
+            book: {
+              id: book.id,
+              title: book.title,
+              genre: book.genre,
+              description: book.description,
+              synopsis: book.synopsis,
+              language: book.language,
+              chapters: book.chapters,
+              characters: book.characters,
+              plotStructure: book.plotStructure,
+              qualityScore: book.qualityScore,
+              coverDesign: book.coverDesign,
+              pageLayout: book.pageLayout,
+              pageImages: book.pageImages || [],
+              publishingStatus: book.publishingStatus,
+              statistics: book.statistics,
+              tags: book.tags,
+              ageRating: book.ageRating,
+              translations: book.translations,
+              createdAt: book.created_at,
+              updatedAt: book.updated_at,
+              // Include author info for consistent data across the app
+              author: {
+                _id: author?.id || book.author,
+                id: author?.id || book.author,
+                name: author?.name || author?.displayName || 'Unknown Author',
+                profile: {
+                  avatar: author?.profile?.avatar || null,
+                  bio: author?.profile?.bio || null,
+                },
+              },
+            },
           },
-        },
-      });
+        });
+      }
       return;
     }
 
     // For public books, return data with author info and chapters for reading
-    const author = await User.findById(book.author);
-    res.status(200).json({
-      success: true,
-      data: {
-        _id: book.id,
-        id: book.id,
-        title: book.title,
-        genre: book.genre,
-        synopsis: book.synopsis,
-        description: book.description,
-        language: book.language,
-        chapters: book.chapters || [], // Include chapters for reading
-        translations: book.translations, // Include pre-generated translations
-        coverDesign: book.coverDesign,
-        qualityScore: book.qualityScore,
-        publishingStatus: {
-          price: book.publishingStatus?.price || 0,
-          isFree: book.publishingStatus?.isFree || true,
-        },
-        statistics: {
-          wordCount: book.statistics?.wordCount || 0,
-          pageCount: book.statistics?.pageCount || 0,
-          views: book.statistics?.views || 0,
-          averageRating: book.statistics?.averageRating || 0,
-          totalReviews: book.statistics?.totalReviews || 0,
-        },
-        likes: book.likes || 0,
-        likedBy: book.likedBy || [],
-        reviews: book.reviews || [],
-        author: {
-          _id: author?.id || book.author,
-          id: author?.id || book.author,
-          name: author?.name || 'Unknown Author',
-          profile: {
-            avatar: author?.profile?.avatar || null,
-            bio: author?.profile?.bio || null,
+    if (!res.headersSent) {
+      res.status(200).json({
+        success: true,
+        data: {
+          _id: book.id,
+          id: book.id,
+          title: book.title,
+          genre: book.genre,
+          synopsis: book.synopsis,
+          description: book.description,
+          language: book.language,
+          chapters: book.chapters || [], // Include chapters for reading
+          translations: book.translations, // Include pre-generated translations
+          coverDesign: book.coverDesign,
+          qualityScore: book.qualityScore,
+          publishingStatus: {
+            price: book.publishingStatus?.price || 0,
+            isFree: book.publishingStatus?.isFree || true,
           },
+          statistics: {
+            wordCount: book.statistics?.wordCount || 0,
+            pageCount: book.statistics?.pageCount || 0,
+            views: book.statistics?.views || 0,
+            averageRating: book.statistics?.averageRating || 0,
+            totalReviews: book.statistics?.totalReviews || 0,
+          },
+          likes: book.likes || 0,
+          likedBy: book.likedBy || [],
+          reviews: book.reviews || [],
+          author: {
+            _id: author?.id || book.author,
+            id: author?.id || book.author,
+            name: author?.name || 'Unknown Author',
+            profile: {
+              avatar: author?.profile?.avatar || null,
+              bio: author?.profile?.bio || null,
+            },
+          },
+          createdAt: book.created_at,
         },
-        createdAt: book.created_at,
-      },
-    });
+      });
+    }
   } catch (error) {
     console.error('Get book error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to retrieve book',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to retrieve book',
+      });
+    }
   }
 };
 
@@ -1454,6 +1489,98 @@ export const getPublicBooks = async (req: Request, res: Response): Promise<void>
 };
 
 /**
+ * Get a single published book by ID (public)
+ * GET /api/books/public/:id
+ * Section 8: Marketplace - Book Details
+ */
+export const getPublicBookById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    // Validate UUID
+    if (!isValidUUID(id)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid book ID',
+      });
+      return;
+    }
+
+    // Find book
+    const book = await Book.findById(id);
+
+    if (!book) {
+      res.status(404).json({
+        success: false,
+        error: 'Book not found',
+      });
+      return;
+    }
+
+    // Check if book is publicly published
+    const isPubliclyPublished = book.publishingStatus?.status === 'published' && book.publishingStatus?.isPublic;
+
+    if (!isPubliclyPublished) {
+      res.status(403).json({
+        success: false,
+        error: 'This book is not publicly available',
+      });
+      return;
+    }
+
+    // Fetch author info
+    const author = await User.findById(book.author);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        _id: book.id,
+        id: book.id,
+        title: book.title,
+        genre: book.genre,
+        synopsis: book.synopsis,
+        description: book.description,
+        language: book.language,
+        chapters: book.chapters || [],
+        translations: book.translations,
+        coverDesign: book.coverDesign,
+        qualityScore: book.qualityScore,
+        publishingStatus: {
+          price: book.publishingStatus?.price || 0,
+          isFree: book.publishingStatus?.isFree || true,
+        },
+        statistics: {
+          wordCount: book.statistics?.wordCount || 0,
+          pageCount: book.statistics?.pageCount || 0,
+          views: book.statistics?.views || 0,
+          averageRating: book.statistics?.averageRating || 0,
+          totalReviews: book.statistics?.totalReviews || 0,
+        },
+        likes: book.likes || 0,
+        likedBy: book.likedBy || [],
+        reviews: book.reviews || [],
+        author: {
+          _id: author?.id || book.author,
+          id: author?.id || book.author,
+          name: author?.name || 'Unknown Author',
+          profile: {
+            avatar: author?.profile?.avatar || null,
+            bio: author?.profile?.bio || null,
+          },
+        },
+        createdAt: book.created_at,
+      },
+    });
+  } catch (error) {
+    console.error('Get public book error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve book',
+    });
+  }
+};
+
+/**
  * Record a book view
  * POST /api/books/:id/view
  * Section 8: Marketplace - View tracking
@@ -1575,8 +1702,17 @@ export const exportBookPDF = async (req: AuthRequest, res: Response): Promise<vo
     // Generate PDF using the new comprehensive export service
     const exportResult = await exportBook(id, 'pdf');
 
+    // Validate export result
+    if (!exportResult || !exportResult.buffer) {
+      res.status(500).json({
+        success: false,
+        error: 'Export failed - no output generated',
+      });
+      return;
+    }
+
     // Log any warnings that occurred during export
-    if (exportResult.warnings.length > 0) {
+    if (exportResult.warnings && exportResult.warnings.length > 0) {
       console.log(`Export warnings for book ${id}:`, exportResult.warnings);
     }
 
@@ -1587,7 +1723,7 @@ export const exportBookPDF = async (req: AuthRequest, res: Response): Promise<vo
     res.setHeader('Content-Length', exportResult.buffer.length);
 
     // Include warnings in response header if any (for debugging)
-    if (exportResult.warnings.length > 0) {
+    if (exportResult.warnings && exportResult.warnings.length > 0) {
       res.setHeader('X-Export-Warnings', JSON.stringify(exportResult.warnings));
     }
 
@@ -2757,23 +2893,35 @@ export const exportBookToFormat = async (req: AuthRequest, res: Response): Promi
     // Generate export file
     const exportResult = await exportBook(id, format as 'pdf' | 'docx');
 
+    // Validate export result
+    if (!exportResult || !exportResult.buffer) {
+      res.status(500).json({
+        success: false,
+        error: 'Export failed - no output generated',
+      });
+      return;
+    }
+
     // Log any warnings that occurred during export
-    if (exportResult.warnings.length > 0) {
+    if (exportResult.warnings && exportResult.warnings.length > 0) {
       console.log(`Export warnings for book ${id}:`, exportResult.warnings);
     }
 
     // Set response headers
-    const filename = book.title.replace(/[^a-zA-Z0-9\u0590-\u05FF]/g, '_');
+    // Use ASCII-safe filename for Content-Disposition header, encode non-ASCII with RFC 5987
+    const safeFilename = book.title.replace(/[^a-zA-Z0-9]/g, '_');
+    const encodedFilename = encodeURIComponent(book.title);
     const contentType = format === 'pdf'
       ? 'application/pdf'
       : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}.${format}"`);
+    // Use both filename (ASCII fallback) and filename* (UTF-8 encoded) for compatibility
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}.${format}"; filename*=UTF-8''${encodedFilename}.${format}`);
     res.setHeader('Content-Length', exportResult.buffer.length);
 
     // Include warnings in response header if any (for debugging)
-    if (exportResult.warnings.length > 0) {
+    if (exportResult.warnings && exportResult.warnings.length > 0) {
       res.setHeader('X-Export-Warnings', JSON.stringify(exportResult.warnings));
     }
 
@@ -3551,25 +3699,14 @@ export const getBookMentions = async (req: Request, res: Response): Promise<void
 
     const book = await Book.findById(id);
     if (!book) {
-      res.status(404).json({
-        success: false,
-        error: 'Book not found',
-      });
+      res.status(404).json({ success: false, error: 'Book not found' });
       return;
     }
 
-    res.status(200).json({
-      success: true,
-      data: {
-        mentions: book.mentions || [],
-        totalMentions: (book.mentions || []).length,
-      },
-    });
+    // Return empty mentions array - feature not yet implemented
+    res.json({ success: true, data: { mentions: [], total: 0 } });
   } catch (error) {
-    console.error('Get mentions error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get mentions',
-    });
+    console.error('Error getting book mentions:', error);
+    res.status(500).json({ success: false, error: 'Failed to get mentions' });
   }
 };

@@ -2,18 +2,21 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import { Mail, Lock, User, Loader2, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { Mail, Lock, User, Loader2, Eye, EyeOff, Sparkles, Ticket, Check, X } from 'lucide-react';
+import { api } from '../services/api';
+import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 // Legacy imports - keeping for fallback
 import _registerSideImageLegacy from '../assets/images/login-side-image.png';
 import _logoIconLegacy from '../assets/images/logo-icon.png';
 
 // Use new realistic images from public folder
-const registerSideImage = '/img/register-hero.png';
+const registerSideImage = '/img/memorial-hero.png';
 const logoIcon = '/img/logo-glow.png';
 
 export default function RegisterPage() {
-  const { t } = useTranslation('auth');
+  const { t, i18n } = useTranslation('auth');
+  const isHebrew = i18n.language === 'he';
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,6 +27,46 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  // Coupon states
+  const [couponCode, setCouponCode] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponValid, setCouponValid] = useState<{
+    valid: boolean;
+    organizationName?: string;
+    discountPercent?: number;
+    message?: string;
+  } | null>(null);
+
+  // Validate coupon code
+  const validateCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponValid(null);
+      return;
+    }
+
+    setCouponLoading(true);
+    try {
+      const response = await api.get(`/organizations/coupon/${couponCode}/validate`);
+      if (response.data.success) {
+        setCouponValid({
+          valid: true,
+          organizationName: response.data.data.organizationName,
+          discountPercent: response.data.data.discountPercent,
+          message: isHebrew ? response.data.data.message : response.data.data.messageEn,
+        });
+      }
+    } catch (err: any) {
+      setCouponValid({
+        valid: false,
+        message: isHebrew
+          ? err.response?.data?.error || 'קוד לא תקף'
+          : err.response?.data?.errorEn || 'Invalid code',
+      });
+    } finally {
+      setCouponLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +92,21 @@ export default function RegisterPage() {
 
     try {
       await register(name, email, password);
+
+      // Apply coupon if valid
+      if (couponValid?.valid && couponCode) {
+        try {
+          await api.post(`/organizations/coupon/${couponCode}/apply`);
+          toast.success(
+            isHebrew
+              ? `הצטרפת ל${couponValid.organizationName}!`
+              : `You joined ${couponValid.organizationName}!`
+          );
+        } catch (couponError) {
+          console.error('Failed to apply coupon:', couponError);
+        }
+      }
+
       navigate('/dashboard');
     } catch (error: any) {
       // Error is already handled by axios interceptor
@@ -102,7 +160,7 @@ export default function RegisterPage() {
                   delay: i * 0.3,
                 }}
               >
-                <Sparkles className="w-6 h-6 text-magic-gold" />
+                <Sparkles className="w-6 h-6 text-memorial-gold" />
               </motion.div>
             ))}
           </div>
@@ -256,6 +314,56 @@ export default function RegisterPage() {
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
                 </button>
               </div>
+            </div>
+
+            {/* Coupon Code Input (Optional) */}
+            <div>
+              <label htmlFor="couponCode" className="block text-sm font-medium text-gray-300 mb-2">
+                {isHebrew ? 'קוד קופון (אופציונלי)' : 'Coupon Code (optional)'}
+              </label>
+              <div className="relative">
+                <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <input
+                  id="couponCode"
+                  name="couponCode"
+                  type="text"
+                  value={couponCode}
+                  onChange={(e) => {
+                    setCouponCode(e.target.value.toUpperCase());
+                    setCouponValid(null);
+                  }}
+                  onBlur={validateCoupon}
+                  className={`input pl-11 pr-11 ${
+                    couponValid?.valid
+                      ? 'border-green-500/50 focus:border-green-500'
+                      : couponValid?.valid === false
+                      ? 'border-red-500/50 focus:border-red-500'
+                      : ''
+                  }`}
+                  placeholder={isHebrew ? 'הזן קוד קופון' : 'Enter coupon code'}
+                  disabled={loading}
+                />
+                {couponLoading && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 animate-spin" />
+                )}
+                {!couponLoading && couponValid?.valid && (
+                  <Check className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                )}
+                {!couponLoading && couponValid?.valid === false && (
+                  <X className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-red-500" />
+                )}
+              </div>
+              {couponValid && (
+                <p
+                  className={`mt-1 text-xs ${
+                    couponValid.valid ? 'text-green-400' : 'text-red-400'
+                  }`}
+                >
+                  {couponValid.valid
+                    ? `${couponValid.organizationName} - ${couponValid.message}`
+                    : couponValid.message}
+                </p>
+              )}
             </div>
 
             {/* Submit Button */}

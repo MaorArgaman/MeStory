@@ -58,7 +58,7 @@ export default function AuthSuccessPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-deep-space">
       <div className="text-center">
-        <Loader2 className="w-16 h-16 animate-spin text-magic-gold mx-auto mb-4" />
+        <Loader2 className="w-16 h-16 animate-spin text-memorial-gold mx-auto mb-4" />
         <h2 className="text-2xl font-semibold text-white mb-2">
           Completing Sign In...
         </h2>

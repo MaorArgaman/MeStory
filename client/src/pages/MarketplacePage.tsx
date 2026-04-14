@@ -12,24 +12,22 @@ import {
   FeaturedBooks,
 } from '../components/recommendations';
 import { SEO } from '../components/seo';
-// Realistic genre banners from public folder
+// Memorial book genre banners from public folder
 const genreBanners: Record<string, string> = {
+  'fallen_soldier': '/img/october7.png',
+  'life_story': '/img/Biography.png',
+  'family_legacy': '/img/memorial-family.png',
+  'tribute': '/img/memorial-hero.png',
+  'holocaust_survivor': '/img/holo.png',
+  'shared_memories': '/img/community-group.png',
+  'letters_and_words': '/img/TrueStory2.png',
+  'testimony': '/img/TrueStory3.png',
+  // Legacy mappings for old data
   'TrueStory': '/img/TrueStory2.png',
-  'Romance': '/img/Romance.png',
-  'Children': '/img/Children.png',
   'Biography': '/img/Biography.png',
-  'Self-Help': '/img/Self-Help.png',
-  'Fantasy': '/img/Fantasy.png',
-  'Sci-Fi': '/img/Sci-Fi.png',
-  'Mystery': '/img/Mystery.png',
-  'Young Adult': '/img/Young%20Adult.png',
   'Historical': '/img/Historical.png',
-  'Thriller': '/img/Thriller.png',
-  'Horror': '/img/Horror.png',
-  'Literary Fiction': '/img/Literary%20Fiction.png',
-  'Adventure': '/img/Adventure.png',
 };
-const marketplaceHero = '/img/marketplace-hero.png';
+const marketplaceHero = '/img/memorial-hero.png';
 
 interface BookItem {
   _id: string;
@@ -70,34 +68,28 @@ interface BookItem {
   };
 }
 
-// Base categories for all languages with translations
+// Memorial book categories for all languages with translations
 const BASE_CATEGORIES: Record<string, Record<'en' | 'he', string>> = {
   'All': { en: 'All', he: 'הכל' },
-  'TrueStory': { en: 'True Story', he: 'סיפור אמיתי' },
-  'Fantasy': { en: 'Fantasy', he: 'פנטזיה' },
-  'Sci-Fi': { en: 'Sci-Fi', he: 'מדע בדיוני' },
-  'Romance': { en: 'Romance', he: 'רומנטיקה' },
-  'Mystery': { en: 'Mystery', he: 'מסתורין' },
-  'Thriller': { en: 'Thriller', he: 'מותחן' },
-  'Horror': { en: 'Horror', he: 'אימה' },
-  'Historical': { en: 'Historical', he: 'היסטורי' },
-  'Literary Fiction': { en: 'Literary Fiction', he: 'ספרות יפה' },
-  'Young Adult': { en: 'Young Adult', he: 'נוער' },
-  'Adventure': { en: 'Adventure', he: 'הרפתקאות' },
-  'Children': { en: 'Children', he: 'ילדים' },
-  'Biography': { en: 'Biography', he: 'ביוגרפיה' },
-  'Self-Help': { en: 'Self-Help', he: 'עזרה עצמית' },
+  'fallen_soldier': { en: 'Fallen Soldiers', he: 'חללי צה"ל' },
+  'life_story': { en: 'Life Story', he: 'סיפור חיים' },
+  'family_legacy': { en: 'Family Legacy', he: 'מורשת משפחתית' },
+  'tribute': { en: 'Tribute & Honor', he: 'מחווה והוקרה' },
+  'holocaust_survivor': { en: 'Holocaust Survivors', he: 'ניצולי שואה' },
+  'shared_memories': { en: 'Shared Memories', he: 'זיכרונות משותפים' },
+  'letters_and_words': { en: 'Letters & Words', he: 'מכתבים ודברים' },
+  'testimony': { en: 'Testimony', he: 'עדות' },
 };
 
-// Personal story subcategories for True Story
+// Memorial book subcategories
 const TRUE_STORY_SUBCATEGORIES = [
-  { id: 'TrueStory_Family', name: { en: 'Family Stories', he: 'סיפורי משפחה' }, icon: '👨‍👩‍👧‍👦' },
-  { id: 'TrueStory_Overcoming', name: { en: 'Overcoming Challenges', he: 'התמודדות והתגברות' }, icon: '💪' },
-  { id: 'TrueStory_Love', name: { en: 'Love & Relationships', he: 'אהבה ויחסים' }, icon: '❤️' },
-  { id: 'TrueStory_Military', name: { en: 'Service & Military', he: 'שירות וצבא' }, icon: '🎖️' },
-  { id: 'TrueStory_Immigration', name: { en: 'Immigration & Roots', he: 'היגרציה ושורשים' }, icon: '🌍' },
-  { id: 'TrueStory_Career', name: { en: 'Career & Business', he: 'קריירה ויזמות' }, icon: '💼' },
-  { id: 'TrueStory_Health', name: { en: 'Health & Recovery', he: 'בריאות והחלמה' }, icon: '🏥' },
+  { id: 'Memorial_Parents', name: { en: 'In Memory of Parents', he: 'לזכר הורים' }, icon: '🕯️' },
+  { id: 'Memorial_Spouse', name: { en: 'In Memory of Spouse', he: 'לזכר בן/בת זוג' }, icon: '💑' },
+  { id: 'Memorial_Child', name: { en: 'In Memory of Child', he: 'לזכר ילד' }, icon: '🌟' },
+  { id: 'Memorial_Sibling', name: { en: 'In Memory of Sibling', he: 'לזכר אח/אחות' }, icon: '👫' },
+  { id: 'Memorial_Soldier', name: { en: 'Fallen Soldier', he: 'חלל צה"ל' }, icon: '🎖️' },
+  { id: 'Memorial_Holocaust', name: { en: 'Holocaust Memory', he: 'זיכרון השואה' }, icon: '✡️' },
+  { id: 'Memorial_Community', name: { en: 'Community Memorial', he: 'הנצחה קהילתית' }, icon: '🤝' },
   { id: 'TrueStory_Growth', name: { en: 'Personal Growth', he: 'צמיחה אישית' }, icon: '🌱' },
   { id: 'TrueStory_Childhood', name: { en: 'Childhood Memories', he: 'זיכרונות ילדות' }, icon: '💎' },
 ];
@@ -328,7 +320,7 @@ export default function MarketplacePage() {
                 delay: i * 0.5,
               }}
             >
-              <BookOpen className="w-12 h-12 sm:w-16 sm:h-16 text-magic-gold" />
+              <BookOpen className="w-12 h-12 sm:w-16 sm:h-16 text-memorial-gold" />
             </motion.div>
           ))}
         </div>
@@ -356,7 +348,7 @@ export default function MarketplacePage() {
             <p className="text-base sm:text-xl md:text-2xl text-gray-300 font-light max-w-3xl mx-auto px-2">
               {t('marketplace.hero.subtitle')}
               <br />
-              <span className="text-magic-gold">{t('marketplace.hero.highlight')}</span>
+              <span className="text-memorial-gold">{t('marketplace.hero.highlight')}</span>
             </p>
           </motion.div>
 
@@ -816,7 +808,7 @@ export default function MarketplacePage() {
               }}
             >
               {/* Glowing Border */}
-              <div className="absolute inset-0 rounded-2xl ring-2 ring-magic-gold/30 shadow-glow-gold" />
+              <div className="absolute inset-0 rounded-2xl ring-2 ring-memorial-gold/30 shadow-glow-gold" />
 
               {/* Gradient Overlay for Text Readability */}
               <div className="absolute inset-0 bg-gradient-to-t from-deep-space/95 via-deep-space/50 to-transparent rounded-2xl" />
@@ -843,7 +835,7 @@ export default function MarketplacePage() {
                       ease: 'easeInOut',
                     }}
                   >
-                    <Sparkles className="w-6 h-6 text-magic-gold" />
+                    <Sparkles className="w-6 h-6 text-memorial-gold" />
                   </motion.div>
                 ))}
               </div>
@@ -876,7 +868,7 @@ export default function MarketplacePage() {
                 {[...Array(15)].map((_, i) => (
                   <motion.div
                     key={`particle-${i}`}
-                    className="absolute w-1 h-1 bg-magic-gold rounded-full"
+                    className="absolute w-1 h-1 bg-memorial-gold rounded-full"
                     style={{
                       left: `${Math.random() * 100}%`,
                       bottom: '0%',
@@ -1365,7 +1357,7 @@ export default function MarketplacePage() {
               }}
             >
               {/* Glowing Border */}
-              <div className="absolute inset-0 rounded-2xl ring-2 ring-magic-gold/30 shadow-lg" />
+              <div className="absolute inset-0 rounded-2xl ring-2 ring-memorial-gold/30 shadow-lg" />
 
               {/* Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-deep-space/95 via-deep-space/50 to-transparent rounded-2xl" />
@@ -1404,7 +1396,7 @@ export default function MarketplacePage() {
             animate={{ opacity: 1 }}
             className="text-gray-400 font-medium text-sm sm:text-base"
           >
-            {books.length} <span className="text-magic-gold">{t('marketplace.results.stellar')}</span>{' '}
+            {books.length} <span className="text-memorial-gold">{t('marketplace.results.stellar')}</span>{' '}
             {books.length === 1 ? t('marketplace.results.count_singular', { count: books.length }).split(' ').slice(-2).join(' ') : t('marketplace.results.count_plural', { count: books.length }).split(' ').slice(-2).join(' ')}
           </motion.p>
           <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
@@ -1412,7 +1404,7 @@ export default function MarketplacePage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="flex-1 sm:flex-none rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm border border-white/10 focus:outline-none focus:ring-2 focus:ring-magic-gold text-white cursor-pointer"
+              className="flex-1 sm:flex-none rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm border border-white/10 focus:outline-none focus:ring-2 focus:ring-memorial-gold text-white cursor-pointer"
               style={{ backgroundColor: '#1a1a2e' }}
             >
               <option value="createdAt" style={{ backgroundColor: '#1a1a2e', color: 'white' }}>{t('marketplace.sort.newest')}</option>
@@ -1554,7 +1546,7 @@ export default function MarketplacePage() {
                   <div className="flex-1 flex flex-col">
                     {/* Author */}
                     <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-magic-gold/30 to-yellow-600/30 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-memorial-gold/30 to-yellow-600/30 flex items-center justify-center overflow-hidden flex-shrink-0">
                         {book.author.profile?.avatar ? (
                           <OptimizedImage
                             src={book.author.profile.avatar}
@@ -1562,7 +1554,7 @@ export default function MarketplacePage() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-magic-gold/70" />
+                          <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-memorial-gold/70" />
                         )}
                       </div>
                       <span className="truncate">{book.author.name}</span>
@@ -1583,13 +1575,13 @@ export default function MarketplacePage() {
                           {t('marketplace.book.free')}
                         </span>
                       ) : (
-                        <div className="flex items-center gap-0.5 sm:gap-1 text-magic-gold font-bold text-sm sm:text-lg">
+                        <div className="flex items-center gap-0.5 sm:gap-1 text-memorial-gold font-bold text-sm sm:text-lg">
                           <span>{formatCurrency(book.publishingStatus.price)}</span>
                         </div>
                       )}
 
                       {/* Rating */}
-                      {book.qualityScore && (
+                      {book.qualityScore?.rating != null && (
                         <div className="flex items-center gap-0.5 sm:gap-1">
                           <Star className="w-4 h-4 sm:w-5 sm:h-5 fill-yellow-400 text-yellow-400" />
                           <span className="text-xs sm:text-sm font-bold text-white">

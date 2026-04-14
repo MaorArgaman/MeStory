@@ -659,7 +659,7 @@ export default function SettingsPage() {
                       <div className="flex items-center gap-4">
                         {/* Avatar Preview */}
                         <div className="relative">
-                          <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-magic-gold/20 to-purple-500/20 border-2 border-white/10 flex items-center justify-center">
+                          <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-memorial-gold/20 to-purple-500/20 border-2 border-white/10 flex items-center justify-center">
                             {avatar ? (
                               <img
                                 src={avatar}

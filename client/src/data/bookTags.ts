@@ -14,6 +14,7 @@ export interface BookTag {
 }
 
 export type TagCategory =
+  | 'memorial'         // הנצחה - קטגוריה ראשית
   | 'life_events'      // אירועי חיים
   | 'emotions'         // רגשות
   | 'relationships'    // יחסים
@@ -30,6 +31,7 @@ export type TagCategory =
   | 'writing_style';   // סגנון כתיבה
 
 export const TAG_CATEGORIES: Record<TagCategory, { en: string; he: string; icon: string }> = {
+  memorial: { en: 'Memorial', he: 'הנצחה', icon: '🕯️' },
   life_events: { en: 'Life Events', he: 'אירועי חיים', icon: '📅' },
   emotions: { en: 'Emotions', he: 'רגשות', icon: '💭' },
   relationships: { en: 'Relationships', he: 'יחסים', icon: '💕' },
@@ -47,6 +49,18 @@ export const TAG_CATEGORIES: Record<TagCategory, { en: string; he: string; icon:
 };
 
 export const BOOK_TAGS: BookTag[] = [
+  // ===== MEMORIAL - הנצחה (קטגוריות ראשיות) =====
+  { id: 'fallen_soldier', name: { en: 'In Memory of a Fallen Soldier', he: 'לזכר חייל/ת שנפל/ה' }, category: 'memorial', icon: '🎖️' },
+  { id: 'life_story', name: { en: 'Life Story', he: 'סיפור חיים' }, category: 'memorial', icon: '📖' },
+  { id: 'family_legacy', name: { en: 'Family Legacy', he: 'מורשת משפחתית' }, category: 'memorial', icon: '👨‍👩‍👧‍👦' },
+  { id: 'tribute', name: { en: 'Tribute', he: 'מחווה ליקיר/ה' }, category: 'memorial', icon: '💐' },
+  { id: 'holocaust_survivor', name: { en: 'Holocaust Survivor Testimony', he: 'עדות ניצול שואה' }, category: 'memorial', icon: '✡️' },
+  { id: 'shared_memories', name: { en: 'Shared Memories', he: 'זיכרונות משותפים' }, category: 'memorial', icon: '🤝' },
+  { id: 'letters_and_words', name: { en: 'Letters Unspoken', he: 'מכתבים ודברים שלא נאמרו' }, category: 'memorial', icon: '✉️' },
+  { id: 'testimony', name: { en: 'Testimony', he: 'עדות' }, category: 'memorial', icon: '🎤' },
+  { id: 'collaborative_memorial', name: { en: 'Collaborative Memorial', he: 'ספר הנצחה שיתופי' }, category: 'memorial', icon: '👥' },
+  { id: 'remembrance', name: { en: 'Remembrance', he: 'יום הזיכרון' }, category: 'memorial', icon: '🕯️' },
+
   // ===== LIFE EVENTS - אירועי חיים =====
   { id: 'birth', name: { en: 'Birth', he: 'לידה' }, category: 'life_events', icon: '👶' },
   { id: 'childhood', name: { en: 'Childhood', he: 'ילדות' }, category: 'life_events', icon: '🧒' },

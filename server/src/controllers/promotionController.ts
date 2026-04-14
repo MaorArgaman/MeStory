@@ -18,10 +18,12 @@ export const getFeatured = async (req: AuthRequest, res: Response): Promise<void
     });
   } catch (error) {
     console.error('Get featured books error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get featured books',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get featured books',
+      });
+    }
   }
 };
 
@@ -41,10 +43,12 @@ export const getRisingStars = async (req: AuthRequest, res: Response): Promise<v
     });
   } catch (error) {
     console.error('Get rising stars error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get rising stars',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get rising stars',
+      });
+    }
   }
 };
 
@@ -69,10 +73,12 @@ export const getQualityReleases = async (req: AuthRequest, res: Response): Promi
     });
   } catch (error) {
     console.error('Get quality releases error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get quality releases',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get quality releases',
+      });
+    }
   }
 };
 
@@ -93,10 +99,12 @@ export const getTrending = async (req: AuthRequest, res: Response): Promise<void
     });
   } catch (error) {
     console.error('Get trending error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get trending books',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get trending books',
+      });
+    }
   }
 };
 
@@ -116,10 +124,12 @@ export const getTopAuthorsSpotlight = async (req: AuthRequest, res: Response): P
     });
   } catch (error) {
     console.error('Get top authors spotlight error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get top authors spotlight',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get top authors spotlight',
+      });
+    }
   }
 };
 
@@ -140,10 +150,12 @@ export const getTopInGenre = async (req: AuthRequest, res: Response): Promise<vo
     });
   } catch (error) {
     console.error('Get top in genre error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get top books in genre',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get top books in genre',
+      });
+    }
   }
 };
 
@@ -161,9 +173,11 @@ export const getPromotionSummary = async (_req: AuthRequest, res: Response): Pro
     });
   } catch (error) {
     console.error('Get promotion summary error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get promotion summary',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get promotion summary',
+      });
+    }
   }
 };

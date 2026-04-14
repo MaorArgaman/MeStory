@@ -287,7 +287,7 @@ export default function AIInterviewChat({
               onClick={() => setTtsEnabled(!ttsEnabled)}
               className={`p-2 rounded-lg transition-colors ${
                 ttsEnabled
-                  ? 'bg-magic-gold/20 text-magic-gold'
+                  ? 'bg-memorial-gold/20 text-memorial-gold'
                   : 'bg-white/10 text-gray-400 hover:text-white'
               }`}
               title={ttsEnabled ? t('interview.disableVoice') : t('interview.enableVoice')}
@@ -336,7 +336,7 @@ export default function AIInterviewChat({
                     isComplete
                       ? 'bg-green-500'
                       : isCurrent
-                      ? 'bg-magic-gold'
+                      ? 'bg-memorial-gold'
                       : 'bg-white/10'
                   }`}
                 />
@@ -369,7 +369,7 @@ export default function AIInterviewChat({
                 >
                   {message.role === 'ai' && (
                     <div className="flex items-center gap-2 mb-1 text-xs text-gray-400">
-                      <span className="font-medium text-magic-gold">{t('interview.aiInterviewer')}</span>
+                      <span className="font-medium text-memorial-gold">{t('interview.aiInterviewer')}</span>
                       <ChevronRight className="w-3 h-3" />
                       <span>{topicNames[message.topic]}</span>
                     </div>
@@ -391,7 +391,7 @@ export default function AIInterviewChat({
             >
               <div className="bg-white/10 rounded-2xl px-4 py-3 border border-white/10">
                 <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-magic-gold" />
+                  <Loader2 className="w-4 h-4 animate-spin text-memorial-gold" />
                   <span className="text-sm text-gray-400">
                     {isTranscribing ? t('interview.transcribing') : t('interview.thinking')}
                   </span>

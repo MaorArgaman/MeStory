@@ -118,7 +118,7 @@ export default function AuthorProfilePage() {
     return (
       <div className="min-h-screen pt-32 flex items-center justify-center">
         <div className="text-center">
-          <User className="w-16 h-16 text-magic-gold mx-auto mb-4 animate-pulse" />
+          <User className="w-16 h-16 text-memorial-gold mx-auto mb-4 animate-pulse" />
           <p className="text-gray-300 text-lg">{t('authorProfile.loading')}</p>
         </div>
       </div>
@@ -160,7 +160,7 @@ export default function AuthorProfilePage() {
                 transition={{ type: 'spring', damping: 15 }}
                 className="relative -mt-12 sm:-mt-16 md:-mt-24"
               >
-                <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-magic-gold to-yellow-600 flex items-center justify-center shadow-glow-gold ring-4 ring-deep-space">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-memorial-gold to-yellow-600 flex items-center justify-center shadow-glow-gold ring-4 ring-deep-space">
                   {author.avatar ? (
                     <img
                       src={author.avatar}
@@ -189,7 +189,7 @@ export default function AuthorProfilePage() {
                 {/* Stats */}
                 <div className="flex flex-wrap justify-center md:justify-start gap-3 sm:gap-4 md:gap-6 mb-4">
                   <div className="flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-magic-gold" />
+                    <BookOpen className="w-5 h-5 text-memorial-gold" />
                     <span className="text-white font-semibold">
                       {author.stats.publishedBooks}
                     </span>
@@ -197,7 +197,7 @@ export default function AuthorProfilePage() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <Eye className="w-5 h-5 text-magic-gold" />
+                    <Eye className="w-5 h-5 text-memorial-gold" />
                     <span className="text-white font-semibold">
                       {author.stats.totalReads.toLocaleString()}
                     </span>
@@ -205,14 +205,14 @@ export default function AuthorProfilePage() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <User className="w-5 h-5 text-magic-gold" />
+                    <User className="w-5 h-5 text-memorial-gold" />
                     <span className="text-white font-semibold">{followersCount}</span>
                     <span className="text-gray-400">{t('authorProfile.followers')}</span>
                   </div>
 
                   {author.stats.rating > 0 && (
                     <div className="flex items-center gap-2">
-                      <Star className="w-5 h-5 text-magic-gold fill-magic-gold" />
+                      <Star className="w-5 h-5 text-memorial-gold fill-memorial-gold" />
                       <span className="text-white font-semibold">
                         {author.stats.rating.toFixed(1)}
                       </span>
@@ -264,7 +264,7 @@ export default function AuthorProfilePage() {
               {activeTab === 'books' && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute inset-0 bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 border border-magic-gold/30 rounded-xl shadow-glow-gold"
+                  className="absolute inset-0 bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 border border-memorial-gold/30 rounded-xl shadow-glow-gold"
                 />
               )}
               <span className="relative z-10">{t('authorProfile.publishedBooks')} ({books.length})</span>
@@ -282,7 +282,7 @@ export default function AuthorProfilePage() {
               {activeTab === 'about' && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute inset-0 bg-gradient-to-r from-magic-gold/20 to-yellow-500/20 border border-magic-gold/30 rounded-xl shadow-glow-gold"
+                  className="absolute inset-0 bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 border border-memorial-gold/30 rounded-xl shadow-glow-gold"
                 />
               )}
               <span className="relative z-10">{t('authorProfile.about')}</span>
@@ -336,7 +336,7 @@ export default function AuthorProfilePage() {
 
                           {/* Masterpiece Badge */}
                           {book.qualityScore && book.qualityScore.overallScore >= 90 && (
-                            <div className="absolute -top-2 -right-2 px-3 py-1 rounded-full bg-gradient-to-r from-magic-gold to-yellow-600 text-deep-space text-xs font-bold shadow-glow-gold flex items-center gap-1">
+                            <div className="absolute -top-2 -right-2 px-3 py-1 rounded-full bg-gradient-to-r from-memorial-gold to-yellow-600 text-deep-space text-xs font-bold shadow-glow-gold flex items-center gap-1">
                               <Sparkles className="w-3 h-3" />
                               {book.qualityScore.ratingLabel}
                             </div>
@@ -354,7 +354,7 @@ export default function AuthorProfilePage() {
                         <div className="flex items-center gap-4 text-sm mb-3">
                           {book.statistics.averageRating && (
                             <div className="flex items-center gap-1">
-                              <Star className="w-4 h-4 text-magic-gold fill-magic-gold" />
+                              <Star className="w-4 h-4 text-memorial-gold fill-memorial-gold" />
                               <span className="text-gray-300">
                                 {book.statistics.averageRating.toFixed(1)}
                               </span>
@@ -368,7 +368,7 @@ export default function AuthorProfilePage() {
                         </div>
 
                         {/* Price */}
-                        <div className="text-magic-gold font-bold">
+                        <div className="text-memorial-gold font-bold">
                           {book.publishingStatus.isFree
                             ? t('authorProfile.free')
                             : `$${book.publishingStatus.price}`}
@@ -383,7 +383,7 @@ export default function AuthorProfilePage() {
 
           {activeTab === 'about' && (
             <GlassCard>
-              <h2 className="text-3xl font-display font-bold text-magic-gold mb-6">
+              <h2 className="text-3xl font-display font-bold text-memorial-gold mb-6">
                 {t('authorProfile.aboutAuthor', { name: author.name })}
               </h2>
 
