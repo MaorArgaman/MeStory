@@ -225,13 +225,22 @@ export default function BookFlipReader({
                 >
                   {backCoverImageUrl && <div className="absolute inset-0 bg-black/50" />}
                   <div
-                    className="relative z-10 text-center px-6 py-8 max-w-[85%] max-h-full overflow-y-auto"
+                    className="relative z-10 text-center px-8 py-10 max-w-[85%] max-h-[80%] overflow-hidden flex items-center justify-center"
                     style={{ direction: 'rtl' }}
                   >
                     {(book.synopsis || book.description) && (
                       <p
-                        className="drop-shadow-md leading-relaxed break-words"
-                        style={{ fontSize: 'clamp(0.7rem, 1.8vw, 0.9rem)' }}
+                        className="drop-shadow-md break-words"
+                        style={{
+                          fontSize: 'clamp(0.65rem, 1.4vw, 0.85rem)',
+                          lineHeight: 1.6,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 14,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          userSelect: 'none',
+                        }}
                       >
                         {book.synopsis || book.description}
                       </p>
@@ -358,13 +367,22 @@ export default function BookFlipReader({
                 >
                   {backCoverImageUrl && <div className="absolute inset-0 bg-black/50" />}
                   <div
-                    className="relative z-10 text-center px-6 py-8 max-w-[85%] max-h-full overflow-y-auto"
+                    className="relative z-10 text-center px-8 py-10 max-w-[85%] max-h-[80%] overflow-hidden flex items-center justify-center"
                     style={{ direction: 'ltr' }}
                   >
                     {(book.synopsis || book.description) && (
                       <p
-                        className="drop-shadow-md leading-relaxed break-words"
-                        style={{ fontSize: 'clamp(0.7rem, 1.8vw, 0.9rem)' }}
+                        className="drop-shadow-md break-words"
+                        style={{
+                          fontSize: 'clamp(0.65rem, 1.4vw, 0.85rem)',
+                          lineHeight: 1.6,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 14,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          userSelect: 'none',
+                        }}
                       >
                         {book.synopsis || book.description}
                       </p>
