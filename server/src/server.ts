@@ -50,6 +50,10 @@ const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 5001;
 
+// Deploy marker — bumped whenever the server code changes. Used to verify
+// that a push actually rolled out to Vercel.
+const SERVER_VERSION = 'v2-hardened-env-handling';
+
 // Check if running in Vercel serverless environment
 const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
 
@@ -57,6 +61,25 @@ const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
 if (isVercel) {
   app.set('trust proxy', 1);
 }
+
+// EARLIEST possible diagnostics endpoint — no middleware, no DB, no imports
+// beyond Express itself. If this doesn't respond, the function is crashing
+// during cold start (module-load error) and no amount of runtime logic helps.
+app.get('/version', (_req, res) => {
+  res.status(200).json({
+    version: SERVER_VERSION,
+    timestamp: new Date().toISOString(),
+    node: process.version,
+    env: {
+      isVercel,
+      nodeEnv: process.env.NODE_ENV,
+      hasSupabaseUrl: !!process.env.SUPABASE_URL,
+      hasSupabaseKey: !!process.env.SUPABASE_ANON_KEY,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+      hasClientUrl: !!process.env.CLIENT_URL,
+    },
+  });
+});
 
 // ============================================
 // Serverless Initialization (must be early)
