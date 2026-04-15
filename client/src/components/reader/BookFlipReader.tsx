@@ -225,26 +225,29 @@ export default function BookFlipReader({
                 >
                   {backCoverImageUrl && <div className="absolute inset-0 bg-black/50" />}
                   <div
-                    className="relative z-10 text-center px-8 py-10 max-w-[85%] max-h-[80%] overflow-hidden flex items-center justify-center"
+                    className="relative z-10 text-center px-8 py-10 max-w-[88%] max-h-[85%] flex items-center justify-center"
                     style={{ direction: 'rtl' }}
                   >
-                    {(book.synopsis || book.description) && (
-                      <p
-                        className="drop-shadow-md break-words"
-                        style={{
-                          fontSize: 'clamp(0.65rem, 1.4vw, 0.85rem)',
-                          lineHeight: 1.6,
-                          display: '-webkit-box',
-                          WebkitLineClamp: 14,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          userSelect: 'none',
-                        }}
-                      >
-                        {book.synopsis || book.description}
-                      </p>
-                    )}
+                    {(() => {
+                      const text = book.synopsis || book.description || '';
+                      const len = text.length;
+                      // Auto-scale font: shorter text = bigger, longer text = smaller
+                      const fontSize = len < 200 ? '1rem' : len < 350 ? '0.85rem' : len < 500 ? '0.75rem' : '0.7rem';
+                      const lineHeight = len < 200 ? 1.7 : len < 350 ? 1.6 : 1.5;
+                      return text && (
+                        <p
+                          className="drop-shadow-md break-words"
+                          style={{
+                            fontSize,
+                            lineHeight,
+                            userSelect: 'none',
+                            whiteSpace: 'pre-wrap',
+                          }}
+                        >
+                          {text}
+                        </p>
+                      );
+                    })()}
                   </div>
                 </div>
               </Page>
@@ -367,26 +370,28 @@ export default function BookFlipReader({
                 >
                   {backCoverImageUrl && <div className="absolute inset-0 bg-black/50" />}
                   <div
-                    className="relative z-10 text-center px-8 py-10 max-w-[85%] max-h-[80%] overflow-hidden flex items-center justify-center"
+                    className="relative z-10 text-center px-8 py-10 max-w-[88%] max-h-[85%] flex items-center justify-center"
                     style={{ direction: 'ltr' }}
                   >
-                    {(book.synopsis || book.description) && (
-                      <p
-                        className="drop-shadow-md break-words"
-                        style={{
-                          fontSize: 'clamp(0.65rem, 1.4vw, 0.85rem)',
-                          lineHeight: 1.6,
-                          display: '-webkit-box',
-                          WebkitLineClamp: 14,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          userSelect: 'none',
-                        }}
-                      >
-                        {book.synopsis || book.description}
-                      </p>
-                    )}
+                    {(() => {
+                      const text = book.synopsis || book.description || '';
+                      const len = text.length;
+                      const fontSize = len < 200 ? '1rem' : len < 350 ? '0.85rem' : len < 500 ? '0.75rem' : '0.7rem';
+                      const lineHeight = len < 200 ? 1.7 : len < 350 ? 1.6 : 1.5;
+                      return text && (
+                        <p
+                          className="drop-shadow-md break-words"
+                          style={{
+                            fontSize,
+                            lineHeight,
+                            userSelect: 'none',
+                            whiteSpace: 'pre-wrap',
+                          }}
+                        >
+                          {text}
+                        </p>
+                      );
+                    })()}
                   </div>
                 </div>
               </Page>

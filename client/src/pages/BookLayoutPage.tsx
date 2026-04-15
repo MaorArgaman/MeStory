@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
+import { exportBookAsPdfAsync } from '../utils/asyncExport';
 import {
   ArrowLeft,
   ArrowRight,
@@ -1030,23 +1031,37 @@ export default function BookLayoutPage() {
     try {
       await saveLayout();
       toast.loading(`Creating ${exportFormat.toUpperCase()} file...`, { id: 'export' });
-      const response = await api.get(`/books/${bookId}/export/${exportFormat}`, { responseType: 'blob' });
-      const blob = new Blob([response.data], {
-        type: exportFormat === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${book.title}.${exportFormat}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+
+      if (exportFormat === 'pdf') {
+        // PDF goes through the background job queue; large books no longer block or time out.
+        await exportBookAsPdfAsync({
+          bookId: bookId!,
+          bookTitle: book.title,
+          onProgress: (progress, message) => {
+            toast.loading(`${message} (${progress}%)`, { id: 'export' });
+          },
+        });
+      } else {
+        // DOCX / other formats still stream from the sync endpoint
+        const response = await api.get(`/books/${bookId}/export/${exportFormat}`, { responseType: 'blob' });
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${book.title}.${exportFormat}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }
+
       toast.success('File downloaded successfully!', { id: 'export' });
       setShowExportModal(false);
     } catch (error: any) {
       console.error('Failed to export book:', error);
-      toast.error(error.response?.data?.error || 'Error exporting book', { id: 'export' });
+      toast.error(error?.message || error.response?.data?.error || 'Error exporting book', { id: 'export' });
     } finally {
       setExporting(false);
     }
@@ -4037,20 +4052,29 @@ function BackCoverPreview({
         <div className="absolute inset-0 bg-black/50" />
       )}
 
-      {/* Synopsis content */}
+      {/* Synopsis content - auto-scaling font to fit all text */}
       <div className="relative z-10 h-full flex flex-col p-6">
-        <div className="flex-1 overflow-hidden">
-          <p
-            className="text-sm leading-relaxed text-white/90 drop-shadow-md"
-            style={{
-              display: '-webkit-box',
-              WebkitLineClamp: 12,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-            }}
-          >
-            {displaySynopsis || (language === 'he' ? 'תקציר הספר יופיע כאן...' : 'Book synopsis will appear here...')}
-          </p>
+        <div className="flex-1 flex items-center justify-center">
+          {(() => {
+            const text = displaySynopsis || (language === 'he' ? 'תקציר הספר יופיע כאן...' : 'Book synopsis will appear here...');
+            const len = text.length;
+            const fontSize = len < 200 ? '0.95rem' : len < 350 ? '0.85rem' : len < 500 ? '0.78rem' : '0.72rem';
+            const lineHeight = len < 200 ? 1.7 : len < 350 ? 1.6 : 1.5;
+            return (
+              <p
+                className="text-white/90 drop-shadow-md break-words"
+                style={{
+                  fontSize,
+                  lineHeight,
+                  userSelect: 'none',
+                  whiteSpace: 'pre-wrap',
+                  textAlign: isRTL ? 'right' : 'left',
+                }}
+              >
+                {text}
+              </p>
+            );
+          })()}
         </div>
 
         {/* Author at bottom */}

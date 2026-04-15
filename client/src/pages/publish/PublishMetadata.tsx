@@ -269,18 +269,18 @@ export default function PublishMetadata() {
               <textarea
                 value={synopsis}
                 onChange={(e) => setSynopsis(e.target.value)}
-                placeholder="Write a compelling synopsis that will hook readers... (min 100 characters)"
+                placeholder="Write a compelling synopsis that will fit on the back cover... (100-500 characters)"
                 className="input min-h-[200px] resize-none"
-                maxLength={1000}
+                maxLength={500}
               />
               <div className="flex justify-between items-center mt-2 text-sm">
-                <span className="text-gray-400">
-                  {synopsis.length} / 1000 characters
+                <span className={`${synopsis.length > 450 ? 'text-amber-400' : 'text-gray-400'}`}>
+                  {synopsis.length} / 500 characters
                 </span>
-                {synopsis.length >= 100 && (
+                {synopsis.length >= 100 && synopsis.length <= 500 && (
                   <span className="text-green-400 flex items-center gap-1">
                     <Sparkles className="w-4 h-4" />
-                    Good length!
+                    Good length for back cover!
                   </span>
                 )}
               </div>

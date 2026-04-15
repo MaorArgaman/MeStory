@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { SupportedLanguage, getLanguageInstruction, detectLanguage, getLocalizedRatingLabel } from '../utils/languageHelper';
+import { geminiBreaker, CircuitBreakerOpenError } from '../utils/circuitBreaker';
 
 // Lazy-initialize Gemini AI client (only when API key is available)
 let genAIClient: GoogleGenerativeAI | null = null;
@@ -17,6 +18,19 @@ function getGeminiModel(): GenerativeModel {
   }
   return modelInstance;
 }
+
+/**
+ * Wraps Gemini's generateContent in a circuit breaker and per-call timeout.
+ * After 3 consecutive failures the breaker OPENS for 60 seconds and
+ * subsequent calls fast-fail with CircuitBreakerOpenError instead of hanging.
+ * Returns the same result shape as the raw SDK call so call sites can stay identical.
+ */
+function generateWithBreaker(prompt: string) {
+  return geminiBreaker.exec(() => getGeminiModel().generateContent(prompt));
+}
+
+// Re-export so callers/controllers can distinguish "AI down" from other errors
+export { CircuitBreakerOpenError };
 
 // Types for AI responses
 export interface WritingSuggestion {
@@ -218,7 +232,7 @@ ${context?.storyContext?.voiceInterview ? '- Align with the story background fro
 Respond ONLY with a JSON array of 3 strings, nothing else:
 ["option1", "option2", "option3"]`;
 
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const response = result.response;
     const text = response.text();
 
@@ -305,7 +319,7 @@ Respond ONLY with valid JSON in this exact format:
   "suggestions": ["<suggestion 1>", "<suggestion 2>", "<suggestion 3>"]
 }`;
 
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const response = result.response;
     const responseText = response.text();
 
@@ -405,7 +419,7 @@ export async function enhanceText(
         break;
     }
 
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const response = result.response;
     return response.text().trim();
   } catch (error: any) {
@@ -449,7 +463,7 @@ ${titleLangNote}
 
 Format: Return only the titles, one per line, numbered 1-${count}.`;
 
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const response = result.response;
     const text = response.text().trim();
 
@@ -509,31 +523,43 @@ CONTENT SAMPLE:
 ${contentSample}
 
 TASK:
-Write a captivating 2-3 paragraph synopsis (150-300 words) that:
-- Hooks readers immediately with an engaging opening
-- Introduces the main character(s) and their conflict
+Write a SHORT, punchy back-cover synopsis (strictly 80-100 words, MUST fit in 400-500 characters) that:
+- Hooks readers immediately with an engaging opening line
+- Introduces the main character(s) and their core conflict
 - Hints at the central plot without spoilers
 - Evokes emotion and creates intrigue
-- Ends with a compelling question or hook
-- Uses active, vivid language appropriate for ${genre}
-- Follows standard book blurb conventions
+- Uses concise, vivid language appropriate for ${genre}
+- Follows standard printed book back-cover conventions
 
-TARGET AUDIENCE: Readers browsing the marketplace who need a reason to click "Read Now"
+CRITICAL CONSTRAINTS:
+- The synopsis will be printed on the BACK COVER of the physical book
+- Maximum 500 characters total (including spaces and punctuation)
+- Keep it tight — every word must earn its place
+- 2 short paragraphs maximum
+
+TARGET AUDIENCE: Someone holding the physical book deciding whether to buy it
 
 Respond with ONLY the synopsis text, no titles, no explanations, no formatting markers.`;
 
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const response = result.response;
-    const synopsis = response.text().trim();
+    let synopsis = response.text().trim();
 
-    // Validate length (100-1000 characters as per frontend validation)
+    // Validate length (100-500 characters to fit on back cover)
     if (synopsis.length < 100) {
       throw new Error('Generated synopsis is too short');
     }
 
-    // Truncate if too long (keep within 1000 char limit)
-    if (synopsis.length > 1000) {
-      return synopsis.slice(0, 997) + '...';
+    // Truncate if too long (keep within 500 char limit for back cover)
+    if (synopsis.length > 500) {
+      // Truncate at last full sentence within limit
+      const truncated = synopsis.slice(0, 497);
+      const lastPeriod = Math.max(
+        truncated.lastIndexOf('.'),
+        truncated.lastIndexOf('!'),
+        truncated.lastIndexOf('?'),
+      );
+      synopsis = lastPeriod > 300 ? truncated.slice(0, lastPeriod + 1) : truncated + '...';
     }
 
     return synopsis;
@@ -591,7 +617,7 @@ Provide colors as hex codes. Respond ONLY with valid JSON in this exact format:
   "suggestion": "Brief explanation of the color choice (1-2 sentences)"
 }`;
 
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const response = result.response;
     const text = response.text().trim();
 
@@ -664,7 +690,7 @@ Respond ONLY with valid JSON in this exact format:
   "suggestion": "Brief explanation of the design concept (2-3 sentences)"
 }`;
 
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const response = result.response;
     const text = response.text().trim();
 
