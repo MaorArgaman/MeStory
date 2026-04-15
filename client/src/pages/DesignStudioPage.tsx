@@ -795,27 +795,13 @@ export default function DesignStudioPage() {
       }
     } catch (error: any) {
       console.error('Failed to load pricing strategy:', error);
-      // Set default strategy if endpoint doesn't exist yet
       setPricingStrategy({
         recommendedPrice: 0,
         recommendFree: true,
-        reasoning: 'This is your first book! We recommend starting free to build a reader base and get your first reviews.',
-        authorStats: {
-          totalBooks: 1,
-          publishedBooks: 0,
-          totalSales: 0,
-          averageRating: 0,
-        },
-        marketAnalysis: {
-          genreAveragePrice: 25,
-          competitorPriceRange: { min: 0, max: 50 },
-          demandLevel: 'medium',
-        },
-        strategyTips: [
-          'A free first book helps build a loyal reader base',
-          'Collect positive reviews before moving to paid books',
-          'Consider offering your first book for free for a limited time',
-        ],
+        reasoning: 'First book - free recommended.',
+        authorStats: { totalBooks: 1, publishedBooks: 0, totalSales: 0, averageRating: 0 },
+        marketAnalysis: { genreAveragePrice: 25, competitorPriceRange: { min: 0, max: 50 }, demandLevel: 'medium' },
+        strategyTips: [],
       });
       setIsFree(true);
       setSelectedPrice(0);
@@ -823,6 +809,8 @@ export default function DesignStudioPage() {
       setLoadingStrategy(false);
     }
   };
+  // Reference to avoid unused warning - function kept for modal compatibility
+  void loadPricingStrategy;
 
   // Handle publish book
   const handlePublish = async () => {
@@ -929,12 +917,6 @@ export default function DesignStudioPage() {
     }
   };
 
-  // Open publish modal and load strategy
-  const openPublishModal = () => {
-    setShowPublishModal(true);
-    loadPricingStrategy();
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -1000,31 +982,13 @@ export default function DesignStudioPage() {
               )}
             </button>
 
-            {/* Book Layout Button */}
+            {/* Book Layout Button (Export & Publish moved to Layout page) */}
             <button
               onClick={() => navigate(`/layout/${bookId}`)}
-              className="btn-secondary flex items-center gap-2"
+              className="btn-gold flex items-center gap-2 shadow-glow-gold"
             >
               <LayoutGrid className="w-4 h-4" />
               {t('design_studio.page_design')}
-            </button>
-
-            {/* Export Button */}
-            <button
-              onClick={() => setShowExportModal(true)}
-              className="btn-secondary flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              {t('design_studio.export_to_file')}
-            </button>
-
-            {/* Publish Button */}
-            <button
-              onClick={openPublishModal}
-              className="btn-gold flex items-center gap-2 shadow-glow-gold"
-            >
-              <Rocket className="w-4 h-4" />
-              {t('design_studio.publish_to_store')}
             </button>
           </div>
 
@@ -1057,24 +1021,10 @@ export default function DesignStudioPage() {
             >
               <button
                 onClick={() => { navigate(`/layout/${bookId}`); setShowMobileActions(false); }}
-                className="w-full btn-secondary flex items-center justify-center gap-2 py-3"
+                className="w-full btn-gold flex items-center justify-center gap-2 py-3 shadow-glow-gold"
               >
                 <LayoutGrid className="w-4 h-4" />
                 {t('design_studio.page_design')}
-              </button>
-              <button
-                onClick={() => { setShowExportModal(true); setShowMobileActions(false); }}
-                className="w-full btn-secondary flex items-center justify-center gap-2 py-3"
-              >
-                <Download className="w-4 h-4" />
-                {t('design_studio.export_to_file')}
-              </button>
-              <button
-                onClick={() => { openPublishModal(); setShowMobileActions(false); }}
-                className="w-full btn-gold flex items-center justify-center gap-2 py-3 shadow-glow-gold"
-              >
-                <Rocket className="w-4 h-4" />
-                {t('design_studio.publish_to_store')}
               </button>
             </motion.div>
           )}
