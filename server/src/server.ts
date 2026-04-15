@@ -41,6 +41,7 @@ import invoiceRoutes from './routes/invoiceRoutes';
 import sitemapRoutes from './routes/sitemapRoutes';
 import collaborationRoutes from './routes/collaborationRoutes';
 import organizationRoutes from './routes/organizationRoutes';
+import jobRoutes from './routes/jobRoutes';
 import { initializeDefaultTemplates } from './services/templateService';
 import { initializeSubscriptionJobs } from './jobs/subscriptionJobs';
 import { initializeCleanupJobs } from './jobs/cleanupJobs';
@@ -136,6 +137,8 @@ if (isVercel) {
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'https://mestory.co.il',
+  'https://www.mestory.co.il',
   process.env.CLIENT_URL,
 ].filter(Boolean) as string[];
 
@@ -162,13 +165,13 @@ app.use(cors({
       return callback(null, true);
     }
 
-    console.warn(`CORS request from origin: ${origin}`);
-    // SEC-009 FIX: Only allow unknown origins in development
-    if (process.env.NODE_ENV === 'production') {
-      callback(new Error('Not allowed by CORS'));
-    } else {
-      callback(null, true);
-    }
+    console.warn(`CORS request from disallowed origin: ${origin}`);
+    // IMPORTANT: Do NOT pass an Error to the callback — that triggers Express's
+    // default error handler which returns 500 with no CORS headers, and the
+    // browser misreports it as "CORS header missing". Instead, return false:
+    // cors middleware will simply not set Access-Control-Allow-Origin, the
+    // browser blocks the request on its own, and we don't surface a fake 500.
+    callback(null, false);
   },
   credentials: true,
 }));
@@ -179,10 +182,13 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
 // SEC-003 FIX: Validate JWT_SECRET in production
+// NOTE: Do NOT process.exit() here — that kills the Vercel serverless function
+// during cold start (FUNCTION_INVOCATION_FAILED), making every API call fail
+// with a misleading "CORS header missing" error in the browser. Instead, log
+// loudly and let /health report the missing env var so the admin can see it.
 const sessionSecret = process.env.JWT_SECRET;
 if (process.env.NODE_ENV === 'production' && !sessionSecret) {
-  console.error('CRITICAL: JWT_SECRET environment variable is required in production!');
-  process.exit(1);
+  console.error('⚠️ CRITICAL: JWT_SECRET is not set in production — sessions are insecure. Check /health for details.');
 }
 
 // ============================================
@@ -242,10 +248,19 @@ app.get('/health', async (_req, res) => {
   // Check for configuration issues
   const configIssues: string[] = [];
   if (!process.env.SUPABASE_URL) {
-    configIssues.push('SUPABASE_URL is not set');
+    configIssues.push('SUPABASE_URL is not set (CRITICAL - DB will fail)');
   }
   if (!process.env.SUPABASE_ANON_KEY) {
-    configIssues.push('SUPABASE_ANON_KEY is not set');
+    configIssues.push('SUPABASE_ANON_KEY is not set (CRITICAL - DB will fail)');
+  }
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    configIssues.push('SUPABASE_SERVICE_ROLE_KEY is not set (CRITICAL - admin ops will fail)');
+  }
+  if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+    configIssues.push('JWT_SECRET is not set (CRITICAL - sessions are insecure)');
+  }
+  if (!process.env.CLIENT_URL) {
+    configIssues.push('CLIENT_URL is not set (CORS may block production origin)');
   }
   if (!process.env.GOOGLE_CLIENT_ID) {
     configIssues.push('GOOGLE_CLIENT_ID is not set');
@@ -345,6 +360,7 @@ app.use('/api/refunds', refundRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/collaboration', collaborationRoutes);
 app.use('/api/organizations', organizationRoutes);
+app.use('/api/jobs', jobRoutes);
 
 // ============================================
 // Error Handling (must be last)

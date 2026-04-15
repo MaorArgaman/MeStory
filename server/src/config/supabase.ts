@@ -1,16 +1,24 @@
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+// Defensive: warn at module load but DON'T throw.
+// Throwing here kills the Vercel serverless function during cold start
+// (FUNCTION_INVOCATION_FAILED) before Express/CORS middleware can run,
+// which in the browser manifests as "CORS header missing" on every request.
+// Instead, use placeholder values so the function can boot and /health
+// can report which env vars are missing.
+const PLACEHOLDER_URL = 'https://placeholder.supabase.co';
+const PLACEHOLDER_KEY = 'placeholder-key';
+
+const supabaseUrl = process.env.SUPABASE_URL || PLACEHOLDER_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY || PLACEHOLDER_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl) {
-  throw new Error('SUPABASE_URL environment variable is not set');
+if (!process.env.SUPABASE_URL) {
+  console.error('⚠️ SUPABASE_URL is not set — DB operations will fail. Check /health for details.');
 }
-
-if (!supabaseKey) {
-  throw new Error('SUPABASE_ANON_KEY environment variable is not set');
+if (!process.env.SUPABASE_ANON_KEY) {
+  console.error('⚠️ SUPABASE_ANON_KEY is not set — DB operations will fail. Check /health for details.');
 }
 
 // Create a fetch-like function using axios (better Windows compatibility)
