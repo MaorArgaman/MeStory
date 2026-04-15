@@ -1072,20 +1072,27 @@ export default function BookLayoutPage() {
 
     setSaving(true);
     try {
-      // Strip base64 image URLs from pages to reduce payload size
-      // Images are stored separately in pageImages collection
+      // Preserve image URLs (including base64) so images persist across reloads.
+      // The previous code stripped base64 and relied on a separate pageImages
+      // collection that was never populated for AI-generated images.
       const pagesForSave = pages.map(page => ({
         ...page,
         images: (page.images || []).map(img => ({
           id: img.id,
+          url: img.url,
           x: img.x,
           y: img.y,
           width: img.width,
           height: img.height,
           rotation: img.rotation,
-          // Only include URL if it's not a base64 data URL
-          url: img.url?.startsWith('data:') ? undefined : img.url,
-        })).filter(img => img.url || img.id), // Keep images with URL or ID
+          opacity: img.opacity,
+          borderRadius: img.borderRadius,
+          fadeEdges: img.fadeEdges,
+          fadeAmount: img.fadeAmount,
+          textWrap: img.textWrap,
+          flipH: img.flipH,
+          flipV: img.flipV,
+        })).filter(img => img.url), // Drop entries without URL
       }));
 
       const response = await api.put(`/books/${bookId}`, {
@@ -1488,9 +1495,12 @@ export default function BookLayoutPage() {
     try {
       toast.loading('Generating image with AI...', { id: 'generate-image' });
 
+      // IMPORTANT: send pageIndex so server saves image to pageImages collection.
+      // Without this, base64 URLs get stripped on save and images disappear on reload.
       const response = await api.post('/ai/generate-image', {
         prompt: imagePrompt,
         bookId,
+        pageIndex: selectedPageIndex,
         style: book?.genre || 'general',
       });
 
