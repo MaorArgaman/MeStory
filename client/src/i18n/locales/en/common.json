@@ -552,7 +552,7 @@
     "generating_title": "Generating Design",
     "generating_desc": "Creating typography, layout, and color scheme...",
     "images_title": "Creating Images",
-    "images_desc": "Generating cover and interior images with AI...",
+    "images_desc": "Placement suggestions and AI generation",
     "preview_title": "Design Ready!",
     "preview_desc": "Review your AI-generated design",
     "error_title": "Error Occurred",
@@ -567,7 +567,6 @@
     "cover": "Cover",
     "cover_desc": "Front, back, and spine design",
     "images": "Images",
-    "images_desc": "Placement suggestions and AI generation",
     "generate_images": "Generate images with AI",
     "generate_images_desc": "Nano Banana Pro will create cover and interior images",
     "premium_mode": "Premium Design",
@@ -868,7 +867,9 @@
       "save_failed": "Failed to save layout",
       "save_success": "Layout saved successfully!",
       "save_error": "Error saving layout"
-    }
+    },
+    "front_cover": "Front Cover",
+    "back_cover": "Back Cover"
   },
   "book_details": {
     "loading": "Loading book details...",

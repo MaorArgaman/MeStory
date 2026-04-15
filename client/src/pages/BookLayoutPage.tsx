@@ -25,6 +25,7 @@ import {
   Layers,
   Edit3,
   AlertTriangle,
+  BookOpen,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -40,6 +41,7 @@ import ImagePlaceholder from '../components/layout/ImagePlaceholder';
 import AICompleteDesignWizard from '../components/design/AICompleteDesignWizard';
 import BrandWatermark from '../components/common/BrandWatermark';
 import BookProgressStepper from '../components/common/BookProgressStepper';
+import BookFlipReader from '../components/reader/BookFlipReader';
 
 interface PageImage {
   id: string;
@@ -387,6 +389,7 @@ export default function BookLayoutPage() {
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [backCoverImageUrl, setBackCoverImageUrl] = useState<string | null>(null);
   const [showAIDesignWizard, setShowAIDesignWizard] = useState(false);
+  const [showFlipReader, setShowFlipReader] = useState(false);
 
   // Save as Template state
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
@@ -1604,9 +1607,11 @@ export default function BookLayoutPage() {
   };
 
   // Get pages for current spread
-  // For RTL books (Hebrew/Arabic), swap left and right pages
+  // "left" and "right" are VISUAL slots (left page, right page on screen).
+  // For Hebrew/RTL books: odd page (1,3,5...) on the RIGHT, even page on the LEFT
+  // For English/LTR books: odd page on the RIGHT, even page on the LEFT (same parity,
+  // but reading starts from the left in LTR).
   const getSpreadPages = (): { left: PageContent | null; right: PageContent | null; isCover: boolean } => {
-    // Handle empty pages array
     if (!pages || pages.length === 0) {
       return { left: null, right: null, isCover: currentSpread === 0 };
     }
@@ -1614,21 +1619,22 @@ export default function BookLayoutPage() {
       return { left: null, right: null, isCover: true };
     }
     const startIndex = (currentSpread - 1) * 2;
-    const firstPage = pages[startIndex] || null;
-    const secondPage = pages[startIndex + 1] || null;
+    const firstPage = pages[startIndex] || null;   // Odd page (1, 3, 5...)
+    const secondPage = pages[startIndex + 1] || null; // Even page (2, 4, 6...)
 
-    // For RTL: first page (odd) goes on right, second page (even) goes on left
-    // For LTR: first page (odd) goes on left, second page (even) goes on right
     if (isBookRTL) {
+      // Hebrew/Arabic: odd page on RIGHT, even page on LEFT
       return {
-        left: secondPage,  // Even page on left in RTL
-        right: firstPage,  // Odd page on right in RTL
+        left: secondPage,
+        right: firstPage,
         isCover: false,
       };
     }
+    // English/LTR: even page on LEFT, odd page on RIGHT
+    // (Standard convention: page 1 is a right-hand page, page 2 is the next left-hand page)
     return {
-      left: firstPage,
-      right: secondPage,
+      left: secondPage,
+      right: firstPage,
       isCover: false,
     };
   };
@@ -1749,6 +1755,19 @@ export default function BookLayoutPage() {
               className={`btn-ghost p-1.5 sm:p-2 ${showSettings ? 'bg-white/10' : ''}`}
             >
               <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+
+            {/* Reader Mode Button */}
+            <button
+              onClick={() => setShowFlipReader(true)}
+              disabled={pages.length === 0}
+              className="btn-ghost flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 border border-memorial-gold/40 hover:bg-memorial-gold/10 disabled:opacity-30"
+              title={isBookRTL ? 'מצב קריאה' : 'Reader mode'}
+            >
+              <BookOpen className="w-4 h-4 text-memorial-gold" />
+              <span className="hidden sm:inline text-memorial-gold">
+                {isBookRTL ? 'קריאה' : 'Read'}
+              </span>
             </button>
 
             {/* Save Button */}
@@ -1922,15 +1941,13 @@ export default function BookLayoutPage() {
 
           {/* Cover labels when viewing cover spread */}
           {spreadPages.isCover && (
-            <div className="flex flex-row gap-1 sm:gap-2 mb-2 transform scale-[0.35] xs:scale-[0.45] sm:scale-[0.55] md:scale-[0.7] lg:scale-[0.85] xl:scale-100 origin-center">
-              <div className="text-center text-memorial-gold text-sm font-medium" style={{ width: '350px' }}>
-                {/* Left side: Back cover for RTL, Front cover for LTR */}
-                {isBookRTL ? t('book_layout.front_cover') : t('book_layout.back_cover')}
+            <div className="flex flex-row gap-1 sm:gap-2 mb-3 transform scale-[0.35] xs:scale-[0.45] sm:scale-[0.55] md:scale-[0.7] lg:scale-[0.85] xl:scale-100 origin-center">
+              <div className="text-center text-memorial-gold/80 text-sm font-semibold tracking-wide uppercase" style={{ width: '350px' }}>
+                {t('book_layout.back_cover')}
               </div>
-              <div className="w-2 sm:w-4" />
-              <div className="text-center text-memorial-gold text-sm font-medium" style={{ width: '350px' }}>
-                {/* Right side: Front cover for RTL, Back cover for LTR */}
-                {isBookRTL ? t('book_layout.back_cover') : t('book_layout.front_cover')}
+              <div className="w-3 sm:w-5" />
+              <div className="text-center text-memorial-gold text-sm font-semibold tracking-wide uppercase" style={{ width: '350px' }}>
+                {t('book_layout.front_cover')}
               </div>
             </div>
           )}
@@ -1963,22 +1980,14 @@ export default function BookLayoutPage() {
               }}
             >
               {spreadPages.isCover ? (
-                // For RTL: Front cover on left, For LTR: Back cover on left
-                isBookRTL ? (
-                  <CoverPreview
-                    book={book}
-                    coverImageUrl={coverImageUrl}
-                    onTitlePositionChange={handleTitlePositionChange}
-                    onAuthorPositionChange={handleAuthorPositionChange}
-                  />
-                ) : (
-                  <BackCoverPreview
-                    book={book}
-                    backCoverImageUrl={backCoverImageUrl}
-                    synopsis={book.synopsis || book.description}
-                    language={language}
-                  />
-                )
+                // LEFT visual slot = BACK cover (for both RTL and LTR)
+                // Front cover lives on the RIGHT visual slot (reading-start side)
+                <BackCoverPreview
+                  book={book}
+                  backCoverImageUrl={backCoverImageUrl}
+                  synopsis={book.synopsis || book.description}
+                  language={language}
+                />
               ) : spreadPages.left && typeof spreadPages.left !== 'string' ? (
                 spreadPages.left.type === 'summary' ? (
                   <BackCoverPreview
@@ -2088,22 +2097,13 @@ export default function BookLayoutPage() {
               }}
             >
               {spreadPages.isCover ? (
-                // For RTL: Back cover on right, For LTR: Front cover on right
-                isBookRTL ? (
-                  <BackCoverPreview
-                    book={book}
-                    backCoverImageUrl={backCoverImageUrl}
-                    synopsis={book.synopsis || book.description}
-                    language={language}
-                  />
-                ) : (
-                  <CoverPreview
-                    book={book}
-                    coverImageUrl={coverImageUrl}
-                    onTitlePositionChange={handleTitlePositionChange}
-                    onAuthorPositionChange={handleAuthorPositionChange}
-                  />
-                )
+                // RIGHT visual slot = FRONT cover (for both RTL and LTR)
+                <CoverPreview
+                  book={book}
+                  coverImageUrl={coverImageUrl}
+                  onTitlePositionChange={handleTitlePositionChange}
+                  onAuthorPositionChange={handleAuthorPositionChange}
+                />
               ) : spreadPages.right ? (
                 spreadPages.right.type === 'summary' ? (
                   <BackCoverPreview
@@ -2901,6 +2901,25 @@ export default function BookLayoutPage() {
         opacity={0.12}
         className="hidden lg:block"
       />
+
+      {/* Flip Book Reader */}
+      {showFlipReader && book && (
+        <BookFlipReader
+          book={{
+            id: book.id,
+            title: book.title,
+            author: book.author,
+            language: book.language,
+            synopsis: book.synopsis,
+            description: book.description,
+            coverDesign: book.coverDesign,
+          }}
+          pages={pages}
+          frontCoverImageUrl={coverImageUrl}
+          backCoverImageUrl={backCoverImageUrl}
+          onClose={() => setShowFlipReader(false)}
+        />
+      )}
     </div>
   );
 }

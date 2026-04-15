@@ -617,7 +617,7 @@
     "generating_title": "מייצר עיצוב",
     "generating_desc": "יוצר טיפוגרפיה, פריסה וסכמת צבעים...",
     "images_title": "יוצר תמונות",
-    "images_desc": "מייצר כריכה ותמונות פנימיות עם AI...",
+    "images_desc": "הצעות למיקום ויצירת תמונות AI",
     "preview_title": "העיצוב מוכן!",
     "preview_desc": "סקור את העיצוב שנוצר",
     "error_title": "אירעה שגיאה",
@@ -632,7 +632,6 @@
     "cover": "כריכה",
     "cover_desc": "עיצוב כריכה קדמית, אחורית ושדרה",
     "images": "תמונות",
-    "images_desc": "הצעות למיקום ויצירת תמונות AI",
     "generate_images": "צור תמונות עם AI",
     "generate_images_desc": "Nano Banana Pro ייצור תמונות כריכה ופנים הספר",
     "premium_mode": "עיצוב פרימיום",
@@ -937,7 +936,9 @@
       "save_failed": "נכשל בשמירת הפריסה",
       "save_success": "הפריסה נשמרה בהצלחה!",
       "save_error": "שגיאה בשמירת הפריסה"
-    }
+    },
+    "front_cover": "עטיפה קדמית",
+    "back_cover": "עטיפה אחורית"
   },
   "book_details": {
     "loading": "טוען פרטי ספר...",
