@@ -1253,7 +1253,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
             const imgInfo = doc.image(imgBuffer, imgX, imgY, {
               fit: [maxImageWidth, maxImageHeight],
               align: 'center',
-              valign: 'top',
+              valign: 'center',
             });
 
             // Calculate actual rendered height based on fit dimensions
