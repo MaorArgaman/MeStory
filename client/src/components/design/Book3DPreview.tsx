@@ -203,7 +203,13 @@ export default function Book3DPreview({
       : t('book_layout.front_cover', 'Front cover');
 
   return (
-    <div className="relative flex flex-col h-full overflow-hidden bg-gradient-to-br from-deep-space via-[#0a0a1f] to-cosmic-purple/30">
+    // min-h-[580px] ensures the chrome (top bar + book + bottom bar) is always
+    // visible even when the parent container doesn't define an explicit height.
+    // Both call sites (DesignStudioPage, BookDesignPage) wrap us in a container
+    // without h-full, which would otherwise collapse h-full to 0 and hide
+    // the top/bottom bars while only the 3D book (fixed 400px) rendered.
+    // h-full is kept so we still stretch if a future parent does set a height.
+    <div className="relative flex flex-col h-full min-h-[580px] w-full overflow-hidden rounded-xl bg-gradient-to-br from-deep-space via-[#0a0a1f] to-cosmic-purple/30">
       {/* Top bar — matches BookFlipReader chrome */}
       <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-black/30 backdrop-blur-sm border-b border-memorial-gold/20">
         {/* Left slot: invisible spacer to keep the center label centered.
