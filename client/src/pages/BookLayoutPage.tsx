@@ -742,13 +742,15 @@ export default function BookLayoutPage() {
           },
           reasoning: 'Applied from stored AI design',
         },
-        imagePlacements: (design.imagePlacements || []).map(p => ({
+        imagePlacements: (design.imagePlacements || []).map((p: any) => ({
           chapterIndex: p.chapterIndex,
           position: p.pagePosition as 'chapter-start' | 'mid-chapter' | 'chapter-end',
           textContext: '',
           suggestedPrompt: p.prompt || '',
           importance: 'medium' as const,
           reasoning: 'Suggested by AI',
+          generatedImageUrl: p.generatedImageUrl || p.imageUrl,
+          prompt: p.prompt || '',
         })),
         overallStyle: 'AI Generated Design',
         moodDescription: 'Custom AI-generated design for this book',
