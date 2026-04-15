@@ -30,6 +30,7 @@ interface BookFlipReaderProps {
   }>;
   frontCoverImageUrl?: string | null;
   backCoverImageUrl?: string | null;
+  isRTL?: boolean;
   onClose: () => void;
 }
 
@@ -56,6 +57,7 @@ export default function BookFlipReader({
   pages,
   frontCoverImageUrl,
   backCoverImageUrl,
+  isRTL: isRTLProp,
   onClose,
 }: BookFlipReaderProps) {
   const { t } = useTranslation();
@@ -64,7 +66,9 @@ export default function BookFlipReader({
   const [totalPages, setTotalPages] = useState(0);
   const [isBookOpen, setIsBookOpen] = useState(false);
 
-  const isRTL = book.language === 'he' || book.language === 'ar';
+  // Prefer the prop (computed from multiple signals in BookLayoutPage).
+  // Fall back to language field if not provided.
+  const isRTL = isRTLProp !== undefined ? isRTLProp : (book.language === 'he' || book.language === 'ar');
   const coverColor = book.coverDesign?.coverColor || '#1a1a2e';
   const textColor = book.coverDesign?.textColor || '#ffffff';
   const fontFamily =
@@ -112,14 +116,16 @@ export default function BookFlipReader({
           className="flex items-center gap-2 text-memorial-gold hover:text-white transition-colors"
         >
           <X className="w-5 h-5" />
-          <span className="text-sm font-medium">{t('common.close') || 'סגור'}</span>
+          <span className="text-sm font-medium">{isRTL ? 'סגור' : 'Close'}</span>
         </button>
 
-        <div className="text-memorial-gold/80 text-sm font-medium tracking-wide">
+        <div className="text-memorial-gold/80 text-sm font-medium tracking-wide" dir={isRTL ? 'rtl' : 'ltr'}>
           {currentPage === 0
             ? t('book_layout.front_cover')
             : isAtEnd
             ? t('book_layout.back_cover')
+            : isRTL
+            ? `${totalPages - 2} / ${currentPage}`
             : `${currentPage} / ${totalPages - 2}`}
         </div>
 
@@ -263,15 +269,20 @@ export default function BookFlipReader({
         </div>
       </div>
 
-      {/* Bottom controls */}
+      {/* Bottom controls
+          Visual layout:
+          - LTR: [←prev]  [open/restart]  [next→]   — next is on the right
+          - RTL: [←next]  [open/restart]  [prev→]   — next is on the left (Hebrew reading direction)
+      */}
       <div className="flex items-center justify-center gap-4 px-6 py-4 bg-black/30 backdrop-blur-sm border-t border-memorial-gold/20">
+        {/* Left visual button: next in RTL, prev in LTR */}
         <button
-          onClick={handlePrevClick}
-          disabled={currentPage === 0}
+          onClick={isRTL ? flipNext : flipPrev}
+          disabled={isRTL ? isAtEnd : currentPage === 0}
           className="p-3 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-          title={isRTL ? 'הדף הקודם' : 'Previous'}
+          title={isRTL ? 'הדף הבא' : 'Previous'}
         >
-          {isRTL ? <ChevronLeft className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
+          <ChevronLeft className="w-6 h-6" />
         </button>
 
         {!isBookOpen && (
@@ -293,13 +304,14 @@ export default function BookFlipReader({
           </button>
         )}
 
+        {/* Right visual button: prev in RTL, next in LTR */}
         <button
-          onClick={handleNextClick}
-          disabled={isAtEnd}
+          onClick={isRTL ? flipPrev : flipNext}
+          disabled={isRTL ? currentPage === 0 : isAtEnd}
           className="p-3 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-          title={isRTL ? 'הדף הבא' : 'Next'}
+          title={isRTL ? 'הדף הקודם' : 'Next'}
         >
-          {isRTL ? <ChevronRight className="w-6 h-6" /> : <ChevronLeft className="w-6 h-6" />}
+          <ChevronRight className="w-6 h-6" />
         </button>
       </div>
     </div>

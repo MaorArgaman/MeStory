@@ -26,8 +26,16 @@ import {
   Edit3,
   AlertTriangle,
   BookOpen,
+  Rocket,
+  Download,
+  FileText,
+  FileType,
+  DollarSign,
+  TrendingUp,
+  AlertCircle,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import confetti from 'canvas-confetti';
 import { useLanguage } from '../contexts/LanguageContext';
 import TemplateGallery from '../components/design/TemplateGallery';
 import { BookTemplate, textColorPresets, availableFonts } from '../data/bookTemplates';
@@ -322,6 +330,24 @@ const splitContentIntoPages = (
   return pages.length > 0 ? pages : [htmlContent];
 };
 
+interface PricingStrategy {
+  recommendedPrice: number;
+  recommendFree: boolean;
+  reasoning: string;
+  authorStats: {
+    totalBooks: number;
+    publishedBooks: number;
+    totalSales: number;
+    averageRating: number;
+  };
+  marketAnalysis: {
+    genreAveragePrice: number;
+    competitorPriceRange: { min: number; max: number };
+    demandLevel: 'low' | 'medium' | 'high';
+  };
+  strategyTips: string[];
+}
+
 // Default page layout settings
 // Image placeholder position from template
 interface ImagePlaceholderPosition {
@@ -391,6 +417,17 @@ export default function BookLayoutPage() {
   const [showAIDesignWizard, setShowAIDesignWizard] = useState(false);
   const [showFlipReader, setShowFlipReader] = useState(false);
 
+  // Publish/Export state (moved from DesignStudioPage)
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'pdf' | 'docx'>('pdf');
+  const [pricingStrategy, setPricingStrategy] = useState<PricingStrategy | null>(null);
+  const [loadingStrategy, setLoadingStrategy] = useState(false);
+  const [selectedPrice, setSelectedPrice] = useState(0);
+  const [isFree, setIsFree] = useState(true);
+
   // Save as Template state
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [templateName, setTemplateName] = useState('');
@@ -405,8 +442,20 @@ export default function BookLayoutPage() {
   const [editingContent, setEditingContent] = useState<string>('');
   const editableRef = useRef<HTMLDivElement>(null);
 
-  // Determine text direction based on book language
-  const isBookRTL = book ? isRTL(book.title) || book.language === 'he' || book.language === 'ar' : false;
+  // Determine text direction based on multiple signals:
+  // 1. Explicit language setting (most reliable)
+  // 2. Hebrew/Arabic chars in title
+  // 3. Hebrew/Arabic chars in description or synopsis
+  // 4. Hebrew/Arabic chars in first chapter title/content
+  const isBookRTL = book
+    ? book.language === 'he' ||
+      book.language === 'ar' ||
+      isRTL(book.title) ||
+      isRTL(book.description || '') ||
+      isRTL(book.synopsis || '') ||
+      isRTL(book.chapters?.[0]?.title || '') ||
+      isRTL((book.chapters?.[0]?.content || '').substring(0, 500))
+    : false;
 
   // Debug RTL detection
   console.log('RTL Debug:', {
@@ -896,6 +945,109 @@ export default function BookLayoutPage() {
   };
 
   // Save layout
+  // Load pricing strategy from AI
+  const loadPricingStrategy = async () => {
+    if (!book) return;
+    setLoadingStrategy(true);
+    try {
+      const response = await api.get(`/books/${bookId}/pricing-strategy`);
+      if (response.data.success) {
+        const strategy = response.data.data;
+        setPricingStrategy(strategy);
+        setIsFree(strategy.recommendFree);
+        setSelectedPrice(strategy.recommendedPrice);
+      }
+    } catch (error: any) {
+      console.error('Failed to load pricing strategy:', error);
+      setPricingStrategy({
+        recommendedPrice: 0,
+        recommendFree: true,
+        reasoning: 'This is your first book! We recommend starting free to build a reader base and get your first reviews.',
+        authorStats: { totalBooks: 1, publishedBooks: 0, totalSales: 0, averageRating: 0 },
+        marketAnalysis: {
+          genreAveragePrice: 25,
+          competitorPriceRange: { min: 0, max: 50 },
+          demandLevel: 'medium',
+        },
+        strategyTips: [
+          'A free first book helps build a loyal reader base',
+          'Collect positive reviews before moving to paid books',
+          'Consider offering your first book for free for a limited time',
+        ],
+      });
+      setIsFree(true);
+      setSelectedPrice(0);
+    } finally {
+      setLoadingStrategy(false);
+    }
+  };
+
+  // Open publish modal
+  const openPublishModal = () => {
+    setShowPublishModal(true);
+    loadPricingStrategy();
+  };
+
+  // Handle publish book
+  const handlePublish = async () => {
+    if (!book) return;
+    const qs = (book as any).qualityScore;
+    if (!qs || qs.overallScore < 70) {
+      toast.error('A quality score of at least 70 is required for publishing. Run quality analysis in the editor.');
+      return;
+    }
+    setPublishing(true);
+    try {
+      await saveLayout();
+      await api.put(`/books/${bookId}`, {
+        publishingStatus: { price: isFree ? 0 : selectedPrice, isFree },
+      });
+      const response = await api.post(`/books/${bookId}/publish`);
+      if (response.data.success) {
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#DAA520', '#FFD700', '#FFA500', '#FF6B6B'] });
+        setTimeout(() => confetti({ particleCount: 50, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#DAA520', '#FFD700'] }), 200);
+        setTimeout(() => confetti({ particleCount: 50, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#FFA500', '#FF6B6B'] }), 400);
+        toast.success('Book published successfully!');
+        setShowPublishModal(false);
+        navigate('/marketplace');
+      }
+    } catch (error: any) {
+      console.error('Failed to publish book:', error);
+      toast.error(error.response?.data?.error || 'Error publishing book');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  // Handle export book
+  const handleExport = async () => {
+    if (!book) return;
+    setExporting(true);
+    try {
+      await saveLayout();
+      toast.loading(`Creating ${exportFormat.toUpperCase()} file...`, { id: 'export' });
+      const response = await api.get(`/books/${bookId}/export/${exportFormat}`, { responseType: 'blob' });
+      const blob = new Blob([response.data], {
+        type: exportFormat === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${book.title}.${exportFormat}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success('File downloaded successfully!', { id: 'export' });
+      setShowExportModal(false);
+    } catch (error: any) {
+      console.error('Failed to export book:', error);
+      toast.error(error.response?.data?.error || 'Error exporting book', { id: 'export' });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const saveLayout = async (isAutoSave = false) => {
     if (!book) return;
 
@@ -1768,6 +1920,26 @@ export default function BookLayoutPage() {
               <span className="hidden sm:inline text-memorial-gold">
                 {isBookRTL ? 'קריאה' : 'Read'}
               </span>
+            </button>
+
+            {/* Export Button */}
+            <button
+              onClick={() => setShowExportModal(true)}
+              className="btn-secondary flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2"
+              title="Export book"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden lg:inline">{t('design_studio.export_to_file', 'Export')}</span>
+            </button>
+
+            {/* Publish Button */}
+            <button
+              onClick={openPublishModal}
+              className="btn-gold flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 shadow-glow-gold"
+              title="Publish to store"
+            >
+              <Rocket className="w-4 h-4" />
+              <span className="hidden lg:inline">{t('design_studio.publish_to_store', 'Publish')}</span>
             </button>
 
             {/* Save Button */}
@@ -2917,9 +3089,240 @@ export default function BookLayoutPage() {
           pages={pages}
           frontCoverImageUrl={coverImageUrl}
           backCoverImageUrl={backCoverImageUrl}
+          isRTL={isBookRTL}
           onClose={() => setShowFlipReader(false)}
         />
       )}
+
+      {/* Publish Modal */}
+      <AnimatePresence>
+        {showPublishModal && book && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            onClick={() => setShowPublishModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="glass-strong rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-2 sm:mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-memorial-gold to-yellow-600 flex items-center justify-center flex-shrink-0">
+                    <Rocket className="w-5 h-5 sm:w-6 sm:h-6 text-deep-space" />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-lg sm:text-2xl font-bold gradient-gold">{t('design_studio.publish_modal.title', 'Publish Book')}</h2>
+                    <p className="text-gray-400 text-xs sm:text-sm truncate">{book.title}</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowPublishModal(false)} className="p-2 rounded-lg hover:bg-white/10 transition">
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+
+              {loadingStrategy ? (
+                <div className="text-center py-12">
+                  <Loader2 className="w-12 h-12 animate-spin text-memorial-gold mx-auto mb-4" />
+                  <p className="text-gray-300">{t('design_studio.publish_modal.analyzing', 'Analyzing pricing strategy...')}</p>
+                </div>
+              ) : pricingStrategy ? (
+                <div className="space-y-6">
+                  <div className="p-4 bg-gradient-to-r from-memorial-gold/10 to-yellow-500/10 border border-memorial-gold/30 rounded-xl">
+                    <div className="flex items-start gap-3">
+                      <Sparkles className="w-6 h-6 text-memorial-gold flex-shrink-0 mt-1" />
+                      <div>
+                        <h3 className="font-bold text-white mb-1">{t('design_studio.publish_modal.ai_recommendation', 'AI Recommendation')}</h3>
+                        <p className="text-gray-300 text-sm">{pricingStrategy.reasoning}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="glass rounded-lg p-3 text-center">
+                      <BookOpen className="w-5 h-5 text-memorial-gold mx-auto mb-1" />
+                      <p className="text-2xl font-bold text-white">{pricingStrategy.authorStats.publishedBooks}</p>
+                      <p className="text-xs text-gray-400">{t('design_studio.publish_modal.published_books', 'Published')}</p>
+                    </div>
+                    <div className="glass rounded-lg p-3 text-center">
+                      <DollarSign className="w-5 h-5 text-green-400 mx-auto mb-1" />
+                      <p className="text-2xl font-bold text-white">{pricingStrategy.authorStats.totalSales}</p>
+                      <p className="text-xs text-gray-400">{t('design_studio.publish_modal.sales', 'Sales')}</p>
+                    </div>
+                    <div className="glass rounded-lg p-3 text-center">
+                      <TrendingUp className="w-5 h-5 text-purple-400 mx-auto mb-1" />
+                      <p className="text-2xl font-bold text-white">${pricingStrategy.marketAnalysis.genreAveragePrice}</p>
+                      <p className="text-xs text-gray-400">{t('design_studio.publish_modal.genre_avg_price', 'Genre avg')}</p>
+                    </div>
+                    <div className="glass rounded-lg p-3 text-center">
+                      <Sparkles className="w-5 h-5 text-yellow-400 mx-auto mb-1" />
+                      <p className="text-2xl font-bold text-white capitalize">{pricingStrategy.marketAnalysis.demandLevel}</p>
+                      <p className="text-xs text-gray-400">{t('design_studio.publish_modal.demand_level', 'Demand')}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold text-white mb-3">{t('design_studio.publish_modal.select_pricing', 'Select Pricing')}</h3>
+                    <div className="flex gap-3 mb-4">
+                      <button
+                        onClick={() => { setIsFree(true); setSelectedPrice(0); }}
+                        className={`flex-1 py-4 px-4 rounded-xl border-2 transition-all ${isFree ? 'border-memorial-gold bg-memorial-gold/20 text-white' : 'border-gray-700 text-gray-400 hover:border-gray-600'}`}
+                      >
+                        <span className="text-lg font-bold">{t('design_studio.publish_modal.free', 'Free')}</span>
+                        {pricingStrategy.recommendFree && (<span className="block text-xs text-memorial-gold mt-1">{t('design_studio.publish_modal.recommended_by_ai', 'AI recommended')}</span>)}
+                      </button>
+                      <button
+                        onClick={() => { setIsFree(false); setSelectedPrice(pricingStrategy.recommendedPrice || 20); }}
+                        className={`flex-1 py-4 px-4 rounded-xl border-2 transition-all ${!isFree ? 'border-memorial-gold bg-memorial-gold/20 text-white' : 'border-gray-700 text-gray-400 hover:border-gray-600'}`}
+                      >
+                        <span className="text-lg font-bold">{t('design_studio.publish_modal.paid', 'Paid')}</span>
+                        {!pricingStrategy.recommendFree && (<span className="block text-xs text-memorial-gold mt-1">{t('design_studio.publish_modal.recommended_by_ai', 'AI recommended')}</span>)}
+                      </button>
+                    </div>
+
+                    {!isFree && (
+                      <div className="space-y-3">
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                          <input
+                            type="number" min="0" max="25" step="0.01"
+                            value={selectedPrice}
+                            onChange={(e) => setSelectedPrice(parseFloat(e.target.value) || 0)}
+                            className={`input pl-10 text-lg font-bold ${selectedPrice > 25 ? 'border-red-500 focus:border-red-500' : ''}`}
+                            placeholder="0"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          {[5, 10, 15, 25].map((price) => (
+                            <button
+                              key={price}
+                              onClick={() => setSelectedPrice(price)}
+                              className={`flex-1 py-2 rounded-lg text-sm transition ${selectedPrice === price ? 'bg-memorial-gold/30 text-memorial-gold border border-memorial-gold/50' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                            >
+                              ${price}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {(!(book as any).qualityScore || (book as any).qualityScore.overallScore < 70) && (
+                    <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                      <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-red-300 font-medium">{t('design_studio.publish_modal.low_quality_title', 'Quality score too low')}</p>
+                        <p className="text-sm text-red-400/80">{t('design_studio.publish_modal.low_quality_desc', 'A quality score of at least 70 is required. Run analysis in the editor.')}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={handlePublish}
+                    disabled={publishing || !(book as any).qualityScore || (book as any).qualityScore.overallScore < 70 || (!isFree && selectedPrice > 25)}
+                    className="w-full btn-gold py-4 text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {publishing ? (
+                      <><Loader2 className="w-5 h-5 animate-spin" />{t('design_studio.publish_modal.publishing', 'Publishing...')}</>
+                    ) : (
+                      <><Rocket className="w-5 h-5" />{isFree ? t('design_studio.publish_modal.publish_free', 'Publish for Free') : `${t('design_studio.publish_modal.publish_for', 'Publish for ')}$${selectedPrice}`}</>
+                    )}
+                  </button>
+                </div>
+              ) : null}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Export Modal */}
+      <AnimatePresence>
+        {showExportModal && book && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            onClick={() => setShowExportModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="glass-strong rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto mx-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-cosmic-purple to-purple-600 flex items-center justify-center flex-shrink-0">
+                    <Download className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-lg sm:text-2xl font-bold text-white truncate">{t('design_studio.export_modal.title', 'Export Book')}</h2>
+                    <p className="text-gray-400 text-xs sm:text-sm truncate">{book.title}</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowExportModal(false)} className="p-2 rounded-lg hover:bg-white/10 transition">
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-semibold text-white">{t('design_studio.export_modal.select_format', 'Select Format')}</h3>
+
+                <button
+                  onClick={() => setExportFormat('pdf')}
+                  className={`w-full p-4 rounded-xl border-2 transition-all text-right ${exportFormat === 'pdf' ? 'border-memorial-gold bg-memorial-gold/20' : 'border-gray-700 hover:border-gray-600'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${exportFormat === 'pdf' ? 'bg-red-500' : 'bg-red-500/50'}`}>
+                      <FileText className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-white">PDF</p>
+                      <p className="text-sm text-gray-400">{t('design_studio.export_modal.pdf_desc', 'Ready for printing')}</p>
+                    </div>
+                    {exportFormat === 'pdf' && <CheckCircle2 className="w-6 h-6 text-memorial-gold" />}
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setExportFormat('docx')}
+                  className={`w-full p-4 rounded-xl border-2 transition-all text-right ${exportFormat === 'docx' ? 'border-memorial-gold bg-memorial-gold/20' : 'border-gray-700 hover:border-gray-600'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${exportFormat === 'docx' ? 'bg-blue-500' : 'bg-blue-500/50'}`}>
+                      <FileType className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-white">{t('design_studio.export_modal.docx_title', 'Word (DOCX)')}</p>
+                      <p className="text-sm text-gray-400">{t('design_studio.export_modal.docx_desc', 'Editable in Word')}</p>
+                    </div>
+                    {exportFormat === 'docx' && <CheckCircle2 className="w-6 h-6 text-memorial-gold" />}
+                  </div>
+                </button>
+
+                <button
+                  onClick={handleExport}
+                  disabled={exporting}
+                  className="w-full btn-primary py-4 text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {exporting ? (
+                    <><Loader2 className="w-5 h-5 animate-spin" />{t('design_studio.export_modal.exporting', 'Exporting...')}</>
+                  ) : (
+                    <><Download className="w-5 h-5" />{t('design_studio.export_modal.download', 'Download')} {exportFormat.toUpperCase()}</>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
