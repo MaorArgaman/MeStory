@@ -442,20 +442,22 @@ export default function BookLayoutPage() {
   const [editingContent, setEditingContent] = useState<string>('');
   const editableRef = useRef<HTMLDivElement>(null);
 
-  // Determine text direction based on multiple signals:
-  // 1. Explicit language setting (most reliable)
-  // 2. Hebrew/Arabic chars in title
-  // 3. Hebrew/Arabic chars in description or synopsis
-  // 4. Hebrew/Arabic chars in first chapter title/content
-  const isBookRTL = book
-    ? book.language === 'he' ||
-      book.language === 'ar' ||
-      isRTL(book.title) ||
-      isRTL(book.description || '') ||
-      isRTL(book.synopsis || '') ||
-      isRTL(book.chapters?.[0]?.title || '') ||
-      isRTL((book.chapters?.[0]?.content || '').substring(0, 500))
-    : false;
+  // Determine text direction from ALL text we know about the book.
+  // We concatenate every piece of text and check once - any Hebrew/Arabic char → RTL.
+  const isBookRTL = (() => {
+    if (!book) return false;
+    if (book.language === 'he' || book.language === 'ar') return true;
+    const combinedText = [
+      book.title || '',
+      book.description || '',
+      book.synopsis || '',
+      ...(book.chapters || []).slice(0, 3).flatMap((ch: any) => [
+        ch.title || '',
+        (ch.content || '').substring(0, 1000),
+      ]),
+    ].join(' ');
+    return isRTL(combinedText);
+  })();
 
   // Debug RTL detection
   console.log('RTL Debug:', {
@@ -2073,41 +2075,46 @@ export default function BookLayoutPage() {
 
         {/* Center - Page Spread View */}
         <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 lg:p-8 overflow-hidden">
-          {/* Navigation with RTL-aware labels */}
+          {/* Navigation — arrows match visual direction of reading:
+               - LTR: [←prev]  page-range  [next→]
+               - RTL: [←next]  page-range  [prev→]  (Hebrew: "next" visually moves left)
+          */}
           <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-4">
+            {/* Left button */}
             <button
               onClick={isBookRTL ? goToNextSpread : goToPrevSpread}
               disabled={isBookRTL ? currentSpread >= totalSpreads - 1 : currentSpread === 0}
               className="btn-ghost p-1.5 sm:p-2 disabled:opacity-30 hover:scale-110 transition-transform"
-              title={isBookRTL ? "הדף הבא" : "Previous"}
+              title={isBookRTL ? 'הדף הבא' : 'Previous'}
             >
-              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
 
-            {/* Page indicator with RTL-aware formatting */}
-            <div className="flex flex-col items-center">
+            {/* Page indicator with visual-left → visual-right numbering */}
+            <div className="flex flex-col items-center" dir="ltr">
               <span className="text-gray-400 text-xs sm:text-sm font-medium">
                 {currentSpread === 0
                   ? t('book_layout.cover')
                   : isBookRTL
-                    ? `${(currentSpread - 1) * 2 + 2} - ${(currentSpread - 1) * 2 + 1}` // RTL: even-odd (left-right)
-                    : `${(currentSpread - 1) * 2 + 1} - ${(currentSpread - 1) * 2 + 2}` // LTR: odd-even (left-right)
+                    ? `${(currentSpread - 1) * 2 + 2} - ${(currentSpread - 1) * 2 + 1}` // RTL: even (left) - odd (right)
+                    : `${(currentSpread - 1) * 2 + 1} - ${(currentSpread - 1) * 2 + 2}` // LTR: odd (left) - even (right)
                 }
               </span>
               {currentSpread > 0 && (
                 <span className="text-memorial-gold/60 text-[10px]">
-                  {isBookRTL ? '→ כיוון הקריאה' : 'Reading direction →'}
+                  {isBookRTL ? 'כיוון הקריאה ←' : 'Reading direction →'}
                 </span>
               )}
             </div>
 
+            {/* Right button */}
             <button
               onClick={isBookRTL ? goToPrevSpread : goToNextSpread}
               disabled={isBookRTL ? currentSpread === 0 : currentSpread >= totalSpreads - 1}
               className="btn-ghost p-1.5 sm:p-2 disabled:opacity-30 hover:scale-110 transition-transform"
-              title={isBookRTL ? "הדף הקודם" : "Next"}
+              title={isBookRTL ? 'הדף הקודם' : 'Next'}
             >
-              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
 
