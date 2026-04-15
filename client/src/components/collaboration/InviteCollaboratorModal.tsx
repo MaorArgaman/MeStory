@@ -176,9 +176,11 @@ export default function InviteCollaboratorModal({
                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-memorial-gold/50 focus:border-memorial-gold/50"
                 required
               >
-                <option value="">{isHebrew ? 'בחר קשר' : 'Select relationship'}</option>
+                <option value="" className="bg-deep-space text-white">
+                  {isHebrew ? 'בחר קשר' : 'Select relationship'}
+                </option>
                 {RELATIONSHIPS.map((rel) => (
-                  <option key={rel.id} value={rel.id}>
+                  <option key={rel.id} value={rel.id} className="bg-deep-space text-white">
                     {isHebrew ? rel.labelHe : rel.labelEn}
                   </option>
                 ))}
