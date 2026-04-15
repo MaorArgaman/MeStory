@@ -144,13 +144,7 @@ export default function BookFlipReader({
 
       {/* Book Flip Area */}
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8 overflow-hidden">
-        <div
-          className="relative"
-          style={{
-            // Mirror the whole book for RTL - content inside is un-mirrored below
-            transform: isRTL ? 'scaleX(-1)' : 'none',
-          }}
-        >
+        <div className="relative">
           <HTMLFlipBook
             ref={flipBookRef}
             width={400}
@@ -181,28 +175,27 @@ export default function BookFlipReader({
             {/* Front Cover */}
             <Page className="front-cover">
               <div
-                className="w-full h-full flex flex-col items-center justify-center relative"
+                className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden"
                 style={{
                   backgroundColor: coverColor,
                   color: textColor,
                   fontFamily,
-                  transform: isRTL ? 'scaleX(-1)' : 'none',
                   backgroundImage: frontCoverImageUrl ? `url(${frontCoverImageUrl})` : undefined,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                 }}
               >
                 {frontCoverImageUrl && <div className="absolute inset-0 bg-black/30" />}
-                <div className="relative z-10 text-center px-6">
+                <div className="relative z-10 text-center px-6 max-w-[90%]">
                   <h1
-                    className="font-bold mb-6 drop-shadow-lg"
+                    className="font-bold mb-6 drop-shadow-lg break-words"
                     style={{ fontSize: 'clamp(1.2rem, 4vw, 2rem)', lineHeight: 1.2 }}
                   >
                     {book.title}
                   </h1>
                   {authorName && (
                     <p
-                      className="drop-shadow-md opacity-90"
+                      className="drop-shadow-md opacity-90 break-words"
                       style={{ fontSize: 'clamp(0.8rem, 2.5vw, 1.1rem)' }}
                     >
                       {authorName}
@@ -216,21 +209,34 @@ export default function BookFlipReader({
             {normalizedPages.map((page, index) => (
               <Page key={page.id}>
                 <div
-                  className="w-full h-full p-8 overflow-hidden"
+                  className="w-full h-full relative overflow-hidden"
                   style={{
                     direction: isRTL ? 'rtl' : 'ltr',
                     fontFamily,
-                    transform: isRTL ? 'scaleX(-1)' : 'none',
                   }}
                 >
+                  {/* Book title header (matches edit view) */}
                   <div
-                    className="prose prose-sm max-w-none h-full overflow-hidden text-gray-800"
-                    style={{ fontSize: '14px', lineHeight: 1.7 }}
-                    dangerouslySetInnerHTML={{ __html: page.content || '' }}
-                  />
+                    className="absolute top-3 left-0 right-0 text-center text-[10px] text-gray-400 px-6"
+                    style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+                  >
+                    {book.title}
+                  </div>
+
                   <div
-                    className="absolute bottom-4 left-0 right-0 text-center text-xs text-gray-400"
-                    style={{ transform: isRTL ? 'scaleX(-1)' : 'none' }}
+                    className="absolute inset-0 px-8 pt-10 pb-10 overflow-hidden"
+                  >
+                    <div
+                      className="prose prose-sm max-w-none h-full overflow-hidden text-gray-800"
+                      style={{ fontSize: '14px', lineHeight: 1.7, direction: isRTL ? 'rtl' : 'ltr' }}
+                      dangerouslySetInnerHTML={{ __html: page.content || '' }}
+                    />
+                  </div>
+
+                  {/* Page number */}
+                  <div
+                    className="absolute bottom-3 left-0 right-0 text-center text-xs text-gray-400"
+                    dir="ltr"
                   >
                     {index + 1}
                   </div>
@@ -241,23 +247,25 @@ export default function BookFlipReader({
             {/* Back Cover */}
             <Page className="back-cover">
               <div
-                className="w-full h-full flex flex-col items-center justify-center relative p-8"
+                className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden"
                 style={{
                   backgroundColor: book.coverDesign?.back?.backgroundColor || coverColor,
                   color: textColor,
                   fontFamily,
-                  transform: isRTL ? 'scaleX(-1)' : 'none',
                   backgroundImage: backCoverImageUrl ? `url(${backCoverImageUrl})` : undefined,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                 }}
               >
                 {backCoverImageUrl && <div className="absolute inset-0 bg-black/50" />}
-                <div className="relative z-10 text-center max-w-[85%]">
+                <div
+                  className="relative z-10 text-center px-6 py-8 max-w-[85%] max-h-full overflow-y-auto"
+                  style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+                >
                   {(book.synopsis || book.description) && (
                     <p
-                      className="drop-shadow-md leading-relaxed"
-                      style={{ fontSize: 'clamp(0.75rem, 2vw, 0.95rem)' }}
+                      className="drop-shadow-md leading-relaxed break-words"
+                      style={{ fontSize: 'clamp(0.7rem, 1.8vw, 0.9rem)' }}
                     >
                       {book.synopsis || book.description}
                     </p>
