@@ -3613,7 +3613,7 @@ function PageRenderer({
         // View mode with edit button for chapter pages
         <div className="relative h-full group">
           <div
-            className="h-full overflow-hidden book-page-content prose prose-sm max-w-none relative"
+            className="h-full overflow-hidden book-page-content prose prose-sm max-w-none relative flex flex-col"
             style={{
               color: settings.textColor || '#000000',
               direction: isRTL ? 'rtl' : 'ltr',
@@ -3623,6 +3623,27 @@ function PageRenderer({
               ...getContentLayoutStyle(),
             }}
           >
+            {/* AI-Generated Chapter Image (at top of chapter page) */}
+            {page.type === 'chapter' && aiImagePlacements.filter(p => p.generatedImageUrl && p.position === 'chapter-start').length > 0 && (
+              <div className="flex-shrink-0 mb-3">
+                {aiImagePlacements
+                  .filter(p => p.generatedImageUrl && p.position === 'chapter-start')
+                  .map((placement, idx) => (
+                    <div
+                      key={`ai-img-${idx}`}
+                      className="relative w-full rounded-lg overflow-hidden shadow-md"
+                      style={{ height: '140px' }}
+                    >
+                      <img
+                        src={placement.generatedImageUrl}
+                        alt={placement.prompt || 'AI-generated illustration'}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+              </div>
+            )}
+
             {/* Floating elements for side images/placeholders */}
             {getFloatingImageElements().map((floatEl) => (
               <div
@@ -3636,7 +3657,7 @@ function PageRenderer({
                 }}
               />
             ))}
-            <div dangerouslySetInnerHTML={{ __html: page.content }} />
+            <div className="flex-1 overflow-hidden" dangerouslySetInnerHTML={{ __html: page.content }} />
           </div>
           {/* Edit button for chapter pages */}
           {page.type === 'chapter' && (
@@ -3648,32 +3669,6 @@ function PageRenderer({
               <Edit3 className="w-3.5 h-3.5" />
             </button>
           )}
-        </div>
-      )}
-
-      {/* AI-Generated Interior Images */}
-      {page.type === 'chapter' && aiImagePlacements.length > 0 && (
-        <div className="relative mb-4">
-          {aiImagePlacements
-            .filter(p => p.generatedImageUrl && p.position === 'chapter-start')
-            .map((placement, idx) => (
-              <div
-                key={`ai-img-${idx}`}
-                className="relative w-full mb-4 rounded-lg overflow-hidden shadow-md"
-                style={{ maxHeight: '150px' }}
-              >
-                <img
-                  src={placement.generatedImageUrl}
-                  alt={placement.prompt || 'AI-generated illustration'}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                  <span className="text-xs text-white/80 italic">
-                    {placement.prompt ? placement.prompt.slice(0, 50) + '...' : 'AI illustration'}
-                  </span>
-                </div>
-              </div>
-            ))}
         </div>
       )}
 
