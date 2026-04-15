@@ -125,6 +125,30 @@ export const payoutRequestLimiter = rateLimit({
 });
 
 /**
+ * Collaboration invite rate limiter
+ * Max 20 invites per user per hour.
+ * Applies to: POST /collaboration/:bookId/invite
+ * Prevents spamming arbitrary email addresses.
+ */
+export const inviteLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 20, // 20 invites per user per hour
+  keyGenerator: userKeyGenerator,
+  handler: (req: Request, res: Response) => {
+    const retryAfter = res.getHeader('Retry-After');
+    const retryMs = retryAfter ? Number(retryAfter) * 1000 : 60 * 60 * 1000;
+    res.status(429).json({
+      success: false,
+      error: 'Too many invitations sent. Please try again later.',
+      retryAfter: formatRetryTime(retryMs),
+      retryAfterSeconds: Math.ceil(retryMs / 1000),
+    });
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+/**
  * Subscription change rate limiter
  * Max 5 subscription changes per user per day
  * Applies to: upgrade, cancel endpoints

@@ -324,6 +324,81 @@ export async function sendWelcomeEmail(to: string, name: string): Promise<boolea
 }
 
 /**
+ * Send a book collaboration invitation email.
+ * Called when an owner invites someone to co-write a book.
+ * Best-effort — caller should not fail the request if this rejects.
+ */
+export async function sendInvitationEmail(params: {
+  to: string;
+  inviteeName: string;
+  bookTitle: string;
+  inviterName: string;
+  personalMessage?: string;
+  invitationLink: string;
+}): Promise<boolean> {
+  const { to, inviteeName, bookTitle, inviterName, personalMessage, invitationLink } = params;
+
+  // Escape HTML to prevent injection in name/title/message fields
+  const esc = (s: string = ''): string =>
+    s.replace(/&/g, '&amp;')
+     .replace(/</g, '&lt;')
+     .replace(/>/g, '&gt;')
+     .replace(/"/g, '&quot;')
+     .replace(/'/g, '&#39;');
+
+  const messageBlock = personalMessage
+    ? `
+      <div class="info-box" style="border-right: 4px solid #d4af37;">
+        <p style="margin: 0; font-style: italic;">"${esc(personalMessage)}"</p>
+      </div>
+    `
+    : '';
+
+  const content = `
+    <div class="success-icon">📖</div>
+    <h1>הוזמנת לכתוב ספר משותף</h1>
+    <div class="content">
+      <p>שלום <span class="highlight">${esc(inviteeName)}</span>,</p>
+      <p>
+        <strong>${esc(inviterName)}</strong> מזמין/ה אותך להצטרף ולכתוב יחד את הספר
+        <span class="highlight">"${esc(bookTitle)}"</span>.
+      </p>
+
+      ${messageBlock}
+
+      <div class="info-box">
+        <h2>מה זה אומר?</h2>
+        <ul>
+          <li>✍️ תוכל/י לכתוב ולערוך פרקים בספר</li>
+          <li>🖼️ להוסיף תמונות ולעצב עמודים</li>
+          <li>💾 כל השינויים נשמרים אוטומטית ומשותפים</li>
+          <li>❤️ יצירה משותפת של זיכרון לנצח</li>
+        </ul>
+      </div>
+
+      <div style="text-align: center;">
+        <a href="${invitationLink}" class="button">
+          קבל/י את ההזמנה
+        </a>
+      </div>
+
+      <p style="margin-top: 30px; font-size: 12px; color: #666;">
+        הקישור בתוקף למשך 30 יום. אם הכפתור לא עובד, העתק/י את הקישור הבא לדפדפן:<br>
+        <a href="${invitationLink}" style="color: #d4af37; word-break: break-all;">${invitationLink}</a>
+      </p>
+
+      <p><strong>צוות MeStory</strong></p>
+    </div>
+  `;
+
+  return sendEmail({
+    to,
+    subject: `${inviterName} מזמין/ה אותך לכתוב את הספר "${bookTitle}" 📖`,
+    html: getBaseTemplate(content, 'הזמנה לכתיבה משותפת'),
+  });
+}
+
+/**
  * Send subscription upgrade email
  */
 export async function sendSubscriptionUpgradeEmail(

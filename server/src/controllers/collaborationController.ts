@@ -7,15 +7,63 @@ const generateInvitationToken = (): string => {
   return crypto.randomBytes(32).toString('hex');
 };
 
+// Normalize email for consistent comparison across invite / accept / duplicate-check.
+const normalizeEmail = (email: unknown): string =>
+  typeof email === 'string' ? email.trim().toLowerCase() : '';
+
+// Allowed relationship values (mirrors the frontend modal)
+const VALID_RELATIONSHIPS = new Set([
+  'spouse',
+  'parent',
+  'child',
+  'sibling',
+  'grandparent',
+  'grandchild',
+  'friend',
+  'other',
+]);
+
+// Allowed collaborator roles (for updateCollaboratorRole)
+const VALID_ROLES = new Set(['contributor', 'editor', 'viewer']);
+
 // Invite a collaborator to a book
 export const inviteCollaborator = async (req: Request, res: Response) => {
   try {
     const { bookId } = req.params;
-    const { email, name, relationship, personalMessage } = req.body;
     const userId = req.user?.id;
+    const userEmail = normalizeEmail(req.user?.email);
 
     if (!userId) {
       return res.status(401).json({ success: false, error: 'Not authenticated' });
+    }
+
+    // --- Input validation (BUG-014) ---
+    const rawEmail = req.body?.email;
+    const rawName = req.body?.name;
+    const rawRelationship = req.body?.relationship;
+    const rawMessage = req.body?.personalMessage;
+
+    const email = normalizeEmail(rawEmail);
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ success: false, error: 'A valid email is required' });
+    }
+
+    const name = typeof rawName === 'string' ? rawName.trim() : '';
+    if (!name || name.length > 120) {
+      return res.status(400).json({ success: false, error: 'Name is required (1–120 characters)' });
+    }
+
+    const relationship = typeof rawRelationship === 'string' ? rawRelationship.trim() : '';
+    if (!VALID_RELATIONSHIPS.has(relationship)) {
+      return res.status(400).json({ success: false, error: 'Invalid relationship value' });
+    }
+
+    const personalMessage =
+      typeof rawMessage === 'string' ? rawMessage.trim().slice(0, 1000) : '';
+
+    // --- Self-invite guard (BUG-008) ---
+    if (email === userEmail) {
+      return res.status(400).json({ success: false, error: 'You cannot invite yourself' });
     }
 
     // Find the book
@@ -29,14 +77,18 @@ export const inviteCollaborator = async (req: Request, res: Response) => {
       return res.status(403).json({ success: false, error: 'Only the book owner can invite collaborators' });
     }
 
-    // Check if already invited
-    const existingInvitation = book.invitations?.find(inv => inv.email === email && inv.status === 'pending');
+    // Check if already invited (normalized compare — BUG-009)
+    const existingInvitation = book.invitations?.find(
+      (inv) => normalizeEmail(inv.email) === email && inv.status === 'pending'
+    );
     if (existingInvitation) {
       return res.status(400).json({ success: false, error: 'This person has already been invited' });
     }
 
-    // Check if already a collaborator
-    const existingCollaborator = book.collaborators?.find(c => c.email === email);
+    // Check if already a collaborator (normalized compare — BUG-009)
+    const existingCollaborator = book.collaborators?.find(
+      (c) => normalizeEmail(c.email) === email
+    );
     if (existingCollaborator) {
       return res.status(400).json({ success: false, error: 'This person is already a collaborator' });
     }
@@ -65,8 +117,21 @@ export const inviteCollaborator = async (req: Request, res: Response) => {
       }
     });
 
-    // TODO: Send email notification to invitee
-    // await sendInvitationEmail(email, name, book.title, invitation.token, personalMessage);
+    // Send invitation email (BUG-003) — best-effort; do not fail the request if email is down
+    const invitationLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/invitation/${invitation.token}`;
+    try {
+      const { sendInvitationEmail } = await import('../services/emailService');
+      await sendInvitationEmail({
+        to: email,
+        inviteeName: name,
+        bookTitle: book.title,
+        inviterName: req.user?.name || 'A friend',
+        personalMessage,
+        invitationLink,
+      });
+    } catch (emailErr) {
+      console.warn('[collaboration] Invitation email failed to send:', emailErr);
+    }
 
     res.status(201).json({
       success: true,
@@ -78,7 +143,7 @@ export const inviteCollaborator = async (req: Request, res: Response) => {
           status: invitation.status,
           expiresAt: invitation.expiresAt,
         },
-        invitationLink: `${process.env.CLIENT_URL || 'http://localhost:5173'}/invitation/${invitation.token}`,
+        invitationLink,
       }
     });
   } catch (error) {
@@ -189,6 +254,14 @@ export const updateCollaboratorRole = async (req: Request, res: Response) => {
       return res.status(403).json({ success: false, error: 'Only the book owner can update collaborator roles' });
     }
 
+    // Validate role enum (BUG-004)
+    if (role !== undefined && !VALID_ROLES.has(role)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid role. Must be one of: ${[...VALID_ROLES].join(', ')}`,
+      });
+    }
+
     const updatedCollaborators = (book.collaborators || []).map(c => {
       if (c.id === collaboratorId) {
         return {
@@ -217,8 +290,7 @@ export const updateCollaboratorRole = async (req: Request, res: Response) => {
 // Get my pending invitations
 export const getMyInvitations = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
-    const userEmail = req.user?.email;
+    const userEmail = normalizeEmail(req.user?.email);
 
     if (!userEmail) {
       return res.status(400).json({ success: false, error: 'User email not found' });
@@ -235,7 +307,7 @@ export const getMyInvitations = async (req: Request, res: Response) => {
 
     for (const book of books) {
       const pendingInvitation = book.invitations?.find(
-        inv => inv.email === userEmail && inv.status === 'pending'
+        (inv) => normalizeEmail(inv.email) === userEmail && inv.status === 'pending'
       );
       if (pendingInvitation) {
         myInvitations.push({
@@ -262,7 +334,7 @@ export const respondToInvitation = async (req: Request, res: Response) => {
     const { token } = req.params;
     const { accept } = req.body;
     const userId = req.user?.id;
-    const userEmail = req.user?.email;
+    const userEmail = normalizeEmail(req.user?.email);
     const userName = req.user?.name;
 
     if (!userId || !userEmail) {
@@ -291,9 +363,12 @@ export const respondToInvitation = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'Invitation has expired' });
     }
 
-    // Check email matches
-    if (targetInvitation.email !== userEmail) {
-      return res.status(403).json({ success: false, error: 'This invitation was sent to a different email address' });
+    // Check email matches (normalized — BUG-009)
+    if (normalizeEmail(targetInvitation.email) !== userEmail) {
+      return res.status(403).json({
+        success: false,
+        error: `This invitation was sent to ${targetInvitation.email}. Please log in with that email to accept it.`,
+      });
     }
 
     // Update invitation status
@@ -390,12 +465,23 @@ export const getInvitationByToken = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'This invitation has expired' });
     }
 
+    // Look up the inviter's name (book owner) to display on the acceptance page
+    let inviterName = 'A friend';
+    try {
+      const { User } = await import('../models/User');
+      const inviter = await User.findById(targetBook.author);
+      if (inviter?.name) inviterName = inviter.name;
+    } catch {
+      // non-fatal
+    }
+
     // Return invitation details (without sensitive data)
     res.json({
       success: true,
       data: {
         bookId: targetBook.id,
         bookTitle: targetBook.title,
+        inviterName,
         relationship: targetInvitation.relationship,
         personalMessage: targetInvitation.personalMessage,
         inviteeName: targetInvitation.name,
@@ -408,6 +494,53 @@ export const getInvitationByToken = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error getting invitation:', error);
     if (!res.headersSent) res.status(500).json({ success: false, error: 'Failed to get invitation' });
+  }
+};
+
+// Leave a collaboration (self-service) — BUG-012
+export const leaveCollaboration = async (req: Request, res: Response) => {
+  try {
+    const { bookId } = req.params;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Not authenticated' });
+    }
+
+    const book = await Book.findById(bookId);
+    if (!book) {
+      return res.status(404).json({ success: false, error: 'Book not found' });
+    }
+
+    // Owner cannot "leave" — they have to delete the book instead
+    if (book.author === userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Book owners cannot leave. Delete the book or transfer ownership instead.',
+      });
+    }
+
+    const collaborators = book.collaborators || [];
+    const wasCollaborator = collaborators.some((c) => c.userId === userId);
+    if (!wasCollaborator) {
+      return res.status(404).json({
+        success: false,
+        error: 'You are not a collaborator on this book',
+      });
+    }
+
+    const updatedCollaborators = collaborators.filter((c) => c.userId !== userId);
+    await Book.findByIdAndUpdate(bookId, {
+      $set: { collaborators: updatedCollaborators },
+    });
+
+    res.json({
+      success: true,
+      message: 'You have left the collaboration',
+    });
+  } catch (error) {
+    console.error('Error leaving collaboration:', error);
+    if (!res.headersSent) res.status(500).json({ success: false, error: 'Failed to leave collaboration' });
   }
 };
 

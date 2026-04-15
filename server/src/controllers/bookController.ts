@@ -14,6 +14,8 @@ import { AuthRequest } from '../types';
 import { transcribeAudio } from '../services/whisperService';
 import { generatePricingStrategy } from '../services/pricingStrategyService';
 import { exportBook } from '../services/bookExportService';
+import { enqueueJob, runJobInBackground } from '../services/jobQueue';
+import { renderBookToPdf } from '../services/puppeteerExportService';
 import {
   notifyBookLike,
   notifyBookComment,
@@ -36,6 +38,22 @@ import { IChapter, IChapterAudio, IBookTranslations, ITranslatedChapter } from '
 // Default voices for pre-generation
 const DEFAULT_MALE_VOICE: GeminiVoiceName = 'Charon';
 const DEFAULT_FEMALE_VOICE: GeminiVoiceName = 'Aoede';
+
+/**
+ * Check whether the user can edit this book (owner OR active collaborator).
+ * Call with the already-loaded book object to avoid a second DB round-trip.
+ */
+const canEditBook = (book: any, userId: string): boolean => {
+  if (!book || !userId) return false;
+  if (book.author === userId) return true;
+  const collaborators = (book.collaborators || []) as Array<{
+    userId?: string;
+    status?: string;
+  }>;
+  return collaborators.some(
+    (c) => c.userId === userId && (c.status === 'active' || !c.status)
+  );
+};
 
 /**
  * Generate translations and TTS audio for a book
@@ -576,11 +594,12 @@ export const getBooks = async (req: AuthRequest, res: Response): Promise<void> =
       query.genre = genre;
     }
 
-    // Find books with sorting
+    // PERF: list endpoint — skip heavy JSONB columns (chapters, pageImages, designState)
     const books = await Book.find({
       ...query,
       _sort: sortBy as string,
       _order: order as string,
+      _lightweight: true,
     });
 
     res.status(200).json({
@@ -646,11 +665,14 @@ export const getBookById = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    // Check if user owns this book OR if book is publicly published
+    // Check if user owns this book, is a collaborator, OR if book is publicly published
     const isOwner = book.author === req.user.id;
+    const isCollaborator = (book.collaborators || []).some(
+      (c: any) => c.userId === req.user.id && (c.status === 'active' || !c.status)
+    );
     const isPubliclyPublished = book.publishingStatus?.status === 'published' && book.publishingStatus?.isPublic;
 
-    if (!isOwner && !isPubliclyPublished) {
+    if (!isOwner && !isCollaborator && !isPubliclyPublished) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to access this book',
@@ -661,8 +683,8 @@ export const getBookById = async (req: AuthRequest, res: Response): Promise<void
     // Fetch author info for both owner and public views
     const author = await User.findById(book.author);
 
-    // If owner, return full book data
-    if (isOwner) {
+    // If owner or collaborator, return full book data
+    if (isOwner || isCollaborator) {
       if (!res.headersSent) {
         res.status(200).json({
           success: true,
@@ -784,24 +806,35 @@ export const updateBook = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    // Find book
-    const book = await Book.findById(id);
-
-    if (!book) {
-      res.status(404).json({
+    // PERF: lightweight permission check — owner OR active collaborator.
+    // Avoids fetching the full book (chapters/pages can be megabytes).
+    const access = await Book.getUserAccess(id, req.user.id);
+    if (access === null) {
+      // Distinguish 404 from 403
+      const ownerId = await Book.getOwnerId(id);
+      res.status(ownerId ? 403 : 404).json({
         success: false,
-        error: 'Book not found',
+        error: ownerId
+          ? 'You do not have permission to update this book'
+          : 'Book not found',
       });
       return;
     }
 
-    // Ensure user owns this book
-    if (book.author !== req.user.id) {
-      res.status(403).json({
-        success: false,
-        error: 'You do not have permission to update this book',
-      });
-      return;
+    // Allowed fields to update.
+    // Owners can update everything; collaborators cannot change
+    // book-level metadata (genre/publishingStatus/collaborators list).
+    const ownerOnlyFields = new Set(['collaborators', 'invitations', 'publishingStatus', 'isCollaborative', 'bookType']);
+    if (access === 'collaborator') {
+      for (const field of Object.keys(req.body || {})) {
+        if (ownerOnlyFields.has(field)) {
+          res.status(403).json({
+            success: false,
+            error: `Collaborators cannot modify '${field}'`,
+          });
+          return;
+        }
+      }
     }
 
     // Allowed fields to update
@@ -1445,32 +1478,39 @@ export const getPublicBooks = async (req: Request, res: Response): Promise<void>
       sortOptions[sortBy as string] = order === 'asc' ? 1 : -1;
     }
 
-    // Fetch books with Supabase-compatible query
+    // PERF: list endpoint — skip heavy JSONB columns
     const books = await Book.find({
       ...query,
       _sort: sortBy as string,
       _order: order as string,
       _limit: 100,
+      _lightweight: true,
     });
 
-    // Fetch author info for each book
-    const booksWithAuthors = await Promise.all(
-      books.map(async (book) => {
-        const author = await User.findById(book.author);
-        return {
-          ...book,
-          authorName: author?.name || 'Unknown Author',
-          author: {
-            id: author?.id || book.author,
-            name: author?.name || 'Unknown Author',
-            profile: {
-              avatar: author?.profile?.avatar || null,
-              bio: author?.profile?.bio || null,
-            },
+    // PERF: batch-fetch all unique authors in ONE query instead of N+1.
+    // Old code did `books.map(async b => User.findById(b.author))` which for
+    // 50 books meant 51 sequential round-trips to Supabase (~5–10 seconds).
+    const uniqueAuthorIds = Array.from(new Set(books.map((b) => b.author)));
+    const authors = uniqueAuthorIds.length > 0
+      ? await User.findByIds(uniqueAuthorIds)
+      : [];
+    const authorMap = new Map(authors.map((a: any) => [a.id, a]));
+
+    const booksWithAuthors = books.map((book) => {
+      const author = authorMap.get(book.author);
+      return {
+        ...book,
+        authorName: author?.name || 'Unknown Author',
+        author: {
+          id: author?.id || book.author,
+          name: author?.name || 'Unknown Author',
+          profile: {
+            avatar: author?.profile?.avatar || null,
+            bio: author?.profile?.bio || null,
           },
-        };
-      })
-    );
+        },
+      };
+    });
 
     res.status(200).json({
       success: true,
@@ -1672,7 +1712,7 @@ export const exportBookPDF = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     // Ensure user owns this book
-    if (book.author !== req.user.id) {
+    if (!canEditBook(book, req.user.id)) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to export this book',
@@ -1745,6 +1785,138 @@ export const exportBookPDF = async (req: AuthRequest, res: Response): Promise<vo
     res.status(500).json({
       success: false,
       error: errorMessage,
+    });
+  }
+};
+
+/**
+ * Async PDF export via background job.
+ * POST /api/books/:id/export-async
+ *
+ * Returns { jobId } immediately. Client polls GET /api/jobs/:jobId until
+ * status === 'completed', then reads result.downloadUrl for the signed URL.
+ * PDF is uploaded to Supabase Storage bucket `exports` with a 24h signed URL.
+ */
+export const exportBookPDFAsync = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, error: 'Authentication required' });
+      return;
+    }
+
+    const { id } = req.params;
+    if (!isValidUUID(id)) {
+      res.status(400).json({ success: false, error: 'Invalid book ID' });
+      return;
+    }
+
+    const book = await Book.findById(id);
+    if (!book) {
+      res.status(404).json({ success: false, error: 'Book not found' });
+      return;
+    }
+    if (!canEditBook(book, req.user.id)) {
+      res.status(403).json({ success: false, error: 'You do not have permission to export this book' });
+      return;
+    }
+    if (!book.chapters?.length || !book.chapters.some((ch: any) => ch.content?.trim())) {
+      res.status(400).json({
+        success: false,
+        error: 'Cannot export a book without content. Add text to chapters first.',
+      });
+      return;
+    }
+
+    // Capture the user's JWT so Puppeteer can authenticate as them.
+    // We grab it before entering the background task because `req` won't be
+    // safe to read after the response is sent.
+    const authHeader = req.headers.authorization || '';
+    const authToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : '';
+
+    // Enqueue job and return immediately
+    const job = await enqueueJob({
+      userId: req.user.id,
+      bookId: id,
+      type: 'pdf_export',
+      input: { format: 'pdf', title: book.title },
+    });
+
+    // Fire-and-forget the actual work
+    runJobInBackground(job.id, async ({ updateProgress }) => {
+      // Try the Puppeteer renderer first — it mirrors what the user sees in
+      // the editor exactly (bidi, fonts, images, cover). Fall back to the
+      // legacy PDFKit exporter only if Puppeteer fails (e.g. no Chrome binary).
+      let pdfBuffer: Buffer;
+      let warnings: string[] = [];
+      try {
+        pdfBuffer = await renderBookToPdf({
+          bookId: id,
+          authToken,
+          onProgress: (pct, msg) => updateProgress(pct * 0.7, msg),
+        });
+      } catch (puppeteerErr: any) {
+        console.warn('[exportBookPDFAsync] Puppeteer failed, falling back to PDFKit:', puppeteerErr?.message);
+        await updateProgress(10, 'Generating PDF (fallback)...');
+        const exportResult = await exportBook(id, 'pdf');
+        if (!exportResult?.buffer) {
+          throw new Error('Export failed — no output generated');
+        }
+        pdfBuffer = exportResult.buffer;
+        warnings = exportResult.warnings || [];
+      }
+
+      await updateProgress(70, 'Uploading to storage...');
+      const { supabaseAdmin } = await import('../config/supabase');
+
+      // Supabase Storage keys must be ASCII — Hebrew/Unicode titles get rejected
+      // as "Invalid key". Use a pure ASCII path (timestamp + book id + "book")
+      // and keep the Hebrew title only for the download filename that the
+      // browser shows the user.
+      const storagePath = `${req.user!.id}/${id}/${Date.now()}_book.pdf`;
+      const downloadFilename = `${book.title.replace(/[^\w\u0590-\u05FF\s-]/g, '').trim().slice(0, 80) || 'book'}.pdf`;
+
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from('exports')
+        .upload(storagePath, pdfBuffer, {
+          contentType: 'application/pdf',
+          upsert: true,
+        });
+      if (uploadError) {
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
+
+      await updateProgress(95, 'Creating download link...');
+      // 24-hour signed URL. Pass the download filename so the browser saves
+      // the file with the original (possibly Hebrew) book title.
+      const { data: signed, error: signError } = await supabaseAdmin.storage
+        .from('exports')
+        .createSignedUrl(storagePath, 60 * 60 * 24, { download: downloadFilename });
+      if (signError || !signed) {
+        throw new Error(`Failed to create download link: ${signError?.message || 'unknown'}`);
+      }
+
+      return {
+        downloadUrl: signed.signedUrl,
+        filename: downloadFilename,
+        sizeBytes: pdfBuffer.length,
+        expiresInSeconds: 60 * 60 * 24,
+        warnings,
+      };
+    });
+
+    res.status(202).json({
+      success: true,
+      data: {
+        jobId: job.id,
+        status: 'pending',
+        pollUrl: `/api/jobs/${job.id}`,
+      },
+    });
+  } catch (error: any) {
+    console.error('Async export book error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to start export',
     });
   }
 };
@@ -2248,8 +2420,12 @@ export const uploadCoverImage = async (req: AuthRequest, res: Response): Promise
       return;
     }
 
-    // Check ownership
-    if (book.author !== req.user.id) {
+    // Owner OR active collaborator may upload the cover
+    const isOwner = book.author === req.user.id;
+    const isCollaborator = (book.collaborators || []).some(
+      (c: any) => c.userId === req.user.id && (c.status === 'active' || !c.status)
+    );
+    if (!isOwner && !isCollaborator) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to update this book',
@@ -2863,7 +3039,7 @@ export const exportBookToFormat = async (req: AuthRequest, res: Response): Promi
     }
 
     // Ensure user owns this book
-    if (book.author !== req.user.id) {
+    if (!canEditBook(book, req.user.id)) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to export this book',
@@ -2989,7 +3165,7 @@ export const uploadPageImage = async (req: AuthRequest, res: Response): Promise<
     }
 
     // Ensure user owns this book
-    if (book.author !== req.user.id) {
+    if (!canEditBook(book, req.user.id)) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to update this book',
@@ -3094,7 +3270,7 @@ export const updatePageImage = async (req: AuthRequest, res: Response): Promise<
     }
 
     // Ensure user owns this book
-    if (book.author !== req.user.id) {
+    if (!canEditBook(book, req.user.id)) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to update this book',
@@ -3186,7 +3362,7 @@ export const deletePageImage = async (req: AuthRequest, res: Response): Promise<
     }
 
     // Ensure user owns this book
-    if (book.author !== req.user.id) {
+    if (!canEditBook(book, req.user.id)) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to update this book',
@@ -3282,8 +3458,8 @@ export const getPageImages = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    // Ensure user owns this book
-    if (book.author !== req.user.id) {
+    // Owner OR collaborator can read page images
+    if (!canEditBook(book, req.user.id)) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to access this book',
@@ -3343,7 +3519,7 @@ export const updatePageImages = async (req: AuthRequest, res: Response): Promise
     }
 
     // Ensure user owns this book
-    if (book.author !== req.user.id) {
+    if (!canEditBook(book, req.user.id)) {
       res.status(403).json({
         success: false,
         error: 'You do not have permission to update this book',
