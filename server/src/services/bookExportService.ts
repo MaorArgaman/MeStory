@@ -808,7 +808,30 @@ async function extractBookData(bookId: string): Promise<BookExportData> {
   // Create a map of chapter index to images
   const chapterImagesMap = new Map<number, PageImageData[]>();
 
-  // Add page images
+  // Add images from pageLayout.pages (the primary source - what user sees in UI)
+  const layoutPages = book.pageLayout?.pages || [];
+  layoutPages.forEach((page: any) => {
+    if (page.chapterIndex !== undefined && page.images && Array.isArray(page.images)) {
+      const images = chapterImagesMap.get(page.chapterIndex) || [];
+      page.images.forEach((img: any) => {
+        if (img.url) {
+          images.push({
+            url: img.url,
+            x: img.x || 0,
+            y: img.y || 0,
+            width: img.width || 100,
+            height: img.height || 100,
+            isAiGenerated: false,
+          });
+        }
+      });
+      if (images.length > 0) {
+        chapterImagesMap.set(page.chapterIndex, images);
+      }
+    }
+  });
+
+  // Also add legacy pageImages (fallback - treating pageIndex as chapter index)
   pageImages.forEach((img: IPageImage) => {
     const images = chapterImagesMap.get(img.pageIndex) || [];
     images.push({
