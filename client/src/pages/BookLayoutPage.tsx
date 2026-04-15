@@ -1265,18 +1265,25 @@ export default function BookLayoutPage() {
     if (book) {
       setSaving(true);
       try {
-        // Strip base64 image URLs to reduce payload size
+        // Preserve image URLs (including base64) so images persist across reloads
         const pagesForSave = pages.map(page => ({
           ...page,
           images: (page.images || []).map(img => ({
             id: img.id,
+            url: img.url,
             x: img.x,
             y: img.y,
             width: img.width,
             height: img.height,
             rotation: img.rotation,
-            url: img.url?.startsWith('data:') ? undefined : img.url,
-          })).filter(img => img.url || img.id),
+            opacity: img.opacity,
+            borderRadius: img.borderRadius,
+            fadeEdges: img.fadeEdges,
+            fadeAmount: img.fadeAmount,
+            textWrap: img.textWrap,
+            flipH: img.flipH,
+            flipV: img.flipV,
+          })).filter(img => img.url),
         }));
 
         const payload = {
