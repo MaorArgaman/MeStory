@@ -2191,19 +2191,19 @@ export default function BookLayoutPage() {
           </div>
 
           {/* Flipbook content area */}
-          <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 lg:p-8 overflow-hidden">
+          <div className="flex-1 flex flex-col items-center justify-center p-1 sm:p-2 lg:p-4 overflow-hidden min-h-0">
 
           {/* react-pageflip book with editing */}
           <div className="relative">
             <HTMLFlipBook
               ref={flipBookRef}
-              width={350}
-              height={500}
+              width={300}
+              height={420}
               size="stretch"
-              minWidth={250}
-              maxWidth={450}
-              minHeight={350}
-              maxHeight={650}
+              minWidth={200}
+              maxWidth={380}
+              minHeight={280}
+              maxHeight={520}
               maxShadowOpacity={0.5}
               showCover={true}
               mobileScrollSupport={false}
