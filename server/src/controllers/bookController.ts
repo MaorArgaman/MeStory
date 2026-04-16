@@ -40,19 +40,37 @@ const DEFAULT_MALE_VOICE: GeminiVoiceName = 'Charon';
 const DEFAULT_FEMALE_VOICE: GeminiVoiceName = 'Aoede';
 
 /**
- * Check whether the user can edit this book (owner OR active collaborator).
- * Call with the already-loaded book object to avoid a second DB round-trip.
+ * Permission levels for book access (mirrors CollaboratorRole + owner).
+ * 'owner'     — full control (delete, publish, manage collaborators)
+ * 'editor'    — read + write (chapters, images, cover, layout, export)
+ * 'commenter' — read + comment only (cannot edit content directly)
+ * 'viewer'    — read-only (can view + export, nothing else)
  */
-const canEditBook = (book: any, userId: string): boolean => {
-  if (!book || !userId) return false;
-  if (book.author === userId) return true;
+type BookAccess = 'owner' | 'editor' | 'commenter' | 'viewer' | null;
+
+const getBookAccess = (book: any, userId: string): BookAccess => {
+  if (!book || !userId) return null;
+  if (book.author === userId) return 'owner';
   const collaborators = (book.collaborators || []) as Array<{
     userId?: string;
     status?: string;
+    role?: string;
   }>;
-  return collaborators.some(
+  const collab = collaborators.find(
     (c) => c.userId === userId && (c.status === 'active' || !c.status)
   );
+  if (!collab) return null;
+  const role = collab.role === 'contributor' ? 'editor' : collab.role;
+  return (role as BookAccess) || 'viewer';
+};
+
+const canEditBook = (book: any, userId: string): boolean => {
+  const access = getBookAccess(book, userId);
+  return access === 'owner' || access === 'editor';
+};
+
+const canReadBook = (book: any, userId: string): boolean => {
+  return getBookAccess(book, userId) !== null;
 };
 
 /**
@@ -806,11 +824,9 @@ export const updateBook = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    // PERF: lightweight permission check — owner OR active collaborator.
-    // Avoids fetching the full book (chapters/pages can be megabytes).
+    // PERF: lightweight permission check — owner, editor, commenter, or viewer.
     const access = await Book.getUserAccess(id, req.user.id);
     if (access === null) {
-      // Distinguish 404 from 403
       const ownerId = await Book.getOwnerId(id);
       res.status(ownerId ? 403 : 404).json({
         success: false,
@@ -821,11 +837,20 @@ export const updateBook = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    // Allowed fields to update.
-    // Owners can update everything; collaborators cannot change
-    // book-level metadata (genre/publishingStatus/collaborators list).
+    // Only owner and editor can write content. Commenter/viewer get 403.
+    if (access === 'commenter' || access === 'viewer') {
+      res.status(403).json({
+        success: false,
+        error: access === 'commenter'
+          ? 'Commenters cannot edit book content. Ask the owner to upgrade your role.'
+          : 'Viewers have read-only access. Ask the owner to upgrade your role.',
+      });
+      return;
+    }
+
+    // Editors cannot change book-level metadata (only content).
     const ownerOnlyFields = new Set(['collaborators', 'invitations', 'publishingStatus', 'isCollaborative', 'bookType']);
-    if (access === 'collaborator') {
+    if (access === 'editor') {
       for (const field of Object.keys(req.body || {})) {
         if (ownerOnlyFields.has(field)) {
           res.status(403).json({

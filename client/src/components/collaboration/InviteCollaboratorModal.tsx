@@ -1,9 +1,15 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, UserPlus, Mail, User, Heart, Loader2 } from 'lucide-react';
+import { X, Send, UserPlus, Mail, User, Heart, Loader2, Shield } from 'lucide-react';
 import { api } from '../../services/api';
 import toast from 'react-hot-toast';
+
+const ROLES = [
+  { id: 'editor', labelHe: 'עריכה - יכול/ה לערוך פרקים, תמונות ועיצוב', labelEn: 'Editor - can edit chapters, images and design', icon: '✏️' },
+  { id: 'commenter', labelHe: 'תגובה - יכול/ה להגיב ולהציע שינויים', labelEn: 'Commenter - can comment and suggest changes', icon: '💬' },
+  { id: 'viewer', labelHe: 'צפיה - יכול/ה לצפות בלבד', labelEn: 'Viewer - read-only access', icon: '👁️' },
+];
 
 interface InviteCollaboratorModalProps {
   isOpen: boolean;
@@ -37,6 +43,7 @@ export default function InviteCollaboratorModal({
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [relationship, setRelationship] = useState('');
+  const [role, setRole] = useState('editor');
   const [personalMessage, setPersonalMessage] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -55,6 +62,7 @@ export default function InviteCollaboratorModal({
         email,
         name,
         relationship,
+        role,
         personalMessage,
       });
 
@@ -74,6 +82,7 @@ export default function InviteCollaboratorModal({
         setEmail('');
         setName('');
         setRelationship('');
+        setRole('editor');
         setPersonalMessage('');
       }
     } catch (error: any) {
@@ -185,6 +194,39 @@ export default function InviteCollaboratorModal({
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* Role Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                <Shield className="w-4 h-4 inline-block mr-2" />
+                {isHebrew ? 'הרשאות' : 'Permissions'}
+              </label>
+              <div className="space-y-2">
+                {ROLES.map((r) => (
+                  <label
+                    key={r.id}
+                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                      role === r.id
+                        ? 'border-memorial-gold/60 bg-memorial-gold/10'
+                        : 'border-white/10 bg-white/5 hover:border-white/20'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="role"
+                      value={r.id}
+                      checked={role === r.id}
+                      onChange={(e) => setRole(e.target.value)}
+                      className="sr-only"
+                    />
+                    <span className="text-lg">{r.icon}</span>
+                    <span className="text-sm text-white">
+                      {isHebrew ? r.labelHe : r.labelEn}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             {/* Personal Message */}

@@ -24,8 +24,8 @@ const VALID_RELATIONSHIPS = new Set([
   'other',
 ]);
 
-// Allowed collaborator roles (for updateCollaboratorRole)
-const VALID_ROLES = new Set(['contributor', 'editor', 'viewer']);
+// Allowed collaborator roles
+const VALID_ROLES = new Set(['editor', 'commenter', 'viewer']);
 
 // Invite a collaborator to a book
 export const inviteCollaborator = async (req: Request, res: Response) => {
@@ -62,6 +62,10 @@ export const inviteCollaborator = async (req: Request, res: Response) => {
     const personalMessage =
       typeof rawMessage === 'string' ? rawMessage.trim().slice(0, 1000) : '';
 
+    // Optional role - default to 'editor' (full write access)
+    const rawRole = req.body?.role;
+    const inviteRole = typeof rawRole === 'string' && VALID_ROLES.has(rawRole) ? rawRole : 'editor';
+
     // --- Self-invite guard (BUG-008) ---
     if (email === userEmail) {
       return res.status(400).json({ success: false, error: 'You cannot invite yourself' });
@@ -94,13 +98,14 @@ export const inviteCollaborator = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'This person is already a collaborator' });
     }
 
-    // Create invitation
+    // Create invitation with the chosen role
     const invitation: IBookInvitation = {
       id: crypto.randomUUID(),
       email,
       name,
       relationship,
       personalMessage,
+      role: inviteRole as any,
       token: generateInvitationToken(),
       status: 'pending',
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
@@ -398,7 +403,7 @@ export const respondToInvitation = async (req: Request, res: Response) => {
         userId,
         email: userEmail,
         name: userName || targetInvitation.name,
-        role: 'contributor',
+        role: targetInvitation.role || 'editor',
         relationship: targetInvitation.relationship,
         assignedChapters: [],
         contributedChapters: [],
@@ -502,6 +507,81 @@ export const getInvitationByToken = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error getting invitation:', error);
     if (!res.headersSent) res.status(500).json({ success: false, error: 'Failed to get invitation' });
+  }
+};
+
+// Transfer book ownership to a collaborator
+export const transferOwnership = async (req: Request, res: Response) => {
+  try {
+    const { bookId, collaboratorId } = req.params;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Not authenticated' });
+    }
+
+    const book = await Book.findById(bookId);
+    if (!book) {
+      return res.status(404).json({ success: false, error: 'Book not found' });
+    }
+
+    // Only current owner can transfer
+    if (book.author !== userId) {
+      return res.status(403).json({ success: false, error: 'Only the book owner can transfer ownership' });
+    }
+
+    // Find the target collaborator
+    const targetCollab = (book.collaborators || []).find(c => c.id === collaboratorId);
+    if (!targetCollab || !targetCollab.userId) {
+      return res.status(404).json({ success: false, error: 'Collaborator not found or has no linked account' });
+    }
+
+    const newOwnerId = targetCollab.userId;
+    const newOwnerEmail = targetCollab.email;
+    const newOwnerName = targetCollab.name;
+
+    // Remove the new owner from collaborators and add the old owner as editor
+    const updatedCollaborators = (book.collaborators || [])
+      .filter(c => c.id !== collaboratorId)
+      .concat({
+        id: require('crypto').randomUUID(),
+        userId,
+        email: req.user?.email || '',
+        name: req.user?.name || '',
+        role: 'editor' as const,
+        relationship: 'owner',
+        assignedChapters: [],
+        contributedChapters: [],
+        status: 'active' as const,
+        joinedAt: new Date().toISOString(),
+        invitedAt: new Date().toISOString(),
+        invitedBy: newOwnerId,
+      });
+
+    await Book.findByIdAndUpdate(bookId, {
+      $set: {
+        author: newOwnerId,
+        collaborators: updatedCollaborators,
+      }
+    });
+
+    // Notify the new owner via socket
+    const { sendNotificationToUser } = await import('../services/socketService');
+    sendNotificationToUser(newOwnerId, {
+      type: 'collaboration:ownership-transferred',
+      bookId,
+      bookTitle: book.title,
+      message: `You are now the owner of "${book.title}"`,
+    });
+
+    res.json({
+      success: true,
+      message: `Ownership transferred to ${newOwnerName}`,
+      data: { newOwnerId, newOwnerName },
+    });
+  } catch (error) {
+    console.error('Error transferring ownership:', error);
+    if (!res.headersSent) res.status(500).json({ success: false, error: 'Failed to transfer ownership' });
   }
 };
 

@@ -393,7 +393,7 @@ export interface IMention {
 // ===== COLLABORATIVE BOOK INTERFACES =====
 
 // Collaborator role and status
-export type CollaboratorRole = 'owner' | 'editor' | 'contributor';
+export type CollaboratorRole = 'editor' | 'commenter' | 'viewer';
 export type CollaboratorStatus = 'pending' | 'active' | 'completed' | 'declined';
 export type InvitationStatus = 'pending' | 'accepted' | 'declined' | 'expired';
 
@@ -421,6 +421,7 @@ export interface IBookInvitation {
   name: string;
   relationship: string;
   personalMessage?: string;
+  role?: CollaboratorRole; // Role to assign when accepted (default: 'editor')
   token: string;  // Unique token for invitation link
   status: InvitationStatus;
   expiresAt: string;
@@ -859,16 +860,16 @@ export class Book {
   }
 
   /**
-   * Lightweight permission check: true if the user is the book owner OR
-   * an active collaborator. Fetches only author_id + collaborators (not the
-   * full book) to keep autosave cheap.
-   *
-   * Returns 'owner' | 'collaborator' | null.
+   * Lightweight permission check.
+   * Returns { access, role } where:
+   *   access = 'owner' | 'editor' | 'commenter' | 'viewer' | null
+   *   role = the CollaboratorRole string if collaborator, or 'owner'
+   * Fetches only author_id + collaborators (not the full book).
    */
   static async getUserAccess(
     bookId: string,
     userId: string
-  ): Promise<'owner' | 'collaborator' | null> {
+  ): Promise<'owner' | CollaboratorRole | null> {
     if (!bookId || !userId) return null;
     const { data, error } = await supabaseAdmin
       .from('books')
@@ -880,17 +881,29 @@ export class Book {
     const collaborators = ((data as any).collaborators || []) as Array<{
       userId?: string;
       status?: string;
+      role?: string;
     }>;
-    const isActiveCollab = collaborators.some(
+    const collab = collaborators.find(
       (c) => c.userId === userId && (c.status === 'active' || !c.status)
     );
-    return isActiveCollab ? 'collaborator' : null;
+    if (!collab) return null;
+    // Map legacy 'contributor' role to 'editor'
+    const role = collab.role === 'contributor' ? 'editor' : collab.role;
+    return (role as CollaboratorRole) || 'viewer';
   }
 
   /**
-   * Convenience wrapper: returns true if the user can read/write this book.
+   * Convenience: returns true if user can WRITE to this book (owner or editor).
    */
   static async canUserWrite(bookId: string, userId: string): Promise<boolean> {
+    const access = await Book.getUserAccess(bookId, userId);
+    return access === 'owner' || access === 'editor';
+  }
+
+  /**
+   * Convenience: returns true if user can READ this book (any role).
+   */
+  static async canUserRead(bookId: string, userId: string): Promise<boolean> {
     return (await Book.getUserAccess(bookId, userId)) !== null;
   }
 

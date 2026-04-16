@@ -8,6 +8,7 @@ import {
   getCollaborators,
   removeCollaborator,
   updateCollaboratorRole,
+  transferOwnership,
   getMyInvitations,
   getCollaborativeBooks,
   getInvitationByToken,
@@ -32,6 +33,9 @@ router.delete('/:bookId/collaborators/:collaboratorId', authenticate, removeColl
 
 // Update collaborator role
 router.put('/:bookId/collaborators/:collaboratorId', authenticate, updateCollaboratorRole);
+
+// Transfer book ownership to a collaborator (owner only)
+router.post('/:bookId/transfer/:collaboratorId', authenticate, transferOwnership);
 
 // ===== PUBLIC ROUTES =====
 
