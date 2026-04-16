@@ -1792,7 +1792,9 @@ export default function BookLayoutPage() {
   void _updatePageContent; // Suppress unused warning
 
   // Flipbook page count: front cover + content pages + back cover
-  const normalizedPages = pages.length % 2 === 0 ? pages : [...pages, { id: 'blank-pad', content: '', type: 'blank' as const } as PageContent];
+  // Filter out 'summary' pages from content — they're rendered as the back cover
+  const contentPages = pages.filter(p => p.type !== 'summary');
+  const normalizedPages = contentPages.length % 2 === 0 ? contentPages : [...contentPages, { id: 'blank-pad', content: '', type: 'blank' as const } as PageContent];
   const totalDomPages = normalizedPages.length + 2; // + front cover + back cover
   const orderedContentPages = isBookRTL ? [...normalizedPages].reverse() : normalizedPages;
   const initialFlipPage = isBookRTL ? totalDomPages - 1 : 0;
@@ -2228,7 +2230,7 @@ export default function BookLayoutPage() {
                   <BackCoverPreview
                     book={book}
                     backCoverImageUrl={backCoverImageUrl}
-                    synopsis={book.synopsis || book.description}
+                    synopsis={pages.find(p => p.type === 'summary')?.content || book.synopsis || book.description}
                     language={language}
                   />
                 </FlipPage>
