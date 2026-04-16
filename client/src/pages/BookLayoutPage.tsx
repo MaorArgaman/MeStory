@@ -1823,7 +1823,9 @@ export default function BookLayoutPage() {
     const domPage = isBookRTL
       ? totalDomPages - 1 - spreadIdx * 2
       : spreadIdx === 0 ? 0 : (spreadIdx - 1) * 2 + 1;
-    flipBookRef.current?.pageFlip()?.flip(Math.max(0, Math.min(domPage, totalDomPages - 1)));
+    const targetPage = Math.max(0, Math.min(domPage, totalDomPages - 1));
+    // turnToPage jumps directly; flip animates one page toward the target
+    flipBookRef.current?.pageFlip()?.turnToPage(targetPage);
   };
 
   // Navigate spreads with page flip animation
