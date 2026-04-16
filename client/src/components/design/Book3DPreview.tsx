@@ -428,31 +428,34 @@ export default function Book3DPreview({
                 top: `${synopsisPosition.y}%`,
                 transform: 'translate(-50%, -50%)',
                 maxWidth: '85%',
-                maxHeight: '70%',
-                overflow: 'hidden',
+                maxHeight: '75%',
               }}
               onMouseDown={handleSynopsisMouseDown}
               onTouchStart={handleSynopsisTouchStart}
             >
-              <p
-                style={{
-                  fontFamily: fontFamily,
-                  fontSize: '11px',
-                  lineHeight: '1.5',
-                  color: textColor,
-                  textShadow: '1px 1px 3px rgba(0,0,0,0.8)',
-                  textAlign: isRTL ? 'right' : 'left',
-                  opacity: 0.95,
-                  display: '-webkit-box',
-                  WebkitLineClamp: 10,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                }}
-              >
-                {synopsis || (language === 'he'
-                  ? 'תקציר הספר יופיע כאן...'
-                  : 'Book synopsis will appear here...')}
-              </p>
+              {(() => {
+                const text = synopsis || (language === 'he' ? 'תקציר הספר יופיע כאן...' : 'Book synopsis will appear here...');
+                const len = text.length;
+                const fontSize = len < 150 ? '11px' : len < 300 ? '9.5px' : len < 450 ? '8px' : '7px';
+                const lineHeight = len < 150 ? '1.5' : len < 300 ? '1.45' : '1.4';
+                return (
+                  <p
+                    style={{
+                      fontFamily: fontFamily,
+                      fontSize,
+                      lineHeight,
+                      color: textColor,
+                      textShadow: '1px 1px 3px rgba(0,0,0,0.8)',
+                      textAlign: isRTL ? 'right' : 'left',
+                      opacity: 0.95,
+                      userSelect: 'none',
+                      whiteSpace: 'pre-wrap',
+                    }}
+                  >
+                    {text}
+                  </p>
+                );
+              })()}
               {editMode && (
                 <div className="absolute -inset-2 border-2 border-dashed border-white/40 rounded pointer-events-none" />
               )}
