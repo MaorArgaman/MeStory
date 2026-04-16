@@ -26,20 +26,18 @@ export default function AICopilot({
   const [analysis, setAnalysis] = useState<QualityAnalysis | null>(null);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
 
-  const handleGetSuggestions = async () => {
-    if (!currentText || currentText.length < 50) {
-      toast.error(t('editor.ai_copilot.min_chars_error'));
-      return;
-    }
+  const isEmptyChapter = !currentText || currentText.trim().length < 20;
 
+  const handleGetSuggestions = async () => {
     setLoadingSuggestions(true);
     try {
       const result = await getAiSuggestions({
-        currentText,
+        currentText: currentText || '',
         genre,
         context: {
           bookTitle,
           chapterTitle,
+          isChapterOpening: isEmptyChapter,
         },
       });
       setSuggestions(result.suggestions);
@@ -72,8 +70,8 @@ export default function AICopilot({
   };
 
   const handleInsertSuggestion = (suggestion: string) => {
-    onInsertText('\n\n' + suggestion);
-    toast.success('Suggestion inserted!');
+    onInsertText(isEmptyChapter ? suggestion : '\n\n' + suggestion);
+    toast.success(isEmptyChapter ? 'הפרק נפתח!' : 'Suggestion inserted!');
   };
 
   const getScoreColor = (score: number) => {
@@ -115,7 +113,9 @@ export default function AICopilot({
             ) : (
               <>
                 <Sparkles className="w-4 h-4" />
-                {t('editor.ai_copilot.inspire_me')}
+                {isEmptyChapter
+                  ? (t('editor.ai_copilot.start_chapter') || 'פתח לי את הפרק')
+                  : t('editor.ai_copilot.inspire_me')}
               </>
             )}
           </button>

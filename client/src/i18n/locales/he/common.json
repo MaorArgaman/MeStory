@@ -762,7 +762,9 @@
       "suggestions": "הצעות לשיפור",
       "breakdown": "פירוט:",
       "improvement_tips": "טיפים לשיפור:",
-      "analyze_placeholder": "נתח את הפרק כדי לראות ציוני איכות"
+      "analyze_placeholder": "נתח את הפרק כדי לראות ציוני איכות",
+      "start_chapter": "פתח לי את הפרק",
+      "pick_opening": "בחר פתיחה:"
     },
     "statistics": {
       "title": "סטטיסטיקות",

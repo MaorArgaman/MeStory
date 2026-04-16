@@ -114,6 +114,7 @@ export async function generateContinuations(
   context?: {
     bookTitle?: string;
     chapterTitle?: string;
+    isChapterOpening?: boolean;
     characters?: string[];
     storyContext?: {
       theme?: string;
@@ -182,6 +183,72 @@ ${sc.characters ? `Characters: ${sc.characters}` : ''}
     // Determine if this is a memorial book genre
     const memorialGenres = ['fallen_soldier', 'life_story', 'family_legacy', 'tribute', 'holocaust_survivor', 'shared_memories', 'letters_and_words', 'testimony'];
     const isMemorial = memorialGenres.includes(genre);
+
+    // For empty/new chapters, generate OPENING text instead of continuations
+    const isOpeningRequest = context?.isChapterOpening || (!currentText || currentText.trim().length < 20);
+
+    if (isOpeningRequest) {
+      const openingPrompt = isMemorial
+        ? `You are a sensitive and respectful writer helping families create memorial books to honor their loved ones.
+${langInstruction}
+
+CONTEXT:
+${context?.bookTitle ? `Memorial Book: "${context.bookTitle}"` : ''}
+${context?.chapterTitle ? `Chapter: "${context.chapterTitle}"` : ''}
+${voiceInterviewPrompt}
+
+TASK:
+Generate exactly 3 different OPENING paragraphs for this new chapter (100-200 words each).
+The chapter is empty — the writer needs inspiration for how to BEGIN.
+
+Each opening should:
+- Be a compelling, engaging start that draws the reader in
+- Set the tone and atmosphere for the chapter
+- ${isMemorial ? 'Honor the memory with warmth, respect, and vivid personal details' : `Match the ${genre} genre`}
+- Offer a different angle or starting point (e.g., a memory, a scene, dialogue, a reflection)
+- ${langInstruction.includes('Hebrew') || lang === 'he' ? 'Be written in Hebrew' : 'Be written in the same language as the book title'}
+- NOT be generic - reference the chapter title and book context
+${voiceInterviewPrompt ? '- Draw from the interview context when possible' : ''}
+
+Respond ONLY with a JSON array of 3 strings:
+["opening1", "opening2", "opening3"]`
+        : `You are a professional ${genre} author and writing assistant.
+${langInstruction}
+
+CONTEXT:
+${context?.bookTitle ? `Book: "${context.bookTitle}"` : ''}
+${context?.chapterTitle ? `Chapter: "${context.chapterTitle}"` : ''}
+${context?.characters ? `Characters: ${context.characters.join(', ')}` : ''}
+${voiceInterviewPrompt}
+
+TASK:
+Generate exactly 3 different OPENING paragraphs for this new chapter (100-200 words each).
+The chapter is empty — the writer needs inspiration for how to BEGIN.
+
+Each opening should:
+- Be a compelling, engaging start that hooks the reader
+- Set the tone and atmosphere for the chapter
+- Stay true to the ${genre} genre
+- Offer a different narrative approach (e.g., action, dialogue, description, reflection)
+- ${langInstruction.includes('Hebrew') || lang === 'he' ? 'Be written in Hebrew' : 'Be written in the same language as the book title'}
+- NOT be generic - reference the chapter title and broader story context
+${voiceInterviewPrompt ? '- Align with the story background from the interview' : ''}
+
+Respond ONLY with a JSON array of 3 strings:
+["opening1", "opening2", "opening3"]`;
+
+      const result = await generateWithBreaker(openingPrompt);
+      const text = result.response.text();
+      let suggestions: string[];
+      try {
+        const jsonMatch = text.match(/\[[\s\S]*\]/);
+        suggestions = jsonMatch ? JSON.parse(jsonMatch[0]) : [text.slice(0, 400)];
+      } catch {
+        suggestions = [text.slice(0, 400)];
+      }
+      while (suggestions.length < 3) suggestions.push(suggestions[0] || '');
+      return { suggestions: suggestions.slice(0, 3) };
+    }
 
     const prompt = isMemorial
       ? `You are a sensitive and respectful writer helping families create memorial books to honor their loved ones.
