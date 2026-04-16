@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, forwardRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
+// @ts-ignore - react-pageflip has incomplete types
+import HTMLFlipBook from 'react-pageflip';
 import { api } from '../services/api';
 import { exportBookAsPdfAsync } from '../utils/asyncExport';
 import {
@@ -384,6 +386,21 @@ const defaultSettings = {
   imageFrameStyle: 'shadow' as 'none' | 'thin-border' | 'shadow' | 'rounded' | 'decorative',
 };
 
+// Page wrapper required by react-pageflip (must be forwardRef)
+const FlipPage = forwardRef<HTMLDivElement, { children: React.ReactNode; className?: string; onClick?: () => void }>(
+  ({ children, className = '', onClick }, ref) => (
+    <div
+      ref={ref}
+      className={`overflow-hidden ${className}`}
+      style={{ width: '100%', height: '100%' }}
+      onClick={onClick}
+    >
+      {children}
+    </div>
+  )
+);
+FlipPage.displayName = 'FlipPage';
+
 export default function BookLayoutPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
@@ -400,6 +417,9 @@ export default function BookLayoutPage() {
   const [currentSpread, setCurrentSpread] = useState(0); // 0 = cover, 1 = pages 1-2, etc.
   const [isFlipping, setIsFlipping] = useState<'left' | 'right' | null>(null); // Page flip animation direction
   const [pages, setPages] = useState<PageContent[]>([]);
+
+  // react-pageflip ref and state
+  const flipBookRef = useRef<any>(null);
   const [settings, setSettings] = useState(defaultSettings);
 
   // UI state
@@ -1771,6 +1791,32 @@ export default function BookLayoutPage() {
   };
   void _updatePageContent; // Suppress unused warning
 
+  // Flipbook page count: front cover + content pages + back cover
+  const normalizedPages = pages.length % 2 === 0 ? pages : [...pages, { id: 'blank-pad', content: '', type: 'blank' as const } as PageContent];
+  const totalDomPages = normalizedPages.length + 2; // + front cover + back cover
+  const orderedContentPages = isBookRTL ? [...normalizedPages].reverse() : normalizedPages;
+  const initialFlipPage = isBookRTL ? totalDomPages - 1 : 0;
+
+  // Flipbook navigation helpers
+  const flipNext = () => flipBookRef.current?.pageFlip()?.flipNext();
+  const flipPrev = () => flipBookRef.current?.pageFlip()?.flipPrev();
+  const readNext = isBookRTL ? flipPrev : flipNext;
+  const readPrev = isBookRTL ? flipNext : flipPrev;
+
+  const handleFlipBookFlip = (e: any) => {
+    const idx = e.data;
+    const readingPos = isBookRTL ? totalDomPages - 1 - idx : idx;
+    setCurrentSpread(readingPos === 0 ? 0 : Math.ceil(readingPos / 2));
+  };
+
+  const jumpToSpread = (spreadIdx: number) => {
+    setCurrentSpread(spreadIdx);
+    const domPage = isBookRTL
+      ? totalDomPages - 1 - spreadIdx * 2
+      : spreadIdx === 0 ? 0 : (spreadIdx - 1) * 2 + 1;
+    flipBookRef.current?.pageFlip()?.flip(Math.max(0, Math.min(domPage, totalDomPages - 1)));
+  };
+
   // Navigate spreads with page flip animation
   const totalSpreads = Math.ceil(((pages?.length || 0) + 1) / 2); // +1 for cover
   const goToNextSpread = () => {
@@ -1863,6 +1909,7 @@ export default function BookLayoutPage() {
   if (!book) return null;
 
   const spreadPages = getSpreadPages();
+  void spreadPages; // kept for potential future use (e.g., page labels); flipbook manages its own rendering
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-deep-space via-deep-space to-cosmic-purple/20">
@@ -2060,7 +2107,7 @@ export default function BookLayoutPage() {
             {/* Cover */}
             <button
               onClick={() => {
-                setCurrentSpread(0);
+                jumpToSpread(0);
                 setShowMobilePages(false);
               }}
               className={`w-full aspect-[3/4] rounded-lg border-2 transition-all ${
@@ -2079,7 +2126,7 @@ export default function BookLayoutPage() {
               <button
                 key={i}
                 onClick={() => {
-                  setCurrentSpread(i + 1);
+                  jumpToSpread(i + 1);
                   setShowMobilePages(false);
                 }}
                 className={`w-full aspect-[3/4] rounded-lg border-2 transition-all ${
@@ -2110,279 +2157,191 @@ export default function BookLayoutPage() {
         {/* Center - Page Spread View (BookFlipReader-style chrome) */}
         <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-deep-space via-[#0a0a1f] to-cosmic-purple/30 rounded-xl">
 
-          {/* Top bar — BookFlipReader style */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-black/30 backdrop-blur-sm border-b border-memorial-gold/20">
+          {/* Top bar — matches BookFlipReader exactly */}
+          <div className="flex items-center justify-between px-6 py-4 bg-black/30 backdrop-blur-sm border-b border-memorial-gold/20">
             {/* Left: back to cover */}
             <button
-              onClick={() => setCurrentSpread(0)}
+              onClick={() => jumpToSpread(0)}
               disabled={currentSpread === 0}
               className="flex items-center gap-2 text-memorial-gold hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              title={isBookRTL ? 'חזרה לכריכה' : 'Back to cover'}
+              title={isBookRTL ? 'חזרה להתחלה' : 'Back to start'}
             >
               <RotateCcw className="w-5 h-5" />
               <span className="text-sm font-medium hidden sm:inline">
-                {isBookRTL ? 'כריכה' : 'Cover'}
+                {isBookRTL ? 'חזרה להתחלה' : 'Back to start'}
               </span>
             </button>
 
-            {/* Center: page indicator */}
-            <div className="flex flex-col items-center">
-              <div className="text-memorial-gold/80 text-sm font-medium tracking-wide" dir="ltr">
-                {currentSpread === 0
-                  ? t('book_layout.cover')
-                  : isBookRTL
-                    ? `${(currentSpread - 1) * 2 + 2} - ${(currentSpread - 1) * 2 + 1}`
-                    : `${(currentSpread - 1) * 2 + 1} - ${(currentSpread - 1) * 2 + 2}`
-                }
-              </div>
-              {currentSpread > 0 && (
-                <span className="text-memorial-gold/40 text-[10px]">
-                  {isBookRTL ? 'כיוון הקריאה ←' : 'Reading direction →'}
-                </span>
-              )}
+            {/* Center: page counter like BookFlipReader "8 / 10" */}
+            <div className="text-memorial-gold/80 text-sm font-medium tracking-wide" dir="ltr">
+              {currentSpread === 0
+                ? t('book_layout.front_cover')
+                : `${Math.min((currentSpread - 1) * 2 + 2, pages.length)} / ${pages.length}`
+              }
             </div>
 
-            {/* Right: spread counter */}
-            <div className="text-memorial-gold/50 text-xs font-medium w-20 sm:w-32 text-end">
-              {currentSpread + 1} / {totalSpreads}
-            </div>
+            {/* Right: close / back button */}
+            <button
+              onClick={() => navigate(`/editor/${bookId}`)}
+              className="flex items-center gap-2 text-memorial-gold hover:text-white transition-colors"
+            >
+              <span className="text-sm font-medium">{isBookRTL ? 'סגור' : 'Close'}</span>
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          {/* Spread content area */}
+          {/* Flipbook content area */}
           <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 lg:p-8 overflow-hidden">
 
-          {/* Cover labels when viewing cover spread */}
-          {spreadPages.isCover && (
-            <div className="flex flex-row gap-1 sm:gap-2 mb-3 transform scale-[0.35] xs:scale-[0.45] sm:scale-[0.55] md:scale-[0.7] lg:scale-[0.85] xl:scale-100 origin-center">
-              <div className="text-center text-memorial-gold/80 text-sm font-semibold tracking-wide uppercase" style={{ width: '350px' }}>
-                {t('book_layout.back_cover')}
-              </div>
-              <div className="w-3 sm:w-5" />
-              <div className="text-center text-memorial-gold text-sm font-semibold tracking-wide uppercase" style={{ width: '350px' }}>
-                {t('book_layout.front_cover')}
-              </div>
-            </div>
-          )}
-
-          {/* Book Spread - responsive scaling with animations */}
-          <div
-            className="flex flex-row gap-1 sm:gap-2 transform scale-[0.35] xs:scale-[0.45] sm:scale-[0.55] md:scale-[0.7] lg:scale-[0.85] xl:scale-100 origin-center transition-all duration-500 ease-out"
-            style={{ perspective: '2000px' }}
-          >
-            {/* Left Page (Even page for RTL, Odd page for LTR) */}
-            <div
-              className="relative rounded-lg shadow-2xl overflow-hidden transition-all duration-300 hover:shadow-memorial-gold/20"
-              style={{
-                width: '350px',
-                height: '500px',
-                direction: isBookRTL ? 'rtl' : 'ltr',
-                backgroundColor: settings.backgroundColor || '#ffffff',
-                transformOrigin: 'right center',
-                transform: isFlipping === 'left' ? 'rotateY(-30deg)' : 'rotateY(0deg)',
-                transition: 'transform 0.3s ease-in-out',
-                boxShadow: isBookRTL
-                  ? 'inset -3px 0 10px rgba(0,0,0,0.1), 5px 5px 15px rgba(0,0,0,0.3)'
-                  : 'inset 3px 0 10px rgba(0,0,0,0.1), -5px 5px 15px rgba(0,0,0,0.3)',
-              }}
-              onClick={() => {
-                if (spreadPages.left && typeof spreadPages.left !== 'string') {
-                  const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
-                  setSelectedPageIndex(idx);
-                }
-              }}
+          {/* react-pageflip book with editing */}
+          <div className="relative">
+            <HTMLFlipBook
+              ref={flipBookRef}
+              width={350}
+              height={500}
+              size="stretch"
+              minWidth={250}
+              maxWidth={450}
+              minHeight={350}
+              maxHeight={650}
+              maxShadowOpacity={0.5}
+              showCover={true}
+              mobileScrollSupport={false}
+              drawShadow={true}
+              flippingTime={900}
+              usePortrait={false}
+              autoSize={true}
+              clickEventForward={true}
+              useMouseEvents={true}
+              swipeDistance={50}
+              showPageCorners={true}
+              disableFlipByClick={true}
+              startPage={initialFlipPage}
+              startZIndex={0}
+              className="book-flip"
+              style={{}}
+              onFlip={handleFlipBookFlip}
             >
-              {spreadPages.isCover ? (
-                // LEFT visual slot = BACK cover (for both RTL and LTR)
-                // Front cover lives on the RIGHT visual slot (reading-start side)
-                <BackCoverPreview
-                  book={book}
-                  backCoverImageUrl={backCoverImageUrl}
-                  synopsis={book.synopsis || book.description}
-                  language={language}
-                />
-              ) : spreadPages.left && typeof spreadPages.left !== 'string' ? (
-                spreadPages.left.type === 'summary' ? (
+              {/* First DOM page: Front cover (LTR) or Back cover (RTL) */}
+              {isBookRTL ? (
+                <FlipPage className="back-cover">
                   <BackCoverPreview
                     book={book}
                     backCoverImageUrl={backCoverImageUrl}
-                    synopsis={spreadPages.left.content}
+                    synopsis={book.synopsis || book.description}
                     language={language}
                   />
-                ) : (
-                  <PageRenderer
-                    page={spreadPages.left}
-                    pageIndex={pages.findIndex(p => p.id === spreadPages.left?.id)}
-                    settings={settings}
-                    isRTL={isBookRTL}
-                    isSelected={selectedPageIndex === pages.findIndex(p => p.id === spreadPages.left?.id)}
-                    onImageSelect={setSelectedImageId}
-                    selectedImageId={selectedImageId}
-                    onImageUpdate={(imageId, updates) => {
-                      const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
-                      if (idx !== -1) updateImagePosition(idx, imageId, updates);
-                    }}
-                    onImageDelete={(imageId) => {
-                      const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
-                      if (idx !== -1) deleteImage(idx, imageId);
-                    }}
-                    onImageDuplicate={(imageId) => {
-                      const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
-                      if (idx !== -1) duplicateImage(idx, imageId);
-                    }}
-                    pageNumber={currentSpread > 0 ? (isBookRTL ? (currentSpread - 1) * 2 + 2 : (currentSpread - 1) * 2 + 1) : undefined}
-                    bookTitle={book.title}
-                    showHeader={aiDesign?.layout?.headerStyle !== 'none'}
-                    headerStyle={aiDesign?.layout?.headerStyle as 'book-title' | 'chapter-title' | 'none'}
-                    aiImagePlacements={
-                      spreadPages.left?.type === 'chapter' && spreadPages.left?.chapterIndex !== undefined
-                        ? (aiDesign?.imagePlacements || []).filter(
-                            (p: any) => p.chapterIndex === spreadPages.left?.chapterIndex
-                          )
-                        : []
-                    }
-                    language={language}
-                    editingPageIndex={editingPageIndex}
-                    editingContent={editingContent}
-                    editableRef={editableRef}
-                    onStartEditing={handleStartEditing}
-                    onFinishEditing={handleFinishEditing}
-                    onCancelEditing={handleCancelEditing}
-                    onImageAdded={(imageUrl, imageData) => {
-                      const idx = pages.findIndex(p => p.id === spreadPages.left?.id);
-                      if (idx !== -1) handleImageFromPlaceholder(idx, imageUrl, imageData);
-                    }}
-                    bookId={bookId}
-                    bookContext={book ? {
-                      title: book.title,
-                      genre: book.genre,
-                      chapterTitle: spreadPages.left?.chapterIndex !== undefined
-                        ? book.chapters[spreadPages.left.chapterIndex]?.title
-                        : undefined,
-                    } : undefined}
-                  />
-                )
+                </FlipPage>
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-300 text-sm">
-                  {t('book_layout.blank_page')}
-                </div>
+                <FlipPage className="front-cover">
+                  <CoverPreview
+                    book={book}
+                    coverImageUrl={coverImageUrl}
+                    onTitlePositionChange={handleTitlePositionChange}
+                    onAuthorPositionChange={handleAuthorPositionChange}
+                  />
+                </FlipPage>
               )}
-            </div>
 
-            {/* Spine with 3D effect */}
-            <div
-              className="w-3 sm:w-5 rounded shadow-inner relative"
-              style={{
-                background: 'linear-gradient(90deg, #8B7355 0%, #A0826D 25%, #C4A882 50%, #A0826D 75%, #8B7355 100%)',
-                boxShadow: 'inset 0 0 10px rgba(0,0,0,0.4), 0 0 5px rgba(0,0,0,0.2)',
-              }}
-            >
-              {/* Spine highlight lines */}
-              <div className="absolute inset-0 flex flex-col justify-center">
-                <div className="h-[1px] bg-amber-100/30 mx-1"></div>
-                <div className="h-[1px] bg-amber-100/30 mx-1 mt-2"></div>
-                <div className="h-[1px] bg-amber-100/30 mx-1 mt-2"></div>
-              </div>
-            </div>
+              {/* Content pages — each renders full PageRenderer with editing */}
+              {orderedContentPages.map((page) => {
+                const idx = pages.findIndex(p => p.id === page.id);
+                if (idx === -1 && page.type !== 'blank') return null;
+                const actualIdx = idx === -1 ? pages.length : idx;
 
-            {/* Right Page (Odd page for RTL, Even page for LTR) */}
-            <div
-              className="relative rounded-lg shadow-2xl overflow-hidden transition-all duration-300 hover:shadow-memorial-gold/20"
-              style={{
-                width: '350px',
-                height: '500px',
-                direction: isBookRTL ? 'rtl' : 'ltr',
-                backgroundColor: settings.backgroundColor || '#ffffff',
-                transformOrigin: 'left center',
-                transform: isFlipping === 'right' ? 'rotateY(30deg)' : 'rotateY(0deg)',
-                transition: 'transform 0.3s ease-in-out',
-                boxShadow: isBookRTL
-                  ? 'inset 3px 0 10px rgba(0,0,0,0.1), -5px 5px 15px rgba(0,0,0,0.3)'
-                  : 'inset -3px 0 10px rgba(0,0,0,0.1), 5px 5px 15px rgba(0,0,0,0.3)',
-              }}
-              onClick={() => {
-                if (spreadPages.isCover) {
-                  // Cover page
-                } else if (spreadPages.right) {
-                  const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
-                  setSelectedPageIndex(idx);
+                if (page.type === 'summary') {
+                  return (
+                    <FlipPage key={page.id}>
+                      <BackCoverPreview
+                        book={book}
+                        backCoverImageUrl={backCoverImageUrl}
+                        synopsis={page.content}
+                        language={language}
+                      />
+                    </FlipPage>
+                  );
                 }
-              }}
-            >
-              {spreadPages.isCover ? (
-                // RIGHT visual slot = FRONT cover (for both RTL and LTR)
-                <CoverPreview
-                  book={book}
-                  coverImageUrl={coverImageUrl}
-                  onTitlePositionChange={handleTitlePositionChange}
-                  onAuthorPositionChange={handleAuthorPositionChange}
-                />
-              ) : spreadPages.right ? (
-                spreadPages.right.type === 'summary' ? (
+
+                if (page.type === 'blank' && page.id === 'blank-pad') {
+                  return (
+                    <FlipPage key="blank-pad">
+                      <div className="w-full h-full flex items-center justify-center bg-white text-gray-300 text-sm">
+                        {t('book_layout.blank_page', 'Blank page')}
+                      </div>
+                    </FlipPage>
+                  );
+                }
+
+                return (
+                  <FlipPage
+                    key={page.id}
+                    onClick={() => setSelectedPageIndex(actualIdx)}
+                  >
+                    <div
+                      className="w-full h-full"
+                      style={{ backgroundColor: settings.backgroundColor || '#ffffff' }}
+                    >
+                      <PageRenderer
+                        page={page}
+                        pageIndex={actualIdx}
+                        settings={settings}
+                        isRTL={isBookRTL}
+                        isSelected={selectedPageIndex === actualIdx}
+                        onImageSelect={setSelectedImageId}
+                        selectedImageId={selectedImageId}
+                        onImageUpdate={(imageId, updates) => updateImagePosition(actualIdx, imageId, updates)}
+                        onImageDelete={(imageId) => deleteImage(actualIdx, imageId)}
+                        onImageDuplicate={(imageId) => duplicateImage(actualIdx, imageId)}
+                        pageNumber={actualIdx + 1}
+                        bookTitle={book.title}
+                        showHeader={aiDesign?.layout?.headerStyle !== 'none'}
+                        headerStyle={aiDesign?.layout?.headerStyle as 'book-title' | 'chapter-title' | 'none'}
+                        aiImagePlacements={
+                          page.type === 'chapter' && page.chapterIndex !== undefined
+                            ? (aiDesign?.imagePlacements || []).filter((p: any) => p.chapterIndex === page.chapterIndex)
+                            : []
+                        }
+                        language={language}
+                        editingPageIndex={editingPageIndex}
+                        editingContent={editingContent}
+                        editableRef={editableRef}
+                        onStartEditing={handleStartEditing}
+                        onFinishEditing={handleFinishEditing}
+                        onCancelEditing={handleCancelEditing}
+                        onImageAdded={(imageUrl, imageData) => handleImageFromPlaceholder(actualIdx, imageUrl, imageData)}
+                        bookId={bookId}
+                        bookContext={{
+                          title: book.title,
+                          genre: book.genre,
+                          chapterTitle: page.chapterIndex !== undefined ? book.chapters[page.chapterIndex]?.title : undefined,
+                        }}
+                      />
+                    </div>
+                  </FlipPage>
+                );
+              })}
+
+              {/* Last DOM page: Back cover (LTR) or Front cover (RTL) */}
+              {isBookRTL ? (
+                <FlipPage className="front-cover">
+                  <CoverPreview
+                    book={book}
+                    coverImageUrl={coverImageUrl}
+                    onTitlePositionChange={handleTitlePositionChange}
+                    onAuthorPositionChange={handleAuthorPositionChange}
+                  />
+                </FlipPage>
+              ) : (
+                <FlipPage className="back-cover">
                   <BackCoverPreview
                     book={book}
                     backCoverImageUrl={backCoverImageUrl}
-                    synopsis={spreadPages.right.content}
+                    synopsis={book.synopsis || book.description}
                     language={language}
                   />
-                ) : (
-                  <PageRenderer
-                    page={spreadPages.right}
-                    pageIndex={pages.findIndex(p => p.id === spreadPages.right!.id)}
-                    settings={settings}
-                    isRTL={isBookRTL}
-                    isSelected={selectedPageIndex === pages.findIndex(p => p.id === spreadPages.right!.id)}
-                    onImageSelect={setSelectedImageId}
-                    selectedImageId={selectedImageId}
-                    onImageUpdate={(imageId, updates) => {
-                      const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
-                      if (idx !== -1) updateImagePosition(idx, imageId, updates);
-                    }}
-                    onImageDelete={(imageId) => {
-                      const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
-                      if (idx !== -1) deleteImage(idx, imageId);
-                    }}
-                    onImageDuplicate={(imageId) => {
-                      const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
-                      if (idx !== -1) duplicateImage(idx, imageId);
-                    }}
-                    pageNumber={currentSpread > 0 ? (isBookRTL ? (currentSpread - 1) * 2 + 1 : (currentSpread - 1) * 2 + 2) : undefined}
-                    bookTitle={book.title}
-                    showHeader={aiDesign?.layout?.headerStyle !== 'none'}
-                    headerStyle={aiDesign?.layout?.headerStyle as 'book-title' | 'chapter-title' | 'none'}
-                    aiImagePlacements={
-                      spreadPages.right?.type === 'chapter' && spreadPages.right?.chapterIndex !== undefined
-                        ? (aiDesign?.imagePlacements || []).filter(
-                            (p: any) => p.chapterIndex === spreadPages.right?.chapterIndex
-                          )
-                        : []
-                    }
-                    language={language}
-                    editingPageIndex={editingPageIndex}
-                    editingContent={editingContent}
-                    editableRef={editableRef}
-                    onStartEditing={handleStartEditing}
-                    onFinishEditing={handleFinishEditing}
-                    onCancelEditing={handleCancelEditing}
-                    onImageAdded={(imageUrl, imageData) => {
-                      const idx = pages.findIndex(p => p.id === spreadPages.right!.id);
-                      if (idx !== -1) handleImageFromPlaceholder(idx, imageUrl, imageData);
-                    }}
-                    bookId={bookId}
-                    bookContext={book ? {
-                      title: book.title,
-                      genre: book.genre,
-                      chapterTitle: spreadPages.right?.chapterIndex !== undefined
-                        ? book.chapters[spreadPages.right.chapterIndex]?.title
-                        : undefined,
-                    } : undefined}
-                  />
-                )
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-300 text-sm">
-                  Blank page
-                </div>
+                </FlipPage>
               )}
-            </div>
+            </HTMLFlipBook>
           </div>
 
           {/* Reading Direction Indicator - shows for RTL books */}
@@ -2471,7 +2430,7 @@ export default function BookLayoutPage() {
           {/* Bottom bar — BookFlipReader style navigation */}
           <div className="flex items-center justify-center gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-black/30 backdrop-blur-sm border-t border-memorial-gold/20">
             <button
-              onClick={isBookRTL ? goToNextSpread : goToPrevSpread}
+              onClick={isBookRTL ? readNext : readPrev}
               disabled={isBookRTL ? currentSpread >= totalSpreads - 1 : currentSpread === 0}
               className="p-3 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               title={isBookRTL ? 'הדף הבא' : 'Previous'}
@@ -2480,7 +2439,7 @@ export default function BookLayoutPage() {
             </button>
 
             <button
-              onClick={isBookRTL ? goToPrevSpread : goToNextSpread}
+              onClick={isBookRTL ? readPrev : readNext}
               disabled={isBookRTL ? currentSpread === 0 : currentSpread >= totalSpreads - 1}
               className="p-3 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               title={isBookRTL ? 'הדף הקודם' : 'Next'}
