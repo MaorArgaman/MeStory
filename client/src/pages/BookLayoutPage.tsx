@@ -2280,8 +2280,11 @@ export default function BookLayoutPage() {
                     onClick={() => setSelectedPageIndex(actualIdx)}
                   >
                     <div
-                      className="w-full h-full"
-                      style={{ backgroundColor: settings.backgroundColor || '#ffffff' }}
+                      className="w-full h-full overflow-hidden"
+                      style={{
+                        backgroundColor: settings.backgroundColor || '#ffffff',
+                        fontSize: `${Math.min(settings.fontSize, 12)}px`,
+                      }}
                     >
                       <PageRenderer
                         page={page}
@@ -3612,7 +3615,7 @@ function PageRenderer({
         // View mode with edit button for chapter pages
         <div className="relative h-full group">
           <div
-            className="h-full overflow-hidden book-page-content prose prose-sm max-w-none relative flex flex-col"
+            className="h-full overflow-y-auto overflow-x-hidden book-page-content prose prose-sm max-w-none relative flex flex-col"
             style={{
               color: settings.textColor || '#000000',
               direction: isRTL ? 'rtl' : 'ltr',
