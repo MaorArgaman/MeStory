@@ -11,7 +11,6 @@ import {
   Loader2,
   Image as ImageIcon,
   Sparkles,
-  List,
   Plus,
   Minus,
   ChevronLeft,
@@ -23,7 +22,6 @@ import {
   X,
   Layout,
   Palette,
-  Layers,
   Edit3,
   AlertTriangle,
   BookOpen,
@@ -50,7 +48,7 @@ import ImagePlaceholder from '../components/layout/ImagePlaceholder';
 import AICompleteDesignWizard from '../components/design/AICompleteDesignWizard';
 import BrandWatermark from '../components/common/BrandWatermark';
 import BookProgressStepper from '../components/common/BookProgressStepper';
-import BookFlipReader from '../components/reader/BookFlipReader';
+import { RotateCcw } from 'lucide-react';
 
 interface PageImage {
   id: string;
@@ -416,7 +414,7 @@ export default function BookLayoutPage() {
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [backCoverImageUrl, setBackCoverImageUrl] = useState<string | null>(null);
   const [showAIDesignWizard, setShowAIDesignWizard] = useState(false);
-  const [showFlipReader, setShowFlipReader] = useState(false);
+  // showFlipReader removed — inline spread now serves as the reader
 
   // Publish/Export state (moved from DesignStudioPage)
   const [showPublishModal, setShowPublishModal] = useState(false);
@@ -435,8 +433,7 @@ export default function BookLayoutPage() {
   const [templateNameHe, setTemplateNameHe] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
 
-  // Mobile UI state
-  const [showMobilePages, setShowMobilePages] = useState(false);
+  // showMobilePages removed — sidebar replaced with inline navigation
 
   // Editing state
   const [editingPageIndex, setEditingPageIndex] = useState<number | null>(null);
@@ -1883,14 +1880,6 @@ export default function BookLayoutPage() {
             </button>
             <div className="hidden sm:block h-6 w-px bg-memorial-gold/30" />
 
-            {/* Mobile Pages Toggle */}
-            <button
-              onClick={() => setShowMobilePages(!showMobilePages)}
-              className="lg:hidden btn-ghost p-2"
-            >
-              <Layers className="w-5 h-5" />
-            </button>
-
             <button
               onClick={() => navigate(`/editor/${bookId}`)}
               className="btn-ghost flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
@@ -1945,19 +1934,6 @@ export default function BookLayoutPage() {
               <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
-            {/* Reader Mode Button */}
-            <button
-              onClick={() => setShowFlipReader(true)}
-              disabled={pages.length === 0}
-              className="btn-ghost flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 border border-memorial-gold/40 hover:bg-memorial-gold/10 disabled:opacity-30"
-              title={isBookRTL ? 'מצב קריאה' : 'Reader mode'}
-            >
-              <BookOpen className="w-4 h-4 text-memorial-gold" />
-              <span className="hidden sm:inline text-memorial-gold">
-                {isBookRTL ? 'קריאה' : 'Read'}
-              </span>
-            </button>
-
             {/* Export Button */}
             <button
               onClick={() => setShowExportModal(true)}
@@ -2009,16 +1985,7 @@ export default function BookLayoutPage() {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Mobile Floating Toggle Buttons */}
-        <div className="lg:hidden fixed bottom-6 left-4 z-40 flex flex-col gap-3">
-          <button
-            onClick={() => setShowMobilePages(!showMobilePages)}
-            className="glass-strong p-4 rounded-full border border-memorial-gold/30 shadow-lg shadow-memorial-gold/10 active:scale-95 transition-transform"
-            aria-label="Pages"
-          >
-            <Layers className="w-6 h-6 text-memorial-gold" />
-          </button>
-        </div>
+        {/* Mobile Settings Floating Button */}
         <div className="lg:hidden fixed bottom-6 right-4 z-40 flex flex-col gap-3">
           <button
             onClick={() => setShowSettings(!showSettings)}
@@ -2029,128 +1996,49 @@ export default function BookLayoutPage() {
           </button>
         </div>
 
-        {/* Mobile Pages Overlay */}
-        {showMobilePages && (
-          <div
-            className="lg:hidden fixed inset-0 bg-black/50 z-40"
-            onClick={() => setShowMobilePages(false)}
-          />
-        )}
+        {/* Center - Page Spread View (BookFlipReader-style chrome) */}
+        <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-deep-space via-[#0a0a1f] to-cosmic-purple/30 rounded-xl">
 
-        {/* Left Sidebar - Page Thumbnails (Right in RTL) */}
-        <div className={`
-          ${showMobilePages ? 'translate-x-0' : isUIRTL ? 'translate-x-full' : '-translate-x-full'}
-          lg:translate-x-0
-          fixed lg:relative z-50 lg:z-auto
-          ${isUIRTL ? 'right-0 lg:right-auto' : 'left-0 lg:left-auto'}
-          w-[180px] sm:w-48 h-full max-h-screen
-          glass-strong ${isUIRTL ? 'border-l' : 'border-r'} border-white/10 p-3 sm:p-4 overflow-y-auto
-          transition-transform duration-300 ease-in-out
-        `}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-300">Pages</h3>
+          {/* Top bar — BookFlipReader style */}
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-black/30 backdrop-blur-sm border-b border-memorial-gold/20">
+            {/* Left: back to cover */}
             <button
-              onClick={() => setShowMobilePages(false)}
-              className="lg:hidden btn-ghost p-3 min-w-[44px] min-h-[44px]"
+              onClick={() => setCurrentSpread(0)}
+              disabled={currentSpread === 0}
+              className="flex items-center gap-2 text-memorial-gold hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              title={isBookRTL ? 'חזרה לכריכה' : 'Back to cover'}
             >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="space-y-2">
-            {/* Cover */}
-            <button
-              onClick={() => {
-                setCurrentSpread(0);
-                setShowMobilePages(false);
-              }}
-              className={`w-full aspect-[3/4] rounded-lg border-2 transition-all ${
-                currentSpread === 0
-                  ? 'border-memorial-gold bg-memorial-gold/20'
-                  : 'border-white/10 hover:border-white/30'
-              }`}
-            >
-              <div className="flex items-center justify-center h-full text-xs text-gray-400">
-                Cover
-              </div>
+              <RotateCcw className="w-5 h-5" />
+              <span className="text-sm font-medium hidden sm:inline">
+                {isBookRTL ? 'כריכה' : 'Cover'}
+              </span>
             </button>
 
-            {/* Page pairs */}
-            {Array.from({ length: Math.ceil(pages.length / 2) }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  setCurrentSpread(i + 1);
-                  setShowMobilePages(false);
-                }}
-                className={`w-full aspect-[3/4] rounded-lg border-2 transition-all ${
-                  currentSpread === i + 1
-                    ? 'border-memorial-gold bg-memorial-gold/20'
-                    : 'border-white/10 hover:border-white/30'
-                }`}
-              >
-                <div className="flex items-center justify-center h-full text-xs text-gray-400">
-                  {i * 2 + 1} - {i * 2 + 2}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* Quick Actions */}
-          <div className="mt-6 space-y-2">
-            <button
-              onClick={toggleToc}
-              className="w-full btn-secondary text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-2"
-            >
-              <List className="w-4 h-4" />
-              <span className="truncate">{settings.includeToc ? t('book_layout.remove_toc') : t('book_layout.add_toc')}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Center - Page Spread View */}
-        <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 lg:p-8 overflow-hidden">
-          {/* Navigation — arrows match visual direction of reading:
-               - LTR: [←prev]  page-range  [next→]
-               - RTL: [←next]  page-range  [prev→]  (Hebrew: "next" visually moves left)
-          */}
-          <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-4">
-            {/* Left button */}
-            <button
-              onClick={isBookRTL ? goToNextSpread : goToPrevSpread}
-              disabled={isBookRTL ? currentSpread >= totalSpreads - 1 : currentSpread === 0}
-              className="btn-ghost p-1.5 sm:p-2 disabled:opacity-30 hover:scale-110 transition-transform"
-              title={isBookRTL ? 'הדף הבא' : 'Previous'}
-            >
-              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-            </button>
-
-            {/* Page indicator with visual-left → visual-right numbering */}
-            <div className="flex flex-col items-center" dir="ltr">
-              <span className="text-gray-400 text-xs sm:text-sm font-medium">
+            {/* Center: page indicator */}
+            <div className="flex flex-col items-center">
+              <div className="text-memorial-gold/80 text-sm font-medium tracking-wide" dir="ltr">
                 {currentSpread === 0
                   ? t('book_layout.cover')
                   : isBookRTL
-                    ? `${(currentSpread - 1) * 2 + 2} - ${(currentSpread - 1) * 2 + 1}` // RTL: even (left) - odd (right)
-                    : `${(currentSpread - 1) * 2 + 1} - ${(currentSpread - 1) * 2 + 2}` // LTR: odd (left) - even (right)
+                    ? `${(currentSpread - 1) * 2 + 2} - ${(currentSpread - 1) * 2 + 1}`
+                    : `${(currentSpread - 1) * 2 + 1} - ${(currentSpread - 1) * 2 + 2}`
                 }
-              </span>
+              </div>
               {currentSpread > 0 && (
-                <span className="text-memorial-gold/60 text-[10px]">
+                <span className="text-memorial-gold/40 text-[10px]">
                   {isBookRTL ? 'כיוון הקריאה ←' : 'Reading direction →'}
                 </span>
               )}
             </div>
 
-            {/* Right button */}
-            <button
-              onClick={isBookRTL ? goToPrevSpread : goToNextSpread}
-              disabled={isBookRTL ? currentSpread === 0 : currentSpread >= totalSpreads - 1}
-              className="btn-ghost p-1.5 sm:p-2 disabled:opacity-30 hover:scale-110 transition-transform"
-              title={isBookRTL ? 'הדף הקודם' : 'Next'}
-            >
-              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
-            </button>
+            {/* Right: spread counter */}
+            <div className="text-memorial-gold/50 text-xs font-medium w-20 sm:w-32 text-end">
+              {currentSpread + 1} / {totalSpreads}
+            </div>
           </div>
+
+          {/* Spread content area */}
+          <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 lg:p-8 overflow-hidden">
 
           {/* Cover labels when viewing cover spread */}
           {spreadPages.isCover && (
@@ -2466,6 +2354,28 @@ export default function BookLayoutPage() {
           {/* Keyboard shortcuts hint - hidden on mobile */}
           <div className="hidden sm:block mt-4 text-xs text-gray-500">
             Ctrl+Enter = Add page | Ctrl+S = Save | Arrows = Navigate
+          </div>
+          </div>
+
+          {/* Bottom bar — BookFlipReader style navigation */}
+          <div className="flex items-center justify-center gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-black/30 backdrop-blur-sm border-t border-memorial-gold/20">
+            <button
+              onClick={isBookRTL ? goToNextSpread : goToPrevSpread}
+              disabled={isBookRTL ? currentSpread >= totalSpreads - 1 : currentSpread === 0}
+              className="p-3 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              title={isBookRTL ? 'הדף הבא' : 'Previous'}
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+
+            <button
+              onClick={isBookRTL ? goToPrevSpread : goToNextSpread}
+              disabled={isBookRTL ? currentSpread === 0 : currentSpread >= totalSpreads - 1}
+              className="p-3 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              title={isBookRTL ? 'הדף הקודם' : 'Next'}
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
           </div>
         </div>
 
@@ -3114,26 +3024,6 @@ export default function BookLayoutPage() {
         opacity={0.12}
         className="hidden lg:block"
       />
-
-      {/* Flip Book Reader */}
-      {showFlipReader && book && (
-        <BookFlipReader
-          book={{
-            id: book.id,
-            title: book.title,
-            author: book.author,
-            language: book.language,
-            synopsis: book.synopsis,
-            description: book.description,
-            coverDesign: book.coverDesign,
-          }}
-          pages={pages}
-          frontCoverImageUrl={coverImageUrl}
-          backCoverImageUrl={backCoverImageUrl}
-          isRTL={isBookRTL}
-          onClose={() => setShowFlipReader(false)}
-        />
-      )}
 
       {/* Publish Modal */}
       <AnimatePresence>

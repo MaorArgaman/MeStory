@@ -195,48 +195,34 @@ export default function Book3DPreview({
     }
   };
 
-  // Page counter label for top bar — mirrors BookFlipReader's "Front cover / X of Y / Back cover" pattern
-  const topBarLabel = showBackCover
-    ? t('book_layout.back_cover', 'Back cover')
-    : pages.length > 1
-      ? `${currentPage + 1} / ${pages.length}`
-      : t('book_layout.front_cover', 'Front cover');
-
   return (
-    // min-h-[580px] ensures the chrome (top bar + book + bottom bar) is always
-    // visible even when the parent container doesn't define an explicit height.
-    // Both call sites (DesignStudioPage, BookDesignPage) wrap us in a container
-    // without h-full, which would otherwise collapse h-full to 0 and hide
-    // the top/bottom bars while only the 3D book (fixed 400px) rendered.
-    // h-full is kept so we still stretch if a future parent does set a height.
-    <div className="relative flex flex-col h-full min-h-[580px] w-full overflow-hidden rounded-xl bg-gradient-to-br from-deep-space via-[#0a0a1f] to-cosmic-purple/30">
-      {/* Top bar — matches BookFlipReader chrome */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-black/30 backdrop-blur-sm border-b border-memorial-gold/20">
-        {/* Left slot: invisible spacer to keep the center label centered.
-            (Book3DPreview is inline — there's no "close" button because there's nothing to close.) */}
-        <div className="w-24 sm:w-32" aria-hidden="true" />
+    <div className="relative flex flex-col items-center justify-center h-full">
+      {/* Magical glow background */}
+      <motion.div
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.3, 0.5, 0.3],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+        className="absolute w-48 h-48 sm:w-64 sm:h-64 md:w-96 md:h-96 rounded-full blur-3xl"
+        style={{
+          background: `radial-gradient(circle, ${coverColor}80, transparent)`,
+        }}
+      />
 
-        {/* Center: page / cover indicator */}
-        <div className="text-memorial-gold/80 text-sm font-medium tracking-wide" dir="ltr">
-          {topBarLabel}
-        </div>
+      {/* Flip Button */}
+      <button
+        onClick={() => setShowBackCover(!showBackCover)}
+        className="absolute top-2 right-2 z-30 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+        title={showBackCover ? t('design_studio.show_front_cover') : t('design_studio.show_back_cover')}
+      >
+        <RotateCw className={`w-5 h-5 text-white transition-transform ${showBackCover ? 'rotate-180' : ''}`} />
+      </button>
 
-        {/* Right slot: flip front/back cover toggle */}
-        <button
-          onClick={() => setShowBackCover(!showBackCover)}
-          className="flex items-center gap-2 text-memorial-gold hover:text-white transition-colors w-24 sm:w-32 justify-end"
-          title={showBackCover ? t('design_studio.show_front_cover') : t('design_studio.show_back_cover')}
-          aria-label={showBackCover ? t('design_studio.show_front_cover') : t('design_studio.show_back_cover')}
-        >
-          <RotateCw className={`w-5 h-5 transition-transform ${showBackCover ? 'rotate-180' : ''}`} />
-          <span className="text-sm font-medium hidden sm:inline">
-            {showBackCover ? t('design_studio.show_front_cover') : t('design_studio.show_back_cover')}
-          </span>
-        </button>
-      </div>
-
-      {/* Book area — centered, fills remaining vertical space */}
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 overflow-hidden">
       {/* 3D Book Container */}
       <div
         className="book-container"
@@ -576,32 +562,35 @@ export default function Book3DPreview({
           </AnimatePresence>
         </motion.div>
       </div>
-      </div>
 
-      {/* Bottom bar — matches BookFlipReader chrome.
-          Visual layout is always [←]  [→]. RTL swaps which arrow maps to prev/next so that
-          in Hebrew "forward reading" still physically moves toward the left side of the bar. */}
+      {/* Pagination Controls - DESIGN-001/005 FIX: Added translations and RTL button order */}
       {pages.length > 1 && (
-        <div className="flex items-center justify-center gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-black/30 backdrop-blur-sm border-t border-memorial-gold/20">
-          <button
-            onClick={isRTL ? nextPage : prevPage}
-            disabled={(isRTL ? currentPage === pages.length - 1 : currentPage === 0) || isPageTurning}
-            className="p-3 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-            title={t('pagination.previous', 'Previous')}
-            aria-label={t('pagination.previous', 'Previous')}
+        <div className={`mt-8 flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={prevPage}
+            disabled={currentPage === 0 || isPageTurning}
+            className={`btn-secondary px-4 py-2 flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${isRTL ? 'flex-row-reverse' : ''}`}
           >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
+            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            {t('pagination.previous', 'Previous')}
+          </motion.button>
 
-          <button
-            onClick={isRTL ? prevPage : nextPage}
-            disabled={(isRTL ? currentPage === 0 : currentPage === pages.length - 1) || isPageTurning}
-            className="p-3 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-            title={t('pagination.next', 'Next')}
-            aria-label={t('pagination.next', 'Next')}
+          <div className="glass rounded-lg px-4 py-2 text-sm text-gray-300">
+            {t('pagination.page_of', { current: currentPage + 1, total: pages.length })}
+          </div>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={nextPage}
+            disabled={currentPage === pages.length - 1 || isPageTurning}
+            className={`btn-secondary px-4 py-2 flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${isRTL ? 'flex-row-reverse' : ''}`}
           >
-            <ChevronRight className="w-6 h-6" />
-          </button>
+            {t('pagination.next', 'Next')}
+            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </motion.button>
         </div>
       )}
     </div>
