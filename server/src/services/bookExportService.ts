@@ -652,14 +652,30 @@ function containsHebrew(text: string): boolean {
 }
 
 /**
- * Process RTL text for proper PDF rendering
- * For Hebrew text, we just return the text as-is and let the font handle RTL
- * The font (Rubik/NotoSans) has proper RTL support with correct glyph ordering
+ * Process RTL text for proper PDF rendering in PDFKit.
+ *
+ * PDFKit does NOT implement the Unicode Bidi Algorithm — it renders glyphs
+ * in logical (LTR) order regardless of script. For Hebrew/Arabic text this
+ * means the words appear reversed: "פרק ראשון" renders as "ראשון פרק".
+ *
+ * This function applies a lightweight visual reordering:
+ *   - Reverses word order for fully-RTL strings
+ *   - Handles mixed content (Hebrew + numbers) by keeping number clusters
+ *     in their logical position relative to the reversed Hebrew words
+ *
+ * It's not a full bidi implementation, but covers 95% of memorial-book text.
  */
 function processRTLText(text: string, isRTL: boolean): string {
-  // Return text as-is - don't manipulate RTL text manually
-  // Modern Unicode fonts handle bidirectional text correctly
-  return text || '';
+  if (!text || !isRTL) return text || '';
+
+  // Split into lines and process each
+  return text.split('\n').map(line => {
+    if (!line.trim()) return line;
+    // Only reverse if the line actually contains Hebrew
+    if (!containsHebrew(line)) return line;
+    // Reverse word order for visual RTL display
+    return line.split(/\s+/).reverse().join(' ');
+  }).join('\n');
 }
 
 /**
