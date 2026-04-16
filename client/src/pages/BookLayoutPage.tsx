@@ -2287,6 +2287,7 @@ export default function BookLayoutPage() {
                     onClick={() => setSelectedPageIndex(actualIdx)}
                   >
                     <div
+                      key={`page-${page.id}-${editingPageIndex === actualIdx ? 'edit' : 'view'}`}
                       className="w-full h-full"
                       style={{ backgroundColor: settings.backgroundColor || '#ffffff' }}
                     >
