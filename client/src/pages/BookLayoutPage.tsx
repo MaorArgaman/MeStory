@@ -3613,7 +3613,7 @@ function PageRenderer({
             }}
           />
           {/* Editing controls */}
-          <div className="absolute bottom-2 right-2 flex gap-2 z-50" onMouseDown={(e) => e.stopPropagation()}>
+          <div className="absolute bottom-2 left-2 flex gap-2 z-50" onMouseDown={(e) => e.stopPropagation()}>
             <button
               onClick={(e) => { e.stopPropagation(); onCancelEditing(); }}
               className="px-2 py-1 bg-gray-600 hover:bg-gray-500 text-white text-xs rounded shadow"
