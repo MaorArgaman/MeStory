@@ -2206,13 +2206,13 @@ export default function BookLayoutPage() {
           <div className="relative w-full flex-1 min-h-0 flex items-center justify-center">
             <HTMLFlipBook
               ref={flipBookRef}
-              width={350}
-              height={500}
+              width={280}
+              height={400}
               size="stretch"
-              minWidth={250}
-              maxWidth={450}
-              minHeight={350}
-              maxHeight={600}
+              minWidth={200}
+              maxWidth={350}
+              minHeight={280}
+              maxHeight={450}
               maxShadowOpacity={0.5}
               showCover={true}
               mobileScrollSupport={false}
@@ -2396,20 +2396,18 @@ export default function BookLayoutPage() {
           <div className="flex items-center justify-center gap-4 px-4 py-2 bg-black/30 backdrop-blur-sm border-t border-memorial-gold/20">
             <button
               onClick={isBookRTL ? readNext : readPrev}
-              disabled={isBookRTL ? currentSpread >= totalSpreads - 1 : currentSpread === 0}
-              className="p-2 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-2 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all"
               title={isBookRTL ? 'הדף הבא' : 'Previous'}
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
 
             <button
               onClick={isBookRTL ? readPrev : readNext}
-              disabled={isBookRTL ? currentSpread === 0 : currentSpread >= totalSpreads - 1}
-              className="p-2 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-2 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all"
               title={isBookRTL ? 'הדף הקודם' : 'Next'}
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
         </div>
