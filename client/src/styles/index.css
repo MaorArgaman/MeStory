@@ -862,3 +862,150 @@
   background: linear-gradient(135deg, rgba(201, 176, 55, 0.2), rgba(201, 176, 55, 0.1));
   border-color: rgba(201, 176, 55, 0.4);
 }
+
+/* ==================== PREMIUM MICRO-ANIMATIONS ==================== */
+
+/* Breathing hover effect — buttons feel alive */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+.hover-breathe:hover {
+  animation: breathe 2s ease-in-out infinite;
+}
+
+/* Golden ink flow — progress bars */
+@keyframes ink-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.ink-flow-bar {
+  background: linear-gradient(90deg, #DAA520, #FFD700, #DAA520, #C9B037);
+  background-size: 300% 100%;
+  animation: ink-flow 3s ease infinite;
+}
+
+/* Handwriting skeleton loader */
+@keyframes handwriting-load {
+  0% { width: 0%; opacity: 0.3; }
+  50% { width: 100%; opacity: 0.6; }
+  100% { width: 60%; opacity: 0.3; }
+}
+.skeleton-handwriting {
+  height: 12px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(218,165,32,0.15), rgba(255,255,255,0.05));
+  border-radius: 4px;
+  animation: handwriting-load 2s ease-in-out infinite;
+}
+.skeleton-handwriting:nth-child(2) { animation-delay: 0.15s; width: 85%; }
+.skeleton-handwriting:nth-child(3) { animation-delay: 0.3s; width: 70%; }
+.skeleton-handwriting:nth-child(4) { animation-delay: 0.45s; width: 90%; }
+.skeleton-handwriting:nth-child(5) { animation-delay: 0.6s; width: 55%; }
+
+/* Polaroid drop effect for uploaded images */
+@keyframes polaroid-drop {
+  0% { transform: translateY(-40px) rotate(-5deg); opacity: 0; }
+  60% { transform: translateY(5px) rotate(2deg); opacity: 1; }
+  80% { transform: translateY(-3px) rotate(-1deg); }
+  100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+}
+.polaroid-enter {
+  animation: polaroid-drop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Page turn hint — subtle corner curl */
+@keyframes corner-peek {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-3px, -3px); }
+}
+.page-corner-hint::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, transparent 50%, rgba(218,165,32,0.2) 50%);
+  border-radius: 0 0 4px 0;
+  animation: corner-peek 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Warm fade-in for content sections */
+@keyframes warm-fade-in {
+  0% { opacity: 0; transform: translateY(20px); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.warm-enter {
+  animation: warm-fade-in 0.6s ease-out forwards;
+}
+
+/* Quill writing effect for AI-generated text */
+@keyframes quill-write {
+  0% { width: 0; border-right: 2px solid #DAA520; }
+  80% { width: 100%; border-right: 2px solid #DAA520; }
+  100% { width: 100%; border-right: none; }
+}
+.ai-writing-effect {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: quill-write 1.5s ease-in-out forwards;
+}
+
+/* Golden sparkle for completed milestones */
+@keyframes sparkle-burst {
+  0% { box-shadow: 0 0 0 0 rgba(218,165,32,0.6); }
+  50% { box-shadow: 0 0 20px 10px rgba(218,165,32,0.3); }
+  100% { box-shadow: 0 0 0 0 rgba(218,165,32,0); }
+}
+.milestone-complete {
+  animation: sparkle-burst 0.8s ease-out;
+}
+
+/* Smooth card hover with perspective */
+.card-3d-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transform-style: preserve-3d;
+}
+.card-3d-hover:hover {
+  transform: translateY(-4px) rotateX(2deg);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(218,165,32,0.1);
+}
+
+/* Page transition blur */
+.page-transition-enter {
+  animation: warm-fade-in 0.4s ease-out;
+}
+
+/* Floating action button pulse */
+@keyframes fab-pulse {
+  0%, 100% { box-shadow: 0 4px 15px rgba(218,165,32,0.4); }
+  50% { box-shadow: 0 4px 25px rgba(218,165,32,0.6), 0 0 40px rgba(218,165,32,0.2); }
+}
+.fab-glow {
+  animation: fab-pulse 2s ease-in-out infinite;
+}
+
+/* Text reveal for hero sections */
+@keyframes text-reveal {
+  0% { clip-path: inset(0 100% 0 0); }
+  100% { clip-path: inset(0 0 0 0); }
+}
+.text-reveal {
+  animation: text-reveal 1s ease-out forwards;
+}
+
+/* Staggered children entrance */
+.stagger-children > * {
+  opacity: 0;
+  animation: warm-fade-in 0.5s ease-out forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
