@@ -1064,9 +1064,44 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
     const textColor = hexToRgb(bookData.coverDesign.textColor);
     const contentWidth = pageDims.width - margins.left - margins.right;
 
-    // Track page numbers
+    // Track page numbers and current chapter for running headers
     let pageNum = 0;
+    let currentChapterTitle = '';
     const startContentPage = 4; // After cover, title, copyright, TOC
+
+    // Running header helper — book title + separator + chapter title
+    const addRunningHeader = (chapterTitle?: string) => {
+      if (!bookData.pageLayout.includeHeader && !chapterTitle) return;
+
+      const headerY = margins.top - 25; // Above the main content area
+      if (headerY < 10) return; // Not enough space
+
+      const savedFontSize = 8;
+      doc.save();
+      doc.font(mainFont)
+        .fontSize(savedFontSize)
+        .fillColor('#999999');
+
+      const title = chapterTitle || currentChapterTitle;
+      const headerText = title
+        ? `${processRTLText(bookData.title, isRTL)}  ·  ${processRTLText(title, isRTL)}`
+        : processRTLText(bookData.title, isRTL);
+
+      doc.text(headerText, margins.left, headerY, {
+        align: isRTL ? 'right' : 'left',
+        width: contentWidth,
+        lineBreak: false,
+      });
+
+      // Thin separator line below header
+      doc.moveTo(margins.left, headerY + 14)
+        .lineTo(margins.left + contentWidth, headerY + 14)
+        .strokeColor('#e0e0e0')
+        .lineWidth(0.5)
+        .stroke();
+
+      doc.restore();
+    };
 
     // ========== FRONT COVER ==========
     doc.rect(0, 0, pageDims.width, pageDims.height)
@@ -1220,6 +1255,10 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
       doc.addPage();
       pageNum++;
 
+      // Update running chapter title and render header
+      currentChapterTitle = chapter.title;
+      addRunningHeader(chapter.title);
+
       // Chapter title - check if title already contains chapter number/word
       const titleHasChapter = chapter.title.toLowerCase().includes('chapter') ||
                               chapter.title.includes('פרק') ||
@@ -1261,6 +1300,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
             if (currentY > pageDims.height - margins.bottom - maxImageHeight - 50) {
               doc.addPage();
               pageNum++;
+              addRunningHeader();
             }
 
             const imgX = margins.left + (contentWidth - maxImageWidth) / 2;
@@ -1340,6 +1380,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
         if (nearBottom && !alreadyAtTop) {
           doc.addPage();
           pageNum++;
+          addRunningHeader();
         }
 
         doc.text(processRTLText(paragraph, isRTL), margins.left, doc.y, textOptions);
@@ -1354,6 +1395,8 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
     if (bookData.characters.length > 0) {
       doc.addPage();
       pageNum++;
+      currentChapterTitle = labels.bookCharacters;
+      addRunningHeader();
 
       doc.fillColor('black')
         .font(boldFont)
@@ -1369,6 +1412,7 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
         if (doc.y > pageDims.height - margins.bottom - 100) {
           doc.addPage();
           pageNum++;
+          addRunningHeader();
         }
 
         // Character name
@@ -1463,6 +1507,8 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
     if (bookData.storyContext) {
       doc.addPage();
       pageNum++;
+      currentChapterTitle = labels.storyBehindBook;
+      addRunningHeader();
 
       doc.fillColor('black')
         .font(boldFont)
