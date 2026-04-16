@@ -3579,32 +3579,40 @@ function PageRenderer({
 
       {/* Page Content */}
       {editingPageIndex === pageIndex ? (
-        // Editable mode
-        <div className="relative h-full">
+        // Editable mode — stop propagation so react-pageflip doesn't intercept events
+        <div
+          className="relative h-full"
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          style={{ pointerEvents: 'all', zIndex: 50 }}
+        >
           <div
             ref={editableRef}
             contentEditable
             suppressContentEditableWarning
-            className="h-full overflow-auto book-page-content prose prose-sm max-w-none outline-none focus:ring-2 focus:ring-memorial-gold/50 rounded relative"
+            className="h-full overflow-auto book-page-content prose prose-sm max-w-none outline-none focus:ring-2 focus:ring-memorial-gold/50 rounded relative cursor-text"
             dangerouslySetInnerHTML={{ __html: editingContent }}
             style={{
               color: settings.textColor || '#000000',
               direction: isRTL ? 'rtl' : 'ltr',
               paddingTop: showHeader ? '15px' : '0',
               paddingBottom: settings.showPageNumbers ? '20px' : '0',
-              zIndex: 5,
+              zIndex: 50,
+              userSelect: 'text',
+              WebkitUserSelect: 'text',
             }}
           />
           {/* Editing controls */}
-          <div className="absolute bottom-2 right-2 flex gap-2 z-30">
+          <div className="absolute bottom-2 right-2 flex gap-2 z-50" onMouseDown={(e) => e.stopPropagation()}>
             <button
-              onClick={onCancelEditing}
+              onClick={(e) => { e.stopPropagation(); onCancelEditing(); }}
               className="px-2 py-1 bg-gray-600 hover:bg-gray-500 text-white text-xs rounded shadow"
             >
               {t('common.cancel', 'Cancel')}
             </button>
             <button
-              onClick={onFinishEditing}
+              onClick={(e) => { e.stopPropagation(); onFinishEditing(); }}
               className="px-2 py-1 bg-memorial-gold hover:bg-yellow-500 text-black text-xs rounded shadow font-medium"
             >
               {t('common.save', 'Save')}
@@ -3664,7 +3672,9 @@ function PageRenderer({
           {/* Edit button for chapter pages */}
           {page.type === 'chapter' && (
             <button
-              onClick={() => onStartEditing(pageIndex)}
+              onClick={(e) => { e.stopPropagation(); onStartEditing(pageIndex); }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-3 bg-memorial-gold/90 hover:bg-memorial-gold text-black rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
               title={t('book_layout.edit_content', 'Edit content')}
             >
