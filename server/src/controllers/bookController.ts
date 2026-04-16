@@ -721,6 +721,7 @@ export const getBookById = async (req: AuthRequest, res: Response): Promise<void
               coverDesign: book.coverDesign,
               pageLayout: book.pageLayout,
               pageImages: book.pageImages || [],
+              aiDesignState: book.aiDesignState,
               publishingStatus: book.publishingStatus,
               statistics: book.statistics,
               tags: book.tags,

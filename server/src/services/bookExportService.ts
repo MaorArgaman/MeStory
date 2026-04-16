@@ -221,6 +221,29 @@ export async function exportBook(bookId: string, format: 'pdf' | 'docx'): Promis
 // I18N LABELS
 // ============================================================================
 
+// Memorial genre translations — same list as the client's i18n files
+const genreTranslations: Record<string, Record<string, string>> = {
+  he: {
+    fallen_soldier: 'לזכר חייל/ת שנפל/ה', life_story: 'סיפור חיים',
+    family_legacy: 'מורשת משפחתית', tribute: 'מחווה ליקיר/ה',
+    holocaust_survivor: 'עדות ניצול שואה', shared_memories: 'זיכרונות משותפים',
+    letters_and_words: 'מכתבים ודברים שלא נאמרו', testimony: 'עדות',
+    collaborative: 'ספר שיתופי', biography: 'ביוגרפיה',
+  },
+  en: {
+    fallen_soldier: 'In Memory of a Fallen Soldier', life_story: 'Life Story',
+    family_legacy: 'Family Legacy', tribute: 'Tribute',
+    holocaust_survivor: 'Holocaust Survivor Testimony', shared_memories: 'Shared Memories',
+    letters_and_words: 'Letters Unspoken', testimony: 'Testimony',
+    collaborative: 'Collaborative Book', biography: 'Biography',
+  },
+};
+
+function translateGenre(genre: string, language: string): string {
+  const lang = language === 'he' ? 'he' : 'en';
+  return genreTranslations[lang]?.[genre] || genreTranslations[lang]?.[genre.toLowerCase()] || genre;
+}
+
 const i18nLabels = {
   he: {
     allRightsReserved: 'כל הזכויות שמורות',
@@ -1840,7 +1863,7 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
     new Paragraph({
       children: [
         new TextRun({
-          text: bookData.genre,
+          text: translateGenre(bookData.genre, bookData.language),
           size: 24,
           italics: true,
           font: bodyFont,
@@ -1939,7 +1962,7 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
         new Paragraph({
           children: [
             new TextRun({
-              text: 'דמויות הספר',
+              text: labels.bookCharacters,
               size: 24,
               font: bodyFont,
             }),
@@ -1955,7 +1978,7 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
         new Paragraph({
           children: [
             new TextRun({
-              text: 'הסיפור מאחורי הספר',
+              text: labels.storyBehindBook,
               size: 24,
               font: bodyFont,
             }),
@@ -2128,7 +2151,7 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
           new Paragraph({
             children: [
               new TextRun({
-                text: 'תכונות: ',
+                text: `${labels.traits}: `,
                 bold: true,
                 size: 22,
                 font: bodyFont,
@@ -2150,7 +2173,7 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
           new Paragraph({
             children: [
               new TextRun({
-                text: 'רקע: ',
+                text: `${labels.backstory}: `,
                 bold: true,
                 size: 22,
                 font: bodyFont,
@@ -2172,7 +2195,7 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
           new Paragraph({
             children: [
               new TextRun({
-                text: 'מטרות: ',
+                text: `${labels.goals}: `,
                 bold: true,
                 size: 22,
                 font: bodyFont,
@@ -2464,8 +2487,9 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
             },
             margin: marginTwips,
           },
+          titlePage: true,
         },
-        headers: bookData.pageLayout.includeHeader ? {
+        headers: {
           default: new Header({
             children: [
               new Paragraph({
@@ -2478,10 +2502,31 @@ export async function generateDOCX(bookId: string): Promise<Buffer> {
                   }),
                 ],
                 alignment: AlignmentType.CENTER,
+                bidirectional: isRTL,
               }),
-            ],          }),
-        } : undefined,
-        children: [...titlePageContent, ...chapterPages, ...charactersSection, ...backMatter],
+            ],
+          }),
+        },
+        footers: {
+          default: new Footer({
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({ children: [PageNumber.CURRENT], size: 18, font: bodyFont, color: '999999' }),
+                ],
+                alignment: AlignmentType.CENTER,
+              }),
+            ],
+          }),
+        },
+        children: [
+          ...titlePageContent,
+          ...copyrightPage,
+          ...tocPage,
+          ...chapterPages,
+          ...charactersSection,
+          ...backMatter,
+        ],
       },
     ],
   });

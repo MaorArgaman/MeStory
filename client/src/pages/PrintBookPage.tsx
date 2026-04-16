@@ -87,19 +87,19 @@ const defaultSettings = {
 export default function PrintBookPage() {
   const { bookId } = useParams<{ bookId: string }>();
   const [params] = useSearchParams();
-  const tokenFromUrl = params.get('token');
 
   const [book, setBook] = useState<BookData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
-  // If Puppeteer passed a token in the URL, use it for this request.
-  // This lets the headless browser authenticate without a cookie jar.
+  // If Puppeteer passed a token in the URL, use it for this specific page.
+  // Don't overwrite existing localStorage token — just set it once if empty.
   useEffect(() => {
-    if (tokenFromUrl) {
+    const tokenFromUrl = params.get('token');
+    if (tokenFromUrl && !localStorage.getItem('token')) {
       localStorage.setItem('token', tokenFromUrl);
     }
-  }, [tokenFromUrl]);
+  }, [params]);
 
   // Load the book
   useEffect(() => {
@@ -375,7 +375,7 @@ function PrintPage({
   pageNumber,
   bookTitle,
   settings,
-  rtl,
+  rtl: _rtl,
 }: {
   page: PageContent;
   pageNumber: number;

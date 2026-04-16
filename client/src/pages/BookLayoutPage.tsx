@@ -257,6 +257,60 @@ const estimateCharsPerPage = (settings: typeof defaultSettings, isHebrew: boolea
   return Math.floor(charsPerLine * linesPerPage * 0.55);
 };
 
+/**
+ * After images are injected into pages, some pages may have more text than
+ * can fit (because the image takes up part of the page height). This function
+ * walks the pages array and splits any overflowing chapter pages into two,
+ * pushing the excess text into a new continuation page.
+ */
+const repaginateForImages = (
+  pages: PageContent[],
+  settings: typeof defaultSettings,
+  isHebrew: boolean
+): PageContent[] => {
+  const baseCharsPerPage = estimateCharsPerPage(settings, isHebrew);
+  const result: PageContent[] = [];
+
+  for (const page of pages) {
+    if (page.type !== 'chapter' || !page.images?.length) {
+      result.push(page);
+      continue;
+    }
+
+    // Estimate how much vertical space images take (percentage → fraction)
+    const totalImageHeightPct = page.images.reduce((sum, img) => sum + (img.height || 0), 0);
+    const reductionFactor = Math.max(0.2, 1 - totalImageHeightPct / 100);
+    const adjustedCharsPerPage = Math.floor(baseCharsPerPage * reductionFactor);
+
+    // Strip HTML to measure text length
+    const textLength = page.content.replace(/<[^>]*>/g, '').length;
+
+    if (textLength <= adjustedCharsPerPage) {
+      result.push(page);
+      continue;
+    }
+
+    // Need to split: keep what fits on this page, overflow goes to a new page
+    const splitPages = splitContentIntoPages(page.content, adjustedCharsPerPage, true);
+
+    // First part stays on the original page (with images)
+    result.push({ ...page, content: splitPages[0] || page.content });
+
+    // Remaining parts become new continuation pages (without images)
+    for (let i = 1; i < splitPages.length; i++) {
+      result.push({
+        id: `${page.id}-overflow-${i}`,
+        type: 'chapter',
+        chapterIndex: page.chapterIndex,
+        content: splitPages[i],
+        images: [],
+      });
+    }
+  }
+
+  return result;
+};
+
 // Split HTML content into pages while preserving HTML structure
 const splitContentIntoPages = (
   htmlContent: string,
@@ -480,14 +534,6 @@ export default function BookLayoutPage() {
     return isRTL(combinedText);
   })();
 
-  // Debug RTL detection
-  console.log('RTL Debug:', {
-    bookTitle: book?.title,
-    bookLanguage: book?.language,
-    isRTLResult: book ? isRTL(book.title) : null,
-    isBookRTL
-  });
-
   // Auto-save timer
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -569,7 +615,41 @@ export default function BookLayoutPage() {
               images: [],
             });
           }
-          setPages(pagesWithImages);
+          // Inject AI-generated images from aiDesignState.design.imagePlacements
+          // into the matching chapter pages BEFORE the first render.
+          const aiPlacements = bookData.aiDesignState?.design?.imagePlacements || [];
+          if (aiPlacements.length > 0) {
+            for (const placement of aiPlacements) {
+              const imgUrl = placement.generatedImageUrl || placement.imageUrl;
+              if (!imgUrl) continue;
+              const chIdx = placement.chapterIndex ?? 0;
+              let targetPage = pagesWithImages.find(
+                (p: any) => p.type === 'chapter' && p.chapterIndex === chIdx
+              );
+              if (!targetPage) {
+                const chPages = pagesWithImages.filter((p: any) => p.type === 'chapter');
+                targetPage = chPages[chIdx] || chPages[0];
+              }
+              if (!targetPage) continue;
+              if (!targetPage.images) targetPage.images = [];
+              if (targetPage.images.some((img: any) => img.url === imgUrl)) continue;
+              targetPage.images.push({
+                id: `ai-design-${chIdx}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                url: imgUrl,
+                x: 10,
+                y: 5,
+                width: 80,
+                height: 35,
+                rotation: 0,
+              });
+            }
+          }
+
+          // Re-paginate: if images reduced available text space on a page,
+          // split the overflow into a new continuation page so text isn't cut off.
+          const bookIsRTL = isRTL(bookData.title) || bookData.language === 'he';
+          const finalPages = repaginateForImages(pagesWithImages, loadedSettings, bookIsRTL);
+          setPages(finalPages);
           setSettings(loadedSettings);
         } else {
           generatePagesFromChapters(bookData);
@@ -763,16 +843,23 @@ export default function BookLayoutPage() {
           },
           reasoning: 'Applied from stored AI design',
         },
-        imagePlacements: (design.imagePlacements || []).map((p: any) => ({
-          chapterIndex: p.chapterIndex,
-          position: p.pagePosition as 'chapter-start' | 'mid-chapter' | 'chapter-end',
-          textContext: '',
-          suggestedPrompt: p.prompt || '',
-          importance: 'medium' as const,
-          reasoning: 'Suggested by AI',
-          generatedImageUrl: p.generatedImageUrl || p.imageUrl,
-          prompt: p.prompt || '',
-        })),
+        // AI image placements are now injected directly into page.images[]
+        // during the loading phase (before first render). Setting them here
+        // too would cause duplicates AND push text down (this path renders
+        // in-flow, not absolute-positioned). Only keep placements that
+        // DON'T have a generated image — those are just suggestions/prompts.
+        imagePlacements: (design.imagePlacements || [])
+          .filter((p: any) => !(p.generatedImageUrl || p.imageUrl))
+          .map((p: any) => ({
+            chapterIndex: p.chapterIndex ?? 0,
+            position: (p.pagePosition || p.position || 'chapter-start') as 'chapter-start' | 'mid-chapter' | 'chapter-end',
+            textContext: '',
+            suggestedPrompt: p.prompt || '',
+            importance: 'medium' as const,
+            reasoning: 'Suggested by AI',
+            generatedImageUrl: undefined,
+            prompt: p.prompt || '',
+          })),
         overallStyle: 'AI Generated Design',
         moodDescription: 'Custom AI-generated design for this book',
         generatedAt: new Date(),
@@ -2257,8 +2344,17 @@ export default function BookLayoutPage() {
               {/* Content pages — each renders full PageRenderer with editing */}
               {orderedContentPages.map((page) => {
                 const idx = pages.findIndex(p => p.id === page.id);
-                if (idx === -1 && page.type !== 'blank') return null;
                 const actualIdx = idx === -1 ? pages.length : idx;
+
+                if (idx === -1 && page.type !== 'blank') {
+                  return (
+                    <FlipPage key={page.id}>
+                      <div className="w-full h-full flex items-center justify-center bg-white text-gray-300 text-sm">
+                        {t('book_layout.blank_page', 'Blank page')}
+                      </div>
+                    </FlipPage>
+                  );
+                }
 
                 if (page.type === 'summary') {
                   return (
