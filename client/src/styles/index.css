@@ -863,6 +863,163 @@
   border-color: rgba(201, 176, 55, 0.4);
 }
 
+/* ==================== PROFESSIONAL BOOK TYPOGRAPHY ==================== */
+
+/* Chapter title styling — elegant, publisher-quality */
+.book-page-content h2 {
+  font-size: 1.4em;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  margin-top: 0.5em;
+  margin-bottom: 0.8em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+/* Decorative ornament after chapter title */
+.book-page-content h2::after {
+  content: '✦';
+  display: block;
+  text-align: center;
+  font-size: 0.6em;
+  color: #c9a84c;
+  margin-top: 0.5em;
+  letter-spacing: 0.3em;
+}
+
+/* Sub-headings */
+.book-page-content h3 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  color: #333;
+}
+
+/* Drop cap — first letter of first paragraph after a chapter title */
+.book-page-content h2 + p::first-letter,
+.book-page-content > p:first-child::first-letter {
+  float: right;
+  font-size: 3em;
+  line-height: 0.85;
+  padding-left: 0.1em;
+  padding-right: 0.05em;
+  margin-top: 0.05em;
+  font-weight: 700;
+  color: #8b6914;
+  font-family: 'Cinzel', 'David Libre', serif;
+}
+
+/* RTL drop cap — float to right side */
+[dir="rtl"] .book-page-content h2 + p::first-letter,
+[dir="rtl"] .book-page-content > p:first-child::first-letter {
+  float: right;
+  padding-left: 0.1em;
+  padding-right: 0;
+}
+
+/* LTR drop cap */
+[dir="ltr"] .book-page-content h2 + p::first-letter,
+[dir="ltr"] .book-page-content > p:first-child::first-letter {
+  float: left;
+  padding-right: 0.1em;
+  padding-left: 0;
+}
+
+/* Paragraph spacing — professional book feel */
+.book-page-content p {
+  margin-bottom: 0;
+  text-indent: 1.5em;
+  text-align: justify;
+  hyphens: auto;
+  orphans: 2;
+  widows: 2;
+}
+
+/* First paragraph after heading — no indent */
+.book-page-content h2 + p,
+.book-page-content h3 + p {
+  text-indent: 0;
+}
+
+/* Blockquotes — elegant pull quotes */
+.book-page-content blockquote {
+  border: none;
+  padding: 0.8em 1.2em;
+  margin: 1em 0.5em;
+  font-style: italic;
+  color: #555;
+  position: relative;
+  background: rgba(218,165,32,0.03);
+  border-radius: 4px;
+}
+
+.book-page-content blockquote::before {
+  content: '"';
+  font-size: 3em;
+  color: #c9a84c;
+  position: absolute;
+  top: -0.15em;
+  right: 0.1em;
+  font-family: 'Cinzel', serif;
+  line-height: 1;
+  opacity: 0.4;
+}
+
+[dir="ltr"] .book-page-content blockquote::before {
+  right: auto;
+  left: 0.1em;
+  content: '"';
+}
+
+/* Section breaks — elegant ornamental divider */
+.book-page-content hr {
+  border: none;
+  text-align: center;
+  margin: 1.5em 0;
+  height: auto;
+}
+
+.book-page-content hr::after {
+  content: '⁂';
+  font-size: 1em;
+  color: #c9a84c;
+  letter-spacing: 0.5em;
+}
+
+/* Lists — clean, professional */
+.book-page-content ul,
+.book-page-content ol {
+  padding-inline-start: 1.5em;
+  margin: 0.5em 0;
+}
+
+.book-page-content li {
+  margin-bottom: 0.3em;
+  text-indent: 0;
+}
+
+/* Emphasis styling */
+.book-page-content strong {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.book-page-content em {
+  font-style: italic;
+  color: #333;
+}
+
+/* Image captions */
+.book-page-content figcaption {
+  font-size: 0.75em;
+  color: #888;
+  text-align: center;
+  font-style: italic;
+  margin-top: 0.3em;
+}
+
 /* ==================== PREMIUM MICRO-ANIMATIONS ==================== */
 
 /* Breathing hover effect — buttons feel alive */

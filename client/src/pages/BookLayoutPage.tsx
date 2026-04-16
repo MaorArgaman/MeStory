@@ -419,21 +419,21 @@ interface ImagePlaceholderPosition {
 }
 
 const defaultSettings = {
-  fontSize: 14,
-  lineHeight: 1.6,
+  fontSize: 13,
+  lineHeight: 1.7,
   fontFamily: 'David Libre',
-  titleFont: 'David Libre',
+  titleFont: 'Cinzel',
   headerFont: 'David Libre',
-  margins: { top: 60, bottom: 60, left: 50, right: 50 },
+  margins: { top: 50, bottom: 45, left: 40, right: 40 },
   showPageNumbers: true,
   includeToc: true,
-  includeBackCover: false,
-  textColor: '#000000',
-  backgroundColor: '#ffffff',
-  accentColor: '#6366f1',
+  includeBackCover: true,
+  textColor: '#1a1a1a',
+  backgroundColor: '#fefdfb',
+  accentColor: '#8b6914',
   columns: 1 as 1 | 2 | 3 | 4,
   paragraphIndent: 0,
-  paragraphSpacing: 12,
+  paragraphSpacing: 8,
   pageNumberPosition: 'bottom-center' as 'top-left' | 'top-right' | 'bottom-center' | 'bottom-outside' | 'none',
   templateId: undefined as string | undefined,
   imagePlaceholders: [] as ImagePlaceholderPosition[],
@@ -3617,19 +3617,41 @@ function PageRenderer({
         textAlign: isRTL ? 'right' : 'left',
       }}
     >
-      {/* Header */}
+      {/* Decorative header line + book title */}
       {showHeader && headerStyle !== 'none' && page.type !== 'title' && page.type !== 'toc' && (
+        <div className="absolute top-0 left-0 right-0" style={{ padding: `0 ${settings.margins.right}px` }}>
+          <div
+            className="flex items-center gap-3 pt-3 pb-2"
+            style={{ borderBottom: '0.5px solid rgba(0,0,0,0.12)' }}
+          >
+            <div className="flex-1 h-[0.5px]" style={{ background: 'linear-gradient(to right, transparent, rgba(0,0,0,0.08))' }} />
+            <span style={{
+              fontSize: '7px',
+              color: '#9ca3af',
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              fontFamily: settings.fontFamily,
+              fontWeight: 300,
+            }}>
+              {getHeaderText()}
+            </span>
+            <div className="flex-1 h-[0.5px]" style={{ background: 'linear-gradient(to left, transparent, rgba(0,0,0,0.08))' }} />
+          </div>
+        </div>
+      )}
+
+      {/* Page number — elegant bottom placement */}
+      {settings.showPageNumbers && pageNumber && (
         <div
-          className="absolute top-2 left-0 right-0 text-center"
+          className="absolute bottom-2 left-0 right-0 text-center"
           style={{
-            fontSize: '9px',
-            color: '#6b7280',
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase',
+            fontSize: '8px',
+            color: '#b0b0b0',
+            letterSpacing: '1px',
             fontFamily: settings.fontFamily,
           }}
         >
-          {getHeaderText()}
+          — {pageNumber} —
         </div>
       )}
 
