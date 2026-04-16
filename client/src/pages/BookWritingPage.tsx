@@ -17,6 +17,7 @@ import {
   Menu,
   X,
   Trash2,
+  UserPlus,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -41,6 +42,7 @@ import WritingGuidanceAlert, { useWritingGuidance } from '../components/analysis
 import { useLanguage } from '../contexts/LanguageContext';
 import BrandWatermark from '../components/common/BrandWatermark';
 import BookProgressStepper from '../components/common/BookProgressStepper';
+import { CollaboratorsList } from '../components/collaboration';
 
 interface Chapter {
   _id?: string;
@@ -79,6 +81,7 @@ export default function BookWritingPage() {
   const [showLeftSidebar, setShowLeftSidebar] = useState(false);
   const [showRightSidebar, setShowRightSidebar] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showCollaboratorsPanel, setShowCollaboratorsPanel] = useState(false);
 
   // Refs for sidebar focus management
   const leftSidebarRef = useRef<HTMLDivElement>(null);
@@ -606,6 +609,16 @@ export default function BookWritingPage() {
               {t('editor.toolbar.page_layout')}
             </button>
 
+            {/* Collaborate / Invite Button */}
+            <button
+              onClick={() => setShowCollaboratorsPanel(true)}
+              className="btn-secondary flex items-center gap-2"
+              title={t('editor.toolbar.collaborate', 'Collaborate')}
+            >
+              <UserPlus className="w-4 h-4" />
+              {t('editor.toolbar.collaborate', 'שתף לכתיבה משותפת')}
+            </button>
+
             {/* Save Button */}
             <button
               onClick={() => saveBook()}
@@ -671,6 +684,16 @@ export default function BookWritingPage() {
             >
               <LayoutGrid className="w-4 h-4" />
               {t('editor.toolbar.page_layout')}
+            </button>
+            <button
+              onClick={() => {
+                setShowCollaboratorsPanel(true);
+                setShowMobileMenu(false);
+              }}
+              className="w-full btn-secondary flex items-center justify-center gap-2 py-2"
+            >
+              <UserPlus className="w-4 h-4" />
+              {t('editor.toolbar.collaborate', 'שתף לכתיבה משותפת')}
             </button>
           </div>
         )}
@@ -1083,6 +1106,45 @@ export default function BookWritingPage() {
         opacity={0.12}
         className="hidden lg:block"
       />
+
+      {/* Collaborators Panel (side drawer) */}
+      {showCollaboratorsPanel && bookId && (
+        <div
+          className="fixed inset-0 z-50 flex"
+          onClick={() => setShowCollaboratorsPanel(false)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+          {/* Panel */}
+          <div
+            className="relative ms-auto h-full w-full max-w-md bg-deep-space border-s border-memorial-gold/20 shadow-2xl overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-white/10 bg-deep-space/95 backdrop-blur">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-memorial-gold" />
+                {t('editor.collaboration.title', 'כתיבה משותפת')}
+              </h2>
+              <button
+                onClick={() => setShowCollaboratorsPanel(false)}
+                className="p-2 rounded-lg hover:bg-white/10 text-gray-300"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4">
+              <CollaboratorsList
+                bookId={bookId}
+                bookTitle={book.title}
+                isOwner={true}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

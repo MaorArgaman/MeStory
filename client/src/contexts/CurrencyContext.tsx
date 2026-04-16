@@ -59,7 +59,8 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const response = await api.get('/auth/me');
+          const { fetchMe } = await import('../services/api');
+          const response = await fetchMe();
           if (response.data.success && response.data.data.user?.profile?.currency) {
             const userCurrency = response.data.data.user.profile.currency as Currency;
             setCurrencyState(userCurrency);

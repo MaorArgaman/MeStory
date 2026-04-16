@@ -72,7 +72,8 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const response = await api.get('/auth/me');
+          const { fetchMe } = await import('../services/api');
+          const response = await fetchMe();
           if (response.data.success && response.data.data.user?.profile?.language) {
             const userLang = response.data.data.user.profile.language as Language;
             setLanguageState(userLang);

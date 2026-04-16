@@ -170,13 +170,17 @@ export const getUsers = async (req: AuthRequest, res: Response): Promise<void> =
       queryBuilder = queryBuilder.eq('role', role);
     }
 
-    // SEC-006 FIX: Search with ILIKE for case-insensitive partial matching
+    // SECURITY: Search with ILIKE — escape wildcards (%, _), backslashes, and
+    // PostgREST separators (comma, parens) to prevent pattern injection.
     if (search) {
-      const searchStr = String(search).slice(0, 100); // Limit length
-      // Escape special characters for LIKE pattern
-      const escapedSearch = searchStr.replace(/[%_\\]/g, '\\$&');
-      // Use OR filter for name or email containing search term
-      queryBuilder = queryBuilder.or(`name.ilike.%${escapedSearch}%,email.ilike.%${escapedSearch}%`);
+      const escapedSearch = String(search)
+        .replace(/\\/g, '\\\\')
+        .replace(/[%_]/g, '\\$&')
+        .replace(/[,()]/g, '')
+        .slice(0, 100);
+      if (escapedSearch) {
+        queryBuilder = queryBuilder.or(`name.ilike.%${escapedSearch}%,email.ilike.%${escapedSearch}%`);
+      }
     }
 
     // Apply sorting and pagination at database level

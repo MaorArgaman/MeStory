@@ -1053,7 +1053,11 @@ export const searchUsers = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    const searchTerm = q.trim().toLowerCase();
+    // SECURITY: Escape ILIKE wildcards (%, _) and backslashes, cap length to prevent ReDoS
+    const searchTerm = q.trim().toLowerCase()
+      .replace(/\\/g, '\\\\')
+      .replace(/[%_]/g, '\\$&')
+      .slice(0, 50);
     const maxResults = Math.min(Math.max(1, parseInt(limit as string) || 10), 50);
 
     // Search users by name using ilike (case-insensitive)

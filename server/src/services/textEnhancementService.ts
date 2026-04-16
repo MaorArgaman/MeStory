@@ -4,6 +4,7 @@
  */
 
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import { generateWithBreaker } from './geminiClient';
 
 // Lazy-initialize Gemini AI client (only when API key is available)
 let genAIClient: GoogleGenerativeAI | null = null;
@@ -109,7 +110,7 @@ Respond ONLY with valid JSON:
 }`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const response = result.response.text();
     const jsonMatch = response.match(/\{[\s\S]*\}/);
 
@@ -159,7 +160,7 @@ Respond ONLY with valid JSON:
 }`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const response = result.response.text();
     const jsonMatch = response.match(/\{[\s\S]*\}/);
 
@@ -208,7 +209,7 @@ Respond ONLY with valid JSON:
 }`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const response = result.response.text();
     const jsonMatch = response.match(/\{[\s\S]*\}/);
 
@@ -259,7 +260,7 @@ Respond ONLY with valid JSON:
 }`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const response = result.response.text();
     const jsonMatch = response.match(/\{[\s\S]*\}/);
 

@@ -1,3 +1,4 @@
+import { lazy } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AnimatePresence } from 'framer-motion';
@@ -10,55 +11,63 @@ import RedirectIfAuth from './components/RedirectIfAuth';
 import Layout from './components/layout/Layout';
 import LoadingScreen from './components/LoadingScreen';
 import ErrorBoundary from './components/ErrorBoundary';
+import PageBoundary from './components/PageBoundary';
 import { OrganizationSchema, WebsiteSchema } from './components/seo';
 import { GoogleAnalytics } from './components/analytics';
 import { LanguageRedirect, LanguageRoute } from './components/routing';
+import AdminCheck from './components/AdminCheck';
 
 // Initialize i18n
 import './i18n';
 
-// Pages
+// Eagerly loaded (landing page is critical for first paint / SEO)
 import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import AuthSuccessPage from './pages/AuthSuccessPage';
-import DashboardPage from './pages/DashboardPage';
-import BookWritingPage from './pages/BookWritingPage';
-import DesignStudioPage from './pages/DesignStudioPage';
-import BookLayoutPage from './pages/BookLayoutPage';
-import BookDesignPage from './pages/BookDesignPage';
-import PublishingPage from './pages/PublishingPage';
-import PublishMetadata from './pages/publish/PublishMetadata';
-import MarketplacePage from './pages/MarketplacePage';
-import SubscriptionPage from './pages/SubscriptionPage';
-import SettingsPage from './pages/SettingsPage';
-import UpgradeSuccessPage from './pages/UpgradeSuccessPage';
-import ReaderPage from './pages/ReaderPage';
-import BookDetailsPage from './pages/BookDetailsPage';
-import AuthorProfilePage from './pages/AuthorProfilePage';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminCheck from './components/AdminCheck';
-import LibraryPage from './pages/LibraryPage';
-import EarningsPage from './pages/EarningsPage';
-import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
-import TermsOfServicePage from './pages/TermsOfServicePage';
-import FAQPage from './pages/FAQPage';
-import AboutPage from './pages/AboutPage';
-import GuidesPage from './pages/GuidesPage';
-import HowToWriteBook from './pages/guides/HowToWriteBook';
-import HowToPublishBook from './pages/guides/HowToPublishBook';
-import HowToEarnMoney from './pages/guides/HowToEarnMoney';
-import HowToCollaborate from './pages/guides/HowToCollaborate';
-import NotFoundPage from './pages/NotFoundPage';
-import MyStoryPage from './pages/MyStoryPage';
-import InvitationPage from './pages/InvitationPage';
+
+// Lazy-loaded pages — each is its own chunk so a failure in one
+// cannot break the others, and bundle size per route is minimized.
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const AuthSuccessPage = lazy(() => import('./pages/AuthSuccessPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const BookWritingPage = lazy(() => import('./pages/BookWritingPage'));
+const DesignStudioPage = lazy(() => import('./pages/DesignStudioPage'));
+const BookLayoutPage = lazy(() => import('./pages/BookLayoutPage'));
+const BookDesignPage = lazy(() => import('./pages/BookDesignPage'));
+const PublishingPage = lazy(() => import('./pages/PublishingPage'));
+const PublishMetadata = lazy(() => import('./pages/publish/PublishMetadata'));
+const MarketplacePage = lazy(() => import('./pages/MarketplacePage'));
+const SubscriptionPage = lazy(() => import('./pages/SubscriptionPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const UpgradeSuccessPage = lazy(() => import('./pages/UpgradeSuccessPage'));
+const ReaderPage = lazy(() => import('./pages/ReaderPage'));
+const BookDetailsPage = lazy(() => import('./pages/BookDetailsPage'));
+const AuthorProfilePage = lazy(() => import('./pages/AuthorProfilePage'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const LibraryPage = lazy(() => import('./pages/LibraryPage'));
+const EarningsPage = lazy(() => import('./pages/EarningsPage'));
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
+const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage'));
+const FAQPage = lazy(() => import('./pages/FAQPage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const GuidesPage = lazy(() => import('./pages/GuidesPage'));
+const HowToWriteBook = lazy(() => import('./pages/guides/HowToWriteBook'));
+const HowToPublishBook = lazy(() => import('./pages/guides/HowToPublishBook'));
+const HowToEarnMoney = lazy(() => import('./pages/guides/HowToEarnMoney'));
+const HowToCollaborate = lazy(() => import('./pages/guides/HowToCollaborate'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const MyStoryPage = lazy(() => import('./pages/MyStoryPage'));
+const InvitationPage = lazy(() => import('./pages/InvitationPage'));
+const PrintBookPage = lazy(() => import('./pages/PrintBookPage'));
+const DiagnoseImagesPage = lazy(() => import('./pages/DiagnoseImagesPage'));
 
 // Localized public routes component factory
 function createLocalizedRoutes() {
-  // Helper to wrap a page with LanguageRoute and Layout
+  // Helper to wrap a page with LanguageRoute + Layout + per-page boundary
   const LocalizedLayout = ({ children }: { children: React.ReactNode }) => (
     <LanguageRoute>
-      <Layout>{children}</Layout>
+      <Layout>
+        <PageBoundary>{children}</PageBoundary>
+      </Layout>
     </LanguageRoute>
   );
 
@@ -73,8 +82,8 @@ function createLocalizedRoutes() {
     <>
       {/* English routes */}
       <Route path="/en" element={<LocalizedLanding />} />
-      <Route path="/en/login" element={<LanguageRoute><RedirectIfAuth><LoginPage /></RedirectIfAuth></LanguageRoute>} />
-      <Route path="/en/register" element={<LanguageRoute><RedirectIfAuth><RegisterPage /></RedirectIfAuth></LanguageRoute>} />
+      <Route path="/en/login" element={<LanguageRoute><RedirectIfAuth><PageBoundary><LoginPage /></PageBoundary></RedirectIfAuth></LanguageRoute>} />
+      <Route path="/en/register" element={<LanguageRoute><RedirectIfAuth><PageBoundary><RegisterPage /></PageBoundary></RedirectIfAuth></LanguageRoute>} />
       <Route path="/en/my-story" element={<LocalizedLayout><MyStoryPage /></LocalizedLayout>} />
       <Route path="/en/marketplace" element={<LocalizedLayout><MarketplacePage /></LocalizedLayout>} />
       <Route path="/en/book/:id" element={<LocalizedLayout><BookDetailsPage /></LocalizedLayout>} />
@@ -90,8 +99,8 @@ function createLocalizedRoutes() {
 
       {/* Hebrew routes */}
       <Route path="/he" element={<LocalizedLanding />} />
-      <Route path="/he/login" element={<LanguageRoute><RedirectIfAuth><LoginPage /></RedirectIfAuth></LanguageRoute>} />
-      <Route path="/he/register" element={<LanguageRoute><RedirectIfAuth><RegisterPage /></RedirectIfAuth></LanguageRoute>} />
+      <Route path="/he/login" element={<LanguageRoute><RedirectIfAuth><PageBoundary><LoginPage /></PageBoundary></RedirectIfAuth></LanguageRoute>} />
+      <Route path="/he/register" element={<LanguageRoute><RedirectIfAuth><PageBoundary><RegisterPage /></PageBoundary></RedirectIfAuth></LanguageRoute>} />
       <Route path="/he/my-story" element={<LocalizedLayout><MyStoryPage /></LocalizedLayout>} />
       <Route path="/he/marketplace" element={<LocalizedLayout><MarketplacePage /></LocalizedLayout>} />
       <Route path="/he/book/:id" element={<LocalizedLayout><BookDetailsPage /></LocalizedLayout>} />
@@ -143,6 +152,7 @@ function AppContent() {
       />
 
       <AnimatePresence mode="wait">
+        {/* Outer ErrorBoundary is the last line of defense for the shell itself */}
         <ErrorBoundary>
           <LanguageRedirect>
             <Routes location={location} key={location.pathname}>
@@ -153,12 +163,28 @@ function AppContent() {
               {createLocalizedRoutes()}
 
               {/* Authentication routes (no language prefix needed) */}
-              <Route path="/login" element={<RedirectIfAuth><LoginPage /></RedirectIfAuth>} />
-              <Route path="/register" element={<RedirectIfAuth><RegisterPage /></RedirectIfAuth>} />
-              <Route path="/auth-success" element={<AuthSuccessPage />} />
+              <Route path="/login" element={<RedirectIfAuth><PageBoundary><LoginPage /></PageBoundary></RedirectIfAuth>} />
+              <Route path="/register" element={<RedirectIfAuth><PageBoundary><RegisterPage /></PageBoundary></RedirectIfAuth>} />
+              <Route path="/auth-success" element={<PageBoundary><AuthSuccessPage /></PageBoundary>} />
 
               {/* Invitation route (accessible without auth, will redirect to login if needed) */}
-              <Route path="/invitation/:token" element={<InvitationPage />} />
+              <Route path="/invitation/:token" element={<PageBoundary><InvitationPage /></PageBoundary>} />
+
+              {/* Print-only route used by Puppeteer/headless Chrome to export a book as PDF.
+                  No Layout, no auth wrapper — the token is injected via ?token=... query param. */}
+              <Route path="/print/:bookId" element={<PageBoundary><PrintBookPage /></PageBoundary>} />
+
+              {/* Internal image diagnostic page — visit /diagnose-images/:bookId
+                  to see every image URL saved on the book and migrate them to
+                  permanent storage with one click. */}
+              <Route
+                path="/diagnose-images/:bookId"
+                element={
+                  <RequireAuth>
+                    <PageBoundary><DiagnoseImagesPage /></PageBoundary>
+                  </RequireAuth>
+                }
+              />
 
               {/* Protected Routes with Layout - no language prefix */}
               <Route
@@ -166,7 +192,7 @@ function AppContent() {
                 element={
                   <RequireAuth>
                     <Layout>
-                      <DashboardPage />
+                      <PageBoundary><DashboardPage /></PageBoundary>
                     </Layout>
                   </RequireAuth>
                 }
@@ -175,7 +201,7 @@ function AppContent() {
                 path="/editor/:bookId"
                 element={
                   <RequireAuth>
-                    <BookWritingPage />
+                    <PageBoundary><BookWritingPage /></PageBoundary>
                   </RequireAuth>
                 }
               />
@@ -183,7 +209,7 @@ function AppContent() {
                 path="/design/:bookId"
                 element={
                   <RequireAuth>
-                    <DesignStudioPage />
+                    <PageBoundary><DesignStudioPage /></PageBoundary>
                   </RequireAuth>
                 }
               />
@@ -191,7 +217,7 @@ function AppContent() {
                 path="/layout/:bookId"
                 element={
                   <RequireAuth>
-                    <BookLayoutPage />
+                    <PageBoundary><BookLayoutPage /></PageBoundary>
                   </RequireAuth>
                 }
               />
@@ -199,7 +225,7 @@ function AppContent() {
                 path="/book-design/:bookId"
                 element={
                   <RequireAuth>
-                    <BookDesignPage />
+                    <PageBoundary><BookDesignPage /></PageBoundary>
                   </RequireAuth>
                 }
               />
@@ -208,7 +234,7 @@ function AppContent() {
                 element={
                   <RequireAuth>
                     <Layout>
-                      <PublishingPage />
+                      <PageBoundary><PublishingPage /></PageBoundary>
                     </Layout>
                   </RequireAuth>
                 }
@@ -218,7 +244,7 @@ function AppContent() {
                 element={
                   <RequireAuth>
                     <Layout>
-                      <PublishMetadata />
+                      <PageBoundary><PublishMetadata /></PageBoundary>
                     </Layout>
                   </RequireAuth>
                 }
@@ -229,7 +255,7 @@ function AppContent() {
                 path="/my-story"
                 element={
                   <Layout>
-                    <MyStoryPage />
+                    <PageBoundary><MyStoryPage /></PageBoundary>
                   </Layout>
                 }
               />
@@ -237,7 +263,7 @@ function AppContent() {
                 path="/marketplace"
                 element={
                   <Layout>
-                    <MarketplacePage />
+                    <PageBoundary><MarketplacePage /></PageBoundary>
                   </Layout>
                 }
               />
@@ -245,7 +271,7 @@ function AppContent() {
                 path="/book/:id"
                 element={
                   <Layout>
-                    <BookDetailsPage />
+                    <PageBoundary><BookDetailsPage /></PageBoundary>
                   </Layout>
                 }
               />
@@ -253,7 +279,7 @@ function AppContent() {
                 path="/faq"
                 element={
                   <Layout>
-                    <FAQPage />
+                    <PageBoundary><FAQPage /></PageBoundary>
                   </Layout>
                 }
               />
@@ -261,7 +287,7 @@ function AppContent() {
                 path="/about"
                 element={
                   <Layout>
-                    <AboutPage />
+                    <PageBoundary><AboutPage /></PageBoundary>
                   </Layout>
                 }
               />
@@ -269,7 +295,7 @@ function AppContent() {
                 path="/privacy"
                 element={
                   <Layout>
-                    <PrivacyPolicyPage />
+                    <PageBoundary><PrivacyPolicyPage /></PageBoundary>
                   </Layout>
                 }
               />
@@ -277,7 +303,7 @@ function AppContent() {
                 path="/terms"
                 element={
                   <Layout>
-                    <TermsOfServicePage />
+                    <PageBoundary><TermsOfServicePage /></PageBoundary>
                   </Layout>
                 }
               />
@@ -285,7 +311,7 @@ function AppContent() {
                 path="/guides"
                 element={
                   <Layout>
-                    <GuidesPage />
+                    <PageBoundary><GuidesPage /></PageBoundary>
                   </Layout>
                 }
               />
@@ -293,7 +319,7 @@ function AppContent() {
                 path="/guides/write-book"
                 element={
                   <Layout>
-                    <HowToWriteBook />
+                    <PageBoundary><HowToWriteBook /></PageBoundary>
                   </Layout>
                 }
               />
@@ -301,7 +327,7 @@ function AppContent() {
                 path="/guides/publish-book"
                 element={
                   <Layout>
-                    <HowToPublishBook />
+                    <PageBoundary><HowToPublishBook /></PageBoundary>
                   </Layout>
                 }
               />
@@ -309,7 +335,7 @@ function AppContent() {
                 path="/guides/earn-money"
                 element={
                   <Layout>
-                    <HowToEarnMoney />
+                    <PageBoundary><HowToEarnMoney /></PageBoundary>
                   </Layout>
                 }
               />
@@ -317,7 +343,7 @@ function AppContent() {
                 path="/guides/collaborate"
                 element={
                   <Layout>
-                    <HowToCollaborate />
+                    <PageBoundary><HowToCollaborate /></PageBoundary>
                   </Layout>
                 }
               />
@@ -328,7 +354,7 @@ function AppContent() {
                 element={
                   <RequireAuth>
                     <Layout>
-                      <SubscriptionPage />
+                      <PageBoundary><SubscriptionPage /></PageBoundary>
                     </Layout>
                   </RequireAuth>
                 }
@@ -338,7 +364,7 @@ function AppContent() {
                 element={
                   <RequireAuth>
                     <Layout>
-                      <SettingsPage />
+                      <PageBoundary><SettingsPage /></PageBoundary>
                     </Layout>
                   </RequireAuth>
                 }
@@ -347,19 +373,19 @@ function AppContent() {
                 path="/success"
                 element={
                   <RequireAuth>
-                    <UpgradeSuccessPage />
+                    <PageBoundary><UpgradeSuccessPage /></PageBoundary>
                   </RequireAuth>
                 }
               />
               <Route
                 path="/read/:bookId"
-                element={<ReaderPage />}
+                element={<PageBoundary><ReaderPage /></PageBoundary>}
               />
               <Route
                 path="/profile/:id"
                 element={
                   <Layout>
-                    <AuthorProfilePage />
+                    <PageBoundary><AuthorProfilePage /></PageBoundary>
                   </Layout>
                 }
               />
@@ -370,7 +396,7 @@ function AppContent() {
                 element={
                   <RequireAuth>
                     <Layout>
-                      <LibraryPage />
+                      <PageBoundary><LibraryPage /></PageBoundary>
                     </Layout>
                   </RequireAuth>
                 }
@@ -382,7 +408,7 @@ function AppContent() {
                 element={
                   <RequireAuth>
                     <Layout>
-                      <EarningsPage />
+                      <PageBoundary><EarningsPage /></PageBoundary>
                     </Layout>
                   </RequireAuth>
                 }
@@ -395,7 +421,7 @@ function AppContent() {
                   <RequireAuth>
                     <AdminCheck>
                       <Layout>
-                        <AdminDashboard />
+                        <PageBoundary><AdminDashboard /></PageBoundary>
                       </Layout>
                     </AdminCheck>
                   </RequireAuth>
@@ -403,7 +429,7 @@ function AppContent() {
               />
 
               {/* Catch all - redirect to landing page */}
-              <Route path="*" element={<Layout><NotFoundPage /></Layout>} />
+              <Route path="*" element={<Layout><PageBoundary><NotFoundPage /></PageBoundary></Layout>} />
             </Routes>
           </LanguageRedirect>
         </ErrorBoundary>

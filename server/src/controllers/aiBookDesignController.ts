@@ -11,6 +11,7 @@ const getAuthorName = async (authorId: string): Promise<string> => {
   return user?.name || 'Unknown Author';
 };
 import { AuthRequest } from '../types';
+import { enqueueJob, runJobInBackground } from '../services/jobQueue';
 import {
   generateCompleteBookDesign,
   generateTypographyDesign,
@@ -583,6 +584,128 @@ export const generateCompleteDesign = async (req: AuthRequest, res: Response): P
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to generate complete design',
+    });
+  }
+};
+
+/**
+ * Async complete design via background job.
+ * POST /api/ai/design-complete-async/:bookId
+ *
+ * Returns { jobId } immediately. Client polls /api/jobs/:jobId for progress.
+ * Heavy work (AI design + image generation) runs in the background and the
+ * existing book.aiDesignState is still updated as progress advances, so the
+ * existing UI components that watch that state continue to work unchanged.
+ */
+export const generateCompleteDesignAsync = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, error: 'Authentication required' });
+      return;
+    }
+
+    const { bookId } = req.params;
+    const { generateImages = true } = req.body;
+
+    if (!isValidUUID(bookId)) {
+      res.status(400).json({ success: false, error: 'Invalid book ID' });
+      return;
+    }
+
+    const book = await Book.findById(bookId);
+    if (!book) {
+      res.status(404).json({ success: false, error: 'Book not found' });
+      return;
+    }
+    if (book.author !== req.user.id) {
+      res.status(403).json({ success: false, error: 'You do not have permission to design this book' });
+      return;
+    }
+
+    // Snapshot fields we need — req.user may not be available after response
+    const userId = req.user.id;
+    const bookSnapshot = {
+      title: book.title,
+      genre: book.genre,
+      language: book.language || 'en',
+      synopsis: book.synopsis || book.description,
+      chapters: book.chapters.map((ch: any) => ({
+        title: ch.title,
+        content: ch.content,
+        wordCount: ch.wordCount,
+      })),
+      targetAudience: book.targetAudience,
+      authorId: book.author,
+    };
+
+    const job = await enqueueJob({
+      userId,
+      bookId,
+      type: 'design_generation',
+      input: { generateImages, title: book.title },
+    });
+
+    runJobInBackground(job.id, async ({ updateProgress }) => {
+      await updateProgress(5, 'Analyzing book...');
+
+      const designInput: BookDesignInput = {
+        title: bookSnapshot.title,
+        authorName: await getAuthorName(bookSnapshot.authorId),
+        genre: bookSnapshot.genre,
+        language: bookSnapshot.language,
+        synopsis: bookSnapshot.synopsis,
+        chapters: bookSnapshot.chapters,
+        targetAudience: bookSnapshot.targetAudience,
+      };
+
+      // Mirror existing aiDesignState updates so current UI keeps working
+      await Book.findByIdAndUpdate(bookId, {
+        aiDesignState: {
+          status: 'analyzing',
+          startedAt: new Date(),
+          progress: {
+            currentStep: 1,
+            totalSteps: generateImages ? 6 : 4,
+            stepName: 'Analyzing book...',
+          },
+        },
+      });
+
+      const design = await generateCompleteDesignWithImages(
+        designInput,
+        async (progress: any) => {
+          // Forward progress to both the book row and the job row
+          await Book.findByIdAndUpdate(bookId, {
+            aiDesignState: { status: 'generating-design', progress },
+          });
+          if (progress?.currentStep && progress?.totalSteps) {
+            const pct = 10 + Math.round((progress.currentStep / progress.totalSteps) * 80);
+            await updateProgress(pct, progress.stepName);
+          }
+        },
+        generateImages
+      );
+
+      await updateProgress(95, 'Finalizing design...');
+      const designState = convertDesignToBookState(design);
+      await Book.findByIdAndUpdate(bookId, { aiDesignState: designState });
+
+      return { bookId, design };
+    });
+
+    res.status(202).json({
+      success: true,
+      data: {
+        jobId: job.id,
+        status: 'pending',
+        pollUrl: `/api/jobs/${job.id}`,
+      },
+    });
+  } catch (error: any) {
+    console.error('Async generate complete design error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to start design generation',
     });
   }
 };

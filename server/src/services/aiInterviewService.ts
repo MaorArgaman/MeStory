@@ -5,6 +5,7 @@
  */
 
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import { generateWithBreaker } from './geminiClient';
 
 // Lazy-initialize Gemini AI client (only when API key is available)
 let genAIClient: GoogleGenerativeAI | null = null;
@@ -159,7 +160,7 @@ export async function getFirstQuestion(state: InterviewState): Promise<string> {
 
 תחזיר רק את השאלה, ללא הסברים.`;
 
-  const result = await getGeminiModel().generateContent(prompt);
+  const result = await generateWithBreaker(prompt);
   return result.response.text().trim();
 }
 
@@ -213,7 +214,7 @@ ${relevantResponses ? `שיחה קודמת בנושא:\n${relevantResponses}` : 
 }`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const text = result.response.text().trim();
 
     // Extract JSON from response
@@ -324,7 +325,7 @@ export async function analyzeResponse(
   "extractedInfo": "סיכום קצר של המידע החדש שהתקבל"
 }`;
 
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const text = result.response.text().trim();
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -502,7 +503,7 @@ ${responsesByTopic.legacy.join('\n\n')}
 - שמור על טון חם ומכבד לאורך כל הסיכום`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const text = result.response.text().trim();
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);

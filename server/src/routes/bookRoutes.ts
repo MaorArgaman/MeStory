@@ -8,6 +8,7 @@ import {
   publishBook,
   purchaseBook,
   exportBookPDF,
+  exportBookPDFAsync,
   getPublicBooks,
   getPublicBookById,
   likeBook,
@@ -32,6 +33,10 @@ import {
   getBookSocialStats,
   recordBookView,
 } from '../controllers/bookController';
+import {
+  diagnoseBookImages,
+  repersistBookImages,
+} from '../controllers/imageDiagnosticController';
 import { upload, uploadImage, uploadAudio as uploadAudioMiddleware } from '../middleware/uploadMiddleware';
 import { authenticate } from '../middleware/auth';
 import { runValidation } from '../middleware/validate';
@@ -39,6 +44,8 @@ import {
   createBookValidation,
   updateBookValidation,
   mongoIdValidation,
+  listBooksValidation,
+  publicBooksValidation,
 } from '../middleware/validators';
 
 const router = Router();
@@ -49,7 +56,7 @@ const router = Router();
 
 // Public routes (no authentication required)
 // GET /api/books/public - Get all published books for marketplace
-router.get('/public', getPublicBooks as any);
+router.get('/public', runValidation(publicBooksValidation), getPublicBooks as any);
 
 // GET /api/books/public/:id - Get a single published book by ID
 router.get('/public/:id', runValidation(mongoIdValidation), getPublicBookById as any);
@@ -67,7 +74,7 @@ router.post('/:id/view', runValidation(mongoIdValidation), recordBookView as any
 router.use(authenticate as any);
 
 // GET /api/books - List user books
-router.get('/', getBooks as any);
+router.get('/', runValidation(listBooksValidation), getBooks as any);
 
 // POST /api/books - Create book
 router.post(
@@ -125,11 +132,35 @@ router.post(
   purchaseBook as any
 );
 
-// GET /api/books/:id/export - Export book as PDF
+// GET /api/books/:id/export - Export book as PDF (sync, streams PDF in response)
 router.get(
   '/:id/export',
   runValidation(mongoIdValidation),
   exportBookPDF as any
+);
+
+// POST /api/books/:id/export-async - Start PDF export as background job
+// Returns { jobId } immediately; client polls /api/jobs/:id for progress and downloadUrl
+router.post(
+  '/:id/export-async',
+  runValidation(mongoIdValidation),
+  exportBookPDFAsync as any
+);
+
+// GET /api/books/:id/image-diagnostic - Report every image URL saved on the book
+// and whether it is still reachable. Used to debug "my AI images disappeared".
+router.get(
+  '/:id/image-diagnostic',
+  runValidation(mongoIdValidation),
+  diagnoseBookImages as any
+);
+
+// POST /api/books/:id/repersist-images - Migrate any reachable image URLs
+// on this book to permanent Supabase Storage so they can't expire again.
+router.post(
+  '/:id/repersist-images',
+  runValidation(mongoIdValidation),
+  repersistBookImages as any
 );
 
 // POST /api/books/:id/like - Toggle like on a book

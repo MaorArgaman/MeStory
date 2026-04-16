@@ -4,6 +4,7 @@
  */
 
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import { generateWithBreaker } from './geminiClient';
 import { IBook } from '../models/Book';
 
 // Lazy-initialize Gemini AI client (only when API key is available)
@@ -152,7 +153,7 @@ ${chapterSummaries}
 }`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const response = result.response.text();
     const jsonMatch = response.match(/\{[\s\S]*\}/);
 
@@ -246,7 +247,7 @@ ${allContent.slice(0, 6000)}
 }`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const response = result.response.text();
     const jsonMatch = response.match(/\{[\s\S]*\}/);
 

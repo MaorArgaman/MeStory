@@ -130,6 +130,44 @@ api.interceptors.request.use(
   }
 );
 
+// PERF: shared /auth/me deduplication.
+// Multiple contexts (AuthContext, LanguageContext, CurrencyContext) each fetch
+// /auth/me on mount. Without this, a single navigation fired 3-6 requests back-
+// to-back, each taking 300-1500ms. This layer ensures:
+//   1. Concurrent requests share ONE in-flight promise.
+//   2. Results are cached for a short window so quick re-mounts don't re-fetch.
+// Any 401/logout clears the cache so the next call will refetch.
+let meInFlight: Promise<AxiosResponse<any>> | null = null;
+let meCachedResponse: AxiosResponse<any> | null = null;
+let meCachedAt = 0;
+const ME_CACHE_TTL_MS = 10_000; // 10s is plenty to absorb a navigation burst
+
+export function fetchMe(): Promise<AxiosResponse<any>> {
+  const now = Date.now();
+  if (meCachedResponse && now - meCachedAt < ME_CACHE_TTL_MS) {
+    return Promise.resolve(meCachedResponse);
+  }
+  if (meInFlight) {
+    return meInFlight;
+  }
+  meInFlight = api.get('/auth/me')
+    .then((res) => {
+      meCachedResponse = res;
+      meCachedAt = Date.now();
+      return res;
+    })
+    .finally(() => {
+      meInFlight = null;
+    });
+  return meInFlight;
+}
+
+export function invalidateMeCache(): void {
+  meInFlight = null;
+  meCachedResponse = null;
+  meCachedAt = 0;
+}
+
 // Response interceptor to handle errors
 api.interceptors.response.use(
   (response) => {
@@ -146,9 +184,10 @@ api.interceptors.response.use(
 
     // Handle specific error cases
     if (error.response?.status === 401) {
-      // Unauthorized - clear token and redirect to login
+      // Unauthorized - clear token, cached /auth/me, and redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      invalidateMeCache();
 
       // Only redirect if not already on login/register page and not during initial auth check
       if (!window.location.pathname.includes('/login') &&

@@ -172,6 +172,24 @@ export class User {
     return user;
   }
 
+  // PERF: Batch fetch multiple users in a single query. Replaces the N+1
+  // pattern `Promise.all(ids.map(id => User.findById(id)))` which spawns
+  // one round-trip per id — this does it in one.
+  static async findByIds(ids: string[]): Promise<IUser[]> {
+    if (!ids || ids.length === 0) return [];
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select('id, name, email, role, credits, subscription, profile, paypal, email_verification, created_at, updated_at')
+      .in('id', ids);
+
+    if (error || !data) return [];
+    return (data as unknown as UserRow[]).map((row) => {
+      const user = rowToUser(row);
+      user.password = '';
+      return user;
+    });
+  }
+
   // Find user by email
   static async findByEmail(email: string, includePassword = false): Promise<IUser | null> {
     const columns = includePassword

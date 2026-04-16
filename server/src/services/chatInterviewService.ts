@@ -5,6 +5,7 @@
  */
 
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import { generateWithBreaker } from './geminiClient';
 import crypto from 'crypto';
 
 // Lazy-initialize Gemini AI client
@@ -418,7 +419,7 @@ export async function generateFirstMessage(
   const prompt = prompts.firstMessage(state.genre || '');
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const content = result.response.text().trim();
 
     const message: ChatMessage = {
@@ -525,7 +526,7 @@ export async function processUserMessage(
   );
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const content = result.response.text().trim();
 
     const aiMessage: ChatMessage = {
@@ -630,7 +631,7 @@ export async function generateSummary(
   const prompt = prompts.summaryPrompt(messagesByTopic);
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const text = result.response.text().trim();
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);

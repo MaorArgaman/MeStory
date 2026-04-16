@@ -65,6 +65,23 @@ export const generateAIImage = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
+    // CRITICAL: persist the generated image to our own Supabase Storage bucket
+    // before returning it to the client. Providers return URLs that either:
+    //   - Expire within an hour (DALL-E, Stability)
+    //   - Regenerate different output each request (Pollinations)
+    //   - Stuff the whole image into a 500KB+ data URL that bloats the book row
+    // Saving it to storage gives us a stable URL we can put in the DB safely.
+    let persistentImageUrl = result.imageUrl!;
+    try {
+      const { persistImage } = await import('../services/imagePersistenceService');
+      persistentImageUrl = await persistImage(result.imageUrl!, {
+        userId: req.user.id,
+        bookId: bookId && isValidUUID(bookId) ? bookId : undefined,
+      });
+    } catch (persistErr: any) {
+      console.warn('[generateAIImage] failed to persist image, using original URL:', persistErr?.message);
+    }
+
     // If bookId and pageIndex are provided, save the image to the book
     if (bookId && pageIndex !== undefined && isValidUUID(bookId)) {
       const book = await Book.findById(bookId);
@@ -72,7 +89,7 @@ export const generateAIImage = async (req: AuthRequest, res: Response): Promise<
         // Add the generated image to existing pageImages
         const newImage = {
           pageIndex: parseInt(pageIndex, 10),
-          url: result.imageUrl!,
+          url: persistentImageUrl,
           x: 10,
           y: 10,
           width: 40,
@@ -91,7 +108,7 @@ export const generateAIImage = async (req: AuthRequest, res: Response): Promise<
     res.status(200).json({
       success: true,
       data: {
-        imageUrl: result.imageUrl,
+        imageUrl: persistentImageUrl,
         prompt: result.prompt,
         enhancedPrompt: result.enhancedPrompt,
       },

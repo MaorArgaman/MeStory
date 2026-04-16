@@ -18,6 +18,7 @@
  */
 
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import { generateWithBreaker } from './geminiClient';
 import {
   generateBookCovers,
   generateBookInteriorImages,
@@ -494,7 +495,7 @@ Respond with ONLY valid JSON:
 }`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const responseText = result.response.text();
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
@@ -611,7 +612,7 @@ Values for quoteStyle: "italic", "indented", "bordered", "highlighted"
 Values for emphasisStyle: "bold", "italic", "color", "underline"`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const responseText = result.response.text();
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
@@ -714,7 +715,7 @@ Values for pageNumberStyle: "right-aligned", "dotted-line", "bracketed", "subtle
 Values for dividerStyle: "none", "line", "ornament", "gradient"`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const responseText = result.response.text();
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
@@ -798,7 +799,7 @@ Values for titleAlignment: "left", "center", "right"
 Values for titleDecoration: "none", "underline", "ornament", "box", "gradient"`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const responseText = result.response.text();
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
@@ -925,7 +926,7 @@ Values for sectionBreaks.style: "space", "ornament", "line", "symbol"
 Values for background.style: "solid", "subtle-texture", "gradient", "parchment", "clean"`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const responseText = result.response.text();
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
@@ -1106,7 +1107,7 @@ Respond with ONLY valid JSON:
 }`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const responseText = result.response.text();
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
@@ -1245,7 +1246,7 @@ Values for frame: "none", "thin-border", "shadow", "rounded", "decorative"
 Values for importance: "essential", "high", "medium", "low"`;
 
     try {
-      const result = await getGeminiModel().generateContent(prompt);
+      const result = await generateWithBreaker(prompt);
       const responseText = result.response.text();
       const jsonMatch = responseText.match(/\[[\s\S]*\]/);
 

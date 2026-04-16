@@ -1,4 +1,40 @@
-import { body, param } from 'express-validator';
+import { body, param, query } from 'express-validator';
+
+/**
+ * SECURITY: Whitelist of memorial book genres. Keep in sync with client genres.
+ */
+const MEMORIAL_GENRES = [
+  'fallen_soldier',
+  'life_story',
+  'family_legacy',
+  'tribute',
+  'holocaust_survivor',
+  'shared_memories',
+  'letters_and_words',
+  'testimony',
+  'collaborative',
+];
+
+/**
+ * SECURITY: Whitelist of sortable book fields. Matches ALLOWED_SORT_FIELDS in Book.ts.
+ */
+const ALLOWED_BOOK_SORT = [
+  'createdAt',
+  'updatedAt',
+  'title',
+  'genre',
+  'qualityScore',
+  'wordCount',
+  'readingTime',
+  'views',
+  'likesCount',
+  'purchaseCount',
+  'rating',
+  'publishedAt',
+  'price',
+  'quality',
+  'popularity',
+];
 
 /**
  * Validation rules for user registration
@@ -147,3 +183,82 @@ export const uuidValidation = [
 
 // Alias for backwards compatibility
 export const mongoIdValidation = uuidValidation;
+
+/**
+ * SECURITY: Validation rules for book listing queries.
+ * Enforces whitelists on sortBy/order to prevent ORDER BY injection,
+ * and caps search/limit to prevent ReDoS and resource exhaustion.
+ */
+export const listBooksValidation = [
+  query('sortBy')
+    .optional()
+    .isString()
+    .isIn(ALLOWED_BOOK_SORT)
+    .withMessage('Invalid sort field'),
+
+  query('order')
+    .optional()
+    .isIn(['asc', 'desc'])
+    .withMessage('Order must be "asc" or "desc"'),
+
+  query('genre')
+    .optional()
+    .isString()
+    .isLength({ max: 50 })
+    .withMessage('Invalid genre'),
+
+  query('status')
+    .optional()
+    .isIn(['draft', 'published', 'archived'])
+    .withMessage('Invalid status'),
+
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .toInt()
+    .withMessage('Limit must be between 1 and 100'),
+
+  query('offset')
+    .optional()
+    .isInt({ min: 0 })
+    .toInt()
+    .withMessage('Offset must be non-negative'),
+];
+
+/**
+ * SECURITY: Validation rules for the public marketplace query.
+ * Search input is length-capped; escaping still happens at the model layer.
+ */
+export const publicBooksValidation = [
+  ...listBooksValidation,
+
+  query('search')
+    .optional()
+    .isString()
+    .isLength({ max: 100 })
+    .withMessage('Search query too long')
+    .trim(),
+
+  query('category')
+    .optional()
+    .isString()
+    .isLength({ max: 50 })
+    .withMessage('Invalid category'),
+];
+
+/**
+ * SECURITY: Validation rules for user search.
+ * Minimum 2 chars to prevent enumerating every user, max 50 to prevent ReDoS.
+ */
+export const userSearchValidation = [
+  query('q')
+    .isString()
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Search query must be 2-50 characters'),
+
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 50 })
+    .toInt(),
+];

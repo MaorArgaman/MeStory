@@ -483,6 +483,32 @@ export async function getDiversifiedRecommendations(
     b => b.author !== userId && !excludedBookIds.has(b.id)
   );
 
+  // PERF: Batch-compute collaborative scores for ALL candidate books at once,
+  // instead of doing 5+ DB queries per book inside the scoring loop (was 100+
+  // sequential round-trips). Fetch similar users + their activities ONCE,
+  // then score every candidate book in memory against that dataset.
+  const similarUsers = await findSimilarUsers(userId, 5);
+  const similarUserIds = similarUsers.map((s) => s.id);
+  const similarActivities = similarUserIds.length > 0
+    ? await UserActivity.find({ userId: { $in: similarUserIds } })
+    : [];
+  const activityByUser = new Map(similarActivities.map((a: any) => [a.userId.toString(), a]));
+  const collabScores = new Map<string, number>();
+  for (const b of books) {
+    let weightedSum = 0;
+    let weightTotal = 0;
+    for (const similar of similarUsers) {
+      const act = activityByUser.get(similar.id);
+      if (!act) continue;
+      const hasRead = act.completedBooks?.some((id: any) => id.toString() === b.id);
+      if (hasRead) {
+        weightedSum += similar.similarity * (3.5 / 5);
+        weightTotal += similar.similarity;
+      }
+    }
+    collabScores.set(b.id, weightTotal > 0 ? weightedSum / weightTotal : 0);
+  }
+
   const recommendations: RecommendationWithReason[] = [];
 
   for (const book of books) {
@@ -513,8 +539,8 @@ export async function getDiversifiedRecommendations(
       reasons.push('Highly rated by AI');
     }
 
-    // Collaborative score (15%)
-    const collabScore = await calculateCollaborativeScore(userId, book.id, 5);
+    // Collaborative score (15%) — looked up from the precomputed batch above
+    const collabScore = collabScores.get(book.id) || 0;
     score += collabScore * 0.15;
     if (collabScore > 0.5) {
       reasons.push('Loved by readers like you');
@@ -646,56 +672,58 @@ export async function getPersonalizedFeed(userId: string): Promise<PersonalizedF
   // Recommended for you
   const recommendedForYou = await getDiversifiedRecommendations(userId, 12, 0.3);
 
-  // Continue reading with progress
+  // PERF: Continue reading — fetch only the specific currently-reading books
+  // by id, skipping the heavy full-table scan the old code did.
   let continueReading: Array<{ book: IBook; progress: number; lastReadAt: Date }> = [];
   if (userActivity && userActivity.currentlyReading.length > 0) {
-    const currentlyReadingIds = new Set(userActivity.currentlyReading.map(id => id.toString()));
-
-    const allBooks = await Book.find({
-      'publishingStatus.status': 'published',
-    });
-
-    const books = allBooks.filter(b => currentlyReadingIds.has(b.id));
+    const currentlyReadingIds = userActivity.currentlyReading.map((id: any) => id.toString());
+    const books = await Book.findByIds(currentlyReadingIds);
 
     continueReading = books.map((book) => {
       const progress = userActivity.readingHistory.find(
-        (h) => h.bookId.toString() === book.id
+        (h: any) => h.bookId.toString() === book.id
       );
       return {
         book: book as unknown as IBook,
         progress: progress?.percentageComplete || 0,
-        lastReadAt: progress?.lastReadAt || new Date(),
+        lastReadAt: progress?.lastReadAt ? new Date(progress.lastReadAt) : new Date(),
       };
     });
     continueReading.sort((a, b) => b.lastReadAt.getTime() - a.lastReadAt.getTime());
   }
 
-  // Continue writing
+  // PERF: Continue writing — limit to 5 drafts, skip heavy JSONB columns
   const drafts = await Book.find({
     author: userId,
     'publishingStatus.status': 'draft',
+    _sort: 'updatedAt',
+    _order: 'desc',
+    _limit: 5,
+    _lightweight: true,
   });
 
-  const sortedDrafts = drafts.sort((a, b) =>
-    new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()
-  ).slice(0, 5);
-
-  const continueWriting = sortedDrafts.map((book) => ({
+  const continueWriting = drafts.map((book) => ({
     book: book as unknown as IBook,
-    lastEditedAt: book.updatedAt || new Date(),
+    lastEditedAt: book.updatedAt ? new Date(book.updatedAt) : new Date(),
     wordCount: book.statistics?.wordCount || 0,
   }));
 
   // Because you read
   const becauseYouRead = await getBecauseYouRead(userId, 2, 4);
 
-  // Trending
+  // PERF: Trending — fetch only the top 50 published books sorted by views
+  // instead of pulling the whole published catalog and sorting in memory.
   const allPublishedBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
+    _sort: 'views',
+    _order: 'desc',
+    _limit: 50,
+    _lightweight: true,
   });
 
   const trending = allPublishedBooks
+    .slice()
     .sort((a, b) => {
       const viewsA = a.statistics?.views || 0;
       const viewsB = b.statistics?.views || 0;
@@ -705,7 +733,7 @@ export async function getPersonalizedFeed(userId: string): Promise<PersonalizedF
     })
     .slice(0, 8);
 
-  // New releases
+  // New releases — reuse the same dataset we already loaded
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const newReleases = allPublishedBooks
     .filter(b => {

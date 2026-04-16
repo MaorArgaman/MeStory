@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
+import { exportBookAsPdfAsync } from '../utils/asyncExport';
 import {
   ArrowLeft,
   Palette,
@@ -890,28 +891,39 @@ export default function DesignStudioPage() {
 
       toast.loading(`Creating ${exportFormat.toUpperCase()} file...`, { id: 'export' });
 
-      const response = await api.get(`/books/${bookId}/export/${exportFormat}`, {
-        responseType: 'blob',
-      });
-
-      // Create download link
-      const blob = new Blob([response.data], {
-        type: exportFormat === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${book.title}.${exportFormat}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      if (exportFormat === 'pdf') {
+        // PDF goes through the background job queue so big books don't time out.
+        // The helper enqueues, polls, and downloads the signed URL.
+        await exportBookAsPdfAsync({
+          bookId: bookId!,
+          bookTitle: book.title,
+          onProgress: (progress, message) => {
+            toast.loading(`${message} (${progress}%)`, { id: 'export' });
+          },
+        });
+      } else {
+        // Non-PDF formats (DOCX, etc.) still use the sync streaming endpoint
+        const response = await api.get(`/books/${bookId}/export/${exportFormat}`, {
+          responseType: 'blob',
+        });
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${book.title}.${exportFormat}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }
 
       toast.success(`File downloaded successfully!`, { id: 'export' });
       setShowExportModal(false);
     } catch (error: any) {
       console.error('Failed to export book:', error);
-      toast.error(error.response?.data?.error || 'Error exporting book', { id: 'export' });
+      toast.error(error?.message || error.response?.data?.error || 'Error exporting book', { id: 'export' });
     } finally {
       setExporting(false);
     }

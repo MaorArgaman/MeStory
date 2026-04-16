@@ -176,13 +176,17 @@ export const getTopBooks = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    const limit = parseInt(req.query.limit as string) || 20;
-    const sortBy = (req.query.sortBy as string) || 'views';
+    const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 20, 1), 100);
 
-    const books = await analyticsService.getTopBooks(
-      limit,
-      sortBy as 'views' | 'purchases' | 'quality' | 'revenue'
-    );
+    // SECURITY: Runtime whitelist validation - TypeScript casts don't enforce at runtime
+    const ALLOWED_SORTS = ['views', 'purchases', 'quality', 'revenue'] as const;
+    type AllowedSort = typeof ALLOWED_SORTS[number];
+    const rawSort = (req.query.sortBy as string) || 'views';
+    const sortBy: AllowedSort = (ALLOWED_SORTS as readonly string[]).includes(rawSort)
+      ? (rawSort as AllowedSort)
+      : 'views';
+
+    const books = await analyticsService.getTopBooks(limit, sortBy);
 
     res.status(200).json({
       success: true,

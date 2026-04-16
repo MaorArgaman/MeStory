@@ -13,6 +13,7 @@ import {
   getImageSuggestions,
   generateContextualImage,
   generateCompleteDesign,
+  generateCompleteDesignAsync,
   getDesignPreview,
   getDesignState,
   applyCompleteDesign,
@@ -269,6 +270,13 @@ router.post('/generate-contextual-image', generateContextualImage as any);
  * }
  */
 router.post('/design-complete/:bookId', generateCompleteDesign as any);
+
+/**
+ * POST /api/ai/design-complete-async/:bookId
+ * Async variant - returns { jobId } immediately, client polls /api/jobs/:id
+ * Avoids HTTP timeouts and lets the client show a live progress bar.
+ */
+router.post('/design-complete-async/:bookId', generateCompleteDesignAsync as any);
 
 /**
  * POST /api/ai/design-wizard/:bookId

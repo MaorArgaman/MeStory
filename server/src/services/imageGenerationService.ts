@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import { generateWithBreaker } from './geminiClient';
 import axios from 'axios';
 import fs from 'fs/promises';
 import path from 'path';
@@ -118,7 +119,7 @@ OUTPUT REQUIREMENTS:
 
 Respond with ONLY the enhanced prompt:`;
 
-    const result = await getGeminiModel().generateContent(aiPrompt);
+    const result = await generateWithBreaker(aiPrompt);
     const response = result.response;
     const enhancedPrompt = response.text().trim();
 
@@ -159,7 +160,7 @@ Hebrew text: "${prompt}"
 
 Reply with ONLY the English translation, nothing else:`;
 
-    const result = await getGeminiModel().generateContent(translationPrompt);
+    const result = await generateWithBreaker(translationPrompt);
     const translated = result.response.text().trim();
 
     console.log('🌐 Translation result:', translated);
@@ -811,7 +812,7 @@ Describe the scene in 2-3 sentences, focusing on:
 
 Respond with ONLY the scene description, no other text.`;
 
-    const result = await getGeminiModel().generateContent(analysisPrompt);
+    const result = await generateWithBreaker(analysisPrompt);
     const sceneDescription = result.response.text().trim();
 
     // Generate the illustration
@@ -915,7 +916,7 @@ Create a detailed, vivid image description (under 300 characters) that will gene
 
 Respond with ONLY the image prompt, nothing else.`;
 
-  const frontPromptResult = await getGeminiModel().generateContent(frontCoverPromptRequest);
+  const frontPromptResult = await generateWithBreaker(frontCoverPromptRequest);
   let frontCoverPrompt = frontPromptResult.response.text().trim();
 
   // Add genre style and negative prompts
@@ -951,7 +952,7 @@ The back cover should:
 
 Respond with ONLY the image prompt (under 250 characters), no other text.`;
 
-  const backPromptResult = await getGeminiModel().generateContent(backCoverPromptRequest);
+  const backPromptResult = await generateWithBreaker(backCoverPromptRequest);
   let backCoverPrompt = backPromptResult.response.text().trim();
 
   // Add negative prompts to back cover

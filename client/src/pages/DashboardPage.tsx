@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { api } from '../services/api';
+import { exportBookAsPdfAsync } from '../utils/asyncExport';
 import { Plus, Loader2, BookOpen, Edit, Palette, Download, Rocket, Upload, Mic, PenTool, Feather, MessageCircle, FileUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -101,26 +102,20 @@ export default function DashboardPage() {
 
   const exportBook = async (bookId: string, bookTitle: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    // Live progress toast that updates as the job advances
+    const toastId = toast.loading(t('dashboard.messages.generating_pdf'));
     try {
-      toast(t('dashboard.messages.generating_pdf'));
-      const response = await api.get(`/books/${bookId}/export/pdf`, {
-        responseType: 'blob',
+      await exportBookAsPdfAsync({
+        bookId,
+        bookTitle,
+        onProgress: (progress, message) => {
+          toast.loading(`${message} (${progress}%)`, { id: toastId });
+        },
       });
-
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `${bookTitle.replace(/[^a-zA-Z0-9\u0590-\u05FF]/g, '_')}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      toast.success(t('dashboard.messages.export_success'));
-    } catch (error) {
+      toast.success(t('dashboard.messages.export_success'), { id: toastId });
+    } catch (error: any) {
       console.error('Failed to export book:', error);
-      toast.error(t('dashboard.messages.export_failed'));
+      toast.error(error?.message || t('dashboard.messages.export_failed'), { id: toastId });
     }
   };
 

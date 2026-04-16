@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { api } from '../services/api';
+import { api, fetchMe, invalidateMeCache } from '../services/api';
 import toast from 'react-hot-toast';
 import { User } from '../types';
 import EmailVerificationModal from '../components/auth/EmailVerificationModal';
@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }
 
-      const response = await api.get('/auth/me');
+      const response = await fetchMe();
       if (response.data.success) {
         const freshUser = response.data.data.user;
         setUser(freshUser);
@@ -111,8 +111,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Store the token
       localStorage.setItem('token', token);
 
-      // Fetch user info with the token
-      const response = await api.get('/auth/me');
+      // Fetch user info with the token (use deduped helper)
+      invalidateMeCache();
+      const response = await fetchMe();
 
       if (response.data.success) {
         const user = response.data.data.user;

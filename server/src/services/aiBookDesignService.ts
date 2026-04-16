@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import { generateWithBreaker } from './geminiClient';
 import axios from 'axios';
 import fs from 'fs/promises';
 import path from 'path';
@@ -226,7 +227,7 @@ Respond with ONLY valid JSON in this exact format:
 }`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const responseText = result.response.text();
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
@@ -325,7 +326,7 @@ Values for pageNumberPosition: "bottom-center" | "bottom-outer" | "top-outer" | 
 Values for headerStyle: "none" | "book-title" | "chapter-title" | "author-name"`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const responseText = result.response.text();
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
@@ -393,7 +394,7 @@ Respond with ONLY valid JSON array:
 If no illustrations are needed for this chapter, return empty array: []`;
 
     try {
-      const result = await getGeminiModel().generateContent(prompt);
+      const result = await generateWithBreaker(prompt);
       const responseText = result.response.text();
       const jsonMatch = responseText.match(/\[[\s\S]*\]/);
 
@@ -506,7 +507,7 @@ Respond with ONLY valid JSON:
 }`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const responseText = result.response.text();
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
@@ -673,7 +674,7 @@ Cover concept: ${cover.reasoning}
 Describe the overall aesthetic in 2 sentences.`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     return result.response.text().trim();
   } catch {
     return `Professional ${input.genre} design with ${typography.bodyFont} typography and ${cover.front.colorPalette.length > 0 ? 'rich color palette' : 'classic styling'}.`;

@@ -20,8 +20,9 @@ import {
 import { SEO } from '../../components/seo';
 
 export default function HowToCollaborate() {
-  const { t } = useTranslation('guides');
+  const { t: _t } = useTranslation('guides');
   const { language } = useLanguage();
+  void _t;
   const isRTL = language === 'he';
 
   const steps = [

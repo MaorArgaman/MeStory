@@ -16,6 +16,17 @@ import {
 } from '../controllers/userController';
 import { authenticate } from '../middleware/auth';
 import { uploadImage, handleUploadError } from '../middleware/uploadMiddleware';
+import { runValidation } from '../middleware/validate';
+import { userSearchValidation } from '../middleware/validators';
+
+// SECURITY: Rate limiter for public search endpoint to prevent enumeration/scraping
+const searchRateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30,
+  message: { success: false, error: 'Too many search requests. Please slow down.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const router = Router();
 
@@ -42,8 +53,8 @@ router.get('/profile/:id', getUserProfile as any);
 // GET /api/user/:id/library - Get user's public library (books they wrote)
 router.get('/:id/library', getUserLibrary as any);
 
-// GET /api/user/search - Search users by name
-router.get('/search', searchUsers as any);
+// GET /api/user/search - Search users by name (rate-limited + validated)
+router.get('/search', searchRateLimiter, runValidation(userSearchValidation), searchUsers as any);
 
 // All remaining routes require authentication
 router.use(authenticate as any);

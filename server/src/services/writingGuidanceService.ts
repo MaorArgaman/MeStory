@@ -4,6 +4,7 @@
  */
 
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import { generateWithBreaker } from './geminiClient';
 import { IBook } from '../models/Book';
 import { SupportedLanguage, detectLanguage, getLanguageInstruction } from '../utils/languageHelper';
 
@@ -176,7 +177,7 @@ If everything is fine, return:
 Note: Only provide guidance when truly needed. Don't interrupt the author unnecessarily.`;
 
   try {
-    const result = await getGeminiModel().generateContent(prompt);
+    const result = await generateWithBreaker(prompt);
     const response = result.response.text();
     const jsonMatch = response.match(/\{[\s\S]*\}/);
 

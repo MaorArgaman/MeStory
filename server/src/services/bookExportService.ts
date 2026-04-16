@@ -1016,26 +1016,43 @@ export async function generatePDF(bookId: string): Promise<Buffer> {
     const fallbackFontPath = path.join(__dirname, '../assets/fonts/NotoSans-Regular.ttf');
     const fallbackBoldFontPath = path.join(__dirname, '../assets/fonts/NotoSans-Bold.ttf');
 
+    // Sanity-check that a font file is a real TTF/OTF before handing it to PDFKit.
+    // We hit a case where someone downloaded an HTML error page as `.ttf`, fs.existsSync
+    // returned true, and registerFont crashed with "Unknown font format".
+    // Valid magic: 00 01 00 00 (TTF), 74 72 75 65 ("true"), 4F 54 54 4F ("OTTO").
+    const isValidFontFile = (p: string): boolean => {
+      try {
+        const fd = fs.openSync(p, 'r');
+        const buf = Buffer.alloc(4);
+        fs.readSync(fd, buf, 0, 4, 0);
+        fs.closeSync(fd);
+        const magic = buf.toString('hex');
+        return magic === '00010000' || magic === '74727565' || magic === '4f54544f';
+      } catch {
+        return false;
+      }
+    };
+
     let mainFont = 'Helvetica';
     let boldFont = 'Helvetica-Bold';
     let hebrewFontAvailable = false;
 
-    if (fs.existsSync(fontPath)) {
+    if (isValidFontFile(fontPath)) {
       doc.registerFont('Hebrew', fontPath);
       mainFont = 'Hebrew';
       hebrewFontAvailable = true;
-    } else if (fs.existsSync(fallbackFontPath)) {
+    } else if (isValidFontFile(fallbackFontPath)) {
       doc.registerFont('Hebrew', fallbackFontPath);
       mainFont = 'Hebrew';
       hebrewFontAvailable = true;
-      addExportWarning('Rubik font not found, using NotoSans as fallback.');
+      addExportWarning('Rubik font not available or invalid, using NotoSans as fallback.');
     } else {
       addExportWarning('Hebrew font not found. Using Helvetica as fallback - Hebrew text may not display correctly.');
     }
-    if (fs.existsSync(boldFontPath)) {
+    if (isValidFontFile(boldFontPath)) {
       doc.registerFont('Hebrew-Bold', boldFontPath);
       boldFont = 'Hebrew-Bold';
-    } else if (fs.existsSync(fallbackBoldFontPath)) {
+    } else if (isValidFontFile(fallbackBoldFontPath)) {
       doc.registerFont('Hebrew-Bold', fallbackBoldFontPath);
       boldFont = 'Hebrew-Bold';
     } else if (hebrewFontAvailable) {
