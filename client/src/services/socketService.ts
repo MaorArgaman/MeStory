@@ -43,10 +43,24 @@ export function initializeSocket(token: string): Socket {
     socket = null;
   }
 
+  // On Vercel serverless, WebSockets are not supported. Skip socket
+  // initialization entirely to avoid flooding the console with errors.
+  const socketUrl = getSocketURL();
+  const isVercelProduction = socketUrl.includes('vercel.app');
+  if (isVercelProduction) {
+    // Return a dummy socket that won't try to connect.
+    // Real-time features (live notifications) gracefully degrade
+    // to polling via the existing /api/notifications/unread-count endpoint.
+    socket = io(socketUrl, {
+      auth: { token },
+      autoConnect: false,
+    });
+    return socket;
+  }
+
   isConnecting = true;
   reconnectAttempts = 0;
 
-  const socketUrl = getSocketURL();
   console.log('[Socket] Connecting to:', socketUrl);
 
   socket = io(socketUrl, {
