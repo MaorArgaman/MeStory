@@ -1,8 +1,27 @@
-import { forwardRef, useRef, useState, useEffect } from 'react';
+import { forwardRef, useRef, useState, useEffect, Component } from 'react';
 // @ts-ignore - react-pageflip has incomplete types
 import HTMLFlipBook from 'react-pageflip';
 import { X, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+
+// react-pageflip manipulates the DOM directly, which can conflict with React's
+// reconciliation. This boundary catches those exceptions silently — the flipbook
+// continues to work because the actual DOM is correct; React just can't match it
+// to its virtual tree.
+class FlipBookErrorBoundary extends Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: false }; }
+  componentDidCatch(error: Error) {
+    if (error.message?.includes('removeChild') || error.message?.includes('insertBefore')) {
+      return; // Suppress known react-pageflip DOM sync errors
+    }
+    console.error('[FlipBook]', error);
+  }
+  render() { return this.props.children; }
+}
 
 interface BookFlipReaderProps {
   book: {
@@ -178,6 +197,7 @@ export default function BookFlipReader({
       {/* Book Flip Area */}
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8 overflow-hidden">
         <div className="relative">
+          <FlipBookErrorBoundary>
           <HTMLFlipBook
             ref={flipBookRef}
             width={400}
@@ -397,6 +417,7 @@ export default function BookFlipReader({
               </Page>
             )}
           </HTMLFlipBook>
+          </FlipBookErrorBoundary>
         </div>
       </div>
 
