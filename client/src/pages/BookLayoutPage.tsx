@@ -3660,7 +3660,7 @@ function PageRenderer({
           {page.type === 'chapter' && (
             <button
               onClick={() => onStartEditing(pageIndex)}
-              className="absolute top-2 right-2 p-1.5 bg-memorial-gold/90 hover:bg-memorial-gold text-black rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-3 bg-memorial-gold/90 hover:bg-memorial-gold text-black rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
               title={t('book_layout.edit_content', 'Edit content')}
             >
               <Edit3 className="w-3.5 h-3.5" />
