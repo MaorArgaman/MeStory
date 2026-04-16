@@ -133,56 +133,32 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
     }
   }, [showHeadingMenu, isRTL]);
 
+  // Helper: position a dropdown menu centered below a button, clamped to viewport
+  const positionMenuBelow = (buttonEl: HTMLElement | null, menuWidth: number) => {
+    if (!buttonEl) return { top: 0, left: 0 };
+    const rect = buttonEl.getBoundingClientRect();
+    const vw = window.innerWidth;
+    // Center the menu under the button
+    let leftPos = rect.left + rect.width / 2 - menuWidth / 2;
+    // Clamp so it doesn't go off-screen
+    leftPos = Math.max(8, Math.min(leftPos, vw - menuWidth - 8));
+    return { top: rect.bottom + 6, left: leftPos };
+  };
+
   // Calculate color menu position
   useEffect(() => {
     if (showColorMenu) {
       const buttonEl = colorButtonMobileRef.current || colorButtonRef.current;
-      if (!buttonEl) return;
-
-      const rect = buttonEl.getBoundingClientRect();
-      const menuWidth = 180; // Approximate menu width
-      const isMobile = window.innerWidth < 640;
-
-      let leftPos: number;
-      if (isMobile) {
-        // Center on mobile
-        leftPos = Math.max(8, Math.min((window.innerWidth - menuWidth) / 2, window.innerWidth - menuWidth - 8));
-      } else if (isRTL) {
-        leftPos = Math.max(8, window.innerWidth - rect.right - 60);
-      } else {
-        leftPos = Math.max(8, rect.left - 60);
-      }
-
-      setColorMenuPosition({
-        top: rect.bottom + 4,
-        left: leftPos,
-      });
+      setColorMenuPosition(positionMenuBelow(buttonEl, 220));
     }
-  }, [showColorMenu, isRTL]);
+  }, [showColorMenu]);
 
   // Calculate highlight menu position
   useEffect(() => {
-    if (showHighlightMenu && highlightButtonRef.current) {
-      const rect = highlightButtonRef.current.getBoundingClientRect();
-      const menuWidth = 140; // Approximate menu width
-      const isMobile = window.innerWidth < 640;
-
-      let leftPos: number;
-      if (isMobile) {
-        // Center on mobile
-        leftPos = Math.max(8, Math.min((window.innerWidth - menuWidth) / 2, window.innerWidth - menuWidth - 8));
-      } else if (isRTL) {
-        leftPos = Math.max(8, window.innerWidth - rect.right - 40);
-      } else {
-        leftPos = Math.max(8, rect.left - 40);
-      }
-
-      setHighlightMenuPosition({
-        top: rect.bottom + 4,
-        left: leftPos,
-      });
+    if (showHighlightMenu) {
+      setHighlightMenuPosition(positionMenuBelow(highlightButtonRef.current, 180));
     }
-  }, [showHighlightMenu, isRTL]);
+  }, [showHighlightMenu]);
 
   // Calculate more menu position
   useEffect(() => {
