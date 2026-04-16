@@ -92,9 +92,71 @@ export function initializeSocketIO(httpServer: HTTPServer, allowedOrigins: strin
       socket.emit('pong');
     });
 
+    // ===== COLLABORATION PRESENCE (BUG-006) =====
+    // Client joins a book room when opening the editor. We broadcast
+    // presence + chapter-focus events to everyone else in that room.
+    //
+    // Authorization is NOT checked here — the server already rejects
+    // writes from non-collaborators in bookController. Presence events
+    // are low-trust (just avatars), so we accept any join and let the
+    // REST layer be the source of truth for permissions.
+
+    socket.on('book:join', (payload: { bookId?: string } = {}) => {
+      const { bookId } = payload;
+      if (!bookId || typeof bookId !== 'string') return;
+
+      const room = `book:${bookId}`;
+      socket.join(room);
+      // Announce to other sockets in the room
+      socket.to(room).emit('book:user-joined', {
+        bookId,
+        userId: user.id,
+        name: (user as any).name,
+        at: new Date().toISOString(),
+      });
+      // Send the joiner a list of who else is already here
+      const room_sockets = io?.sockets.adapter.rooms.get(room);
+      const others: Array<{ userId: string; socketId: string }> = [];
+      if (room_sockets && io) {
+        for (const sid of room_sockets) {
+          if (sid === socket.id) continue;
+          const s = io.sockets.sockets.get(sid);
+          const uid = (s?.data?.user as JWTPayload | undefined)?.id;
+          if (uid) others.push({ userId: uid, socketId: sid });
+        }
+      }
+      socket.emit('book:presence', { bookId, others });
+    });
+
+    socket.on('book:leave', (payload: { bookId?: string } = {}) => {
+      const { bookId } = payload;
+      if (!bookId || typeof bookId !== 'string') return;
+      const room = `book:${bookId}`;
+      socket.leave(room);
+      socket.to(room).emit('book:user-left', { bookId, userId: user.id });
+    });
+
+    socket.on('book:editing-chapter', (payload: { bookId?: string; chapterIndex?: number } = {}) => {
+      const { bookId, chapterIndex } = payload;
+      if (!bookId || typeof bookId !== 'string') return;
+      socket.to(`book:${bookId}`).emit('book:user-editing', {
+        bookId,
+        chapterIndex,
+        userId: user.id,
+      });
+    });
+
     // Handle disconnection
     socket.on('disconnect', (reason) => {
       console.log(`[Socket] User ${user.id} disconnected (socket: ${socket.id}, reason: ${reason})`);
+
+      // Broadcast user-left to any book rooms this socket was in
+      for (const room of socket.rooms) {
+        if (room.startsWith('book:')) {
+          const bookId = room.slice('book:'.length);
+          socket.to(room).emit('book:user-left', { bookId, userId: user.id });
+        }
+      }
 
       // Remove socket from user's connections
       const sockets = userSockets.get(user.id);
@@ -196,4 +258,39 @@ export function broadcastToAll(event: string, data: any): void {
   }
 
   io.emit(event, data);
+}
+
+/**
+ * Emit a collaboration-scoped event to everyone currently viewing a book.
+ * Used for presence + live update broadcasts.
+ */
+export function emitToBookRoom(bookId: string, event: string, data: any): void {
+  if (!io || !bookId) return;
+  io.to(`book:${bookId}`).emit(event, data);
+}
+
+/**
+ * Notify a specific user that they've been removed from a book (BUG-007).
+ * The client should close any open editor for that book and show a toast.
+ */
+export function notifyCollaboratorRemoved(userId: string, bookId: string, bookTitle?: string): void {
+  if (!io) return;
+  io.to(`user:${userId}`).emit('collaboration:removed', {
+    bookId,
+    bookTitle,
+    at: new Date().toISOString(),
+  });
+}
+
+/**
+ * Notify all collaborators that a book was deleted (BUG-011).
+ * Everyone in the book room gets a toast + forced close.
+ */
+export function notifyBookDeleted(bookId: string, bookTitle?: string): void {
+  if (!io) return;
+  io.to(`book:${bookId}`).emit('collaboration:book-deleted', {
+    bookId,
+    bookTitle,
+    at: new Date().toISOString(),
+  });
 }

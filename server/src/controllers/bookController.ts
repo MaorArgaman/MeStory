@@ -859,6 +859,31 @@ export const updateBook = async (req: AuthRequest, res: Response): Promise<void>
       'translations',
     ];
 
+    // BUG-005: Optimistic locking — if the client sends `_lastUpdatedAt`,
+    // reject the save when the DB copy is newer (another user saved after the
+    // client last loaded). This prevents silent overwrites in collaborative
+    // editing. The client can then show "reload to see latest changes".
+    const clientLastUpdated = req.body._lastUpdatedAt;
+    if (clientLastUpdated) {
+      const { data: meta } = await supabaseAdmin
+        .from('books')
+        .select('updated_at')
+        .eq('id', id)
+        .single();
+      if (meta?.updated_at) {
+        const dbTime = new Date(meta.updated_at).getTime();
+        const clientTime = new Date(clientLastUpdated).getTime();
+        if (dbTime > clientTime) {
+          res.status(409).json({
+            success: false,
+            error: 'Conflict: this book was modified by someone else. Reload to see the latest version.',
+            serverUpdatedAt: meta.updated_at,
+          });
+          return;
+        }
+      }
+    }
+
     // Build update object
     const updateData: any = {};
     Object.keys(req.body).forEach((key) => {
@@ -867,8 +892,19 @@ export const updateBook = async (req: AuthRequest, res: Response): Promise<void>
       }
     });
 
-    // Update book
+    // Update book + broadcast change to other editors in the room
     const updatedBook = await Book.findByIdAndUpdate(id, updateData);
+
+    // Notify other collaborators in real-time that the book has changed
+    try {
+      const { emitToBookRoom } = await import('../services/socketService');
+      emitToBookRoom(id, 'book:content-updated', {
+        bookId: id,
+        updatedBy: req.user.id,
+        fields: Object.keys(updateData),
+        at: new Date().toISOString(),
+      });
+    } catch { /* non-fatal */ }
 
     if (!updatedBook) {
       res.status(500).json({
@@ -1059,6 +1095,11 @@ export const deleteBook = async (req: AuthRequest, res: Response): Promise<void>
       console.error('Error during cascade delete, continuing with book deletion:', cascadeError);
       // Continue with book deletion even if cascade operations fail
     }
+
+    // BUG-011: Notify all collaborators that the book is being deleted
+    // Do this BEFORE the actual delete so the socket room still exists.
+    const { notifyBookDeleted } = await import('../services/socketService');
+    notifyBookDeleted(id, book.title);
 
     await Book.findByIdAndDelete(id);
 

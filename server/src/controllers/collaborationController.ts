@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Book, ICollaborator, IBookInvitation } from '../models/Book';
+import { notifyCollaboratorRemoved } from '../services/socketService';
 import crypto from 'crypto';
 
 // Generate unique invitation token
@@ -222,11 +223,18 @@ export const removeCollaborator = async (req: Request, res: Response) => {
       return res.status(403).json({ success: false, error: 'Only the book owner can remove collaborators' });
     }
 
+    // Find the collaborator being removed so we can notify them
+    const removedCollab = (book.collaborators || []).find(c => c.id === collaboratorId);
     const updatedCollaborators = (book.collaborators || []).filter(c => c.id !== collaboratorId);
 
     await Book.findByIdAndUpdate(bookId, {
       $set: { collaborators: updatedCollaborators }
     });
+
+    // BUG-007: Notify removed user via socket so their editor closes gracefully
+    if (removedCollab?.userId) {
+      notifyCollaboratorRemoved(removedCollab.userId, bookId, book.title);
+    }
 
     res.json({
       success: true,
