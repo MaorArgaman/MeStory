@@ -1149,6 +1149,13 @@ export default function BookLayoutPage() {
 
     setEditingPageIndex(pageIndex);
     setEditingContent(page.content);
+
+    // Auto-focus the contentEditable after React re-renders
+    setTimeout(() => {
+      if (editableRef.current) {
+        editableRef.current.focus();
+      }
+    }, 100);
   };
 
   // Finish editing and save changes
@@ -3576,12 +3583,17 @@ function PageRenderer({
 
       {/* Page Content */}
       {editingPageIndex === pageIndex ? (
-        // Editable mode — stop propagation so react-pageflip doesn't intercept events
+        // Editable mode — stop ALL event propagation so react-pageflip doesn't intercept
         <div
           className="relative h-full"
           onMouseDown={(e) => e.stopPropagation()}
           onTouchStart={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+          onKeyUp={(e) => e.stopPropagation()}
+          onKeyPress={(e) => e.stopPropagation()}
+          onInput={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
           style={{ pointerEvents: 'all', zIndex: 50 }}
         >
           <div
