@@ -88,11 +88,16 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   // Editor is guaranteed non-null by early return above - cast to ensure TypeScript knows
   const safeEditor = editor as Editor;
 
-  // Get chain builder that restores selection first
+  // Get chain builder that restores selection first, then clears it
   const getChainWithSelection = () => {
     if (savedSelection.current) {
       const { from, to } = savedSelection.current;
-      return safeEditor.chain().focus().setTextSelection({ from, to });
+      const docSize = safeEditor.state.doc.content.size;
+      savedSelection.current = null;
+      // Validate bounds to prevent invalid selection crash
+      if (from >= 0 && to <= docSize && from <= to) {
+        return safeEditor.chain().focus().setTextSelection({ from, to });
+      }
     }
     return safeEditor.chain().focus();
   };
