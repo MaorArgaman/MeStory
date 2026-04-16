@@ -2159,8 +2159,8 @@ export default function BookLayoutPage() {
         {/* Center - Page Spread View (BookFlipReader-style chrome) */}
         <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-deep-space via-[#0a0a1f] to-cosmic-purple/30 rounded-xl">
 
-          {/* Top bar — matches BookFlipReader exactly */}
-          <div className="flex items-center justify-between px-6 py-4 bg-black/30 backdrop-blur-sm border-b border-memorial-gold/20">
+          {/* Top bar — compact */}
+          <div className="flex items-center justify-between px-4 py-2 bg-black/30 backdrop-blur-sm border-b border-memorial-gold/20">
             {/* Left: back to cover */}
             <button
               onClick={() => jumpToSpread(0)}
@@ -2196,7 +2196,7 @@ export default function BookLayoutPage() {
           <div className="flex-1 flex flex-col items-center justify-center p-1 sm:p-2 lg:p-4 overflow-hidden min-h-0">
 
           {/* react-pageflip book with editing — 350×500 base, auto-scales via size="stretch" */}
-          <div className="relative w-full h-full max-h-[70vh] flex items-center justify-center">
+          <div className="relative w-full h-full max-h-[50vh] flex items-center justify-center">
             <HTMLFlipBook
               ref={flipBookRef}
               width={350}
@@ -2348,7 +2348,7 @@ export default function BookLayoutPage() {
 
           {/* Reading Direction Indicator - shows for RTL books */}
           {currentSpread > 0 && isBookRTL && (
-            <div className="flex items-center justify-center gap-4 mt-3 text-memorial-gold/70 text-xs animate-pulse">
+            <div className="flex items-center justify-center gap-4 mt-1 text-memorial-gold/70 text-[10px] animate-pulse">
               <span className="flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-green-400"></span>
                 {t('book_layout.start_reading', 'התחל כאן')}
@@ -2364,7 +2364,7 @@ export default function BookLayoutPage() {
 
           {/* Page Labels - show which page is which in the spread */}
           {currentSpread > 0 && (
-            <div className="flex items-center justify-center mt-2 transform scale-[0.35] xs:scale-[0.45] sm:scale-[0.55] md:scale-[0.7] lg:scale-[0.85] xl:scale-100">
+            <div className="flex items-center justify-center mt-1">
               <div className="flex items-center gap-4" style={{ width: '716px' }}>
                 {/* Left page label */}
                 <div className="flex-1 text-center">
@@ -2392,7 +2392,7 @@ export default function BookLayoutPage() {
 
           {/* Page Actions */}
           {selectedPageIndex !== null && (
-            <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 mt-2 sm:mt-4">
+            <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 mt-1 sm:mt-2">
               <button
                 onClick={() => {
                   setShowImageModal(true);
@@ -2423,18 +2423,18 @@ export default function BookLayoutPage() {
             </div>
           )}
 
-          {/* Keyboard shortcuts hint - hidden on mobile */}
-          <div className="hidden sm:block mt-4 text-xs text-gray-500">
+          {/* Keyboard shortcuts hint - hidden to save space, accessible via title */}
+          <div className="hidden lg:block mt-1 text-[10px] text-gray-600">
             Ctrl+Enter = Add page | Ctrl+S = Save | Arrows = Navigate
           </div>
           </div>
 
-          {/* Bottom bar — BookFlipReader style navigation */}
-          <div className="flex items-center justify-center gap-4 px-4 sm:px-6 py-3 sm:py-4 bg-black/30 backdrop-blur-sm border-t border-memorial-gold/20">
+          {/* Bottom bar — compact navigation */}
+          <div className="flex items-center justify-center gap-4 px-4 py-2 bg-black/30 backdrop-blur-sm border-t border-memorial-gold/20">
             <button
               onClick={isBookRTL ? readNext : readPrev}
               disabled={isBookRTL ? currentSpread >= totalSpreads - 1 : currentSpread === 0}
-              className="p-3 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-2 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               title={isBookRTL ? 'הדף הבא' : 'Previous'}
             >
               <ChevronLeft className="w-6 h-6" />
@@ -2443,7 +2443,7 @@ export default function BookLayoutPage() {
             <button
               onClick={isBookRTL ? readPrev : readNext}
               disabled={isBookRTL ? currentSpread === 0 : currentSpread >= totalSpreads - 1}
-              className="p-3 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-2 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               title={isBookRTL ? 'הדף הקודם' : 'Next'}
             >
               <ChevronRight className="w-6 h-6" />
