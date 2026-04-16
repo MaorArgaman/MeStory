@@ -256,15 +256,18 @@
     background: linear-gradient(180deg, #1a1a2e 0%, #16162a 100%);
   }
 
-  /* Paper-like writing area */
+  /* Paper-like writing area — Google Docs style page */
   .editor-paper {
-    @apply mx-auto w-full max-w-4xl rounded-lg shadow-2xl;
-    background: linear-gradient(180deg, #fefefe 0%, #f8f9fa 100%);
+    @apply mx-auto w-full rounded-sm;
+    max-width: 816px; /* A4 width at 96 DPI */
+    background: #ffffff;
     box-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.12),
-      0 8px 24px rgba(0, 0, 0, 0.2),
-      0 24px 48px rgba(0, 0, 0, 0.15);
-    min-height: calc(100vh - 280px);
+      0 0 0 1px rgba(0, 0, 0, 0.08),
+      0 2px 8px rgba(0, 0, 0, 0.12),
+      0 8px 32px rgba(0, 0, 0, 0.16);
+    min-height: 1056px; /* A4 height at 96 DPI */
+    margin-bottom: 40px;
+    transition: transform 0.2s ease;
   }
 
   /* Mobile adjustments for editor */
@@ -272,6 +275,9 @@
     .editor-paper {
       min-height: auto;
       margin-bottom: 80px;
+      max-width: 100%;
+      box-shadow: none;
+      border-radius: 0;
     }
   }
 
@@ -282,22 +288,30 @@
     line-height: 1.8;
   }
 
-  /* TipTap Editor Styles - Clean Google Docs typography */
+  /* TipTap Editor Styles - Google Docs-like typography */
   .ProseMirror {
-    @apply bg-transparent px-4 py-6 sm:px-6 sm:py-8 md:px-12 md:py-10 focus:outline-none;
-    font-family: 'Merriweather', 'Crimson Text', Georgia, serif;
-    font-size: 16px;
-    line-height: 1.85;
+    @apply bg-transparent focus:outline-none;
+    /* Google Docs uses ~1 inch margins on A4, which is ~96px at 96 DPI */
+    padding: 72px 96px;
+    font-family: 'David Libre', 'Merriweather', Georgia, serif;
+    font-size: 11pt;
+    line-height: 1.75;
     color: #000000;
-    caret-color: #4f46e5;
-    min-height: 300px;
+    caret-color: #4285f4; /* Google blue caret */
+    min-height: 1056px; /* A4 height */
   }
 
-  @media (min-width: 640px) {
+  @media (max-width: 640px) {
     .ProseMirror {
-      font-size: 18px;
-      min-height: 400px;
+      padding: 24px 16px;
+      font-size: 16px;
+      min-height: 300px;
     }
+  }
+
+  /* Selection highlight — Google Docs style */
+  .ProseMirror ::selection {
+    background: rgba(66, 133, 244, 0.2);
   }
 
   .ProseMirror p {

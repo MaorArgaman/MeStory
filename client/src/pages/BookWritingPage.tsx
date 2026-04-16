@@ -18,6 +18,12 @@ import {
   X,
   Trash2,
   UserPlus,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Minimize2,
+  Search,
+  Replace,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -82,6 +88,14 @@ export default function BookWritingPage() {
   const [showRightSidebar, setShowRightSidebar] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showCollaboratorsPanel, setShowCollaboratorsPanel] = useState(false);
+
+  // Google Docs-like features
+  const [zoomLevel, setZoomLevel] = useState(100);
+  const [focusMode, setFocusMode] = useState(false);
+  const [showFindReplace, setShowFindReplace] = useState(false);
+  const [findText, setFindText] = useState('');
+  const [replaceText, setReplaceText] = useState('');
+  const [findCount, setFindCount] = useState(0);
 
   // Refs for sidebar focus management
   const leftSidebarRef = useRef<HTMLDivElement>(null);
@@ -361,6 +375,75 @@ export default function BookWritingPage() {
       setSaving(false);
     }
   };
+
+  // Zoom controls
+  const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 10, 150));
+  const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 10, 70));
+
+  // Find and Replace
+  const handleFind = useCallback(() => {
+    if (!editor || !findText) { setFindCount(0); return; }
+    const text = editor.getText();
+    const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    const matches = text.match(regex);
+    setFindCount(matches ? matches.length : 0);
+  }, [editor, findText]);
+
+  const handleReplace = useCallback(() => {
+    if (!editor || !findText) return;
+    const { state } = editor;
+    const { from, to } = state.selection;
+    const selectedText = state.doc.textBetween(from, to);
+    if (selectedText.toLowerCase() === findText.toLowerCase()) {
+      editor.chain().focus().deleteSelection().insertContent(replaceText).run();
+      handleFind();
+    }
+  }, [editor, findText, replaceText, handleFind]);
+
+  const handleReplaceAll = useCallback(() => {
+    if (!editor || !findText) return;
+    const currentContent = editor.getHTML();
+    const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    const newContent = currentContent.replace(regex, replaceText);
+    editor.commands.setContent(newContent);
+    setFindCount(0);
+    setSaved(false);
+  }, [editor, findText, replaceText]);
+
+  // Keyboard shortcuts for Docs-like features
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
+        e.preventDefault();
+        setShowFindReplace(prev => !prev);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setShowFindReplace(true);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === '=') {
+        e.preventDefault();
+        handleZoomIn();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === '-') {
+        e.preventDefault();
+        handleZoomOut();
+      }
+      if (e.key === 'Escape') {
+        if (showFindReplace) setShowFindReplace(false);
+        if (focusMode) setFocusMode(false);
+      }
+      if (e.key === 'F11') {
+        e.preventDefault();
+        setFocusMode(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showFindReplace, focusMode]);
+
+  // Update find count when search text changes
+  useEffect(() => { handleFind(); }, [findText, handleFind]);
 
   const addChapter = () => {
     if (!book) return;
@@ -750,10 +833,11 @@ export default function BookWritingPage() {
           aria-label="Chapters sidebar"
           className={`
           ${showLeftSidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          ${focusMode ? '!-translate-x-full !w-0 !p-0 !border-0 !overflow-hidden' : ''}
           fixed lg:relative z-50 lg:z-auto
           w-full sm:w-80 lg:w-64 h-full
           glass-strong border-r border-white/10 p-4 sm:p-5 overflow-y-auto
-          transition-transform duration-300 ease-in-out
+          transition-all duration-300 ease-in-out
         `}>
           {/* Mobile Header */}
           <div className="flex items-center justify-between mb-6 lg:mb-4">
@@ -857,9 +941,68 @@ export default function BookWritingPage() {
                   </div>
                 </div>
 
-                {/* Rich Text Editor with AI Floating Toolbar - Paper-like design */}
+                {/* Find & Replace Bar */}
+                {showFindReplace && (
+                  <div className="px-3 sm:px-4 lg:px-6 py-2 bg-slate-800/80 border-b border-white/10 z-20">
+                    <div className="max-w-4xl mx-auto flex flex-wrap items-center gap-2">
+                      <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                        <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <input
+                          type="text"
+                          value={findText}
+                          onChange={(e) => setFindText(e.target.value)}
+                          placeholder={isHebrew ? 'חפש...' : 'Find...'}
+                          className="bg-white/10 text-white text-sm rounded px-3 py-1.5 flex-1 outline-none focus:ring-1 focus:ring-indigo-500"
+                          dir="auto"
+                          autoFocus
+                        />
+                        {findText && (
+                          <span className="text-xs text-gray-400 flex-shrink-0">
+                            {findCount} {isHebrew ? 'תוצאות' : 'found'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                        <Replace className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <input
+                          type="text"
+                          value={replaceText}
+                          onChange={(e) => setReplaceText(e.target.value)}
+                          placeholder={isHebrew ? 'החלף ב...' : 'Replace with...'}
+                          className="bg-white/10 text-white text-sm rounded px-3 py-1.5 flex-1 outline-none focus:ring-1 focus:ring-indigo-500"
+                          dir="auto"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={handleReplace}
+                          className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded transition"
+                        >
+                          {isHebrew ? 'החלף' : 'Replace'}
+                        </button>
+                        <button
+                          onClick={handleReplaceAll}
+                          className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded transition"
+                        >
+                          {isHebrew ? 'החלף הכל' : 'Replace All'}
+                        </button>
+                        <button
+                          onClick={() => setShowFindReplace(false)}
+                          className="p-1.5 hover:bg-white/10 rounded transition"
+                        >
+                          <X className="w-4 h-4 text-gray-400" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Rich Text Editor - Google Docs page view */}
                 <div className="flex-1 overflow-y-auto relative px-3 sm:px-4 lg:px-6 py-4 bg-slate-800/30 z-10">
-                  <div className="editor-paper">
+                  <div
+                    className="editor-paper"
+                    style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
+                  >
                     {editor && (
                       <BubbleMenu
                         editor={editor}
@@ -879,6 +1022,47 @@ export default function BookWritingPage() {
                       </BubbleMenu>
                     )}
                     <EditorContent editor={editor} />
+                  </div>
+                </div>
+
+                {/* Status Bar — Google Docs style */}
+                <div className="hidden lg:flex items-center justify-between px-4 py-1.5 bg-slate-900/90 border-t border-white/10 text-xs text-gray-400 flex-shrink-0">
+                  <div className="flex items-center gap-4">
+                    <span>
+                      {editor?.storage.characterCount?.words() || 0} {isHebrew ? 'מילים' : 'words'}
+                    </span>
+                    <span>
+                      {editor?.storage.characterCount?.characters() || 0} {isHebrew ? 'תווים' : 'characters'}
+                    </span>
+                    <span>
+                      {isHebrew ? `פרק ${selectedChapterIndex + 1} מתוך ${book?.chapters?.length || 0}` : `Chapter ${selectedChapterIndex + 1} of ${book?.chapters?.length || 0}`}
+                    </span>
+                    {saved ? (
+                      <span className="text-green-400 flex items-center gap-1"><Check className="w-3 h-3" /> {isHebrew ? 'נשמר' : 'Saved'}</span>
+                    ) : (
+                      <span className="text-amber-400">{isHebrew ? 'שינויים לא שמורים' : 'Unsaved changes'}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setShowFindReplace(!showFindReplace)} className="p-1 hover:bg-white/10 rounded transition" title="Ctrl+F">
+                      <Search className="w-3.5 h-3.5" />
+                    </button>
+                    <div className="w-px h-4 bg-white/10" />
+                    <button onClick={handleZoomOut} className="p-1 hover:bg-white/10 rounded transition" title="Ctrl+-">
+                      <ZoomOut className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="w-10 text-center">{zoomLevel}%</span>
+                    <button onClick={handleZoomIn} className="p-1 hover:bg-white/10 rounded transition" title="Ctrl+=">
+                      <ZoomIn className="w-3.5 h-3.5" />
+                    </button>
+                    <div className="w-px h-4 bg-white/10" />
+                    <button
+                      onClick={() => setFocusMode(!focusMode)}
+                      className="p-1 hover:bg-white/10 rounded transition"
+                      title="F11"
+                    >
+                      {focusMode ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                    </button>
                   </div>
                 </div>
               </>
@@ -920,10 +1104,11 @@ export default function BookWritingPage() {
           aria-label="AI and Analysis sidebar"
           className={`
           ${showRightSidebar ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+          ${focusMode ? '!translate-x-full !w-0 !p-0 !border-0 !overflow-hidden' : ''}
           fixed lg:relative right-0 z-50 lg:z-auto
           w-[85%] sm:w-80 lg:w-80 h-full
           glass-strong border-l border-white/10 flex flex-col overflow-hidden
-          transition-transform duration-300 ease-in-out
+          transition-all duration-300 ease-in-out
         `}>
           {/* Mobile Close Button */}
           <div className="lg:hidden flex items-center justify-between p-3 border-b border-white/10">
