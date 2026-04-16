@@ -49,6 +49,7 @@ import AICompleteDesignWizard from '../components/design/AICompleteDesignWizard'
 import BrandWatermark from '../components/common/BrandWatermark';
 import BookProgressStepper from '../components/common/BookProgressStepper';
 import { RotateCcw } from 'lucide-react';
+import BookFlipReader from '../components/reader/BookFlipReader';
 
 interface PageImage {
   id: string;
@@ -414,7 +415,7 @@ export default function BookLayoutPage() {
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [backCoverImageUrl, setBackCoverImageUrl] = useState<string | null>(null);
   const [showAIDesignWizard, setShowAIDesignWizard] = useState(false);
-  // showFlipReader removed — inline spread now serves as the reader
+  const [showFlipReader, setShowFlipReader] = useState(false);
 
   // Publish/Export state (moved from DesignStudioPage)
   const [showPublishModal, setShowPublishModal] = useState(false);
@@ -1934,6 +1935,19 @@ export default function BookLayoutPage() {
               <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
+            {/* Reader Mode Button */}
+            <button
+              onClick={() => setShowFlipReader(true)}
+              disabled={pages.length === 0}
+              className="btn-ghost flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 border border-memorial-gold/40 hover:bg-memorial-gold/10 disabled:opacity-30"
+              title={isBookRTL ? 'מצב קריאה' : 'Reader mode'}
+            >
+              <BookOpen className="w-4 h-4 text-memorial-gold" />
+              <span className="hidden sm:inline text-memorial-gold">
+                {isBookRTL ? 'קריאה' : 'Read'}
+              </span>
+            </button>
+
             {/* Export Button */}
             <button
               onClick={() => setShowExportModal(true)}
@@ -3024,6 +3038,26 @@ export default function BookLayoutPage() {
         opacity={0.12}
         className="hidden lg:block"
       />
+
+      {/* Flip Book Reader */}
+      {showFlipReader && book && (
+        <BookFlipReader
+          book={{
+            id: book.id,
+            title: book.title,
+            author: book.author,
+            language: book.language,
+            synopsis: book.synopsis,
+            description: book.description,
+            coverDesign: book.coverDesign,
+          }}
+          pages={pages}
+          frontCoverImageUrl={coverImageUrl}
+          backCoverImageUrl={backCoverImageUrl}
+          isRTL={isBookRTL}
+          onClose={() => setShowFlipReader(false)}
+        />
+      )}
 
       {/* Publish Modal */}
       <AnimatePresence>
