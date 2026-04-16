@@ -2195,17 +2195,17 @@ export default function BookLayoutPage() {
           {/* Flipbook content area */}
           <div className="flex-1 flex flex-col items-center justify-center p-1 sm:p-2 lg:p-4 overflow-hidden min-h-0">
 
-          {/* react-pageflip book with editing */}
-          <div className="relative">
+          {/* react-pageflip book with editing — 350×500 base, auto-scales via size="stretch" */}
+          <div className="relative w-full h-full max-h-[70vh] flex items-center justify-center">
             <HTMLFlipBook
               ref={flipBookRef}
-              width={300}
-              height={420}
+              width={350}
+              height={500}
               size="stretch"
-              minWidth={200}
-              maxWidth={380}
-              minHeight={280}
-              maxHeight={520}
+              minWidth={250}
+              maxWidth={450}
+              minHeight={350}
+              maxHeight={600}
               maxShadowOpacity={0.5}
               showCover={true}
               mobileScrollSupport={false}
@@ -2280,11 +2280,8 @@ export default function BookLayoutPage() {
                     onClick={() => setSelectedPageIndex(actualIdx)}
                   >
                     <div
-                      className="w-full h-full overflow-hidden"
-                      style={{
-                        backgroundColor: settings.backgroundColor || '#ffffff',
-                        fontSize: `${Math.min(settings.fontSize, 12)}px`,
-                      }}
+                      className="w-full h-full"
+                      style={{ backgroundColor: settings.backgroundColor || '#ffffff' }}
                     >
                       <PageRenderer
                         page={page}
