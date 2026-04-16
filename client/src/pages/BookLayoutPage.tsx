@@ -11,6 +11,8 @@ import {
   Loader2,
   Image as ImageIcon,
   Sparkles,
+  List,
+  Layers,
   Plus,
   Minus,
   ChevronLeft,
@@ -434,7 +436,7 @@ export default function BookLayoutPage() {
   const [templateNameHe, setTemplateNameHe] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
 
-  // showMobilePages removed — sidebar replaced with inline navigation
+  const [showMobilePages, setShowMobilePages] = useState(false);
 
   // Editing state
   const [editingPageIndex, setEditingPageIndex] = useState<number | null>(null);
@@ -1881,6 +1883,14 @@ export default function BookLayoutPage() {
             </button>
             <div className="hidden sm:block h-6 w-px bg-memorial-gold/30" />
 
+            {/* Mobile Pages Toggle */}
+            <button
+              onClick={() => setShowMobilePages(!showMobilePages)}
+              className="lg:hidden btn-ghost p-2"
+            >
+              <Layers className="w-5 h-5" />
+            </button>
+
             <button
               onClick={() => navigate(`/editor/${bookId}`)}
               className="btn-ghost flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
@@ -1999,7 +2009,16 @@ export default function BookLayoutPage() {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Mobile Settings Floating Button */}
+        {/* Mobile Floating Toggle Buttons */}
+        <div className="lg:hidden fixed bottom-6 left-4 z-40 flex flex-col gap-3">
+          <button
+            onClick={() => setShowMobilePages(!showMobilePages)}
+            className="glass-strong p-4 rounded-full border border-memorial-gold/30 shadow-lg shadow-memorial-gold/10 active:scale-95 transition-transform"
+            aria-label="Pages"
+          >
+            <Layers className="w-6 h-6 text-memorial-gold" />
+          </button>
+        </div>
         <div className="lg:hidden fixed bottom-6 right-4 z-40 flex flex-col gap-3">
           <button
             onClick={() => setShowSettings(!showSettings)}
@@ -2008,6 +2027,84 @@ export default function BookLayoutPage() {
           >
             <Settings className="w-6 h-6 text-indigo-400" />
           </button>
+        </div>
+
+        {/* Mobile Pages Overlay */}
+        {showMobilePages && (
+          <div
+            className="lg:hidden fixed inset-0 bg-black/50 z-40"
+            onClick={() => setShowMobilePages(false)}
+          />
+        )}
+
+        {/* Left Sidebar - Page Thumbnails (Right in RTL) */}
+        <div className={`
+          ${showMobilePages ? 'translate-x-0' : isUIRTL ? 'translate-x-full' : '-translate-x-full'}
+          lg:translate-x-0
+          fixed lg:relative z-50 lg:z-auto
+          ${isUIRTL ? 'right-0 lg:right-auto' : 'left-0 lg:left-auto'}
+          w-[180px] sm:w-48 h-full max-h-screen
+          glass-strong ${isUIRTL ? 'border-l' : 'border-r'} border-white/10 p-3 sm:p-4 overflow-y-auto
+          transition-transform duration-300 ease-in-out
+        `}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-gray-300">Pages</h3>
+            <button
+              onClick={() => setShowMobilePages(false)}
+              className="lg:hidden btn-ghost p-3 min-w-[44px] min-h-[44px]"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="space-y-2">
+            {/* Cover */}
+            <button
+              onClick={() => {
+                setCurrentSpread(0);
+                setShowMobilePages(false);
+              }}
+              className={`w-full aspect-[3/4] rounded-lg border-2 transition-all ${
+                currentSpread === 0
+                  ? 'border-memorial-gold bg-memorial-gold/20'
+                  : 'border-white/10 hover:border-white/30'
+              }`}
+            >
+              <div className="flex items-center justify-center h-full text-xs text-gray-400">
+                Cover
+              </div>
+            </button>
+
+            {/* Page pairs */}
+            {Array.from({ length: Math.ceil(pages.length / 2) }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  setCurrentSpread(i + 1);
+                  setShowMobilePages(false);
+                }}
+                className={`w-full aspect-[3/4] rounded-lg border-2 transition-all ${
+                  currentSpread === i + 1
+                    ? 'border-memorial-gold bg-memorial-gold/20'
+                    : 'border-white/10 hover:border-white/30'
+                }`}
+              >
+                <div className="flex items-center justify-center h-full text-xs text-gray-400">
+                  {i * 2 + 1} - {i * 2 + 2}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Quick Actions */}
+          <div className="mt-6 space-y-2">
+            <button
+              onClick={toggleToc}
+              className="w-full btn-secondary text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-2"
+            >
+              <List className="w-4 h-4" />
+              <span className="truncate">{settings.includeToc ? t('book_layout.remove_toc') : t('book_layout.add_toc')}</span>
+            </button>
+          </div>
         </div>
 
         {/* Center - Page Spread View (BookFlipReader-style chrome) */}
