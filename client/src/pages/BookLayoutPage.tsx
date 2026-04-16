@@ -2221,7 +2221,7 @@ export default function BookLayoutPage() {
               usePortrait={false}
               autoSize={true}
               clickEventForward={true}
-              useMouseEvents={editingPageIndex === null}
+              useMouseEvents={false}
               swipeDistance={50}
               showPageCorners={true}
               disableFlipByClick={true}
@@ -3685,7 +3685,7 @@ function PageRenderer({
               onClick={(e) => { e.stopPropagation(); onStartEditing(pageIndex); }}
               onMouseDown={(e) => e.stopPropagation()}
               onPointerDown={(e) => e.stopPropagation()}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-3 bg-memorial-gold/90 hover:bg-memorial-gold text-black rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
+              className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-3 bg-memorial-gold/90 hover:bg-memorial-gold text-black rounded-full shadow-lg transition-opacity z-30 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
               title={t('book_layout.edit_content', 'Edit content')}
             >
               <Edit3 className="w-3.5 h-3.5" />
