@@ -16,6 +16,7 @@ import {
   Sparkles,
   Heart,
   Shield,
+  Mic,
 } from 'lucide-react';
 import { GlassCard, GlowingButton, OptimizedImage } from '../components/ui';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -279,7 +280,7 @@ export default function LandingPage() {
             >
               <Heart className="w-4 h-4 text-memorial-gold animate-pulse" />
               <span className="text-memorial-gold font-semibold text-sm sm:text-base">
-                {storiesWritten.toLocaleString()} {t('landing.hero.stories_written', isHebrew ? 'סיפורים כבר נכתבו' : 'stories already written')}
+                {storiesWritten.toLocaleString()} {t('landing.hero.stories_written')}
               </span>
             </motion.div>
 
@@ -314,26 +315,16 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.8 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6"
+              className="flex items-center justify-center"
             >
               <GlowingButton
                 variant="gold"
                 size="lg"
                 onClick={() => navigate('/register')}
-                className="px-6 sm:px-8 lg:px-12 py-3 sm:py-4 lg:py-5 text-sm sm:text-base lg:text-xl w-full sm:w-auto"
+                className="px-8 sm:px-12 lg:px-16 py-4 sm:py-5 lg:py-6 text-base sm:text-lg lg:text-2xl w-full sm:w-auto"
               >
-                <Feather className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
                 {t('landing.hero.cta_primary')}
-              </GlowingButton>
-
-              <GlowingButton
-                variant="cosmic"
-                size="lg"
-                onClick={() => navigate('/marketplace')}
-                className="px-6 sm:px-8 lg:px-12 py-3 sm:py-4 lg:py-5 text-sm sm:text-base lg:text-xl w-full sm:w-auto"
-              >
-                <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
-                {t('landing.hero.cta_secondary')}
               </GlowingButton>
             </motion.div>
 
@@ -376,6 +367,88 @@ export default function LandingPage() {
           </div>
         </motion.div>
       </motion.section>
+
+      {/* How It Works Section */}
+      <section className="relative py-16 sm:py-24 px-4 sm:px-6 bg-gradient-to-b from-deep-space via-[#111827] to-deep-space" aria-labelledby="how-it-works-heading">
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-12 sm:mb-16"
+          >
+            <h2 id="how-it-works-heading" className="text-2xl sm:text-4xl md:text-5xl font-display font-bold gradient-gold">
+              {t('landing.how_it_works.title')}
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4 lg:gap-8 items-start relative">
+            {/* Connecting line (desktop only) */}
+            <div className="hidden sm:block absolute top-16 left-[20%] right-[20%] h-0.5 bg-gradient-to-r from-memorial-gold/20 via-memorial-gold/50 to-memorial-gold/20" />
+
+            {/* Step 1 */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0, duration: 0.6 }}
+              className="flex flex-col items-center text-center relative z-10"
+            >
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-memorial-gold/20 to-memorial-gold/5 border-2 border-memorial-gold/40 flex items-center justify-center mb-4 sm:mb-6 shadow-lg shadow-memorial-gold/10">
+                <Mic className="w-8 h-8 sm:w-10 sm:h-10 text-memorial-gold" />
+              </div>
+              <span className="text-memorial-gold font-bold text-sm mb-2">01</span>
+              <h3 className="text-xl sm:text-2xl font-display font-bold text-white mb-2">
+                {t('landing.how_it_works.step1_title')}
+              </h3>
+              <p className="text-gray-400 text-sm sm:text-base">
+                {t('landing.how_it_works.step1_desc')}
+              </p>
+            </motion.div>
+
+            {/* Step 2 */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              className="flex flex-col items-center text-center relative z-10"
+            >
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-memorial-gold/20 to-memorial-gold/5 border-2 border-memorial-gold/40 flex items-center justify-center mb-4 sm:mb-6 shadow-lg shadow-memorial-gold/10">
+                <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 text-memorial-gold" />
+              </div>
+              <span className="text-memorial-gold font-bold text-sm mb-2">02</span>
+              <h3 className="text-xl sm:text-2xl font-display font-bold text-white mb-2">
+                {t('landing.how_it_works.step2_title')}
+              </h3>
+              <p className="text-gray-400 text-sm sm:text-base">
+                {t('landing.how_it_works.step2_desc')}
+              </p>
+            </motion.div>
+
+            {/* Step 3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+              className="flex flex-col items-center text-center relative z-10"
+            >
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-memorial-gold/20 to-memorial-gold/5 border-2 border-memorial-gold/40 flex items-center justify-center mb-4 sm:mb-6 shadow-lg shadow-memorial-gold/10">
+                <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-memorial-gold" />
+              </div>
+              <span className="text-memorial-gold font-bold text-sm mb-2">03</span>
+              <h3 className="text-xl sm:text-2xl font-display font-bold text-white mb-2">
+                {t('landing.how_it_works.step3_title')}
+              </h3>
+              <p className="text-gray-400 text-sm sm:text-base">
+                {t('landing.how_it_works.step3_desc')}
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
 
       {/* Live Ticker */}
       <motion.div
@@ -615,8 +688,8 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
-            {successStories.map((story, index) => (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {successStories.slice(0, 3).map((story, index) => (
               <motion.article
                 key={story.name}
                 initial={{ opacity: 0, x: index === 0 ? -30 : 30 }}

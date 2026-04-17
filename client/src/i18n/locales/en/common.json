@@ -420,10 +420,19 @@
   },
   "landing": {
     "hero": {
-      "title": "Preserve Your Loved One's Life Story",
-      "subtitle": "Write a memorial book that will last for generations. Guided writing with AI, dignified design, and a printed book to share with family and friends.",
-      "cta_primary": "Start Writing",
-      "cta_secondary": "View Memorial Books"
+      "title": "You have a story. We'll turn it into a book.",
+      "subtitle": "You don't need to know how to write. Just tell — we'll do the rest.",
+      "cta_primary": "Let's start — free",
+      "stories_written": "stories already written"
+    },
+    "how_it_works": {
+      "title": "How does it work?",
+      "step1_title": "Tell",
+      "step1_desc": "Answer simple questions",
+      "step2_title": "We write",
+      "step2_desc": "AI turns your story into a book",
+      "step3_title": "Book ready",
+      "step3_desc": "Digital or printed"
     },
     "trust": {
       "no_credit_card": "Start for Free",
