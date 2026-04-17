@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
-import { Search, Sparkles, Star, User, BookOpen, Eye, Shield } from 'lucide-react';
+import { Search, Sparkles, Star, User, BookOpen, Eye, Shield, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 import toast from 'react-hot-toast';
@@ -96,6 +96,16 @@ const TRUE_STORY_SUBCATEGORIES = [
 
 const CATEGORY_KEYS = Object.keys(BASE_CATEGORIES);
 
+// Quick filter pills with emoji icons for visual browsing
+const QUICK_FILTER_PILLS = [
+  { id: 'All', icon: '📚', label: { en: 'All', he: 'הכל' } },
+  { id: 'life_story', icon: '📖', label: { en: 'Life Stories', he: 'סיפורי חיים' } },
+  { id: 'tribute', icon: '🕯️', label: { en: 'Memorial', he: 'הנצחה' } },
+  { id: 'family_legacy', icon: '👨‍👩‍👧‍👦', label: { en: 'Family', he: 'משפחה' } },
+  { id: 'shared_memories', icon: '🎁', label: { en: 'Gifts', he: 'מתנות' } },
+  { id: 'testimony', icon: '✈️', label: { en: 'Travel', he: 'מסעות' } },
+];
+
 // Israeli-specific categories for Hebrew users (with trauma-informed design)
 const ISRAELI_CATEGORIES = [
   { id: 'October7', name: 'אירועי השבעה באוקטובר', icon: 'candle', hasSubcategories: true, isMemorial: true, image: '/img-isr/ארועי השבעה באוקטובר - קטגוריה ראשית.png' },
@@ -148,6 +158,18 @@ export default function MarketplacePage() {
   const [expandedIsraeliCategory, setExpandedIsraeliCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('createdAt');
   const [hoveredBook, setHoveredBook] = useState<string | null>(null);
+  const [quickFilter, setQuickFilter] = useState('All');
+
+  // Featured book: pick the highest-rated published book, or just the first one
+  const featuredBook = useMemo(() => {
+    if (books.length === 0) return null;
+    const sorted = [...books].sort((a, b) => {
+      const rA = a.qualityScore?.rating ?? a.qualityScore?.overallScore ?? 0;
+      const rB = b.qualityScore?.rating ?? b.qualityScore?.overallScore ?? 0;
+      return rB - rA;
+    });
+    return sorted[0];
+  }, [books]);
 
   // Determine if we should show Israeli categories (only in Hebrew)
   const isHebrew = language === 'he';
@@ -393,6 +415,148 @@ export default function MarketplacePage() {
 
         {/* Trending Books */}
         <TrendingBooks limit={6} title={t('marketplace.sections.trending')} />
+
+        {/* === Featured Story Hero === */}
+        {featuredBook && !loading && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            className="mb-10 sm:mb-14"
+          >
+            <div
+              className="relative w-full rounded-2xl overflow-hidden shadow-2xl"
+              style={{ minHeight: '280px' }}
+            >
+              {/* Parallax-like gradient background */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)',
+                }}
+              />
+              {/* Cover image as subtle background (parallax feel) */}
+              {featuredBook.coverDesign?.front?.imageUrl && (
+                <div
+                  className="absolute inset-0 opacity-20"
+                  style={{
+                    backgroundImage: `url(${featuredBook.coverDesign.front.imageUrl})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundAttachment: 'fixed',
+                  }}
+                />
+              )}
+              {/* Glass overlay */}
+              <div className="absolute inset-0 backdrop-blur-sm bg-black/30" />
+              {/* Gold accent border */}
+              <div className="absolute inset-0 rounded-2xl ring-1 ring-memorial-gold/30 shadow-[0_0_40px_rgba(218,165,32,0.15)]" />
+
+              {/* Content */}
+              <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 sm:gap-8 p-6 sm:p-8 md:p-10">
+                {/* Large cover image */}
+                <motion.div
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex-shrink-0"
+                >
+                  <div
+                    className="w-36 h-52 sm:w-44 sm:h-64 md:w-48 md:h-72 rounded-xl shadow-2xl overflow-hidden ring-2 ring-memorial-gold/40"
+                    style={{
+                      ...getBookCoverStyle(featuredBook),
+                      transform: 'perspective(800px) rotateY(-5deg)',
+                      transition: 'transform 0.4s ease',
+                    }}
+                  >
+                    {/* Title overlay on cover */}
+                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+                      <span className="text-white text-sm font-bold drop-shadow-lg">{featuredBook.title}</span>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Info */}
+                <motion.div
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="flex-1 text-center md:text-start"
+                >
+                  <span className="inline-block px-3 py-1 mb-3 bg-memorial-gold/20 text-memorial-gold text-xs sm:text-sm font-semibold rounded-full border border-memorial-gold/30">
+                    <Sparkles className="w-3.5 h-3.5 inline mr-1" />
+                    {language === 'he' ? 'הסיפור המומלץ' : 'Featured Story'}
+                  </span>
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-white mb-2 leading-tight">
+                    {featuredBook.title}
+                  </h2>
+                  <div className="flex items-center gap-2 justify-center md:justify-start text-gray-300 text-sm mb-3">
+                    <User className="w-4 h-4 text-memorial-gold/70" />
+                    <span>{featuredBook.author.name}</span>
+                    {featuredBook.qualityScore?.rating != null && (
+                      <>
+                        <span className="text-gray-600">|</span>
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-semibold text-yellow-300">{featuredBook.qualityScore.rating.toFixed(1)}</span>
+                      </>
+                    )}
+                  </div>
+                  {featuredBook.description && (
+                    <p className="text-gray-300 text-sm sm:text-base line-clamp-3 mb-5 max-w-xl">
+                      {featuredBook.description}
+                    </p>
+                  )}
+                  <GlowingButton
+                    variant="gold"
+                    size="lg"
+                    onClick={() => { window.location.href = `/book/${featuredBook._id}`; }}
+                  >
+                    <Eye className="w-5 h-5" />
+                    {language === 'he' ? 'קרא עכשיו' : 'Read Now'}
+                    <ChevronRight className="w-4 h-4" />
+                  </GlowingButton>
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* === Category Filter Pills with Icons === */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="mb-6 sm:mb-8"
+        >
+          <div
+            className="flex items-center gap-2 sm:gap-3 pb-3 overflow-x-auto scrollbar-hide -mx-3 px-3 sm:mx-0 sm:px-0"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            {QUICK_FILTER_PILLS.map((pill) => {
+              const isActive = quickFilter === pill.id;
+              return (
+                <motion.button
+                  key={pill.id}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setQuickFilter(pill.id);
+                    setSelectedCategory(pill.id);
+                    setExpandedIsraeliCategory(null);
+                  }}
+                  className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full font-medium whitespace-nowrap text-sm sm:text-base transition-all duration-300 border ${
+                    isActive
+                      ? 'bg-memorial-gold/20 text-memorial-gold border-memorial-gold/50 shadow-[0_0_16px_rgba(218,165,32,0.25)]'
+                      : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10 hover:border-white/20'
+                  }`}
+                >
+                  <span className="text-lg">{pill.icon}</span>
+                  <span>{pill.label[language]}</span>
+                </motion.button>
+              );
+            })}
+          </div>
+        </motion.div>
 
         {/* Glowing Category Tabs */}
         <motion.div
@@ -1451,6 +1615,7 @@ export default function MarketplacePage() {
                 transition={{ delay: index * 0.05 }}
                 onMouseEnter={() => setHoveredBook(book._id)}
                 onMouseLeave={() => setHoveredBook(null)}
+                className="card-3d-hover"
               >
                 <GlassCard
                   hover={true}
@@ -1474,11 +1639,20 @@ export default function MarketplacePage() {
                     </motion.div>
                   )}
 
-                  {/* Book Cover with 2:3 Aspect Ratio */}
+                  {/* Book Cover with 2:3 Aspect Ratio + 3D Perspective */}
                   <div className="relative mb-2 sm:mb-4 rounded-lg overflow-hidden group/cover">
                     <div
-                      className="aspect-[2/3] relative"
-                      style={getBookCoverStyle(book)}
+                      className="aspect-[2/3] relative transition-all duration-400 ease-out"
+                      style={{
+                        ...getBookCoverStyle(book),
+                        transform: hoveredBook === book._id
+                          ? 'perspective(800px) rotateY(0deg) translateZ(10px)'
+                          : 'perspective(800px) rotateY(-5deg)',
+                        boxShadow: hoveredBook === book._id
+                          ? '0 25px 50px rgba(0,0,0,0.4), 0 0 30px rgba(218,165,32,0.15)'
+                          : '0 10px 30px rgba(0,0,0,0.3)',
+                        transition: 'transform 0.4s ease, box-shadow 0.4s ease',
+                      }}
                     >
                       {/* Gradient Overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />

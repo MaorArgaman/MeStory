@@ -1136,12 +1136,22 @@
 
 /* Smooth card hover with perspective */
 .card-3d-hover {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
   transform-style: preserve-3d;
+  will-change: transform;
 }
 .card-3d-hover:hover {
-  transform: translateY(-4px) rotateX(2deg);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(218,165,32,0.1);
+  transform: translateY(-6px) scale(1.02) rotateX(2deg);
+  box-shadow: 0 25px 50px rgba(0,0,0,0.35), 0 0 35px rgba(218,165,32,0.15);
+}
+
+/* Hide scrollbar for filter pills */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* Page transition blur */
