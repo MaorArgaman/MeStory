@@ -2560,10 +2560,10 @@ export default function BookLayoutPage() {
                     </div>
 
                     <div className="flex items-center justify-center gap-2 text-memorial-gold animate-pulse">
-                      <span className="text-lg">→</span>
-                      <span className="text-lg">→</span>
-                      <span className="text-lg">→</span>
                       <span className="font-medium">כיוון הקריאה</span>
+                      <span className="text-lg">←</span>
+                      <span className="text-lg">←</span>
+                      <span className="text-lg">←</span>
                     </div>
                   </div>
 
@@ -3104,7 +3104,7 @@ export default function BookLayoutPage() {
                 <textarea
                   value={imagePrompt}
                   onChange={(e) => setImagePrompt(e.target.value)}
-                  placeholder="Describe the image you want to create..."
+                  placeholder={language === 'he' ? 'תאר את התמונה שאתה רוצה ליצור...' : 'Describe the image you want to create...'}
                   className="input w-full h-20 sm:h-24 resize-none mb-2 sm:mb-3 text-sm"
                 />
                 <button

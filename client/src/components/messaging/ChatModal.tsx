@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -43,6 +44,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
   bookId,
   bookTitle,
 }) => {
+  const { language } = useLanguage();
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -408,7 +410,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Write a message..."
+                placeholder={language === 'he' ? 'כתוב הודעה...' : 'Write a message...'}
                 className="flex-1 bg-white/10 border border-white/10 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
                 disabled={loading || sending}
               />
