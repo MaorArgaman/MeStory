@@ -2960,18 +2960,124 @@ export default function BookLayoutPage() {
                 </button>
               </div>
 
-              {/* Upload Option */}
+              {/* Upload Option — single or multiple */}
               <div className="mb-4 sm:mb-6">
-                <h3 className="text-sm font-semibold text-gray-300 mb-2 sm:mb-3">Upload Image</h3>
-                <label className="flex flex-col items-center justify-center w-full h-28 sm:h-32 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer hover:border-memorial-gold transition">
-                  <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mb-2" />
-                  <span className="text-xs sm:text-sm text-gray-400">Click to upload image</span>
-                  <span className="text-xs text-gray-500">PNG, JPG up to 10MB</span>
+                <h3 className="text-sm font-semibold text-gray-300 mb-2 sm:mb-3">
+                  {language === 'he' ? 'העלאת תמונות' : 'Upload Images'}
+                </h3>
+
+                {/* Single upload to specific page */}
+                <label className="flex flex-col items-center justify-center w-full h-24 sm:h-28 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer hover:border-memorial-gold transition mb-2">
+                  <Upload className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 mb-1" />
+                  <span className="text-xs sm:text-sm text-gray-400">
+                    {language === 'he' ? 'לחץ להעלאת תמונה לעמוד הנוכחי' : 'Upload to current page'}
+                  </span>
+                  <span className="text-xs text-gray-500">PNG, JPG — 10MB max</span>
                   <input
                     type="file"
                     accept="image/*"
                     className="hidden"
                     onChange={handleImageUpload}
+                  />
+                </label>
+
+                {/* Bulk upload — auto-distribute across chapter pages */}
+                <label className="flex flex-col items-center justify-center w-full h-24 sm:h-28 border-2 border-dashed border-memorial-gold/30 rounded-xl cursor-pointer hover:border-memorial-gold/60 hover:bg-memorial-gold/5 transition">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles className="w-4 h-4 text-memorial-gold" />
+                    <span className="text-xs sm:text-sm text-memorial-gold font-medium">
+                      {language === 'he' ? 'העלאת אלבום — מיקום אוטומטי' : 'Album upload — auto-placement'}
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    {language === 'he' ? 'בחר כמה תמונות, ה-AI ימקם אותן בפרקים' : 'Select multiple, AI places them in chapters'}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={async (e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length === 0) return;
+                      if (files.length > 20) {
+                        toast.error(language === 'he' ? 'מקסימום 20 תמונות' : 'Maximum 20 images');
+                        return;
+                      }
+
+                      toast.loading(
+                        language === 'he' ? `מעלה ${files.length} תמונות...` : `Uploading ${files.length} images...`,
+                        { id: 'bulk-upload' }
+                      );
+
+                      // Distribute images across chapter pages
+                      const chapterPages = pages
+                        .map((p, idx) => ({ page: p, index: idx }))
+                        .filter(p => p.page.type === 'chapter');
+
+                      if (chapterPages.length === 0) {
+                        toast.error(language === 'he' ? 'אין פרקים בספר' : 'No chapters found', { id: 'bulk-upload' });
+                        return;
+                      }
+
+                      let uploadedCount = 0;
+                      for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        if (!file.type.startsWith('image/') || file.size > 10 * 1024 * 1024) continue;
+
+                        // Distribute evenly across chapter pages
+                        const targetChapter = chapterPages[i % chapterPages.length];
+                        const pageIndex = targetChapter.index;
+
+                        try {
+                          const formData = new FormData();
+                          formData.append('image', file);
+                          formData.append('pageIndex', String(pageIndex));
+
+                          const response = await api.post(`/books/${bookId}/page-image`, formData, {
+                            headers: { 'Content-Type': 'multipart/form-data' },
+                          });
+
+                          if (response.data.success) {
+                            const imageData = response.data.data.image || response.data.data;
+                            const imageUrl = imageData.url || response.data.data.imageUrl;
+
+                            const newImage = {
+                              id: imageData._id || `img-${Date.now()}-${i}`,
+                              url: imageUrl,
+                              x: 15 + (i % 3) * 25,
+                              y: 20 + Math.floor(i / 3) * 25,
+                              width: 40,
+                              height: 35,
+                              rotation: 0,
+                            };
+
+                            setPages(prev => {
+                              const updated = [...prev];
+                              if (!updated[pageIndex].images) updated[pageIndex].images = [];
+                              updated[pageIndex].images.push(newImage as any);
+                              return updated;
+                            });
+                            uploadedCount++;
+                          }
+                        } catch (err) {
+                          console.error(`Failed to upload image ${i + 1}:`, err);
+                        }
+                      }
+
+                      if (uploadedCount > 0) {
+                        saveLayout(true);
+                        toast.success(
+                          language === 'he'
+                            ? `${uploadedCount} תמונות הועלו ומוקמו בפרקים!`
+                            : `${uploadedCount} images uploaded and placed!`,
+                          { id: 'bulk-upload' }
+                        );
+                        setShowImageModal(false);
+                      } else {
+                        toast.error(language === 'he' ? 'לא הצלחנו להעלות תמונות' : 'Failed to upload images', { id: 'bulk-upload' });
+                      }
+                    }}
                   />
                 </label>
               </div>
