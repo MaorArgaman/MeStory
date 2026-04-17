@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
 import Navbar from './Navbar';
 
+const logoIcon = '/img/logo-glow.png';
+
 interface LayoutProps {
   children: ReactNode;
 }
@@ -12,7 +14,7 @@ export default function Layout({ children }: LayoutProps) {
   const { isRTL } = useLanguage();
 
   return (
-    <div className="min-h-screen" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Skip Link for Accessibility - WCAG 2.4.1 */}
       <a
         href="#main-content"
@@ -21,9 +23,28 @@ export default function Layout({ children }: LayoutProps) {
         {t('accessibility.skip_to_content', 'Skip to main content')}
       </a>
       <Navbar />
-      <main className="pt-20" role="main" id="main-content" tabIndex={-1}>
+      <main className="pt-20 flex-1" role="main" id="main-content" tabIndex={-1}>
         {children}
       </main>
+
+      {/* Footer */}
+      <footer className="footer-paper relative bg-deep-space/90 border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col items-center gap-4">
+          <img
+            src={logoIcon}
+            alt="MeStory"
+            className="nav-logo-glow h-12 w-auto object-contain"
+          />
+          <p className="text-gray-400 text-sm text-center">
+            <span dir="rtl">נבנה עם ❤️ בישראל</span>
+            {' · '}
+            <span>Built with ❤️ in Israel</span>
+          </p>
+          <p className="text-gray-600 text-xs">
+            &copy; {new Date().getFullYear()} MeStory. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

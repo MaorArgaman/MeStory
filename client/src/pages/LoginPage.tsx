@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { Sparkles, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 // Legacy imports - keeping for fallback
 import _loginSideImageLegacy from '../assets/images/login-side-image.png';
 import _logoIconLegacy from '../assets/images/logo-icon.png';
@@ -12,14 +12,29 @@ import _logoIconLegacy from '../assets/images/logo-icon.png';
 const loginSideImage = '/img/new/hero-grandma-grandkids.png';
 const logoIcon = '/img/logo-glow.png';
 
+const rotatingQuotes = [
+  { he: 'אף פעם לא חשבתי שאני יכולה לכתוב ספר — רחל, בת 78', en: 'I never thought I could write a book — Rachel, age 78' },
+  { he: 'הנצחנו את הגיבור שלנו בספר שכל המשפחה גאה בו — משפחת כהן', en: 'We memorialized our hero in a book the whole family is proud of — The Cohen Family' },
+  { he: 'הסיפור של סבא נשמר לדורות הבאים — דנה, בת 32', en: 'Grandpa\'s story is preserved for future generations — Dana, age 32' },
+  { he: 'מהראיון הקצר יצא ספר שהפתיע את כולנו — יוסי, בן 45', en: 'From a short interview came a book that surprised us all — Yossi, age 45' },
+];
+
 export default function LoginPage() {
   const { t } = useTranslation('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [quoteIndex, setQuoteIndex] = useState(0);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setQuoteIndex((prev) => (prev + 1) % rotatingQuotes.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +98,27 @@ export default function LoginPage() {
                 <Sparkles className="w-6 h-6 text-memorial-gold" />
               </motion.div>
             ))}
+          </div>
+
+          {/* Rotating Quote Overlay */}
+          <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-8 py-5">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={quoteIndex}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.6 }}
+                className="rotating-quote text-center"
+              >
+                <p className="text-white/90 italic text-sm mb-1" dir="rtl">
+                  &ldquo;{rotatingQuotes[quoteIndex].he}&rdquo;
+                </p>
+                <p className="text-white/60 italic text-xs">
+                  &ldquo;{rotatingQuotes[quoteIndex].en}&rdquo;
+                </p>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>

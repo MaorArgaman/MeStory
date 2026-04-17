@@ -448,9 +448,9 @@ export default function FAQPage() {
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.3, ease: 'easeInOut' }}
-                            className="overflow-hidden"
+                            className="overflow-hidden accordion-content"
                           >
-                            <div className={`px-6 pb-6 ${isHebrew ? 'pr-20' : 'pl-20'}`}>
+                            <div className={`px-6 pb-6 warm-enter ${isHebrew ? 'pr-20' : 'pl-20'}`}>
                               <p className="text-gray-300 leading-relaxed">
                                 {item.answer[language]}
                               </p>

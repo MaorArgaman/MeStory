@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -16,6 +16,47 @@ import { api } from '../services/api';
 import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
+
+/**
+ * Hook that animates a number from 0 to the target value over a given duration.
+ */
+function useCountUp(target: number, duration = 1000) {
+  const [value, setValue] = useState(0);
+  const rafRef = useRef<number | null>(null);
+  const startedRef = useRef(false);
+
+  const start = useCallback(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    const startTime = performance.now();
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // ease-out quad
+      const eased = 1 - (1 - progress) * (1 - progress);
+      setValue(Math.round(eased * target));
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(animate);
+      }
+    };
+    rafRef.current = requestAnimationFrame(animate);
+  }, [target, duration]);
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  // Reset when target changes
+  useEffect(() => {
+    startedRef.current = false;
+    setValue(0);
+    if (target > 0) start();
+  }, [target, start]);
+
+  return value;
+}
 
 interface AuthorData {
   user: {
@@ -58,6 +99,48 @@ interface AuthorData {
     };
     createdAt: string;
   }>;
+}
+
+function AnimatedStatsGrid({ publishedBooks, totalReads, followers, rating, t }: {
+  publishedBooks: number;
+  totalReads: number;
+  followers: number;
+  rating: number;
+  t: (key: string) => string;
+}) {
+  const animBooks = useCountUp(publishedBooks);
+  const animReads = useCountUp(totalReads);
+  const animFollowers = useCountUp(followers);
+  const animRating = useCountUp(Math.round(rating * 10)); // animate integer, display as decimal
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="text-center">
+        <p className="text-3xl font-bold text-memorial-gold">
+          {animBooks}
+        </p>
+        <p className="text-gray-400 text-sm mt-1">{t('authorProfile.booksPublished')}</p>
+      </div>
+      <div className="text-center">
+        <p className="text-3xl font-bold text-memorial-gold">
+          {animReads.toLocaleString()}
+        </p>
+        <p className="text-gray-400 text-sm mt-1">{t('authorProfile.totalReads')}</p>
+      </div>
+      <div className="text-center">
+        <p className="text-3xl font-bold text-memorial-gold">{animFollowers}</p>
+        <p className="text-gray-400 text-sm mt-1">{t('authorProfile.followers')}</p>
+      </div>
+      {rating > 0 && (
+        <div className="text-center">
+          <p className="text-3xl font-bold text-memorial-gold">
+            {(animRating / 10).toFixed(1)}
+          </p>
+          <p className="text-gray-400 text-sm mt-1">{t('authorProfile.averageRating')}</p>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function AuthorProfilePage() {
@@ -398,37 +481,18 @@ export default function AuthorProfilePage() {
                 </div>
               )}
 
-              {/* Additional Stats */}
+              {/* Additional Stats with Count-Up Animation */}
               <div className="mt-8 pt-8 border-t border-white/10">
                 <h3 className="text-xl font-display font-semibold text-white mb-4">
                   {t('authorProfile.authorStatistics')}
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <div className="text-center">
-                    <p className="text-3xl font-bold gradient-gold">
-                      {author.stats.publishedBooks}
-                    </p>
-                    <p className="text-gray-400 text-sm mt-1">{t('authorProfile.booksPublished')}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-3xl font-bold gradient-gold">
-                      {author.stats.totalReads.toLocaleString()}
-                    </p>
-                    <p className="text-gray-400 text-sm mt-1">{t('authorProfile.totalReads')}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-3xl font-bold gradient-gold">{followersCount}</p>
-                    <p className="text-gray-400 text-sm mt-1">{t('authorProfile.followers')}</p>
-                  </div>
-                  {author.stats.rating > 0 && (
-                    <div className="text-center">
-                      <p className="text-3xl font-bold gradient-gold">
-                        {author.stats.rating.toFixed(1)}
-                      </p>
-                      <p className="text-gray-400 text-sm mt-1">{t('authorProfile.averageRating')}</p>
-                    </div>
-                  )}
-                </div>
+                <AnimatedStatsGrid
+                  publishedBooks={author.stats.publishedBooks}
+                  totalReads={author.stats.totalReads}
+                  followers={followersCount}
+                  rating={author.stats.rating}
+                  t={t}
+                />
               </div>
             </GlassCard>
           )}
