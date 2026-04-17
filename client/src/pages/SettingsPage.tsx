@@ -1,172 +1,109 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { api, uploadAvatar } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage, Language } from '../contexts/LanguageContext';
-import { useCurrency, Currency } from '../contexts/CurrencyContext';
-import { useTabKeyboardNavigation } from '../hooks/useModal';
 import {
   User,
-  DollarSign,
-  CreditCard,
-  TrendingUp,
   Download,
   Loader2,
   Check,
-  Crown,
   Mail,
   Save,
-  Shield,
   Bell,
   Lock,
-  Smartphone,
   AlertTriangle,
   Globe,
   FileDown,
   Camera,
+  Trash2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-type Tab = 'profile' | 'earnings' | 'billing' | 'security' | 'notifications';
-
-// Notification preferences interfaces
-interface EmailNotifications {
-  purchases: boolean;
-  subscriptions: boolean;
-  bookUpdates: boolean;
-  marketing: boolean;
-}
-
-interface PushNotifications {
-  purchases: boolean;
-  subscriptions: boolean;
-  bookUpdates: boolean;
-  mentions: boolean;
-}
-
-interface InAppNotifications {
-  purchases: boolean;
-  subscriptions: boolean;
-  bookUpdates: boolean;
-  mentions: boolean;
-  likes: boolean;
-  comments: boolean;
-  shares: boolean;
-  newFollowers: boolean;
-  messages: boolean;
-  payments: boolean;
-  qualityScore: boolean;
-  promotions: boolean;
-  system: boolean;
-}
-
-type EmailDigestFrequency = 'none' | 'daily' | 'weekly';
-
-interface NotificationPreferences {
-  id: string;
-  userId: string;
-  emailNotifications: EmailNotifications;
-  pushNotifications: PushNotifications;
-  inAppNotifications: InAppNotifications;
-  emailDigest: EmailDigestFrequency;
-  quietHoursStart: string | null;
-  quietHoursEnd: string | null;
-  quietHoursEnabled: boolean;
-}
-
-interface EarningsData {
-  earnings: {
-    total: number;
-    available: number;
-    withdrawn: number;
-    pending: number;
-  };
-  sales: {
-    totalBooks: number;
-    totalSales: number;
-    totalRevenue: number;
-  };
-  dailySales: Array<{ date: string; amount: number }>;
-  monthlySales: Array<{ month: string; amount: number }>;
-  topBooks: Array<{
-    id: string;
-    title: string;
-    sales: number;
-    revenue: string;
-    price: number;
-  }>;
-}
+// Simplified notification level
+type NotificationLevel = 'all' | 'important' | 'off';
 
 export default function SettingsPage() {
   const { t } = useTranslation('common');
   const { user, refreshUser } = useAuth();
   const { language, setLanguage } = useLanguage();
-  const { currency, setCurrency } = useCurrency();
-  const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [loading, setLoading] = useState(false);
-
-  // Tab keys for keyboard navigation
-  const tabKeys: Tab[] = ['profile', 'security', 'earnings', 'billing', 'notifications'];
-  const handleTabKeyDown = useTabKeyboardNavigation(tabKeys, activeTab, setActiveTab);
   const [languageLoading, setLanguageLoading] = useState(false);
-  const [currencyLoading, setCurrencyLoading] = useState(false);
 
   // Profile state
   const [name, setName] = useState(user?.name || '');
   const [email] = useState(user?.email || '');
-  const [bio, setBio] = useState(user?.profile?.bio || '');
   const [avatar, setAvatar] = useState(user?.profile?.avatar || '');
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  // Earnings state
-  const [earningsData, setEarningsData] = useState<EarningsData | null>(null);
-  const [loadingEarnings, setLoadingEarnings] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState('');
-
   // Security state
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [exportingData, setExportingData] = useState(false);
 
-  // Notifications state
-  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences | null>(null);
-  const [_loadingNotificationPrefs, setLoadingNotificationPrefs] = useState(false);
-  void _loadingNotificationPrefs; // Used only internally by loadNotificationPreferences
+  // Notifications state - simplified to 3 levels
+  const [notificationLevel, setNotificationLevel] = useState<NotificationLevel>('all');
   const [savingNotificationPrefs, setSavingNotificationPrefs] = useState(false);
 
-  useEffect(() => {
-    if (activeTab === 'earnings') {
-      loadEarnings();
-    }
-    if (activeTab === 'notifications') {
-      loadNotificationPreferences();
-    }
-  }, [activeTab]);
+  // Delete account state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
-  const loadNotificationPreferences = async () => {
+  useEffect(() => {
+    loadNotificationLevel();
+  }, []);
+
+  const loadNotificationLevel = async () => {
     try {
-      setLoadingNotificationPrefs(true);
       const response = await api.get('/notifications/preferences');
       if (response.data.success) {
-        setNotificationPrefs(response.data.data);
+        const prefs = response.data.data;
+        const emailAll = prefs.emailNotifications;
+        const allOn = emailAll.purchases && emailAll.subscriptions && emailAll.bookUpdates && emailAll.marketing;
+        const allOff = !emailAll.purchases && !emailAll.subscriptions && !emailAll.bookUpdates && !emailAll.marketing;
+        if (allOff) setNotificationLevel('off');
+        else if (allOn) setNotificationLevel('all');
+        else setNotificationLevel('important');
       }
     } catch (error) {
       console.error('Failed to load notification preferences:', error);
-      toast.error(t('settings.toast.load_notification_prefs_failed', 'Failed to load notification preferences'));
-    } finally {
-      setLoadingNotificationPrefs(false);
     }
   };
 
-  const saveNotificationPreferences = async (updates: Partial<NotificationPreferences>) => {
+  const handleNotificationLevelChange = async (level: NotificationLevel) => {
+    setNotificationLevel(level);
     try {
       setSavingNotificationPrefs(true);
+      let updates = {};
+      if (level === 'all') {
+        updates = {
+          emailNotifications: { purchases: true, subscriptions: true, bookUpdates: true, marketing: true },
+          pushNotifications: { purchases: true, subscriptions: true, bookUpdates: true, mentions: true },
+          inAppNotifications: { purchases: true, subscriptions: true, bookUpdates: true, mentions: true, likes: true, comments: true, shares: true, newFollowers: true, messages: true, payments: true, qualityScore: true, promotions: true, system: true },
+          quietHoursEnabled: false,
+        };
+      } else if (level === 'important') {
+        updates = {
+          emailNotifications: { purchases: true, subscriptions: true, bookUpdates: true, marketing: false },
+          pushNotifications: { purchases: true, subscriptions: false, bookUpdates: true, mentions: false },
+          inAppNotifications: { purchases: true, subscriptions: true, bookUpdates: true, mentions: false, likes: false, comments: false, shares: false, newFollowers: false, messages: true, payments: true, qualityScore: false, promotions: false, system: true },
+          quietHoursEnabled: false,
+        };
+      } else {
+        updates = {
+          emailNotifications: { purchases: false, subscriptions: false, bookUpdates: false, marketing: false },
+          pushNotifications: { purchases: false, subscriptions: false, bookUpdates: false, mentions: false },
+          inAppNotifications: { purchases: false, subscriptions: false, bookUpdates: false, mentions: false, likes: false, comments: false, shares: false, newFollowers: false, messages: false, payments: false, qualityScore: false, promotions: false, system: false },
+          quietHoursEnabled: false,
+        };
+      }
       const response = await api.put('/notifications/preferences', updates);
       if (response.data.success) {
-        setNotificationPrefs(response.data.data);
         toast.success(t('settings.toast.notification_prefs_saved', 'Notification preferences saved'));
       }
     } catch (error) {
@@ -177,98 +114,10 @@ export default function SettingsPage() {
     }
   };
 
-  const handleToggleEmailNotification = (key: keyof EmailNotifications) => {
-    if (!notificationPrefs) return;
-    const newValue = !notificationPrefs.emailNotifications[key];
-    const updates = {
-      emailNotifications: {
-        ...notificationPrefs.emailNotifications,
-        [key]: newValue,
-      },
-    };
-    setNotificationPrefs({ ...notificationPrefs, ...updates });
-    saveNotificationPreferences(updates);
-  };
-
-  const handleTogglePushNotification = (key: keyof PushNotifications) => {
-    if (!notificationPrefs) return;
-    const newValue = !notificationPrefs.pushNotifications[key];
-    const updates = {
-      pushNotifications: {
-        ...notificationPrefs.pushNotifications,
-        [key]: newValue,
-      },
-    };
-    setNotificationPrefs({ ...notificationPrefs, ...updates });
-    saveNotificationPreferences(updates);
-  };
-
-  const handleToggleInAppNotification = (key: keyof InAppNotifications) => {
-    if (!notificationPrefs) return;
-    const newValue = !notificationPrefs.inAppNotifications[key];
-    const updates = {
-      inAppNotifications: {
-        ...notificationPrefs.inAppNotifications,
-        [key]: newValue,
-      },
-    };
-    setNotificationPrefs({ ...notificationPrefs, ...updates });
-    saveNotificationPreferences(updates);
-  };
-
-  const handleEmailDigestChange = (value: EmailDigestFrequency) => {
-    if (!notificationPrefs) return;
-    const updates = { emailDigest: value };
-    setNotificationPrefs({ ...notificationPrefs, ...updates });
-    saveNotificationPreferences(updates);
-  };
-
-  const handleQuietHoursToggle = () => {
-    if (!notificationPrefs) return;
-    const newEnabled = !notificationPrefs.quietHoursEnabled;
-    const updates = {
-      quietHoursEnabled: newEnabled,
-      quietHoursStart: newEnabled ? (notificationPrefs.quietHoursStart || '22:00') : notificationPrefs.quietHoursStart,
-      quietHoursEnd: newEnabled ? (notificationPrefs.quietHoursEnd || '08:00') : notificationPrefs.quietHoursEnd,
-    };
-    setNotificationPrefs({ ...notificationPrefs, ...updates });
-    saveNotificationPreferences(updates);
-  };
-
-  const handleQuietHoursChange = (field: 'quietHoursStart' | 'quietHoursEnd', value: string) => {
-    if (!notificationPrefs) return;
-    const updates = { [field]: value };
-  // Suppress unused warnings — handlers kept for potential advanced settings toggle
-  void handleToggleEmailNotification; void handleTogglePushNotification; void handleToggleInAppNotification; void handleEmailDigestChange; void handleQuietHoursToggle; void handleQuietHoursChange;
-
-    setNotificationPrefs({ ...notificationPrefs, ...updates });
-    saveNotificationPreferences(updates);
-  };
-
-  const loadEarnings = async () => {
-    try {
-      setLoadingEarnings(true);
-      const response = await api.get('/user/earnings');
-      if (response.data.success) {
-        setEarningsData(response.data.data);
-      }
-    } catch (error) {
-      console.error('Failed to load earnings:', error);
-      toast.error(t('settings.toast.load_earnings_failed'));
-    } finally {
-      setLoadingEarnings(false);
-    }
-  };
-
   const handleUpdateProfile = async () => {
     try {
       setLoading(true);
-      const response = await api.put('/user/profile', {
-        name,
-        bio,
-        avatar,
-      });
-
+      const response = await api.put('/user/profile', { name, avatar });
       if (response.data.success) {
         toast.success(t('settings.toast.profile_updated'));
         await refreshUser();
@@ -284,20 +133,15 @@ export default function SettingsPage() {
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!validTypes.includes(file.type)) {
       toast.error(t('settings.toast.invalid_image_type', 'Please upload a valid image (JPG, PNG, WebP, GIF)'));
       return;
     }
-
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error(t('settings.toast.image_too_large', 'Image must be less than 5MB'));
       return;
     }
-
     try {
       setAvatarUploading(true);
       const avatarUrl = await uploadAvatar(file);
@@ -309,67 +153,32 @@ export default function SettingsPage() {
       toast.error(error.message || t('settings.toast.avatar_failed', 'Failed to upload profile picture'));
     } finally {
       setAvatarUploading(false);
-      // Reset input
-      if (avatarInputRef.current) {
-        avatarInputRef.current.value = '';
-      }
-    }
-  };
-
-  const handleWithdraw = async () => {
-    const amount = parseFloat(withdrawAmount);
-
-    if (!amount || amount < 10) {
-      toast.error(t('settings.toast.min_withdrawal'));
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await api.post('/user/withdraw', { amount });
-
-      if (response.data.success) {
-        toast.success(t('settings.toast.withdrawal_submitted'));
-        setWithdrawAmount('');
-        loadEarnings();
-      }
-    } catch (error: any) {
-      console.error('Failed to request withdrawal:', error);
-      toast.error(error.response?.data?.error || t('settings.toast.withdrawal_failed'));
-    } finally {
-      setLoading(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
     }
   };
 
   const handleChangePassword = async () => {
-    // Validation
     if (!oldPassword || !newPassword || !confirmPassword) {
       toast.error(t('settings.toast.fill_passwords'));
       return;
     }
-
     if (newPassword !== confirmPassword) {
       toast.error(t('settings.toast.passwords_mismatch'));
       return;
     }
-
     if (newPassword.length < 6) {
       toast.error(t('settings.toast.password_min_length'));
       return;
     }
-
     try {
       setLoading(true);
-      const response = await api.put('/user/password', {
-        oldPassword,
-        newPassword,
-      });
-
+      const response = await api.put('/user/password', { oldPassword, newPassword });
       if (response.data.success) {
         toast.success(t('settings.toast.password_changed'));
         setOldPassword('');
         setNewPassword('');
         setConfirmPassword('');
+        setShowPasswordForm(false);
       }
     } catch (error: any) {
       console.error('Failed to change password:', error);
@@ -392,27 +201,10 @@ export default function SettingsPage() {
     }
   };
 
-  const handleCurrencyChange = async (newCurrency: Currency) => {
-    try {
-      setCurrencyLoading(true);
-      await setCurrency(newCurrency);
-      toast.success(newCurrency === 'ILS' ? t('settings.toast.currency_ils') : t('settings.toast.currency_usd'));
-    } catch (error) {
-      console.error('Failed to change currency:', error);
-      toast.error(t('settings.toast.currency_failed'));
-    } finally {
-      setCurrencyLoading(false);
-    }
-  };
-
   const handleExportData = async () => {
     try {
       setExportingData(true);
-      const response = await api.get('/user/export-data', {
-        responseType: 'blob',
-      });
-
-      // Create a blob from the response and trigger download
+      const response = await api.get('/user/export-data', { responseType: 'blob' });
       const blob = new Blob([response.data], { type: 'application/json' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -422,7 +214,6 @@ export default function SettingsPage() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-
       toast.success(t('settings.toast.export_success'));
     } catch (error: any) {
       console.error('Failed to export data:', error);
@@ -432,20 +223,36 @@ export default function SettingsPage() {
     }
   };
 
-  const tabs = [
-    { id: 'profile' as Tab, label: t('settings.tabs.profile'), icon: User },
-    { id: 'security' as Tab, label: t('settings.tabs.security'), icon: Shield },
-    { id: 'earnings' as Tab, label: t('settings.tabs.earnings'), icon: DollarSign },
-    { id: 'billing' as Tab, label: t('settings.tabs.billing'), icon: CreditCard },
-    { id: 'notifications' as Tab, label: t('settings.tabs.notifications'), icon: Bell },
-  ];
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') return;
+    try {
+      setDeletingAccount(true);
+      await api.delete('/user/account');
+      toast.success(t('settings.account.deleted', 'Account deleted'));
+      window.location.href = '/';
+    } catch (error: any) {
+      console.error('Failed to delete account:', error);
+      toast.error(error.response?.data?.error || t('settings.account.delete_failed', 'Failed to delete account'));
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.08, duration: 0.4, ease: 'easeOut' as const },
+    }),
+  };
 
   return (
     <div className="min-h-screen p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-1 sm:mb-2">
+        <div className="mb-8 text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-memorial-gold to-amber-300 bg-clip-text text-transparent mb-2">
             {t('settings.title')}
           </h1>
           <p className="text-sm sm:text-base text-gray-400">
@@ -453,826 +260,370 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
-          {/* Sidebar Tabs - Horizontal scroll on mobile */}
-          <div className="lg:w-64 flex-shrink-0">
-            <div className="glass-strong rounded-xl p-2 sm:p-4 lg:sticky lg:top-8 overflow-x-auto">
-              <div className="flex lg:flex-col gap-1 sm:gap-2 min-w-max lg:min-w-0" role="tablist">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <button
-                      type="button"
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      onKeyDown={handleTabKeyDown}
-                      role="tab"
-                      aria-selected={activeTab === tab.id}
-                      tabIndex={activeTab === tab.id ? 0 : -1}
-                      className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-all whitespace-nowrap ${
-                        activeTab === tab.id
-                          ? 'bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border border-indigo-500/50 text-white'
-                          : 'text-gray-400 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span className="font-medium text-sm sm:text-base">{tab.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+        <div className="space-y-5">
+          {/* Profile Card */}
+          <motion.section
+            custom={0}
+            initial="hidden"
+            animate="visible"
+            variants={cardVariants}
+            className="rounded-2xl border border-memorial-gold/20 bg-white/[0.04] backdrop-blur-xl p-5 sm:p-7 shadow-lg"
+          >
+            <h2 className="text-lg sm:text-xl font-bold mb-5 flex items-center gap-2.5 text-memorial-gold">
+              <User className="w-5 h-5" />
+              {t('settings.profile.title')}
+            </h2>
 
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <AnimatePresence mode="wait">
-              {/* Profile Tab */}
-              {activeTab === 'profile' && (
-                <motion.div
-                  key="profile"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8"
-                >
-                  <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-                    {t('settings.profile.title')}
-                  </h2>
-
-                  <div className="space-y-4 sm:space-y-6">
-                    {/* Language Selection - First for visibility */}
-                    <div className="p-3 sm:p-4 rounded-xl bg-gradient-to-r from-indigo-600/10 to-purple-600/10 border border-indigo-500/30">
-                      <label className="block text-sm font-medium mb-2 sm:mb-3 flex items-center gap-2">
-                        <Globe className="w-4 h-4 text-indigo-400" />
-                        {t('settings.profile.language')}
-                      </label>
-                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                        <button
-                          type="button"
-                          onClick={() => handleLanguageChange('en')}
-                          disabled={languageLoading}
-                          className={`flex-1 flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl border transition-all ${
-                            language === 'en'
-                              ? 'bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border-indigo-500/50 text-white'
-                              : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
-                          }`}
-                        >
-                          {languageLoading && language !== 'en' ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                          ) : (
-                            <>
-                              <span className="text-xl sm:text-2xl">🇺🇸</span>
-                              <span className="font-medium text-sm sm:text-base">English</span>
-                              {language === 'en' && <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />}
-                            </>
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleLanguageChange('he')}
-                          disabled={languageLoading}
-                          className={`flex-1 flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl border transition-all ${
-                            language === 'he'
-                              ? 'bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border-indigo-500/50 text-white'
-                              : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
-                          }`}
-                        >
-                          {languageLoading && language !== 'he' ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                          ) : (
-                            <>
-                              <span className="text-xl sm:text-2xl">🇮🇱</span>
-                              <span className="font-medium text-sm sm:text-base">עברית</span>
-                              {language === 'he' && <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />}
-                            </>
-                          )}
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        {t('settings.profile.language_help')}
-                      </p>
-                    </div>
-
-                    {/* Currency */}
-                    <div>
-                      <label className="block text-sm font-medium mb-2 sm:mb-3 flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-green-400" />
-                        {t('currency.select')}
-                      </label>
-                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                        <button
-                          type="button"
-                          onClick={() => handleCurrencyChange('USD')}
-                          disabled={currencyLoading}
-                          className={`flex-1 flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl border transition-all ${
-                            currency === 'USD'
-                              ? 'bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-green-500/50 text-white'
-                              : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
-                          }`}
-                        >
-                          {currencyLoading && currency !== 'USD' ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                          ) : (
-                            <>
-                              <span className="text-xl sm:text-2xl">$</span>
-                              <span className="font-medium text-sm sm:text-base">USD</span>
-                              {currency === 'USD' && <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />}
-                            </>
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleCurrencyChange('ILS')}
-                          disabled={currencyLoading}
-                          className={`flex-1 flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl border transition-all ${
-                            currency === 'ILS'
-                              ? 'bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-green-500/50 text-white'
-                              : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
-                          }`}
-                        >
-                          {currencyLoading && currency !== 'ILS' ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                          ) : (
-                            <>
-                              <span className="text-xl sm:text-2xl">&#8362;</span>
-                              <span className="font-medium text-sm sm:text-base">ILS</span>
-                              {currency === 'ILS' && <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />}
-                            </>
-                          )}
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        {t('settings.profile.currency_help')}
-                      </p>
-                    </div>
-
-                    {/* Name */}
-                    <div>
-                      <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        {t('settings.profile.name')}
-                      </label>
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="input"
-                        placeholder={t('settings.profile.name_placeholder')}
-                      />
-                    </div>
-
-                    {/* Email (readonly) */}
-                    <div>
-                      <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        {t('settings.profile.email')}
-                      </label>
-                      <input
-                        type="email"
-                        value={email}
-                        disabled
-                        className="input opacity-50 cursor-not-allowed"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        {t('settings.profile.email_help')}
-                      </p>
-                    </div>
-
-                    {/* Bio */}
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        {t('settings.profile.bio')}
-                      </label>
-                      <textarea
-                        value={bio}
-                        onChange={(e) => setBio(e.target.value)}
-                        className="input min-h-[100px] resize-none"
-                        placeholder={t('settings.profile.bio_placeholder')}
-                      />
-                    </div>
-
-                    {/* Avatar Upload */}
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        {t('settings.profile.avatar')}
-                      </label>
-                      <div className="flex items-center gap-4">
-                        {/* Avatar Preview */}
-                        <div className="relative">
-                          <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-memorial-gold/20 to-purple-500/20 border-2 border-white/10 flex items-center justify-center">
-                            {avatar ? (
-                              <img
-                                src={avatar}
-                                alt={t('settings.profile.avatar')}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <User className="w-10 h-10 text-gray-400" />
-                            )}
-                          </div>
-                          {avatarUploading && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
-                              <Loader2 className="w-6 h-6 animate-spin text-white" />
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Upload Button */}
-                        <div className="flex-1">
-                          <input
-                            ref={avatarInputRef}
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp,image/gif"
-                            onChange={handleAvatarUpload}
-                            className="hidden"
-                            id="avatar-upload"
-                          />
-                          <label
-                            htmlFor="avatar-upload"
-                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all
-                              ${avatarUploading
-                                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                : 'bg-white/10 hover:bg-white/20 text-white border border-white/10 hover:border-white/20'
-                              }`}
-                          >
-                            {avatarUploading ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Camera className="w-4 h-4" />
-                            )}
-                            <span>{t('settings.profile.upload_avatar', 'Upload Picture')}</span>
-                          </label>
-                          <p className="mt-2 text-xs text-gray-400">
-                            {t('settings.profile.avatar_hint', 'JPG, PNG, WebP or GIF. Max 5MB.')}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Save Button */}
-                    <button
-                      onClick={handleUpdateProfile}
-                      disabled={loading}
-                      className="btn-primary px-8 py-3 flex items-center gap-2"
-                    >
-                      {loading ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <Save className="w-5 h-5" />
-                      )}
-                      {t('settings.profile.save')}
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Earnings Tab */}
-              {activeTab === 'earnings' && (
-                <motion.div
-                  key="earnings"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                >
-                  <div className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-                      <h2 className="text-xl sm:text-2xl font-bold">
-                        {t('settings.earnings_tab.title')}
-                      </h2>
-                      <button
-                        onClick={loadEarnings}
-                        className="btn-secondary text-sm py-2 px-4"
-                      >
-                        {t('settings.earnings_tab.refresh')}
-                      </button>
-                    </div>
-
-                    {loadingEarnings ? (
-                      <div className="flex items-center justify-center py-12 sm:py-20">
-                        <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin text-indigo-500" />
-                      </div>
-                    ) : earningsData ? (
-                      <>
-                        {/* Earnings Cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-                          {/* Total Earnings */}
-                          <div className="glass rounded-xl p-4 sm:p-6">
-                            <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
-                              <span className="text-xs sm:text-sm text-gray-400">
-                                {t('settings.earnings_tab.total_earnings')}
-                              </span>
-                            </div>
-                            <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-                              ${earningsData.earnings.total.toFixed(2)}
-                            </div>
-                          </div>
-
-                          {/* Available Balance */}
-                          <div className="glass rounded-xl p-4 sm:p-6">
-                            <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                              <Download className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" />
-                              <span className="text-xs sm:text-sm text-gray-400">
-                                {t('settings.earnings_tab.available')}
-                              </span>
-                            </div>
-                            <div className="text-2xl sm:text-3xl font-bold text-white">
-                              ${earningsData.earnings.available.toFixed(2)}
-                            </div>
-                          </div>
-
-                          {/* Total Sales */}
-                          <div className="glass rounded-xl p-4 sm:p-6 sm:col-span-2 md:col-span-1">
-                            <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
-                              <span className="text-xs sm:text-sm text-gray-400">
-                                {t('settings.earnings_tab.total_sales')}
-                              </span>
-                            </div>
-                            <div className="text-2xl sm:text-3xl font-bold text-white">
-                              {earningsData.sales.totalSales}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Simple Chart (SVG visualization) */}
-                        <div className="glass rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
-                          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
-                            {t('settings.earnings_tab.revenue_trend')}
-                          </h3>
-                          <div className="h-36 sm:h-48 flex items-end justify-between gap-1 sm:gap-2">
-                            {earningsData.monthlySales.slice(-6).map((month, index) => {
-                              const maxAmount = Math.max(...earningsData.monthlySales.map(m => m.amount));
-                              const height = maxAmount > 0 ? (month.amount / maxAmount) * 100 : 0;
-
-                              return (
-                                <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                                  <motion.div
-                                    initial={{ height: 0 }}
-                                    animate={{ height: `${height}%` }}
-                                    transition={{ delay: index * 0.1 }}
-                                    className="w-full bg-gradient-to-t from-indigo-600 to-purple-600 rounded-t-lg min-h-[20px]"
-                                    title={`$${month.amount.toFixed(2)}`}
-                                  />
-                                  <span className="text-xs text-gray-400">
-                                    {month.month.split('-')[1]}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Top Books */}
-                        <div className="glass rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
-                          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
-                            {t('settings.earnings_tab.top_books')}
-                          </h3>
-                          <div className="space-y-2 sm:space-y-3">
-                            {earningsData.topBooks.map((book) => (
-                              <div
-                                key={book.id}
-                                className="flex items-center justify-between p-2 sm:p-3 bg-white/5 rounded-lg"
-                              >
-                                <div className="flex-1 min-w-0">
-                                  <div className="font-medium text-white text-sm sm:text-base truncate">{book.title}</div>
-                                  <div className="text-xs sm:text-sm text-gray-400">
-                                    {t('settings.earnings_tab.sales_format', { sales: book.sales, amount: book.price })}
-                                  </div>
-                                </div>
-                                <div className="text-base sm:text-lg font-bold text-green-400 ml-2">
-                                  ${book.revenue}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Withdrawal Section */}
-                        <div className="glass rounded-xl p-4 sm:p-6">
-                          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
-                            {t('settings.earnings_tab.withdraw_title')}
-                          </h3>
-                          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                            <div className="flex-1">
-                              <input
-                                type="number"
-                                value={withdrawAmount}
-                                onChange={(e) => setWithdrawAmount(e.target.value)}
-                                className="input"
-                                placeholder={t('settings.earnings_tab.withdraw_placeholder')}
-                                min="10"
-                                step="0.01"
-                              />
-                            </div>
-                            <button
-                              onClick={handleWithdraw}
-                              disabled={loading || !withdrawAmount || parseFloat(withdrawAmount) < 10}
-                              className="btn-primary px-6 sm:px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {loading ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                              ) : (
-                                t('settings.earnings_tab.withdraw_button')
-                              )}
-                            </button>
-                          </div>
-                          <p className="text-xs text-gray-400 mt-2">
-                            {t('settings.earnings_tab.withdraw_help')}
-                          </p>
-                        </div>
-                      </>
+            <div className="space-y-5">
+              {/* Avatar */}
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-memorial-gold/20 to-purple-500/20 border-2 border-memorial-gold/30 flex items-center justify-center">
+                    {avatar ? (
+                      <img src={avatar} alt={t('settings.profile.avatar')} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="text-center py-20">
-                        <p className="text-gray-400">
-                          {t('settings.earnings_tab.no_data')}
-                        </p>
-                      </div>
+                      <User className="w-10 h-10 text-gray-400" />
                     )}
                   </div>
-                </motion.div>
-              )}
+                  {avatarUploading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                      <Loader2 className="w-6 h-6 animate-spin text-white" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                    id="avatar-upload"
+                  />
+                  <label
+                    htmlFor="avatar-upload"
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all text-sm ${
+                      avatarUploading
+                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                        : 'bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold border border-memorial-gold/30 hover:border-memorial-gold/50'
+                    }`}
+                  >
+                    {avatarUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+                    <span>{t('settings.profile.upload_avatar', 'Upload Picture')}</span>
+                  </label>
+                  <p className="mt-1.5 text-xs text-gray-500">
+                    {t('settings.profile.avatar_hint', 'JPG, PNG, WebP or GIF. Max 5MB.')}
+                  </p>
+                </div>
+              </div>
 
-              {/* Billing Tab */}
-              {activeTab === 'billing' && (
-                <motion.div
-                  key="billing"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8"
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-medium mb-1.5 text-gray-300">
+                  {t('settings.profile.name')}
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="input"
+                  placeholder={t('settings.profile.name_placeholder')}
+                />
+              </div>
+
+              {/* Email (readonly) */}
+              <div>
+                <label className="block text-sm font-medium mb-1.5 flex items-center gap-2 text-gray-300">
+                  <Mail className="w-4 h-4" />
+                  {t('settings.profile.email', 'Email')}
+                </label>
+                <input type="email" value={email} disabled className="input opacity-50 cursor-not-allowed" />
+                <p className="text-xs text-gray-500 mt-1">{t('settings.profile.email_help')}</p>
+              </div>
+
+              {/* Save */}
+              <button
+                onClick={handleUpdateProfile}
+                disabled={loading}
+                className="btn-primary w-full sm:w-auto px-8 py-3 flex items-center justify-center gap-2 text-base"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                {t('settings.profile.save')}
+              </button>
+            </div>
+          </motion.section>
+
+          {/* Notifications Card */}
+          <motion.section
+            custom={1}
+            initial="hidden"
+            animate="visible"
+            variants={cardVariants}
+            className="rounded-2xl border border-memorial-gold/20 bg-white/[0.04] backdrop-blur-xl p-5 sm:p-7 shadow-lg"
+          >
+            <h2 className="text-lg sm:text-xl font-bold mb-4 flex items-center gap-2.5 text-memorial-gold">
+              <Bell className="w-5 h-5" />
+              {t('settings.notifications.title')}
+            </h2>
+            <p className="text-sm text-gray-400 mb-4">{t('settings.notifications.subtitle')}</p>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              {([
+                { value: 'all' as NotificationLevel, label: language === 'he' ? '\u05D4\u05DB\u05DC' : 'All', desc: language === 'he' ? '\u05E7\u05D1\u05DC\u05D5 \u05D0\u05EA \u05DB\u05DC \u05D4\u05D4\u05EA\u05E8\u05D0\u05D5\u05EA' : 'Receive all notifications' },
+                { value: 'important' as NotificationLevel, label: language === 'he' ? '\u05E8\u05E7 \u05D7\u05E9\u05D5\u05D1' : 'Important only', desc: language === 'he' ? '\u05E8\u05DB\u05D9\u05E9\u05D5\u05EA, \u05EA\u05E9\u05DC\u05D5\u05DE\u05D9\u05DD \u05D5\u05DE\u05E2\u05E8\u05DB\u05EA' : 'Purchases, payments & system' },
+                { value: 'off' as NotificationLevel, label: language === 'he' ? '\u05DB\u05D1\u05D5\u05D9' : 'Off', desc: language === 'he' ? '\u05DC\u05DC\u05D0 \u05D4\u05EA\u05E8\u05D0\u05D5\u05EA' : 'No notifications' },
+              ]).map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => handleNotificationLevelChange(option.value)}
+                  disabled={savingNotificationPrefs}
+                  className={`flex-1 p-4 rounded-xl border-2 transition-all text-center ${
+                    notificationLevel === option.value
+                      ? 'border-memorial-gold bg-memorial-gold/10 text-white'
+                      : 'border-white/10 text-gray-400 hover:text-white hover:border-white/20 hover:bg-white/5'
+                  }`}
                 >
-                  <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-                    {t('settings.billing.title')}
-                  </h2>
+                  <div className="font-semibold text-base mb-1">{option.label}</div>
+                  <div className="text-xs opacity-70">{option.desc}</div>
+                  {notificationLevel === option.value && (
+                    <Check className="w-4 h-4 mx-auto mt-2 text-memorial-gold" />
+                  )}
+                </button>
+              ))}
+            </div>
 
-                  {/* Current Plan */}
-                  <div className="glass rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-3 sm:mb-4">
-                      <div className="flex items-center gap-3">
-                        {user?.role === 'premium' && (
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
-                            <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-gray-900" />
-                          </div>
-                        )}
-                        <div>
-                          <h3 className="text-base sm:text-lg font-semibold capitalize">
-                            {t('settings.billing.plan')}: {user?.role}
-                          </h3>
-                          <p className="text-xs sm:text-sm text-gray-400">
-                            {user?.credits === 999999
-                              ? t('settings.billing.unlimited')
-                              : user?.credits.toLocaleString()}{' '}
-                            {t('user.credits')}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => window.location.href = '/subscription'}
-                        className="btn-secondary px-4 sm:px-6 py-2 text-sm w-full sm:w-auto"
-                      >
-                        {t('settings.billing.change_plan')}
-                      </button>
-                    </div>
-                  </div>
+            {savingNotificationPrefs && (
+              <div className="flex items-center gap-2 mt-3 text-sm text-gray-400">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {t('common.saving', 'Saving...')}
+              </div>
+            )}
+          </motion.section>
 
-                  {/* Subscription Details */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between py-3 border-b border-white/10">
-                      <span className="text-gray-400">{t('settings.billing.status')}</span>
-                      <span className="flex items-center gap-2 text-green-400">
-                        <Check className="w-4 h-4" />
-                        {t('settings.billing.active')}
-                      </span>
-                    </div>
+          {/* Language Card */}
+          <motion.section
+            custom={2}
+            initial="hidden"
+            animate="visible"
+            variants={cardVariants}
+            className="rounded-2xl border border-memorial-gold/20 bg-white/[0.04] backdrop-blur-xl p-5 sm:p-7 shadow-lg"
+          >
+            <h2 className="text-lg sm:text-xl font-bold mb-4 flex items-center gap-2.5 text-memorial-gold">
+              <Globe className="w-5 h-5" />
+              {t('settings.language.title', 'Language')}
+            </h2>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={() => handleLanguageChange('he')}
+                disabled={languageLoading}
+                className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border-2 transition-all ${
+                  language === 'he'
+                    ? 'border-memorial-gold bg-memorial-gold/10 text-white'
+                    : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {languageLoading && language !== 'he' ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <span className="text-2xl">&#x1F1EE;&#x1F1F1;</span>
+                    <span className="font-medium text-base">{'\u05E2\u05D1\u05E8\u05D9\u05EA'}</span>
+                    {language === 'he' && <Check className="w-5 h-5 text-memorial-gold" />}
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleLanguageChange('en')}
+                disabled={languageLoading}
+                className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl border-2 transition-all ${
+                  language === 'en'
+                    ? 'border-memorial-gold bg-memorial-gold/10 text-white'
+                    : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {languageLoading && language !== 'en' ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <span className="text-2xl">&#x1F1FA;&#x1F1F8;</span>
+                    <span className="font-medium text-base">English</span>
+                    {language === 'en' && <Check className="w-5 h-5 text-memorial-gold" />}
+                  </>
+                )}
+              </button>
+            </div>
+          </motion.section>
 
-                    {user?.subscription && (
-                      <>
-                        <div className="flex items-center justify-between py-3 border-b border-white/10">
-                          <span className="text-gray-400">{t('settings.billing.billing_cycle')}</span>
-                          <span className="text-white">{t('settings.billing.monthly')}</span>
-                        </div>
+          {/* Change Password Card */}
+          <motion.section
+            custom={3}
+            initial="hidden"
+            animate="visible"
+            variants={cardVariants}
+            className="rounded-2xl border border-memorial-gold/20 bg-white/[0.04] backdrop-blur-xl p-5 sm:p-7 shadow-lg"
+          >
+            <h2 className="text-lg sm:text-xl font-bold mb-4 flex items-center gap-2.5 text-memorial-gold">
+              <Lock className="w-5 h-5" />
+              {t('settings.security.change_password')}
+            </h2>
 
-                        <div className="flex items-center justify-between py-3 border-b border-white/10">
-                          <span className="text-gray-400">{t('settings.billing.next_billing')}</span>
-                          <span className="text-white">
-                            {new Date(user.subscription.endDate).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </motion.div>
-              )}
+            {!showPasswordForm ? (
+              <button
+                onClick={() => setShowPasswordForm(true)}
+                className="w-full sm:w-auto px-6 py-3 rounded-xl border border-memorial-gold/30 text-memorial-gold hover:bg-memorial-gold/10 transition-all font-medium"
+              >
+                {t('settings.security.change_password')}
+              </button>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium mb-1.5 text-gray-300">
+                    {t('settings.security.current_password')}
+                  </label>
+                  <input
+                    type="password"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    className="input"
+                    placeholder={t('settings.security.current_password_placeholder', '********')}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5 text-gray-300">
+                    {t('settings.security.new_password')}
+                  </label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="input"
+                    placeholder={t('settings.security.new_password_placeholder', '********')}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5 text-gray-300">
+                    {t('settings.security.confirm_password')}
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="input"
+                    placeholder={t('settings.security.confirm_password_placeholder', '********')}
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={loading}
+                    className="btn-primary px-6 py-3 flex items-center gap-2"
+                  >
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Lock className="w-5 h-5" />}
+                    {t('settings.security.update_password')}
+                  </button>
+                  <button
+                    onClick={() => { setShowPasswordForm(false); setOldPassword(''); setNewPassword(''); setConfirmPassword(''); }}
+                    className="px-6 py-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+                  >
+                    {t('common.cancel', 'Cancel')}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </motion.section>
 
-              {/* Security Tab */}
-              {activeTab === 'security' && (
-                <motion.div
-                  key="security"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                >
-                  {/* Change Password */}
-                  <div className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6">
-                    <div className="flex items-start sm:items-center gap-3 mb-4 sm:mb-6">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                        <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl sm:text-2xl font-bold">
-                          {t('settings.security.password_title')}
-                        </h2>
-                        <p className="text-gray-400 text-xs sm:text-sm">
-                          {t('settings.security.password_subtitle')}
-                        </p>
-                      </div>
-                    </div>
+          {/* Download Data Card */}
+          <motion.section
+            custom={4}
+            initial="hidden"
+            animate="visible"
+            variants={cardVariants}
+            className="rounded-2xl border border-memorial-gold/20 bg-white/[0.04] backdrop-blur-xl p-5 sm:p-7 shadow-lg"
+          >
+            <h2 className="text-lg sm:text-xl font-bold mb-2 flex items-center gap-2.5 text-memorial-gold">
+              <FileDown className="w-5 h-5" />
+              {t('settings.security.export_title', 'Download My Data')}
+            </h2>
+            <p className="text-sm text-gray-400 mb-4">
+              {t('settings.security.export_description', 'Download a copy of all your data, including your profile, books, and activity.')}
+            </p>
+            <button
+              onClick={handleExportData}
+              disabled={exportingData}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl border border-memorial-gold/30 text-memorial-gold hover:bg-memorial-gold/10 transition-all font-medium flex items-center justify-center gap-2"
+            >
+              {exportingData ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+              {t('settings.security.export_button', 'Download Data')}
+            </button>
+          </motion.section>
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          {t('settings.security.current_password')}
-                        </label>
-                        <input
-                          type="password"
-                          value={oldPassword}
-                          onChange={(e) => setOldPassword(e.target.value)}
-                          className="input"
-                          placeholder={t('settings.security.current_password_placeholder')}
-                        />
-                      </div>
+          {/* Delete Account Card */}
+          <motion.section
+            custom={5}
+            initial="hidden"
+            animate="visible"
+            variants={cardVariants}
+            className="rounded-2xl border border-red-500/30 bg-red-500/[0.03] backdrop-blur-xl p-5 sm:p-7 shadow-lg"
+          >
+            <h2 className="text-lg sm:text-xl font-bold mb-2 flex items-center gap-2.5 text-red-400">
+              <Trash2 className="w-5 h-5" />
+              {t('settings.account.delete_account')}
+            </h2>
+            <p className="text-sm text-gray-400 mb-4">{t('settings.account.delete_warning')}</p>
 
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          {t('settings.security.new_password')}
-                        </label>
-                        <input
-                          type="password"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          className="input"
-                          placeholder={t('settings.security.new_password_placeholder')}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          {t('settings.security.confirm_password')}
-                        </label>
-                        <input
-                          type="password"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="input"
-                          placeholder={t('settings.security.confirm_password_placeholder')}
-                        />
-                      </div>
-
-                      <button
-                        onClick={handleChangePassword}
-                        disabled={loading}
-                        className="btn-primary px-8 py-3 flex items-center gap-2"
-                      >
-                        {loading ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <Lock className="w-5 h-5" />
-                        )}
-                        {t('settings.security.update_password')}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Active Sessions */}
-                  <div className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8">
-                    <div className="flex items-start sm:items-center gap-3 mb-4 sm:mb-6">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0">
-                        <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl sm:text-2xl font-bold">
-                          {t('settings.security.sessions_title')}
-                        </h2>
-                        <p className="text-gray-400 text-xs sm:text-sm">
-                          {t('settings.security.sessions_subtitle')}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      {/* Current Session */}
-                      <div className="glass rounded-xl p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-3">
-                            <Smartphone className="w-5 h-5 text-green-400 mt-1" />
-                            <div>
-                              <div className="font-semibold text-white flex items-center gap-2">
-                                Windows PC - Chrome
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400">
-                                  {t('settings.security.current')}
-                                </span>
-                              </div>
-                              <div className="text-sm text-gray-400 mt-1">
-                                {t('settings.security.last_active', { time: t('notifications.time.just_now') })}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                IP: 192.168.1.1 • Tel Aviv, Israel
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Other Sessions (Mock Data) */}
-                      <div className="glass rounded-xl p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-3">
-                            <Smartphone className="w-5 h-5 text-gray-400 mt-1" />
-                            <div>
-                              <div className="font-semibold text-white">
-                                iPhone 13 - Safari
-                              </div>
-                              <div className="text-sm text-gray-400 mt-1">
-                                {t('settings.security.last_active', { time: t('notifications.time.days_ago', { count: 2 }) })}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                IP: 192.168.1.15 • Tel Aviv, Israel
-                              </div>
-                            </div>
-                          </div>
-                          <button className="text-sm text-red-400 hover:text-red-300 transition">
-                            {t('settings.security.revoke')}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                        <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-                        <p className="text-sm text-yellow-200">
-                          {t('settings.security.security_warning')}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Data Export Section (GDPR) */}
-                  <div className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8 mt-4 sm:mt-6">
-                    <div className="flex items-start sm:items-center gap-3 mb-4 sm:mb-6">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center flex-shrink-0">
-                        <FileDown className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl sm:text-2xl font-bold">
-                          {t('settings.security.export_title')}
-                        </h2>
-                        <p className="text-gray-400 text-xs sm:text-sm">
-                          {t('settings.security.export_subtitle')}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <p className="text-sm text-gray-300">
-                        {t('settings.security.export_description')}
-                      </p>
-
-                      <ul className="text-sm text-gray-400 space-y-1 list-disc list-inside">
-                        <li>{t('settings.security.export_includes_profile')}</li>
-                        <li>{t('settings.security.export_includes_books')}</li>
-                        <li>{t('settings.security.export_includes_summaries')}</li>
-                        <li>{t('settings.security.export_includes_transactions')}</li>
-                        <li>{t('settings.security.export_includes_activity')}</li>
-                      </ul>
-
-                      <button
-                        onClick={handleExportData}
-                        disabled={exportingData}
-                        className="btn-primary px-8 py-3 flex items-center gap-2"
-                      >
-                        {exportingData ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <FileDown className="w-5 h-5" />
-                        )}
-                        {t('settings.security.export_button')}
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Notifications Tab */}
-              {activeTab === 'notifications' && (
-                <motion.div
-                  key="notifications"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
-                  {/* Simplified notification presets */}
-                  <div className="glass-strong rounded-xl p-4 sm:p-6 lg:p-8">
-                    <div className="flex items-start sm:items-center gap-3 mb-6">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0">
-                        <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <h2 className="text-xl sm:text-2xl font-bold">
-                          {t('settings.notifications_tab.title', 'Notifications')}
-                        </h2>
-                        <p className="text-gray-400 text-xs sm:text-sm">
-                          {t('settings.notifications_tab.subtitle', 'Choose how you want to receive updates')}
-                        </p>
-                      </div>
-                      {savingNotificationPrefs && (
-                        <div className="flex items-center gap-2 text-sm text-gray-400">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          {t('common.saving', 'Saving...')}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Simple 3-preset notification selection */}
-                    <div className="space-y-3 mt-4">
-                      {[
-                        { id: 'all', label: language === 'he' ? 'הכל — קבל את כל ההתראות' : 'Everything — get all notifications', icon: '🔔' },
-                        { id: 'essential', label: language === 'he' ? 'רק חשוב — רכישות ועדכוני ספר' : 'Essential — purchases & book updates only', icon: '✅' },
-                        { id: 'off', label: language === 'he' ? 'כבוי — ללא התראות' : 'Off — no notifications', icon: '🔕' },
-                      ].map((preset) => {
-                        const currentPreset = !notificationPrefs ? 'essential' :
-                          (notificationPrefs.emailNotifications.purchases &&
-                           notificationPrefs.emailNotifications.marketing) ? 'all' :
-                          notificationPrefs.emailNotifications.purchases ? 'essential' : 'off';
-
-                        return (
-                          <button
-                            key={preset.id}
-                            onClick={async () => {
-                              const allOn = preset.id === 'all';
-                              const essentialOn = preset.id === 'essential' || preset.id === 'all';
-                              const allOff = preset.id === 'off';
-                              try {
-                                await api.put('/user/notification-preferences', {
-                                  emailNotifications: {
-                                    purchases: essentialOn,
-                                    subscriptions: essentialOn,
-                                    bookUpdates: essentialOn,
-                                    marketing: allOn,
-                                  },
-                                  pushNotifications: {
-                                    purchases: essentialOn,
-                                    subscriptions: essentialOn,
-                                    bookUpdates: essentialOn,
-                                    mentions: allOn,
-                                  },
-                                  inAppNotifications: {
-                                    purchases: essentialOn,
-                                    subscriptions: essentialOn,
-                                    bookUpdates: essentialOn,
-                                    mentions: allOn,
-                                    likes: allOn,
-                                    comments: allOn,
-                                    shares: allOn,
-                                    newFollowers: allOn,
-                                    messages: essentialOn,
-                                    payments: essentialOn,
-                                    qualityScore: allOn,
-                                    promotions: allOn,
-                                    system: essentialOn,
-                                  },
-                                  emailDigest: allOff ? 'none' : 'weekly',
-                                  quietHoursEnabled: false,
-                                });
-                                toast.success(language === 'he' ? 'הגדרות התראות עודכנו' : 'Notifications updated');
-                                loadNotificationPreferences();
-                              } catch (err) {
-                                toast.error(language === 'he' ? 'שגיאה בעדכון' : 'Failed to update');
-                              }
-                            }}
-                            className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all text-right ${
-                              currentPreset === preset.id
-                                ? 'bg-white/10 border-2 border-memorial-gold'
-                                : 'bg-white/5 border border-white/10 hover:bg-white/10'
-                            }`}
-                          >
-                            <span className="text-2xl">{preset.icon}</span>
-                            <span className="font-medium text-white flex-1">{preset.label}</span>
-                            {currentPreset === preset.id && (
-                              <div className="w-3 h-3 rounded-full bg-memorial-gold" />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Old notification toggles removed — simplified to presets */}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+            {!showDeleteConfirm ? (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-full sm:w-auto px-6 py-3 rounded-xl border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-all font-medium"
+              >
+                {t('settings.account.delete_account')}
+              </button>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="space-y-4"
+              >
+                <div className="flex items-start gap-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-200">
+                    {language === 'he'
+                      ? '\u05E4\u05E2\u05D5\u05DC\u05D4 \u05D6\u05D5 \u05DC\u05D0 \u05E0\u05D9\u05EA\u05E0\u05EA \u05DC\u05D1\u05D9\u05D8\u05D5\u05DC. \u05D4\u05E7\u05DC\u05D3 "DELETE" \u05DC\u05D0\u05D9\u05E9\u05D5\u05E8.'
+                      : 'This cannot be undone. Type "DELETE" to confirm.'}
+                  </p>
+                </div>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  className="input"
+                  placeholder="DELETE"
+                />
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={deleteConfirmText !== 'DELETE' || deletingAccount}
+                    className="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium transition-all flex items-center gap-2"
+                  >
+                    {deletingAccount ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                    {t('settings.account.delete_account')}
+                  </button>
+                  <button
+                    onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }}
+                    className="px-6 py-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+                  >
+                    {t('common.cancel', 'Cancel')}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </motion.section>
         </div>
       </div>
     </div>
