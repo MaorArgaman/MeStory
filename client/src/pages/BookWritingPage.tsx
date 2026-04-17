@@ -921,9 +921,15 @@ export default function BookWritingPage() {
                       <span className="flex-1 truncate text-base lg:text-sm font-medium text-white lg:text-gray-200">
                         {chapter.title}
                       </span>
+                      <span className="flex-shrink-0 text-xs" title={chapter.wordCount > 0 ? (isHebrew ? 'יש תוכן' : 'Has content') : (isHebrew ? 'ריק' : 'Empty')}>
+                        {chapter.wordCount > 0 ? '🟢' : '⚪'}
+                      </span>
                     </div>
-                    <p className="text-sm lg:text-xs text-gray-400 mt-2 lg:mt-1">
+                    <p className="text-sm lg:text-xs text-gray-400 mt-2 lg:mt-1 flex items-center gap-1">
                       {chapter.wordCount} {t('editor.statistics.words_unit')}
+                      {chapter.wordCount > 0 && (
+                        <span className="text-green-400/60">✓</span>
+                      )}
                     </p>
                   </button>
                   <button
@@ -1038,8 +1044,13 @@ export default function BookWritingPage() {
                 {/* Rich Text Editor - Google Docs page view */}
                 <div className="flex-1 overflow-y-auto relative px-3 sm:px-4 lg:px-6 py-4 bg-slate-800/30 z-10">
                   <div
-                    className="editor-paper"
-                    style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
+                    className={`editor-paper ${enhancing ? 'ring-2 ring-memorial-gold/30 transition-all' : 'ring-0 transition-all'}`}
+                    style={{
+                      transform: `scale(${zoomLevel / 100})`,
+                      transformOrigin: 'top center',
+                      backgroundImage: 'url(/img/new/texture-paper.png)',
+                      backgroundSize: '512px 512px',
+                    }}
                   >
                     {editor && (
                       <BubbleMenu
@@ -1059,7 +1070,12 @@ export default function BookWritingPage() {
                         />
                       </BubbleMenu>
                     )}
-                    <EditorContent editor={editor} />
+                    <EditorContent
+                      editor={editor}
+                      style={{
+                        cursor: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23DAA520' stroke-width='2'%3E%3Cpath d='M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z'/%3E%3C/path%3E%3C/svg%3E") 2 18, text`,
+                      }}
+                    />
                   </div>
                 </div>
 

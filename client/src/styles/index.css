@@ -1180,3 +1180,131 @@
 .stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
 .stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
 .stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+
+/* ==================== TYPOGRAPHY SCALE ==================== */
+
+.text-display { font: 700 48px/1.1 'Cinzel', serif; letter-spacing: -0.02em; }
+.text-title { font: 700 32px/1.2 'Cinzel', serif; letter-spacing: -0.01em; }
+.text-heading { font: 600 24px/1.3 'Playfair Display', serif; }
+.text-subheading { font: 600 18px/1.4 'Inter', sans-serif; }
+.text-body { font: 400 16px/1.6 'Inter', sans-serif; }
+.text-caption { font: 400 13px/1.4 'Inter', sans-serif; letter-spacing: 0.02em; }
+.text-book { font: 400 14px/1.7 'David Libre', serif; }
+.text-book-title { font: 700 22px/1.2 'Cinzel', serif; }
+.text-handwriting { font: 400 18px/1.5 'Caveat', cursive; }
+
+/* ==================== COLOR TOKENS ==================== */
+
+:root {
+  /* Royal — default, memorial */
+  --theme-bg: #0a0a1f;
+  --theme-text: #fefdfb;
+  --theme-accent: #DAA520;
+
+  /* Warm — life stories, family */
+  --theme-warm-bg: #faf6ef;
+  --theme-warm-text: #2d2118;
+  --theme-warm-accent: #c75b39;
+
+  /* Festive — gifts, celebrations */
+  --theme-festive-bg: #1a0a20;
+  --theme-festive-text: #fff5e6;
+  --theme-festive-accent: #e6c35c;
+
+  /* Nostalgic — grandparent stories, vintage */
+  --theme-nostalgic-bg: #f5efe0;
+  --theme-nostalgic-text: #3d3225;
+  --theme-nostalgic-accent: #8b7355;
+
+  /* Modern — travel, young people */
+  --theme-modern-bg: #fafafa;
+  --theme-modern-text: #1a1a1a;
+  --theme-modern-accent: #2563eb;
+}
+
+/* ==================== NAVBAR PREMIUM EFFECTS ==================== */
+
+/* Logo glow pulse */
+.nav-logo-glow {
+  filter: drop-shadow(0 0 8px rgba(218,165,32,0.3));
+  transition: filter 0.3s ease;
+}
+.nav-logo-glow:hover {
+  filter: drop-shadow(0 0 16px rgba(218,165,32,0.6));
+}
+
+/* Notification bell shake */
+@keyframes bell-shake {
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(12deg); }
+  30% { transform: rotate(-10deg); }
+  45% { transform: rotate(8deg); }
+  60% { transform: rotate(-6deg); }
+  75% { transform: rotate(3deg); }
+}
+.bell-shake {
+  animation: bell-shake 0.6s ease-in-out;
+}
+
+/* ==================== FOOTER ==================== */
+
+.footer-paper {
+  background-image: url('/img/new/texture-paper-2.png');
+  background-size: 512px 512px;
+  background-repeat: repeat;
+}
+
+/* ==================== TOAST ENHANCEMENTS ==================== */
+
+/* Success toast sparkle */
+@keyframes toast-sparkle {
+  0% { box-shadow: 0 0 0 0 rgba(218,165,32,0.4); }
+  50% { box-shadow: 0 0 15px 5px rgba(218,165,32,0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(218,165,32,0); }
+}
+.toast-success-glow {
+  animation: toast-sparkle 0.6s ease-out;
+}
+
+/* ==================== BOOK SPINNER (replaces circle spinner) ==================== */
+
+@keyframes book-spin {
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
+}
+.spinner-book {
+  width: 40px;
+  height: 50px;
+  background: linear-gradient(135deg, #DAA520, #c9a84c);
+  border-radius: 2px 6px 6px 2px;
+  box-shadow: -3px 0 0 #8b6914, inset 5px 0 10px rgba(0,0,0,0.2);
+  animation: book-spin 1.2s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+/* ==================== FAQ ACCORDION ==================== */
+
+.accordion-content {
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.accordion-content[data-open="false"] {
+  max-height: 0;
+  opacity: 0;
+}
+
+.accordion-content[data-open="true"] {
+  max-height: 500px;
+  opacity: 1;
+}
+
+/* ==================== LOGIN ROTATING QUOTE ==================== */
+
+@keyframes quote-fade {
+  0%, 100% { opacity: 0; transform: translateY(10px); }
+  10%, 90% { opacity: 1; transform: translateY(0); }
+}
+.rotating-quote {
+  animation: quote-fade 6s ease-in-out infinite;
+}
