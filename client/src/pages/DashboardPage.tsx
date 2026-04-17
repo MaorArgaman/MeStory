@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { api } from '../services/api';
 import { exportBookAsPdfAsync } from '../utils/asyncExport';
-import { Plus, Loader2, BookOpen, Edit, Upload, Mic, PenTool, MessageCircle, FileUp } from 'lucide-react';
+import { Plus, Loader2, BookOpen, Edit, Upload, Mic, PenTool, MessageCircle, FileUp, Lightbulb } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import CreateBookWizard from '../components/dashboard/CreateBookWizard';
@@ -22,9 +22,35 @@ import MemorialSection from '../components/memorial/MemorialSection';
 import MyCollaborationsSection from '../components/collaboration/MyCollaborationsSection';
 
 // Memorial-themed dashboard images from public folder
-const emptyDashboard = '/img/memorial-hero.png';
 const dashboardHero = '/img/new/hero-soldiers-unit.png';
 const dashboardCtaMicrophone = '/img/new/card-microphone.png';
+
+const TIPS_HE = [
+  'איזה ריח מזכיר לך את הבית שגדלת בו?',
+  'מה הדבר הראשון שאתה זוכר מהילדות?',
+  'ספר על אדם שהשפיע על חייך',
+  'מה היית רוצה שהנכדים שלך יידעו?',
+  'תאר יום מושלם מהעבר',
+  'מה המנגינה שמחזירה אותך בזמן?',
+  'ספר על הפעם הראשונה ש...',
+];
+
+const TIPS_EN = [
+  'What smell reminds you of the home you grew up in?',
+  'What is the first thing you remember from childhood?',
+  'Tell about a person who influenced your life',
+  'What would you like your grandchildren to know?',
+  'Describe a perfect day from the past',
+  'What melody takes you back in time?',
+  'Tell about the first time you...',
+];
+
+function getDayOfYear(): number {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = now.getTime() - start.getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
 
 interface BookItem {
   id: string;
@@ -347,9 +373,26 @@ export default function DashboardPage() {
         </div>
         <div className="relative z-10 max-w-7xl mx-auto">
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">{t('dashboard.title')}</h1>
-          <p className="text-sm sm:text-base text-gray-300">
+          <p className="text-sm sm:text-base text-gray-300 mb-4">
             {t('dashboard.welcome', { name: user?.name, credits: user?.credits })}
           </p>
+
+          {/* Tip of the Day */}
+          <div className="glass rounded-xl px-4 py-3 border border-amber-500/20 bg-amber-900/10 backdrop-blur-sm max-w-xl">
+            <div className="flex items-start gap-3">
+              <Lightbulb className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs font-semibold text-amber-400/80 mb-1">
+                  {language === 'he' ? 'השראה להיום' : 'Writing prompt of the day'}
+                </p>
+                <p className="text-sm text-gray-200 leading-relaxed">
+                  {language === 'he'
+                    ? TIPS_HE[getDayOfYear() % TIPS_HE.length]
+                    : TIPS_EN[getDayOfYear() % TIPS_EN.length]}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -485,40 +528,45 @@ export default function DashboardPage() {
           </div>
         ) : books.length === 0 ? (
           /* Empty State */
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="flex flex-col items-center justify-center py-16 px-6"
-          >
-            <motion.img
-              src={emptyDashboard}
-              alt={t('dashboard.empty.title')}
-              className="w-full max-w-xs md:max-w-sm h-auto object-contain mb-8 opacity-90"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 0.9 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            />
-            <h2
-              className="text-4xl font-bold gradient-gold mb-4 text-center"
-              style={{ fontFamily: "'Cinzel', serif" }}
+          <div className="warm-enter relative rounded-2xl overflow-hidden py-20 px-6">
+            {/* Background Image */}
+            <div className="absolute inset-0 z-0">
+              <img
+                src="/img/new/onboarding-tree.png"
+                alt=""
+                className="w-full h-full object-cover opacity-50"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-deep-space/40" />
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="relative z-10 flex flex-col items-center justify-center"
             >
-              {t('dashboard.empty.title')}
-            </h2>
-            <p className="text-gray-400 text-lg mb-8 text-center max-w-md">
-              {t('dashboard.empty.subtitle')}
-            </p>
-            <motion.button
-              type="button"
-              onClick={openWizard}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="btn-primary px-8 py-4 text-lg font-semibold flex items-center gap-3 shadow-glow-gold"
-            >
-              <Plus className="w-6 h-6" />
-              {t('dashboard.empty.create_first')}
-            </motion.button>
-          </motion.div>
+              <h2
+                className="text-3xl sm:text-4xl lg:text-5xl font-bold gradient-gold mb-4 text-center"
+                style={{ fontFamily: "'Cinzel', serif" }}
+              >
+                {t('dashboard.empty.headline', '\u05D4\u05E1\u05D9\u05E4\u05D5\u05E8 \u05E9\u05DC\u05DA \u05DE\u05D7\u05DB\u05D4 \u05DC\u05D4\u05D9\u05DB\u05EA\u05D1')}
+              </h2>
+              <p className="text-gray-300 text-base sm:text-lg mb-10 text-center max-w-md leading-relaxed">
+                {t('dashboard.empty.sub_headline', '\u05DC\u05DB\u05DC \u05D0\u05D7\u05D3 \u05D9\u05E9 \u05E1\u05D9\u05E4\u05D5\u05E8. \u05D1\u05D5\u05D0\u05D5 \u05E0\u05EA\u05D7\u05D9\u05DC \u05DC\u05E1\u05E4\u05E8 \u05D0\u05EA \u05E9\u05DC\u05DA')}
+              </p>
+              <motion.button
+                type="button"
+                onClick={openWizard}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="fab-glow px-8 py-4 text-lg font-semibold flex items-center gap-3 rounded-full bg-memorial-gold/90 text-deep-space hover:bg-memorial-gold transition-colors"
+              >
+                <Plus className="w-6 h-6" />
+                {t('dashboard.empty.create_first', '\u05D1\u05D5\u05D0\u05D5 \u05E0\u05EA\u05D7\u05D9\u05DC')}
+              </motion.button>
+            </motion.div>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Create New Book Card */}
