@@ -70,6 +70,47 @@ interface BookData {
   };
 }
 
+// Simple rotating writing tip component for the sidebar
+function WritingTipRotator({ isHebrew }: { isHebrew: boolean }) {
+  const tips = isHebrew
+    ? [
+        'נסה לתאר ריח או צליל שאתה זוכר',
+        'ספר מה הרגשת באותו רגע',
+        'תאר את המקום כאילו אתה שם עכשיו',
+        'מה היית אומר לעצמך הצעיר?',
+        'איזה שיר או טעם מחזיר אותך לשם?',
+        'נסה להתחיל עם משפט קצר ופשוט',
+      ]
+    : [
+        'Try describing a smell or sound you remember',
+        'Tell what you felt in that moment',
+        'Describe the place as if you are there now',
+        'What would you say to your younger self?',
+        'What song or taste takes you back there?',
+        'Try starting with a short, simple sentence',
+      ];
+
+  const [tipIndex, setTipIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTipIndex((prev) => (prev + 1) % tips.length);
+    }, 12000);
+    return () => clearInterval(interval);
+  }, [tips.length]);
+
+  return (
+    <div className="rounded-xl bg-amber-500/5 border border-amber-500/15 p-3 text-center" dir={isHebrew ? 'rtl' : 'ltr'}>
+      <p className="text-xs text-amber-400/80 mb-1">
+        {isHebrew ? '💡 טיפ לכתיבה' : '💡 Writing tip'}
+      </p>
+      <p className="text-sm text-amber-200/90 leading-relaxed">
+        &ldquo;{tips[tipIndex]}&rdquo;
+      </p>
+    </div>
+  );
+}
+
 export default function BookWritingPage() {
   const { bookId } = useParams();
   const navigate = useNavigate();
@@ -1112,7 +1153,7 @@ export default function BookWritingPage() {
         `}>
           {/* Mobile Close Button */}
           <div className="lg:hidden flex items-center justify-between p-3 border-b border-white/10">
-            <span className="text-sm font-semibold text-gray-300">{t('editor.tabs.ai_analysis')}</span>
+            <span className="text-sm font-semibold text-gray-300">{isHebrew ? 'עוזר כתיבה' : 'Writing Helper'}</span>
             <button
               onClick={() => setShowRightSidebar(false)}
               className="btn-ghost p-2"
@@ -1121,138 +1162,159 @@ export default function BookWritingPage() {
             </button>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="flex border-b border-white/10 p-2 gap-1">
-            <button
-              onClick={() => setActiveTab('copilot')}
-              className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-all ${
-                activeTab === 'copilot'
-                  ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
-                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{t('editor.tabs.ai_assistant')}</span>
-              <span className="sm:hidden">{t('editor.tabs.ai')}</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('plot')}
-              className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-all ${
-                activeTab === 'plot'
-                  ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
-                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
-              }`}
-            >
-              <Target className="w-3.5 h-3.5" />
-              {t('editor.tabs.plot')}
-            </button>
-            <button
-              onClick={() => setActiveTab('analysis')}
-              className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-2 sm:px-3 rounded-lg text-xs font-medium transition-all ${
-                activeTab === 'analysis'
-                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
-              }`}
-            >
-              <PenTool className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{t('editor.tabs.analysis')}</span>
-              <span className="sm:hidden">{t('editor.tabs.stats')}</span>
-            </button>
-          </div>
-
-          {/* Tab Content */}
+          {/* Simple Writing Helper Panel */}
           <div className="flex-1 overflow-y-auto p-3 sm:p-4">
-            <div className="space-y-4 sm:space-y-6">
-              {/* Writing Guidance Alert */}
-              {guidance && activeTab === 'copilot' && (
-                <WritingGuidanceAlert
-                  guidance={guidance}
-                  onDismiss={dismissGuidance}
-                  onApplySuggestion={(_text, insertable) => {
-                    if (insertable && editor) {
-                      editor.chain().focus().insertContent(insertable).run();
-                      setSaved(false);
-                    }
-                    dismissGuidance();
-                  }}
-                />
-              )}
+            <div className="space-y-4 sm:space-y-5">
+              {/* Panel Title */}
+              <div className="text-center">
+                <h2 className="text-lg font-semibold text-white flex items-center justify-center gap-2">
+                  <Sparkles className="w-5 h-5 text-indigo-400" />
+                  {isHebrew ? 'עוזר כתיבה' : 'Writing Helper'}
+                </h2>
+                <p className="text-xs text-gray-400 mt-1">
+                  {isHebrew ? 'לחץ על כפתור ותן ל-AI לעזור לך' : 'Click a button and let AI help you'}
+                </p>
+              </div>
 
-              {/* AI Copilot Tab */}
-              {activeTab === 'copilot' && (
-                <>
-                  {currentChapter ? (
-                    <AICopilot
-                      currentText={content}
-                      genre={book.genre}
-                      bookTitle={book.title}
-                      chapterTitle={currentChapter.title}
-                      onInsertText={handleInsertText}
-                    />
-                  ) : (
-                    <div className="card p-4">
-                      <p className="text-sm text-gray-400 text-center py-8">
-                        {t('editor.ai.select_chapter')}
-                      </p>
-                    </div>
-                  )}
+              {/* Quick Action Buttons */}
+              <div className="space-y-2">
+                {currentChapter ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        if (editor) {
+                          // Use AI copilot to help start writing
+                          handleInsertText('');
+                          // Trigger the AICopilot suggestion flow
+                          const copilotEl = document.querySelector('[data-copilot-suggest]') as HTMLButtonElement;
+                          if (copilotEl) copilotEl.click();
+                        }
+                      }}
+                      className="w-full text-right py-3 px-4 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 hover:border-indigo-500/40 text-indigo-200 text-sm font-medium transition-all flex items-center gap-3"
+                      dir={isHebrew ? 'rtl' : 'ltr'}
+                    >
+                      <span className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                        <Sparkles className="w-4 h-4 text-indigo-400" />
+                      </span>
+                      {isHebrew ? 'עזור לי להתחיל' : 'Help me start'}
+                    </button>
 
-                  {/* Stats Panel */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <BarChart3 className="w-5 h-5 text-purple-400" />
-                      <h2 className="text-sm font-semibold text-gray-300">{t('editor.statistics.title')}</h2>
-                    </div>
-                    <div className="card space-y-3">
-                      <div>
-                        <p className="text-xs text-gray-500">{t('editor.statistics.words')}</p>
-                        <p className="text-lg font-semibold text-white">
-                          {book.statistics.wordCount.toLocaleString()}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">{t('editor.statistics.chapters')}</p>
-                        <p className="text-lg font-semibold text-white">
-                          {book.statistics.chapterCount}
-                        </p>
-                      </div>
-                      {currentChapter && (
-                        <div>
-                          <p className="text-xs text-gray-500">{t('editor.statistics.current_chapter')}</p>
-                          <p className="text-lg font-semibold text-white">
-                            {currentChapter.wordCount} {t('editor.statistics.words_unit')}
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                    <button
+                      onClick={() => {
+                        if (editor) {
+                          const text = editor.getText();
+                          if (text && text.length >= 5) {
+                            // Select all text and trigger improve
+                            editor.commands.selectAll();
+                            const { from, to } = editor.state.selection;
+                            const selectedText = editor.state.doc.textBetween(from, to, ' ');
+                            handleEnhance('improve', selectedText);
+                          } else {
+                            toast.error(isHebrew ? 'כתוב קצת טקסט קודם' : 'Write some text first');
+                          }
+                        }
+                      }}
+                      className="w-full text-right py-3 px-4 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/40 text-purple-200 text-sm font-medium transition-all flex items-center gap-3"
+                      dir={isHebrew ? 'rtl' : 'ltr'}
+                    >
+                      <span className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                        <PenTool className="w-4 h-4 text-purple-400" />
+                      </span>
+                      {isHebrew ? 'תשפר את הטקסט' : 'Improve my text'}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (editor) {
+                          const text = editor.getText();
+                          if (text && text.length >= 5) {
+                            // Move cursor to end and trigger continue
+                            editor.commands.selectAll();
+                            const { from, to } = editor.state.selection;
+                            const selectedText = editor.state.doc.textBetween(from, to, ' ');
+                            // Collapse selection to end
+                            editor.commands.setTextSelection(to);
+                            handleEnhance('continue', selectedText);
+                          } else {
+                            toast.error(isHebrew ? 'כתוב קצת טקסט קודם' : 'Write some text first');
+                          }
+                        }
+                      }}
+                      className="w-full text-right py-3 px-4 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 text-emerald-200 text-sm font-medium transition-all flex items-center gap-3"
+                      dir={isHebrew ? 'rtl' : 'ltr'}
+                    >
+                      <span className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                        <Plus className="w-4 h-4 text-emerald-400" />
+                      </span>
+                      {isHebrew ? 'תמשיך לכתוב' : 'Continue writing'}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (editor) {
+                          const text = editor.getText();
+                          if (text && text.length >= 5) {
+                            editor.commands.selectAll();
+                            const { from, to } = editor.state.selection;
+                            const selectedText = editor.state.doc.textBetween(from, to, ' ');
+                            handleEnhance('expand', selectedText);
+                          } else {
+                            toast.error(isHebrew ? 'כתוב קצת טקסט קודם' : 'Write some text first');
+                          }
+                        }
+                      }}
+                      className="w-full text-right py-3 px-4 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 text-amber-200 text-sm font-medium transition-all flex items-center gap-3"
+                      dir={isHebrew ? 'rtl' : 'ltr'}
+                    >
+                      <span className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                        <Target className="w-4 h-4 text-amber-400" />
+                      </span>
+                      {isHebrew ? 'תוסיף פרטים' : 'Add details'}
+                    </button>
+                  </>
+                ) : (
+                  <div className="card p-4">
+                    <p className="text-sm text-gray-400 text-center py-4">
+                      {isHebrew ? 'בחר פרק כדי להתחיל לכתוב' : 'Select a chapter to start writing'}
+                    </p>
                   </div>
-                </>
+                )}
+              </div>
+
+              {/* Enhancing indicator */}
+              {enhancing && (
+                <div className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
+                  <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />
+                  <span className="text-sm text-indigo-300">
+                    {isHebrew ? 'ה-AI עובד על זה...' : 'AI is working on it...'}
+                  </span>
+                </div>
               )}
 
-              {/* Plot Analysis Tab */}
-              {activeTab === 'plot' && bookId && (
-                <div className="space-y-6">
-                  <PlotStructurePanel
-                    bookId={bookId}
-                    chapterCount={book.chapters?.length || 0}
-                    onChapterClick={selectChapter}
-                  />
-                  <TensionArcChart
-                    bookId={bookId}
-                    chapterCount={book.chapters?.length || 0}
-                    currentChapterIndex={selectedChapterIndex}
-                    onChapterClick={selectChapter}
+              {/* Stats Line */}
+              <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                <div className="flex-1 h-px bg-white/10" />
+                <span>
+                  {book.statistics.wordCount.toLocaleString()} {isHebrew ? 'מילים' : 'words'} | {book.statistics.chapterCount} {isHebrew ? 'פרקים' : 'chapters'}
+                </span>
+                <div className="flex-1 h-px bg-white/10" />
+              </div>
+
+              {/* AI Copilot (hidden but functional — renders response area) */}
+              {currentChapter && (
+                <div className="hidden">
+                  <AICopilot
+                    currentText={content}
+                    genre={book.genre}
+                    bookTitle={book.title}
+                    chapterTitle={currentChapter.title}
+                    onInsertText={handleInsertText}
                   />
                 </div>
               )}
 
-              {/* Writing Techniques Tab */}
-              {activeTab === 'analysis' && bookId && (
-                <WritingTechniquesCard
-                  bookId={bookId}
-                  chapterCount={book.chapters?.length || 0}
-                />
-              )}
+              {/* Rotating Writing Tip */}
+              <WritingTipRotator isHebrew={isHebrew} />
             </div>
           </div>
         </div>
