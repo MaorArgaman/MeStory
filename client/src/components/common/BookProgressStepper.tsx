@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -8,8 +9,12 @@ import {
   Check,
   ChevronRight,
   ChevronLeft,
+  Sparkles,
+  Loader2,
 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { api } from '../../services/api';
+import toast from 'react-hot-toast';
 
 interface BookProgress {
   hasContent: boolean;      // Has at least one chapter with content
@@ -32,6 +37,68 @@ export default function BookProgressStepper({ bookId, progress, currentStep }: B
   const { language } = useLanguage();
   void _location;
   const isHebrew = language === 'he';
+  const [autoCompleting, setAutoCompleting] = useState(false);
+
+  // "Finish everything for me" — auto-complete missing steps
+  const handleAutoComplete = async () => {
+    if (autoCompleting) return;
+    const missing: string[] = [];
+    if (!progress.hasDesign) missing.push(isHebrew ? 'עיצוב' : 'design');
+    if (!progress.hasLayout) missing.push(isHebrew ? 'פריסה' : 'layout');
+
+    if (missing.length === 0) {
+      toast.success(isHebrew ? 'הספר כבר מוכן!' : 'Book is already complete!');
+      return;
+    }
+
+    setAutoCompleting(true);
+    try {
+      toast.loading(
+        isHebrew ? 'ה-AI משלים את הספר שלך...' : 'AI is completing your book...',
+        { id: 'auto-complete' }
+      );
+
+      // Step 1: Auto-generate design if missing
+      if (!progress.hasDesign) {
+        toast.loading(isHebrew ? 'מעצב כריכה...' : 'Designing cover...', { id: 'auto-complete' });
+        try {
+          await api.post(`/ai/design/complete/${bookId}`, { generateImages: true });
+        } catch (e) {
+          console.warn('Design generation failed, continuing...', e);
+        }
+      }
+
+      // Step 2: Auto-generate synopsis if missing
+      try {
+        await api.post('/ai/generate-synopsis', { bookId });
+      } catch (e) {
+        console.warn('Synopsis generation failed, continuing...', e);
+      }
+
+      toast.success(
+        isHebrew ? 'הספר הושלם! עובר לעיצוב...' : 'Book completed! Moving to design...',
+        { id: 'auto-complete' }
+      );
+
+      // Navigate to the next incomplete step
+      if (!progress.hasDesign) {
+        navigate(`/design/${bookId}`);
+      } else if (!progress.hasLayout) {
+        navigate(`/layout/${bookId}`);
+      }
+    } catch (error: any) {
+      console.error('Auto-complete failed:', error);
+      toast.error(
+        isHebrew ? 'שגיאה בהשלמה אוטומטית' : 'Auto-complete failed',
+        { id: 'auto-complete' }
+      );
+    } finally {
+      setAutoCompleting(false);
+    }
+  };
+
+  // Show "finish" button only if content exists but other steps aren't done
+  const showAutoComplete = progress.hasContent && (!progress.hasDesign || !progress.hasLayout) && !progress.isPublished;
 
   const steps = [
     {
@@ -195,6 +262,32 @@ export default function BookProgressStepper({ bookId, progress, currentStep }: B
               </div>
             );
           })}
+
+          {/* Auto-complete button — "Finish everything for me" */}
+          {showAutoComplete && (
+            <>
+              <div className="w-px h-5 bg-white/10 mx-2" />
+              <motion.button
+                onClick={handleAutoComplete}
+                disabled={autoCompleting}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-memorial-gold/20 border border-memorial-gold/40 hover:bg-memorial-gold/30 transition-all text-memorial-gold disabled:opacity-50"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {autoCompleting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5" />
+                )}
+                <span className="text-xs font-medium">
+                  {autoCompleting
+                    ? (isHebrew ? 'משלים...' : 'Completing...')
+                    : (isHebrew ? 'סיים הכל' : 'Finish all')
+                  }
+                </span>
+              </motion.button>
+            </>
+          )}
         </div>
       </div>
     </div>
