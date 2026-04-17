@@ -2,7 +2,7 @@
  * Professional Footer — shown on public pages (landing, marketplace, about, etc.)
  */
 import { Link } from 'react-router-dom';
-import { BookOpen, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function Footer() {

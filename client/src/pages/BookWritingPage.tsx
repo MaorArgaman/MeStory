@@ -42,6 +42,8 @@ import AIFloatingToolbar, { AIEnhancePreview } from '../components/editor/AIFloa
 import { enhanceText } from '../services/analysisApi';
 import { EnhanceAction, EnhanceResult, AnalysisTab } from '../types/analysis';
 import { useWritingGuidance } from '../components/analysis/WritingGuidanceAlert';
+import PlotStructurePanel from '../components/analysis/PlotStructurePanel';
+import WritingTechniquesCard from '../components/analysis/WritingTechniquesCard';
 import { useLanguage } from '../contexts/LanguageContext';
 import BrandWatermark from '../components/common/BrandWatermark';
 import BookProgressStepper from '../components/common/BookProgressStepper';
@@ -186,9 +188,8 @@ export default function BookWritingPage() {
     selectionTo: 0,
   });
 
-  // Analysis tab state (kept for AICopilot integration)
-  const [activeTab, _setActiveTab] = useState<AnalysisTab>('copilot');
-  void _setActiveTab;
+  // Analysis tab state
+  const [activeTab] = useState<AnalysisTab>('copilot');
 
   // Writing guidance hook
   const { guidance: _guidance, dismiss: _dismissGuidance } = useWritingGuidance(
@@ -1368,6 +1369,30 @@ export default function BookWritingPage() {
                     bookTitle={book.title}
                     chapterTitle={currentChapter.title}
                     onInsertText={handleInsertText}
+                  />
+                </div>
+              )}
+
+              {/* AI Analysis Section — Quality Score, Plot, Techniques */}
+              {currentChapter && content && content.length > 50 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <div className="flex-1 h-px bg-white/10" />
+                    <span>{isHebrew ? 'ניתוח AI' : 'AI Analysis'}</span>
+                    <div className="flex-1 h-px bg-white/10" />
+                  </div>
+
+                  {/* Plot Structure */}
+                  <PlotStructurePanel
+                    bookId={bookId || ''}
+                    chapterCount={book.chapters?.length || 0}
+                    onChapterClick={(idx) => selectChapter(idx)}
+                  />
+
+                  {/* Writing Techniques */}
+                  <WritingTechniquesCard
+                    bookId={bookId || ''}
+                    chapterCount={book.chapters?.length || 0}
                   />
                 </div>
               )}

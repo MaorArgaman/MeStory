@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, Send, Mic, Image, Upload, Check, Loader2, Heart } from 'lucide-react';
+import { BookOpen, Send, Upload, Check, Loader2, Heart } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { api } from '../services/api';
 
