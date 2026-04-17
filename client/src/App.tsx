@@ -57,6 +57,7 @@ const HowToCollaborate = lazy(() => import('./pages/guides/HowToCollaborate'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const MyStoryPage = lazy(() => import('./pages/MyStoryPage'));
 const InvitationPage = lazy(() => import('./pages/InvitationPage'));
+const ContributePage = lazy(() => import('./pages/ContributePage'));
 const PrintBookPage = lazy(() => import('./pages/PrintBookPage'));
 const DiagnoseImagesPage = lazy(() => import('./pages/DiagnoseImagesPage'));
 
@@ -169,6 +170,7 @@ function AppContent() {
 
               {/* Invitation route (accessible without auth, will redirect to login if needed) */}
               <Route path="/invitation/:token" element={<PageBoundary><InvitationPage /></PageBoundary>} />
+              <Route path="/contribute/:bookId" element={<PageBoundary><ContributePage /></PageBoundary>} />
 
               {/* Print-only route used by Puppeteer/headless Chrome to export a book as PDF.
                   No Layout, no auth wrapper — the token is injected via ?token=... query param. */}

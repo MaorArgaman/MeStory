@@ -274,4 +274,89 @@ router.delete(
   deletePageImage as any
 );
 
+// GET /api/books/:id/contribute-info - Public: get basic book info for contribution page
+router.get('/:id/contribute-info', async (req: any, res: any) => {
+  try {
+    const { Book } = await import('../models/Book');
+    const book = await Book.findById(req.params.id);
+    if (!book) {
+      return res.status(404).json({ success: false, error: 'Book not found' });
+    }
+    // Return minimal public info
+    res.status(200).json({
+      success: true,
+      data: {
+        title: book.title,
+        author: (book as any).authorName || 'Anonymous',
+        genre: book.genre,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/books/:id/contributions - Public: submit a memory/contribution
+router.post('/:id/contributions', async (req: any, res: any) => {
+  try {
+    const { Book } = await import('../models/Book');
+    const book = await Book.findById(req.params.id);
+    if (!book) {
+      return res.status(404).json({ success: false, error: 'Book not found' });
+    }
+
+    const { memory, contributorName, relationship, token } = req.body;
+
+    if (!memory && !req.file) {
+      return res.status(400).json({ success: false, error: 'Memory or image required' });
+    }
+    if (!contributorName) {
+      return res.status(400).json({ success: false, error: 'Name required' });
+    }
+
+    // Add contribution to book's pending contributions
+    const contribution = {
+      id: `contrib-${Date.now()}`,
+      memory: memory || '',
+      contributorName,
+      relationship: relationship || 'other',
+      imageUrl: null, // TODO: handle image upload
+      status: 'pending', // pending | approved | rejected
+      createdAt: new Date().toISOString(),
+    };
+
+    const contributions = (book as any).contributions || [];
+    contributions.push(contribution);
+
+    await Book.findByIdAndUpdate(req.params.id, {
+      contributions,
+    } as any);
+
+    res.status(201).json({
+      success: true,
+      message: 'Contribution submitted',
+    });
+  } catch (error: any) {
+    console.error('Failed to save contribution:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/books/:id/contributions - Authenticated: get contributions for book owner
+router.get('/:id/contributions', authenticate as any, async (req: any, res: any) => {
+  try {
+    const { Book } = await import('../models/Book');
+    const book = await Book.findById(req.params.id);
+    if (!book || book.author !== req.user.id) {
+      return res.status(403).json({ success: false, error: 'Not authorized' });
+    }
+    res.status(200).json({
+      success: true,
+      data: (book as any).contributions || [],
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;
