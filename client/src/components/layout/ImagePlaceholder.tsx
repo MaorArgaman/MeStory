@@ -225,10 +225,11 @@ export default function ImagePlaceholder({
       <div
         style={{ ...getFrameStyles(), zIndex: 25, pointerEvents: 'all' }}
         className="cursor-pointer bg-gradient-to-br from-gray-100/50 to-gray-200/50 hover:from-purple-100/50 hover:to-pink-100/50 transition-colors duration-300 flex items-center justify-center group border-2 border-dashed border-gray-300 hover:border-purple-400"
-        onClick={(e) => { e.stopPropagation(); setShowMenu(true); }}
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); setShowMenu(true); }}
         onMouseDown={(e) => e.stopPropagation()}
-        onPointerDown={(e) => e.stopPropagation()}
-        onTouchStart={(e) => e.stopPropagation()}
+        onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+        onTouchStart={(e) => { e.stopPropagation(); e.preventDefault(); }}
+        onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); setShowMenu(true); }}
       >
         {/* Placeholder content */}
         <div className="text-center p-2">

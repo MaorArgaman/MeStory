@@ -36,6 +36,7 @@ import {
   DollarSign,
   TrendingUp,
   AlertCircle,
+  Printer,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import confetti from 'canvas-confetti';
@@ -51,6 +52,7 @@ import ImageEditToolbar from '../components/layout/ImageEditToolbar';
 import ImagePlaceholder from '../components/layout/ImagePlaceholder';
 import AICompleteDesignWizard from '../components/design/AICompleteDesignWizard';
 import BrandWatermark from '../components/common/BrandWatermark';
+import PrintOrderModal from '../components/print/PrintOrderModal';
 import BookProgressStepper from '../components/common/BookProgressStepper';
 import { RotateCcw } from 'lucide-react';
 import BookFlipReader from '../components/reader/BookFlipReader';
@@ -506,6 +508,7 @@ export default function BookLayoutPage() {
   const [loadingStrategy, setLoadingStrategy] = useState(false);
   const [selectedPrice, setSelectedPrice] = useState(0);
   const [isFree, setIsFree] = useState(true);
+  const [showPrintModal, setShowPrintModal] = useState(false);
 
   // Save as Template state
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
@@ -2201,6 +2204,16 @@ export default function BookLayoutPage() {
               <span className="hidden lg:inline">{t('design_studio.export_to_file', 'ייצוא')}</span>
             </button>
 
+            {/* Print Button */}
+            <button
+              onClick={() => setShowPrintModal(true)}
+              className="btn-secondary flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 border-amber-500/30 text-amber-200 hover:bg-amber-500/10"
+              title={isBookRTL ? 'הדפסת ספר פיזי' : 'Print physical book'}
+            >
+              <Printer className="w-4 h-4" />
+              <span className="hidden lg:inline">{isBookRTL ? 'הדפסה' : 'Print'}</span>
+            </button>
+
             {/* Publish Button */}
             <button
               onClick={openPublishModal}
@@ -3632,6 +3645,18 @@ export default function BookLayoutPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Print Order Modal */}
+      {book && (
+        <PrintOrderModal
+          isOpen={showPrintModal}
+          onClose={() => setShowPrintModal(false)}
+          bookId={bookId || ''}
+          bookTitle={book.title}
+          pageCount={pages.length}
+          hasCover={!!(book as any).coverDesign?.imageUrl || !!coverImageUrl}
+        />
+      )}
     </div>
   );
 }

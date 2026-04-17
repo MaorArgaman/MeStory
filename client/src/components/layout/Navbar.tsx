@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useSocket } from '../../contexts/SocketContext';
-import { BookOpen, User, LogOut, ChevronDown, Crown, MessageCircle, Bell, Store, Menu, X, HelpCircle } from 'lucide-react';
+import { BookOpen, User, LogOut, ChevronDown, Crown, MessageCircle, Bell, Store, Menu, X, HelpCircle, DollarSign } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getUnreadCount as getMessagesUnreadCount } from '../../services/messagingApi';
 import { getUnreadCount as getNotificationsUnreadCount } from '../../services/notificationApi';
