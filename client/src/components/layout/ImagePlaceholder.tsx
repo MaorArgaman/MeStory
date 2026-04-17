@@ -228,6 +228,7 @@ export default function ImagePlaceholder({
         onClick={(e) => { e.stopPropagation(); setShowMenu(true); }}
         onMouseDown={(e) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
       >
         {/* Placeholder content */}
         <div className="text-center p-2">
