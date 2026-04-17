@@ -80,6 +80,7 @@ export async function buildUserFeatureVector(userId: string): Promise<MLFeatureV
   if (userActivity.completedBooks.length > 0) {
     const allBooks = await Book.find({
       'publishingStatus.status': 'published',
+      _lightweight: true,
     });
 
     // Filter to completed books in memory
@@ -105,6 +106,7 @@ export async function buildUserFeatureVector(userId: string): Promise<MLFeatureV
     if (completedBookIds.length >= 3) {
       const allBooks = await Book.find({
         'publishingStatus.status': 'published',
+        _lightweight: true,
       });
 
       const completedIdSet = new Set(completedBookIds.map(id => id.toString()));
@@ -347,6 +349,7 @@ export async function getContentSimilarBooks(
   const allBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
+    _lightweight: true,
   });
 
   // Filter candidates (same genre or similar tags) in memory
@@ -423,6 +426,7 @@ export async function getExplorationRecommendations(
   const allBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
+    _lightweight: true,
   });
 
   // Filter unexplored high-quality books in memory
@@ -470,6 +474,7 @@ export async function getDiversifiedRecommendations(
   const allBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
+    _lightweight: true,
   });
 
   // Filter out user's own books and already-read books
@@ -618,6 +623,7 @@ export async function getBecauseYouRead(
 
   const allBooks = await Book.find({
     'publishingStatus.status': 'published',
+    _lightweight: true,
   });
 
   const recentlyCompletedSet = new Set(recentlyCompleted);
@@ -771,6 +777,7 @@ async function getTrendingWithReasons(limit: number): Promise<RecommendationWith
   const books = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
+    _lightweight: true,
   });
 
   const sorted = books

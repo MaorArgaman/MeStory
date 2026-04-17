@@ -139,7 +139,6 @@ export function applyTemplateById(
 ): PageLayoutSettings {
   const template = getTemplateById(templateId);
   if (!template) {
-    console.warn(`Template not found: ${templateId}`);
     return currentSettings;
   }
   return applyTemplate(currentSettings, template);

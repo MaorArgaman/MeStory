@@ -882,7 +882,6 @@ export default function BookLayoutPage() {
         generatedAt: new Date(),
       });
 
-      console.log('Applied stored AI design:', design);
     } catch (error) {
       console.error('Error applying stored AI design:', error);
     }
@@ -1471,7 +1470,6 @@ export default function BookLayoutPage() {
             settings: newSettings,
           },
         };
-        console.log('Payload size:', JSON.stringify(payload).length, 'bytes');
         const response = await api.put(`/books/${bookId}`, payload);
 
         if (response.data.success) {
@@ -1627,7 +1625,6 @@ export default function BookLayoutPage() {
 
     try {
       const selectedPage = pages[selectedPageIndex];
-      console.log('Uploading image to page:', selectedPageIndex, 'Page ID:', selectedPage?.id, 'Type:', selectedPage?.type);
       toast.loading(`Uploading image to page ${selectedPageIndex + 1}...`, { id: 'upload-image' });
 
       const formData = new FormData();
@@ -1729,7 +1726,6 @@ export default function BookLayoutPage() {
 
   // Update image position/size
   const updateImagePosition = (pageIndex: number, imageId: string, updates: Partial<PageImage>) => {
-    console.log('updateImagePosition called:', { pageIndex, imageId, updates });
 
     setPages(prevPages => {
       // Handle empty pages array
@@ -1748,14 +1744,12 @@ export default function BookLayoutPage() {
         return prevPages;
       }
       const imageIndex = updatedPages[pageIndex].images.findIndex(img => img.id === imageId);
-      console.log('Found image at index:', imageIndex);
 
       if (imageIndex !== -1) {
         updatedPages[pageIndex].images[imageIndex] = {
           ...updatedPages[pageIndex].images[imageIndex],
           ...updates,
         };
-        console.log('Updated image:', updatedPages[pageIndex].images[imageIndex]);
         return updatedPages;
       }
       console.error('Image not found with id:', imageId);
@@ -2112,7 +2106,7 @@ export default function BookLayoutPage() {
               className="hidden sm:flex items-center hover:opacity-80 transition-opacity"
             >
               <img
-                src="/img/MeStory-Logo.png"
+                src="/img/new/logo-mestory-small.jpeg"
                 alt="MeStory"
                 className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.3)]"
               />
@@ -4181,12 +4175,7 @@ function PageRenderer({
         </div>
       )}
 
-      {/* Page type indicator */}
-      {page.type === 'blank' && (
-        <div className="absolute inset-0 flex items-center justify-center text-gray-300 text-sm">
-          {t('book_layout.blank_page', 'עמוד ריק')}
-        </div>
-      )}
+      {/* Blank page — no text overlay (looks like printed blank page) */}
     </div>
   );
 }

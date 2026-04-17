@@ -43,7 +43,6 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
   // Handle notification event
   const handleNotification = useCallback((notification: NotificationEventData) => {
-    console.log('[SocketContext] Received notification:', notification);
     setLastNotification(notification);
 
     // Show toast for new notification
@@ -60,13 +59,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
   // Handle unread count update
   const handleUnreadCountUpdate = useCallback((data: { unreadCount: number }) => {
-    console.log('[SocketContext] Unread count update:', data.unreadCount);
     setNotificationsUnreadCount(data.unreadCount);
   }, []);
 
   // Handle new message
   const handleNewMessage = useCallback((data: NewMessageData) => {
-    console.log('[SocketContext] New message:', data);
     setLastMessage(data);
     setMessagesUnreadCount(prev => prev + 1);
 
@@ -87,7 +84,6 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     const token = localStorage.getItem('token');
 
     if (user && token) {
-      console.log('[SocketContext] User logged in, initializing socket');
       const socket = initializeSocket(token);
 
       // Update connection state
@@ -115,7 +111,6 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       };
     } else {
       // User logged out, disconnect socket
-      console.log('[SocketContext] User logged out, disconnecting socket');
       disconnectSocket();
       setIsConnected(false);
       setNotificationsUnreadCount(0);

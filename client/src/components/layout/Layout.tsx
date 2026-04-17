@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
 import Navbar from './Navbar';
 
-const logoIcon = '/img/logo-glow.png';
+const logoIcon = '/img/new/logo-mestory-large.jpeg';
 
 interface LayoutProps {
   children: ReactNode;

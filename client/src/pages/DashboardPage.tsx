@@ -289,9 +289,7 @@ export default function DashboardPage() {
       let audioToUpload: Blob = file;
       if (needsCompression(file)) {
         toast.loading(t('dashboard.messages.compressing_audio'), { id: 'audio-transcribe' });
-        console.log(`Compressing audio: ${formatFileSize(file.size)}`);
         audioToUpload = await compressAudio(file);
-        console.log(`Compressed to: ${formatFileSize(audioToUpload.size)}`);
         toast.loading(t('dashboard.messages.transcribing_audio'), { id: 'audio-transcribe' });
       }
 
@@ -367,7 +365,7 @@ export default function DashboardPage() {
             src={dashboardHero}
             alt=""
             className="w-full h-full object-cover opacity-40"
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            onError={(e) => { e.currentTarget.style.opacity = '0'; }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-deep-space/60 to-deep-space" />
         </div>
@@ -420,7 +418,7 @@ export default function DashboardPage() {
               src={dashboardCtaMicrophone}
               alt={t('dashboard.hero.title', 'Tell me your story')}
               className="w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500"
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              onError={(e) => { e.currentTarget.style.opacity = '0'; }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/70 to-deep-space/30" />
           </div>
@@ -535,7 +533,7 @@ export default function DashboardPage() {
                 src="/img/new/onboarding-tree.png"
                 alt=""
                 className="w-full h-full object-cover opacity-50"
-                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                onError={(e) => { e.currentTarget.style.opacity = '0'; }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-deep-space/40" />
             </div>

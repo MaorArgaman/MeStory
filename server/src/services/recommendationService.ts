@@ -207,6 +207,7 @@ export async function getPersonalizedRecommendations(
     const allBooks = await Book.find({
       'publishingStatus.status': 'published',
       'publishingStatus.isPublic': true,
+      _lightweight: true,
     });
 
     // Filter out user's own books in memory
@@ -287,6 +288,7 @@ export async function getTrendingBooks(limit: number = 20): Promise<Recommendati
   const allBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
+    _lightweight: true,
   });
 
   // Sort by engagement in memory
@@ -319,6 +321,7 @@ export async function getNewReleases(
   const allBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
+    _lightweight: true,
   });
 
   // Filter and sort in memory
@@ -350,6 +353,7 @@ export async function getBooksByGenre(
   const allBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
+    _lightweight: true,
   });
 
   // Filter by genre (case-insensitive) in memory
@@ -383,6 +387,7 @@ export async function getContinueReading(userId: string): Promise<IBook[]> {
 
   const allBooks = await Book.find({
     'publishingStatus.status': 'published',
+    _lightweight: true,
   });
 
   const books = allBooks.filter(b => currentlyReadingIds.has(b.id));
@@ -410,6 +415,7 @@ export async function getContinueWriting(userId: string): Promise<IBook[]> {
   const draftBooks = await Book.find({
     author: userId,
     'publishingStatus.status': 'draft',
+    _lightweight: true,
   });
 
   // Sort by updatedAt in memory
@@ -434,6 +440,7 @@ export async function getSimilarBooks(
   const allBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
+    _lightweight: true,
   });
 
   // Filter same genre, exclude source book in memory
@@ -460,6 +467,7 @@ export async function getTopAuthors(limit: number = 10): Promise<any[]> {
   const books = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
+    _lightweight: true,
   });
 
   // Group by author in memory

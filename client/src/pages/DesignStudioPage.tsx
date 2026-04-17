@@ -435,7 +435,6 @@ export default function DesignStudioPage() {
         setFontFamily(`"${design.typography.titleFont}", serif`);
       }
 
-      console.log('Applied AI design state to Design Studio:', design);
     } catch (error) {
       console.error('Error applying AI design state:', error);
     }
@@ -582,7 +581,6 @@ export default function DesignStudioPage() {
             setSynopsis(synopsisResponse.data.data.synopsis);
           }
         } catch (synopsisError) {
-          console.warn('Synopsis generation failed:', synopsisError);
         }
 
         // Step 8: Generate back cover image
@@ -603,7 +601,6 @@ export default function DesignStudioPage() {
             setBackCoverImageUrl(backCoverResponse.data.data.imageUrl);
           }
         } catch (backCoverError) {
-          console.warn('Back cover image generation failed:', backCoverError);
         }
 
         // Reload book to get all changes
@@ -953,7 +950,7 @@ export default function DesignStudioPage() {
               className="flex items-center hover:opacity-80 transition-opacity"
             >
               <img
-                src="/img/MeStory-Logo.png"
+                src="/img/new/logo-mestory-small.jpeg"
                 alt="MeStory"
                 className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.3)]"
               />

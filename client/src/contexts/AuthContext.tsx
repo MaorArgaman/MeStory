@@ -60,13 +60,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Don't logout user on server errors (500) or network issues
       const status = error.response?.status;
       if (status === 401 || status === 403) {
-        console.log('Authentication failed, clearing session');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setUser(null);
       } else {
         // Server/network error - keep user logged in with cached data
-        console.log('Server error, keeping cached user session');
         const cachedUser = localStorage.getItem('user');
         if (cachedUser) {
           try {

@@ -28,7 +28,9 @@
       "Bash(powershell -Command:*)",
       "Bash(git status:*)",
       "Bash(git fetch:*)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Bash(which vercel *)",
+      "Bash(vercel --version)"
     ]
   }
 }

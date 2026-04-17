@@ -35,7 +35,7 @@ export default function BrandWatermark({
       style={{ opacity }}
     >
       <img
-        src="/img/logo-glow.png"
+        src="/img/new/logo-mestory-small.jpeg"
         alt=""
         aria-hidden="true"
         className={`${sizeClasses[size]} h-auto object-contain filter drop-shadow-[0_0_10px_rgba(255,215,0,0.3)]`}

@@ -64,7 +64,6 @@ export default function BookProgressStepper({ bookId, progress, currentStep }: B
         try {
           await api.post(`/ai/design-complete/${bookId}`, { generateImages: true });
         } catch (e) {
-          console.warn('Design generation failed, continuing...', e);
         }
       }
 
@@ -72,7 +71,6 @@ export default function BookProgressStepper({ bookId, progress, currentStep }: B
       try {
         await api.post('/ai/generate-synopsis', { bookId });
       } catch (e) {
-        console.warn('Synopsis generation failed, continuing...', e);
       }
 
       toast.success(

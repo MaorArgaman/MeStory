@@ -10,7 +10,7 @@ import _logoIconLegacy from '../assets/images/logo-icon.png';
 
 // Use new realistic images from public folder
 const loginSideImage = '/img/new/hero-grandma-grandkids.png';
-const logoIcon = '/img/logo-glow.png';
+const logoIcon = '/img/new/logo-mestory-large.jpeg';
 
 const rotatingQuotes = [
   { he: 'אף פעם לא חשבתי שאני יכולה לכתוב ספר — רחל, בת 78', en: 'I never thought I could write a book — Rachel, age 78' },

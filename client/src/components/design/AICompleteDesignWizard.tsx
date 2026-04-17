@@ -264,7 +264,6 @@ export default function AICompleteDesignWizard({
             processedDesign.cover.back.synopsis.text = synopsisResponse.data.data.synopsis;
           }
         } catch (synopsisError) {
-          console.warn('Synopsis generation failed:', synopsisError);
         }
       }
 
@@ -324,7 +323,6 @@ export default function AICompleteDesignWizard({
 
         await api.put(`/books/${bookId}`, savePayload);
       } catch (saveError) {
-        console.warn('Failed to save some settings:', saveError);
       }
 
       setDesign(processedDesign);

@@ -89,12 +89,10 @@ export async function withRetry<T>(
 
       // Don't retry if we've exhausted attempts
       if (attempt === retryConfig.maxRetries) {
-        console.warn(`[Retry] Max retries (${retryConfig.maxRetries}) exhausted`);
         throw error;
       }
 
       const delay = calculateDelay(attempt, retryConfig);
-      console.log(`[Retry] Attempt ${attempt + 1}/${retryConfig.maxRetries} failed, retrying in ${Math.round(delay)}ms...`);
       await sleep(delay);
     }
   }

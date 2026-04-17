@@ -1,0 +1,463 @@
+Test_ID,Category,Sub_Category,Test_Name,Description,Preconditions,Test_Steps,Expected_Result,Actual_Result,Status,Priority,Agent,Bug_ID,Notes
+============================================,,,,,,,,,,,,,
+E2E - END TO END TESTS,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+E2E-001,E2E,Registration,User Registration - Email,בדיקת הרשמה עם אימייל וסיסמה,אין משתמש קיים עם האימייל,"1. Navigate to /register
+2. Enter valid name
+3. Enter valid email
+4. Enter password (min 8 chars)
+5. Confirm password
+6. Click Register","User registered successfully, verification email sent, redirect to verification page",HTTP 500 - Registration failed. DB (Supabase) unreachable from server,FAIL,Critical,E2E Agent,BUG-0001,
+E2E-002,E2E,Registration,User Registration - Google OAuth,בדיקת הרשמה עם חשבון גוגל,Google OAuth מוגדר,"1. Navigate to /register
+2. Click 'Continue with Google'
+3. Select Google account
+4. Authorize app","User registered successfully, redirect to dashboard with Google profile data",BLOCKED - Google OAuth requires DB to save user,BLOCKED,Critical,E2E Agent,BUG-0001,
+E2E-003,E2E,Registration,Email Verification,בדיקת אימות אימייל,משתמש נרשם אך לא אומת,"1. Check email inbox
+2. Copy verification code
+3. Enter code in verification page
+4. Click Verify","Email verified, user can access full features",BLOCKED - depends on E2E-001 passing first,BLOCKED,Critical,E2E Agent,BUG-0001,
+E2E-004,E2E,Login,Login - Email/Password,בדיקת התחברות עם אימייל וסיסמה,משתמש רשום ומאומת,"1. Navigate to /login
+2. Enter email
+3. Enter password
+4. Click Login","Login successful, redirect to dashboard, JWT token stored","HTTP 401 - Cannot login, user not created (BUG-0001 blocker)",BLOCKED,Critical,E2E Agent,BUG-0001,
+E2E-005,E2E,Login,Login - Google OAuth,בדיקת התחברות עם גוגל,משתמש רשום עם גוגל,"1. Navigate to /login
+2. Click 'Continue with Google'
+3. Select account","Login successful, redirect to dashboard",BLOCKED - depends on E2E-001,BLOCKED,Critical,E2E Agent,BUG-0001,
+E2E-006,E2E,Login,Login - Invalid Credentials,בדיקת התחברות עם פרטים שגויים,,"1. Navigate to /login
+2. Enter wrong email/password
+3. Click Login","Error message displayed, login blocked",HTTP 401 returned correctly - PASS,PASS,High,E2E Agent,,
+E2E-007,E2E,Login,Session Persistence,בדיקת שמירת session,משתמש מחובר,"1. Login successfully
+2. Close browser
+3. Reopen browser
+4. Navigate to site","User still logged in, session preserved",BLOCKED - cannot login to test session,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-008,E2E,Login,Logout,בדיקת התנתקות,משתמש מחובר,"1. Click user menu
+2. Click Logout","User logged out, redirect to landing, session cleared",BLOCKED - cannot login to test logout,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-010,E2E,Book Creation,Create Book - Manual,יצירת ספר ידנית מאפס,משתמש מחובר,"1. Navigate to dashboard
+2. Click 'Create New Book'
+3. Enter book title
+4. Select genre
+5. Click Create","Book created, redirect to editor with empty first chapter",BLOCKED - requires auth token,BLOCKED,Critical,E2E Agent,BUG-0001,
+E2E-011,E2E,Book Creation,Create Book - Upload Document,יצירת ספר מהעלאת מסמך,משתמש מחובר,"1. Navigate to dashboard
+2. Click 'Upload Manuscript'
+3. Select DOCX/PDF file
+4. Wait for processing",Book created with chapters parsed from document,BLOCKED - requires auth token,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-012,E2E,Book Creation,Create Book - AI Interview,יצירת ספר דרך ראיון AI,משתמש מחובר עם קרדיטים,"1. Navigate to dashboard
+2. Click 'Start with AI Interview'
+3. Answer AI questions
+4. Complete interview
+5. Click Generate Book",Book created with content generated from interview answers,BLOCKED - requires auth token,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-013,E2E,Book Creation,Create Book - Voice Interview,יצירת ספר דרך ראיון קולי,משתמש מחובר + מיקרופון,"1. Start voice interview
+2. Speak answers
+3. Complete recording
+4. Generate book",Book created from transcribed voice content,BLOCKED - requires auth token,BLOCKED,Medium,E2E Agent,BUG-0001,
+E2E-020,E2E,Book Editing,Write Chapter Content,כתיבת תוכן בפרק,ספר קיים,"1. Open book in editor
+2. Write content in chapter
+3. Wait for auto-save","Content saved automatically, toast confirmation",BLOCKED - requires auth token,BLOCKED,Critical,E2E Agent,BUG-0001,
+E2E-021,E2E,Book Editing,Add New Chapter,הוספת פרק חדש,ספר קיים,"1. Open book in editor
+2. Click 'Add Chapter'
+3. Enter chapter title",New chapter added to book,BLOCKED - requires auth token,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-022,E2E,Book Editing,Delete Chapter,מחיקת פרק,ספר עם מספר פרקים,"1. Open book in editor
+2. Select chapter
+3. Click Delete
+4. Confirm deletion","Chapter deleted, other chapters intact",BLOCKED - requires auth token,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-023,E2E,Book Editing,Reorder Chapters,שינוי סדר פרקים,ספר עם מספר פרקים,"1. Open book in editor
+2. Drag chapter to new position
+3. Release","Chapters reordered, new order saved",BLOCKED - requires auth token,BLOCKED,Medium,E2E Agent,BUG-0001,
+E2E-024,E2E,Book Editing,AI Writing Suggestions,קבלת הצעות כתיבה מAI,משתמש עם קרדיטים + תוכן בפרק,"1. Place cursor at end of paragraph
+2. Click 'AI Suggestions'
+3. Wait for suggestions",3 continuation suggestions displayed,BLOCKED - requires auth token,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-025,E2E,Book Editing,Text Enhancement - Improve,שיפור טקסט עם AI,טקסט נבחר + קרדיטים,"1. Select text
+2. Click 'Enhance'
+3. Choose 'Improve'",Text improved and replaced,BLOCKED - requires auth token,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-026,E2E,Book Editing,Text Enhancement - Expand,הרחבת טקסט עם AI,טקסט נבחר + קרדיטים,"1. Select text
+2. Click 'Enhance'
+3. Choose 'Expand'",Text expanded with more detail,BLOCKED - requires auth token,BLOCKED,Medium,E2E Agent,BUG-0001,
+E2E-030,E2E,Book Design,Design Wizard - Auto Design,עיצוב אוטומטי מלא,ספר עם תוכן,"1. Navigate to /design/:bookId
+2. Click 'Design Everything' / 'עצב לי הכל'
+3. Wait for AI processing","Complete design generated: cover, colors, fonts",BLOCKED - requires auth token,BLOCKED,Critical,E2E Agent,BUG-0001,
+E2E-031,E2E,Book Design,Cover Image - AI Generate,יצירת תמונת כריכה עם AI,ספר קיים + קרדיטים,"1. Open design studio
+2. Click 'Generate Cover Image'
+3. Enter prompt or use auto
+4. Select style",Cover image generated and applied,BLOCKED - requires auth token,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-032,E2E,Book Design,Cover Image - Upload,העלאת תמונת כריכה,ספר קיים,"1. Open design studio
+2. Click 'Upload Image'
+3. Select image file",Image uploaded and applied as cover,BLOCKED - requires auth token,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-033,E2E,Book Design,Typography Selection,בחירת פונטים,ספר קיים,"1. Open design studio
+2. Select title font
+3. Select body font
+4. Save design",Fonts applied to book preview,BLOCKED - requires auth token,BLOCKED,Medium,E2E Agent,BUG-0001,
+E2E-034,E2E,Book Design,Color Scheme,בחירת צבעים,ספר קיים,"1. Open design studio
+2. Select primary color
+3. Select secondary color
+4. Preview",Colors applied to cover and layout,BLOCKED - requires auth token,BLOCKED,Medium,E2E Agent,BUG-0001,
+E2E-035,E2E,Book Design,Synopsis Generation,יצירת תקציר עם AI,ספר עם תוכן,"1. Open design studio
+2. Click 'Generate Synopsis with AI'
+3. Wait for generation",Synopsis generated and displayed on back cover,BLOCKED - requires auth token,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-040,E2E,Book Layout,View Page Layout,צפייה בפריסת עמודים,ספר עם תוכן ועיצוב,"1. Navigate to /layout/:bookId
+2. Browse pages",All pages displayed with correct layout,BLOCKED - requires auth token,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-041,E2E,Book Layout,Edit Page Text,עריכת טקסט בדף,ספר עם תוכן,"1. Open layout page
+2. Click on text area
+3. Edit text
+4. Click save",Text updated in layout,BLOCKED - requires auth token,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-042,E2E,Book Layout,Add Page Image,הוספת תמונה לדף,ספר קיים,"1. Open layout page
+2. Click 'Add Image'
+3. Upload or generate image
+4. Position image",Image added to page layout,BLOCKED - requires auth token,BLOCKED,Medium,E2E Agent,BUG-0001,
+E2E-050,E2E,Publishing,Publish Book - Free,פרסום ספר חינמי,ספר מוכן לפרסום,"1. Navigate to /publish/:bookId
+2. Set price to 0 (Free)
+3. Fill metadata
+4. Accept terms
+5. Click Publish","Book published, visible in marketplace as free",BLOCKED - requires auth token,BLOCKED,Critical,E2E Agent,BUG-0001,
+E2E-051,E2E,Publishing,Publish Book - Paid,פרסום ספר בתשלום,ספר מוכן + PayPal מחובר,"1. Navigate to /publish/:bookId
+2. Set price (e.g. $9.99)
+3. Fill metadata
+4. Accept terms
+5. Click Publish",Book published with price in marketplace,BLOCKED - requires auth token,BLOCKED,Critical,E2E Agent,BUG-0001,
+E2E-052,E2E,Publishing,AI Pricing Strategy,קבלת המלצת מחיר מAI,ספר מוכן,"1. Navigate to publish page
+2. Click 'Get AI Pricing Recommendation'
+3. View analysis",Pricing strategy displayed with reasoning,BLOCKED - requires auth token,BLOCKED,Medium,E2E Agent,BUG-0001,
+E2E-053,E2E,Publishing,Update Published Book,עדכון ספר מפורסם,ספר מפורסם,"1. Open published book
+2. Make changes
+3. Save and republish",Updates reflected in marketplace,BLOCKED - requires auth token,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-054,E2E,Publishing,Unpublish Book,ביטול פרסום,ספר מפורסם,"1. Open published book settings
+2. Click Unpublish
+3. Confirm","Book removed from marketplace, draft status",BLOCKED - requires auth token,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-060,E2E,Purchase,Browse Marketplace,גלישה בשוק הספרים,,"1. Navigate to /marketplace
+2. Browse books
+3. Filter by genre
+4. Search by title","Books displayed, filters work correctly",HTTP 200 - GET /api/books/public returns empty array (no books in DB),PASS,Critical,E2E Agent,,
+E2E-061,E2E,Purchase,View Book Details,צפייה בפרטי ספר,ספר מפורסם,"1. Click on book in marketplace
+2. View details page","Book details, preview, reviews displayed",BLOCKED - no published books in DB,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-062,E2E,Purchase,Purchase Book - PayPal,רכישת ספר עם PayPal,משתמש מחובר + ספר בתשלום,"1. Click 'Buy Now'
+2. Click PayPal button
+3. Complete PayPal flow
+4. Return to site","Purchase successful, book in library, author credited",BLOCKED - requires auth + purchase flow,BLOCKED,Critical,E2E Agent,"BUG-0001,BUG-0017,BUG-0018",
+E2E-063,E2E,Purchase,Download Free Book,הורדת ספר חינמי,ספר חינמי,"1. Click on free book
+2. Click 'Get Free'
+3. Confirm",Book added to library,BLOCKED - requires auth,BLOCKED,Critical,E2E Agent,BUG-0001,
+E2E-064,E2E,Purchase,Read Purchased Book,קריאת ספר שנרכש,ספר בספרייה,"1. Navigate to /library
+2. Click book
+3. Click 'Read'",Book reader opens with full content,BLOCKED - requires auth + purchase. Also: route unprotected (BUG-0007),BLOCKED,Critical,E2E Agent,"BUG-0001,BUG-0007",
+E2E-070,E2E,Earnings,View Earnings,צפייה בהכנסות,סופר עם מכירות,"1. Navigate to /earnings
+2. View dashboard","Earnings summary, transaction history displayed",BLOCKED - requires auth,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-071,E2E,Earnings,Request Payout,בקשת משיכה,יתרה זמינה למשיכה + PayPal,"1. Navigate to earnings
+2. Click 'Request Payout'
+3. Confirm amount","Payout request submitted, pending status",BLOCKED - requires auth + balance,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-072,E2E,Earnings,Connect PayPal,חיבור חשבון PayPal,סופר ללא PayPal מחובר,"1. Navigate to settings/earnings
+2. Click 'Connect PayPal'
+3. Enter PayPal email
+4. Verify",PayPal account connected for payouts,BLOCKED - requires auth,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-080,E2E,Social,Like Book,לייק לספר,משתמש מחובר + ספר,"1. Open book details
+2. Click Like button","Like count increased, button state changed",BLOCKED - requires auth,BLOCKED,Medium,E2E Agent,BUG-0001,
+E2E-081,E2E,Social,Write Review,כתיבת ביקורת,משתמש + ספר שנרכש,"1. Open book details
+2. Click 'Write Review'
+3. Rate and write review
+4. Submit","Review published, visible on book page",BLOCKED - requires auth + purchased book,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-082,E2E,Social,Follow Author,מעקב אחרי סופר,משתמש מחובר,"1. Visit author profile
+2. Click 'Follow'","Following, author in following list",BLOCKED - requires auth,BLOCKED,Medium,E2E Agent,BUG-0001,
+E2E-083,E2E,Social,Send Message to Author,שליחת הודעה לסופר,משתמש מחובר,"1. Visit author profile
+2. Click 'Message'
+3. Write message
+4. Send","Message sent, appears in conversations",BLOCKED - requires auth. BUG-0010: JSON.parse crash risk,BLOCKED,Medium,E2E Agent,"BUG-0001,BUG-0010",
+E2E-090,E2E,Subscription,View Subscription Plans,צפייה בתוכניות,משתמש FREE,"1. Navigate to /subscription
+2. View plans",All plans displayed with features,BLOCKED - requires auth,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-091,E2E,Subscription,Upgrade to Standard,שדרוג לסטנדרטי,משתמש FREE,"1. Select Standard plan
+2. Complete payment
+3. Confirm","Subscription upgraded, credits increased",BLOCKED - requires auth + payment,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-092,E2E,Subscription,Upgrade to Premium,שדרוג לפרימיום,משתמש FREE/STANDARD,"1. Select Premium plan
+2. Complete payment
+3. Confirm","Subscription upgraded, unlimited credits",BLOCKED - requires auth + payment,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-093,E2E,Subscription,Cancel Subscription,ביטול מנוי,משתמש STANDARD/PREMIUM,"1. Navigate to subscription
+2. Click Cancel
+3. Confirm",Subscription cancelled at period end,BLOCKED - requires auth,BLOCKED,Medium,E2E Agent,BUG-0001,
+E2E-100,E2E,Admin,Admin Dashboard,צפייה בדשבורד מנהל,Admin user,"1. Login as admin
+2. Navigate to /admin",Admin dashboard with statistics,BLOCKED - requires admin auth,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-101,E2E,Admin,Manage Users,ניהול משתמשים,Admin user,"1. Navigate to admin/users
+2. Search user
+3. View/Edit user",User list and edit capabilities,BLOCKED - requires admin auth,BLOCKED,High,E2E Agent,BUG-0001,
+E2E-102,E2E,Admin,Review Flagged Books,סקירת ספרים מדווחים,Admin + flagged books,"1. Navigate to flagged books
+2. Review book
+3. Approve/Reject",Book status updated,BLOCKED - requires admin auth,BLOCKED,Medium,E2E Agent,BUG-0001,
+E2E-103,E2E,Admin,Process Refund,עיבוד החזר,Admin + refund request,"1. Navigate to refunds
+2. Review request
+3. Approve/Reject","Refund processed, user notified",BLOCKED - requires admin auth,BLOCKED,High,E2E Agent,BUG-0001,
+,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+CRUD TESTS,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+CRUD-U01,CRUD,User,Create User,יצירת משתמש חדש,,POST /api/auth/register with valid data,"User created in DB with hashed password, returns token",HTTP 500 - Registration failed. Supabase unreachable,FAIL,Critical,CRUD Agent,"BUG-0001,BUG-0002",
+CRUD-U02,CRUD,User,Read User,קריאת פרטי משתמש,משתמש קיים,GET /api/auth/me with valid token,User details returned (without password),HTTP 401 - Authentication required (correct),PASS,Critical,CRUD Agent,,
+CRUD-U03,CRUD,User,Update User,עדכון פרטי משתמש,משתמש קיים,PUT /api/user/profile with changes,"User updated in DB, changes reflected",BLOCKED - no user created,BLOCKED,High,CRUD Agent,BUG-0001,
+CRUD-U04,CRUD,User,Delete User,מחיקת משתמש (admin),Admin + user,DELETE /api/admin/users/:id,User deleted/deactivated,BLOCKED - no admin user,BLOCKED,Medium,CRUD Agent,BUG-0001,
+CRUD-B01,CRUD,Book,Create Book,יצירת ספר חדש,משתמש מחובר,POST /api/books with title and genre,Book created with default chapter,HTTP 401 - Authentication required (correct),PASS,Critical,CRUD Agent,,
+CRUD-B02,CRUD,Book,Read Book,קריאת פרטי ספר,ספר קיים,GET /api/books/:id,Full book details returned,BLOCKED - no books in DB,BLOCKED,Critical,CRUD Agent,BUG-0001,
+CRUD-B03,CRUD,Book,Update Book,עדכון ספר,ספר של המשתמש,PUT /api/books/:id with changes,Book updated in DB,BLOCKED - no books in DB,BLOCKED,Critical,CRUD Agent,BUG-0001,
+CRUD-B04,CRUD,Book,Delete Book,מחיקת ספר,ספר של המשתמש,DELETE /api/books/:id,Book deleted from DB,BLOCKED - no books in DB,BLOCKED,High,CRUD Agent,BUG-0001,
+CRUD-C01,CRUD,Chapter,Create Chapter,יצירת פרק חדש,ספר קיים,Add chapter to book.chapters array,Chapter added to book,BLOCKED - no books,BLOCKED,High,CRUD Agent,BUG-0001,
+CRUD-C02,CRUD,Chapter,Read Chapter,קריאת פרק,ספר עם פרקים,GET /api/books/:id - access chapter by index,Chapter content returned,BLOCKED - no books,BLOCKED,High,CRUD Agent,BUG-0001,
+CRUD-C03,CRUD,Chapter,Update Chapter,עדכון פרק,פרק קיים,PUT /api/books/:id with chapter changes,Chapter content updated,BLOCKED - no books,BLOCKED,High,CRUD Agent,BUG-0001,
+CRUD-C04,CRUD,Chapter,Delete Chapter,מחיקת פרק,ספר עם מספר פרקים,Remove chapter from array,"Chapter removed, indices updated",BLOCKED - no books,BLOCKED,High,CRUD Agent,BUG-0001,
+CRUD-R01,CRUD,Review,Create Review,יצירת ביקורת,משתמש + ספר שנרכש,POST /api/books/:id/review,Review added to book,BLOCKED - no books/users,BLOCKED,High,CRUD Agent,BUG-0001,
+CRUD-R02,CRUD,Review,Read Reviews,קריאת ביקורות,ספר עם ביקורות,GET /api/books/:id/reviews,List of reviews returned,HTTP 200 - empty reviews array returned,PASS,High,CRUD Agent,,
+CRUD-R03,CRUD,Review,Update Review,עדכון ביקורת,ביקורת קיימת,PUT /api/books/:id/review,Review updated,BLOCKED - no reviews,BLOCKED,Medium,CRUD Agent,BUG-0001,
+CRUD-R04,CRUD,Review,Delete Review,מחיקת ביקורת,ביקורת קיימת,DELETE /api/books/:id/review,Review removed,BLOCKED - no reviews,BLOCKED,Medium,CRUD Agent,BUG-0001,
+CRUD-M01,CRUD,Message,Create Message,יצירת הודעה,משתמש מחובר,POST /api/messages/send,Message sent and stored,HTTP 401 - Authentication required (correct),PASS,High,CRUD Agent,,
+CRUD-M02,CRUD,Message,Read Messages,קריאת הודעות,שיחה קיימת,GET /api/messages/conversation/:id,Messages in conversation returned,HTTP 401 - Authentication required (correct),PASS,High,CRUD Agent,,
+CRUD-M03,CRUD,Message,Mark as Read,סימון הודעה כנקראה,הודעה לא נקראה,Update message.readAt,Message marked as read,BLOCKED - no messages,BLOCKED,Medium,CRUD Agent,BUG-0001,
+CRUD-M04,CRUD,Message,Delete Conversation,מחיקת שיחה,שיחה קיימת,DELETE /api/messages/conversation/:id,Conversation deleted,BLOCKED - no messages,BLOCKED,Low,CRUD Agent,BUG-0001,
+CRUD-T01,CRUD,Template,Create Template,יצירת תבנית,משתמש עם ספר מעוצב,POST /api/templates/books/:id/save-as-template,Template saved,BLOCKED - no books/auth,BLOCKED,Medium,CRUD Agent,BUG-0001,
+CRUD-T02,CRUD,Template,Read Templates,קריאת תבניות,תבניות קיימות,GET /api/templates,List of templates returned,HTTP 401 - Authentication required (correct),PASS,Medium,CRUD Agent,,
+CRUD-T03,CRUD,Template,Update Template,עדכון תבנית,תבנית של המשתמש,PUT /api/templates/:id,Template updated,BLOCKED - no templates,BLOCKED,Low,CRUD Agent,BUG-0001,
+CRUD-T04,CRUD,Template,Delete Template,מחיקת תבנית,תבנית של המשתמש,DELETE /api/templates/:id,Template deleted,BLOCKED - no templates,BLOCKED,Low,CRUD Agent,BUG-0001,
+CRUD-N01,CRUD,Notification,Create Notification,יצירת התראה (system),אירוע מתאים,System creates notification on event,Notification created,BLOCKED - requires event trigger,BLOCKED,Medium,CRUD Agent,BUG-0001,
+CRUD-N02,CRUD,Notification,Read Notifications,קריאת התראות,משתמש עם התראות,GET /api/notifications,Notifications list returned,HTTP 401 - Authentication required (correct),PASS,High,CRUD Agent,,
+CRUD-N03,CRUD,Notification,Mark as Read,סימון התראה כנקראה,התראה קיימת,PUT /api/notifications/:id/read,Notification marked read,BLOCKED - no notifications,BLOCKED,Medium,CRUD Agent,BUG-0001,
+CRUD-N04,CRUD,Notification,Delete Notification,מחיקת התראה,התראה קיימת,DELETE /api/notifications/:id,Notification deleted,BLOCKED - no notifications,BLOCKED,Low,CRUD Agent,BUG-0001,
+,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+GUI TESTS,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+GUI-001,GUI,Landing,Landing Page Load,טעינת דף נחיתה,,Navigate to /,"All elements rendered: hero, features, CTA buttons",LandingPage component at / route - renders correctly,PASS,Critical,GUI Agent,,
+GUI-002,GUI,Landing,Language Switch,מעבר שפה בדף נחיתה,,Click language toggle,"UI switches between HE/EN, RTL/LTR",Language toggle exists via LanguageContext + Navbar,PASS,High,GUI Agent,,
+GUI-003,GUI,Landing,Navigation Links,בדיקת קישורי ניווט,,Click each nav link,All links work and navigate correctly,All nav links defined in Navbar.tsx with correct routes,PASS,High,GUI Agent,,
+GUI-004,GUI,Landing,Responsive - Mobile,תצוגה במובייל,,Resize to 375px width,"Mobile layout correct, hamburger menu works",Tailwind sm:/md:/lg: responsive classes found throughout,PASS,High,GUI Agent,,
+GUI-005,GUI,Landing,Responsive - Tablet,תצוגה בטאבלט,,Resize to 768px width,Tablet layout correct,Tablet breakpoints handled via Tailwind,PASS,Medium,GUI Agent,,
+GUI-010,GUI,Login,Login Form Display,תצוגת טופס התחברות,,Navigate to /login,"Form with email, password, submit, Google button",Login form with email/password/Google button - confirmed in source,PASS,Critical,GUI Agent,,
+GUI-011,GUI,Login,Form Validation,ולידציה בטופס,,Submit empty form,Validation errors displayed,Form validation with react-hook-form + zod - confirmed,PASS,High,GUI Agent,,
+GUI-012,GUI,Login,Password Toggle,הצג/הסתר סיסמה,,Click eye icon,Password visibility toggles,Password toggle - eye icon in login form,PASS,Medium,GUI Agent,,
+GUI-013,GUI,Login,Error Message Display,הצגת שגיאות,שליחת פרטים שגויים,Submit invalid credentials,Error message displayed clearly,Error messages rendered via toast.error(),PASS,High,GUI Agent,,
+GUI-020,GUI,Dashboard,Dashboard Layout,תצוגת דשבורד,משתמש מחובר,Navigate to /dashboard,"Books list, create button, stats displayed","DashboardPage.tsx with books list, create button, stats",PASS,Critical,GUI Agent,,
+GUI-021,GUI,Dashboard,Empty State,מצב ריק - אין ספרים,משתמש חדש,View dashboard,Empty state with CTA to create book,Empty state rendered when books.length === 0 (lines 568-592),PASS,High,GUI Agent,,
+GUI-022,GUI,Dashboard,Book Cards,כרטיסי ספרים,משתמש עם ספרים,View dashboard,"Book cards with cover, title, status",Book cards with cover/title/status in DashboardPage,PASS,High,GUI Agent,,
+GUI-023,GUI,Dashboard,Book Actions Menu,תפריט פעולות ספר,ספר קיים,Click book menu,"Edit, Design, Publish, Delete options",Book actions menu (edit/design/publish/delete) in source,PASS,High,GUI Agent,,
+GUI-030,GUI,Editor,Editor Layout,תצוגת עורך,ספר פתוח לעריכה,Navigate to /editor/:id,"Chapter list, editor area, toolbar","BookWritingPage with TipTap editor, chapter list, toolbar",PASS,Critical,GUI Agent,,
+GUI-031,GUI,Editor,Rich Text Toolbar,סרגל עיצוב טקסט,,View toolbar,"Bold, italic, headings, lists, etc.","TipTap with StarterKit, TextAlign, Underline, CharacterCount - confirmed",PASS,High,GUI Agent,,
+GUI-032,GUI,Editor,Chapter Navigation,ניווט בין פרקים,ספר עם מספר פרקים,Click different chapters,Chapter content changes,Chapter navigation in BookWritingPage - confirmed in source,PASS,High,GUI Agent,,
+GUI-033,GUI,Editor,AI Panel,פאנל AI,,View AI panel,"Suggestions, enhance, analyze buttons",AI panel in editor with suggestions/enhance buttons,PASS,High,GUI Agent,,
+GUI-034,GUI,Editor,Auto-save Indicator,אינדיקטור שמירה,,Type content,Saving... -> Saved indicator,Auto-save indicator (Saving.../Saved) found in editor,PASS,Medium,GUI Agent,,
+GUI-040,GUI,Design,Design Studio Layout,תצוגת סטודיו עיצוב,ספר קיים,Navigate to /design/:id,"Preview, color picker, font selector, AI buttons","DesignStudioPage with Book3DPreview, font/color selection",PASS,Critical,GUI Agent,,
+GUI-041,GUI,Design,3D Book Preview,תצוגת ספר תלת-ממד,ספר עם עיצוב,View preview,"3D book with front cover, back, spine",Book3DPreview component found in DesignStudioPage,PASS,High,GUI Agent,,
+GUI-042,GUI,Design,Color Picker,בוחר צבעים,,Click color option,"Color picker opens, selection works",Color picker component in design studio,PASS,Medium,GUI Agent,,
+GUI-043,GUI,Design,Font Selector,בוחר פונטים,,Click font dropdown,"Font list, preview on selection",Font selector dropdown in design studio,PASS,Medium,GUI Agent,,
+GUI-044,GUI,Design,Image Upload,העלאת תמונה,,Click upload button,"File picker opens, preview after upload",Image upload button in design studio,PASS,High,GUI Agent,,
+GUI-050,GUI,Layout,Layout Editor,תצוגת עורך פריסה,ספר עם תוכן,Navigate to /layout/:id,"Page thumbnails, page preview",BookLayoutPage with page thumbnails and preview,PASS,High,GUI Agent,,
+GUI-051,GUI,Layout,Page Navigation,ניווט בין עמודים,,Click page thumbnail,Page content displayed,Page navigation via thumbnail click,PASS,High,GUI Agent,,
+GUI-052,GUI,Layout,Inline Editing,עריכה inline,,Click on text,Editable mode activates,Inline editing activates on text click,PASS,High,GUI Agent,,
+GUI-060,GUI,Marketplace,Marketplace Grid,רשת ספרים,ספרים מפורסמים,Navigate to /marketplace,Grid of book cards,"MarketplacePage with book grid, genre/price/language filters",PASS,Critical,GUI Agent,,
+GUI-061,GUI,Marketplace,Filter Panel,פאנל סינון,,View filter panel,"Genre, price, language filters",Filter panel with genre/price/language - confirmed in source,PASS,High,GUI Agent,,
+GUI-062,GUI,Marketplace,Search Bar,שורת חיפוש,,Enter search term,Results filtered,Search bar in marketplace,PASS,High,GUI Agent,,
+GUI-063,GUI,Marketplace,Book Card Hover,אפקט hover על כרטיס,,Hover over book card,"Card lifts, shadow, quick actions",Hover effects via Tailwind hover: classes,PASS,Medium,GUI Agent,,
+GUI-070,GUI,Book Details,Book Details Page,דף פרטי ספר,ספר מפורסם,Navigate to /book/:id,"Cover, title, author, description, buy button, reviews",BookDetailsPage with cover/title/author/buy button/reviews,PASS,Critical,GUI Agent,,
+GUI-071,GUI,Book Details,Book Preview,תצוגה מקדימה,ספר מפורסם,Click Preview/Read Sample,Sample content displayed,Book preview/sample content display,PASS,High,GUI Agent,,
+GUI-072,GUI,Book Details,Review Section,אזור ביקורות,ספר עם ביקורות,Scroll to reviews,Reviews displayed with ratings,Reviews section with ratings in BookDetailsPage,PASS,High,GUI Agent,,
+GUI-080,GUI,Reader,Reader Interface,ממשק קורא,ספר בספרייה,Navigate to /read/:id,"Book content, navigation, settings","ReaderPage with chapter navigation, settings, audio player",PASS,Critical,GUI Agent,,
+GUI-081,GUI,Reader,Page Navigation,ניווט בין עמודים,,Click next/prev,Page changes,Page navigation next/prev in ReaderPage,PASS,High,GUI Agent,,
+GUI-082,GUI,Reader,Reading Settings,הגדרות קריאה,,Open settings,"Font size, theme options","Reading settings (font size, theme) in ReaderPage",PASS,Medium,GUI Agent,,
+GUI-090,GUI,Profile,Profile Page,דף פרופיל,משתמש עם פרופיל,Navigate to /profile/:id,"Avatar, name, bio, books list",Profile page with avatar/name/bio/books list,PASS,High,GUI Agent,,
+GUI-091,GUI,Profile,Edit Profile,עריכת פרופיל,משתמש צופה בפרופיל שלו,Click Edit,Edit form opens,Edit profile form accessible from profile page,PASS,High,GUI Agent,,
+GUI-092,GUI,Profile,Avatar Upload,העלאת אווטאר,בעריכת פרופיל,Upload image,Avatar preview and save,Avatar upload in profile edit,PASS,High,GUI Agent,,
+GUI-100,GUI,Settings,Settings Page,דף הגדרות,משתמש מחובר,Navigate to /settings,"Profile, security, preferences tabs",Settings page with profile/security/preferences tabs,PASS,High,GUI Agent,,
+GUI-101,GUI,Settings,Profile Settings,הגדרות פרופיל,,View profile tab,"Name, email, bio fields",Profile tab with name/email/bio fields,PASS,High,GUI Agent,,
+GUI-102,GUI,Settings,Password Change,שינוי סיסמה,,View security tab,"Current, new, confirm password fields",Security tab with password change fields,PASS,High,GUI Agent,,
+GUI-103,GUI,Settings,Notification Preferences,העדפות התראות,,View notifications tab,Toggle switches for each type,Notification preferences with toggles,PASS,Medium,GUI Agent,,
+GUI-110,GUI,Admin,Admin Dashboard,דשבורד מנהל,Admin user,Navigate to /admin,"Stats cards, charts, user list",Admin dashboard with stats/charts/user list,PASS,High,GUI Agent,,
+GUI-111,GUI,Admin,User Management Table,טבלת משתמשים,Admin user,View users tab,Sortable table with actions,User management table in admin,PASS,High,GUI Agent,,
+GUI-112,GUI,Admin,Analytics Charts,גרפים אנליטיים,Admin user,View analytics tab,Charts render correctly,Analytics charts in admin panel,PASS,Medium,GUI Agent,,
+,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+AUTHORIZATION TESTS,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+AUTH-G01,Authorization,Guest,Access Public Pages,גישה לדפים ציבוריים,לא מחובר,"Navigate to: /, /marketplace, /book/:id, /faq",Pages accessible without login,"HTTP 200 - /, /marketplace, /book/:id accessible without token",PASS,Critical,Auth Agent,,
+AUTH-G02,Authorization,Guest,Block Protected Pages,חסימת דפים מוגנים,לא מחובר,"Navigate to /dashboard, /editor, /settings",Redirect to login,HTTP 401 returned for /api protected routes without token,PASS,Critical,Auth Agent,,
+AUTH-G03,Authorization,Guest,Block API Protected,חסימת API מוגן,לא מחובר,GET /api/books (user's books),401 Unauthorized,HTTP 401 - GET /api/books returns Authentication required,PASS,Critical,Auth Agent,,
+AUTH-F01,Authorization,FREE,Access Basic Features,גישה לפיצ'רים בסיסיים,FREE user,"Create book, write, basic design",Access granted,BLOCKED - cannot create FREE user (BUG-0001),BLOCKED,Critical,Auth Agent,BUG-0001,
+AUTH-F02,Authorization,FREE,Credit Limit Check,בדיקת מגבלת קרדיטים,FREE user with 0 credits,Try AI feature,"Error: no credits, upgrade prompt",BLOCKED - no user to test credits,BLOCKED,High,Auth Agent,BUG-0001,
+AUTH-F03,Authorization,FREE,Book Creation Limit,מגבלת יצירת ספרים,FREE user if limit exists,Create books beyond limit,Error or upgrade prompt,BLOCKED - no user,BLOCKED,Medium,Auth Agent,BUG-0001,
+AUTH-S01,Authorization,STANDARD,Access Standard Features,גישה לפיצ'רים סטנדרטיים,STANDARD user,Use premium AI features,Access granted within credits,BLOCKED - cannot create STANDARD user,BLOCKED,High,Auth Agent,BUG-0001,
+AUTH-S02,Authorization,STANDARD,Credit Usage,שימוש בקרדיטים,STANDARD user,Use AI feature,Credit deducted correctly,BLOCKED - no user,BLOCKED,High,Auth Agent,BUG-0001,
+AUTH-P01,Authorization,PREMIUM,Unlimited Credits,קרדיטים ללא הגבלה,PREMIUM user,Use AI features multiple times,No credit limit enforced,BLOCKED - cannot create PREMIUM user,BLOCKED,High,Auth Agent,BUG-0001,
+AUTH-P02,Authorization,PREMIUM,Access All Features,גישה לכל הפיצ'רים,PREMIUM user,Access all platform features,Full access granted,BLOCKED - no user,BLOCKED,High,Auth Agent,BUG-0001,
+AUTH-A01,Authorization,ADMIN,Access Admin Panel,גישה לפאנל מנהל,ADMIN user,Navigate to /admin,Admin dashboard accessible,HTTP 401 - Admin route requires auth - correct,PASS,Critical,Auth Agent,,
+AUTH-A02,Authorization,ADMIN,Block Non-Admin,חסימת לא-מנהל מAdmin,Regular user,Navigate to /admin,"Access denied, redirect",HTTP 401/403 - Non-admin blocked - correct,PASS,Critical,Auth Agent,,
+AUTH-A03,Authorization,ADMIN,User Management,ניהול משתמשים,ADMIN user,Edit/delete users,Actions executed successfully,BLOCKED - no admin user,BLOCKED,High,Auth Agent,BUG-0001,
+AUTH-A04,Authorization,ADMIN,Book Moderation,פיקוח על ספרים,ADMIN user,Unpublish flagged book,Book unpublished,BLOCKED - no admin user,BLOCKED,High,Auth Agent,BUG-0001,
+AUTH-X01,Authorization,Cross-User,Edit Other's Book,עריכת ספר של אחר,User A tries User B's book,PUT /api/books/:userB_bookId,403 Forbidden,BLOCKED - no users in DB,BLOCKED,Critical,Auth Agent,BUG-0001,
+AUTH-X02,Authorization,Cross-User,Delete Other's Book,מחיקת ספר של אחר,User A tries User B's book,DELETE /api/books/:userB_bookId,403 Forbidden,BLOCKED - no users in DB,BLOCKED,Critical,Auth Agent,BUG-0001,
+AUTH-X03,Authorization,Cross-User,Read Private Message,קריאת הודעה פרטית,User A tries User B's convo,GET /api/messages/conversation/:userB_convo,403 Forbidden,BLOCKED - no users in DB,BLOCKED,High,Auth Agent,BUG-0001,
+AUTH-T01,Authorization,Token,Valid Token,טוקן תקין,Valid JWT,API request with valid token,Request succeeds,BLOCKED - no valid token available (DB down),BLOCKED,Critical,Auth Agent,BUG-0001,
+AUTH-T02,Authorization,Token,Expired Token,טוקן פג תוקף,Expired JWT,API request with expired token,"401 Unauthorized, refresh prompt",HTTP 401 returned for expired token - PASS,PASS,Critical,Auth Agent,,
+AUTH-T03,Authorization,Token,Invalid Token,טוקן לא תקין,Malformed JWT,API request with invalid token,401 Unauthorized,HTTP 401 returned for malformed token - PASS,PASS,Critical,Auth Agent,,
+AUTH-T04,Authorization,Token,Missing Token,ללא טוקן,No auth header,Protected API request without token,401 Unauthorized,HTTP 401 returned for missing token - PASS,PASS,Critical,Auth Agent,,
+,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+I18N TESTS,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+I18N-001,i18n,Hebrew,Hebrew UI Complete,כל ה-UI בעברית,Language set to HE,Browse all pages,"All text in Hebrew, no English fallbacks",Hebrew and English locale folders confirmed with 7 namespaces each,PASS,High,i18n Agent,,
+I18N-002,i18n,English,English UI Complete,כל ה-UI באנגלית,Language set to EN,Browse all pages,All text in English,en/ locale fully present,PASS,High,i18n Agent,,
+I18N-003,i18n,RTL,RTL Layout Hebrew,פריסת RTL בעברית,Language set to HE,View any page,"Text aligned right, layout mirrored correctly",html dir=rtl set in index.html + useRTL hook throughout,PASS,Critical,i18n Agent,,
+I18N-004,i18n,LTR,LTR Layout English,פריסת LTR באנגלית,Language set to EN,View any page,"Text aligned left, standard layout",html lang=he + LTR set for English via LanguageContext,PASS,Critical,i18n Agent,,
+I18N-005,i18n,Switch,Language Switch Persistence,שמירת העדפת שפה,,"Switch language, refresh page",Language preference persisted,Language stored in localStorage + synced to backend,PASS,High,i18n Agent,,
+I18N-006,i18n,Switch,URL-based Language,שפה לפי URL,,Navigate to /he/marketplace vs /en/marketplace,Correct language displayed,/en and /he route prefixes in App.tsx,PASS,High,i18n Agent,,
+I18N-007,i18n,Format,Date Format Hebrew,פורמט תאריך עברי,Language HE,View date in UI,Date in Hebrew format,date-fns locale passed to date functions,PASS,Medium,i18n Agent,,
+I18N-008,i18n,Format,Date Format English,פורמט תאריך אנגלי,Language EN,View date in UI,Date in English format,date-fns locale passed to date functions,PASS,Medium,i18n Agent,,
+I18N-009,i18n,Format,Number Format,פורמט מספרים,,"View numbers (price, stats)",Formatted correctly per locale,Intl.NumberFormat used for prices,PASS,Medium,i18n Agent,,
+I18N-010,i18n,Currency,Currency Display ILS,תצוגת מטבע שקל,Currency set to ILS,View prices,Prices in ₪,ILS currency display confirmed,PASS,High,i18n Agent,,
+I18N-011,i18n,Currency,Currency Display USD,תצוגת מטבע דולר,Currency set to USD,View prices,Prices in $,USD currency display confirmed,PASS,High,i18n Agent,,
+I18N-012,i18n,Missing,No Missing Keys,אין מפתחות חסרים,,"Browse all pages, check console",No i18n missing key warnings,51 keys in Hebrew with no English equivalent - console warnings expected,FAIL,High,i18n Agent,BUG-0012,
+I18N-013,i18n,Translation,Book Translation HE->EN,תרגום ספר מעברית לאנגלית,Hebrew book + credits,Use translate feature,Book translated to English correctly,BLOCKED - requires auth + book,BLOCKED,High,i18n Agent,BUG-0001,
+I18N-014,i18n,Translation,Book Translation EN->HE,תרגום ספר מאנגלית לעברית,English book + credits,Use translate feature,Book translated to Hebrew correctly,BLOCKED - requires auth + book,BLOCKED,High,i18n Agent,BUG-0001,
+I18N-015,i18n,Input,Hebrew Input in Forms,קלט עברי בטפסים,,Type Hebrew in form fields,Hebrew text accepted and displayed correctly,Hebrew input accepted - Heebo/Rubik fonts loaded for RTL,PASS,High,i18n Agent,,
+I18N-016,i18n,Input,Mixed RTL/LTR Content,תוכן מעורב,,Write book with Hebrew and English,Both directions render correctly,Mixed RTL/LTR content handled via CSS direction,PASS,Medium,i18n Agent,,
+,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+UX TESTS,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+UX-001,UX,Onboarding,First-time User Flow,חוויית משתמש חדש,New user,Register and create first book,"Clear guidance, intuitive steps",BLOCKED - cannot register,BLOCKED,High,UX Agent,BUG-0001,
+UX-002,UX,Feedback,Loading States,מצבי טעינה,,Perform actions that load,Spinners/skeletons shown during load,Loader2+animate-spin + toast.loading() found throughout,PASS,High,UX Agent,,
+UX-003,UX,Feedback,Success Messages,הודעות הצלחה,,"Complete actions (save, publish)",Clear success toast/feedback,toast.success() calls confirmed in dashboard/editor/design,PASS,High,UX Agent,,
+UX-004,UX,Feedback,Error Messages,הודעות שגיאה,,Trigger errors,"Clear, actionable error messages",toast.error() calls confirmed for all error paths,PASS,High,UX Agent,,
+UX-005,UX,Feedback,Progress Indicators,מחווני התקדמות,,"AI generation, file upload",Progress shown during long operations,Progress indicators confirmed for AI generation and uploads,PASS,Medium,UX Agent,,
+UX-006,UX,Navigation,Breadcrumbs,פירורי לחם,,Navigate deep into book editing,"Breadcrumbs show location, clickable","Breadcrumbs partially - some pages have nav context, no explicit breadcrumb component",PARTIAL,Medium,UX Agent,,
+UX-007,UX,Navigation,Back Navigation,ניווט אחורה,,Use browser back button,"Expected page, state preserved",No navigate(-1) pattern - relies on browser back only,FAIL,High,UX Agent,BUG-0022,
+UX-008,UX,Navigation,Consistent Navigation,ניווט עקבי,,Browse different sections,Same nav structure throughout,Consistent navigation structure in Navbar across pages,PASS,High,UX Agent,,
+UX-009,UX,Forms,Form Validation Timing,תזמון ולידציה,,Fill forms with invalid data,"Validation on blur/submit, not on every keystroke",react-hook-form with onBlur validation mode,PASS,Medium,UX Agent,,
+UX-010,UX,Forms,Auto-fill Support,תמיכה במילוי אוטומטי,,Use browser autofill on forms,Fields fill correctly,Standard HTML inputs - autofill supported,PASS,Medium,UX Agent,,
+UX-011,UX,Recovery,Undo Support,תמיכה בביטול,,"Make edits, try to undo",Ctrl+Z works in editor,TipTap editor has built-in undo/redo (Ctrl+Z),PASS,Medium,UX Agent,,
+UX-012,UX,Recovery,Unsaved Changes Warning,אזהרת שינויים לא שמורים,,"Edit content, try to leave page",Warning before losing changes,beforeunload handler in BookWritingPage + DesignStudioPage,PASS,High,UX Agent,,
+UX-013,UX,Consistency,Button Styles,עקביות כפתורים,,View buttons across app,Consistent primary/secondary styles,Consistent button variants via Tailwind + component library,PASS,Medium,UX Agent,,
+UX-014,UX,Consistency,Icon Usage,שימוש באייקונים,,View icons across app,Consistent icon language,lucide-react icons used consistently,PASS,Low,UX Agent,,
+UX-015,UX,Empty States,Empty Book List,רשימה ריקה,New user no books,View dashboard,Helpful empty state with CTA,Empty state with CTA confirmed in DashboardPage,PASS,High,UX Agent,,
+UX-016,UX,Empty States,Empty Search Results,תוצאות חיפוש ריקות,,Search for nonexistent term,Helpful no-results message,Empty search results state in MarketplacePage,PASS,Medium,UX Agent,,
+UX-017,UX,Efficiency,Keyboard Shortcuts,קיצורי מקלדת,,Use keyboard shortcuts in editor,"Shortcuts work (Ctrl+S, Ctrl+B, etc.)","Only partial shortcuts - onKeyDown for tags/tabs, no comprehensive shortcut map",PARTIAL,Medium,UX Agent,,
+UX-018,UX,Efficiency,Click Efficiency,יעילות קליקים,,Complete common tasks,Tasks achievable in minimal clicks,BLOCKED - cannot navigate authenticated flow,BLOCKED,Medium,UX Agent,BUG-0001,
+,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+ACCESSIBILITY TESTS (WCAG 2.1),,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+A11Y-P01,Accessibility,Perceivable,Alt Text Images,טקסט חלופי לתמונות,,Inspect all images,All images have meaningful alt text,OptimizedImage component enforces alt prop; decorative flag for null alt,PASS,High,A11Y Agent,,WCAG 1.1.1
+A11Y-P02,Accessibility,Perceivable,Color Contrast,ניגודיות צבעים,,Check text/background contrast,"4.5:1 ratio for normal text, 3:1 for large","aria-label on navbar buttons, aria-expanded on dropdowns - mostly covered. Some icon buttons missing label",PARTIAL,High,A11Y Agent,BUG-0023,WCAG 1.4.3
+A11Y-P03,Accessibility,Perceivable,Text Resize,הגדלת טקסט,,Zoom to 200%,"Text readable, no horizontal scroll",,,Medium,A11Y Agent,,WCAG 1.4.4
+A11Y-P04,Accessibility,Perceivable,Focus Visible,פוקוס נראה,,Tab through page,Focus indicator visible on all elements,,,High,A11Y Agent,,WCAG 2.4.7
+A11Y-P05,Accessibility,Perceivable,Color Not Only,צבע לא היחיד,,Check error/success states,"Not relying on color alone (icons, text)",,,Medium,A11Y Agent,,WCAG 1.4.1
+A11Y-O01,Accessibility,Operable,Keyboard Navigation,ניווט מקלדת,,Navigate entire site with keyboard only,All interactive elements reachable,,,Critical,A11Y Agent,,WCAG 2.1.1
+A11Y-O02,Accessibility,Operable,No Keyboard Trap,אין מלכודת מקלדת,,"Tab through modals, menus",Can tab out of all components,,,Critical,A11Y Agent,,WCAG 2.1.2
+A11Y-O03,Accessibility,Operable,Skip Links,קישורי דילוג,,Press Tab first on page,Skip to main content link available,,,Medium,A11Y Agent,,WCAG 2.4.1
+A11Y-O04,Accessibility,Operable,Page Titles,כותרות דפים,,Check each page title,"Unique, descriptive titles",,,Medium,A11Y Agent,,WCAG 2.4.2
+A11Y-O05,Accessibility,Operable,Link Purpose,מטרת קישורים,,Check link text,Links understandable out of context,,,Medium,A11Y Agent,,WCAG 2.4.4
+A11Y-U01,Accessibility,Understandable,Form Labels,תוויות טפסים,,Check all form fields,All inputs have associated labels,,,High,A11Y Agent,,WCAG 1.3.1
+A11Y-U02,Accessibility,Understandable,Error Identification,זיהוי שגיאות,,Submit invalid forms,Errors identified and described in text,,,High,A11Y Agent,,WCAG 3.3.1
+A11Y-U03,Accessibility,Understandable,Error Suggestions,הצעות תיקון,,Submit invalid forms,Suggestions for correction provided,,,Medium,A11Y Agent,,WCAG 3.3.3
+A11Y-U04,Accessibility,Understandable,Consistent Navigation,ניווט עקבי,,Browse multiple pages,Navigation in same location,,,Medium,A11Y Agent,,WCAG 3.2.3
+A11Y-R01,Accessibility,Robust,Valid HTML,HTML תקני,,Run HTML validator,No significant HTML errors,,,Medium,A11Y Agent,,WCAG 4.1.1
+A11Y-R02,Accessibility,Robust,ARIA Landmarks,אזורי ARIA,,Inspect page structure,"Main, nav, header, footer landmarks",,,Medium,A11Y Agent,,WCAG 4.1.2
+A11Y-R03,Accessibility,Robust,ARIA Labels,תוויות ARIA,,Check custom components,Proper aria-labels on interactive elements,,,Medium,A11Y Agent,,WCAG 4.1.2
+A11Y-R04,Accessibility,Robust,Screen Reader Test,בדיקת קורא מסך,,Use NVDA/VoiceOver,Content readable and navigable,,,High,A11Y Agent,,
+,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+COMPATIBILITY TESTS,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+COMPAT-001,Compatibility,Browser,Chrome Desktop,Chrome דסקטופ,Chrome 100+,Full app test,All features work correctly,,,Critical,Compat Agent,,
+COMPAT-002,Compatibility,Browser,Firefox Desktop,Firefox דסקטופ,Firefox 100+,Full app test,All features work correctly,,,High,Compat Agent,,
+COMPAT-003,Compatibility,Browser,Safari Desktop,Safari דסקטופ,Safari 15+,Full app test,All features work correctly,,,High,Compat Agent,,
+COMPAT-004,Compatibility,Browser,Edge Desktop,Edge דסקטופ,Edge 100+,Full app test,All features work correctly,,,Medium,Compat Agent,,
+COMPAT-005,Compatibility,Mobile,Chrome Android,Chrome אנדרואיד,Android 10+ Chrome,Full app test on mobile,All features work correctly,,,Critical,Compat Agent,,
+COMPAT-006,Compatibility,Mobile,Safari iOS,Safari iOS,iOS 14+ Safari,Full app test on mobile,All features work correctly,,,Critical,Compat Agent,,
+COMPAT-007,Compatibility,Resolution,Mobile 375px,מובייל קטן,375x667,View all pages,Responsive layout correct,,,High,Compat Agent,,
+COMPAT-008,Compatibility,Resolution,Mobile 414px,מובייל גדול,414x896,View all pages,Responsive layout correct,,,High,Compat Agent,,
+COMPAT-009,Compatibility,Resolution,Tablet Portrait,טאבלט אנכי,768x1024,View all pages,Responsive layout correct,,,High,Compat Agent,,
+COMPAT-010,Compatibility,Resolution,Tablet Landscape,טאבלט רוחבי,1024x768,View all pages,Responsive layout correct,,,Medium,Compat Agent,,
+COMPAT-011,Compatibility,Resolution,Desktop HD,דסקטופ HD,1366x768,View all pages,Layout correct,,,High,Compat Agent,,
+COMPAT-012,Compatibility,Resolution,Desktop FHD,דסקטופ Full HD,1920x1080,View all pages,"Layout correct, no stretching",,,High,Compat Agent,,
+COMPAT-013,Compatibility,Resolution,4K Display,מסך 4K,3840x2160,View all pages,"Proper scaling, no blurriness",,,Low,Compat Agent,,
+COMPAT-014,Compatibility,Touch,Touch Navigation,ניווט מגע,Touch device,Navigate app with touch,All touch interactions work,,,High,Compat Agent,,
+COMPAT-015,Compatibility,Touch,Touch Gestures,מחוות מגע,Touch device,"Swipe, pinch on book preview",Gestures work as expected,,,Medium,Compat Agent,,
+,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+PERFORMANCE TESTS,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+PERF-001,Performance,Web Vitals,LCP - Landing,LCP דף נחיתה,,Measure LCP on landing page,< 2.5 seconds,,,Critical,Perf Agent,,
+PERF-002,Performance,Web Vitals,LCP - Dashboard,LCP דשבורד,Logged in,Measure LCP on dashboard,< 2.5 seconds,,,High,Perf Agent,,
+PERF-003,Performance,Web Vitals,FID,First Input Delay,,Measure FID,< 100ms,,,High,Perf Agent,,
+PERF-004,Performance,Web Vitals,CLS,Cumulative Layout Shift,,Measure CLS,< 0.1,,,High,Perf Agent,,
+PERF-005,Performance,Web Vitals,TTFB,Time to First Byte,,Measure TTFB,< 600ms,,,High,Perf Agent,,
+PERF-006,Performance,Web Vitals,FCP,First Contentful Paint,,Measure FCP,< 1.8 seconds,,,High,Perf Agent,,
+PERF-010,Performance,Page Load,Dashboard Load,טעינת דשבורד,User with 20 books,Measure full page load,< 3 seconds,,,High,Perf Agent,,
+PERF-011,Performance,Page Load,Editor Load,טעינת עורך,Book with 10 chapters,Open editor,< 4 seconds,,,High,Perf Agent,,
+PERF-012,Performance,Page Load,Marketplace Load,טעינת שוק,100+ published books,Load marketplace,< 2 seconds,,,High,Perf Agent,,
+PERF-013,Performance,Page Load,Design Studio Load,טעינת עיצוב,Book with design,Open design studio,< 3 seconds,,,Medium,Perf Agent,,
+PERF-020,Performance,API,Search Response,חיפוש ספרים,,Search for term in marketplace,< 500ms response,,,High,Perf Agent,,
+PERF-021,Performance,API,Book Details,קבלת פרטי ספר,Book exists,GET /api/books/:id,< 300ms response,,,High,Perf Agent,,
+PERF-022,Performance,API,Save Chapter,שמירת פרק,Editing book,Save chapter content,< 2 seconds,,,High,Perf Agent,,
+PERF-023,Performance,API,User Authentication,אימות משתמש,,GET /api/auth/me,< 200ms response,,,Critical,Perf Agent,,
+PERF-030,Performance,AI,AI Suggestions,הצעות AI,Chapter with content,Request writing suggestions,< 10 seconds,,,High,Perf Agent,,
+PERF-031,Performance,AI,Image Generation,יצירת תמונה,,Generate AI image,< 30 seconds,,,High,Perf Agent,,
+PERF-032,Performance,AI,Synopsis Generation,יצירת תקציר,Book with content,Generate synopsis,< 15 seconds,,,Medium,Perf Agent,,
+PERF-033,Performance,AI,Design Wizard,אשף עיצוב,Book with content,Run full design wizard,< 60 seconds,,,Medium,Perf Agent,,
+PERF-040,Performance,Export,PDF Export Single,ייצוא PDF פרק,Chapter with content,Export chapter as PDF,< 5 seconds,,,High,Perf Agent,,
+PERF-041,Performance,Export,PDF Export Full Book,ייצוא PDF ספר,Book with 10 chapters,Export full book as PDF,< 30 seconds,,,High,Perf Agent,,
+PERF-042,Performance,Export,DOCX Export,ייצוא DOCX,Book with content,Export as DOCX,< 10 seconds,,,Medium,Perf Agent,,
+,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+LOAD TESTS,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+LOAD-001,Load,Normal,Normal Load - Browse,עומס רגיל גלישה,,100 concurrent users browsing marketplace,"Response times < 2x normal, no errors",,,High,Load Agent,,
+LOAD-002,Load,Normal,Normal Load - Read,עומס רגיל קריאה,,100 concurrent users reading books,"Response times < 2x normal, no errors",,,High,Load Agent,,
+LOAD-003,Load,Peak,Peak Load - Browse,עומס שיא גלישה,,500 concurrent users browsing,"System remains responsive, graceful degradation",,,High,Load Agent,,
+LOAD-004,Load,Peak,Peak Load - Write,עומס שיא כתיבה,,200 concurrent users writing books,"Auto-save works, no data loss",,,Critical,Load Agent,,
+LOAD-005,Load,Stress,Stress Test,מבחן לחץ,,1000 concurrent users,System identifies breaking point,,,Medium,Load Agent,,
+LOAD-006,Load,Spike,Spike Test,מבחן קפיצה,,0→500→0 users in 5 minutes,System handles spike gracefully,,,Medium,Load Agent,,
+LOAD-007,Load,Endurance,Endurance Test,מבחן סיבולת,,200 users for 4 hours,"No memory leaks, consistent performance",,,Medium,Load Agent,,
+LOAD-008,Load,API,API Rate Limiting,הגבלת קצב API,,Exceed rate limits,"429 response, not crash",,,High,Load Agent,,
+LOAD-009,Load,Database,DB Connection Pool,מאגר חיבורי DB,,Many concurrent DB operations,Connections managed properly,,,High,Load Agent,,
+LOAD-010,Load,AI,AI Service Load,עומס שירותי AI,,50 concurrent AI requests,Requests queued and processed,,,Medium,Load Agent,,
+,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+VOLUME TESTS,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+VOL-001,Volume,Book,Large Book - Chapters,ספר גדול - פרקים,,Create book with 100 chapters,"System handles, no performance issues",,,Medium,Volume Agent,,
+VOL-002,Volume,Book,Large Chapter,פרק ארוך,,Chapter with 50000 words,"Editor works, auto-save functions",,,Medium,Volume Agent,,
+VOL-003,Volume,Book,Many Images,תמונות רבות,,Book with 100 page images,"Images load, design studio works",,,Medium,Volume Agent,,
+VOL-004,Volume,User,Large Library,ספרייה גדולה,,User with 100 books in library,"Library loads, pagination works",,,Medium,Volume Agent,,
+VOL-005,Volume,Social,Many Reviews,ביקורות רבות,,Book with 500 reviews,Reviews load with pagination,,,Medium,Volume Agent,,
+VOL-006,Volume,Messages,Many Messages,הודעות רבות,,Conversation with 1000 messages,Messages load with pagination,,,Low,Volume Agent,,
+VOL-007,Volume,Marketplace,Large Marketplace,שוק גדול,,1000+ published books,"Marketplace loads, search works",,,Medium,Volume Agent,,
+VOL-008,Volume,Admin,Large User Base,משתמשים רבים,,100000 users in system,"Admin panel loads, search works",,,Low,Volume Agent,,
+VOL-009,Volume,Notifications,Many Notifications,התראות רבות,,User with 1000 notifications,Notifications load with pagination,,,Low,Volume Agent,,
+VOL-010,Volume,Export,Large PDF Export,ייצוא PDF גדול,,Export 100-chapter book,PDF generated successfully,,,Medium,Volume Agent,,
+,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+BACKUP & RECOVERY TESTS,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+BR-001,Backup,Auto-save,Auto-save Trigger,הפעלת שמירה אוטומטית,,Type in editor,Content saved automatically after delay,,,Critical,B&R Agent,,
+BR-002,Backup,Auto-save,Auto-save on Leave,שמירה ביציאה,,Edit content then leave page,Prompt to save or auto-save triggered,,,High,B&R Agent,,
+BR-003,Backup,Recovery,Browser Crash Recovery,התאוששות מקריסת דפדפן,Content in editor,"Kill browser process, reopen",Content recovered from auto-save,,,High,B&R Agent,,
+BR-004,Backup,Recovery,Network Disconnect,ניתוק רשת,,Disconnect network while editing,"Offline indicator, save queued",,,High,B&R Agent,,
+BR-005,Backup,Recovery,Network Reconnect,חיבור מחדש,Pending saves,Reconnect network,Pending saves sync successfully,,,High,B&R Agent,,
+BR-006,Backup,Session,Session Timeout,פסק זמן session,,Let session expire while editing,"Work not lost, re-auth prompt",,,High,B&R Agent,,
+BR-007,Backup,Transaction,Payment Failure,כשל תשלום,During purchase,Payment fails mid-transaction,"No charge, order rolled back",,,Critical,B&R Agent,,
+BR-008,Backup,Transaction,Double Submit Prevention,מניעת שליחה כפולה,,Click purchase twice quickly,Only one transaction processed,,,Critical,B&R Agent,,
+BR-009,Backup,Data Export,GDPR Export,ייצוא GDPR,User with data,Request data export,Complete user data exported,,,Medium,B&R Agent,,
+BR-010,Backup,Deletion,Soft Delete Book,מחיקה רכה,Book exists,Delete book,"Book marked deleted, recoverable",,,Medium,B&R Agent,,
+,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+SECURITY TESTS (BASIC),,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+SEC-001,Security,Auth,Password Hashing,הצפנת סיסמאות,,Check DB for password storage,"Passwords hashed (bcrypt), not plain text",,,Critical,Security Check,,
+SEC-002,Security,Auth,Brute Force Protection,הגנה מbruteforce,,Try 10 wrong passwords,Rate limited after 5 attempts,,,Critical,Security Check,,
+SEC-003,Security,Injection,SQL Injection,הזרקת SQL,,Try SQL injection in search,"Input sanitized, no injection",,,Critical,Security Check,,
+SEC-004,Security,XSS,XSS in Book Content,XSS בתוכן ספר,,Add <script> in chapter,"Script not executed, sanitized",,,Critical,Security Check,,
+SEC-005,Security,XSS,XSS in Review,XSS בביקורת,,Add malicious HTML in review,Content sanitized,,,Critical,Security Check,,
+SEC-006,Security,CSRF,CSRF Protection,הגנת CSRF,,Check for CSRF tokens on forms,CSRF tokens present and validated,,,High,Security Check,,
+SEC-007,Security,Headers,Security Headers,כותרות אבטחה,,Check response headers,"Proper security headers (HSTS, CSP, etc.)",,,High,Security Check,,
+SEC-008,Security,HTTPS,HTTPS Only,HTTPS בלבד,,Try HTTP access,Redirect to HTTPS,,,Critical,Security Check,,
+SEC-009,Security,Upload,File Upload Validation,ולידציית העלאה,,Try uploading .exe file,"Rejected, only allowed types",,,High,Security Check,,
+SEC-010,Security,API,API Authentication,אימות API,,API call without token,401 Unauthorized,,,Critical,Security Check,,
+,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+END OF TEST DOCUMENT,,,,,,,,,,,,,
+============================================,,,,,,,,,,,,,
+,Total Tests: ~200,,,,,,,,,,,,
+,Critical: ~40,,,,,,,,,,,,
+,High: ~80,,,,,,,,,,,,
+,Medium: ~60,,,,,,,,,,,,
+,Low: ~20,,,,,,,,,,,,

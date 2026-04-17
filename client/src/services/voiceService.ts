@@ -122,7 +122,6 @@ export async function processInterviewResponse(
     // Compress audio if needed before upload
     let audioToUpload = options.audioBlob;
     if (needsCompression(options.audioBlob)) {
-      console.log('Compressing audio before upload...');
       audioToUpload = await compressAudio(options.audioBlob);
     }
     formData.append('audio', audioToUpload, 'recording.wav');
@@ -205,7 +204,6 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscribeResult
   // Compress audio if needed before upload
   let audioToUpload = audioBlob;
   if (needsCompression(audioBlob)) {
-    console.log('Compressing audio before transcription...');
     audioToUpload = await compressAudio(audioBlob);
   }
 

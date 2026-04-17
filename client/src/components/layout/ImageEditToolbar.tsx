@@ -64,7 +64,6 @@ export default function ImageEditToolbar({
 
   // Debug wrapper for onUpdate
   const handleUpdate = (updates: Partial<ImageEditToolbarProps['image']>) => {
-    console.log('ImageEditToolbar handleUpdate:', updates);
     onUpdate(updates);
   };
 

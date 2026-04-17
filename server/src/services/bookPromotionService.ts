@@ -149,7 +149,7 @@ export async function calculatePromotionScore(book: IBook): Promise<{
  * Calculate author credibility score (simplified)
  */
 export async function getAuthorCredibilityScore(authorId: string): Promise<number> {
-  const books = await Book.find({ author: authorId, 'publishingStatus.status': 'published' });
+  const books = await Book.find({ author: authorId, 'publishingStatus.status': 'published', _lightweight: true });
 
   if (books.length === 0) return 0.1;
 
@@ -175,35 +175,32 @@ export async function getFeaturedBooks(limit: number = 10): Promise<PromotedBook
   const books = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
+    _lightweight: true,
   });
 
   // Filter and sort in memory
   const qualityBooks = books.filter(b => (b.qualityScore?.overallScore || 0) >= 75);
   qualityBooks.sort((a, b) => (b.qualityScore?.overallScore || 0) - (a.qualityScore?.overallScore || 0));
 
-  const promoted: PromotedBook[] = [];
+  // PERF: batch-compute promotion scores in parallel instead of sequential loop
+  const candidates = qualityBooks.slice(0, limit);
+  const scored = await Promise.all(
+    candidates.map(async (book) => {
+      const { score, badges } = await calculatePromotionScore(book);
+      const reasons: string[] = [];
+      if ((book.qualityScore?.overallScore || 0) >= 85) reasons.push('Exceptional writing quality');
+      if (badges.includes('TOP_AUTHOR')) reasons.push('From a top-rated author');
+      return {
+        book,
+        promotionScore: score,
+        promotionReasons: reasons.length > 0 ? reasons : ['Featured selection'],
+        badges,
+      } as PromotedBook;
+    })
+  );
 
-  for (const book of qualityBooks.slice(0, limit)) {
-    const { score, badges } = await calculatePromotionScore(book);
-    const reasons: string[] = [];
-
-    if ((book.qualityScore?.overallScore || 0) >= 85) {
-      reasons.push('Exceptional writing quality');
-    }
-    if (badges.includes('TOP_AUTHOR')) {
-      reasons.push('From a top-rated author');
-    }
-
-    promoted.push({
-      book,
-      promotionScore: score,
-      promotionReasons: reasons.length > 0 ? reasons : ['Featured selection'],
-      badges,
-    });
-  }
-
-  promoted.sort((a, b) => b.promotionScore - a.promotionScore);
-  return promoted.slice(0, limit);
+  scored.sort((a, b) => b.promotionScore - a.promotionScore);
+  return scored.slice(0, limit);
 }
 
 /**
@@ -215,6 +212,7 @@ export async function getRisingStars(limit: number = 10): Promise<PromotedBook[]
   const books = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
+    _lightweight: true,
   });
 
   // Filter recent books
@@ -225,18 +223,19 @@ export async function getRisingStars(limit: number = 10): Promise<PromotedBook[]
 
   recentBooks.sort((a, b) => (b.statistics?.views || 0) - (a.statistics?.views || 0));
 
-  const promoted: PromotedBook[] = [];
+  // PERF: batch-compute promotion scores in parallel instead of sequential loop
+  const promoted = await Promise.all(
+    recentBooks.slice(0, limit).map(async (book) => {
+      const { score, badges } = await calculatePromotionScore(book);
 
-  for (const book of recentBooks.slice(0, limit)) {
-    const { score, badges } = await calculatePromotionScore(book);
-
-    promoted.push({
-      book,
-      promotionScore: score,
-      promotionReasons: ['Rising in popularity', 'Gaining readers quickly'],
-      badges: [...badges, 'RISING_STAR'],
-    });
-  }
+      return {
+        book,
+        promotionScore: score,
+        promotionReasons: ['Rising in popularity', 'Gaining readers quickly'],
+        badges: [...badges, 'RISING_STAR'],
+      } as PromotedBook;
+    })
+  );
 
   return promoted;
 }
@@ -261,6 +260,7 @@ export async function getQualityNewReleases(
   const books = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
+    _lightweight: true,
   });
 
   const filteredBooks = books.filter(b => {
@@ -313,6 +313,7 @@ export async function getTrendingByVelocity(
   const books = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
+    _lightweight: true,
   });
 
   // Sort by views as proxy for trending
@@ -343,6 +344,7 @@ export async function getTopAuthorsSpotlight(limit: number = 10): Promise<Author
   const allBooks = await Book.find({
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
+    _lightweight: true,
   });
 
   // Group by author
@@ -400,6 +402,7 @@ export async function getTopInGenre(
     'publishingStatus.status': 'published',
     'publishingStatus.isPublic': true,
     genre,
+    _lightweight: true,
   });
 
   books.sort((a, b) => (b.qualityScore?.overallScore || 0) - (a.qualityScore?.overallScore || 0));
@@ -432,6 +435,7 @@ export async function getPromotionSummary(): Promise<{
 }> {
   const allBooks = await Book.find({
     'publishingStatus.status': 'published',
+    _lightweight: true,
   });
 
   const featured = allBooks.filter(b => (b.qualityScore?.overallScore || 0) >= 80).length;

@@ -43,7 +43,7 @@ export function OrganizationSchema({ locale = 'he' }: OrganizationSchemaProps) {
     name: 'MeStory',
     alternateName: 'MeStory Israel',
     url: DEFAULT_SITE_URL,
-    logo: `${DEFAULT_SITE_URL}/img/MeStory-Logo.png`,
+    logo: `${DEFAULT_SITE_URL}/img/new/logo-mestory-large.jpeg`,
     description: descriptions[locale],
     foundingDate: '2024',
     sameAs: [
@@ -514,7 +514,7 @@ export function ArticleSchema({
   datePublished,
   dateModified,
   author = { name: 'MeStory', url: DEFAULT_SITE_URL },
-  publisher = { name: 'MeStory', logo: `${DEFAULT_SITE_URL}/img/MeStory-Logo.png` },
+  publisher = { name: 'MeStory', logo: `${DEFAULT_SITE_URL}/img/new/logo-mestory-large.jpeg` },
   url,
   articleType = 'Article',
   wordCount,

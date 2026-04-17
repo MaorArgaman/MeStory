@@ -40,7 +40,6 @@ export const loadGoogleFont = async (fontFamily: string): Promise<void> => {
     // Wait for font to load
     await document.fonts.ready;
   } catch (error) {
-    console.warn(`Failed to load font: ${fontFamily}`, error);
   }
 };
 

@@ -106,7 +106,8 @@ const fetchPublishedBooks = async (): Promise<Array<{
       .select('id, title, updated_at')
       .filter('publishing_status->>status', 'eq', 'published')
       .filter('publishing_status->>isPublic', 'eq', 'true')
-      .order('updated_at', { ascending: false });
+      .order('updated_at', { ascending: false })
+      .limit(50000);
 
     if (error) {
       console.error('Error fetching published books for sitemap:', error);

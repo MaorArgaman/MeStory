@@ -61,7 +61,6 @@ export function initializeSocket(token: string): Socket {
   isConnecting = true;
   reconnectAttempts = 0;
 
-  console.log('[Socket] Connecting to:', socketUrl);
 
   socket = io(socketUrl, {
     auth: {
@@ -77,7 +76,6 @@ export function initializeSocket(token: string): Socket {
 
   // Connection events
   socket.on('connect', () => {
-    console.log('[Socket] Connected successfully');
     isConnecting = false;
     reconnectAttempts = 0;
   });
@@ -88,12 +86,10 @@ export function initializeSocket(token: string): Socket {
     reconnectAttempts++;
 
     if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-      console.warn('[Socket] Max reconnection attempts reached');
     }
   });
 
   socket.on('disconnect', (reason: string) => {
-    console.log('[Socket] Disconnected:', reason);
 
     // If server disconnected us, try to reconnect
     if (reason === 'io server disconnect') {
@@ -102,7 +98,6 @@ export function initializeSocket(token: string): Socket {
   });
 
   socket.on('reconnect', (attemptNumber: number) => {
-    console.log('[Socket] Reconnected after', attemptNumber, 'attempts');
     reconnectAttempts = 0;
   });
 
@@ -137,7 +132,6 @@ export function isSocketConnected(): boolean {
  */
 export function disconnectSocket(): void {
   if (socket) {
-    console.log('[Socket] Disconnecting...');
     socket.disconnect();
     socket = null;
     isConnecting = false;
@@ -193,7 +187,6 @@ export type NewMessageData = {
  */
 export function onNotification(callback: (data: NotificationEventData) => void): () => void {
   if (!socket) {
-    console.warn('[Socket] Cannot subscribe: socket not initialized');
     return () => {};
   }
 
@@ -208,7 +201,6 @@ export function onNotification(callback: (data: NotificationEventData) => void):
  */
 export function onUnreadCountUpdate(callback: (data: UnreadCountUpdateData) => void): () => void {
   if (!socket) {
-    console.warn('[Socket] Cannot subscribe: socket not initialized');
     return () => {};
   }
 
@@ -223,7 +215,6 @@ export function onUnreadCountUpdate(callback: (data: UnreadCountUpdateData) => v
  */
 export function onNewMessage(callback: (data: NewMessageData) => void): () => void {
   if (!socket) {
-    console.warn('[Socket] Cannot subscribe: socket not initialized');
     return () => {};
   }
 
