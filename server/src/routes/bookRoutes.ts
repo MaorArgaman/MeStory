@@ -365,4 +365,56 @@ router.get('/:id/contributions', authenticate as any, async (req: any, res: any)
   }
 });
 
+// POST /api/books/:id/print-order - Create a print order
+router.post('/:id/print-order', authenticate as any, async (req: any, res: any) => {
+  try {
+    const { Book } = await import('../models/Book');
+    const book = await Book.findById(req.params.id);
+    if (!book || book.author !== req.user.id) {
+      return res.status(403).json({ success: false, error: 'Not authorized' });
+    }
+
+    const { coverType, paperQuality, bookSize, quantity, shipping, price } = req.body;
+
+    // Create print order record
+    const printOrder = {
+      id: `print-${Date.now()}`,
+      bookId: req.params.id,
+      userId: req.user.id,
+      status: 'pending', // pending → processing → printing → shipped → delivered
+      coverType,
+      paperQuality,
+      bookSize,
+      quantity,
+      shipping,
+      price,
+      createdAt: new Date().toISOString(),
+      // POD integration: when connected to Peecho/Lulu, this is where
+      // we'd call their API and store the external order ID.
+      // externalOrderId: null,
+      // trackingNumber: null,
+    };
+
+    // Store order in book's printOrders array
+    const printOrders = (book as any).printOrders || [];
+    printOrders.push(printOrder);
+    await Book.findByIdAndUpdate(req.params.id, { printOrders } as any);
+
+    // TODO: Send confirmation email
+    // TODO: Call POD API (Peecho/Lulu) to place actual print order
+    // TODO: Generate print-ready PDF with bleed marks
+
+    console.log(`📦 Print order created: ${quantity}x ${coverType} "${book.title}" → ${shipping.city}`);
+
+    res.status(201).json({
+      success: true,
+      data: { orderId: printOrder.id },
+      message: 'Print order created',
+    });
+  } catch (error: any) {
+    console.error('Failed to create print order:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;
