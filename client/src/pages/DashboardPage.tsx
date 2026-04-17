@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { api } from '../services/api';
 import { exportBookAsPdfAsync } from '../utils/asyncExport';
-import { Plus, Loader2, BookOpen, Edit, Palette, Download, Rocket, Upload, Mic, PenTool, Feather, MessageCircle, FileUp } from 'lucide-react';
+import { Plus, Loader2, BookOpen, Edit, Upload, Mic, PenTool, MessageCircle, FileUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import CreateBookWizard from '../components/dashboard/CreateBookWizard';
@@ -24,10 +24,7 @@ import MyCollaborationsSection from '../components/collaboration/MyCollaboration
 // Memorial-themed dashboard images from public folder
 const emptyDashboard = '/img/memorial-hero.png';
 const dashboardHero = '/img/new/hero-soldiers-unit.png';
-const dashboardIconScratch = '/img/new/card-notebook.png';
-const dashboardIconInterview = '/img/new/card-microphone.png';
-const dashboardIconVoice = '/img/new/card-recording.png';
-const dashboardIconImport = '/img/new/card-old-documents.png';
+const dashboardCtaMicrophone = '/img/new/card-microphone.png';
 
 interface BookItem {
   id: string;
@@ -366,135 +363,86 @@ export default function DashboardPage() {
           <p className="text-sm sm:text-base lg:text-xl text-gray-400 px-2">{t('dashboard.hero.subtitle')}</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 stagger-children">
-          {/* Card 1: Start from Scratch */}
+        {/* Main CTA - Interview */}
+        <motion.button
+          type="button"
+          onClick={() => setShowInterviewModal(true)}
+          whileHover={{ scale: 1.01, y: -4 }}
+          whileTap={{ scale: 0.99 }}
+          className="w-full glass rounded-xl sm:rounded-2xl overflow-hidden group cursor-pointer relative h-[180px] sm:h-[200px] border border-white/10 hover:border-memorial-gold/50 transition-all duration-500 mb-6"
+        >
+          {/* Background Image */}
+          <div className="absolute inset-0">
+            <img
+              src={dashboardCtaMicrophone}
+              alt={t('dashboard.hero.title', 'Tell me your story')}
+              className="w-full h-full object-cover opacity-50 group-hover:opacity-70 group-hover:scale-105 transition-all duration-500"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/70 to-deep-space/30" />
+          </div>
+
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 p-4">
+            <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">
+              {t('dashboard.hero.title', '\u05E1\u05E4\u05E8 \u05DC\u05D9 \u05D0\u05EA \u05D4\u05E1\u05D9\u05E4\u05D5\u05E8 \u05E9\u05DC\u05DA')}
+            </h3>
+            <p className="text-sm sm:text-base text-gray-300 mb-4">
+              {t('dashboard.hero.cta_subtitle', '\u05E8\u05D0\u05D9\u05D5\u05DF \u05E7\u05E6\u05E8 \u2192 \u05E1\u05E4\u05E8 \u05DE\u05D5\u05DB\u05DF \u05EA\u05D5\u05DA \u05D3\u05E7\u05D5\u05EA')}
+            </p>
+            <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-memorial-gold/90 text-deep-space font-semibold fab-glow">
+              <MessageCircle className="w-5 h-5" />
+              {t('dashboard.hero.cta_button', '\u05D1\u05D5\u05D0\u05D5 \u05E0\u05EA\u05D7\u05D9\u05DC')}
+            </span>
+          </div>
+        </motion.button>
+
+        {/* Separator */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="flex-1 h-px bg-white/10" />
+          <span className="text-sm text-gray-500">{t('dashboard.hero.or_separator', '\u05D0\u05D5')}</span>
+          <div className="flex-1 h-px bg-white/10" />
+        </div>
+
+        {/* Secondary Options Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <motion.button
             type="button"
             onClick={() => setShowQuickCreateModal(true)}
-            whileHover={{ scale: 1.02, y: -8 }}
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="glass rounded-xl sm:rounded-2xl overflow-hidden group cursor-pointer relative h-[220px] sm:h-[280px] lg:h-[340px] border border-white/10 hover:border-cyan-500/50 transition-all duration-500"
+            className="glass rounded-xl px-4 py-3 sm:py-4 flex items-center justify-center gap-3 border border-white/10 hover:border-cyan-500/40 transition-all duration-300 group"
           >
-            {/* Background Image */}
-            <div className="absolute inset-0">
-              <img
-                src={dashboardIconScratch}
-                alt={t('dashboard.cards.scratch.title')}
-                className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
-            </div>
-
-            <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-6 z-10">
-              <h3 className="text-sm sm:text-lg lg:text-xl font-bold text-white mb-1 sm:mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
-                {t('dashboard.cards.scratch.title')}
-              </h3>
-              <p className="text-gray-300 text-xs sm:text-sm leading-relaxed mb-2 sm:mb-3 line-clamp-2 sm:line-clamp-none">
-                {t('dashboard.cards.scratch.description')}
-              </p>
-              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-cyan-500/20 border border-cyan-500/30">
-                <Feather className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-400" />
-                <span className="text-[10px] sm:text-xs text-cyan-300 font-medium">{t('dashboard.cards.scratch.badge')}</span>
-              </div>
-            </div>
+            <PenTool className="w-5 h-5 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+            <span className="text-sm sm:text-base text-gray-200 group-hover:text-white transition-colors">
+              {t('dashboard.secondary.write_myself', '\u05D0\u05E0\u05D9 \u05E8\u05D5\u05E6\u05D4 \u05DC\u05DB\u05EA\u05D5\u05D1 \u05D1\u05E2\u05E6\u05DE\u05D9')}
+            </span>
           </motion.button>
 
-          {/* Card 2: Deep Dive Interview */}
-          <motion.button
-            type="button"
-            onClick={() => setShowInterviewModal(true)}
-            whileHover={{ scale: 1.02, y: -8 }}
-            whileTap={{ scale: 0.98 }}
-            className="glass rounded-xl sm:rounded-2xl overflow-hidden group cursor-pointer relative h-[220px] sm:h-[280px] lg:h-[340px] border border-white/10 hover:border-indigo-500/50 transition-all duration-500"
-          >
-            {/* Background Image */}
-            <div className="absolute inset-0">
-              <img
-                src={dashboardIconInterview}
-                alt={t('dashboard.cards.interview.title')}
-                className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
-            </div>
-
-            <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-6 z-10">
-              <h3 className="text-sm sm:text-lg lg:text-xl font-bold text-white mb-1 sm:mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
-                {t('dashboard.cards.interview.title')}
-              </h3>
-              <p className="text-gray-300 text-xs sm:text-sm leading-relaxed mb-2 sm:mb-3 line-clamp-2 sm:line-clamp-none">
-                {t('dashboard.cards.interview.description')}
-              </p>
-              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-indigo-500/20 border border-indigo-500/30">
-                <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-400" />
-                <span className="text-[10px] sm:text-xs text-indigo-300 font-medium">{t('dashboard.cards.interview.badge')}</span>
-              </div>
-            </div>
-          </motion.button>
-
-          {/* Card 3: Voice Dictation */}
           <motion.button
             type="button"
             onClick={() => setShowVoiceModal(true)}
-            whileHover={{ scale: 1.02, y: -8 }}
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="glass rounded-xl sm:rounded-2xl overflow-hidden group cursor-pointer relative h-[220px] sm:h-[280px] lg:h-[340px] border border-white/10 hover:border-memorial-gold/50 transition-all duration-500"
+            className="glass rounded-xl px-4 py-3 sm:py-4 flex items-center justify-center gap-3 border border-white/10 hover:border-memorial-gold/40 transition-all duration-300 group"
           >
-            {/* Background Image */}
-            <div className="absolute inset-0">
-              <img
-                src={dashboardIconVoice}
-                alt={t('dashboard.cards.voice.title')}
-                className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
-            </div>
-
-            <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-6 z-10">
-              <h3 className="text-sm sm:text-lg lg:text-xl font-bold text-white mb-1 sm:mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
-                {t('dashboard.cards.voice.title')}
-              </h3>
-              <p className="text-gray-300 text-xs sm:text-sm leading-relaxed mb-2 sm:mb-3 line-clamp-2 sm:line-clamp-none">
-                {t('dashboard.cards.voice.description')}
-              </p>
-              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-memorial-gold/20 border border-memorial-gold/30">
-                <Mic className="w-3 h-3 sm:w-4 sm:h-4 text-memorial-gold" />
-                <span className="text-[10px] sm:text-xs text-memorial-gold font-medium">{t('dashboard.cards.voice.badge')}</span>
-              </div>
-            </div>
+            <Mic className="w-5 h-5 text-memorial-gold group-hover:text-yellow-300 transition-colors" />
+            <span className="text-sm sm:text-base text-gray-200 group-hover:text-white transition-colors">
+              {t('dashboard.secondary.prefer_voice', '\u05D0\u05E0\u05D9 \u05DE\u05E2\u05D3\u05D9\u05E3 \u05DC\u05D3\u05D1\u05E8')}
+            </span>
           </motion.button>
 
-          {/* Card 4: Import Manuscript */}
           <motion.button
             type="button"
             onClick={() => setShowUploadModal(true)}
-            whileHover={{ scale: 1.02, y: -8 }}
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="glass rounded-xl sm:rounded-2xl overflow-hidden group cursor-pointer relative h-[220px] sm:h-[280px] lg:h-[340px] border border-white/10 hover:border-purple-500/50 transition-all duration-500"
+            className="glass rounded-xl px-4 py-3 sm:py-4 flex items-center justify-center gap-3 border border-white/10 hover:border-purple-500/40 transition-all duration-300 group"
           >
-            {/* Background Image */}
-            <div className="absolute inset-0">
-              <img
-                src={dashboardIconImport}
-                alt={t('dashboard.cards.import.title')}
-                className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
-            </div>
-
-            <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 lg:p-6 z-10">
-              <h3 className="text-sm sm:text-lg lg:text-xl font-bold text-white mb-1 sm:mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
-                {t('dashboard.cards.import.title')}
-              </h3>
-              <p className="text-gray-300 text-xs sm:text-sm leading-relaxed mb-2 sm:mb-3 line-clamp-2 sm:line-clamp-none">
-                {t('dashboard.cards.import.description')}
-              </p>
-              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-purple-500/20 border border-purple-500/30">
-                <FileUp className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400" />
-                <span className="text-[10px] sm:text-xs text-purple-300 font-medium">{t('dashboard.cards.import.badge')}</span>
-              </div>
-            </div>
+            <FileUp className="w-5 h-5 text-purple-400 group-hover:text-purple-300 transition-colors" />
+            <span className="text-sm sm:text-base text-gray-200 group-hover:text-white transition-colors">
+              {t('dashboard.secondary.have_text', '\u05D9\u05E9 \u05DC\u05D9 \u05D8\u05E7\u05E1\u05D8 \u05DE\u05D5\u05DB\u05DF')}
+            </span>
           </motion.button>
-
         </div>
       </div>
 
@@ -624,45 +572,22 @@ export default function DashboardPage() {
                   </span>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={() => navigate(`/editor/${book.id}`)}
-                    className="btn-secondary text-xs py-2 flex items-center justify-center gap-1"
-                    title={t('dashboard.sections.continue_writing')}
-                  >
-                    <Edit className="w-3 h-3" />
-                    {t('dashboard.book_card.write')}
-                  </button>
-                  <button
-                    onClick={() => navigate(`/design/${book.id}`)}
-                    className="btn-secondary text-xs py-2 flex items-center justify-center gap-1"
-                    title={t('dashboard.book_card.design')}
-                  >
-                    <Palette className="w-3 h-3" />
-                    {t('dashboard.book_card.design')}
-                  </button>
-                  {/* Export button - available for all books with chapters */}
-                  {book.statistics.chapterCount > 0 ? (
-                    <button
-                      onClick={(e) => exportBook(book.id, book.title, e)}
-                      className={`${book.publishingStatus.status === 'published' ? 'btn-primary' : 'btn-secondary'} text-xs py-2 flex items-center justify-center gap-1`}
-                      title={t('dashboard.book_card.export')}
-                    >
-                      <Download className="w-3 h-3" />
-                      {t('dashboard.book_card.export')}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => navigate(`/publish/${book.id}`)}
-                      className="btn-primary text-xs py-2 flex items-center justify-center gap-1"
-                      title={t('dashboard.book_card.publish')}
-                    >
-                      <Rocket className="w-3 h-3" />
-                      {t('dashboard.book_card.publish')}
-                    </button>
-                  )}
-                </div>
+                {/* Single Continue Button - navigates to the next incomplete step */}
+                <button
+                  onClick={() => {
+                    if (book.statistics.wordCount === 0) {
+                      navigate(`/editor/${book.id}`);
+                    } else if (book.publishingStatus.status !== 'published') {
+                      navigate(`/design/${book.id}`);
+                    } else {
+                      navigate(`/editor/${book.id}`);
+                    }
+                  }}
+                  className="btn-primary w-full py-2.5 flex items-center justify-center gap-2 text-sm font-medium"
+                >
+                  <Edit className="w-4 h-4" />
+                  {t('dashboard.book_card.continue', '\u05D4\u05DE\u05E9\u05DA')}
+                </button>
               </motion.div>
             ))}
           </div>

@@ -1,75 +1,65 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useModal } from '../../hooks/useModal';
 import {
   Sparkles,
   BookOpen,
-  Wand2,
-  Target,
-  ArrowRight,
-  ArrowLeft,
-  Loader2,
-  Check,
   Heart,
-  Book,
-  TrendingUp,
-  Layout,
-  Flame,
   Users,
   ScrollText,
-  Star,
-  Feather,
-  MessageCircleHeart,
-  User,
-  UserPlus,
+  PenLine,
+  Loader2,
 } from 'lucide-react';
 import { api } from '../../services/api';
 import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton } from '../ui';
-import { TemplateGallery } from '../templates';
-import { BookTemplate } from '../../types/templates';
 import { applyTemplateToBook } from '../../services/templateApi';
 
-interface Genre {
+interface StoryType {
   id: string;
+  genre: string;
+  templateSlug: string;
   icon: any;
   color: string;
 }
 
-// Memorial book categories - קטגוריות ספרי הנצחה
-const genres: Genre[] = [
-  { id: 'fallen_soldier', icon: Flame, color: 'from-amber-600 to-orange-700' },
-  { id: 'life_story', icon: BookOpen, color: 'from-blue-600 to-indigo-700' },
-  { id: 'family_legacy', icon: Users, color: 'from-emerald-600 to-teal-700' },
-  { id: 'tribute', icon: Heart, color: 'from-rose-600 to-pink-700' },
-  { id: 'holocaust_survivor', icon: Star, color: 'from-amber-500 to-yellow-600' },
-  { id: 'shared_memories', icon: MessageCircleHeart, color: 'from-purple-600 to-indigo-700' },
-  { id: 'letters_and_words', icon: Feather, color: 'from-slate-600 to-gray-700' },
-  { id: 'testimony', icon: ScrollText, color: 'from-cyan-600 to-blue-700' },
-];
-
-interface WritingGoal {
-  id: string;
-  icon: any;
-}
-
-const writingGoals: WritingGoal[] = [
-  { id: 'short-story', icon: Book },
-  { id: 'novella', icon: BookOpen },
-  { id: 'novel', icon: TrendingUp },
-];
-
-interface TargetAudience {
-  id: string;
-}
-
-// Memorial book audiences - קהלי יעד לספרי הנצחה
-const targetAudiences: TargetAudience[] = [
-  { id: 'family' },
-  { id: 'friends' },
-  { id: 'community' },
-  { id: 'public' },
+const storyTypes: StoryType[] = [
+  {
+    id: 'my-life-story',
+    genre: 'autobiography',
+    templateSlug: 'my-life-story',
+    icon: BookOpen,
+    color: 'from-blue-500 to-indigo-600',
+  },
+  {
+    id: 'in-memory',
+    genre: 'memorial',
+    templateSlug: 'in-memory',
+    icon: Heart,
+    color: 'from-rose-500 to-pink-600',
+  },
+  {
+    id: 'family-story',
+    genre: 'family',
+    templateSlug: 'family-roots',
+    icon: Users,
+    color: 'from-emerald-500 to-teal-600',
+  },
+  {
+    id: 'personal-testimony',
+    genre: 'testimony',
+    templateSlug: 'my-life-story',
+    icon: ScrollText,
+    color: 'from-amber-500 to-yellow-600',
+  },
+  {
+    id: 'something-else',
+    genre: 'other',
+    templateSlug: 'custom',
+    icon: PenLine,
+    color: 'from-purple-500 to-violet-600',
+  },
 ];
 
 interface CreateBookWizardProps {
@@ -83,120 +73,47 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
   // Use modal hook for ESC key and scroll lock
   useModal(true, onClose);
 
-  const [step, setStep] = useState(1);
   const [title, setTitle] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState<string>('');
-  const [generatedTitles, setGeneratedTitles] = useState<string[]>([]);
-  const [generatingTitles, setGeneratingTitles] = useState(false);
-  const [selectedWritingGoal, setSelectedWritingGoal] = useState<string>('');
-  const [selectedAudience, setSelectedAudience] = useState<string>('');
-  const [selectedTemplate, setSelectedTemplate] = useState<BookTemplate | null>(null);
+  const [selectedType, setSelectedType] = useState<string>('my-life-story');
   const [creating, setCreating] = useState(false);
 
-  // Collaborative book state
-  const [bookType, setBookType] = useState<'personal' | 'collaborative'>('personal');
-  const [memorialDedication, setMemorialDedication] = useState({
-    name: '',
-    relationship: '',
-    birthDate: '',
-    passingDate: '',
-  });
-
-  const isHebrew = t('create_book.wizard_title').includes('ספר');
-
-  const handleSelectTemplate = (template: BookTemplate) => {
-    setSelectedTemplate(template);
-    toast.success(t('create_book.template_selected', { name: template.name }));
-  };
-
-  const handleGenerateTitles = async () => {
-    if (!selectedGenre) {
-      toast.error(t('create_book.select_genre_first'));
-      return;
-    }
-
-    try {
-      setGeneratingTitles(true);
-      const response = await api.post('/ai/generate-titles', {
-        genre: selectedGenre,
-        count: 5,
-      });
-
-      if (response.data.success) {
-        setGeneratedTitles(response.data.data.titles);
-        toast.success(t('create_book.title_ideas_generated'));
-      }
-    } catch (error: any) {
-      console.error('Failed to generate titles:', error);
-      toast.error(error.response?.data?.error || t('create_book.title_generation_failed'));
-    } finally {
-      setGeneratingTitles(false);
-    }
-  };
-
-  const handleSelectGeneratedTitle = (generatedTitle: string) => {
-    setTitle(generatedTitle);
-    toast.success(t('create_book.title_selected'));
-  };
+  const isHebrew = t('create_book.wizard_title').includes('סיפור');
 
   const handleCreateBook = async () => {
-    // Validation
     if (!title.trim()) {
       toast.error(t('create_book.enter_title'));
       return;
     }
-    if (!selectedGenre) {
-      toast.error(t('create_book.select_genre'));
-      return;
-    }
-    if (!selectedWritingGoal) {
-      toast.error(t('create_book.select_writing_goal'));
-      return;
-    }
-    if (!selectedAudience) {
-      toast.error(t('create_book.select_audience'));
-      return;
-    }
+
+    const storyType = storyTypes.find((st) => st.id === selectedType)!;
 
     try {
       setCreating(true);
-      const bookData: any = {
+      const bookData = {
         title: title.trim(),
-        genre: selectedGenre,
-        writingGoal: selectedWritingGoal,
-        targetAudience: selectedAudience,
-        bookType: bookType,
-        isCollaborative: bookType === 'collaborative',
+        genre: storyType.genre,
+        writingGoal: 'novella',
+        targetAudience: 'family',
+        bookType: 'personal',
+        isCollaborative: false,
       };
-
-      // Add memorial dedication for collaborative books
-      if (bookType === 'collaborative' && memorialDedication.name) {
-        bookData.memorialDedication = {
-          name: memorialDedication.name,
-          relationship: memorialDedication.relationship,
-          birthDate: memorialDedication.birthDate || undefined,
-          passingDate: memorialDedication.passingDate || undefined,
-        };
-      }
 
       const response = await api.post('/books', bookData);
 
       if (response.data.success) {
         const bookId = response.data.data.book.id;
 
-        // Apply template if selected
-        if (selectedTemplate) {
+        // Auto-apply template based on story type
+        if (storyType.templateSlug !== 'custom') {
           try {
-            await applyTemplateToBook(bookId, selectedTemplate._id);
-            toast.success(t('create_book.book_created_with_template'));
+            await applyTemplateToBook(bookId, storyType.templateSlug);
           } catch (templateError) {
             console.error('Failed to apply template:', templateError);
-            toast.success(t('create_book.book_created_template_failed'));
+            // Non-blocking — book is still created
           }
-        } else {
-          toast.success(t('create_book.book_created'));
         }
 
+        toast.success(t('create_book.book_created'));
         onSuccess(bookId);
       }
     } catch (error: any) {
@@ -206,9 +123,6 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
       setCreating(false);
     }
   };
-
-  const canProceedToStep2 = title.trim() && selectedGenre;
-  const canProceedToStep3 = canProceedToStep2;
 
   return (
     <div
@@ -221,9 +135,9 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-lg"
       >
-        <GlassCard className="relative">
+        <GlassCard className="relative p-8">
           {/* Close Button */}
           <button
             onClick={onClose}
@@ -235,658 +149,91 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
           {/* Header */}
           <div className="text-center mb-8">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-memorial-gold to-yellow-600 flex items-center justify-center mx-auto mb-4 shadow-glow-gold">
-              <Sparkles className="w-8 h-8 text-deep-space" />
+              <BookOpen className="w-8 h-8 text-deep-space" />
             </div>
-            <h2 id="create-book-wizard-title" className="text-3xl font-display font-bold gradient-gold mb-2">
+            <h2
+              id="create-book-wizard-title"
+              className="text-3xl font-display font-bold gradient-gold mb-2"
+            >
               {t('create_book.wizard_title')}
             </h2>
             <p className="text-gray-400">{t('create_book.wizard_subtitle')}</p>
           </div>
 
-          {/* Progress Steps */}
-          <div className="flex items-center justify-center gap-4 mb-8">
-            {[1, 2, 3, 4].map((s) => (
-              <div key={s} className="flex items-center gap-2">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
-                    s === step
-                      ? 'bg-gradient-to-br from-memorial-gold to-yellow-600 text-deep-space shadow-glow-gold'
-                      : s < step
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/50'
-                      : 'bg-white/5 text-gray-500 border border-white/10'
-                  }`}
-                >
-                  {s < step ? <Check className="w-5 h-5" /> : s}
-                </div>
-                {s < 4 && (
-                  <div
-                    className={`w-12 h-0.5 ${
-                      s < step ? 'bg-green-400' : 'bg-white/10'
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
+          {/* Title Input */}
+          <div className="mb-6">
+            <label className="block text-sm font-semibold mb-2 text-gray-300">
+              {t('create_book.book_name_label')}
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={t('create_book.book_name_placeholder')}
+              className="input text-lg"
+              autoFocus
+            />
           </div>
 
-          <AnimatePresence mode="wait">
-            {/* Step 1: The Spark */}
-            {step === 1 && (
-              <motion.div
-                key="step1"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
-              >
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl font-display font-bold text-white mb-2">
-                    ✨ {t('create_book.step1_title')}
-                  </h3>
-                  <p className="text-gray-400">{t('create_book.step1_subtitle')}</p>
-                </div>
+          {/* Story Type Selection */}
+          <div className="mb-8">
+            <label className="block text-sm font-semibold mb-4 text-gray-300">
+              {t('create_book.story_type_label')}
+            </label>
+            <div className="space-y-2">
+              {storyTypes.map((type) => {
+                const Icon = type.icon;
+                const isSelected = selectedType === type.id;
 
-                {/* Title Input */}
-                <div>
-                  <label className="block text-sm font-semibold mb-2 text-gray-300">
-                    {t('create_book.book_name_label')}
-                  </label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder={t('create_book.book_name_placeholder')}
-                    className="input text-lg"
-                    autoFocus
-                  />
-                </div>
-
-                {/* Genre Selection */}
-                <div>
-                  <label className="block text-sm font-semibold mb-4 text-gray-300">
-                    {t('create_book.select_genre_label')}
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
-                    {genres.map((genre) => {
-                      const Icon = genre.icon;
-                      const isSelected = selectedGenre === genre.id;
-
-                      return (
-                        <motion.button
-                          key={genre.id}
-                          onClick={() => setSelectedGenre(genre.id)}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className={`relative p-4 rounded-xl transition-all ${
-                            isSelected
-                              ? 'bg-white/10 border-2 border-memorial-gold shadow-glow-gold'
-                              : 'bg-white/5 border border-white/10 hover:bg-white/10'
-                          }`}
-                        >
-                          <div
-                            className={`w-12 h-12 rounded-lg bg-gradient-to-br ${genre.color} flex items-center justify-center mx-auto mb-2`}
-                          >
-                            <Icon className="w-6 h-6 text-white" />
-                          </div>
-                          <div className="text-sm font-semibold text-white">
-                            {t(`create_book.genres.${genre.id}`)}
-                          </div>
-                          {isSelected && (
-                            <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-memorial-gold flex items-center justify-center">
-                              <Check className="w-4 h-4 text-deep-space" />
-                            </div>
-                          )}
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Book Type Selection */}
-                <div>
-                  <label className="block text-sm font-semibold mb-4 text-gray-300">
-                    {isHebrew ? 'סוג הספר' : 'Book Type'}
-                  </label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <motion.button
-                      onClick={() => setBookType('personal')}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={`p-4 rounded-xl transition-all flex items-center gap-3 ${
-                        bookType === 'personal'
-                          ? 'bg-white/10 border-2 border-memorial-gold shadow-glow-gold'
-                          : 'bg-white/5 border border-white/10 hover:bg-white/10'
-                      }`}
+                return (
+                  <motion.button
+                    key={type.id}
+                    onClick={() => setSelectedType(type.id)}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all text-right ${
+                      isSelected
+                        ? 'bg-white/10 border-2 border-memorial-gold shadow-glow-gold'
+                        : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                    }`}
+                  >
+                    <div
+                      className={`w-10 h-10 rounded-lg bg-gradient-to-br ${type.color} flex items-center justify-center flex-shrink-0`}
                     >
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
-                        <User className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="text-right flex-1">
-                        <div className="text-sm font-semibold text-white">
-                          {isHebrew ? 'ספר אישי' : 'Personal Book'}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          {isHebrew ? 'אני כותב/ת בעצמי' : 'I write it myself'}
-                        </div>
-                      </div>
-                      {bookType === 'personal' && (
-                        <div className="w-6 h-6 rounded-full bg-memorial-gold flex items-center justify-center">
-                          <Check className="w-4 h-4 text-deep-space" />
-                        </div>
-                      )}
-                    </motion.button>
-
-                    <motion.button
-                      onClick={() => setBookType('collaborative')}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={`p-4 rounded-xl transition-all flex items-center gap-3 ${
-                        bookType === 'collaborative'
-                          ? 'bg-white/10 border-2 border-memorial-gold shadow-glow-gold'
-                          : 'bg-white/5 border border-white/10 hover:bg-white/10'
-                      }`}
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-memorial-gold to-amber-600 flex items-center justify-center">
-                        <UserPlus className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="text-right flex-1">
-                        <div className="text-sm font-semibold text-white">
-                          {isHebrew ? 'ספר שיתופי' : 'Collaborative Book'}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          {isHebrew ? 'להזמין אחרים לתרום' : 'Invite others to contribute'}
-                        </div>
-                      </div>
-                      {bookType === 'collaborative' && (
-                        <div className="w-6 h-6 rounded-full bg-memorial-gold flex items-center justify-center">
-                          <Check className="w-4 h-4 text-deep-space" />
-                        </div>
-                      )}
-                    </motion.button>
-                  </div>
-                </div>
-
-                {/* Memorial Dedication (for collaborative books) */}
-                {bookType === 'collaborative' && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="bg-memorial-gold/10 rounded-xl p-4 border border-memorial-gold/20"
-                  >
-                    <div className="flex items-center gap-2 mb-4">
-                      <Heart className="w-5 h-5 text-memorial-gold" />
-                      <h4 className="font-semibold text-white">
-                        {isHebrew ? 'הקדשת הספר' : 'Memorial Dedication'}
-                      </h4>
+                      <Icon className="w-5 h-5 text-white" />
                     </div>
-                    <p className="text-sm text-gray-400 mb-4">
-                      {isHebrew
-                        ? 'לזכר מי הספר הזה נכתב?'
-                        : 'In whose memory is this book being written?'}
-                    </p>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs text-gray-400 mb-1">
-                          {isHebrew ? 'שם' : 'Name'}
-                        </label>
-                        <input
-                          type="text"
-                          value={memorialDedication.name}
-                          onChange={(e) =>
-                            setMemorialDedication((prev) => ({ ...prev, name: e.target.value }))
-                          }
-                          placeholder={isHebrew ? 'שם מלא' : 'Full name'}
-                          className="input text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-400 mb-1">
-                          {isHebrew ? 'קשר' : 'Relationship'}
-                        </label>
-                        <input
-                          type="text"
-                          value={memorialDedication.relationship}
-                          onChange={(e) =>
-                            setMemorialDedication((prev) => ({
-                              ...prev,
-                              relationship: e.target.value,
-                            }))
-                          }
-                          placeholder={isHebrew ? 'אבא, אח, חבר...' : 'Father, brother, friend...'}
-                          className="input text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-400 mb-1">
-                          {isHebrew ? 'תאריך לידה' : 'Birth Date'}
-                        </label>
-                        <input
-                          type="date"
-                          value={memorialDedication.birthDate}
-                          onChange={(e) =>
-                            setMemorialDedication((prev) => ({
-                              ...prev,
-                              birthDate: e.target.value,
-                            }))
-                          }
-                          className="input text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-400 mb-1">
-                          {isHebrew ? 'תאריך פטירה' : 'Passing Date'}
-                        </label>
-                        <input
-                          type="date"
-                          value={memorialDedication.passingDate}
-                          onChange={(e) =>
-                            setMemorialDedication((prev) => ({
-                              ...prev,
-                              passingDate: e.target.value,
-                            }))
-                          }
-                          className="input text-sm"
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Navigation */}
-                <div className="flex justify-end gap-4 pt-6 border-t border-white/10">
-                  <GlowingButton
-                    onClick={() => setStep(2)}
-                    disabled={!canProceedToStep2}
-                    variant="gold"
-                    size="lg"
-                  >
-                    {t('create_book.next_step')}
-                    <ArrowLeft className="w-5 h-5" />
-                  </GlowingButton>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Step 2: AI Brainstorm */}
-            {step === 2 && (
-              <motion.div
-                key="step2"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
-              >
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl font-display font-bold text-white mb-2">
-                    🎨 {t('create_book.step2_title')}
-                  </h3>
-                  <p className="text-gray-400">{t('create_book.step2_subtitle')}</p>
-                </div>
-
-                {/* Current Title */}
-                <div className="glass rounded-xl p-6 text-center">
-                  <p className="text-sm text-gray-400 mb-2">{t('create_book.current_title')}</p>
-                  <p className="text-2xl font-display font-bold gradient-gold">{title}</p>
-                  <p className="text-sm text-cosmic-purple mt-2 capitalize">
-                    {t(`create_book.genres.${selectedGenre}`)} • {t('create_book.ready_to_write')}
-                  </p>
-                </div>
-
-                {/* Generate Titles Button */}
-                <div className="text-center">
-                  <p className="text-gray-300 mb-4">
-                    {t('create_book.title_not_sure')}
-                  </p>
-                  <GlowingButton
-                    onClick={handleGenerateTitles}
-                    disabled={generatingTitles}
-                    variant="cosmic"
-                    size="lg"
-                  >
-                    {generatingTitles ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        {t('create_book.generating_ideas')}
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="w-5 h-5" />
-                        {t('create_book.suggest_titles')}
-                      </>
+                    <span className="font-semibold text-white flex-1">
+                      {t(`create_book.story_types.${type.id}`)}
+                    </span>
+                    {isSelected && (
+                      <div className="w-3 h-3 rounded-full bg-memorial-gold flex-shrink-0" />
                     )}
-                  </GlowingButton>
-                </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
 
-                {/* Generated Titles */}
-                {generatedTitles.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="space-y-3"
-                  >
-                    <p className="text-sm font-semibold text-gray-300 text-center">
-                      {t('create_book.ai_suggestions')}
-                    </p>
-                    {generatedTitles.map((genTitle, index) => (
-                      <motion.button
-                        key={index}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        onClick={() => handleSelectGeneratedTitle(genTitle)}
-                        className={`w-full p-4 rounded-xl text-left transition-all ${
-                          title === genTitle
-                            ? 'bg-memorial-gold/20 border-2 border-memorial-gold'
-                            : 'bg-white/5 border border-white/10 hover:bg-white/10'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <p className="font-semibold text-white">{genTitle}</p>
-                          </div>
-                          {title === genTitle && (
-                            <Check className="w-5 h-5 text-memorial-gold" />
-                          )}
-                        </div>
-                      </motion.button>
-                    ))}
-                  </motion.div>
-                )}
-
-                {/* Navigation */}
-                <div className="flex justify-between gap-4 pt-6 border-t border-white/10">
-                  <GlowingButton
-                    onClick={() => setStep(1)}
-                    variant="cosmic"
-                    size="lg"
-                  >
-                    <ArrowRight className="w-5 h-5" />
-                    {t('create_book.back')}
-                  </GlowingButton>
-                  <GlowingButton
-                    onClick={() => setStep(3)}
-                    disabled={!canProceedToStep3}
-                    variant="gold"
-                    size="lg"
-                  >
-                    {t('create_book.next_step')}
-                    <ArrowLeft className="w-5 h-5" />
-                  </GlowingButton>
-                </div>
-              </motion.div>
+          {/* CTA Button */}
+          <GlowingButton
+            onClick={handleCreateBook}
+            disabled={creating || !title.trim()}
+            variant="gold"
+            size="lg"
+            className="w-full justify-center text-lg py-4"
+          >
+            {creating ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                {t('create_book.creating')}
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-5 h-5" />
+                {t('create_book.lets_start')}
+              </>
             )}
-
-            {/* Step 3: The Setup */}
-            {step === 3 && (
-              <motion.div
-                key="step3"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
-              >
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl font-display font-bold text-white mb-2">
-                    🎯 {t('create_book.step3_title')}
-                  </h3>
-                  <p className="text-gray-400">{t('create_book.step3_subtitle')}</p>
-                </div>
-
-                {/* Writing Goal */}
-                <div>
-                  <label className="block text-sm font-semibold mb-4 text-gray-300">
-                    {t('create_book.writing_goal_label')}
-                  </label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-4">
-                    {writingGoals.map((goal) => {
-                      const Icon = goal.icon;
-                      const isSelected = selectedWritingGoal === goal.id;
-
-                      return (
-                        <motion.button
-                          key={goal.id}
-                          onClick={() => setSelectedWritingGoal(goal.id)}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className={`p-6 rounded-xl transition-all ${
-                            isSelected
-                              ? 'bg-white/10 border-2 border-memorial-gold shadow-glow-gold'
-                              : 'bg-white/5 border border-white/10 hover:bg-white/10'
-                          }`}
-                        >
-                          <Icon className={`w-8 h-8 mb-3 mx-auto ${isSelected ? 'text-memorial-gold' : 'text-gray-400'}`} />
-                          <div className="font-semibold text-white mb-1">{t(`create_book.writing_goals.${goal.id}`)}</div>
-                          <div className="text-sm text-gray-400">{t(`create_book.writing_goals.${goal.id}_desc`)}</div>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Target Audience */}
-                <div>
-                  <label className="block text-sm font-semibold mb-4 text-gray-300">
-                    {t('create_book.audience_label')}
-                  </label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4">
-                    {targetAudiences.map((audience) => {
-                      const isSelected = selectedAudience === audience.id;
-
-                      return (
-                        <motion.button
-                          key={audience.id}
-                          onClick={() => setSelectedAudience(audience.id)}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className={`p-4 rounded-xl text-left transition-all ${
-                            isSelected
-                              ? 'bg-white/10 border-2 border-memorial-gold shadow-glow-gold'
-                              : 'bg-white/5 border border-white/10 hover:bg-white/10'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="font-semibold text-white mb-1">
-                                {t(`create_book.audiences.${audience.id}`)}
-                              </div>
-                              <div className="text-sm text-gray-400">
-                                {t(`create_book.audiences.${audience.id}_desc`)}
-                              </div>
-                            </div>
-                            {isSelected && (
-                              <div className="w-8 h-8 rounded-full bg-memorial-gold flex items-center justify-center">
-                                <Check className="w-5 h-5 text-deep-space" />
-                              </div>
-                            )}
-                          </div>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Summary */}
-                <div className="glass rounded-xl p-6 space-y-2">
-                  <p className="text-sm text-gray-400 mb-3">{t('create_book.summary')}</p>
-                  <div className="flex items-center gap-2">
-                    <Target className="w-4 h-4 text-memorial-gold" />
-                    <span className="text-white">
-                      <span className="font-semibold">{title}</span> • {t(`create_book.genres.${selectedGenre}`)}
-                    </span>
-                  </div>
-                  {selectedWritingGoal && (
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 text-cosmic-purple" />
-                      <span className="text-gray-300 capitalize">
-                        {t(`create_book.writing_goals.${selectedWritingGoal}`)}
-                      </span>
-                    </div>
-                  )}
-                  {selectedAudience && (
-                    <div className="flex items-center gap-2">
-                      <Target className="w-4 h-4 text-green-400" />
-                      <span className="text-gray-300">
-                        {t('create_book.target_audience')} {t(`create_book.audiences.${selectedAudience}`)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Navigation */}
-                <div className="flex justify-between gap-4 pt-6 border-t border-white/10">
-                  <GlowingButton
-                    onClick={() => setStep(2)}
-                    variant="cosmic"
-                    size="lg"
-                  >
-                    <ArrowRight className="w-5 h-5" />
-                    {t('create_book.back')}
-                  </GlowingButton>
-                  <GlowingButton
-                    onClick={() => setStep(4)}
-                    disabled={!selectedWritingGoal || !selectedAudience}
-                    variant="gold"
-                    size="lg"
-                  >
-                    {t('create_book.next_step')}
-                    <ArrowLeft className="w-5 h-5" />
-                  </GlowingButton>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Step 4: Template Selection */}
-            {step === 4 && (
-              <motion.div
-                key="step4"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
-              >
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl font-display font-bold text-white mb-2">
-                    📐 {t('create_book.step4_title')}
-                  </h3>
-                  <p className="text-gray-400">{t('create_book.step4_subtitle')}</p>
-                </div>
-
-                {/* Template Gallery */}
-                <div className="max-h-[400px] overflow-y-auto rounded-xl">
-                  <TemplateGallery
-                    selectedTemplate={selectedTemplate}
-                    onSelectTemplate={handleSelectTemplate}
-                    compact={true}
-                  />
-                </div>
-
-                {/* Selected Template Display */}
-                {selectedTemplate && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="glass rounded-xl p-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Layout className="w-5 h-5 text-memorial-gold" />
-                      <span className="text-white">
-                        {t('create_book.template_selected_label')} <span className="font-semibold text-memorial-gold">{selectedTemplate.name}</span>
-                      </span>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Summary */}
-                <div className="glass rounded-xl p-6 space-y-2">
-                  <p className="text-sm text-gray-400 mb-3">{t('create_book.summary')}</p>
-                  <div className="flex items-center gap-2">
-                    <Target className="w-4 h-4 text-memorial-gold" />
-                    <span className="text-white">
-                      <span className="font-semibold">{title}</span> • {t(`create_book.genres.${selectedGenre}`)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-cosmic-purple" />
-                    <span className="text-gray-300 capitalize">
-                      {t(`create_book.writing_goals.${selectedWritingGoal}`)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Target className="w-4 h-4 text-green-400" />
-                    <span className="text-gray-300">
-                      {t('create_book.target_audience')} {t(`create_book.audiences.${selectedAudience}`)}
-                    </span>
-                  </div>
-                  {/* Book Type */}
-                  <div className="flex items-center gap-2">
-                    {bookType === 'collaborative' ? (
-                      <UserPlus className="w-4 h-4 text-memorial-gold" />
-                    ) : (
-                      <User className="w-4 h-4 text-blue-400" />
-                    )}
-                    <span className="text-gray-300">
-                      {bookType === 'collaborative'
-                        ? isHebrew
-                          ? 'ספר שיתופי'
-                          : 'Collaborative Book'
-                        : isHebrew
-                        ? 'ספר אישי'
-                        : 'Personal Book'}
-                    </span>
-                  </div>
-                  {/* Memorial Dedication */}
-                  {bookType === 'collaborative' && memorialDedication.name && (
-                    <div className="flex items-center gap-2">
-                      <Heart className="w-4 h-4 text-memorial-gold" />
-                      <span className="text-memorial-gold">
-                        {isHebrew ? 'לזכר ' : 'In memory of '}
-                        {memorialDedication.name}
-                      </span>
-                    </div>
-                  )}
-                  {selectedTemplate && (
-                    <div className="flex items-center gap-2">
-                      <Layout className="w-4 h-4 text-memorial-gold" />
-                      <span className="text-gray-300">
-                        {t('create_book.template')} {selectedTemplate.name}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Navigation */}
-                <div className="flex justify-between gap-4 pt-6 border-t border-white/10">
-                  <GlowingButton
-                    onClick={() => setStep(3)}
-                    variant="cosmic"
-                    size="lg"
-                  >
-                    <ArrowRight className="w-5 h-5" />
-                    {t('create_book.back')}
-                  </GlowingButton>
-                  <GlowingButton
-                    onClick={handleCreateBook}
-                    disabled={creating}
-                    variant="gold"
-                    size="lg"
-                  >
-                    {creating ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        {t('create_book.creating')}
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-5 h-5" />
-                        {t('create_book.create_my_book')}
-                      </>
-                    )}
-                  </GlowingButton>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          </GlowingButton>
         </GlassCard>
       </motion.div>
     </div>
