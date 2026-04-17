@@ -6,7 +6,6 @@ import {
   BookOpen,
   Plus,
   Save,
-  BarChart3,
   Loader2,
   Check,
   Palette,
@@ -41,10 +40,7 @@ import DraftNotes from '../components/editor/DraftNotes';
 import AIFloatingToolbar, { AIEnhancePreview } from '../components/editor/AIFloatingToolbar';
 import { enhanceText } from '../services/analysisApi';
 import { EnhanceAction, EnhanceResult, AnalysisTab } from '../types/analysis';
-import PlotStructurePanel from '../components/analysis/PlotStructurePanel';
-import TensionArcChart from '../components/analysis/TensionArcChart';
-import WritingTechniquesCard from '../components/analysis/WritingTechniquesCard';
-import WritingGuidanceAlert, { useWritingGuidance } from '../components/analysis/WritingGuidanceAlert';
+import { useWritingGuidance } from '../components/analysis/WritingGuidanceAlert';
 import { useLanguage } from '../contexts/LanguageContext';
 import BrandWatermark from '../components/common/BrandWatermark';
 import BookProgressStepper from '../components/common/BookProgressStepper';
@@ -189,11 +185,12 @@ export default function BookWritingPage() {
     selectionTo: 0,
   });
 
-  // Analysis tab state
-  const [activeTab, setActiveTab] = useState<AnalysisTab>('copilot');
+  // Analysis tab state (kept for AICopilot integration)
+  const [activeTab, _setActiveTab] = useState<AnalysisTab>('copilot');
+  void _setActiveTab;
 
   // Writing guidance hook
-  const { guidance, dismiss: dismissGuidance } = useWritingGuidance(
+  const { guidance: _guidance, dismiss: _dismissGuidance } = useWritingGuidance(
     bookId,
     selectedChapterIndex,
     content,
@@ -341,7 +338,7 @@ export default function BookWritingPage() {
       }
     } catch (error) {
       console.error('Failed to load book:', error);
-      toast.error('Failed to load book');
+      toast.error(isHebrew ? 'לא הצלחנו לטעון את הספר' : 'Failed to load book');
       navigate('/dashboard');
     } finally {
       setLoading(false);
@@ -619,7 +616,7 @@ export default function BookWritingPage() {
         // For continue action, insert directly after selection
         editor.chain().focus().setTextSelection(to).insertContent(' ' + result.enhancedText).run();
         setSaved(false);
-        toast.success('Continuation added successfully!');
+        toast.success(isHebrew ? 'הטקסט נוסף בהצלחה!' : 'Text added successfully!');
       } else {
         // For other actions, show preview
         setPreviewData({
@@ -632,7 +629,7 @@ export default function BookWritingPage() {
       }
     } catch (error) {
       console.error('Enhancement failed:', error);
-      toast.error('Error improving text');
+      toast.error(isHebrew ? 'שגיאה בשיפור הטקסט' : 'Error improving text');
     } finally {
       setEnhancing(false);
       setLoadingAction(null);
@@ -654,7 +651,7 @@ export default function BookWritingPage() {
 
     setSaved(false);
     setPreviewData({ isOpen: false, originalText: '', result: null, selectionFrom: 0, selectionTo: 0 });
-    toast.success('Text updated successfully!');
+    toast.success(isHebrew ? 'הטקסט עודכן בהצלחה!' : 'Text updated!');
   };
 
   const handleCancelEnhancement = () => {

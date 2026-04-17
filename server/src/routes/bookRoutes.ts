@@ -278,16 +278,22 @@ router.delete(
 router.get('/:id/contribute-info', async (req: any, res: any) => {
   try {
     const { Book } = await import('../models/Book');
+    const { User } = await import('../models/User');
     const book = await Book.findById(req.params.id);
     if (!book) {
       return res.status(404).json({ success: false, error: 'Book not found' });
     }
-    // Return minimal public info
+    // Get author name from User model
+    let authorName = 'Anonymous';
+    if (book.author) {
+      const author = await User.findById(book.author);
+      if (author) authorName = author.name || 'Anonymous';
+    }
     res.status(200).json({
       success: true,
       data: {
         title: book.title,
-        author: (book as any).authorName || 'Anonymous',
+        author: authorName,
         genre: book.genre,
       },
     });

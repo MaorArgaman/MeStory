@@ -62,7 +62,7 @@ export default function BookProgressStepper({ bookId, progress, currentStep }: B
       if (!progress.hasDesign) {
         toast.loading(isHebrew ? 'מעצב כריכה...' : 'Designing cover...', { id: 'auto-complete' });
         try {
-          await api.post(`/ai/design/complete/${bookId}`, { generateImages: true });
+          await api.post(`/ai/design-complete/${bookId}`, { generateImages: true });
         } catch (e) {
           console.warn('Design generation failed, continuing...', e);
         }
