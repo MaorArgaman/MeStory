@@ -278,27 +278,28 @@ export async function getQualityNewReleases(
     return dateB.getTime() - dateA.getTime();
   });
 
-  const promoted: PromotedBook[] = [];
+  // PERF: batch-compute promotion scores in parallel instead of sequential loop
+  const promoted = await Promise.all(
+    filteredBooks.slice(0, limit).map(async (book) => {
+      const { score, badges } = await calculatePromotionScore(book);
+      const daysSince = Math.floor(
+        (Date.now() - new Date(book.publishingStatus?.publishedAt || 0).getTime()) /
+          (1000 * 60 * 60 * 24)
+      );
 
-  for (const book of filteredBooks.slice(0, limit)) {
-    const { score, badges } = await calculatePromotionScore(book);
-    const daysSince = Math.floor(
-      (Date.now() - new Date(book.publishingStatus?.publishedAt || 0).getTime()) /
-        (1000 * 60 * 60 * 24)
-    );
+      const reasons: string[] = [`Published ${daysSince} day${daysSince === 1 ? '' : 's'} ago`];
+      if ((book.qualityScore?.overallScore || 0) >= 75) {
+        reasons.push('High quality score');
+      }
 
-    const reasons: string[] = [`Published ${daysSince} day${daysSince === 1 ? '' : 's'} ago`];
-    if ((book.qualityScore?.overallScore || 0) >= 75) {
-      reasons.push('High quality score');
-    }
-
-    promoted.push({
-      book,
-      promotionScore: score,
-      promotionReasons: reasons,
-      badges: [...badges, 'NEW_RELEASE'],
-    });
-  }
+      return {
+        book,
+        promotionScore: score,
+        promotionReasons: reasons,
+        badges: [...badges, 'NEW_RELEASE'],
+      } as PromotedBook;
+    })
+  );
 
   return promoted;
 }
@@ -319,18 +320,19 @@ export async function getTrendingByVelocity(
   // Sort by views as proxy for trending
   books.sort((a, b) => (b.statistics?.views || 0) - (a.statistics?.views || 0));
 
-  const promoted: PromotedBook[] = [];
+  // PERF: batch-compute promotion scores in parallel instead of sequential loop
+  const promoted = await Promise.all(
+    books.slice(0, limit).map(async (book) => {
+      const { score, badges } = await calculatePromotionScore(book);
 
-  for (const book of books.slice(0, limit)) {
-    const { score, badges } = await calculatePromotionScore(book);
-
-    promoted.push({
-      book,
-      promotionScore: score,
-      promotionReasons: ['Trending this week'],
-      badges,
-    });
-  }
+      return {
+        book,
+        promotionScore: score,
+        promotionReasons: ['Trending this week'],
+        badges,
+      } as PromotedBook;
+    })
+  );
 
   return promoted;
 }
@@ -357,15 +359,26 @@ export async function getTopAuthorsSpotlight(limit: number = 10): Promise<Author
     authorMap.get(authorId)!.push(book);
   }
 
+  // PERF: batch-fetch all authors in parallel instead of sequential User.findById loop
+  const authorEntries = Array.from(authorMap.entries());
+  const authorIds = authorEntries.map(([id]) => id);
+  const authors = await User.findByIds(authorIds);
+
+  // PERF: batch-compute credibility scores in parallel
+  const credibilityScores = await Promise.all(
+    authorIds.map((authorId) => getAuthorCredibilityScore(authorId))
+  );
+
   const spotlights: AuthorSpotlight[] = [];
 
-  for (const [authorId, books] of authorMap) {
-    const author = await User.findById(authorId);
+  for (let i = 0; i < authorEntries.length; i++) {
+    const [authorId, books] = authorEntries[i];
+    const author = authors[i];
     if (!author) continue;
 
     const totalViews = books.reduce((sum, b) => sum + (b.statistics?.views || 0), 0);
     const avgQuality = books.reduce((sum, b) => sum + (b.qualityScore?.overallScore || 50), 0) / books.length;
-    const credibilityScore = await getAuthorCredibilityScore(authorId);
+    const credibilityScore = credibilityScores[i];
 
     // Sort books by quality for featured
     const sortedBooks = [...books].sort((a, b) =>
@@ -407,18 +420,19 @@ export async function getTopInGenre(
 
   books.sort((a, b) => (b.qualityScore?.overallScore || 0) - (a.qualityScore?.overallScore || 0));
 
-  const promoted: PromotedBook[] = [];
+  // PERF: batch-compute promotion scores in parallel instead of sequential loop
+  const promoted = await Promise.all(
+    books.slice(0, limit).map(async (book) => {
+      const { score, badges } = await calculatePromotionScore(book);
 
-  for (const book of books.slice(0, limit)) {
-    const { score, badges } = await calculatePromotionScore(book);
-
-    promoted.push({
-      book,
-      promotionScore: score,
-      promotionReasons: [`Top ${genre} book`, 'Highly rated in category'],
-      badges: [...badges, `TOP_${genre.toUpperCase().replace(/\s+/g, '_')}`],
-    });
-  }
+      return {
+        book,
+        promotionScore: score,
+        promotionReasons: [`Top ${genre} book`, 'Highly rated in category'],
+        badges: [...badges, `TOP_${genre.toUpperCase().replace(/\s+/g, '_')}`],
+      } as PromotedBook;
+    })
+  );
 
   return promoted;
 }
