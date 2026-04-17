@@ -476,6 +476,9 @@ export default function BookLayoutPage() {
   const flipBookRef = useRef<any>(null);
   const [settings, setSettings] = useState(defaultSettings);
 
+  // Custom swipe gesture state — separate from flipbook to avoid conflicts with image drag
+  const swipeRef = useRef<{ startX: number; startY: number; startTime: number } | null>(null);
+
   // UI state
   const [showSettings, setShowSettings] = useState(false);
   const [showBookStructureHelp, setShowBookStructureHelp] = useState(false); // RTL book structure help overlay
@@ -605,7 +608,18 @@ export default function BookLayoutPage() {
             };
           });
           // Ensure summary page exists if includeBackCover is enabled
-          const loadedSettings = { ...defaultSettings, ...bookData.pageLayout.settings };
+          const rawSettings = { ...defaultSettings, ...bookData.pageLayout.settings };
+          // Migrate old books with oversized fonts/margins — they caused text overflow
+          const loadedSettings = {
+            ...rawSettings,
+            fontSize: rawSettings.fontSize > 13 ? Math.round(rawSettings.fontSize * 0.78) : rawSettings.fontSize,
+            margins: {
+              top: rawSettings.margins.top > 45 ? Math.round(rawSettings.margins.top * 0.65) : rawSettings.margins.top,
+              bottom: rawSettings.margins.bottom > 45 ? Math.round(rawSettings.margins.bottom * 0.65) : rawSettings.margins.bottom,
+              left: rawSettings.margins.left > 40 ? Math.round(rawSettings.margins.left * 0.65) : rawSettings.margins.left,
+              right: rawSettings.margins.right > 40 ? Math.round(rawSettings.margins.right * 0.65) : rawSettings.margins.right,
+            },
+          };
           const hasSummaryPage = pagesWithImages.some((p: any) => p.type === 'summary');
           if (loadedSettings.includeBackCover && !hasSummaryPage) {
             pagesWithImages.push({
@@ -1174,20 +1188,67 @@ export default function BookLayoutPage() {
     }
   };
 
+  // Upload a base64 data URL to the server via the page-image endpoint, returns server URL
+  const uploadBase64Image = async (dataUrl: string, pageIndex: number): Promise<string | null> => {
+    try {
+      // Convert base64 to Blob
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], `image-${Date.now()}.png`, { type: blob.type || 'image/png' });
+
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('pageIndex', String(pageIndex));
+
+      const response = await api.post(`/books/${bookId}/page-image`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      if (response.data.success) {
+        const imageData = response.data.data?.image || response.data.data;
+        return imageData?.url || response.data.data?.imageUrl || null;
+      }
+      return null;
+    } catch (err) {
+      console.error('Failed to upload base64 image:', err);
+      return null;
+    }
+  };
+
   const saveLayout = async (isAutoSave = false) => {
     if (!book) return;
 
     setSaving(true);
     try {
-      // Save images with proper URLs only — skip base64 data URLs to avoid
-      // payload size issues (base64 images can be 1-5MB each as text).
-      // Images uploaded via /upload/image already have server URLs.
-      const pagesForSave = pages.map(page => ({
+      // First, upload any base64 images to the server so they get proper URLs.
+      // This prevents payload size issues and ensures images persist.
+      let updatedPages = [...pages];
+      let hadBase64Uploads = false;
+
+      for (let pi = 0; pi < updatedPages.length; pi++) {
+        const pageImages = updatedPages[pi].images || [];
+        for (let ii = 0; ii < pageImages.length; ii++) {
+          const img = pageImages[ii];
+          if (img.url && img.url.startsWith('data:')) {
+            const serverUrl = await uploadBase64Image(img.url, pi);
+            if (serverUrl) {
+              pageImages[ii] = { ...img, url: serverUrl };
+              hadBase64Uploads = true;
+            }
+          }
+        }
+      }
+
+      // If we uploaded base64 images, update local state so they have server URLs now
+      if (hadBase64Uploads) {
+        setPages(updatedPages);
+      }
+
+      const pagesForSave = updatedPages.map(page => ({
         ...page,
         images: (page.images || []).map(img => ({
           id: img.id,
-          // Keep server URLs, skip large base64 data
-          url: img.url && !img.url.startsWith('data:') ? img.url : '',
+          url: img.url || '',
           x: img.x,
           y: img.y,
           width: img.width,
@@ -1200,7 +1261,7 @@ export default function BookLayoutPage() {
           textWrap: img.textWrap,
           flipH: img.flipH,
           flipV: img.flipV,
-        })).filter(img => img.url), // Drop entries without URL
+        })).filter(img => img.url && !img.url.startsWith('data:')), // Only save server URLs
       }));
 
       const response = await api.put(`/books/${bookId}`, {
@@ -1900,6 +1961,32 @@ export default function BookLayoutPage() {
   const readNext = isBookRTL ? flipPrev : flipNext;
   const readPrev = isBookRTL ? flipNext : flipPrev;
 
+  // Custom swipe gesture handlers — works on the flipbook container without
+  // conflicting with image drag (which uses stopPropagation on the image elements)
+  const handleSwipeStart = (clientX: number, clientY: number) => {
+    swipeRef.current = { startX: clientX, startY: clientY, startTime: Date.now() };
+  };
+  const handleSwipeEnd = (clientX: number, clientY: number) => {
+    if (!swipeRef.current) return;
+    const { startX, startY, startTime } = swipeRef.current;
+    swipeRef.current = null;
+
+    const deltaX = clientX - startX;
+    const deltaY = clientY - startY;
+    const elapsed = Date.now() - startTime;
+
+    // Must be horizontal, fast enough, and long enough
+    if (Math.abs(deltaX) < 40 || Math.abs(deltaY) > Math.abs(deltaX) || elapsed > 600) return;
+
+    if (deltaX > 0) {
+      // Swiped right → in Hebrew (RTL) = next page, in LTR = prev page
+      isBookRTL ? readNext() : readPrev();
+    } else {
+      // Swiped left → in Hebrew (RTL) = prev page, in LTR = next page
+      isBookRTL ? readPrev() : readNext();
+    }
+  };
+
   const handleFlipBookFlip = (e: any) => {
     const idx = e.data;
     const readingPos = isBookRTL ? totalDomPages - 1 - idx : idx;
@@ -2297,8 +2384,14 @@ export default function BookLayoutPage() {
             </button>
           </div>
 
-          {/* Flipbook content area */}
-          <div className="flex-1 flex flex-col items-center justify-center p-1 sm:p-2 lg:p-4 overflow-hidden min-h-0">
+          {/* Flipbook content area — with custom swipe gesture support */}
+          <div
+            className="flex-1 flex flex-col items-center justify-center p-1 sm:p-2 lg:p-4 overflow-hidden min-h-0"
+            onTouchStart={(e) => handleSwipeStart(e.touches[0].clientX, e.touches[0].clientY)}
+            onTouchEnd={(e) => handleSwipeEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY)}
+            onMouseDown={(e) => handleSwipeStart(e.clientX, e.clientY)}
+            onMouseUp={(e) => handleSwipeEnd(e.clientX, e.clientY)}
+          >
 
           {/* react-pageflip book with editing — 350×500 base, auto-scales via size="stretch" */}
           <div className="relative w-full flex-1 min-h-0 flex items-center justify-center">
@@ -2319,7 +2412,7 @@ export default function BookLayoutPage() {
               usePortrait={false}
               autoSize={true}
               clickEventForward={true}
-              useMouseEvents={true}
+              useMouseEvents={false}
               swipeDistance={30}
               showPageCorners={true}
               disableFlipByClick={true}
@@ -2459,6 +2552,17 @@ export default function BookLayoutPage() {
                 </FlipPage>
               )}
             </HTMLFlipBook>
+            {/* Book reflection effect */}
+            <div
+              className="w-full h-16 mt-1 opacity-20 pointer-events-none"
+              style={{
+                background: 'linear-gradient(to bottom, rgba(255,255,255,0.1), transparent)',
+                filter: 'blur(4px)',
+                transform: 'scaleY(-0.3)',
+                maskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)',
+              }}
+            />
           </div>
 
           {/* Page info shown in top bar — no duplicate labels needed here */}
@@ -3725,11 +3829,23 @@ function PageRenderer({
     return bookTitle || '';
   };
 
-  // Scale font size and margins for mobile — pages render at ~200-350px wide on small screens
-  // so template sizes (14-15px fonts, 55-65px margins) are too large
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-  const scaleFactor = isMobile ? 0.65 : 1;
-  const scaledFontSize = Math.max(8, Math.round(settings.fontSize * scaleFactor));
+  // Scale font size and margins based on actual container width — reactive to resize/rotation.
+  // Pages render at ~200-350px wide on small screens, so template sizes need scaling.
+  const [containerWidth, setContainerWidth] = useState(0);
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Scale proportionally: 350px container = full size, smaller = proportionally smaller
+  const scaleFactor = containerWidth > 0 ? Math.min(1, Math.max(0.5, containerWidth / 350)) : 1;
+  const scaledFontSize = Math.max(7, Math.round(settings.fontSize * scaleFactor));
   const scaledMargins = {
     top: Math.round(settings.margins.top * scaleFactor),
     bottom: Math.round(settings.margins.bottom * scaleFactor),
@@ -3904,11 +4020,14 @@ function PageRenderer({
 
       {/* User-Added Images — deduplicate against AI placements to avoid showing same image twice */}
       {(page.images || []).filter((image) => {
-        // Skip images that are already rendered by AI chapter-start placements above
-        const aiUrls = aiImagePlacements
+        // Skip images that are already rendered by AI chapter-start placements above.
+        // Compare by filename (last URL segment) to handle domain/path variations.
+        const getFilename = (url: string) => url?.split('/').pop()?.split('?')[0] || url;
+        const aiFilenames = aiImagePlacements
           .filter(p => p.generatedImageUrl && p.position === 'chapter-start')
-          .map(p => p.generatedImageUrl);
-        return !aiUrls.includes(image.url);
+          .map(p => getFilename(p.generatedImageUrl!));
+        const imageFilename = getFilename(image.url);
+        return !aiFilenames.includes(imageFilename) && !aiFilenames.some(af => image.url?.includes(af) || af?.includes(imageFilename));
       }).map((image) => {
         // Calculate styles based on image properties
         const imageStyles: React.CSSProperties = {
