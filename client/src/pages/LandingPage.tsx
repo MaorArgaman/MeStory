@@ -34,7 +34,7 @@ const heroImages = [
 
 // Social proof portraits
 const socialProofHe = [
-  { image: '/img/new/social-soldier-female.png', name: 'נועה כהן', bookType: 'ספר הנצחה צבאי', quote: 'כתבתי את הספר לזכר החברה הכי טובה שלי. לא חשבתי שאני מסוגלת, אבל המילים פשוט זרמו.' },
+  { image: '/img/new/social-soldier-female.png', name: 'נועה כהן', bookType: 'ספר הנצחה צבאי', quote: 'מעולם לא כתבתי ספר. פשוט סיפרתי, וה-AI של MeStory הפך את הסיפור שלי לספר אמיתי. כמו שותף ליצירה שתמיד יודע מה רצית להגיד.' },
   { image: '/img/new/social-bereaved-brother.png', name: 'יוסי אברהם', bookType: 'ספר זיכרון לאח', quote: 'האח שלי היה גיבור שקט. הספר הזה נותן לו את הבמה שמגיעה לו.' },
   { image: '/img/new/social-retired-officer.png', name: 'אלי בן-דוד', bookType: 'סיפור חיים צבאיים', quote: '35 שנות שירות בצה"ל. עכשיו הנכדים יודעים למה סבא תמיד שותק ביום הזיכרון.' },
   { image: '/img/new/social-couple-telaviv.png', name: 'מיכל ודני', bookType: 'סיפור אהבה', quote: 'יצרנו ספר מהסיפור שלנו כמתנה להורים. אמא בכתה מאושר.' },
@@ -44,7 +44,7 @@ const socialProofHe = [
 ];
 
 const socialProofEn = [
-  { image: '/img/new/social-soldier-female.png', name: 'Noa Cohen', bookType: 'Military Memorial Book', quote: 'I wrote a book in memory of my best friend. I didn\'t think I could, but the words just flowed.' },
+  { image: '/img/new/social-soldier-female.png', name: 'Noa Cohen', bookType: 'Military Memorial Book', quote: 'I never wrote a book before. I just told my story, and MeStory\'s AI turned it into a real book. Like a creative partner who always knows what you meant to say.' },
   { image: '/img/new/social-bereaved-brother.png', name: 'Yossi Abraham', bookType: 'Brother\'s Memorial', quote: 'My brother was a quiet hero. This book gives him the stage he deserves.' },
   { image: '/img/new/social-retired-officer.png', name: 'Eli Ben-David', bookType: 'Military Life Story', quote: '35 years of IDF service. Now my grandchildren understand why grandpa is always silent on Memorial Day.' },
   { image: '/img/new/social-couple-telaviv.png', name: 'Michal & Danny', bookType: 'Love Story', quote: 'We made a book from our story as a gift for our parents. Mom cried tears of joy.' },
