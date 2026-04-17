@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
 // Use new logo from public folder
 const logoIcon = '/img/new/logo-mestory-small.jpeg';
 
@@ -38,15 +37,15 @@ export default function LoadingScreen() {
           AI-Powered Book Writing Platform
         </motion.p>
 
-        {/* Loading Spinner */}
+        {/* Loading Spinner — book animation */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.5 }}
-          className="flex items-center justify-center gap-3"
+          className="flex flex-col items-center justify-center gap-3"
         >
-          <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
-          <span className="text-gray-400 text-sm">Loading your workspace...</span>
+          <div className="spinner-book" />
+          <span className="text-gray-400 text-sm">טוען...</span>
         </motion.div>
 
         {/* Progress Indicator */}

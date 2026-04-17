@@ -68,25 +68,28 @@ class ErrorBoundary extends Component<Props, State> {
       const isChunk = this.state.error && isChunkLoadError(this.state.error);
 
       return (
-        <div className="min-h-[400px] flex items-center justify-center p-8">
+        <div className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-gray-900 via-purple-900/30 to-indigo-900/30">
           <div className="text-center max-w-md">
-            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-red-500/20 flex items-center justify-center">
-              <AlertTriangle className="w-8 h-8 text-red-400" />
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-memorial-gold/10 border border-memorial-gold/20 flex items-center justify-center">
+              <AlertTriangle className="w-10 h-10 text-memorial-gold" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3">
-              {isChunk ? 'New version available' : 'Something went wrong'}
+            <h2 className="text-2xl font-bold text-white mb-2">
+              {isChunk ? 'גרסה חדשה זמינה' : 'אופס! משהו השתבש'}
             </h2>
-            <p className="text-gray-400 mb-6">
+            <p className="text-sm text-gray-400 mb-1" dir="ltr">
+              {isChunk ? 'A new version is available' : 'Oops! Something went wrong'}
+            </p>
+            <p className="text-gray-400 mb-8 mt-4">
               {isChunk
-                ? 'The app has been updated. Please refresh to load the latest version.'
-                : 'We encountered an unexpected error. Please try again or refresh the page.'}
+                ? 'האפליקציה עודכנה. רענן את הדף כדי לטעון את הגרסה החדשה.'
+                : 'נתקלנו בשגיאה לא צפויה. אפשר לנסות שוב — זה בדרך כלל עוזר.'}
             </p>
             <button
-              onClick={isChunk ? () => window.location.reload() : this.handleRetry}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl text-white font-medium transition-all"
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-memorial-gold to-amber-600 hover:from-amber-500 hover:to-amber-600 rounded-xl text-white font-medium transition-all shadow-lg shadow-memorial-gold/20"
             >
               <RefreshCw className="w-5 h-5" />
-              {isChunk ? 'Refresh' : 'Try Again'}
+              {isChunk ? 'רענן את הדף' : 'נסה שוב'}
             </button>
           </div>
         </div>

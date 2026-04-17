@@ -14,7 +14,7 @@ let socket: Socket | null = null;
 // Connection state (isConnecting tracked for future connection status UI)
 let isConnecting = false;
 let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 5;
+const MAX_RECONNECT_ATTEMPTS = 2;
 
 // Export function to check connection status
 export function getConnectionState() {
@@ -81,7 +81,9 @@ export function initializeSocket(token: string): Socket {
   });
 
   socket.on('connect_error', (error: Error) => {
-    console.error('[Socket] Connection error:', error.message);
+    if (import.meta.env.DEV) {
+      console.error('[Socket] Connection error:', error.message);
+    }
     isConnecting = false;
     reconnectAttempts++;
 
@@ -102,7 +104,9 @@ export function initializeSocket(token: string): Socket {
   });
 
   socket.on('reconnect_failed', () => {
-    console.error('[Socket] Reconnection failed');
+    if (import.meta.env.DEV) {
+      console.error('[Socket] Reconnection failed');
+    }
   });
 
   // Health check
