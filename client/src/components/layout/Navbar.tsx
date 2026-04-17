@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useSocket } from '../../contexts/SocketContext';
-import { BookOpen, User, LogOut, ChevronDown, Crown, MessageCircle, Bell, Store, Library, Menu, X, DollarSign } from 'lucide-react';
+import { BookOpen, User, LogOut, ChevronDown, Crown, MessageCircle, Bell, Store, Menu, X, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getUnreadCount as getMessagesUnreadCount } from '../../services/messagingApi';
 import { getUnreadCount as getNotificationsUnreadCount } from '../../services/notificationApi';
@@ -148,19 +148,19 @@ export default function Navbar() {
                 }`}
               >
                 <Store className="w-4 h-4 xl:w-5 xl:h-5" />
-                <span className="font-semibold text-sm xl:text-base">{t('nav.marketplace')}</span>
+                <span className="font-semibold text-sm xl:text-base">{t('nav.marketplace', 'חנות')}</span>
               </Link>
 
               <Link
-                to="/library"
+                to="/faq"
                 className={`flex items-center gap-2 px-4 xl:px-5 py-2 xl:py-2.5 rounded-xl transition-all duration-300 ${
-                  isActive('/library')
+                  isActive('/faq')
                     ? 'bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 text-memorial-gold border border-memorial-gold/30 shadow-glow-gold'
                     : 'text-gray-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Library className="w-4 h-4 xl:w-5 xl:h-5" />
-                <span className="font-semibold text-sm xl:text-base">{t('nav.library', 'My Library')}</span>
+                <HelpCircle className="w-4 h-4 xl:w-5 xl:h-5" />
+                <span className="font-semibold text-sm xl:text-base">{t('nav.help', 'עזרה')}</span>
               </Link>
             </div>
 
@@ -394,29 +394,15 @@ export default function Navbar() {
                   </Link>
 
                   <Link
-                    to="/library"
+                    to="/faq"
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-                      isActive('/library')
+                      isActive('/faq')
                         ? 'bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 text-memorial-gold border border-memorial-gold/30'
                         : 'text-gray-300 hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    <Library className="w-5 h-5" />
-                    <span className="font-semibold">{t('nav.library', 'My Library')}</span>
-                  </Link>
-
-                  <div className="border-t border-white/10 my-2" />
-
-                  <Link
-                    to="/earnings"
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-                      isActive('/earnings')
-                        ? 'bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 text-memorial-gold border border-memorial-gold/30'
-                        : 'text-gray-300 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    <DollarSign className="w-5 h-5" />
-                    <span className="font-semibold">{t('nav.earnings', 'My Earnings')}</span>
+                    <HelpCircle className="w-5 h-5" />
+                    <span className="font-semibold">{t('nav.help', 'עזרה')}</span>
                   </Link>
 
                   <Link
