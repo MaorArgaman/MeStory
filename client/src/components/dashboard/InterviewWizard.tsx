@@ -13,24 +13,30 @@ import toast from 'react-hot-toast';
 import { api } from '../../services/api';
 import AIInterviewChat from '../interview/AIInterviewChat';
 import { InterviewSummary } from '../../services/aiInterviewApi';
+import BookGeneratingScreen from './BookGeneratingScreen';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface InterviewWizardProps {
   onClose: () => void;
   onSuccess: (bookId: string) => void;
 }
 
-type WizardStep = 'interview' | 'summary' | 'creating';
+type WizardStep = 'interview' | 'summary' | 'creating' | 'generating';
 
 export default function InterviewWizard({ onClose, onSuccess }: InterviewWizardProps) {
   // Use modal hook for ESC key and scroll lock (active when not in interview step)
   useModal(true, onClose);
   const { t } = useTranslation('common');
+  const { language } = useLanguage();
+  const isHebrew = language === 'he';
 
   const [step, setStep] = useState<WizardStep>('interview');
   const [editedSummary, setEditedSummary] = useState<InterviewSummary | null>(null);
   const [bookTitle, setBookTitle] = useState('');
   const [bookGenre, setBookGenre] = useState('Fiction');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [generatingProgress, setGeneratingProgress] = useState(0);
+  const [generatingStep, setGeneratingStep] = useState('');
 
   // Handle interview completion
   const handleInterviewComplete = (interviewSummary: InterviewSummary) => {
@@ -48,7 +54,7 @@ export default function InterviewWizard({ onClose, onSuccess }: InterviewWizardP
     }
   };
 
-  // Create book with storyContext
+  // Create book AND generate full content with AI
   const handleCreateBook = async () => {
     if (!bookTitle.trim()) {
       toast.error(t('interview.enter_book_title', 'Please enter a book title'));
@@ -61,12 +67,19 @@ export default function InterviewWizard({ onClose, onSuccess }: InterviewWizardP
     }
 
     setIsSubmitting(true);
-    setStep('creating');
+    setStep('generating');
+    setGeneratingProgress(5);
+    setGeneratingStep(isHebrew ? 'יוצר את הספר...' : 'Creating book...');
 
     try {
-      const response = await api.post('/books', {
+      // Step 1: Create the book
+      setGeneratingProgress(10);
+      setGeneratingStep(isHebrew ? 'שומר את פרטי הספר...' : 'Saving book details...');
+
+      const createResponse = await api.post('/books', {
         title: bookTitle.trim(),
         genre: bookGenre,
+        language: isHebrew ? 'he' : 'en',
         storyContext: {
           theme: editedSummary.theme,
           characters: editedSummary.characters,
@@ -80,13 +93,75 @@ export default function InterviewWizard({ onClose, onSuccess }: InterviewWizardP
         },
       });
 
-      if (response.data.success) {
-        toast.success(t('interview.story_created', 'Story foundation created! Starting your book...'));
-        onSuccess(response.data.data.id);
+      if (!createResponse.data.success) {
+        throw new Error('Failed to create book');
+      }
+
+      const bookId = createResponse.data.data.id;
+
+      // Step 2: Generate complete book content with AI
+      setGeneratingProgress(20);
+      setGeneratingStep(isHebrew ? 'ה-AI כותב את הספר שלך...' : 'AI is writing your book...');
+
+      // Simulate gradual progress while waiting for AI
+      const progressInterval = setInterval(() => {
+        setGeneratingProgress(prev => {
+          if (prev < 80) return prev + 2;
+          return prev;
+        });
+      }, 1500);
+
+      const generateResponse = await api.post('/ai/generate-book', {
+        bookId,
+        storyInput: {
+          bookTitle: bookTitle.trim(),
+          genre: bookGenre,
+          language: isHebrew ? 'he' : 'en',
+          // Pass interview data
+          theme: editedSummary.theme,
+          characters: editedSummary.characters,
+          conflict: editedSummary.conflict,
+          setting: editedSummary.setting,
+          climax: editedSummary.climax,
+          resolution: editedSummary.resolution,
+          keyPoints: editedSummary.keyPoints,
+          narrativeArc: editedSummary.narrativeArc,
+          // Build raw text from all fields for context
+          rawAnswers: Object.values(editedSummary).filter(v => typeof v === 'string').join('\n\n'),
+        },
+      }, { timeout: 120000 }); // 2 minute timeout for AI generation
+
+      clearInterval(progressInterval);
+
+      if (generateResponse.data.success) {
+        setGeneratingProgress(90);
+        setGeneratingStep(isHebrew ? 'מסיים...' : 'Finishing...');
+
+        // Short delay for animation
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        setGeneratingProgress(100);
+        setGeneratingStep(isHebrew ? 'הספר שלך מוכן!' : 'Your book is ready!');
+
+        // Wait for completion animation
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        toast.success(
+          isHebrew
+            ? `הספר "${bookTitle}" נוצר עם ${generateResponse.data.data.chapters?.length || 0} פרקים!`
+            : `Book "${bookTitle}" created with ${generateResponse.data.data.chapters?.length || 0} chapters!`
+        );
+        onSuccess(bookId);
+      } else {
+        throw new Error(generateResponse.data.error || 'Generation failed');
       }
     } catch (error: any) {
-      console.error('Failed to create book:', error);
-      toast.error(error.response?.data?.error || t('interview.create_failed', 'Failed to create book'));
+      console.error('Failed to create/generate book:', error);
+      toast.error(
+        isHebrew
+          ? 'שגיאה ביצירת הספר. נסה שוב.'
+          : (error.response?.data?.error || 'Failed to generate book')
+      );
       setStep('summary');
     } finally {
       setIsSubmitting(false);
@@ -104,25 +179,14 @@ export default function InterviewWizard({ onClose, onSuccess }: InterviewWizardP
     );
   }
 
-  // Render creating step
-  if (step === 'creating') {
+  // Render generating step — full book creation with AI
+  if (step === 'generating' || step === 'creating') {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center"
-      >
-        <div className="flex flex-col items-center gap-4">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-          >
-            <Sparkles className="w-16 h-16 text-memorial-gold" />
-          </motion.div>
-          <p className="text-xl text-white">{t('interview.creating_book', 'Creating your book...')}</p>
-          <p className="text-gray-400">{t('interview.setting_up_foundation', 'Setting up your story foundation')}</p>
-        </div>
-      </motion.div>
+      <BookGeneratingScreen
+        isVisible={true}
+        currentStep={generatingStep}
+        progress={generatingProgress}
+      />
     );
   }
 

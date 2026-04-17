@@ -392,4 +392,59 @@ router.post('/interview/:id/complete', completeInterview as any);
  */
 router.delete('/interview/:id', cancelInterview as any);
 
+/**
+ * POST /api/ai/generate-book
+ * Generate a complete book from interview data / story context.
+ * This is the "Tell me your story → get a book" endpoint.
+ */
+router.post('/generate-book', authenticate as any, async (req: any, res: any) => {
+  try {
+    const { generateCompleteBook } = await import('../services/storyGenerationService');
+    const { Book } = await import('../models/Book');
+
+    const { bookId, storyInput } = req.body;
+
+    if (!storyInput) {
+      return res.status(400).json({ success: false, error: 'storyInput is required' });
+    }
+
+    // Generate the book (can take 30-60 seconds)
+    const generatedBook = await generateCompleteBook({
+      ...storyInput,
+      onProgress: undefined, // progress is handled client-side via polling
+    });
+
+    // If bookId is provided, update the existing book
+    if (bookId) {
+      const book = await Book.findById(bookId);
+      if (book && book.author === req.user.id) {
+        await Book.findByIdAndUpdate(bookId, {
+          chapters: generatedBook.chapters.map((ch, i) => ({
+            title: ch.title,
+            content: ch.content,
+            order: i,
+            wordCount: ch.wordCount,
+          })),
+          synopsis: generatedBook.synopsis,
+          statistics: {
+            wordCount: generatedBook.totalWords,
+            chapterCount: generatedBook.chapters.length,
+          },
+        });
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: generatedBook,
+    });
+  } catch (error: any) {
+    console.error('Failed to generate book:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to generate book',
+    });
+  }
+});
+
 export default router;
