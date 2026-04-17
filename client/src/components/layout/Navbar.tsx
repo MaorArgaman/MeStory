@@ -120,7 +120,7 @@ export default function Navbar() {
                   src={logoIcon}
                   alt="MeStory"
                   lazy={false}
-                  className="h-10 sm:h-12 w-auto object-contain"
+                  className="h-10 sm:h-12 w-auto object-contain nav-logo-glow"
                 />
               </motion.div>
             </Link>
@@ -206,7 +206,7 @@ export default function Navbar() {
                     title={t('nav.notifications')}
                     aria-label={t('nav.notifications')}
                   >
-                    <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <Bell className={`w-4 h-4 sm:w-5 sm:h-5 ${notificationsUnreadCount > 0 ? 'bell-shake' : ''}`} />
                     {notificationsUnreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-r from-memorial-gold to-yellow-500 text-deep-space text-[10px] sm:text-xs flex items-center justify-center font-bold">
                         {notificationsUnreadCount > 9 ? '9+' : notificationsUnreadCount}
