@@ -18,9 +18,10 @@
 - **רקע וידאו לופ** (15 שניות) — ידיים מדפדפות באלבום תמונות ישן, אור חם
 - **כותרת מונפשת** — `text-reveal` animation, אותיות מופיעות אחת-אחת כמו מכונת כתיבה
 - **תמונה ראשית** שמתחלפת כל 5 שניות (carousel עדין, fade):
+  - חיילים צעירים יוצרים ספר הנצחה ליחידה
   - סבתא עם נכדים ותמונות ישנות
-  - חייל עם ספר הנצחה
-  - זוג מבוגר עם ספר חיים
+  - זוג צעיר עם ספר סיפור האהבה שלהם
+  - משפחה שכולה עם ספר הנצחה בהר הרצל
 - **CTA גדול** עם `fab-glow` animation — "בואו נתחיל לספר"
 - **מונה חי** — "4,832 סיפורים כבר נכתבו" (מתעדכן בזמן אמת)
 
@@ -74,32 +75,88 @@ emotion, 8K.
 
 #### Social Proof Section
 - **"הם כבר סיפרו"** — גלריית תמונות עגולות של משתמשים (8-12)
+- **חשוב: 50% צעירים, 50% מבוגרים** — לא רק סבא וסבתא!
 - כל תמונה עם שם + סוג ספר + ציטוט קצר
 - `stagger-children` entrance animation
 - רקע: טקסטורת נייר עתיק עדינה
 
 ```
-Prompt (Social Proof Grid — 6 portraits):
-Six individual portrait photographs of diverse Israeli people, each 
-holding their completed MeStory book, arranged for a grid layout. 
-Each portrait shot against a warm, neutral background:
+Prompt (Social Proof Grid — 8 portraits, 50/50 young/old):
+Eight individual portrait photographs of diverse Israeli people, 
+each holding their completed MeStory book. IMPORTANT: Equal 
+representation — 4 young people and 4 older people.
 
-1. Elderly Yemenite-Israeli woman (80s) in colorful traditional dress 
-   and gold jewelry, holding a family history book with Hebrew title
-2. Young secular Tel Aviv woman (35) with modern glasses and tattoo, 
-   holding a gift book she made for her mother
-3. Religious man (50s) with beard and black kippah, holding a 
-   Holocaust survivor memoir he wrote for his late father
-4. Ethiopian-Israeli teenager (17) in school uniform, holding a 
-   family immigration story book
-5. Druze elder (70s) with magnificent white mustache, holding a 
-   village history book
-6. Female IDF officer (25) in dress uniform, holding a memorial 
-   book for fallen soldiers
+SOLDIERS & MILITARY (50%):
+1. Young female IDF combat soldier (21) with ponytail and olive 
+   uniform, proudly holding a memorial book for her fallen commander.
+   Strong, determined expression with soft eyes. Outdoor military 
+   base background blurred.
+2. Group of 3 young soldiers (20-22, mixed gender) in olive uniforms, 
+   arms around each other, holding a unit memorial book together. 
+   Brotherhood, camaraderie, emotion. Military base background.
+3. Young bereaved brother (25) in civilian clothes, sitting at a 
+   memorial site holding a memorial book about his fallen brother. 
+   Dog tags visible around his neck. Powerful, dignified grief.
+4. Retired IDF colonel (65, civilian clothes) with kind eyes and 
+   silver hair, holding a memoir of 30 years of military service. 
+   Israeli flag pin on his lapel.
 
-All portraits: studio lighting, warm color grade, genuine smiles of 
-pride, books prominently displayed. Apple-style clean aesthetic, 
-consistent lighting across all six, 8K resolution each.
+FAMILIES & CIVILIANS (50%):
+5. Young Israeli couple (late 20s) sitting in a Tel Aviv cafe 
+   holding a love story book they wrote together. Modern, authentic.
+6. Ethiopian-Israeli young woman (24) in university graduation gown, 
+   holding a family immigration story book. Radiant pride.
+7. Elderly Yemenite-Israeli grandmother (80s) in traditional dress 
+   and gold jewelry, holding a family history book.
+8. Young religious father (30) with knitted kippah, holding a 
+   children's book he wrote for his son. Baby in carrier on chest.
+
+All portraits: studio-quality lighting, warm color grade, genuine 
+smiles of pride, books prominently displayed. Apple-style clean 
+aesthetic, consistent lighting, 8K resolution each.
+```
+
+#### Military / IDF Dedicated Section
+- **"לזכרם"** — section ייעודי בדף הנחיתה לספרי הנצחה צבאיים
+- רקע כהה עם טקסטורה של דגל ישראל עדין מאוד
+- תמונות: חיילים, יחידות, ספרי הנצחה
+- CTA: "הנציחו את הגיבורים שלנו"
+
+```
+Prompt (Military Hero Section):
+A powerful, cinematic photograph of a young Israeli soldier's hands 
+(early 20s, olive uniform sleeves visible) carefully placing a 
+photograph into an open memorial book. The photograph shows a group 
+of smiling soldiers in uniform. The book is on a simple wooden table 
+with IDF dog tags, a folded beret, and a small memorial candle 
+(yahrzeit) nearby. The lighting is dramatic — a single warm light 
+from the side creating deep shadows. The mood is reverent, dignified, 
+and deeply emotional. Close-up hands shot, cinematic depth of field, 
+desaturated warm tones, photojournalistic style, 8K resolution.
+```
+
+```
+Prompt (Military — Unit Book):
+A group photograph of 5 young Israeli soldiers (mixed gender, ages 
+19-22) in olive green IDF uniforms, sitting together on sandbags at 
+a military outpost at golden hour. They are all looking at an open 
+memorial book in the center, some pointing at photographs of their 
+fallen friends. One soldier is writing a message in the book. Their 
+expressions show a mix of pride, love, and sadness. The setting sun 
+creates a warm backlight. Documentary photography style, authentic, 
+raw emotion, National Geographic quality, 8K.
+```
+
+```
+Prompt (Military — Bereaved Family):
+A deeply moving photograph of a young Israeli woman (early 30s) 
+sitting on a bench in Mount Herzl military cemetery in Jerusalem. 
+She holds a beautifully bound memorial book open on her lap, showing 
+photographs and text about her fallen husband. She touches a page 
+gently with one hand. A small Israeli flag is planted next to the 
+gravestone behind her. Autumn light filters through cypress trees. 
+The mood is dignified grief mixed with love and pride. Cinematic, 
+photojournalistic, shallow depth of field, 8K resolution.
 ```
 
 #### "How It Works" Section
