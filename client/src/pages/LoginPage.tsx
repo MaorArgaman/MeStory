@@ -9,7 +9,7 @@ import _loginSideImageLegacy from '../assets/images/login-side-image.png';
 import _logoIconLegacy from '../assets/images/logo-icon.png';
 
 // Use new realistic images from public folder
-const loginSideImage = '/img/memorial-family.png';
+const loginSideImage = '/img/new/hero-grandma-grandkids.png';
 const logoIcon = '/img/logo-glow.png';
 
 export default function LoginPage() {

@@ -68,7 +68,7 @@ export default function NotFoundPage() {
   return (
     <div className="min-h-screen flex items-center justify-center py-20 px-4 sm:px-8" dir={isHebrew ? 'rtl' : 'ltr'}>
       <div className="max-w-2xl mx-auto text-center">
-        {/* 404 Animation */}
+        {/* 404 Illustration */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -76,16 +76,18 @@ export default function NotFoundPage() {
           className="mb-8"
         >
           <div className="relative inline-block">
-            <span className="text-[120px] sm:text-[180px] font-display font-bold gradient-gold leading-none">
-              404
-            </span>
+            <img
+              src="/img/new/404-book-character.png"
+              alt="404"
+              className="w-64 h-64 sm:w-80 sm:h-80 object-contain mx-auto rounded-2xl"
+            />
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="absolute -bottom-2 left-1/2 -translate-x-1/2"
+              className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-deep-space/80 backdrop-blur px-6 py-2 rounded-full"
             >
-              <AlertTriangle className="w-12 h-12 text-memorial-gold" />
+              <span className="text-4xl font-display font-bold gradient-gold">404</span>
             </motion.div>
           </div>
         </motion.div>

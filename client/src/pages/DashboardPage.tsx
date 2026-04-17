@@ -23,11 +23,11 @@ import MyCollaborationsSection from '../components/collaboration/MyCollaboration
 
 // Memorial-themed dashboard images from public folder
 const emptyDashboard = '/img/memorial-hero.png';
-const dashboardHero = '/img/memorial-family.png';
-const dashboardIconScratch = '/img/empty-notebook.png';
-const dashboardIconInterview = '/img/interview-speaker.png';
-const dashboardIconVoice = '/img/voice-interview.png';
-const dashboardIconImport = '/img/editing-desk.png';
+const dashboardHero = '/img/new/hero-soldiers-unit.png';
+const dashboardIconScratch = '/img/new/card-notebook.png';
+const dashboardIconInterview = '/img/new/card-microphone.png';
+const dashboardIconVoice = '/img/new/card-recording.png';
+const dashboardIconImport = '/img/new/card-old-documents.png';
 
 interface BookItem {
   id: string;

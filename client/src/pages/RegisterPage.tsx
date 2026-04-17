@@ -11,7 +11,7 @@ import _registerSideImageLegacy from '../assets/images/login-side-image.png';
 import _logoIconLegacy from '../assets/images/logo-icon.png';
 
 // Use new realistic images from public folder
-const registerSideImage = '/img/memorial-hero.png';
+const registerSideImage = '/img/new/hero-soldiers-unit.png';
 const logoIcon = '/img/logo-glow.png';
 
 export default function RegisterPage() {

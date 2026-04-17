@@ -2252,8 +2252,15 @@ export default function BookLayoutPage() {
           </div>
         </div>
 
-        {/* Center - Page Spread View (BookFlipReader-style chrome) */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-deep-space via-[#0a0a1f] to-cosmic-purple/30 rounded-xl">
+        {/* Center - Page Spread View (BookFlipReader-style chrome with desk texture) */}
+        <div
+          className="flex-1 flex flex-col overflow-hidden rounded-xl"
+          style={{
+            backgroundImage: 'linear-gradient(to bottom right, rgba(10,10,31,0.92), rgba(10,10,31,0.85), rgba(88,28,135,0.15)), url(/img/new/texture-desk-library.png)',
+            backgroundSize: 'cover, cover',
+            backgroundPosition: 'center, center',
+          }}
+        >
 
           {/* Top bar — compact */}
           <div className="flex items-center justify-between px-4 py-2 bg-black/30 backdrop-blur-sm border-b border-memorial-gold/20">
