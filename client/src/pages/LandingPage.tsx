@@ -230,18 +230,20 @@ export default function LandingPage() {
         className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 pt-20"
         aria-labelledby="hero-heading"
       >
-        {/* Background Image Carousel */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={heroIndex}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.2, ease: 'easeInOut' }}
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${heroImages[heroIndex].src})` }}
-          />
-        </AnimatePresence>
+        {/* Background Image Carousel — crossfade (both images overlap during transition) */}
+        <div className="absolute inset-0">
+          <AnimatePresence initial={false}>
+            <motion.div
+              key={heroIndex}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.5, ease: 'easeInOut' }}
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: `url(${heroImages[heroIndex].src})` }}
+            />
+          </AnimatePresence>
+        </div>
 
         {/* Dark Overlay for Text Readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-deep-space/90 via-deep-space/70 to-deep-space/95" />

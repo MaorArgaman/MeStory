@@ -419,12 +419,12 @@ interface ImagePlaceholderPosition {
 }
 
 const defaultSettings = {
-  fontSize: 13,
-  lineHeight: 1.7,
+  fontSize: 11,
+  lineHeight: 1.6,
   fontFamily: 'David Libre',
   titleFont: 'Cinzel',
   headerFont: 'David Libre',
-  margins: { top: 50, bottom: 45, left: 40, right: 40 },
+  margins: { top: 32, bottom: 30, left: 28, right: 28 },
   showPageNumbers: true,
   includeToc: true,
   includeBackCover: true,
@@ -1179,14 +1179,15 @@ export default function BookLayoutPage() {
 
     setSaving(true);
     try {
-      // Preserve image URLs (including base64) so images persist across reloads.
-      // The previous code stripped base64 and relied on a separate pageImages
-      // collection that was never populated for AI-generated images.
+      // Save images with proper URLs only — skip base64 data URLs to avoid
+      // payload size issues (base64 images can be 1-5MB each as text).
+      // Images uploaded via /upload/image already have server URLs.
       const pagesForSave = pages.map(page => ({
         ...page,
         images: (page.images || []).map(img => ({
           id: img.id,
-          url: img.url,
+          // Keep server URLs, skip large base64 data
+          url: img.url && !img.url.startsWith('data:') ? img.url : '',
           x: img.x,
           y: img.y,
           width: img.width,
@@ -2107,20 +2108,20 @@ export default function BookLayoutPage() {
             <button
               onClick={() => setShowExportModal(true)}
               className="btn-secondary flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2"
-              title="Export book"
+              title={isBookRTL ? 'ייצוא הספר' : 'Export book'}
             >
               <Download className="w-4 h-4" />
-              <span className="hidden lg:inline">{t('design_studio.export_to_file', 'Export')}</span>
+              <span className="hidden lg:inline">{t('design_studio.export_to_file', 'ייצוא')}</span>
             </button>
 
             {/* Publish Button */}
             <button
               onClick={openPublishModal}
               className="btn-gold flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 shadow-glow-gold"
-              title="Publish to store"
+              title={isBookRTL ? 'פרסום בחנות' : 'Publish to store'}
             >
               <Rocket className="w-4 h-4" />
-              <span className="hidden lg:inline">{t('design_studio.publish_to_store', 'Publish')}</span>
+              <span className="hidden lg:inline">{t('design_studio.publish_to_store', 'פרסום')}</span>
             </button>
 
             {/* Save Button */}
@@ -2187,13 +2188,14 @@ export default function BookLayoutPage() {
           ${showMobilePages ? 'translate-x-0' : isUIRTL ? 'translate-x-full' : '-translate-x-full'}
           lg:translate-x-0
           fixed lg:relative z-50 lg:z-auto
+          top-0 bottom-0
           ${isUIRTL ? 'right-0 lg:right-auto' : 'left-0 lg:left-auto'}
-          w-[180px] sm:w-48 h-full max-h-screen
+          w-[75vw] max-w-[280px] sm:w-48 lg:w-48 h-full max-h-screen
           glass-strong ${isUIRTL ? 'border-l' : 'border-r'} border-white/10 p-3 sm:p-4 overflow-y-auto
           transition-transform duration-300 ease-in-out
         `}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-300">Pages</h3>
+            <h3 className="text-sm font-semibold text-gray-300">{language === 'he' ? 'עמודים' : 'Pages'}</h3>
             <button
               onClick={() => setShowMobilePages(false)}
               className="lg:hidden btn-ghost p-3 min-w-[44px] min-h-[44px]"
@@ -2215,7 +2217,7 @@ export default function BookLayoutPage() {
               }`}
             >
               <div className="flex items-center justify-center h-full text-xs text-gray-400">
-                Cover
+                {language === 'he' ? 'כריכה' : 'Cover'}
               </div>
             </button>
 
@@ -2247,7 +2249,7 @@ export default function BookLayoutPage() {
               className="w-full btn-secondary text-xs sm:text-sm flex items-center justify-center gap-1 sm:gap-2"
             >
               <List className="w-4 h-4" />
-              <span className="truncate">{settings.includeToc ? t('book_layout.remove_toc') : t('book_layout.add_toc')}</span>
+              <span className="truncate">{settings.includeToc ? (language === 'he' ? 'הסר תוכן עניינים' : t('book_layout.remove_toc')) : (language === 'he' ? 'הוסף תוכן עניינים' : t('book_layout.add_toc'))}</span>
             </button>
           </div>
         </div>
@@ -2317,8 +2319,8 @@ export default function BookLayoutPage() {
               usePortrait={false}
               autoSize={true}
               clickEventForward={true}
-              useMouseEvents={false}
-              swipeDistance={50}
+              useMouseEvents={true}
+              swipeDistance={30}
               showPageCorners={true}
               disableFlipByClick={true}
               startPage={initialFlipPage}
@@ -2357,7 +2359,7 @@ export default function BookLayoutPage() {
                   return (
                     <FlipPage key={page.id}>
                       <div className="w-full h-full flex items-center justify-center bg-white text-gray-300 text-sm">
-                        {t('book_layout.blank_page', 'Blank page')}
+                        {t('book_layout.blank_page', 'עמוד ריק')}
                       </div>
                     </FlipPage>
                   );
@@ -2380,7 +2382,7 @@ export default function BookLayoutPage() {
                   return (
                     <FlipPage key="blank-pad">
                       <div className="w-full h-full flex items-center justify-center bg-white text-gray-300 text-sm">
-                        {t('book_layout.blank_page', 'Blank page')}
+                        {t('book_layout.blank_page', 'עמוד ריק')}
                       </div>
                     </FlipPage>
                   );
@@ -2462,46 +2464,54 @@ export default function BookLayoutPage() {
           {/* Page info shown in top bar — no duplicate labels needed here */}
 
           {/* Page Actions */}
-          {selectedPageIndex !== null && (
-            <div className="flex items-center justify-center gap-2 mt-1">
-              <button
-                onClick={() => {
-                  setShowImageModal(true);
-                }}
-                className="btn-secondary text-xs sm:text-sm flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5"
-              >
-                <ImageIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Add Image</span>
-                <span className="sm:hidden">Image</span>
-              </button>
-              <button
-                onClick={() => addBlankPage(selectedPageIndex)}
-                className="btn-secondary text-xs sm:text-sm flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5"
-              >
-                <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Add Page</span>
-                <span className="sm:hidden">Page</span>
-              </button>
-              {pages[selectedPageIndex]?.type === 'blank' && (
+          <div className="flex items-center justify-center gap-2 mt-1 flex-wrap">
+            {selectedPageIndex !== null && (
+              <>
                 <button
-                  onClick={() => removePage(selectedPageIndex)}
-                  className="btn-secondary text-xs sm:text-sm flex items-center gap-1 sm:gap-2 text-red-400 px-2 sm:px-3 py-1.5"
+                  onClick={() => {
+                    setShowImageModal(true);
+                  }}
+                  className="btn-secondary text-xs sm:text-sm flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5"
                 >
-                  <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Remove</span>
+                  <ImageIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>{language === 'he' ? 'תמונה' : 'Image'}</span>
                 </button>
-              )}
-            </div>
-          )}
+                <button
+                  onClick={() => addBlankPage(selectedPageIndex)}
+                  className="btn-secondary text-xs sm:text-sm flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5"
+                >
+                  <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>{language === 'he' ? 'עמוד' : 'Page'}</span>
+                </button>
+                {pages[selectedPageIndex]?.type === 'blank' && (
+                  <button
+                    onClick={() => removePage(selectedPageIndex)}
+                    className="btn-secondary text-xs sm:text-sm flex items-center gap-1 sm:gap-2 text-red-400 px-2 sm:px-3 py-1.5"
+                  >
+                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span>{language === 'he' ? 'מחק' : 'Remove'}</span>
+                  </button>
+                )}
+              </>
+            )}
+            {/* TOC toggle — always visible for mobile access */}
+            <button
+              onClick={toggleToc}
+              className="btn-secondary text-xs sm:text-sm flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 lg:hidden"
+            >
+              <List className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>{settings.includeToc ? (language === 'he' ? 'הסר תוכן' : 'Remove TOC') : (language === 'he' ? 'הוסף תוכן' : 'Add TOC')}</span>
+            </button>
+          </div>
 
           {/* Keyboard shortcuts: Ctrl+Enter=Add page, Ctrl+S=Save, Arrows=Navigate */}
           </div>
 
-          {/* Bottom bar — compact navigation */}
-          <div className="flex items-center justify-center gap-4 px-4 py-2 bg-black/30 backdrop-blur-sm border-t border-memorial-gold/20">
+          {/* Bottom bar — compact navigation with safe distance from URL bar */}
+          <div className="flex items-center justify-center gap-4 px-4 py-3 pb-safe bg-black/30 backdrop-blur-sm border-t border-memorial-gold/20" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
             <button
               onClick={isBookRTL ? readNext : readPrev}
-              className="p-2 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all"
+              className="p-3 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
               title={isBookRTL ? 'הדף הבא' : 'Previous'}
             >
               <ChevronLeft className="w-5 h-5" />
@@ -2509,7 +2519,7 @@ export default function BookLayoutPage() {
 
             <button
               onClick={isBookRTL ? readPrev : readNext}
-              className="p-2 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all"
+              className="p-3 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
               title={isBookRTL ? 'הדף הקודם' : 'Next'}
             >
               <ChevronRight className="w-5 h-5" />
@@ -2952,10 +2962,10 @@ export default function BookLayoutPage() {
             >
               <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-white">Add Image</h2>
+                  <h2 className="text-lg sm:text-xl font-bold text-white">{isBookRTL ? 'הוספת תמונה' : 'Add Image'}</h2>
                   {selectedPageIndex !== null && (
                     <p className="text-xs text-memorial-gold mt-1">
-                      Adding to: Page {selectedPageIndex + 1} ({pages[selectedPageIndex]?.type || 'unknown'})
+                      {isBookRTL ? `מוסיף לעמוד ${selectedPageIndex + 1}` : `Adding to: Page ${selectedPageIndex + 1}`}
                     </p>
                   )}
                 </div>
@@ -3094,13 +3104,13 @@ export default function BookLayoutPage() {
                   <div className="w-full border-t border-gray-700" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="px-4 bg-deep-space text-gray-400 text-xs sm:text-sm">or</span>
+                  <span className="px-4 bg-deep-space text-gray-400 text-xs sm:text-sm">{language === 'he' ? 'או' : 'or'}</span>
                 </div>
               </div>
 
               {/* AI Generation Option */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-300 mb-2 sm:mb-3">Generate Image with AI</h3>
+                <h3 className="text-sm font-semibold text-gray-300 mb-2 sm:mb-3">{language === 'he' ? 'יצירת תמונה עם AI' : 'Generate Image with AI'}</h3>
                 <textarea
                   value={imagePrompt}
                   onChange={(e) => setImagePrompt(e.target.value)}
@@ -3715,14 +3725,26 @@ function PageRenderer({
     return bookTitle || '';
   };
 
+  // Scale font size and margins for mobile — pages render at ~200-350px wide on small screens
+  // so template sizes (14-15px fonts, 55-65px margins) are too large
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+  const scaleFactor = isMobile ? 0.65 : 1;
+  const scaledFontSize = Math.max(8, Math.round(settings.fontSize * scaleFactor));
+  const scaledMargins = {
+    top: Math.round(settings.margins.top * scaleFactor),
+    bottom: Math.round(settings.margins.bottom * scaleFactor),
+    left: Math.round(settings.margins.left * scaleFactor),
+    right: Math.round(settings.margins.right * scaleFactor),
+  };
+
   return (
     <div
       ref={containerRef}
-      className={`relative h-full ${isSelected ? 'ring-2 ring-memorial-gold' : ''}`}
+      className={`relative h-full overflow-hidden ${isSelected ? 'ring-2 ring-memorial-gold' : ''}`}
       style={{
-        padding: `${settings.margins.top}px ${settings.margins.right}px ${settings.margins.bottom}px ${settings.margins.left}px`,
+        padding: `${scaledMargins.top}px ${scaledMargins.right}px ${scaledMargins.bottom}px ${scaledMargins.left}px`,
         fontFamily: settings.fontFamily,
-        fontSize: `${settings.fontSize}px`,
+        fontSize: `${scaledFontSize}px`,
         lineHeight: settings.lineHeight,
         color: settings.textColor || '#000000',
         backgroundColor: settings.backgroundColor || '#ffffff',
@@ -3730,9 +3752,9 @@ function PageRenderer({
         textAlign: isRTL ? 'right' : 'left',
       }}
     >
-      {/* Decorative header line + book title */}
+      {/* Decorative header line + book title — hidden on mobile (too small to read) */}
       {showHeader && headerStyle !== 'none' && page.type !== 'title' && page.type !== 'toc' && (
-        <div className="absolute top-0 left-0 right-0" style={{ padding: `0 ${settings.margins.right}px` }}>
+        <div className="absolute top-0 left-0 right-0 hidden sm:block" style={{ padding: `0 ${settings.margins.right}px` }}>
           <div
             className="flex items-center gap-3 pt-3 pb-2"
             style={{ borderBottom: '0.5px solid rgba(0,0,0,0.12)' }}
@@ -3880,8 +3902,14 @@ function PageRenderer({
         </div>
       )}
 
-      {/* User-Added Images */}
-      {(page.images || []).map((image) => {
+      {/* User-Added Images — deduplicate against AI placements to avoid showing same image twice */}
+      {(page.images || []).filter((image) => {
+        // Skip images that are already rendered by AI chapter-start placements above
+        const aiUrls = aiImagePlacements
+          .filter(p => p.generatedImageUrl && p.position === 'chapter-start')
+          .map(p => p.generatedImageUrl);
+        return !aiUrls.includes(image.url);
+      }).map((image) => {
         // Calculate styles based on image properties
         const imageStyles: React.CSSProperties = {
           left: `${image.x}%`,
@@ -4012,7 +4040,7 @@ function PageRenderer({
       {/* Page type indicator */}
       {page.type === 'blank' && (
         <div className="absolute inset-0 flex items-center justify-center text-gray-300 text-sm">
-          Blank page
+          {t('book_layout.blank_page', 'עמוד ריק')}
         </div>
       )}
     </div>
