@@ -925,19 +925,19 @@ export default function DashboardPage() {
                       className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                       disabled={creating}
                     >
-                      <option value="Fiction" className="bg-gray-800 text-white">{t('dashboard.genres.fiction')}</option>
-                      <option value="Fantasy" className="bg-gray-800 text-white">{t('dashboard.genres.fantasy')}</option>
-                      <option value="Science Fiction" className="bg-gray-800 text-white">{t('dashboard.genres.science_fiction')}</option>
-                      <option value="Mystery" className="bg-gray-800 text-white">{t('dashboard.genres.mystery')}</option>
-                      <option value="Thriller" className="bg-gray-800 text-white">{t('dashboard.genres.thriller')}</option>
-                      <option value="Romance" className="bg-gray-800 text-white">{t('dashboard.genres.romance')}</option>
-                      <option value="Horror" className="bg-gray-800 text-white">{t('dashboard.genres.horror')}</option>
-                      <option value="Adventure" className="bg-gray-800 text-white">{t('dashboard.genres.adventure')}</option>
-                      <option value="Historical Fiction" className="bg-gray-800 text-white">{t('dashboard.genres.historical_fiction')}</option>
-                      <option value="Non-Fiction" className="bg-gray-800 text-white">{t('dashboard.genres.non_fiction')}</option>
-                      <option value="Biography" className="bg-gray-800 text-white">{t('dashboard.genres.biography')}</option>
-                      <option value="Self-Help" className="bg-gray-800 text-white">{t('dashboard.genres.self_help')}</option>
-                      <option value="Other" className="bg-gray-800 text-white">{t('dashboard.genres.other')}</option>
+                      <option value="Memory Book" className="bg-gray-800 text-white">{language === 'he' ? '📖 ספר זיכרון' : '📖 Memory Book'}</option>
+                      <option value="Life Story" className="bg-gray-800 text-white">{language === 'he' ? '✍️ סיפור חיים / אוטוביוגרפיה' : '✍️ Life Story / Autobiography'}</option>
+                      <option value="Family Legacy" className="bg-gray-800 text-white">{language === 'he' ? '👨‍👩‍👧 מורשת משפחתית' : '👨‍👩‍👧 Family Legacy'}</option>
+                      <option value="Tribute" className="bg-gray-800 text-white">{language === 'he' ? '💛 מחווה ליקיר/ה' : '💛 Tribute to a Loved One'}</option>
+                      <option value="Holocaust Survivor" className="bg-gray-800 text-white">{language === 'he' ? '🕯️ עדות ניצול/ת שואה' : '🕯️ Holocaust Survivor Testimony'}</option>
+                      <option value="October 7" className="bg-gray-800 text-white">{language === 'he' ? '🕊️ אירועי ה-7 באוקטובר' : '🕊️ October 7th Stories'}</option>
+                      <option value="Childhood Memories" className="bg-gray-800 text-white">{language === 'he' ? '🌅 זיכרונות ילדות' : '🌅 Childhood Memories'}</option>
+                      <option value="Personal Letters" className="bg-gray-800 text-white">{language === 'he' ? '✉️ מכתבים ודברים שלא נאמרו' : '✉️ Letters & Untold Words'}</option>
+                      <option value="Poetry" className="bg-gray-800 text-white">{language === 'he' ? '🌸 שירה' : '🌸 Poetry'}</option>
+                      <option value="Children Book" className="bg-gray-800 text-white">{language === 'he' ? '🧒 ספר ילדים' : '🧒 Children\'s Book'}</option>
+                      <option value="Organization Story" className="bg-gray-800 text-white">{language === 'he' ? '🏛️ ספר ארגוני / עסקי' : '🏛️ Organization / Business Book'}</option>
+                      <option value="Fiction" className="bg-gray-800 text-white">{language === 'he' ? '📚 ספרות בדיונית' : '📚 Fiction'}</option>
+                      <option value="Other" className="bg-gray-800 text-white">{language === 'he' ? 'אחר' : 'Other'}</option>
                     </select>
                   </div>
                 </div>

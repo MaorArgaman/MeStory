@@ -48,21 +48,19 @@ interface BookData {
 }
 
 const categories = [
-  'Fiction',
-  'Non-Fiction',
-  'Fantasy',
-  'Science Fiction',
-  'Mystery',
-  'Thriller',
-  'Romance',
-  'Horror',
-  'Biography',
-  'Self-Help',
-  'Business',
-  'History',
-  'Poetry',
-  'Young Adult',
-  'Children',
+  { value: 'Memory Book',        he: '📖 ספר זיכרון',                     en: '📖 Memory Book' },
+  { value: 'Life Story',         he: '✍️ סיפור חיים / אוטוביוגרפיה',      en: '✍️ Life Story / Autobiography' },
+  { value: 'Family Legacy',      he: '👨‍👩‍👧 מורשת משפחתית',                  en: '👨‍👩‍👧 Family Legacy' },
+  { value: 'Tribute',            he: '💛 מחווה ליקיר/ה',                   en: '💛 Tribute to a Loved One' },
+  { value: 'Holocaust Survivor', he: '🕯️ עדות ניצול/ת שואה',              en: '🕯️ Holocaust Survivor Testimony' },
+  { value: 'October 7',         he: '🕊️ אירועי ה-7 באוקטובר',            en: '🕊️ October 7th Stories' },
+  { value: 'Childhood Memories', he: '🌅 זיכרונות ילדות',                 en: '🌅 Childhood Memories' },
+  { value: 'Personal Letters',   he: '✉️ מכתבים ודברים שלא נאמרו',        en: '✉️ Letters & Untold Words' },
+  { value: 'Poetry',             he: '🌸 שירה',                            en: '🌸 Poetry' },
+  { value: 'Children Book',      he: '🧒 ספר ילדים',                       en: '🧒 Children\'s Book' },
+  { value: 'Organization Story', he: '🏛️ ספר ארגוני / עסקי',              en: '🏛️ Organization / Business Book' },
+  { value: 'Fiction',            he: '📚 ספרות בדיונית',                   en: '📚 Fiction' },
+  { value: 'Other',              he: 'אחר',                                en: 'Other' },
 ];
 
 export default function PublishMetadata() {
@@ -348,8 +346,8 @@ export default function PublishMetadata() {
               >
                 <option value="">בחר קטגוריה</option>
                 {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
+                  <option key={cat.value} value={cat.value}>
+                    {cat.he}
                   </option>
                 ))}
               </select>
