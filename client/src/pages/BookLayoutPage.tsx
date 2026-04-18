@@ -2445,42 +2445,131 @@ export default function BookLayoutPage() {
             </button>
           </div>
           <div className="space-y-2">
-            {/* Cover */}
+            {/* ── Cover Spread ── */}
             <button
-              onClick={() => {
-                jumpToSpread(0);
-                setShowMobilePages(false);
-              }}
-              className={`w-full aspect-[3/4] rounded-lg border-2 transition-all ${
+              onClick={() => { jumpToSpread(0); setShowMobilePages(false); }}
+              className={`w-full rounded-lg border-2 transition-all overflow-hidden ${
                 currentSpread === 0
-                  ? 'border-memorial-gold bg-memorial-gold/20'
+                  ? 'border-memorial-gold shadow-sm shadow-memorial-gold/30'
                   : 'border-white/10 hover:border-white/30'
               }`}
             >
-              <div className="flex items-center justify-center h-full text-xs text-gray-400">
+              {/* Mini open-book: blank left + front cover right */}
+              <div className="flex" style={{ aspectRatio: '3/2' }}>
+                {/* Left side – back cover placeholder */}
+                <div className="flex-1 bg-gray-800/60 flex items-center justify-center">
+                  <span style={{ fontSize: '7px', color: '#555' }}>{language === 'he' ? 'אחורי' : 'Back'}</span>
+                </div>
+                {/* Spine */}
+                <div className="w-[3px] flex-shrink-0 bg-gradient-to-b from-black/60 via-gray-500/40 to-black/60" />
+                {/* Right side – front cover */}
+                <div
+                  className="flex-1 flex flex-col items-center justify-center px-1 py-1 relative overflow-hidden"
+                  style={{
+                    background: book?.coverDesign?.imageUrl
+                      ? `url(${book.coverDesign.imageUrl}) center/cover`
+                      : `linear-gradient(160deg, ${book?.coverDesign?.coverColor || '#2d1b69'}, ${(book?.coverDesign?.coverColor || '#1a0a3e')}bb)`,
+                  }}
+                >
+                  {book?.coverDesign?.imageUrl && <div className="absolute inset-0 bg-black/30" />}
+                  <p className="relative text-[6px] font-bold text-center leading-tight line-clamp-2 w-full"
+                    style={{ color: book?.coverDesign?.textColor || '#fff', fontFamily: book?.coverDesign?.fontFamily }}>
+                    {book?.title}
+                  </p>
+                  <p className="relative text-[4px] mt-0.5 opacity-60 truncate w-full text-center"
+                    style={{ color: book?.coverDesign?.textColor || '#fff' }}>
+                    {book?.author?.name}
+                  </p>
+                </div>
+              </div>
+              <div className="bg-black/30 py-0.5 text-center" style={{ fontSize: '8px', color: '#888' }}>
                 {language === 'he' ? 'כריכה' : 'Cover'}
               </div>
             </button>
 
-            {/* Page pairs */}
-            {Array.from({ length: Math.ceil(pages.length / 2) }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  jumpToSpread(i + 1);
-                  setShowMobilePages(false);
-                }}
-                className={`w-full aspect-[3/4] rounded-lg border-2 transition-all ${
-                  currentSpread === i + 1
-                    ? 'border-memorial-gold bg-memorial-gold/20'
-                    : 'border-white/10 hover:border-white/30'
-                }`}
-              >
-                <div className="flex items-center justify-center h-full text-xs text-gray-400">
-                  {i * 2 + 1} - {i * 2 + 2}
-                </div>
-              </button>
-            ))}
+            {/* ── Content Spreads ── */}
+            {Array.from({ length: Math.ceil(pages.length / 2) }).map((_, i) => {
+              const spreadIdx = i + 1;
+              const p1 = pages[i * 2];
+              const p2 = pages[i * 2 + 1];
+              // RTL books: right page is page 1 (odd), left is page 2 (even)
+              const leftPage = isBookRTL ? p2 : p1;
+              const rightPage = isBookRTL ? p1 : p2;
+              const leftNum  = isBookRTL ? i * 2 + 2 : i * 2 + 1;
+              const rightNum = isBookRTL ? i * 2 + 1 : i * 2 + 2;
+
+              // Render a single mini page cell (no page number inside — shown in label below)
+              const miniPage = (page: PageContent | undefined) => {
+                const hasImg = (page?.images?.length ?? 0) > 0;
+                const bg = '#f5f0e8';
+                if (!page || page.type === 'blank') {
+                  return <div className="flex-1" style={{ background: bg }} />;
+                }
+                if (page.type === 'toc') return (
+                  <div className="flex-1 flex flex-col p-1 gap-0.5" style={{ background: bg }}>
+                    <div className="h-[2px] w-3/4 rounded mx-auto mb-1" style={{ background: '#aaa' }} />
+                    {[70,50,70,60,65,45].map((w, j) => (
+                      <div key={j} className="flex justify-between">
+                        <div className="h-[1.5px] rounded" style={{ background: '#ccc', width: `${w}%` }} />
+                        <div className="h-[1.5px] w-2 rounded ml-1" style={{ background: '#ccc' }} />
+                      </div>
+                    ))}
+                  </div>
+                );
+                if (page.type === 'title') return (
+                  <div className="flex-1 flex flex-col items-center justify-center gap-1" style={{ background: bg }}>
+                    <div className="h-[2px] w-3/4 rounded" style={{ background: '#aaa' }} />
+                    <div className="h-[1.5px] w-1/2 rounded" style={{ background: '#ccc' }} />
+                  </div>
+                );
+                if (page.type === 'dedication') return (
+                  <div className="flex-1 flex items-center justify-center" style={{ background: bg }}>
+                    <span style={{ fontSize: '10px', color: '#bbb' }}>❝</span>
+                  </div>
+                );
+                // chapter / summary / continuation
+                return (
+                  <div className="flex-1 flex flex-col p-0.5 pt-1" style={{ background: bg }}>
+                    {/* Heading line */}
+                    <div className="h-[2px] w-2/3 rounded mb-1" style={{ background: '#999' }} />
+                    {/* Image placeholder if page has images */}
+                    {hasImg && (
+                      <div className="h-3 w-full rounded mb-1 flex items-center justify-center"
+                        style={{ background: '#dde8f0', border: '1px solid #b8d0e0' }}>
+                        <span style={{ fontSize: '5px', color: '#7aaccc' }}>◼</span>
+                      </div>
+                    )}
+                    {/* Text-line simulation */}
+                    {[95,80,100,88,92,75,96].slice(0, hasImg ? 4 : 7).map((w, j) => (
+                      <div key={j} className="h-[1.5px] rounded mb-0.5" style={{ background: '#ccc', width: `${w}%` }} />
+                    ))}
+                  </div>
+                );
+              };
+
+              return (
+                <button
+                  key={i}
+                  onClick={() => { jumpToSpread(spreadIdx); setShowMobilePages(false); }}
+                  className={`w-full rounded-lg border-2 transition-all overflow-hidden ${
+                    currentSpread === spreadIdx
+                      ? 'border-memorial-gold shadow-sm shadow-memorial-gold/30'
+                      : 'border-white/10 hover:border-white/30'
+                  }`}
+                >
+                  <div className="flex" style={{ aspectRatio: '3/2' }}>
+                    {miniPage(leftPage)}
+                    {/* Book spine */}
+                    <div className="w-[3px] flex-shrink-0 bg-gradient-to-b from-black/50 via-gray-500/30 to-black/50" />
+                    {miniPage(rightPage)}
+                  </div>
+                  {/* Page number label — one place only */}
+                  <div className="bg-black/30 py-0.5 text-center" style={{ fontSize: '8px', color: '#888' }}>
+                    {leftNum}–{Math.min(rightNum, pages.length)}
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
           {/* Quick Actions */}
@@ -4668,19 +4757,7 @@ function PageRenderer({
         })
       )}
 
-      {/* Page Number Footer */}
-      {settings.showPageNumbers && pageNumber !== undefined && page.type !== 'title' && (
-        <div
-          className="absolute bottom-3 left-0 right-0 text-center"
-          style={{
-            fontSize: '10px',
-            color: '#6b7280',
-            fontFamily: settings.fontFamily,
-          }}
-        >
-          {pageNumber}
-        </div>
-      )}
+      {/* Page Number Footer — single source of truth, kept here only */}
 
       {/* Blank page — no text overlay (looks like printed blank page) */}
     </div>
