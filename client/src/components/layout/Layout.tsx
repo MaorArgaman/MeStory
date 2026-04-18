@@ -1,6 +1,7 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { WifiOff } from 'lucide-react';
 import Navbar from './Navbar';
 
 const logoIcon = '/img/new/logo-mestory-large.jpeg';
@@ -11,10 +12,31 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const { t } = useTranslation('common');
-  const { isRTL } = useLanguage();
+  const { isRTL, language } = useLanguage();
+  const isHebrew = language === 'he';
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const goOffline = () => setIsOffline(true);
+    const goOnline = () => setIsOffline(false);
+    window.addEventListener('offline', goOffline);
+    window.addEventListener('online', goOnline);
+    return () => {
+      window.removeEventListener('offline', goOffline);
+      window.removeEventListener('online', goOnline);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Offline Banner */}
+      {isOffline && (
+        <div className="fixed top-0 left-0 right-0 z-[999] bg-amber-600 text-white text-center py-2 px-4 text-sm flex items-center justify-center gap-2">
+          <WifiOff className="w-4 h-4" />
+          {isHebrew ? 'אין חיבור לאינטרנט. חלק מהתכונות לא יעבדו.' : 'No internet connection. Some features may not work.'}
+        </div>
+      )}
+
       {/* Skip Link for Accessibility - WCAG 2.4.1 */}
       <a
         href="#main-content"
@@ -23,7 +45,7 @@ export default function Layout({ children }: LayoutProps) {
         {t('accessibility.skip_to_content', 'Skip to main content')}
       </a>
       <Navbar />
-      <main className="pt-20 flex-1" role="main" id="main-content" tabIndex={-1}>
+      <main className={`${isOffline ? 'pt-28' : 'pt-20'} flex-1`} role="main" id="main-content" tabIndex={-1}>
         {children}
       </main>
 

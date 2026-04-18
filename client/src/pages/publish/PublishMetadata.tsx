@@ -210,7 +210,7 @@ export default function PublishMetadata() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-memorial-gold mx-auto mb-4 animate-spin" />
-          <p className="text-gray-300">Loading book...</p>
+          <p className="text-gray-300">{t('common.loading', 'טוען...')}</p>
         </div>
       </div>
     );
@@ -226,12 +226,12 @@ export default function PublishMetadata() {
             className="text-gray-400 hover:text-white transition mb-4 flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
+            {t('common.back', 'חזרה')}
           </button>
           <h1 className="text-4xl font-display font-bold gradient-gold mb-2">
-            Prepare for Marketplace
+            {t('publishing.prepare_title', 'הכנת הספר לפרסום')}
           </h1>
-          <p className="text-gray-400">Package your book for readers</p>
+          <p className="text-gray-400">{t('publishing.prepare_subtitle', 'ארזו את הספר שלכם לקוראים')}</p>
         </div>
 
         {/* Split Layout */}
