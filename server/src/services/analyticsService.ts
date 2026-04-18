@@ -23,11 +23,11 @@ export interface UserChurnData {
   userId: string;
   name: string;
   email: string;
-  lastActiveAt: Date;
+  lastActiveAt: string | Date;
   daysSinceActive: number;
   booksStarted: number;
   booksCompleted: number;
-  registeredAt: Date;
+  registeredAt: string | Date;
 }
 
 export interface TopAuthorData {
@@ -61,7 +61,7 @@ export interface BookPerformance {
   purchases: number;
   revenue: number;
   qualityScore: number;
-  publishedAt: Date;
+  publishedAt: string | Date;
   performanceScore: number;
 }
 
@@ -650,7 +650,7 @@ export interface ChurnPrediction {
   email: string;
   churnProbability: number;
   riskFactors: string[];
-  lastActiveAt: Date;
+  lastActiveAt: string | Date;
   recommendedAction: string;
 }
 
@@ -979,7 +979,7 @@ export interface EngagedUser {
   conversationsStarted: number;
   messagesSent: number;
   engagementScore: number;
-  joinedAt: Date;
+  joinedAt: string | Date;
 }
 
 /**

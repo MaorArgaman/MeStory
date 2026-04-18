@@ -42,7 +42,7 @@ export interface IAuthorPreference {
 
 // Interaction Event interface
 export interface IInteractionEvent {
-  type: 'view' | 'read' | 'complete' | 'purchase' | 'like' | 'share' | 'review' | 'abandon';
+  type: 'view' | 'read' | 'complete' | 'purchase' | 'like' | 'share' | 'review' | 'abandon' | 'comment';
   bookId: string;
   genre: string;
   authorId: string;

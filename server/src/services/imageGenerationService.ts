@@ -839,7 +839,7 @@ Respond with ONLY the scene description, no other text.`;
  * Book Cover Generation Options
  */
 // Style type for image generation
-type ImageStyle = 'realistic' | 'illustration' | 'artistic' | 'manga' | 'watercolor' | 'oil-painting';
+export type ImageStyle = 'realistic' | 'illustration' | 'artistic' | 'manga' | 'watercolor' | 'oil-painting' | (string & {});
 
 export interface BookCoverGenerationRequest {
   title: string;
@@ -989,8 +989,8 @@ Respond with ONLY the image prompt (under 250 characters), no other text.`;
  */
 export interface BookImagePlacement {
   chapterIndex: number;
-  pagePosition: 'chapter-start' | 'mid-chapter' | 'chapter-end';
-  imagePosition: 'top' | 'center' | 'bottom' | 'full-page';
+  pagePosition: 'chapter-start' | 'mid-chapter' | 'chapter-end' | 'full-page';
+  imagePosition: 'top' | 'center' | 'bottom' | 'full-page' | 'left' | 'right' | 'full-bleed';
   prompt: string;
   caption?: string;
 }

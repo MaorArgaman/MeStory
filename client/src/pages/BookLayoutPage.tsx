@@ -1043,7 +1043,7 @@ export default function BookLayoutPage() {
       newPages.push({
         id: `page-toc`,
         type: 'toc',
-        content: `<h2 class="toc-header">Table of Contents</h2>${tocContent}`,
+        content: `<h2 class="toc-header">${isBookRTL ? 'תוכן עניינים' : 'Table of Contents'}</h2>${tocContent}`,
         images: [],
       });
 
@@ -3318,7 +3318,7 @@ export default function BookLayoutPage() {
                     type="text"
                     value={templateName}
                     onChange={(e) => setTemplateName(e.target.value)}
-                    placeholder="My Custom Template"
+                    placeholder={isBookRTL ? 'שם התבנית שלי' : 'My Custom Template'}
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     disabled={savingTemplate}
                   />

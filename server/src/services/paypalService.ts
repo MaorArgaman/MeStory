@@ -171,7 +171,7 @@ export async function createBookPurchaseOrder(
       console.log(`   Platform Share: $${(price * PLATFORM_SHARE_PERCENTAGE).toFixed(2)}`);
 
       // Create pending transaction
-      const transaction = new Transaction({
+      await Transaction.create({
         userId: buyerId,
         amount: price,
         currency: 'USD',
@@ -190,8 +190,6 @@ export async function createBookPurchaseOrder(
           type: 'book_purchase',
         },
       });
-
-      await transaction.save();
 
       return {
         success: true,
@@ -242,7 +240,7 @@ export async function createBookPurchaseOrder(
     );
 
     // Create pending transaction
-    const transaction = new Transaction({
+    await Transaction.create({
       userId: buyerId,
       amount: price,
       currency: 'USD',
@@ -261,8 +259,6 @@ export async function createBookPurchaseOrder(
         type: 'book_purchase',
       },
     });
-
-    await transaction.save();
 
     // Find approval URL
     const approvalLink = response.data.links.find((link) => link.rel === 'approve');
@@ -325,53 +321,55 @@ export async function captureBookPayment(
       console.log(`💳 [MOCK] Capturing payment for order: ${orderId}`);
 
       // Update transaction
-      transaction.status = 'completed';
-      transaction.paypalCaptureId = `MOCK-CAPTURE-${Date.now()}`;
-      transaction.metadata = {
-        ...transaction.metadata,
-        capturedAt: new Date(),
-        revenueProcessed: true,
-      };
-      await transaction.save();
+      await Transaction.findByIdAndUpdate(transaction.id, {
+        status: 'completed',
+        paypalCaptureId: `MOCK-CAPTURE-${Date.now()}`,
+        metadata: {
+          ...transaction.metadata,
+          capturedAt: new Date().toISOString(),
+          revenueProcessed: true,
+        },
+      });
 
       // Add book to buyer's library
-      if (!buyer.profile) {
-        buyer.profile = {};
-      }
-      if (!buyer.profile.readingHistory) {
-        buyer.profile.readingHistory = [];
-      }
-      buyer.profile.readingHistory.push({
-        bookId: book._id,
+      const buyerProfile = buyer.profile || {};
+      const buyerReadingHistory = buyerProfile.readingHistory || [];
+      buyerReadingHistory.push({
+        bookId: book.id,
         progress: 0,
-        lastRead: new Date(),
+        lastRead: new Date().toISOString(),
       });
-      await buyer.save();
+      await User.findByIdAndUpdate(buyerId, {
+        profile: { ...buyerProfile, readingHistory: buyerReadingHistory },
+      });
 
       // Update book statistics
-      book.statistics.purchases += 1;
-      book.statistics.revenue += transaction.amount;
-      await book.save();
+      await Book.findByIdAndUpdate(bookId, {
+        statistics: {
+          ...book.statistics,
+          purchases: book.statistics.purchases + 1,
+          revenue: book.statistics.revenue + transaction.amount,
+        },
+      });
 
       // Update author earnings
-      if (!author.profile) {
-        author.profile = {};
-      }
-      if (!author.profile.earnings) {
-        author.profile.earnings = {
-          totalEarned: 0,
-          pendingPayout: 0,
-          withdrawn: 0,
-          history: [],
-        };
-      }
-      author.profile.earnings.totalEarned += authorShare;
-      author.profile.earnings.pendingPayout += authorShare;
+      const authorProfile = author.profile || {};
+      const earnings = authorProfile.earnings || {
+        totalEarned: 0,
+        pendingPayout: 0,
+        withdrawn: 0,
+        history: [],
+      };
+      earnings.totalEarned += authorShare;
+      earnings.pendingPayout += authorShare;
 
-      if (author.profile.authorProfile) {
-        author.profile.authorProfile.totalSales += 1;
+      const authorAuthorProfile = authorProfile.authorProfile;
+      if (authorAuthorProfile) {
+        authorAuthorProfile.totalSales += 1;
       }
-      await author.save();
+      await User.findByIdAndUpdate(authorId, {
+        profile: { ...authorProfile, earnings, authorProfile: authorAuthorProfile },
+      });
 
       console.log(`✅ [MOCK] Payment captured successfully`);
       console.log(`   Author earned: $${authorShare.toFixed(2)}`);
@@ -437,54 +435,56 @@ export async function captureBookPayment(
     const captureId = response.data.purchase_units[0]?.payments?.captures?.[0]?.id;
 
     // Update transaction
-    transaction.status = 'completed';
-    transaction.paypalCaptureId = captureId;
-    transaction.metadata = {
-      ...transaction.metadata,
-      capturedAt: new Date(),
-      paypalResponse: response.data,
-      revenueProcessed: true,
-    };
-    await transaction.save();
+    await Transaction.findByIdAndUpdate(transaction.id, {
+      status: 'completed',
+      paypalCaptureId: captureId,
+      metadata: {
+        ...transaction.metadata,
+        capturedAt: new Date().toISOString(),
+        paypalResponse: response.data,
+        revenueProcessed: true,
+      },
+    });
 
     // Add book to buyer's library
-    if (!buyer.profile) {
-      buyer.profile = {};
-    }
-    if (!buyer.profile.readingHistory) {
-      buyer.profile.readingHistory = [];
-    }
-    buyer.profile.readingHistory.push({
-      bookId: book._id,
+    const buyerProfile2 = buyer.profile || {};
+    const buyerReadingHistory2 = buyerProfile2.readingHistory || [];
+    buyerReadingHistory2.push({
+      bookId: book.id,
       progress: 0,
-      lastRead: new Date(),
+      lastRead: new Date().toISOString(),
     });
-    await buyer.save();
+    await User.findByIdAndUpdate(buyerId, {
+      profile: { ...buyerProfile2, readingHistory: buyerReadingHistory2 },
+    });
 
     // Update book statistics
-    book.statistics.purchases += 1;
-    book.statistics.revenue += transaction.amount;
-    await book.save();
+    await Book.findByIdAndUpdate(bookId, {
+      statistics: {
+        ...book.statistics,
+        purchases: book.statistics.purchases + 1,
+        revenue: book.statistics.revenue + transaction.amount,
+      },
+    });
 
     // Update author earnings
-    if (!author.profile) {
-      author.profile = {};
-    }
-    if (!author.profile.earnings) {
-      author.profile.earnings = {
-        totalEarned: 0,
-        pendingPayout: 0,
-        withdrawn: 0,
-        history: [],
-      };
-    }
-    author.profile.earnings.totalEarned += authorShare;
-    author.profile.earnings.pendingPayout += authorShare;
+    const authorProfile2 = author.profile || {};
+    const earnings2 = authorProfile2.earnings || {
+      totalEarned: 0,
+      pendingPayout: 0,
+      withdrawn: 0,
+      history: [],
+    };
+    earnings2.totalEarned += authorShare;
+    earnings2.pendingPayout += authorShare;
 
-    if (author.profile.authorProfile) {
-      author.profile.authorProfile.totalSales += 1;
+    const authorAuthorProfile2 = authorProfile2.authorProfile;
+    if (authorAuthorProfile2) {
+      authorAuthorProfile2.totalSales += 1;
     }
-    await author.save();
+    await User.findByIdAndUpdate(authorId, {
+      profile: { ...authorProfile2, earnings: earnings2, authorProfile: authorAuthorProfile2 },
+    });
 
     return {
       success: true,
@@ -548,15 +548,17 @@ export async function processAuthorPayout(authorId: string): Promise<PayoutResul
 
       author.profile.earnings.pendingPayout = 0;
       author.profile.earnings.withdrawn += pendingAmount;
-      author.profile.earnings.lastPayoutDate = new Date();
+      author.profile.earnings.lastPayoutDate = new Date().toISOString();
       author.profile.earnings.history.push({
         amount: pendingAmount,
-        date: new Date(),
+        date: new Date().toISOString(),
         status: 'completed',
         paypalEmail,
       });
 
-      await author.save();
+      await User.findByIdAndUpdate(authorId, {
+        profile: author.profile,
+      });
 
       console.log(`✅ [MOCK] Payout completed: ${mockPayoutId}`);
 
@@ -655,15 +657,17 @@ export async function processAuthorPayout(authorId: string): Promise<PayoutResul
 
     author.profile.earnings.pendingPayout = 0;
     author.profile.earnings.withdrawn += pendingAmount;
-    author.profile.earnings.lastPayoutDate = new Date();
+    author.profile.earnings.lastPayoutDate = new Date().toISOString();
     author.profile.earnings.history.push({
       amount: pendingAmount,
-      date: new Date(),
+      date: new Date().toISOString(),
       status: 'pending', // Will be updated via webhook
       paypalEmail,
     });
 
-    await author.save();
+    await User.findByIdAndUpdate(authorId, {
+      profile: author.profile,
+    });
 
     return {
       success: true,

@@ -9,7 +9,7 @@ export interface ITransaction {
   userId: string;
   amount: number;
   currency: 'USD' | 'ILS';
-  plan: 'free' | 'standard' | 'premium';
+  plan: 'free' | 'standard' | 'premium' | 'book-purchase';
   status: 'pending' | 'completed' | 'failed' | 'refunded' | 'expired';
   paymentMethod: 'paypal' | 'mock' | 'credit_card';
   orderId?: string;

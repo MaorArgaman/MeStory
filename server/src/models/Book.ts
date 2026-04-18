@@ -501,6 +501,10 @@ export interface IBook {
   memorialDedication?: IMemorialDedication;
   bookType?: 'personal' | 'collaborative' | 'memorial';
 
+  // Convenience aliases used in some controllers
+  status?: string;
+  coverImage?: string;
+
   created_at: string;
   updated_at: string;
   createdAt?: string;
@@ -676,7 +680,7 @@ export class Book {
   // Update book by ID
   static async findByIdAndUpdate(
     id: string,
-    update: Partial<IBook> | { $set?: Partial<any>; $push?: any; $pull?: any; $inc?: any },
+    update: Partial<IBook> | { $set?: Partial<any>; $push?: any; $pull?: any; $inc?: any } | Record<string, any>,
     options?: { new?: boolean }
   ): Promise<IBook | null> {
     let updateData: Record<string, any> = {};
@@ -924,6 +928,15 @@ export class Book {
     }
 
     return (data || []).map((row: any) => rowToBook(row));
+  }
+
+  // Delete many books by query
+  static async deleteMany(query: Record<string, any>): Promise<void> {
+    let queryBuilder = supabaseAdmin.from('books').delete();
+    if (query.author) {
+      queryBuilder = queryBuilder.eq('author_id', query.author);
+    }
+    await queryBuilder;
   }
 
   // Count books

@@ -15,6 +15,7 @@ export enum UserRole {
 // Subscription interface
 export interface ISubscription {
   tier: string;
+  plan?: string;
   price: number;
   credits: number;
   startDate: string | null;
@@ -29,6 +30,8 @@ export interface IProfile {
   avatar?: string;
   headerImage?: string;
   language?: 'en' | 'he';
+  gender?: string;
+  currency?: string;
   authorProfile?: {
     publishedBooks: number;
     totalSales: number;
@@ -94,6 +97,7 @@ export interface IUser {
   id: string;
   _id?: string; // Alias for compatibility
   name: string;
+  displayName?: string;
   email: string;
   password: string;
   role: UserRole;
@@ -285,7 +289,7 @@ export class User {
   // Update user by ID
   static async findByIdAndUpdate(
     id: string,
-    update: Partial<IUser> | { $set?: Partial<IUser>; $inc?: { credits?: number } },
+    update: Partial<IUser> | { $set?: Partial<IUser>; $inc?: { credits?: number } } | Record<string, any>,
     options?: { new?: boolean }
   ): Promise<IUser | null> {
     // Handle $set and $inc operators for Mongoose compatibility

@@ -23,7 +23,7 @@ interface RecommendationResult {
  * Calculate exponential temporal decay
  * Half-life of 14 days - preferences decay naturally over time
  */
-function calculateTemporalDecay(lastInteractionDate: Date): number {
+function calculateTemporalDecay(lastInteractionDate: string | Date): number {
   const daysSince = Math.floor(
     (Date.now() - new Date(lastInteractionDate).getTime()) / (1000 * 60 * 60 * 24)
   );
@@ -221,7 +221,7 @@ export async function getPersonalizedRecommendations(
 
         // Calculate individual scores
         const genreScore = calculateGenreScore(userActivity!, book.genre);
-        const authorScore = calculateAuthorScore(userActivity!, book.author?.id || book.author);
+        const authorScore = calculateAuthorScore(userActivity!, book.author);
         const qualityScore = calculateQualityScore(book as unknown as IBook);
         const popularityScore = calculatePopularityScore(book as unknown as IBook);
         const freshnessScore = calculateFreshnessScore(book as unknown as IBook);
@@ -393,14 +393,14 @@ export async function getContinueReading(userId: string): Promise<IBook[]> {
   const books = allBooks.filter(b => currentlyReadingIds.has(b.id));
 
   // Sort by last read date
-  const progressMap = new Map<string, Date>();
+  const progressMap = new Map<string, string>();
   userActivity.readingHistory.forEach((progress) => {
     progressMap.set(progress.bookId.toString(), progress.lastReadAt);
   });
 
   books.sort((a, b) => {
-    const dateA = progressMap.get(a.id) || new Date(0);
-    const dateB = progressMap.get(b.id) || new Date(0);
+    const dateA = new Date(progressMap.get(a.id) || 0);
+    const dateB = new Date(progressMap.get(b.id) || 0);
     return dateB.getTime() - dateA.getTime();
   });
 
@@ -562,7 +562,7 @@ export async function recordInteraction(
       genre: book.genre,
       authorId: book.author,
       duration,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
       metadata,
     });
 
@@ -577,10 +577,10 @@ export async function recordInteraction(
         weight: 50,
         readCount: interactionType === 'complete' ? 1 : 0,
         writtenCount: 0,
-        lastInteraction: new Date(),
+        lastInteraction: new Date().toISOString(),
       });
     } else {
-      userActivity.genrePreferences[genrePrefIndex].lastInteraction = new Date();
+      userActivity.genrePreferences[genrePrefIndex].lastInteraction = new Date().toISOString();
 
       // Increase weight based on interaction type
       const weightIncrease =
@@ -614,10 +614,10 @@ export async function recordInteraction(
         booksRead: interactionType === 'complete' ? 1 : 0,
         averageRating: interactionType === 'review' && metadata?.rating ? metadata.rating : 0,
         isFollowing: false,
-        lastInteraction: new Date(),
+        lastInteraction: new Date().toISOString(),
       });
     } else if (authorPrefIndex !== -1) {
-      userActivity.authorPreferences[authorPrefIndex].lastInteraction = new Date();
+      userActivity.authorPreferences[authorPrefIndex].lastInteraction = new Date().toISOString();
       if (interactionType === 'complete') {
         userActivity.authorPreferences[authorPrefIndex].booksRead += 1;
       }
@@ -658,7 +658,7 @@ export async function recordInteraction(
     }
 
     // Update engagement metrics
-    userActivity.lastActiveAt = new Date();
+    userActivity.lastActiveAt = new Date().toISOString();
     if (duration) {
       userActivity.totalReadingTime += duration;
     }
@@ -696,11 +696,11 @@ export async function recordWritingActivity(
         weight: 60, // Writers in a genre get higher initial weight
         readCount: 0,
         writtenCount: 1,
-        lastInteraction: new Date(),
+        lastInteraction: new Date().toISOString(),
       });
     } else {
       userActivity.genrePreferences[genrePrefIndex].writtenCount += 1;
-      userActivity.genrePreferences[genrePrefIndex].lastInteraction = new Date();
+      userActivity.genrePreferences[genrePrefIndex].lastInteraction = new Date().toISOString();
       // Boost weight for genres user writes in
       userActivity.genrePreferences[genrePrefIndex].weight = Math.min(
         100,
@@ -717,7 +717,7 @@ export async function recordWritingActivity(
     );
 
     userActivity.totalBooksWritten += 1;
-    userActivity.lastActiveAt = new Date();
+    userActivity.lastActiveAt = new Date().toISOString();
 
     await UserActivity.findByIdAndUpdate(userActivity.id, userActivity);
   } catch (error) {
@@ -752,14 +752,14 @@ export async function updateReadingProgress(
         lastChapterRead: chapterNumber,
         percentageComplete,
         totalReadingTime: readingTime,
-        lastReadAt: new Date(),
+        lastReadAt: new Date().toISOString(),
         isCompleted: percentageComplete >= 100,
       });
     } else {
       userActivity.readingHistory[progressIndex].lastChapterRead = chapterNumber;
       userActivity.readingHistory[progressIndex].percentageComplete = percentageComplete;
       userActivity.readingHistory[progressIndex].totalReadingTime += readingTime;
-      userActivity.readingHistory[progressIndex].lastReadAt = new Date();
+      userActivity.readingHistory[progressIndex].lastReadAt = new Date().toISOString();
       userActivity.readingHistory[progressIndex].isCompleted = percentageComplete >= 100;
     }
 

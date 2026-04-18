@@ -38,8 +38,8 @@ export interface RecommendationWithReason {
 
 export interface PersonalizedFeed {
   recommendedForYou: RecommendationWithReason[];
-  continueReading: Array<{ book: IBook; progress: number; lastReadAt: Date }>;
-  continueWriting: Array<{ book: IBook; lastEditedAt: Date; wordCount: number }>;
+  continueReading: Array<{ book: IBook; progress: number; lastReadAt: string | Date }>;
+  continueWriting: Array<{ book: IBook; lastEditedAt: string | Date; wordCount: number }>;
   becauseYouRead: Array<{ basedOn: IBook; recommendations: IBook[] }>;
   trending: IBook[];
   newReleases: IBook[];
@@ -766,7 +766,7 @@ export async function getPersonalizedFeed(userId: string): Promise<PersonalizedF
 
 // ==================== HELPER FUNCTIONS ====================
 
-function calculateRecencyDecay(date: Date): number {
+function calculateRecencyDecay(date: string | Date): number {
   const daysSince = Math.floor(
     (Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24)
   );
