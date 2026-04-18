@@ -43,6 +43,7 @@ import { enhanceText } from '../services/analysisApi';
 import { EnhanceAction, EnhanceResult, AnalysisTab } from '../types/analysis';
 import { useWritingGuidance } from '../components/analysis/WritingGuidanceAlert';
 import PlotStructurePanel from '../components/analysis/PlotStructurePanel';
+import TensionArcChart from '../components/analysis/TensionArcChart';
 import WritingTechniquesCard from '../components/analysis/WritingTechniquesCard';
 import { useLanguage } from '../contexts/LanguageContext';
 import BrandWatermark from '../components/common/BrandWatermark';
@@ -938,7 +939,7 @@ export default function BookWritingPage() {
                       e.stopPropagation();
                       deleteChapter(index);
                     }}
-                    className="absolute top-3 right-3 lg:top-2 lg:right-2 p-2 lg:p-1.5 rounded-lg lg:rounded opacity-100 lg:opacity-0 group-hover:opacity-100 bg-red-500/10 lg:bg-transparent hover:bg-red-500/20 text-red-400 transition-all"
+                    className="absolute top-3 right-3 lg:top-2 lg:right-2 p-2 lg:p-1.5 rounded-lg lg:rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all"
                     title={t('editor.chapters.delete')}
                   >
                     <Trash2 className="w-4 h-4 lg:w-3.5 lg:h-3.5" />
@@ -1382,7 +1383,15 @@ export default function BookWritingPage() {
                     <div className="flex-1 h-px bg-white/10" />
                   </div>
 
-                  {/* Plot Structure */}
+                  {/* Tension Arc Chart — visual story arc */}
+                  <TensionArcChart
+                    bookId={bookId || ''}
+                    chapterCount={book.chapters?.length || 0}
+                    currentChapterIndex={selectedChapterIndex}
+                    onChapterClick={(idx) => selectChapter(idx)}
+                  />
+
+                  {/* Plot Structure — 3-act breakdown */}
                   <PlotStructurePanel
                     bookId={bookId || ''}
                     chapterCount={book.chapters?.length || 0}
