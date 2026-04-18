@@ -16,6 +16,7 @@ import { generatePricingStrategy } from '../services/pricingStrategyService';
 import { exportBook } from '../services/bookExportService';
 import { enqueueJob, runJobInBackground } from '../services/jobQueue';
 import { renderBookToPdf } from '../services/puppeteerExportService';
+import { generateBookPdfFromHtml } from '../services/pdfService';
 import {
   notifyBookLike,
   notifyBookComment,
@@ -1922,14 +1923,23 @@ export const exportBookPDFAsync = async (req: AuthRequest, res: Response): Promi
           onProgress: (pct, msg) => updateProgress(pct * 0.7, msg),
         });
       } catch (puppeteerErr: any) {
-        console.warn('[exportBookPDFAsync] Puppeteer failed, falling back to PDFKit:', puppeteerErr?.message);
-        await updateProgress(10, 'Generating PDF (fallback)...');
-        const exportResult = await exportBook(id, 'pdf');
-        if (!exportResult?.buffer) {
-          throw new Error('Export failed — no output generated');
+        console.warn('[exportBookPDFAsync] Puppeteer/React render failed, trying HTML-based fallback:', puppeteerErr?.message);
+        try {
+          // Second attempt: server-side HTML generation (no React app required)
+          pdfBuffer = await generateBookPdfFromHtml({
+            bookId: id,
+            onProgress: (pct, msg) => updateProgress(10 + pct * 0.5, msg),
+          });
+        } catch (htmlErr: any) {
+          console.warn('[exportBookPDFAsync] HTML-based render failed, falling back to PDFKit:', htmlErr?.message);
+          await updateProgress(10, 'Generating PDF (fallback)...');
+          const exportResult = await exportBook(id, 'pdf');
+          if (!exportResult?.buffer) {
+            throw new Error('Export failed — no output generated');
+          }
+          pdfBuffer = exportResult.buffer;
+          warnings = exportResult.warnings || [];
         }
-        pdfBuffer = exportResult.buffer;
-        warnings = exportResult.warnings || [];
       }
 
       await updateProgress(70, 'Uploading to storage...');

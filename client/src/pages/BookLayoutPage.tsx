@@ -42,7 +42,7 @@ import toast from 'react-hot-toast';
 import confetti from 'canvas-confetti';
 import { useLanguage } from '../contexts/LanguageContext';
 import TemplateGallery from '../components/design/TemplateGallery';
-import { BookTemplate, textColorPresets, availableFonts } from '../data/bookTemplates';
+import { BookTemplate, textColorPresets, availableFonts, saveCustomTemplate } from '../data/bookTemplates';
 import { applyTemplate, loadGoogleFonts, PageLayoutSettings } from '../services/templateService';
 import {
   loadDesignFonts,
@@ -440,6 +440,20 @@ const defaultSettings = {
   templateId: undefined as string | undefined,
   imagePlaceholders: [] as ImagePlaceholderPosition[],
   imageFrameStyle: 'shadow' as 'none' | 'thin-border' | 'shadow' | 'rounded' | 'decorative',
+  // Page size
+  pageSize: 'A5' as 'A4' | 'A5' | 'B5' | 'Letter' | '6x9' | '5x8' | 'Square' | 'Pocket' | 'Custom',
+  customPageSize: undefined as { width: number; height: number } | undefined,
+  // Design elements
+  dropCapStyle: 'none' as 'none' | 'classic' | 'decorative' | 'box' | 'modern',
+  dividerStyle: 'none' as 'none' | 'line' | 'ornament' | 'stars' | 'dots' | 'wave',
+  pullQuoteStyle: 'none' as 'none' | 'bordered' | 'background' | 'side-accent' | 'centered',
+  pageFrame: 'none' as 'none' | 'simple' | 'double' | 'ornate' | 'rounded' | 'dashed' | 'dotted' | 'gradient',
+  frameColor: '#8b6914' as string,
+  backgroundPattern: 'none' as 'none' | 'dots' | 'stripes' | 'grid' | 'waves' | 'confetti' | 'stars' | 'hearts' | 'geometric',
+  headerDecoration: 'none' as 'none' | 'line' | 'ornament' | 'gradient-line' | 'dots',
+  sectionDivider: '' as string,
+  cornerDecorations: 'none' as 'none' | 'flourish' | 'geometric' | 'floral' | 'stars' | 'hearts' | 'leaves',
+  titleUnderline: 'none' as 'none' | 'simple' | 'double' | 'wavy' | 'dotted' | 'gradient' | 'ornate',
 };
 
 // Page wrapper required by react-pageflip (must be forwardRef)
@@ -932,9 +946,18 @@ export default function BookLayoutPage() {
         paragraphSpacing: settings.paragraphSpacing || 12,
         // Advanced features
         chapterStartStyle: aiDesign?.layout?.chapterStartStyle || 'new-page',
-        dropCapStyle: aiDesign?.layout?.dropCaps ? 'classic' : 'none',
-        headerDecoration: aiDesign?.layout?.headerStyle !== 'none' ? 'line' : 'none',
-        dividerStyle: 'ornament',
+        dropCapStyle: (settings as any).dropCapStyle || (aiDesign?.layout?.dropCaps ? 'classic' : 'none'),
+        headerDecoration: (settings as any).headerDecoration || (aiDesign?.layout?.headerStyle !== 'none' ? 'line' : 'none'),
+        dividerStyle: (settings as any).dividerStyle || 'none',
+        // Decorative elements
+        decorativeElements: {
+          pageFrame: (settings as any).pageFrame || 'none',
+          frameColor: (settings as any).frameColor || settings.accentColor,
+          backgroundPattern: (settings as any).backgroundPattern || 'none',
+          cornerDecorations: (settings as any).cornerDecorations || 'none',
+          titleUnderline: (settings as any).titleUnderline || 'none',
+          sectionDivider: (settings as any).sectionDivider || '',
+        },
         // Images
         imagePositions: ['top', 'center', 'bottom'],
         imageFrameStyle: 'shadow',
@@ -962,10 +985,21 @@ export default function BookLayoutPage() {
         } : undefined,
       };
 
+      // Also save to localStorage for instant availability in Template Gallery
+      try {
+        saveCustomTemplate({
+          ...templateData,
+          id: `custom-${Date.now()}`,
+          previewGradient: `linear-gradient(135deg, ${settings.backgroundColor || '#fff'} 0%, ${settings.accentColor || '#6366f1'} 100%)`,
+        } as any);
+      } catch (localErr) {
+        console.warn('localStorage template save failed:', localErr);
+      }
+
       const response = await api.post('/templates', templateData);
 
       if (response.data.success) {
-        toast.success(language === 'he' ? 'התבנית נשמרה בהצלחה!' : 'Template saved successfully!');
+        toast.success(language === 'he' ? '✓ התבנית נשמרה בהצלחה!' : '✓ Template saved successfully!');
         setShowSaveTemplateModal(false);
         setTemplateName('');
         setTemplateNameHe('');
@@ -1503,16 +1537,27 @@ export default function BookLayoutPage() {
       textColor: design.typography.colors.text,
       accentColor: design.typography.colors.accent,
       margins: {
-        top: design.layout.margins.top,
-        bottom: design.layout.margins.bottom,
-        left: design.layout.margins.inner,
-        right: design.layout.margins.outer,
+        top: design.layout.margins?.top ?? settings.margins.top,
+        bottom: design.layout.margins?.bottom ?? settings.margins.bottom,
+        left: design.layout.margins?.inner ?? settings.margins.left,
+        right: design.layout.margins?.outer ?? settings.margins.right,
       },
       showPageNumbers: design.layout.pageNumberPosition !== 'none',
       pageNumberPosition: design.layout.pageNumberPosition,
       chapterStartStyle: design.layout.chapterStartStyle,
       headerStyle: design.layout.headerStyle,
       dropCapEnabled: design.layout.dropCaps,
+      // New design elements from style variant
+      dropCapStyle: design.dropCapStyle || (design.layout.dropCaps ? 'classic' : 'none'),
+      dividerStyle: design.dividerStyle || 'ornament',
+      pageFrame: design.pageFrame || 'none',
+      frameColor: design.frameColor || design.typography.colors.accent,
+      backgroundPattern: design.backgroundPattern || 'none',
+      headerDecoration: design.headerDecoration || (design.layout.headerStyle !== 'none' ? 'line' : 'none'),
+      cornerDecorations: design.cornerDecorations || 'none',
+      sectionDivider: design.sectionDivider || '',
+      titleUnderline: design.titleUnderline || 'none',
+      pageSize: design.pageSize || settings.pageSize || 'A5',
     };
 
     setSettings(newSettings);
@@ -1580,6 +1625,107 @@ export default function BookLayoutPage() {
       setSettings(newSettings);
     }
 
+    // ── Auto-save as user template ────────────────────────────────────────────
+    // Build a reusable BookTemplate from the AI design so the user can apply
+    // the same style to future books from the Template Gallery.
+    const autoTemplateName = book?.title
+      ? `${book.title} – AI`
+      : (language === 'he' ? 'עיצוב AI' : 'AI Design');
+    const autoTemplateNameHe = book?.title
+      ? `${book.title} – עיצוב AI`
+      : 'עיצוב AI';
+
+    const autoTemplate: BookTemplate = {
+      id: `ai-auto-${Date.now()}`,
+      name: autoTemplateName,
+      nameHe: autoTemplateNameHe,
+      description: design.moodDescription || 'Auto-saved from AI Design Wizard',
+      descriptionHe: design.moodDescription || 'נשמר אוטומטית מאשף עצב לי הכל',
+      category: 'custom',
+      previewGradient: `linear-gradient(135deg, ${newSettings.backgroundColor || '#fff'} 0%, ${newSettings.accentColor || '#6366f1'} 100%)`,
+      fonts: {
+        title: design.typography.titleFont || newSettings.fontFamily,
+        body: design.typography.bodyFont || newSettings.fontFamily,
+        headers: design.typography.headingFont || newSettings.fontFamily,
+      },
+      headerSizes: {
+        h1: design.typography.chapterTitleSize || 24,
+        h2: 20,
+        h3: 16,
+      },
+      fontSize: newSettings.fontSize,
+      lineHeight: newSettings.lineHeight,
+      columns: (newSettings.columns || 1) as 1 | 2 | 3 | 4,
+      paragraphStyle: 'vertical',
+      pageNumberPosition: (newSettings.pageNumberPosition || 'bottom-center') as any,
+      margins: newSettings.margins,
+      paragraphIndent: newSettings.paragraphIndent || 0,
+      paragraphSpacing: newSettings.paragraphSpacing || 12,
+      textColor: newSettings.textColor || '#000000',
+      accentColor: newSettings.accentColor || '#6366f1',
+      backgroundColor: newSettings.backgroundColor || '#ffffff',
+      chapterStartStyle: (design.layout?.chapterStartStyle || 'new-page') as any,
+      dropCapStyle: (newSettings.dropCapStyle || 'none') as any,
+      headerDecoration: (newSettings.headerDecoration || 'none') as any,
+      dividerStyle: (newSettings.dividerStyle || 'none') as any,
+      imagePositions: ['top', 'center', 'bottom'],
+      imageFrameStyle: 'shadow',
+      imageLayout: 'single',
+      coverStyle: {
+        backgroundColor: newSettings.backgroundColor || '#1a1a2e',
+        gradientColors: [newSettings.accentColor || '#6366f1'],
+        titlePosition: 'center',
+        titleAlignment: 'center',
+        titleColor: newSettings.textColor || '#ffffff',
+        authorColor: newSettings.accentColor || '#cccccc',
+      },
+      decorativeElements: {
+        pageFrame: (newSettings.pageFrame || 'none') as any,
+        frameColor: newSettings.frameColor || newSettings.accentColor,
+        backgroundPattern: (newSettings.backgroundPattern || 'none') as any,
+        cornerDecorations: (newSettings.cornerDecorations || 'none') as any,
+        titleUnderline: (newSettings.titleUnderline || 'none') as any,
+        sectionDivider: newSettings.sectionDivider || '',
+      },
+    } as any;
+
+    // 1. Save locally (instant, works offline)
+    try {
+      saveCustomTemplate(autoTemplate);
+    } catch (err) {
+      console.warn('Could not save template to localStorage:', err);
+    }
+
+    // 2. Save to server (background, best-effort)
+    api.post('/templates', {
+      name: autoTemplateName,
+      nameHe: autoTemplateNameHe,
+      description: autoTemplate.description,
+      descriptionHe: autoTemplate.descriptionHe,
+      category: 'custom',
+      fonts: autoTemplate.fonts,
+      headerSizes: autoTemplate.headerSizes,
+      fontSize: autoTemplate.fontSize,
+      lineHeight: autoTemplate.lineHeight,
+      columns: autoTemplate.columns,
+      paragraphStyle: autoTemplate.paragraphStyle,
+      pageNumberPosition: autoTemplate.pageNumberPosition,
+      margins: autoTemplate.margins,
+      paragraphIndent: autoTemplate.paragraphIndent,
+      paragraphSpacing: autoTemplate.paragraphSpacing,
+      textColor: autoTemplate.textColor,
+      accentColor: autoTemplate.accentColor,
+      backgroundColor: autoTemplate.backgroundColor,
+      coverStyle: autoTemplate.coverStyle,
+      previewGradient: autoTemplate.previewGradient,
+      dropCapStyle: autoTemplate.dropCapStyle,
+      headerDecoration: autoTemplate.headerDecoration,
+      dividerStyle: autoTemplate.dividerStyle,
+      decorativeElements: autoTemplate.decorativeElements,
+      aiDesignData: { typography: design.typography, layout: design.layout },
+    }).catch(err => console.warn('Could not save template to server:', err));
+    // ─────────────────────────────────────────────────────────────────────────
+
     // Save to database
     if (book) {
       setSaving(true);
@@ -1596,7 +1742,11 @@ export default function BookLayoutPage() {
         };
         await api.put(`/books/${bookId}`, payload);
         setLastSaved(new Date());
-        toast.success(language === 'he' ? 'העיצוב הוחל ונשמר!' : 'Design applied and saved!');
+        toast.success(
+          language === 'he'
+            ? '✨ העיצוב הוחל ונשמר! התבנית נוספה לגלריה שלך'
+            : '✨ Design applied! Template saved to your gallery'
+        );
       } catch (error) {
         console.error('Failed to save AI design:', error);
         toast.error(language === 'he' ? 'העיצוב הוחל אך השמירה נכשלה' : 'Design applied but save failed');
@@ -2806,6 +2956,67 @@ export default function BookLayoutPage() {
 
                 <div className="border-b border-white/10 mb-4" />
 
+                {/* Page Size Selector */}
+                <div className="mb-5">
+                  <label className="block text-sm text-gray-300 mb-2 font-medium flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-memorial-gold" />
+                    {language === 'he' ? 'גודל עמוד' : 'Page Size'}
+                  </label>
+                  <div className="grid grid-cols-3 gap-1.5 mb-2">
+                    {([
+                      { key: 'A5', label: 'A5', sub: '148×210', icon: '📄' },
+                      { key: 'A4', label: 'A4', sub: '210×297', icon: '📋' },
+                      { key: 'B5', label: 'B5', sub: '176×250', icon: '📖' },
+                      { key: 'Letter', label: 'Letter', sub: '216×279', icon: '📝' },
+                      { key: '6x9', label: '6×9"', sub: '152×229', icon: '📗' },
+                      { key: '5x8', label: '5×8"', sub: '127×203', icon: '📒' },
+                      { key: 'Square', label: language === 'he' ? 'מרובע' : 'Square', sub: '210×210', icon: '🖼️' },
+                      { key: 'Pocket', label: language === 'he' ? 'כיס' : 'Pocket', sub: '127×178', icon: '📔' },
+                      { key: 'Custom', label: language === 'he' ? 'מותאם' : 'Custom', sub: '...', icon: '✏️' },
+                    ] as { key: typeof settings.pageSize; label: string; sub: string; icon: string }[]).map(({ key, label, sub, icon }) => (
+                      <button
+                        key={key}
+                        onClick={() => setSettings({ ...settings, pageSize: key })}
+                        className={`flex flex-col items-center p-2 rounded-lg border transition-all text-xs ${
+                          settings.pageSize === key
+                            ? 'border-memorial-gold bg-memorial-gold/20 text-memorial-gold'
+                            : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/30'
+                        }`}
+                      >
+                        <span className="text-base mb-0.5">{icon}</span>
+                        <span className="font-semibold">{label}</span>
+                        <span className="text-[9px] opacity-60">{sub}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {settings.pageSize === 'Custom' && (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1 block">{language === 'he' ? 'רוחב (מ"מ)' : 'Width (mm)'}</label>
+                        <input
+                          type="number"
+                          min="80" max="400"
+                          value={settings.customPageSize?.width || 148}
+                          onChange={(e) => setSettings({ ...settings, customPageSize: { width: parseInt(e.target.value) || 148, height: settings.customPageSize?.height || 210 } })}
+                          className="input w-full text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1 block">{language === 'he' ? 'גובה (מ"מ)' : 'Height (mm)'}</label>
+                        <input
+                          type="number"
+                          min="100" max="600"
+                          value={settings.customPageSize?.height || 210}
+                          onChange={(e) => setSettings({ ...settings, customPageSize: { width: settings.customPageSize?.width || 148, height: parseInt(e.target.value) || 210 } })}
+                          className="input w-full text-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-b border-white/10 mb-4" />
+
                 {/* Font Size */}
                 <div className="mb-4">
                   <label className="block text-sm text-gray-300 mb-2">{language === 'he' ? 'גודל גופן' : 'Font Size'}</label>
@@ -3047,6 +3258,189 @@ export default function BookLayoutPage() {
                     />
                     <span className="text-sm text-gray-300">{language === 'he' ? 'שמירה אוטומטית' : 'Auto-save'}</span>
                   </label>
+                </div>
+
+                <div className="border-b border-white/10 my-4" />
+
+                {/* ── Design Elements ── */}
+                <div className="mb-2">
+                  <h4 className="text-sm font-semibold text-memorial-gold mb-3 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    {language === 'he' ? 'אלמנטים עיצוביים' : 'Design Elements'}
+                  </h4>
+
+                  {/* Columns */}
+                  <div className="mb-4">
+                    <label className="block text-xs text-gray-400 mb-2">{language === 'he' ? 'עמודות' : 'Columns'}</label>
+                    <div className="grid grid-cols-4 gap-1">
+                      {([1,2,3,4] as const).map(col => (
+                        <button
+                          key={col}
+                          onClick={() => setSettings({ ...settings, columns: col })}
+                          className={`py-1.5 rounded-lg text-xs font-medium transition-all border ${settings.columns === col ? 'border-memorial-gold bg-memorial-gold/20 text-memorial-gold' : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/30'}`}
+                        >{col}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Drop Cap */}
+                  <div className="mb-4">
+                    <label className="block text-xs text-gray-400 mb-2">{language === 'he' ? 'אות ראשונה גדולה' : 'Drop Cap'}</label>
+                    <div className="grid grid-cols-2 gap-1">
+                      {([
+                        { v: 'none', label: language === 'he' ? 'ללא' : 'None' },
+                        { v: 'classic', label: language === 'he' ? 'קלאסי' : 'Classic' },
+                        { v: 'decorative', label: language === 'he' ? 'מעוטר' : 'Decorative' },
+                        { v: 'box', label: language === 'he' ? 'מסגרת' : 'Box' },
+                      ] as { v: typeof settings.dropCapStyle; label: string }[]).map(({ v, label }) => (
+                        <button key={v} onClick={() => setSettings({ ...settings, dropCapStyle: v })}
+                          className={`py-1.5 rounded-lg text-xs font-medium transition-all border ${settings.dropCapStyle === v ? 'border-memorial-gold bg-memorial-gold/20 text-memorial-gold' : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/30'}`}
+                        >{label}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Section Divider */}
+                  <div className="mb-4">
+                    <label className="block text-xs text-gray-400 mb-2">{language === 'he' ? 'מפריד פרק' : 'Section Divider'}</label>
+                    <div className="grid grid-cols-3 gap-1">
+                      {([
+                        { v: 'none', label: language === 'he' ? 'ללא' : 'None' },
+                        { v: 'line', label: language === 'he' ? 'קו' : 'Line' },
+                        { v: 'dots', label: language === 'he' ? 'נקודות' : 'Dots' },
+                        { v: 'stars', label: language === 'he' ? 'כוכבים' : 'Stars' },
+                        { v: 'wave', label: language === 'he' ? 'גל' : 'Wave' },
+                        { v: 'ornament', label: language === 'he' ? 'עיטור' : 'Ornament' },
+                      ] as { v: typeof settings.dividerStyle; label: string }[]).map(({ v, label }) => (
+                        <button key={v} onClick={() => setSettings({ ...settings, dividerStyle: v })}
+                          className={`py-1.5 rounded-lg text-xs font-medium transition-all border ${settings.dividerStyle === v ? 'border-memorial-gold bg-memorial-gold/20 text-memorial-gold' : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/30'}`}
+                        >{label}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Page Frame */}
+                  <div className="mb-4">
+                    <label className="block text-xs text-gray-400 mb-2">{language === 'he' ? 'מסגרת עמוד' : 'Page Frame'}</label>
+                    <div className="grid grid-cols-3 gap-1">
+                      {([
+                        { v: 'none', label: language === 'he' ? 'ללא' : 'None' },
+                        { v: 'simple', label: language === 'he' ? 'פשוט' : 'Simple' },
+                        { v: 'double', label: language === 'he' ? 'כפול' : 'Double' },
+                        { v: 'ornate', label: language === 'he' ? 'מפואר' : 'Ornate' },
+                        { v: 'rounded', label: language === 'he' ? 'עגול' : 'Rounded' },
+                        { v: 'gradient', label: language === 'he' ? 'גרדיאנט' : 'Gradient' },
+                      ] as { v: typeof settings.pageFrame; label: string }[]).map(({ v, label }) => (
+                        <button key={v} onClick={() => setSettings({ ...settings, pageFrame: v })}
+                          className={`py-1.5 rounded-lg text-xs font-medium transition-all border ${settings.pageFrame === v ? 'border-memorial-gold bg-memorial-gold/20 text-memorial-gold' : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/30'}`}
+                        >{label}</button>
+                      ))}
+                    </div>
+                    {settings.pageFrame !== 'none' && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <input type="color" value={settings.frameColor || '#8b6914'}
+                          onChange={(e) => setSettings({ ...settings, frameColor: e.target.value })}
+                          className="w-7 h-7 rounded cursor-pointer border-0"
+                        />
+                        <span className="text-xs text-gray-400">{language === 'he' ? 'צבע מסגרת' : 'Frame color'}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Background Pattern */}
+                  <div className="mb-4">
+                    <label className="block text-xs text-gray-400 mb-2">{language === 'he' ? 'תבנית רקע' : 'Background Pattern'}</label>
+                    <div className="grid grid-cols-3 gap-1">
+                      {([
+                        { v: 'none', label: language === 'he' ? 'ללא' : 'None' },
+                        { v: 'dots', label: language === 'he' ? 'נקודות' : 'Dots' },
+                        { v: 'grid', label: language === 'he' ? 'רשת' : 'Grid' },
+                        { v: 'waves', label: language === 'he' ? 'גלים' : 'Waves' },
+                        { v: 'stripes', label: language === 'he' ? 'פסים' : 'Stripes' },
+                        { v: 'geometric', label: language === 'he' ? 'גאומטרי' : 'Geometric' },
+                      ] as { v: typeof settings.backgroundPattern; label: string }[]).map(({ v, label }) => (
+                        <button key={v} onClick={() => setSettings({ ...settings, backgroundPattern: v })}
+                          className={`py-1.5 rounded-lg text-xs font-medium transition-all border ${settings.backgroundPattern === v ? 'border-memorial-gold bg-memorial-gold/20 text-memorial-gold' : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/30'}`}
+                        >{label}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Header Decoration */}
+                  <div className="mb-4">
+                    <label className="block text-xs text-gray-400 mb-2">{language === 'he' ? 'עיטור כותרת פרק' : 'Chapter Header Decoration'}</label>
+                    <div className="grid grid-cols-3 gap-1">
+                      {([
+                        { v: 'none', label: language === 'he' ? 'ללא' : 'None' },
+                        { v: 'line', label: language === 'he' ? 'קו' : 'Line' },
+                        { v: 'gradient-line', label: language === 'he' ? 'גרדיאנט' : 'Gradient' },
+                        { v: 'ornament', label: language === 'he' ? 'עיטור' : 'Ornament' },
+                        { v: 'dots', label: language === 'he' ? 'נקודות' : 'Dots' },
+                      ] as { v: typeof settings.headerDecoration; label: string }[]).map(({ v, label }) => (
+                        <button key={v} onClick={() => setSettings({ ...settings, headerDecoration: v })}
+                          className={`py-1.5 rounded-lg text-xs font-medium transition-all border ${settings.headerDecoration === v ? 'border-memorial-gold bg-memorial-gold/20 text-memorial-gold' : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/30'}`}
+                        >{label}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Corner Decorations */}
+                  <div className="mb-4">
+                    <label className="block text-xs text-gray-400 mb-2">{language === 'he' ? 'עיטורי פינות' : 'Corner Decorations'}</label>
+                    <div className="grid grid-cols-3 gap-1">
+                      {([
+                        { v: 'none', label: language === 'he' ? 'ללא' : 'None' },
+                        { v: 'flourish', label: language === 'he' ? 'פריחה' : 'Flourish' },
+                        { v: 'geometric', label: language === 'he' ? 'גאומטרי' : 'Geometric' },
+                        { v: 'floral', label: language === 'he' ? 'פרחוני' : 'Floral' },
+                        { v: 'stars', label: language === 'he' ? 'כוכבים' : 'Stars' },
+                        { v: 'leaves', label: language === 'he' ? 'עלים' : 'Leaves' },
+                      ] as { v: typeof settings.cornerDecorations; label: string }[]).map(({ v, label }) => (
+                        <button key={v} onClick={() => setSettings({ ...settings, cornerDecorations: v })}
+                          className={`py-1.5 rounded-lg text-xs font-medium transition-all border ${settings.cornerDecorations === v ? 'border-memorial-gold bg-memorial-gold/20 text-memorial-gold' : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/30'}`}
+                        >{label}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Title Underline */}
+                  <div className="mb-4">
+                    <label className="block text-xs text-gray-400 mb-2">{language === 'he' ? 'קו תחת כותרת' : 'Title Underline'}</label>
+                    <div className="grid grid-cols-3 gap-1">
+                      {([
+                        { v: 'none', label: language === 'he' ? 'ללא' : 'None' },
+                        { v: 'simple', label: language === 'he' ? 'פשוט' : 'Simple' },
+                        { v: 'double', label: language === 'he' ? 'כפול' : 'Double' },
+                        { v: 'wavy', label: language === 'he' ? 'גלי' : 'Wavy' },
+                        { v: 'gradient', label: language === 'he' ? 'גרדיאנט' : 'Gradient' },
+                        { v: 'ornate', label: language === 'he' ? 'מעוטר' : 'Ornate' },
+                      ] as { v: typeof settings.titleUnderline; label: string }[]).map(({ v, label }) => (
+                        <button key={v} onClick={() => setSettings({ ...settings, titleUnderline: v })}
+                          className={`py-1.5 rounded-lg text-xs font-medium transition-all border ${settings.titleUnderline === v ? 'border-memorial-gold bg-memorial-gold/20 text-memorial-gold' : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/30'}`}
+                        >{label}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Accent Color */}
+                  <div className="mb-4">
+                    <label className="block text-xs text-gray-400 mb-2">{language === 'he' ? 'צבע הדגשה' : 'Accent Color'}</label>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {['#8b6914','#1a365d','#6b5b95','#c0392b','#16a085','#2c3e50','#e74c3c','#8e44ad'].map(c => (
+                        <button key={c} onClick={() => setSettings({ ...settings, accentColor: c })}
+                          className={`w-7 h-7 rounded-lg border-2 transition-all ${settings.accentColor === c ? 'border-white scale-110' : 'border-transparent hover:border-white/40'}`}
+                          style={{ backgroundColor: c }}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={settings.accentColor || '#8b6914'}
+                        onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
+                        className="w-7 h-7 rounded cursor-pointer border-0"
+                      />
+                      <span className="text-xs text-gray-400">{language === 'he' ? 'מותאם' : 'Custom'}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -3406,6 +3800,26 @@ export default function BookLayoutPage() {
           frontCoverImageUrl={coverImageUrl}
           backCoverImageUrl={backCoverImageUrl}
           isRTL={isBookRTL}
+          designSettings={{
+            fontFamily: settings.fontFamily,
+            fontSize: settings.fontSize,
+            lineHeight: settings.lineHeight,
+            textColor: settings.textColor,
+            accentColor: settings.accentColor,
+            backgroundColor: settings.backgroundColor,
+            columns: settings.columns,
+            dropCapStyle: (settings as any).dropCapStyle,
+            dividerStyle: (settings as any).dividerStyle,
+            pageFrame: (settings as any).pageFrame,
+            frameColor: (settings as any).frameColor,
+            backgroundPattern: (settings as any).backgroundPattern,
+            headerDecoration: (settings as any).headerDecoration,
+            sectionDivider: (settings as any).sectionDivider,
+            cornerDecorations: (settings as any).cornerDecorations,
+            titleUnderline: (settings as any).titleUnderline,
+            margins: settings.margins,
+            showPageNumbers: settings.showPageNumbers,
+          }}
           onClose={() => setShowFlipReader(false)}
         />
       )}
@@ -3872,6 +4286,55 @@ function PageRenderer({
     right: Math.round(settings.margins.right * scaleFactor),
   };
 
+  // Compute background pattern style
+  const getPagePatternStyle = (): React.CSSProperties => {
+    const pattern = settings.backgroundPattern;
+    const accentColor = settings.accentColor || '#8b6914';
+    if (!pattern || pattern === 'none') return {};
+    const hex = accentColor.replace('#', '');
+    const r = parseInt(hex.slice(0, 2), 16) || 139;
+    const g = parseInt(hex.slice(2, 4), 16) || 105;
+    const b = parseInt(hex.slice(4, 6), 16) || 20;
+    const rgba = (a: number) => `rgba(${r},${g},${b},${a})`;
+    switch (pattern) {
+      case 'dots': return { backgroundImage: `radial-gradient(circle, ${rgba(0.1)} 1px, transparent 1px)`, backgroundSize: '18px 18px' };
+      case 'grid': return { backgroundImage: `linear-gradient(${rgba(0.04)} 1px, transparent 1px), linear-gradient(90deg, ${rgba(0.04)} 1px, transparent 1px)`, backgroundSize: '22px 22px' };
+      case 'stripes': return { backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 26px, ${rgba(0.05)} 26px, ${rgba(0.05)} 27px)` };
+      default: return {};
+    }
+  };
+
+  // Compute page frame style
+  const getPageFrameStyle = (): React.CSSProperties => {
+    const frame = settings.pageFrame;
+    const c = settings.frameColor || settings.accentColor || '#8b6914';
+    if (!frame || frame === 'none') return {};
+    switch (frame) {
+      case 'simple': return { boxShadow: `inset 0 0 0 1px ${c}60` };
+      case 'double': return { boxShadow: `inset 0 0 0 1px ${c}60, inset 0 0 0 3px ${c}30` };
+      case 'ornate': return { boxShadow: `inset 0 0 0 1.5px ${c}70, inset 0 0 0 3.5px ${c}30, inset 0 0 0 5px ${c}15` };
+      case 'dashed': return { outline: `1.5px dashed ${c}60`, outlineOffset: '-5px' };
+      case 'dotted': return { outline: `1.5px dotted ${c}60`, outlineOffset: '-5px' };
+      case 'rounded': return { boxShadow: `inset 0 0 0 1.5px ${c}60`, borderRadius: '6px', overflow: 'hidden' };
+      default: return {};
+    }
+  };
+
+  // Corner decoration SVG paths by type
+  const getCornerSVG = (type: string, rotate: number) => {
+    const accent = settings.accentColor || '#8b6914';
+    const svgPaths: Record<string, string> = {
+      flourish: 'M2,2 Q8,2 8,8 M2,2 Q2,8 8,8 M4,4 C6,4 6,6 4,6',
+      geometric: 'M2,2 L14,2 L14,4 L4,4 L4,14 L2,14 Z',
+      floral: 'M8,8 Q4,4 2,2 M8,8 Q4,12 2,14 M8,8 Q12,4 14,2 M8,8 C7,6 5,4 4,4 C6,4 7,6 8,8',
+      stars: 'M8,2 L9,6 L13,6 L10,9 L11,13 L8,10 L5,13 L6,9 L3,6 L7,6 Z',
+      hearts: 'M8,12 C8,12 2,8 2,5 A3,3 0 0 1 8,5 A3,3 0 0 1 14,5 C14,8 8,12 8,12 Z',
+      leaves: 'M2,14 Q2,8 8,2 Q8,8 14,8 Q8,8 8,14 Q4,14 2,14 Z',
+    };
+    const path = svgPaths[type] || svgPaths.geometric;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="${accent}" stroke-width="1.5" transform="rotate(${rotate},8,8)">${path}</svg>`;
+  };
+
   return (
     <div
       ref={containerRef}
@@ -3885,19 +4348,50 @@ function PageRenderer({
         backgroundColor: settings.backgroundColor || '#ffffff',
         direction: isRTL ? 'rtl' : 'ltr',
         textAlign: isRTL ? 'right' : 'left',
-      }}
+        '--accent-color': settings.accentColor || '#8b6914',
+        '--frame-color': settings.frameColor || settings.accentColor || '#8b6914',
+        ...getPagePatternStyle(),
+        ...getPageFrameStyle(),
+      } as React.CSSProperties}
     >
+      {/* Corner Decorations */}
+      {settings.cornerDecorations && settings.cornerDecorations !== 'none' && (
+        <>
+          {[
+            { cls: 'book-corner-decoration book-corner-tl', rot: 0 },
+            { cls: 'book-corner-decoration book-corner-tr', rot: 90 },
+            { cls: 'book-corner-decoration book-corner-bl', rot: 270 },
+            { cls: 'book-corner-decoration book-corner-br', rot: 180 },
+          ].map(({ cls, rot }) => (
+            <div
+              key={cls}
+              className={cls}
+              dangerouslySetInnerHTML={{ __html: getCornerSVG(settings.cornerDecorations, rot) }}
+              style={{ '--accent-color': settings.accentColor || '#8b6914' } as React.CSSProperties}
+            />
+          ))}
+        </>
+      )}
+
       {/* Decorative header line + book title — hidden on mobile (too small to read) */}
       {showHeader && headerStyle !== 'none' && page.type !== 'title' && page.type !== 'toc' && (
         <div className="absolute top-0 left-0 right-0 hidden sm:block" style={{ padding: `0 ${settings.margins.right}px` }}>
           <div
-            className="flex items-center gap-3 pt-3 pb-2"
-            style={{ borderBottom: '0.5px solid rgba(0,0,0,0.12)' }}
+            className={`flex items-center gap-3 pt-3 pb-2 ${
+              settings.headerDecoration === 'gradient-line' ? 'book-chapter-header header-gradient-line' :
+              settings.headerDecoration === 'ornament' ? 'book-chapter-header header-decorated' :
+              ''
+            }`}
+            style={{
+              borderBottom: settings.headerDecoration === 'line' || settings.headerDecoration === 'dots'
+                ? `0.5px solid ${settings.accentColor || 'rgba(0,0,0,0.15)'}${settings.headerDecoration === 'dots' ? '' : ''}`
+                : '0.5px solid rgba(0,0,0,0.12)',
+            }}
           >
             <div className="flex-1 h-[0.5px]" style={{ background: 'linear-gradient(to right, transparent, rgba(0,0,0,0.08))' }} />
             <span style={{
               fontSize: '7px',
-              color: '#9ca3af',
+              color: settings.headerDecoration !== 'none' ? (settings.accentColor || '#9ca3af') : '#9ca3af',
               letterSpacing: '2px',
               textTransform: 'uppercase',
               fontFamily: settings.fontFamily,
@@ -3976,15 +4470,31 @@ function PageRenderer({
         // View mode with edit button for chapter pages
         <div className="relative h-full group">
           <div
-            className="h-full overflow-y-auto overflow-x-hidden book-page-content prose prose-sm max-w-none relative flex flex-col"
+            className={[
+              'h-full overflow-y-auto overflow-x-hidden book-page-content prose prose-sm max-w-none relative flex flex-col',
+              // Drop cap class based on template setting
+              page.type === 'chapter' && settings.dropCapStyle === 'classic' ? 'book-drop-cap' : '',
+              page.type === 'chapter' && settings.dropCapStyle === 'decorative' ? 'book-drop-cap-decorative' : '',
+              page.type === 'chapter' && settings.dropCapStyle === 'box' ? 'book-drop-cap-box' : '',
+              // Multi-column class
+              settings.columns === 2 ? 'book-columns-2 book-column-rule' : '',
+              settings.columns === 3 ? 'book-columns-3 book-column-rule' : '',
+              settings.columns === 4 ? 'book-columns-4 book-column-rule' : '',
+              // Title underline class
+              settings.titleUnderline && settings.titleUnderline !== 'none' ? `page-title-underline-${settings.titleUnderline}` : '',
+              // Divider style class
+              settings.dividerStyle && settings.dividerStyle !== 'none' ? `page-divider-${settings.dividerStyle}` : '',
+            ].filter(Boolean).join(' ')}
             style={{
               color: settings.textColor || '#000000',
               direction: isRTL ? 'rtl' : 'ltr',
               paddingTop: showHeader ? '15px' : '0',
               paddingBottom: settings.showPageNumbers ? '20px' : '0',
               zIndex: 5,
+              '--accent-color': settings.accentColor || '#8b6914',
+              '--frame-color': settings.frameColor || settings.accentColor || '#8b6914',
               ...getContentLayoutStyle(),
-            }}
+            } as React.CSSProperties}
           >
             {/* AI-Generated Chapter Image (at top of chapter page) */}
             {page.type === 'chapter' && aiImagePlacements.filter(p => p.generatedImageUrl && p.position === 'chapter-start').length > 0 && (

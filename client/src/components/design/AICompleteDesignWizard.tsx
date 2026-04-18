@@ -29,12 +29,101 @@ import {
   BookMarked,
   FileText,
   Save,
+  Layers,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useModal } from '../../hooks/useModal';
 import { api } from '../../services/api';
 import { BookTemplate, saveCustomTemplate } from '../../data/bookTemplates';
 import toast from 'react-hot-toast';
+
+// ─── Style Variants ───────────────────────────────────────────────────────────
+
+type StyleVariantKey = 'minimal' | 'classic' | 'luxurious';
+
+interface StyleVariantConfig {
+  key: StyleVariantKey;
+  nameHe: string;
+  nameEn: string;
+  descriptionHe: string;
+  descriptionEn: string;
+  swatches: string[];
+  dropCapStyle: 'classic' | 'none' | 'decorative' | 'box';
+  dividerStyle: 'ornament' | 'none' | 'stars' | 'wave';
+  pageFrame: 'none' | 'simple' | 'double' | 'ornate';
+  backgroundPattern: 'none' | 'dots' | 'grid';
+  headerDecoration: 'none' | 'ornament' | 'gradient-line' | 'line';
+  cornerDecorations: 'none' | 'flourish' | 'floral' | 'geometric';
+  sectionDivider: string;
+  titleUnderline: 'none' | 'gradient' | 'ornate' | 'simple';
+  pageSize: 'A4' | 'A5' | 'B5';
+}
+
+const STYLE_VARIANTS: StyleVariantConfig[] = [
+  {
+    key: 'minimal',
+    nameHe: 'מינימלי',
+    nameEn: 'Minimal',
+    descriptionHe: 'נקי, פשוט, ללא קישוטים',
+    descriptionEn: 'Clean, simple, no ornaments',
+    swatches: ['#f8f9fa', '#e9ecef', '#dee2e6', '#1a1a2e', '#6c757d'],
+    dropCapStyle: 'none',
+    dividerStyle: 'none',
+    pageFrame: 'none',
+    backgroundPattern: 'none',
+    headerDecoration: 'line',
+    cornerDecorations: 'none',
+    sectionDivider: '⸻',
+    titleUnderline: 'simple',
+    pageSize: 'A5',
+  },
+  {
+    key: 'classic',
+    nameHe: 'קלאסי',
+    nameEn: 'Classic',
+    descriptionHe: 'סריף, זהב, תחושת ספר מסורתי',
+    descriptionEn: 'Serif, gold accents, traditional book feel',
+    swatches: ['#fdf6e3', '#d4af37', '#8b4513', '#2c1810', '#a0522d'],
+    dropCapStyle: 'classic',
+    dividerStyle: 'ornament',
+    pageFrame: 'simple',
+    backgroundPattern: 'none',
+    headerDecoration: 'ornament',
+    cornerDecorations: 'flourish',
+    sectionDivider: '⸻ ✦ ⸻',
+    titleUnderline: 'ornate',
+    pageSize: 'B5',
+  },
+  {
+    key: 'luxurious',
+    nameHe: 'מפואר',
+    nameEn: 'Luxurious',
+    descriptionHe: 'קישוטים מרובים, גבולות דקורטיביים, פרימיום',
+    descriptionEn: 'Heavy ornaments, decorative borders, premium feel',
+    swatches: ['#0d0d0d', '#c9a84c', '#8b0000', '#1a0533', '#4a0080'],
+    dropCapStyle: 'decorative',
+    dividerStyle: 'ornament',
+    pageFrame: 'ornate',
+    backgroundPattern: 'dots',
+    headerDecoration: 'gradient-line',
+    cornerDecorations: 'floral',
+    sectionDivider: '✦ ❦ ✦',
+    titleUnderline: 'gradient',
+    pageSize: 'A5',
+  },
+];
+
+// ─── Progress Steps ───────────────────────────────────────────────────────────
+
+const PROGRESS_STEPS: { titleHe: string; titleEn: string; percent: number }[] = [
+  { titleHe: 'מנתח את תוכן הספר...', titleEn: 'Analyzing book content...', percent: 10 },
+  { titleHe: 'בוחר פלטת צבעים...', titleEn: 'Selecting color palette...', percent: 30 },
+  { titleHe: 'מתאים גופנים ועיצוב...', titleEn: 'Matching fonts and design...', percent: 55 },
+  { titleHe: 'מציב תמונות ומרכיבים...', titleEn: 'Placing images and elements...', percent: 75 },
+  { titleHe: 'מסיים ומכין תצוגה מקדימה...', titleEn: 'Finishing and preparing preview...', percent: 95 },
+];
+
+// ─── Interfaces ───────────────────────────────────────────────────────────────
 
 interface CoverDesign {
   front: {
@@ -100,6 +189,18 @@ interface CompleteDesign {
   synopsis?: string;
   overallStyle: string;
   moodDescription: string;
+  // Extended design settings
+  dropCapStyle?: 'classic' | 'none' | 'decorative' | 'box';
+  dividerStyle?: 'ornament' | 'none' | 'stars' | 'wave';
+  pageFrame?: 'none' | 'simple' | 'double' | 'ornate';
+  frameColor?: string;
+  backgroundPattern?: 'none' | 'dots' | 'grid';
+  headerDecoration?: 'none' | 'ornament' | 'gradient-line' | 'line';
+  cornerDecorations?: 'none' | 'flourish' | 'floral' | 'geometric';
+  sectionDivider?: string;
+  titleUnderline?: 'none' | 'gradient' | 'ornate' | 'simple';
+  pageSize?: string;
+  styleVariant?: StyleVariantKey;
 }
 
 interface AICompleteDesignWizardProps {
@@ -117,7 +218,7 @@ interface AICompleteDesignWizardProps {
   onDesignComplete: (design: CompleteDesign, coverImageUrls: { front?: string; back?: string }) => void;
 }
 
-type Step = 'intro' | 'analyzing' | 'typography' | 'layout' | 'cover' | 'synopsis' | 'images' | 'saving' | 'preview';
+type Step = 'intro' | 'analyzing' | 'typography' | 'layout' | 'cover' | 'synopsis' | 'images' | 'saving' | 'variant' | 'preview';
 
 const STEPS: { key: Step; icon: any; titleHe: string; titleEn: string }[] = [
   { key: 'analyzing', icon: BookOpen, titleHe: 'מנתח את הספר', titleEn: 'Analyzing book' },
@@ -128,6 +229,8 @@ const STEPS: { key: Step; icon: any; titleHe: string; titleEn: string }[] = [
   { key: 'images', icon: ImageIcon, titleHe: 'ממקם תמונות', titleEn: 'Placing images' },
   { key: 'saving', icon: Save, titleHe: 'שומר הכל', titleEn: 'Saving everything' },
 ];
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AICompleteDesignWizard({
   isOpen,
@@ -143,6 +246,8 @@ export default function AICompleteDesignWizard({
 
   const [step, setStep] = useState<Step>('intro');
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [progressStepIndex, setProgressStepIndex] = useState(0);
+  const [animatedPercent, setAnimatedPercent] = useState(0);
   const [design, setDesign] = useState<CompleteDesign | null>(null);
   const [coverImages, setCoverImages] = useState<{ front?: string; back?: string }>({});
   const [synopsis, setSynopsis] = useState<string>('');
@@ -151,30 +256,53 @@ export default function AICompleteDesignWizard({
   const [generateSynopsis, setGenerateSynopsis] = useState(true);
   const [generateInteriorImages, setGenerateInteriorImages] = useState(true);
   const [previewTab, setPreviewTab] = useState<'cover' | 'typography' | 'layout' | 'images'>('cover');
+  const [selectedVariant, setSelectedVariant] = useState<StyleVariantKey>('classic');
 
   // Reset state when closed
   useEffect(() => {
     if (!isOpen) {
       setStep('intro');
       setCurrentStepIndex(0);
+      setProgressStepIndex(0);
+      setAnimatedPercent(0);
       setDesign(null);
       setCoverImages({});
       setSynopsis('');
       setError(null);
+      setSelectedVariant('classic');
     }
   }, [isOpen]);
 
-  const updateStep = (newStep: Step, index: number) => {
+  // Animate progress percentage
+  useEffect(() => {
+    if (step === 'intro' || step === 'variant' || step === 'preview') return;
+    const target = PROGRESS_STEPS[progressStepIndex]?.percent ?? 0;
+    let current = animatedPercent;
+    const interval = setInterval(() => {
+      if (current < target) {
+        current = Math.min(current + 1, target);
+        setAnimatedPercent(current);
+      } else {
+        clearInterval(interval);
+      }
+    }, 18);
+    return () => clearInterval(interval);
+  }, [progressStepIndex, step]);
+
+  const updateStep = (newStep: Step, index: number, progressIdx?: number) => {
     setStep(newStep);
     setCurrentStepIndex(index);
+    if (progressIdx !== undefined) setProgressStepIndex(progressIdx);
   };
 
   const startDesign = useCallback(async () => {
     try {
       setError(null);
+      setAnimatedPercent(0);
+      setProgressStepIndex(0);
 
       // Step 1: Analyzing
-      updateStep('analyzing', 0);
+      updateStep('analyzing', 0, 0);
 
       // Call premium design endpoint
       const response = await api.post(`/ai/premium-design/${bookId}`, {
@@ -190,15 +318,15 @@ export default function AICompleteDesignWizard({
       const data = response.data.data;
 
       // Step 2: Typography
-      updateStep('typography', 1);
+      updateStep('typography', 1, 1);
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // Step 3: Layout
-      updateStep('layout', 2);
+      updateStep('layout', 2, 2);
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // Step 4: Cover
-      updateStep('cover', 3);
+      updateStep('cover', 3, 3);
 
       // Process the design response
       const processedDesign: CompleteDesign = {
@@ -255,7 +383,7 @@ export default function AICompleteDesignWizard({
 
       // Step 5: Generate synopsis if enabled and not already exists
       if (generateSynopsis && (!book.synopsis || book.synopsis.length < 50)) {
-        updateStep('synopsis', 4);
+        updateStep('synopsis', 4, 3);
         try {
           const synopsisResponse = await api.post('/ai/generate-synopsis', { bookId });
           if (synopsisResponse.data.success && synopsisResponse.data.data.synopsis) {
@@ -263,18 +391,19 @@ export default function AICompleteDesignWizard({
             processedDesign.synopsis = synopsisResponse.data.data.synopsis;
             processedDesign.cover.back.synopsis.text = synopsisResponse.data.data.synopsis;
           }
-        } catch (synopsisError) {
+        } catch (_synopsisError) {
+          // non-fatal
         }
       }
 
       // Step 6: Images
-      updateStep('images', 5);
+      updateStep('images', 5, 4);
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // Step 7: Saving
-      updateStep('saving', 6);
+      updateStep('saving', 6, 4);
 
-      // Save everything to the book
+      // Save core data to the book (variant-specific fields will be saved when user picks a variant)
       try {
         const savePayload: any = {
           coverDesign: {
@@ -316,17 +445,18 @@ export default function AICompleteDesignWizard({
           },
         };
 
-        // Add synopsis if generated
         if (synopsis || processedDesign.synopsis) {
           savePayload.synopsis = synopsis || processedDesign.synopsis;
         }
 
         await api.put(`/books/${bookId}`, savePayload);
-      } catch (saveError) {
+      } catch (_saveError) {
+        // non-fatal
       }
 
       setDesign(processedDesign);
-      setStep('preview');
+      // Go to variant selection before preview
+      setStep('variant');
 
     } catch (err: any) {
       console.error('AI Design error:', err);
@@ -335,11 +465,35 @@ export default function AICompleteDesignWizard({
     }
   }, [bookId, book, generateCoverImages, generateInteriorImages, generateSynopsis]);
 
+  const applyVariantToDesign = (base: CompleteDesign, variantKey: StyleVariantKey): CompleteDesign => {
+    const v = STYLE_VARIANTS.find(sv => sv.key === variantKey)!;
+    return {
+      ...base,
+      styleVariant: variantKey,
+      dropCapStyle: v.dropCapStyle,
+      dividerStyle: v.dividerStyle,
+      pageFrame: v.pageFrame,
+      frameColor: base.typography.colors.accent,
+      backgroundPattern: v.backgroundPattern,
+      headerDecoration: v.headerDecoration,
+      cornerDecorations: v.cornerDecorations,
+      sectionDivider: v.sectionDivider,
+      titleUnderline: v.titleUnderline,
+      pageSize: v.pageSize,
+    };
+  };
+
+  const confirmVariant = () => {
+    if (!design) return;
+    const updated = applyVariantToDesign(design, selectedVariant);
+    setDesign(updated);
+    setStep('preview');
+  };
+
   const handleApply = async () => {
     if (!design) return;
 
     try {
-      // Create a custom template from the design
       const customTemplate: BookTemplate = {
         id: `ai-custom-${Date.now()}`,
         name: `AI Design for ${book.title}`,
@@ -357,9 +511,10 @@ export default function AICompleteDesignWizard({
         lineHeight: design.typography.lineHeight,
         columns: 1,
         paragraphStyle: 'vertical',
-        pageNumberPosition: design.layout.pageNumberPosition === 'bottom-outer' || design.layout.pageNumberPosition === 'top-outer'
-          ? 'bottom-outside' as const
-          : design.layout.pageNumberPosition as 'none' | 'top-left' | 'top-right' | 'bottom-center' | 'bottom-outside',
+        pageNumberPosition:
+          design.layout.pageNumberPosition === 'bottom-outer' || design.layout.pageNumberPosition === 'top-outer'
+            ? 'bottom-outside' as const
+            : design.layout.pageNumberPosition as 'none' | 'top-left' | 'top-right' | 'bottom-center' | 'bottom-outside',
         margins: {
           top: design.layout.margins.top,
           bottom: design.layout.margins.bottom,
@@ -369,9 +524,9 @@ export default function AICompleteDesignWizard({
         paragraphIndent: 0,
         paragraphSpacing: 12,
         chapterStartStyle: design.layout.chapterStartStyle,
-        dropCapStyle: design.layout.dropCaps ? 'classic' : 'none',
-        headerDecoration: 'ornament',
-        dividerStyle: 'ornament',
+        dropCapStyle: design.dropCapStyle || (design.layout.dropCaps ? 'classic' : 'none'),
+        headerDecoration: design.headerDecoration || 'ornament',
+        dividerStyle: design.dividerStyle || 'ornament',
         imagePositions: ['top', 'center'],
         imageFrameStyle: 'rounded',
         textColor: design.typography.colors.text,
@@ -398,29 +553,36 @@ export default function AICompleteDesignWizard({
         },
       };
 
-      // Save custom template
       saveCustomTemplate(customTemplate);
-
-      // Call the callback with design data
       onDesignComplete(design, coverImages);
-
       toast.success(isHebrew ? 'העיצוב הושלם והוחל בהצלחה!' : 'Design completed and applied!');
       onClose();
-
     } catch (err: any) {
       console.error('Apply design error:', err);
       toast.error(err.message || 'Failed to apply design');
     }
   };
 
+  const handleRegenerate = () => {
+    setStep('intro');
+    setDesign(null);
+    setCoverImages({});
+    setSynopsis('');
+    setAnimatedPercent(0);
+    setProgressStepIndex(0);
+  };
+
   const getCurrentStepInfo = () => {
     if (step === 'intro') return { icon: Wand2, titleHe: 'עצב לי הכל', titleEn: 'Design Everything' };
     if (step === 'preview') return { icon: Eye, titleHe: 'תצוגה מקדימה', titleEn: 'Preview' };
+    if (step === 'variant') return { icon: Layers, titleHe: 'בחר סגנון', titleEn: 'Choose Style' };
     return STEPS.find(s => s.key === step) || STEPS[0];
   };
 
   const stepInfo = getCurrentStepInfo();
   const StepIcon = stepInfo.icon;
+
+  const isProcessing = step !== 'intro' && step !== 'preview' && step !== 'variant';
 
   if (!isOpen) return null;
 
@@ -444,8 +606,8 @@ export default function AICompleteDesignWizard({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 sm:gap-4">
               <motion.div
-                animate={step !== 'intro' && step !== 'preview' ? { rotate: 360 } : {}}
-                transition={{ duration: 2, repeat: step !== 'intro' && step !== 'preview' ? Infinity : 0, ease: 'linear' }}
+                animate={isProcessing ? { rotate: 360 } : {}}
+                transition={{ duration: 2, repeat: isProcessing ? Infinity : 0, ease: 'linear' }}
                 className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 rounded-xl flex items-center justify-center"
               >
                 <StepIcon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
@@ -468,20 +630,33 @@ export default function AICompleteDesignWizard({
           </div>
 
           {/* Progress Steps */}
-          {step !== 'intro' && step !== 'preview' && (
+          {isProcessing && (
             <div className="mt-4">
-              <div className="flex items-center justify-between text-sm text-white/70 mb-2">
-                <span>{isHebrew ? stepInfo.titleHe : stepInfo.titleEn}</span>
-                <span>{currentStepIndex + 1} / {STEPS.length}</span>
+              {/* Step label + animated percentage */}
+              <div className="flex items-center justify-between text-sm text-white/80 mb-2 font-medium">
+                <motion.span
+                  key={progressStepIndex}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {isHebrew
+                    ? PROGRESS_STEPS[progressStepIndex]?.titleHe
+                    : PROGRESS_STEPS[progressStepIndex]?.titleEn}
+                </motion.span>
+                <span className="tabular-nums">{animatedPercent}%</span>
               </div>
-              <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+
+              {/* Progress bar */}
+              <div className="h-2.5 bg-white/20 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-white rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${((currentStepIndex + 1) / STEPS.length) * 100}%` }}
-                  transition={{ duration: 0.5 }}
+                  style={{ width: `${animatedPercent}%` }}
+                  transition={{ duration: 0.4 }}
                 />
               </div>
+
+              {/* Step circles */}
               <div className="flex items-center justify-center gap-0.5 sm:gap-1 mt-3 overflow-x-auto px-2">
                 {STEPS.map((s, i) => {
                   const Icon = s.icon;
@@ -512,6 +687,7 @@ export default function AICompleteDesignWizard({
         {/* Content */}
         <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(95vh-200px)]">
           <AnimatePresence mode="wait">
+
             {/* Intro */}
             {step === 'intro' && (
               <motion.div
@@ -528,7 +704,9 @@ export default function AICompleteDesignWizard({
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-white">{book.title}</h3>
-                    <p className="text-white/60 text-sm">{book.genre} • {book.chapters?.length || 0} {isHebrew ? 'פרקים' : 'chapters'}</p>
+                    <p className="text-white/60 text-sm">
+                      {book.genre} • {book.chapters?.length || 0} {isHebrew ? 'פרקים' : 'chapters'}
+                    </p>
                   </div>
                 </div>
 
@@ -561,7 +739,6 @@ export default function AICompleteDesignWizard({
                       {isHebrew ? 'צור תמונות לכריכה עם AI' : 'Generate cover images with AI'}
                     </span>
                   </label>
-
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
@@ -573,7 +750,6 @@ export default function AICompleteDesignWizard({
                       {isHebrew ? 'צור תקציר אוטומטי' : 'Generate synopsis automatically'}
                     </span>
                   </label>
-
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
@@ -605,7 +781,7 @@ export default function AICompleteDesignWizard({
             )}
 
             {/* Processing */}
-            {step !== 'intro' && step !== 'preview' && (
+            {isProcessing && (
               <motion.div
                 key="processing"
                 initial={{ opacity: 0, y: 20 }}
@@ -637,6 +813,133 @@ export default function AICompleteDesignWizard({
                     ? 'AI מעצב את הספר שלך... זה לוקח כמה שניות'
                     : 'AI is designing your book... this takes a few seconds'}
                 </p>
+
+                {/* Detailed progress steps list */}
+                <div className="mt-8 space-y-2 w-full max-w-sm">
+                  {PROGRESS_STEPS.map((ps, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: i <= progressStepIndex ? 1 : 0.3, x: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="flex items-center gap-3"
+                    >
+                      <div
+                        className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          i < progressStepIndex
+                            ? 'bg-green-500'
+                            : i === progressStepIndex
+                            ? 'bg-purple-500 animate-pulse'
+                            : 'bg-white/20'
+                        }`}
+                      >
+                        {i < progressStepIndex ? (
+                          <Check className="w-3 h-3 text-white" />
+                        ) : (
+                          <span className="w-2 h-2 rounded-full bg-white/60" />
+                        )}
+                      </div>
+                      <span className={`text-sm ${i === progressStepIndex ? 'text-white font-medium' : 'text-white/50'}`}>
+                        {isHebrew ? ps.titleHe : ps.titleEn}
+                      </span>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Variant Selector */}
+            {step === 'variant' && design && (
+              <motion.div
+                key="variant"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
+              >
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    {isHebrew ? 'בחר סגנון עיצוב' : 'Choose a Design Style'}
+                  </h3>
+                  <p className="text-white/60 text-sm">
+                    {isHebrew
+                      ? 'ה-AI יצר את הבסיס — עכשיו בחר את הסגנון שמתאים לך'
+                      : 'The AI created the foundation — now pick the style that fits you'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {STYLE_VARIANTS.map((v) => (
+                    <button
+                      key={v.key}
+                      onClick={() => setSelectedVariant(v.key)}
+                      className={`relative rounded-2xl p-5 border-2 text-left transition-all ${
+                        selectedVariant === v.key
+                          ? 'border-purple-400 bg-purple-500/20 shadow-lg shadow-purple-500/20'
+                          : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'
+                      }`}
+                    >
+                      {selectedVariant === v.key && (
+                        <div className="absolute top-3 right-3 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                          <Check className="w-3.5 h-3.5 text-white" />
+                        </div>
+                      )}
+
+                      {/* Color swatches */}
+                      <div className="flex gap-1.5 mb-4">
+                        {v.swatches.map((color, ci) => (
+                          <div
+                            key={ci}
+                            className="w-7 h-7 rounded-full border border-white/10 shadow-inner"
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+
+                      <h4 className="text-white font-bold text-lg mb-1">
+                        {isHebrew ? v.nameHe : v.nameEn}
+                      </h4>
+                      <p className="text-white/60 text-xs leading-relaxed">
+                        {isHebrew ? v.descriptionHe : v.descriptionEn}
+                      </p>
+
+                      {/* Feature tags */}
+                      <div className="flex flex-wrap gap-1 mt-3">
+                        {v.dropCapStyle !== 'none' && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/70">
+                            {isHebrew ? 'אות ראשונה גדולה' : 'Drop caps'}
+                          </span>
+                        )}
+                        {v.dividerStyle !== 'none' && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/70">
+                            {isHebrew ? 'מפרידים' : 'Dividers'}
+                          </span>
+                        )}
+                        {v.pageFrame !== 'none' && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/70">
+                            {isHebrew ? 'מסגרת' : 'Frame'}
+                          </span>
+                        )}
+                        {v.cornerDecorations !== 'none' && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/70">
+                            {isHebrew ? 'קישוטי פינה' : 'Corners'}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={confirmVariant}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl text-white font-bold transition-all shadow-lg shadow-purple-500/25"
+                  >
+                    <Check className="w-5 h-5" />
+                    {isHebrew ? 'המשך עם הסגנון הנבחר' : 'Continue with Selected Style'}
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                </div>
               </motion.div>
             )}
 
@@ -663,6 +966,9 @@ export default function AICompleteDesignWizard({
                     </p>
                   </div>
                 </div>
+
+                {/* Design Summary Card */}
+                <DesignSummaryCard design={design} isHebrew={isHebrew} />
 
                 {/* Preview Tabs */}
                 <div className="flex gap-1.5 sm:gap-2 border-b border-white/10 pb-2 overflow-x-auto scrollbar-thin scrollbar-thumb-white/20">
@@ -694,7 +1000,10 @@ export default function AICompleteDesignWizard({
                     <div className="space-y-6">
                       <div className="flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-2">
                         {/* Back Cover */}
-                        <div className="relative w-40 h-56 rounded-lg overflow-hidden shadow-xl order-2 lg:order-1" style={{ backgroundColor: design.cover.back.backgroundColor }}>
+                        <div
+                          className="relative w-40 h-56 rounded-lg overflow-hidden shadow-xl order-2 lg:order-1"
+                          style={{ backgroundColor: design.cover.back.backgroundColor }}
+                        >
                           {coverImages.back ? (
                             <img src={coverImages.back} alt="Back Cover" className="w-full h-full object-cover opacity-60" />
                           ) : (
@@ -730,7 +1039,9 @@ export default function AICompleteDesignWizard({
                           ) : (
                             <div
                               className="w-full h-full"
-                              style={{ background: `linear-gradient(135deg, ${design.cover.front.colorPalette?.[0] || '#6366f1'}, ${design.cover.front.colorPalette?.[1] || '#8b5cf6'})` }}
+                              style={{
+                                background: `linear-gradient(135deg, ${design.cover.front.colorPalette?.[0] || '#6366f1'}, ${design.cover.front.colorPalette?.[1] || '#8b5cf6'})`,
+                              }}
                             />
                           )}
                           <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center">
@@ -768,18 +1079,16 @@ export default function AICompleteDesignWizard({
                       <div className="sm:col-span-2">
                         <label className="text-sm text-white/50 mb-2 block">{isHebrew ? 'צבעים' : 'Colors'}</label>
                         <div className="flex flex-wrap gap-3 sm:gap-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full border border-white/20" style={{ backgroundColor: design.typography.colors.text }} />
-                            <span className="text-sm text-white/70">{isHebrew ? 'טקסט' : 'Text'}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full border border-white/20" style={{ backgroundColor: design.typography.colors.heading }} />
-                            <span className="text-sm text-white/70">{isHebrew ? 'כותרות' : 'Headings'}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full border border-white/20" style={{ backgroundColor: design.typography.colors.accent }} />
-                            <span className="text-sm text-white/70">{isHebrew ? 'הדגשה' : 'Accent'}</span>
-                          </div>
+                          {[
+                            { color: design.typography.colors.text, labelHe: 'טקסט', labelEn: 'Text' },
+                            { color: design.typography.colors.heading, labelHe: 'כותרות', labelEn: 'Headings' },
+                            { color: design.typography.colors.accent, labelHe: 'הדגשה', labelEn: 'Accent' },
+                          ].map(({ color, labelHe, labelEn }) => (
+                            <div key={labelEn} className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full border border-white/20" style={{ backgroundColor: color }} />
+                              <span className="text-sm text-white/70">{isHebrew ? labelHe : labelEn}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -792,10 +1101,10 @@ export default function AICompleteDesignWizard({
                         <label className="text-sm text-white/50">{isHebrew ? 'סגנון פרק' : 'Chapter Style'}</label>
                         <p className="text-white font-medium">
                           {design.layout.chapterStartStyle === 'new-page-centered'
-                            ? (isHebrew ? 'עמוד חדש במרכז' : 'New page centered')
+                            ? isHebrew ? 'עמוד חדש במרכז' : 'New page centered'
                             : design.layout.chapterStartStyle === 'new-page'
-                            ? (isHebrew ? 'עמוד חדש' : 'New page')
-                            : (isHebrew ? 'באותו עמוד' : 'Same page')}
+                            ? isHebrew ? 'עמוד חדש' : 'New page'
+                            : isHebrew ? 'באותו עמוד' : 'Same page'}
                         </p>
                       </div>
                       <div>
@@ -810,6 +1119,30 @@ export default function AICompleteDesignWizard({
                         <label className="text-sm text-white/50">{isHebrew ? 'אות ראשונה גדולה' : 'Drop Caps'}</label>
                         <p className="text-white font-medium">{design.layout.dropCaps ? '✓' : '✗'}</p>
                       </div>
+                      {design.dividerStyle && (
+                        <div>
+                          <label className="text-sm text-white/50">{isHebrew ? 'מפריד פסקאות' : 'Divider Style'}</label>
+                          <p className="text-white font-medium">{design.dividerStyle}</p>
+                        </div>
+                      )}
+                      {design.pageFrame && design.pageFrame !== 'none' && (
+                        <div>
+                          <label className="text-sm text-white/50">{isHebrew ? 'מסגרת עמוד' : 'Page Frame'}</label>
+                          <p className="text-white font-medium">{design.pageFrame}</p>
+                        </div>
+                      )}
+                      {design.sectionDivider && (
+                        <div>
+                          <label className="text-sm text-white/50">{isHebrew ? 'סימן הפרדה' : 'Section Divider'}</label>
+                          <p className="text-white font-medium tracking-widest">{design.sectionDivider}</p>
+                        </div>
+                      )}
+                      {design.pageSize && (
+                        <div>
+                          <label className="text-sm text-white/50">{isHebrew ? 'גודל עמוד' : 'Page Size'}</label>
+                          <p className="text-white font-medium">{design.pageSize}</p>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -823,11 +1156,15 @@ export default function AICompleteDesignWizard({
                               <span className="text-white font-medium">
                                 {isHebrew ? `פרק ${placement.chapterIndex + 1}` : `Chapter ${placement.chapterIndex + 1}`}
                               </span>
-                              <span className={`px-2 py-0.5 rounded text-xs ${
-                                placement.importance === 'high' ? 'bg-red-500/30 text-red-300' :
-                                placement.importance === 'medium' ? 'bg-yellow-500/30 text-yellow-300' :
-                                'bg-green-500/30 text-green-300'
-                              }`}>
+                              <span
+                                className={`px-2 py-0.5 rounded text-xs ${
+                                  placement.importance === 'high'
+                                    ? 'bg-red-500/30 text-red-300'
+                                    : placement.importance === 'medium'
+                                    ? 'bg-yellow-500/30 text-yellow-300'
+                                    : 'bg-green-500/30 text-green-300'
+                                }`}
+                              >
                                 {placement.importance}
                               </span>
                             </div>
@@ -843,14 +1180,15 @@ export default function AICompleteDesignWizard({
                   )}
                 </div>
 
-                {/* Apply Button */}
+                {/* Action Bar */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-white/10">
+                  {/* Regenerate button */}
                   <button
-                    onClick={() => { setStep('intro'); setDesign(null); setCoverImages({}); setSynopsis(''); }}
+                    onClick={handleRegenerate}
                     className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors w-full sm:w-auto justify-center sm:justify-start"
                   >
                     <RefreshCw className="w-4 h-4" />
-                    {isHebrew ? 'צור מחדש' : 'Regenerate'}
+                    {isHebrew ? 'יפה לי זה / צור מחדש' : 'Regenerate / Redo'}
                   </button>
 
                   <button
@@ -871,7 +1209,8 @@ export default function AICompleteDesignWizard({
   );
 }
 
-// Feature Card Component
+// ─── Feature Card ─────────────────────────────────────────────────────────────
+
 function FeatureCard({ icon: Icon, title, description }: { icon: any; title: string; description: string }) {
   return (
     <div className="bg-white/5 rounded-lg p-3 flex items-center gap-3">
@@ -881,6 +1220,77 @@ function FeatureCard({ icon: Icon, title, description }: { icon: any; title: str
       <div>
         <h4 className="text-white font-medium text-sm">{title}</h4>
         <p className="text-white/50 text-xs">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Design Summary Card ──────────────────────────────────────────────────────
+
+function DesignSummaryCard({ design, isHebrew }: { design: CompleteDesign; isHebrew: boolean }) {
+  const variantInfo = STYLE_VARIANTS.find(v => v.key === design.styleVariant);
+  const palette = [
+    design.typography.colors.text,
+    design.typography.colors.heading,
+    design.typography.colors.accent,
+    design.cover.front.colorPalette?.[0] || '#6366f1',
+    design.cover.spine.backgroundColor,
+  ];
+
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+      <h4 className="text-white font-semibold text-sm flex items-center gap-2">
+        <Sparkles className="w-4 h-4 text-yellow-400" />
+        {isHebrew ? 'סיכום העיצוב' : 'Design Summary'}
+      </h4>
+
+      {/* Color palette */}
+      <div className="flex items-center gap-2">
+        <span className="text-white/50 text-xs w-20 shrink-0">{isHebrew ? 'פלטת צבעים' : 'Colors'}</span>
+        <div className="flex gap-1.5">
+          {palette.map((color, i) => (
+            <div
+              key={i}
+              title={color}
+              className="w-6 h-6 rounded-full border border-white/10"
+              style={{ backgroundColor: color }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Fonts */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+        <div className="flex gap-1">
+          <span className="text-white/50">{isHebrew ? 'כותרת:' : 'Title:'}</span>
+          <span className="text-white truncate">{design.typography.titleFont}</span>
+        </div>
+        <div className="flex gap-1">
+          <span className="text-white/50">{isHebrew ? 'גוף:' : 'Body:'}</span>
+          <span className="text-white truncate">{design.typography.bodyFont}</span>
+        </div>
+      </div>
+
+      {/* Meta row */}
+      <div className="flex flex-wrap gap-2 text-xs">
+        {design.pageSize && (
+          <span className="px-2 py-0.5 bg-white/10 rounded-full text-white/70">
+            {design.pageSize}
+          </span>
+        )}
+        {variantInfo && (
+          <span className="px-2 py-0.5 bg-purple-500/20 rounded-full text-purple-300">
+            {isHebrew ? variantInfo.nameHe : variantInfo.nameEn}
+          </span>
+        )}
+        <span className={`px-2 py-0.5 rounded-full ${design.dropCapStyle && design.dropCapStyle !== 'none' ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-white/40'}`}>
+          {isHebrew ? 'אות ראשונה גדולה: ' : 'Drop caps: '}
+          {design.dropCapStyle && design.dropCapStyle !== 'none' ? (isHebrew ? 'כן' : 'yes') : (isHebrew ? 'לא' : 'no')}
+        </span>
+        <span className={`px-2 py-0.5 rounded-full ${design.dividerStyle && design.dividerStyle !== 'none' ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-white/40'}`}>
+          {isHebrew ? 'קישוטים: ' : 'Ornaments: '}
+          {design.dividerStyle && design.dividerStyle !== 'none' ? (isHebrew ? 'כן' : 'yes') : (isHebrew ? 'לא' : 'no')}
+        </span>
       </div>
     </div>
   );

@@ -35,6 +35,20 @@ export interface PageLayoutSettings {
   // Image placeholders from template
   imagePlaceholders?: ImagePlaceholderPosition[];
   imageFrameStyle?: 'none' | 'thin-border' | 'shadow' | 'rounded' | 'decorative';
+  // Page size
+  pageSize?: 'A4' | 'A5' | 'B5' | 'Letter' | '6x9' | '5x8' | 'Square' | 'Pocket' | 'Custom';
+  customPageSize?: { width: number; height: number };
+  // Design elements from template
+  dropCapStyle?: 'none' | 'classic' | 'decorative' | 'box' | 'modern';
+  dividerStyle?: 'none' | 'line' | 'ornament' | 'stars' | 'dots' | 'wave';
+  pullQuoteStyle?: 'none' | 'bordered' | 'background' | 'side-accent' | 'centered';
+  pageFrame?: 'none' | 'simple' | 'double' | 'ornate' | 'rounded' | 'dashed' | 'dotted' | 'gradient';
+  frameColor?: string;
+  backgroundPattern?: 'none' | 'dots' | 'stripes' | 'grid' | 'waves' | 'confetti' | 'stars' | 'hearts' | 'geometric';
+  headerDecoration?: 'none' | 'line' | 'ornament' | 'gradient-line' | 'dots';
+  sectionDivider?: string;
+  cornerDecorations?: 'none' | 'flourish' | 'geometric' | 'floral' | 'stars' | 'hearts' | 'leaves';
+  titleUnderline?: 'none' | 'simple' | 'double' | 'wavy' | 'dotted' | 'gradient' | 'ornate';
 }
 
 // Cover design settings
@@ -112,6 +126,19 @@ export function applyTemplate(
     templateId: template.id,
     imagePlaceholders,
     imageFrameStyle: frameStyle,
+    // Page size from template
+    pageSize: (template as any).pageSize || currentSettings.pageSize || 'A5',
+    // Design elements
+    dropCapStyle: template.dropCapStyle || 'none',
+    dividerStyle: template.dividerStyle || 'none',
+    pullQuoteStyle: template.pullQuoteStyle || 'none',
+    pageFrame: template.decorativeElements?.pageFrame || 'none',
+    frameColor: template.decorativeElements?.frameColor || template.accentColor,
+    backgroundPattern: template.decorativeElements?.backgroundPattern || 'none',
+    headerDecoration: template.headerDecoration || 'none',
+    sectionDivider: template.decorativeElements?.sectionDivider || '',
+    cornerDecorations: template.decorativeElements?.cornerDecorations || 'none',
+    titleUnderline: template.decorativeElements?.titleUnderline || 'none',
   };
 }
 

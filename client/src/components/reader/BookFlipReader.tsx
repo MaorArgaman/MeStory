@@ -23,6 +23,27 @@ class FlipBookErrorBoundary extends Component<
   render() { return this.props.children; }
 }
 
+export interface ReaderDesignSettings {
+  fontFamily?: string;
+  fontSize?: number;
+  lineHeight?: number;
+  textColor?: string;
+  accentColor?: string;
+  backgroundColor?: string;
+  columns?: 1 | 2 | 3 | 4;
+  dropCapStyle?: 'none' | 'classic' | 'decorative' | 'box' | 'modern';
+  dividerStyle?: 'none' | 'line' | 'ornament' | 'stars' | 'dots' | 'wave';
+  pageFrame?: 'none' | 'simple' | 'double' | 'ornate' | 'rounded' | 'dashed' | 'dotted' | 'gradient';
+  frameColor?: string;
+  backgroundPattern?: 'none' | 'dots' | 'stripes' | 'grid' | 'waves' | 'confetti' | 'stars' | 'hearts' | 'geometric';
+  headerDecoration?: 'none' | 'line' | 'ornament' | 'gradient-line' | 'dots';
+  sectionDivider?: string;
+  cornerDecorations?: 'none' | 'flourish' | 'geometric' | 'floral' | 'stars' | 'hearts' | 'leaves';
+  titleUnderline?: 'none' | 'simple' | 'double' | 'wavy' | 'dotted' | 'gradient' | 'ornate';
+  margins?: { top: number; bottom: number; left: number; right: number };
+  showPageNumbers?: boolean;
+}
+
 interface BookFlipReaderProps {
   book: {
     id: string;
@@ -50,6 +71,8 @@ interface BookFlipReaderProps {
   frontCoverImageUrl?: string | null;
   backCoverImageUrl?: string | null;
   isRTL?: boolean;
+  /** Optional design settings to render the book pages with template styling */
+  designSettings?: ReaderDesignSettings;
   onClose: () => void;
 }
 
@@ -77,6 +100,7 @@ export default function BookFlipReader({
   frontCoverImageUrl,
   backCoverImageUrl,
   isRTL: isRTLProp,
+  designSettings,
   onClose,
 }: BookFlipReaderProps) {
   const { t } = useTranslation();
@@ -306,41 +330,193 @@ export default function BookFlipReader({
             )}
 
             {/* Content Pages (reversed for RTL, natural order for LTR) */}
-            {orderedContentPages.map((page) => (
-              <Page key={page.id}>
-                <div
-                  className="w-full h-full relative overflow-hidden bg-white"
-                  style={{
-                    direction: isRTL ? 'rtl' : 'ltr',
-                    fontFamily,
-                  }}
-                >
-                  {/* Book title header */}
-                  <div
-                    className="absolute top-3 left-0 right-0 text-center text-[10px] text-gray-400 px-6 truncate"
-                    style={{ direction: isRTL ? 'rtl' : 'ltr' }}
-                  >
-                    {book.title}
-                  </div>
+            {orderedContentPages.map((page) => {
+              // Design settings from template (or defaults)
+              const ds = designSettings || {};
+              const pageFontFamily = ds.fontFamily || fontFamily;
+              const pageFontSize = ds.fontSize || 14;
+              const pageLineHeight = ds.lineHeight || 1.7;
+              const pageTextColor = ds.textColor || '#1a1a1a';
+              const pageAccentColor = ds.accentColor || '#8b6914';
+              const pageBgColor = ds.backgroundColor || '#ffffff';
+              const pageMargins = ds.margins || { top: 32, bottom: 30, left: 28, right: 28 };
+              const showHeader = ds.headerDecoration && ds.headerDecoration !== 'none';
 
-                  <div className="absolute inset-0 px-8 pt-10 pb-10 overflow-hidden">
+              // Drop cap class
+              const dropCapClass = page.type === 'chapter' && ds.dropCapStyle && ds.dropCapStyle !== 'none'
+                ? ds.dropCapStyle === 'classic' ? 'book-drop-cap'
+                : ds.dropCapStyle === 'decorative' ? 'book-drop-cap-decorative'
+                : ds.dropCapStyle === 'box' ? 'book-drop-cap-box'
+                : 'book-drop-cap'
+                : '';
+
+              // Column class
+              const columnClass = ds.columns && ds.columns > 1 ? `book-columns-${ds.columns} book-column-rule` : '';
+
+              // Background pattern style
+              const patternStyle: React.CSSProperties = (() => {
+                if (!ds.backgroundPattern || ds.backgroundPattern === 'none') return {};
+                const hex = pageAccentColor.replace('#', '');
+                const r = parseInt(hex.slice(0, 2), 16) || 139;
+                const g = parseInt(hex.slice(2, 4), 16) || 105;
+                const b = parseInt(hex.slice(4, 6), 16) || 20;
+                const rgba = (a: number) => `rgba(${r},${g},${b},${a})`;
+                if (ds.backgroundPattern === 'dots') return { backgroundImage: `radial-gradient(circle, ${rgba(0.1)} 1px, transparent 1px)`, backgroundSize: '18px 18px' };
+                if (ds.backgroundPattern === 'grid') return { backgroundImage: `linear-gradient(${rgba(0.04)} 1px, transparent 1px), linear-gradient(90deg, ${rgba(0.04)} 1px, transparent 1px)`, backgroundSize: '22px 22px' };
+                return {};
+              })();
+
+              // Frame style
+              const frameStyle: React.CSSProperties = (() => {
+                const c = ds.frameColor || pageAccentColor;
+                if (!ds.pageFrame || ds.pageFrame === 'none') return {};
+                if (ds.pageFrame === 'simple') return { boxShadow: `inset 0 0 0 1px ${c}50` };
+                if (ds.pageFrame === 'double') return { boxShadow: `inset 0 0 0 1px ${c}50, inset 0 0 0 3px ${c}25` };
+                if (ds.pageFrame === 'ornate') return { boxShadow: `inset 0 0 0 1.5px ${c}60, inset 0 0 0 3.5px ${c}25` };
+                if (ds.pageFrame === 'dashed') return { outline: `1.5px dashed ${c}50`, outlineOffset: '-5px' };
+                return {};
+              })();
+
+              // Header decoration text
+              const headerText = (() => {
+                if (!showHeader) return null;
+                const titleTrunc = book.title.length > 30 ? book.title.slice(0, 28) + '…' : book.title;
+                if (ds.headerDecoration === 'ornament') return `✦ ${titleTrunc} ✦`;
+                return titleTrunc;
+              })();
+
+              return (
+                <Page key={page.id}>
+                  <div
+                    className="w-full h-full relative overflow-hidden"
+                    style={{
+                      direction: isRTL ? 'rtl' : 'ltr',
+                      fontFamily: pageFontFamily,
+                      backgroundColor: pageBgColor,
+                      color: pageTextColor,
+                      '--accent-color': pageAccentColor,
+                      '--frame-color': ds.frameColor || pageAccentColor,
+                      ...patternStyle,
+                      ...frameStyle,
+                    } as React.CSSProperties}
+                  >
+                    {/* ── Header ── */}
+                    {showHeader ? (
+                      <div
+                        className="absolute top-0 left-0 right-0"
+                        style={{ padding: `0 ${pageMargins.right}px` }}
+                      >
+                        <div
+                          className="flex items-center gap-2 pt-2 pb-1.5"
+                          style={{
+                            borderBottom: ds.headerDecoration === 'gradient-line'
+                              ? 'none'
+                              : `0.5px solid ${pageAccentColor}40`,
+                          }}
+                        >
+                          {ds.headerDecoration === 'gradient-line' && (
+                            <div style={{ flex: 1, height: 1, background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, transparent, ${pageAccentColor}50)` }} />
+                          )}
+                          <span style={{
+                            fontSize: '8px',
+                            color: `${pageAccentColor}80`,
+                            letterSpacing: '1.5px',
+                            textTransform: 'uppercase',
+                            fontWeight: 300,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: '80%',
+                          }}>
+                            {headerText}
+                          </span>
+                          {ds.headerDecoration === 'gradient-line' && (
+                            <div style={{ flex: 1, height: 1, background: `linear-gradient(to ${isRTL ? 'right' : 'left'}, transparent, ${pageAccentColor}50)` }} />
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      /* Simple title header (always shown as fallback) */
+                      <div
+                        className="absolute top-3 left-0 right-0 text-center truncate px-6"
+                        style={{ fontSize: '8px', color: '#9ca3af', direction: isRTL ? 'rtl' : 'ltr' }}
+                      >
+                        {book.title}
+                      </div>
+                    )}
+
+                    {/* ── Content ── */}
                     <div
-                      className="prose prose-sm max-w-none h-full overflow-hidden text-gray-800"
-                      style={{ fontSize: '14px', lineHeight: 1.7, direction: isRTL ? 'rtl' : 'ltr' }}
-                      dangerouslySetInnerHTML={{ __html: page.content || '' }}
-                    />
-                  </div>
+                      className="absolute overflow-hidden"
+                      style={{
+                        top: pageMargins.top + (showHeader ? 18 : 12),
+                        bottom: pageMargins.bottom + (ds.showPageNumbers !== false ? 16 : 0),
+                        left: pageMargins.left,
+                        right: pageMargins.right,
+                      }}
+                    >
+                      <div
+                        className={`book-page-content prose prose-sm max-w-none h-full overflow-hidden ${dropCapClass} ${columnClass} ${ds.titleUnderline && ds.titleUnderline !== 'none' ? `page-title-underline-${ds.titleUnderline}` : ''} ${ds.dividerStyle && ds.dividerStyle !== 'none' ? `page-divider-${ds.dividerStyle}` : ''}`}
+                        style={{
+                          fontSize: `${pageFontSize}px`,
+                          lineHeight: pageLineHeight,
+                          direction: isRTL ? 'rtl' : 'ltr',
+                          color: pageTextColor,
+                          textAlign: isRTL ? 'right' : 'left',
+                          '--accent-color': pageAccentColor,
+                        } as React.CSSProperties}
+                        dangerouslySetInnerHTML={{ __html: page.content || '' }}
+                      />
+                    </div>
 
-                  {/* Page number — always the ORIGINAL page number, not the DOM index */}
-                  <div
-                    className="absolute bottom-3 left-0 right-0 text-center text-xs text-gray-400"
-                    dir="ltr"
-                  >
-                    {page.pageNumber}
+                    {/* ── Corner Decorations ── */}
+                    {ds.cornerDecorations && ds.cornerDecorations !== 'none' && (() => {
+                      const cornerSVGPaths: Record<string, string> = {
+                        flourish: 'M2,2 Q8,2 8,8 M2,2 Q2,8 8,8',
+                        geometric: 'M2,2 L14,2 L14,4 L4,4 L4,14 L2,14 Z',
+                        floral: 'M8,8 Q4,4 2,2 M8,8 Q4,12 2,14 M8,8 Q12,4 14,2',
+                        stars: 'M8,2 L9,6 L13,6 L10,9 L11,13 L8,10 L5,13 L6,9 L3,6 L7,6 Z',
+                        leaves: 'M2,14 Q2,8 8,2 Q8,8 14,8 Q8,8 8,14 Q4,14 2,14 Z',
+                        geometric_fallback: 'M2,2 L12,2 L12,3.5 L3.5,3.5 L3.5,12 L2,12 Z',
+                      };
+                      const path = cornerSVGPaths[ds.cornerDecorations] || cornerSVGPaths.geometric;
+                      const corners = [
+                        { style: { top: 4, right: 4 }, rotate: 0 },
+                        { style: { top: 4, left: 4 }, rotate: 90 },
+                        { style: { bottom: 4, right: 4 }, rotate: 270 },
+                        { style: { bottom: 4, left: 4 }, rotate: 180 },
+                      ];
+                      return corners.map((corner, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            position: 'absolute',
+                            width: 14,
+                            height: 14,
+                            opacity: 0.5,
+                            ...corner.style,
+                          }}
+                          dangerouslySetInnerHTML={{
+                            __html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="${pageAccentColor}" stroke-width="1.5" transform="rotate(${corner.rotate},8,8)">${path}</svg>`
+                          }}
+                        />
+                      ));
+                    })()}
+
+                    {/* ── Page Number ── */}
+                    {ds.showPageNumbers !== false && (
+                      <div
+                        className="absolute bottom-2 left-0 right-0 text-center"
+                        style={{ fontSize: '8px', color: `${pageTextColor}50`, letterSpacing: '1px', fontFamily: pageFontFamily }}
+                        dir="ltr"
+                      >
+                        — {page.pageNumber} —
+                      </div>
+                    )}
                   </div>
-                </div>
-              </Page>
-            ))}
+                </Page>
+              );
+            })}
 
             {/* Last DOM page — Front cover for RTL, Back cover for LTR */}
             {isRTL ? (
