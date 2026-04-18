@@ -668,7 +668,7 @@ export default function AdminDashboard() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by name or email..."
+                    placeholder="חיפוש לפי שם או אימייל..."
                     className="input pl-10"
                   />
                 </div>

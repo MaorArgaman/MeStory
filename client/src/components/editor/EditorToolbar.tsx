@@ -74,6 +74,9 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   const [showColorMenu, setShowColorMenu] = useState(false);
   const [showHighlightMenu, setShowHighlightMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [isSimpleMode, setIsSimpleMode] = useState(() =>
+    localStorage.getItem('editor-simple-mode') === 'true'
+  );
 
   // Save selection when opening menus (to restore before applying commands in portals)
   const savedSelection = useRef<{ from: number; to: number } | null>(null);
@@ -332,7 +335,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
       <div className="hidden sm:block w-px h-5 bg-white/10 mx-0.5 flex-shrink-0" />
 
       {/* Paragraph/Heading Dropdown - Compact */}
-      <div className="relative flex-shrink-0">
+      {!isSimpleMode && <div className="relative flex-shrink-0">
         <button
           ref={buttonRef}
           type="button"
@@ -412,9 +415,9 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           </motion.div>,
           document.body
         )}
-      </div>
+      </div>}
 
-      <div className="w-px h-5 bg-white/10 mx-0.5 flex-shrink-0" />
+      {!isSimpleMode && <div className="w-px h-5 bg-white/10 mx-0.5 flex-shrink-0" />}
 
       {/* Core Text Formatting - Always visible */}
       <div className="flex gap-0.5 items-center flex-shrink-0">
@@ -444,7 +447,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         </ToolbarButton>
 
         {/* Text Color - Mobile only */}
-        <div className="relative sm:hidden">
+        {!isSimpleMode && <div className="relative sm:hidden">
           <button
             ref={colorButtonMobileRef}
             type="button"
@@ -465,7 +468,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
               style={{ backgroundColor: editor.getAttributes('textStyle').color || '#374151' }}
             />
           </button>
-        </div>
+        </div>}
 
         {/* Voice Recording Button - Always visible */}
         <VoiceRecordButton
@@ -475,7 +478,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
       </div>
 
       {/* Desktop only: Additional formatting */}
-      <div className="hidden sm:flex gap-0.5 items-center flex-shrink-0">
+      {!isSimpleMode && <div className="hidden sm:flex gap-0.5 items-center flex-shrink-0">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleStrike().run()}
           isActive={editor.isActive('strike')}
@@ -526,12 +529,12 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
             <Highlighter className="w-4 h-4" />
           </button>
         </div>
-      </div>
+      </div>}
 
-      <div className="w-px h-5 bg-white/10 mx-0.5 flex-shrink-0 hidden sm:block" />
+      {!isSimpleMode && <div className="w-px h-5 bg-white/10 mx-0.5 flex-shrink-0 hidden sm:block" />}
 
       {/* Desktop only: Alignment */}
-      <div className="hidden md:flex gap-0.5 items-center flex-shrink-0">
+      {!isSimpleMode && <div className="hidden md:flex gap-0.5 items-center flex-shrink-0">
         <ToolbarButton
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
           isActive={editor.isActive({ textAlign: 'left' })}
@@ -556,12 +559,12 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         >
           <AlignRight className={smallIconClass} />
         </ToolbarButton>
-      </div>
+      </div>}
 
-      <div className="w-px h-5 bg-white/10 mx-0.5 flex-shrink-0 hidden md:block" />
+      {!isSimpleMode && <div className="w-px h-5 bg-white/10 mx-0.5 flex-shrink-0 hidden md:block" />}
 
       {/* Desktop only: Lists */}
-      <div className="hidden lg:flex gap-0.5 items-center flex-shrink-0">
+      {!isSimpleMode && <div className="hidden lg:flex gap-0.5 items-center flex-shrink-0">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           isActive={editor.isActive('bulletList')}
@@ -586,10 +589,10 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         >
           <Quote className={smallIconClass} />
         </ToolbarButton>
-      </div>
+      </div>}
 
       {/* More Button - Always visible on mobile, hidden on lg+ */}
-      <div className="lg:hidden relative flex-shrink-0">
+      {!isSimpleMode && <div className="lg:hidden relative flex-shrink-0">
         <button
           ref={moreButtonRef}
           type="button"
@@ -607,7 +610,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         >
           {showMoreMenu ? <X className="w-4 h-4" /> : <MoreHorizontal className="w-4 h-4" />}
         </button>
-      </div>
+      </div>}
 
       {/* More Menu - Portal */}
       <AnimatePresence>
@@ -845,6 +848,21 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         </motion.div>,
         document.body
       )}
+
+      {/* Simple/Advanced toggle */}
+      <button
+        type="button"
+        onClick={() => {
+          const next = !isSimpleMode;
+          setIsSimpleMode(next);
+          localStorage.setItem('editor-simple-mode', String(next));
+        }}
+        title={isSimpleMode ? t('editor.toolbar.advanced_mode', 'Advanced mode') : t('editor.toolbar.simple_mode', 'Simple mode')}
+        className="flex-shrink-0 ml-1 px-2 py-1 rounded-lg text-[10px] font-bold border transition-all
+          border-white/10 text-gray-400 hover:text-white hover:border-white/30 hover:bg-white/5"
+      >
+        {isSimpleMode ? t('editor.toolbar.mode_advanced', 'מתקדם') : t('editor.toolbar.mode_simple', 'פשוט')}
+      </button>
 
       {/* Word Count - Right aligned */}
       <div className={`${isRTL ? 'mr-auto' : 'ml-auto'} flex items-center text-[10px] sm:text-xs text-gray-400 px-1 sm:px-2 flex-shrink-0`}>

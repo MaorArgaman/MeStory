@@ -26,6 +26,30 @@ import OnboardingModal, { useOnboarding } from '../components/onboarding/Onboard
 const dashboardHero = '/img/new/hero-soldiers-unit.png';
 const dashboardCtaMicrophone = '/img/new/card-microphone.png';
 
+// Genre-to-background-image mapping for book cards
+const GENRE_CARD_IMAGES: Record<string, string> = {
+  memorial: '/img/new/hero-bereaved-herzl.png',
+  biography: '/img/new/hero-grandma-grandkids.png',
+  autobiography: '/img/new/hero-grandma-grandkids.png',
+  military: '/img/new/hero-soldiers-unit.png',
+  romance: '/img/new/hero-couple-love.png',
+  love: '/img/new/hero-couple-love.png',
+  history: '/img/new/card-old-documents.png',
+  fiction: '/img/new/texture-desk-library.png',
+  poetry: '/img/new/texture-paper-3.png',
+  children: '/img/new/texture-paper-4.png',
+  interview: '/img/new/card-recording.png',
+  default: '/img/new/card-notebook.png',
+};
+
+function getGenreCardImage(genre: string): string {
+  const key = genre?.toLowerCase() || 'default';
+  for (const [k, v] of Object.entries(GENRE_CARD_IMAGES)) {
+    if (key.includes(k)) return v;
+  }
+  return GENRE_CARD_IMAGES.default;
+}
+
 const TIPS_HE = [
   'איזה ריח מזכיר לך את הבית שגדלת בו?',
   'מה הדבר הראשון שאתה זוכר מהילדות?',
@@ -598,8 +622,19 @@ export default function DashboardPage() {
               <motion.div
                 key={book.id}
                 whileHover={{ scale: 1.02 }}
-                className="card-hover min-h-[280px] flex flex-col cursor-pointer group"
+                className="card-hover min-h-[280px] flex flex-col cursor-pointer group relative overflow-hidden"
               >
+                {/* Genre background image */}
+                <div className="absolute inset-0 z-0">
+                  <img
+                    src={getGenreCardImage(book.genre)}
+                    alt=""
+                    className="w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-500"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/80 to-transparent" />
+                </div>
+                <div className="relative z-10 flex flex-col h-full">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center group-hover:glow transition-all">
                     <BookOpen className="w-6 h-6 text-white" />
@@ -643,6 +678,7 @@ export default function DashboardPage() {
                   <Edit className="w-4 h-4" />
                   {t('dashboard.book_card.continue', '\u05D4\u05DE\u05E9\u05DA')}
                 </button>
+                </div>
               </motion.div>
             ))}
           </div>

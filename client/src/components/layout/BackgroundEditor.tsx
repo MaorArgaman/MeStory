@@ -419,7 +419,7 @@ export default function BackgroundEditor({
               type="text"
               value={image.url}
               onChange={(e) => updateImage({ url: e.target.value })}
-              placeholder="Image URL..."
+              placeholder="קישור לתמונה..."
               className="flex-1 p-2.5 rounded-lg bg-white/5 border border-white/10
                 text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500/50"
             />

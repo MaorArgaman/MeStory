@@ -867,7 +867,7 @@ export default function CustomTemplateBuilder({
                     type="text"
                     value={template.name}
                     onChange={e => setTemplate(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="My Custom Template"
+                    placeholder="התבנית שלי"
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-3 sm:px-4 py-2 text-white text-sm"
                   />
                 </div>

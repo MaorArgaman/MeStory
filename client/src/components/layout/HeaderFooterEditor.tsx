@@ -229,7 +229,7 @@ export default function HeaderFooterEditor({
                           style: { ...config.style, backgroundColor: e.target.value },
                         })
                       }
-                      placeholder="None"
+                      placeholder="ללא"
                       className="flex-1 p-2 text-xs rounded-lg bg-white/5 border border-white/10 text-white"
                     />
                   </div>

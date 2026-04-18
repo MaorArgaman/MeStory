@@ -238,7 +238,7 @@ export default function BookWritingPage() {
       attributes: {
         class: 'editor-content flex-1 w-full h-full outline-none focus:outline-none',
         dir: 'auto', // Automatic RTL detection
-        'data-placeholder': 'Start writing your story...',
+        'data-placeholder': 'התחל לכתוב את הסיפור שלך...',
       },
     },
     onUpdate: ({ editor }) => {
@@ -713,7 +713,13 @@ export default function BookWritingPage() {
                     {t('status.saved')}
                     {lastSavedAt && (
                       <span className="text-gray-500 font-normal ml-1">
-                        {lastSavedAt.toLocaleTimeString(isHebrew ? 'he-IL' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                        {(() => {
+                          const diffMs = Date.now() - lastSavedAt.getTime();
+                          const diffMin = Math.floor(diffMs / 60000);
+                          if (diffMin < 1) return isHebrew ? 'לפני פחות מדקה' : 'just now';
+                          if (diffMin === 1) return isHebrew ? 'לפני דקה' : '1 min ago';
+                          return isHebrew ? `לפני ${diffMin} דקות` : `${diffMin} min ago`;
+                        })()}
                       </span>
                     )}
                   </span>
@@ -1126,6 +1132,44 @@ export default function BookWritingPage() {
                           loadingAction={loadingAction}
                         />
                       </BubbleMenu>
+                    )}
+                    {/* Guiding questions — shown when chapter is empty */}
+                    {(!content || content === '<p></p>' || content.trim() === '') && editor && (
+                      <div className="max-w-4xl mx-auto px-4 pb-3">
+                        <div className="rounded-xl border border-dashed border-indigo-500/30 bg-indigo-500/5 p-4">
+                          <p className="text-xs text-indigo-400 mb-3 font-medium">
+                            {isHebrew ? '✍️ שאלות מנחות להתחלה:' : '✍️ Guiding questions to get started:'}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {(isHebrew ? [
+                              book?.genre === 'Biography' || book?.genre === 'Memorial' ? 'איפה ומתי נולד? מה הזיכרון הראשון שלך ממנו?' : null,
+                              'מה הרגע שהכי חרוט בזיכרון שלך?',
+                              'ספר על אדם שהשפיע עליך הכי הרבה',
+                              'מה היית רוצה שהדורות הבאים יידעו?',
+                              'תאר יום מיוחד שלא תשכח לעולם',
+                            ] : [
+                              book?.genre === 'Biography' || book?.genre === 'Memorial' ? 'Where and when were they born? What is your earliest memory of them?' : null,
+                              'What moment is most deeply etched in your memory?',
+                              'Tell about a person who influenced you most',
+                              'What would you like future generations to know?',
+                              'Describe a special day you will never forget',
+                            ]).filter(Boolean).map((q, i) => (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() => {
+                                  if (editor && q) {
+                                    editor.chain().focus().insertContent(`<p>${q}</p>`).run();
+                                  }
+                                }}
+                                className="text-xs px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-indigo-500/20 hover:border-indigo-500/40 transition-all text-right"
+                              >
+                                {q}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     )}
                     <EditorContent
                       editor={editor}

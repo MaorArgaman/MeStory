@@ -157,27 +157,27 @@ export default function PublishMetadata() {
   const handleSave = async () => {
     // Validation
     if (!synopsis.trim()) {
-      toast.error('Please add a synopsis');
+      toast.error('אנא הוסף תקציר לספר');
       return;
     }
 
     if (synopsis.length < 100) {
-      toast.error('Synopsis must be at least 100 characters');
+      toast.error('התקציר חייב להכיל לפחות 100 תווים');
       return;
     }
 
     if (tags.length === 0) {
-      toast.error('Please add at least one tag');
+      toast.error('אנא הוסף לפחות תגית אחת');
       return;
     }
 
     if (!category) {
-      toast.error('Please select a category');
+      toast.error('אנא בחר קטגוריה');
       return;
     }
 
     if (!isFree && (price < 1 || price > 25)) {
-      toast.error('Price must be between $1 and $25');
+      toast.error('המחיר חייב להיות בין $1 ל-$25');
       return;
     }
 
@@ -194,12 +194,12 @@ export default function PublishMetadata() {
       });
 
       if (response.data.success) {
-        toast.success('Metadata saved successfully!');
+        toast.success('המידע נשמר בהצלחה!');
         navigate(`/publish/${bookId}`);
       }
     } catch (error: any) {
       console.error('Failed to save metadata:', error);
-      toast.error(error.response?.data?.error || 'Failed to save metadata');
+      toast.error(error.response?.data?.error || 'שגיאה בשמירת המידע');
     } finally {
       setSaving(false);
     }
@@ -244,7 +244,7 @@ export default function PublishMetadata() {
                 <div className="flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-memorial-gold" />
                   <h3 className="text-xl font-display font-bold text-white">
-                    Book Synopsis
+                    תקציר הספר
                   </h3>
                 </div>
                 <GlowingButton
@@ -256,12 +256,12 @@ export default function PublishMetadata() {
                   {generatingSynopsis ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Generating...
+                      מייצר...
                     </>
                   ) : (
                     <>
                       <Wand2 className="w-4 h-4" />
-                      AI Generate
+                      יצירה בבינה מלאכותית
                     </>
                   )}
                 </GlowingButton>
@@ -269,18 +269,19 @@ export default function PublishMetadata() {
               <textarea
                 value={synopsis}
                 onChange={(e) => setSynopsis(e.target.value)}
-                placeholder="Write a compelling synopsis that will fit on the back cover... (100-500 characters)"
+                placeholder="כתוב תקציר מרתק שיתאים לעטיפה האחורית של הספר... (100-500 תווים)"
                 className="input min-h-[200px] resize-none"
                 maxLength={500}
+                dir="rtl"
               />
               <div className="flex justify-between items-center mt-2 text-sm">
                 <span className={`${synopsis.length > 450 ? 'text-amber-400' : 'text-gray-400'}`}>
-                  {synopsis.length} / 500 characters
+                  {synopsis.length} / 500 תווים
                 </span>
                 {synopsis.length >= 100 && synopsis.length <= 500 && (
                   <span className="text-green-400 flex items-center gap-1">
                     <Sparkles className="w-4 h-4" />
-                    Good length for back cover!
+                    אורך מושלם לעטיפה האחורית!
                   </span>
                 )}
               </div>
@@ -290,7 +291,7 @@ export default function PublishMetadata() {
             <GlassCard>
               <div className="flex items-center gap-2 mb-4">
                 <Tag className="w-5 h-5 text-memorial-gold" />
-                <h3 className="text-xl font-display font-bold text-white">Tags</h3>
+                <h3 className="text-xl font-display font-bold text-white">תגיות</h3>
               </div>
               <div className="flex gap-2 mb-3">
                 <input
@@ -298,12 +299,13 @@ export default function PublishMetadata() {
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={handleTagInputKeyDown}
-                  placeholder="Add a tag (press Enter)"
+                  placeholder="הוסף תגית (לחץ Enter)"
                   className="input flex-1"
                   maxLength={30}
+                  dir="rtl"
                 />
                 <GlowingButton onClick={handleAddTag} variant="gold" size="sm">
-                  Add
+                  הוסף
                 </GlowingButton>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -326,24 +328,25 @@ export default function PublishMetadata() {
               </div>
               {tags.length === 0 && (
                 <p className="text-gray-500 text-sm mt-2">
-                  Add tags to help readers find your book
+                  הוסף תגיות כדי שקוראים יוכלו למצוא את הספר שלך
                 </p>
               )}
-              <p className="text-gray-400 text-xs mt-2">{tags.length} / 10 tags</p>
+              <p className="text-gray-400 text-xs mt-2">{tags.length} / 10 תגיות</p>
             </GlassCard>
 
             {/* Category */}
             <GlassCard>
               <div className="flex items-center gap-2 mb-4">
                 <BookOpen className="w-5 h-5 text-memorial-gold" />
-                <h3 className="text-xl font-display font-bold text-white">Category</h3>
+                <h3 className="text-xl font-display font-bold text-white">קטגוריה</h3>
               </div>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="input"
+                dir="rtl"
               >
-                <option value="">Select a category</option>
+                <option value="">בחר קטגוריה</option>
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
                     {cat}
@@ -356,7 +359,7 @@ export default function PublishMetadata() {
             <GlassCard>
               <div className="flex items-center gap-2 mb-4">
                 <DollarSign className="w-5 h-5 text-memorial-gold" />
-                <h3 className="text-xl font-display font-bold text-white">Pricing</h3>
+                <h3 className="text-xl font-display font-bold text-white">תמחור</h3>
               </div>
 
               {/* Free/Paid Toggle */}
@@ -369,7 +372,7 @@ export default function PublishMetadata() {
                       : 'bg-white/5 text-gray-400 hover:bg-white/10'
                   }`}
                 >
-                  Free
+                  חינם
                 </button>
                 <button
                   onClick={() => setIsFree(false)}
@@ -379,7 +382,7 @@ export default function PublishMetadata() {
                       : 'bg-white/5 text-gray-400 hover:bg-white/10'
                   }`}
                 >
-                  Paid
+                  בתשלום
                 </button>
               </div>
 
@@ -390,7 +393,7 @@ export default function PublishMetadata() {
                   animate={{ opacity: 1, height: 'auto' }}
                 >
                   <label className="block text-sm font-semibold mb-2 text-gray-300">
-                    Set Price ($1 - $25)
+                    קבע מחיר ($1 - $25)
                   </label>
                   <div className="flex items-center gap-4">
                     <input
@@ -406,7 +409,7 @@ export default function PublishMetadata() {
                     </div>
                   </div>
                   <p className="text-gray-400 text-sm mt-2">
-                    You'll earn: <span className="text-green-400 font-semibold">${(price * 0.5).toFixed(2)}</span> (50%) per sale
+                    תרוויח: <span className="text-green-400 font-semibold">${(price * 0.5).toFixed(2)}</span> (50%) לכל מכירה
                   </p>
                 </motion.div>
               )}
@@ -421,7 +424,7 @@ export default function PublishMetadata() {
                 className="flex-1"
               >
                 <ArrowLeft className="w-5 h-5" />
-                Cancel
+                ביטול
               </GlowingButton>
               <GlowingButton
                 onClick={handleSave}
@@ -433,11 +436,11 @@ export default function PublishMetadata() {
                 {saving ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Saving...
+                    שומר...
                   </>
                 ) : (
                   <>
-                    Continue
+                    המשך
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}
@@ -451,7 +454,7 @@ export default function PublishMetadata() {
               <div className="flex items-center gap-2 mb-6">
                 <Eye className="w-5 h-5 text-cosmic-purple" />
                 <h3 className="text-xl font-display font-bold text-white">
-                  Marketplace Preview
+                  תצוגה מקדימה
                 </h3>
               </div>
 
@@ -498,7 +501,7 @@ export default function PublishMetadata() {
                   <h4 className="font-display font-bold text-xl text-white mb-1 line-clamp-2">
                     {book.title}
                   </h4>
-                  <p className="text-sm text-gray-400 mb-2">by {book.author.name}</p>
+                  <p className="text-sm text-gray-400 mb-2">מאת {book.author.name}</p>
 
                   {/* Category */}
                   {category && (
@@ -525,7 +528,7 @@ export default function PublishMetadata() {
                       ))}
                       {tags.length > 3 && (
                         <span className="text-xs px-2 py-0.5 text-gray-500">
-                          +{tags.length - 3} more
+                          +{tags.length - 3} עוד
                         </span>
                       )}
                     </div>
@@ -543,11 +546,11 @@ export default function PublishMetadata() {
                         </div>
                       )}
                       <div className="text-gray-400">
-                        {book.statistics.wordCount.toLocaleString()} words
+                        {book.statistics.wordCount.toLocaleString()} מילים
                       </div>
                     </div>
                     <div className="font-bold text-memorial-gold">
-                      {isFree ? 'Free' : `$${price}`}
+                      {isFree ? 'חינם' : `$${price}`}
                     </div>
                   </div>
                 </div>
@@ -555,7 +558,7 @@ export default function PublishMetadata() {
 
               <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                 <p className="text-sm text-blue-300">
-                  This is how your book will appear in the marketplace. Make sure your synopsis is compelling!
+                  כך הספר שלך יופיע בחנות. ודא שהתקציר שלך מושך ומעניין!
                 </p>
               </div>
             </GlassCard>
