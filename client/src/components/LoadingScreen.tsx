@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 // Use full horizontal brand logo for splash screen
-const logoIcon = '/img/new/logo-mestory-large.jpeg';
+const logoIcon = '/img/new/logo-mestory-large.png';
 
 /**
  * Loading Screen Component
