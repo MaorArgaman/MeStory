@@ -122,6 +122,7 @@ export default function BookWritingPage() {
   const [content, setContent] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(true);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Mobile sidebar states
@@ -389,6 +390,7 @@ export default function BookWritingPage() {
       if (currentVersion === saveVersionRef.current && response.data.success) {
         setBook(response.data.data.book);
         setSaved(true);
+        setLastSavedAt(new Date());
         retryCountRef.current = 0;
         // Clear backup on successful save
         try {
@@ -707,7 +709,14 @@ export default function BookWritingPage() {
               ) : saved ? (
                 <>
                   <Check className="w-4 h-4 text-green-400" />
-                  <span className="text-green-400">{t('status.saved')}</span>
+                  <span className="text-green-400">
+                    {t('status.saved')}
+                    {lastSavedAt && (
+                      <span className="text-gray-500 font-normal ml-1">
+                        {lastSavedAt.toLocaleTimeString(isHebrew ? 'he-IL' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </span>
                 </>
               ) : (
                 <span className="text-yellow-400">{t('status.unsaved_changes')}</span>
@@ -905,7 +914,7 @@ export default function BookWritingPage() {
               book.chapters.map((chapter, index) => (
                 <div
                   key={index}
-                  className={`group relative rounded-xl lg:rounded-lg ${
+                  className={`group flex items-start gap-2 rounded-xl lg:rounded-lg ${
                     selectedChapterIndex === index
                       ? 'bg-indigo-500/20 border border-indigo-500/30'
                       : 'bg-white/5 lg:bg-transparent border border-white/10 lg:border-transparent hover:bg-white/10'
@@ -916,7 +925,7 @@ export default function BookWritingPage() {
                       selectChapter(index);
                       setShowLeftSidebar(false);
                     }}
-                    className="w-full text-left"
+                    className="flex-1 min-w-0 text-right"
                   >
                     <div className="flex items-center gap-3 lg:gap-2">
                       <BookOpen className="w-5 h-5 lg:w-4 lg:h-4 text-indigo-400" />
@@ -939,7 +948,7 @@ export default function BookWritingPage() {
                       e.stopPropagation();
                       deleteChapter(index);
                     }}
-                    className="absolute top-3 right-3 lg:top-2 lg:right-2 p-2 lg:p-1.5 rounded-lg lg:rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all"
+                    className="flex-shrink-0 mt-1 p-2 lg:p-1.5 rounded-lg lg:rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all"
                     title={t('editor.chapters.delete')}
                   >
                     <Trash2 className="w-4 h-4 lg:w-3.5 lg:h-3.5" />

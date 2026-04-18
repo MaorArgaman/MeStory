@@ -65,7 +65,7 @@ export function useVoiceRecording({
     };
 
     const ext = extensions[baseMime] || 'webm';
-    console.log(`🎵 MIME type: ${mimeType} -> extension: ${ext}`);
+    // MIME type resolved
     return ext;
   };
 
@@ -145,13 +145,13 @@ export function useVoiceRecording({
 
       // Log all supported formats for debugging
       const supportedFormats = mimeTypes.filter(m => MediaRecorder.isTypeSupported(m));
-      console.log('🎵 Supported audio formats:', supportedFormats);
+      // audio formats checked
 
       let selectedMimeType = supportedFormats[0] || '';
 
       if (!selectedMimeType) {
         // Try without specifying mimeType - let browser choose default
-        console.log('⚠️ No specific format supported, using browser default');
+        // using browser default format
         selectedMimeType = '';
       }
 
@@ -165,7 +165,7 @@ export function useVoiceRecording({
       mimeTypeRef.current = mediaRecorder.mimeType || selectedMimeType || 'audio/webm';
       chunksRef.current = [];
 
-      console.log('🎤 Recording with MIME type:', mimeTypeRef.current);
+      // recording started
 
       // Handle data available
       mediaRecorder.ondataavailable = (event) => {
@@ -207,7 +207,7 @@ export function useVoiceRecording({
       mediaRecorderRef.current.onstop = async () => {
         if (chunksRef.current.length > 0) {
           const finalBlob = new Blob(chunksRef.current, { type: mimeTypeRef.current });
-          console.log('📤 Sending recording:', finalBlob.size, 'bytes,', chunksRef.current.length, 'chunks');
+          // sending recording
           await transcribeChunk(finalBlob);
         }
       };

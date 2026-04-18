@@ -20,6 +20,7 @@ import {
 } from '../components/recommendations';
 import MemorialSection from '../components/memorial/MemorialSection';
 import MyCollaborationsSection from '../components/collaboration/MyCollaborationsSection';
+import OnboardingModal, { useOnboarding } from '../components/onboarding/OnboardingModal';
 
 // Memorial-themed dashboard images from public folder
 const dashboardHero = '/img/new/hero-soldiers-unit.png';
@@ -88,6 +89,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const { showOnboarding, completeOnboarding } = useOnboarding(true);
 
   useEffect(() => {
     loadBooks();
@@ -358,6 +360,13 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen">
+      {/* First-time onboarding modal */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <OnboardingModal onComplete={completeOnboarding} />
+        )}
+      </AnimatePresence>
+
       {/* Hero Header with Background Image */}
       <div className="relative overflow-hidden pt-24 pb-6 sm:pt-28 sm:pb-8 px-4 sm:px-6 lg:px-8 bg-deep-space">
         <div className="absolute inset-0 z-0">

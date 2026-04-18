@@ -1593,17 +1593,35 @@ export default function MarketplacePage() {
           </div>
         ) : books.length === 0 ? (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-16 sm:py-24 md:py-32"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-20 sm:py-32"
           >
-            <BookOpen className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 text-gray-600 mx-auto mb-4 sm:mb-6 opacity-50" />
-            <h3 className="text-lg sm:text-xl md:text-2xl font-display font-semibold text-gray-400 mb-2 sm:mb-3">
-              {t('marketplace.empty.title')}
+            <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-memorial-gold/10 to-yellow-600/5 border border-memorial-gold/20 flex items-center justify-center">
+              {searchQuery ? (
+                <Search className="w-10 h-10 text-memorial-gold/50" />
+              ) : (
+                <BookOpen className="w-10 h-10 text-memorial-gold/50" />
+              )}
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-300 mb-3">
+              {searchQuery
+                ? t('marketplace.empty.search_title', `אין תוצאות עבור "${searchQuery}"`)
+                : t('marketplace.empty.title')}
             </h3>
-            <p className="text-gray-500 text-sm sm:text-base md:text-lg">
-              {t('marketplace.empty.subtitle')}
+            <p className="text-gray-500 text-base max-w-sm mx-auto leading-relaxed">
+              {searchQuery
+                ? t('marketplace.empty.search_subtitle', 'נסו מילות חיפוש אחרות או עיינו בכל הספרים')
+                : t('marketplace.empty.subtitle')}
             </p>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="mt-6 px-5 py-2.5 rounded-xl bg-memorial-gold/10 border border-memorial-gold/30 text-memorial-gold text-sm font-medium hover:bg-memorial-gold/20 transition-all"
+              >
+                {t('marketplace.empty.clear_search', 'נקה חיפוש')}
+              </button>
+            )}
           </motion.div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8">

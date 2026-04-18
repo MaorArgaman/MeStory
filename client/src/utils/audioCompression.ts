@@ -14,11 +14,11 @@ export async function compressAudio(
 ): Promise<Blob> {
   // If already small enough, return as-is
   if (audioBlob.size <= targetSizeKB * 1024) {
-    console.log('Audio already small enough, skipping compression');
+    // audio small enough
     return audioBlob;
   }
 
-  console.log(`Compressing audio from ${(audioBlob.size / 1024).toFixed(0)}KB to ~${targetSizeKB}KB`);
+  // compressing audio
 
   try {
     // Create audio context
@@ -56,7 +56,7 @@ export async function compressAudio(
     // Convert to WAV (Whisper accepts WAV)
     const wavBlob = audioBufferToWav(resampledBuffer);
 
-    console.log(`Compressed audio from ${(audioBlob.size / 1024).toFixed(0)}KB to ${(wavBlob.size / 1024).toFixed(0)}KB`);
+    // audio compressed
 
     // Close audio context
     await audioContext.close();

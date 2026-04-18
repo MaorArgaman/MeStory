@@ -17,7 +17,7 @@ const logoIcon = '/img/new/logo-mestory-small.png';
 export default function Navbar() {
   const { t } = useTranslation('common');
   const { user, logout } = useAuth();
-  const { isRTL } = useLanguage();
+  const { isRTL, language, setLanguage } = useLanguage();
   const {
     isConnected: socketConnected,
     notificationsUnreadCount: socketNotificationsCount,
@@ -166,6 +166,20 @@ export default function Navbar() {
 
             {/* Right Side - Notifications, Messages, User OR Login/Register */}
             <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 flex-shrink-0">
+              {/* Language Toggle */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setLanguage(language === 'he' ? 'en' : 'he')}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-white/10 text-gray-300 hover:text-memorial-gold hover:border-memorial-gold/40 transition-all duration-300 text-xs font-bold tracking-wide"
+                aria-label={language === 'he' ? 'Switch to English' : 'עבור לעברית'}
+                title={language === 'he' ? 'Switch to English' : 'עבור לעברית'}
+              >
+                <span className={language === 'he' ? 'text-memorial-gold' : 'text-gray-500'}>עב</span>
+                <span className="text-gray-600">|</span>
+                <span className={language === 'en' ? 'text-memorial-gold' : 'text-gray-500'}>EN</span>
+              </motion.button>
+
               {/* Mobile Menu Button */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -365,6 +379,22 @@ export default function Navbar() {
             aria-label="Mobile navigation"
           >
             <div className="p-3 space-y-1">
+              {/* Language Toggle — Mobile */}
+              <button
+                onClick={() => setLanguage(language === 'he' ? 'en' : 'he')}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:text-memorial-gold hover:bg-memorial-gold/10 transition-all duration-300"
+              >
+                <span className="text-base">🌐</span>
+                <span className="font-semibold">
+                  {language === 'he' ? 'Switch to English' : 'עבור לעברית'}
+                </span>
+                <span className="mr-auto flex items-center gap-1 text-xs font-bold">
+                  <span className={language === 'he' ? 'text-memorial-gold' : 'text-gray-500'}>עב</span>
+                  <span className="text-gray-600">|</span>
+                  <span className={language === 'en' ? 'text-memorial-gold' : 'text-gray-500'}>EN</span>
+                </span>
+              </button>
+              <div className="border-t border-white/10 my-1" />
               {/* Always show marketplace */}
               <Link
                 to="/marketplace"

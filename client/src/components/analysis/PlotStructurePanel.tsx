@@ -134,9 +134,9 @@ export default function PlotStructurePanel({
                   className={`relative bg-gradient-to-r ${actLabels[actKey as keyof typeof actLabels].color} cursor-pointer hover:brightness-110 transition-all`}
                   onClick={() => setExpandedAct(expandedAct === actKey ? null : actKey)}
                 >
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-medium text-white drop-shadow">
-                      {actLabels[actKey as keyof typeof actLabels].name}
+                  <div className="absolute inset-0 flex items-center justify-center overflow-hidden px-1">
+                    <span className="text-xs font-medium text-white drop-shadow truncate">
+                      {act.percentage >= 15 ? actLabels[actKey as keyof typeof actLabels].name : ''}
                     </span>
                   </div>
                 </motion.div>
