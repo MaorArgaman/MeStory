@@ -4,11 +4,14 @@ import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { CheckCircle2, Crown, Sparkles, ArrowRight, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function UpgradeSuccessPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { language } = useLanguage();
+  const isHebrew = language === 'he';
   const plan = location.state?.plan || 'premium';
   const mockMode = location.state?.mockMode || false;
 
@@ -231,7 +234,7 @@ export default function UpgradeSuccessPage() {
           >
             <div className="flex items-center justify-center gap-2 mb-4">
               <Sparkles className={isPremium ? 'text-yellow-400' : 'text-indigo-400'} />
-              <h3 className="text-lg font-semibold">You now have access to:</h3>
+              <h3 className="text-lg font-semibold">{isHebrew ? 'עכשיו יש לך גישה ל:' : 'You now have access to:'}</h3>
             </div>
 
             <ul className="space-y-3 text-left max-w-md mx-auto">
@@ -239,34 +242,34 @@ export default function UpgradeSuccessPage() {
                 <>
                   <li className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-                    <span className="text-gray-300">Unlimited AI credits</span>
+                    <span className="text-gray-300">{isHebrew ? 'קרדיטים ללא הגבלה' : 'Unlimited AI credits'}</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-                    <span className="text-gray-300">Priority AI processing</span>
+                    <span className="text-gray-300">{isHebrew ? 'עיבוד AI מועדף' : 'Priority AI processing'}</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-                    <span className="text-gray-300">Advanced analytics</span>
+                    <span className="text-gray-300">{isHebrew ? 'ניתוח מתקדם' : 'Advanced analytics'}</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-                    <span className="text-gray-300">Early access to features</span>
+                    <span className="text-gray-300">{isHebrew ? 'גישה מוקדמת לתכונות חדשות' : 'Early access to features'}</span>
                   </li>
                 </>
               ) : (
                 <>
                   <li className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-indigo-400 flex-shrink-0" />
-                    <span className="text-gray-300">Full AI writing assistant</span>
+                    <span className="text-gray-300">{isHebrew ? 'עוזר כתיבה AI מלא' : 'Full AI writing assistant'}</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-indigo-400 flex-shrink-0" />
-                    <span className="text-gray-300">Publish to marketplace</span>
+                    <span className="text-gray-300">{isHebrew ? 'פרסום בחנות' : 'Publish to marketplace'}</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-indigo-400 flex-shrink-0" />
-                    <span className="text-gray-300">Advanced exports</span>
+                    <span className="text-gray-300">{isHebrew ? 'ייצוא מתקדם' : 'Advanced exports'}</span>
                   </li>
                 </>
               )}
@@ -281,9 +284,9 @@ export default function UpgradeSuccessPage() {
               transition={{ delay: 0.6 }}
               className="mb-8 p-4 bg-white/5 rounded-lg"
             >
-              <p className="text-sm text-gray-400 mb-1">Your new balance</p>
+              <p className="text-sm text-gray-400 mb-1">{isHebrew ? 'היתרה החדשה שלך' : 'Your new balance'}</p>
               <p className="text-3xl font-bold gradient-text">
-                {user.credits === 999999 ? 'Unlimited' : user.credits.toLocaleString()} Credits
+                {user.credits === 999999 ? (isHebrew ? 'ללא הגבלה' : 'Unlimited') : user.credits.toLocaleString()} {isHebrew ? 'קרדיטים' : 'Credits'}
               </p>
             </motion.div>
           )}
