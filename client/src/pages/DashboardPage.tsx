@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { api } from '../services/api';
 import { exportBookAsPdfAsync } from '../utils/asyncExport';
-import { Plus, Loader2, BookOpen, Edit, Upload, Mic, PenTool, MessageCircle, FileUp, Lightbulb } from 'lucide-react';
+import { Plus, Loader2, BookOpen, Edit, Upload, Mic, PenTool, MessageCircle, FileUp, Lightbulb, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import CreateBookWizard from '../components/dashboard/CreateBookWizard';
@@ -682,6 +682,44 @@ export default function DashboardPage() {
               </motion.div>
             ))}
           </div>
+        )}
+
+        {/* "Finish the book for me" CTA — shown when user has at least 1 unfinished book */}
+        {!loading && books.some(b => b.publishingStatus.status !== 'published' && b.statistics.wordCount > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="max-w-7xl mx-auto mt-8 mb-4"
+          >
+            <div className="relative overflow-hidden rounded-2xl border border-memorial-gold/20 bg-gradient-to-r from-memorial-gold/10 via-yellow-600/5 to-memorial-gold/10 p-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+              {/* Sparkle decoration */}
+              <div className="w-14 h-14 rounded-2xl bg-memorial-gold/20 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-7 h-7 text-memorial-gold" />
+              </div>
+              <div className="flex-1 text-center sm:text-start">
+                <h3 className="text-xl font-bold text-white mb-1">
+                  {language === 'he' ? '🪄 סיים את הספר בשבילי' : '🪄 Finish the book for me'}
+                </h3>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  {language === 'he'
+                    ? 'הבינה המלאכותית תמלא את הפרקים הריקים, תעצב ותארוז את הספר כולו — מוכן להדפסה'
+                    : 'Our AI will complete empty chapters, design, and package the full book — print-ready'}
+                </p>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => {
+                  const firstUnfinished = books.find(b => b.publishingStatus.status !== 'published' && b.statistics.wordCount > 0);
+                  if (firstUnfinished) navigate(`/editor/${firstUnfinished.id}`);
+                }}
+                className="flex-shrink-0 px-6 py-3 rounded-xl bg-gradient-to-r from-memorial-gold to-yellow-500 text-deep-space font-bold text-sm hover:shadow-glow-gold transition-all"
+              >
+                {language === 'he' ? 'התחל עכשיו' : 'Start Now'}
+              </motion.button>
+            </div>
+          </motion.div>
         )}
       </div>
 

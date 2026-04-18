@@ -13,6 +13,7 @@ import {
   Crown,
 } from 'lucide-react';
 import { api } from '../services/api';
+import BookLoader from '../components/common/BookLoader';
 import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
@@ -198,14 +199,7 @@ export default function AuthorProfilePage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen pt-32 flex items-center justify-center">
-        <div className="text-center">
-          <User className="w-16 h-16 text-memorial-gold mx-auto mb-4 animate-pulse" />
-          <p className="text-gray-300 text-lg">{t('authorProfile.loading')}</p>
-        </div>
-      </div>
-    );
+    return <BookLoader variant="fullscreen" message="טוען..." />;
   }
 
   if (!authorData) {

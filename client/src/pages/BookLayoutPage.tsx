@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 // @ts-ignore - react-pageflip has incomplete types
 import HTMLFlipBook from 'react-pageflip';
 import { api } from '../services/api';
+import BookLoader from '../components/common/BookLoader';
 import { exportBookAsPdfAsync } from '../utils/asyncExport';
 import {
   ArrowLeft,
@@ -2232,11 +2233,7 @@ export default function BookLayoutPage() {
   }, [currentSpread, selectedPageIndex, isBookRTL]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-memorial-gold" />
-      </div>
-    );
+    return <BookLoader variant="fullscreen" message="טוען את הספר..." />;
   }
 
   if (!book) return null;

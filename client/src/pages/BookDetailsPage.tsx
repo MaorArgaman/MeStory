@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import BookLoader from '../components/common/BookLoader';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart,
@@ -289,14 +290,7 @@ export default function BookDetailsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen pt-32 flex items-center justify-center">
-        <div className="text-center">
-          <BookOpen className="w-16 h-16 text-memorial-gold mx-auto mb-4 animate-pulse" />
-          <p className="text-gray-300 text-lg">{t('book_details.loading')}</p>
-        </div>
-      </div>
-    );
+    return <BookLoader variant="fullscreen" message="טוען..." />;
   }
 
   if (!book) {

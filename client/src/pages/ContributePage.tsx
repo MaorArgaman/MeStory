@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, Send, Upload, Check, Loader2, Heart } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { api } from '../services/api';
+import BookLoader from '../components/common/BookLoader';
 
 export default function ContributePage() {
   const { bookId } = useParams();
@@ -93,11 +94,7 @@ export default function ContributePage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-deep-space flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-memorial-gold" />
-      </div>
-    );
+    return <BookLoader variant="fullscreen" message="טוען..." />;
   }
 
   if (error) {

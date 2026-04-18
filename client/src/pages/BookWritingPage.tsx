@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
+import BookLoader from '../components/common/BookLoader';
 import {
   BookOpen,
   Plus,
@@ -663,11 +664,7 @@ export default function BookWritingPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-      </div>
-    );
+    return <BookLoader variant="fullscreen" message="טוען את הספר..." />;
   }
 
   if (!book) {

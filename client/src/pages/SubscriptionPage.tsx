@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { api, paymentApi } from '../services/api';
+import BookLoader from '../components/common/BookLoader';
 import { useAuth } from '../contexts/AuthContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -200,11 +201,7 @@ export default function SubscriptionPage() {
   const isCurrentPlan = (tier: string) => user?.role === tier;
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-      </div>
-    );
+    return <BookLoader variant="fullscreen" message="טוען..." />;
   }
 
   return (

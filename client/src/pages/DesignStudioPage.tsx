@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
+import BookLoader from '../components/common/BookLoader';
 import { exportBookAsPdfAsync } from '../utils/asyncExport';
 import {
   ArrowLeft,
@@ -927,11 +928,7 @@ export default function DesignStudioPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-      </div>
-    );
+    return <BookLoader variant="fullscreen" message="טוען..." />;
   }
 
   if (!book) {

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../services/api';
+import BookLoader from '../components/common/BookLoader';
 import { useLanguage } from '../contexts/LanguageContext';
 import {
   BookTemplate,
@@ -210,14 +211,7 @@ export default function BookDesignPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-purple-500 mx-auto mb-4" />
-          <p className="text-gray-400">{isHebrew ? 'טוען...' : 'Loading...'}</p>
-        </div>
-      </div>
-    );
+    return <BookLoader variant="fullscreen" message="טוען..." />;
   }
 
   if (!book) {

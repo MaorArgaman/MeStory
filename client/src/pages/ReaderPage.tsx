@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import BookLoader from '../components/common/BookLoader';
 import {
   X,
   ChevronLeft,
@@ -583,14 +584,7 @@ export default function ReaderPage() {
   };
 
   if (loading) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-deep-space">
-        <div className="text-center">
-          <BookOpen className="w-16 h-16 text-memorial-gold mx-auto mb-4 animate-pulse" />
-          <p className="text-gray-300 text-lg">{t('reader.loading')}</p>
-        </div>
-      </div>
-    );
+    return <BookLoader variant="fullscreen" message="טוען ספר..." />;
   }
 
   if (!book || !currentChapter) {

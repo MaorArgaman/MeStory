@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AnimatePresence } from 'framer-motion';
@@ -10,6 +10,7 @@ import RequireAuth from './components/RequireAuth';
 import RedirectIfAuth from './components/RedirectIfAuth';
 import Layout from './components/layout/Layout';
 import LoadingScreen from './components/LoadingScreen';
+import BookLoader from './components/common/BookLoader';
 import ErrorBoundary from './components/ErrorBoundary';
 import PageBoundary from './components/PageBoundary';
 import { OrganizationSchema, WebsiteSchema } from './components/seo';
@@ -156,6 +157,8 @@ function AppContent() {
         {/* Outer ErrorBoundary is the last line of defense for the shell itself */}
         <ErrorBoundary>
           <LanguageRedirect>
+            {/* Suspense wraps lazy-loaded pages — BookLoader is shown while the chunk downloads */}
+            <Suspense fallback={<BookLoader variant="fullscreen" message="טוען..." />}>
             <Routes location={location} key={location.pathname}>
               {/* Root path - LanguageRedirect handles redirecting to /en or /he */}
               <Route path="/" element={<RedirectIfAuth><LandingPage /></RedirectIfAuth>} />
@@ -433,6 +436,7 @@ function AppContent() {
               {/* Catch all - redirect to landing page */}
               <Route path="*" element={<Layout><PageBoundary><NotFoundPage /></PageBoundary></Layout>} />
             </Routes>
+            </Suspense>
           </LanguageRedirect>
         </ErrorBoundary>
       </AnimatePresence>
