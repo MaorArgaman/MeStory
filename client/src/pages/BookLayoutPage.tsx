@@ -245,10 +245,19 @@ const PAGE_HEIGHT_PX = 560; // Approximate page height in pixels
 
 // Estimate how many characters fit on a page based on settings
 const estimateCharsPerPage = (settings: typeof defaultSettings, isHebrew: boolean = true): number => {
-  const availableWidth = PAGE_WIDTH_PX - settings.margins.left - settings.margins.right;
-  const availableHeight = PAGE_HEIGHT_PX - settings.margins.top - settings.margins.bottom;
+  // Account for frame inset (royal/art-deco frames take ~14px each side)
+  const frameInset = (settings.pageFrame === 'royal' || settings.pageFrame === 'art-deco') ? 14 :
+                     (settings.pageFrame === 'elegant' || settings.pageFrame === 'ornate') ? 8 :
+                     (settings.pageFrame !== 'none') ? 4 : 0;
 
-  // Hebrew characters are wider than Latin - use 0.6 for Hebrew, 0.5 for Latin
+  const availableWidth = PAGE_WIDTH_PX - settings.margins.left - settings.margins.right - frameInset * 2;
+
+  // Reserve space for header banner (~22px) and page number (~18px)
+  const headerSpace = (settings.headerDecoration && settings.headerDecoration !== 'none') ? 22 : 0;
+  const pageNumSpace = settings.showPageNumbers ? 18 : 0;
+  const availableHeight = PAGE_HEIGHT_PX - settings.margins.top - settings.margins.bottom - headerSpace - pageNumSpace - frameInset * 2;
+
+  // Hebrew characters are wider than Latin
   const avgCharWidth = settings.fontSize * (isHebrew ? 0.65 : 0.5);
   const charsPerLine = Math.floor(availableWidth / avgCharWidth);
 
@@ -256,8 +265,8 @@ const estimateCharsPerPage = (settings: typeof defaultSettings, isHebrew: boolea
   const lineHeightPx = settings.fontSize * settings.lineHeight;
   const linesPerPage = Math.floor(availableHeight / lineHeightPx);
 
-  // More conservative buffer for better accuracy (0.55 instead of 0.7)
-  return Math.floor(charsPerLine * linesPerPage * 0.55);
+  // Conservative buffer (0.45) — better to have more pages than overflowing text
+  return Math.floor(charsPerLine * linesPerPage * 0.45);
 };
 
 /**
