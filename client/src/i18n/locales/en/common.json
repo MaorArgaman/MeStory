@@ -709,7 +709,9 @@
       "suggestions": "Improvement Suggestions",
       "breakdown": "Breakdown:",
       "improvement_tips": "Improvement Tips:",
-      "analyze_prompt": "Analyze your chapter to see quality scores"
+      "analyze_prompt": "Analyze your chapter to see quality scores",
+      "start_chapter": "Start my chapter",
+      "great_writing": "Great writing! Keep it up."
     },
     "statistics": {
       "title": "STATISTICS",
