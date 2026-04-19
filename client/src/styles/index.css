@@ -1849,3 +1849,42 @@
 .page-divider-wave hr::after { content: '〜〜〜'; display: block; color: var(--accent-color, #8b6914); margin: 0.8em 0; opacity: 0.6; }
 .page-divider-ornament hr { border: none; text-align: center; color: var(--accent-color, #8b6914); }
 .page-divider-ornament hr::after { content: '❧ ✦ ❧'; display: block; font-size: 1em; margin: 1em 0; letter-spacing: 0.3em; opacity: 0.7; }
+
+/* --- RICH CHAPTER TITLE STYLES --- */
+.book-page-content .chapter-title {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* Enhanced drop-cap for banner style */
+.book-drop-cap p:first-of-type::first-letter,
+.book-drop-cap-decorative p:first-of-type::first-letter {
+  font-size: 3.2em;
+  line-height: 0.85;
+  float: right;
+  margin: 0 0 0 8px;
+  padding: 2px 4px;
+  color: var(--accent-color, #8b6914);
+  font-weight: 700;
+}
+[dir="ltr"] .book-drop-cap p:first-of-type::first-letter,
+[dir="ltr"] .book-drop-cap-decorative p:first-of-type::first-letter {
+  float: left;
+  margin: 0 8px 0 0;
+}
+
+.book-drop-cap-box p:first-of-type::first-letter {
+  font-size: 3em;
+  line-height: 0.9;
+  float: right;
+  margin: 0 0 0 8px;
+  padding: 4px 8px;
+  background: var(--accent-color, #8b6914);
+  color: white;
+  font-weight: 700;
+  border-radius: 3px;
+}
+[dir="ltr"] .book-drop-cap-box p:first-of-type::first-letter {
+  float: left;
+  margin: 0 8px 0 0;
+}

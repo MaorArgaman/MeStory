@@ -338,11 +338,20 @@ function processContent(
       ornament: `<div style="text-align:center;color:${accentColor};font-size:0.85em;letter-spacing:0.5em;margin:0.4em 0 0.8em;opacity:0.7;direction:ltr">✦ ✧ ✦</div>`,
       'gradient-line': `<div class="book-chapter-header header-gradient-line" style="--accent-color:${accentColor}"></div>`,
       dots: `<div style="text-align:center;color:${accentColor};margin:0.4em 0 0.8em;letter-spacing:0.5em;opacity:0.5;direction:ltr">• • •</div>`,
+      banner: `<div style="text-align:center;margin:0.3em -8px 0.8em;padding:6px 12px;background:linear-gradient(90deg, transparent 0%, ${accentColor}15 20%, ${accentColor}20 50%, ${accentColor}15 80%, transparent 100%);border-top:1px solid ${accentColor}30;border-bottom:1px solid ${accentColor}30;direction:ltr"><span style="color:${accentColor};font-size:0.7em;letter-spacing:0.6em;opacity:0.6">❖ ─── ❖</span></div>`,
     };
     const decoHtml = decoMap[settings.headerDecoration] || '';
     if (decoHtml) {
       processed = processed.replace(/(<\/h[12]>)/gi, `$1${decoHtml}`);
     }
+  }
+
+  // Wrap chapter titles (h2.chapter-title) with decorative background when banner header is active
+  if (settings.headerDecoration === 'banner') {
+    processed = processed.replace(
+      /<h2([^>]*class="[^"]*chapter-title[^"]*"[^>]*)>([\s\S]*?)<\/h2>/gi,
+      `<h2$1 style="text-align:center;padding:12px 16px 8px;margin:-8px -8px 4px;background:linear-gradient(180deg, ${accentColor}12 0%, ${accentColor}06 100%);border-bottom:1.5px solid ${accentColor}25;letter-spacing:1px">$2</h2>`
+    );
   }
 
   // Inject title underline class on <h1>/<h2>
