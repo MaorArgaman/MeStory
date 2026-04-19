@@ -1366,15 +1366,18 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
     // Find book with all data
     const book = await Book.findById(bookId);
     if (!book) {
+      console.error(`[premiumDesignWizard] Book not found — bookId=${bookId} userId=${req.user.id}`);
       res.status(404).json({
         success: false,
         error: 'Book not found',
+        bookId,
       });
       return;
     }
 
     // Ensure user owns this book
     if (book.author !== req.user.id) {
+      console.error(`[premiumDesignWizard] Permission denied — book.author=${book.author} userId=${req.user.id}`);
       res.status(403).json({
         success: false,
         error: 'You do not have permission to design this book',

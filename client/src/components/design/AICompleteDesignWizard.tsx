@@ -459,11 +459,22 @@ export default function AICompleteDesignWizard({
       setStep('variant');
 
     } catch (err: any) {
-      const is504 = err?.response?.status === 504 || err?.code === 'ECONNABORTED';
+      const status = err?.response?.status;
+      const serverError = err?.response?.data?.error;
+      const is504 = status === 504 || err?.code === 'ECONNABORTED';
       const isTimeout = err?.message?.includes('timeout') || is504;
-      const heMsg = isTimeout
-        ? 'עיצוב ה-AI לוקח זמן רב — אנא נסה שוב בעוד כמה דקות (הבקשה עברה את מגבלת הזמן של השרת)'
-        : 'שגיאה ביצירת העיצוב: ' + (err.message || 'שגיאה לא ידועה');
+      const is404 = status === 404;
+      let heMsg: string;
+      if (isTimeout) {
+        heMsg = 'עיצוב ה-AI לוקח זמן רב — אנא נסה שוב בעוד כמה דקות (הבקשה עברה את מגבלת הזמן של השרת)';
+      } else if (is404) {
+        heMsg = serverError
+          ? `שגיאה: ${serverError}`
+          : 'הנתיב לא נמצא בשרת (404) — ייתכן שהשרת לא עודכן. אנא נסה שוב.';
+      } else {
+        heMsg = 'שגיאה ביצירת העיצוב: ' + (serverError || err.message || 'שגיאה לא ידועה');
+      }
+      console.error('[AICompleteDesignWizard] Design failed', { status, serverError, err });
       setError(heMsg);
       setStep('intro');
     }

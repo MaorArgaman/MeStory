@@ -1225,63 +1225,12 @@ export default function BookLayoutPage() {
     }
   };
 
-  // Upload a base64 data URL to the server via the page-image endpoint, returns server URL
-  const uploadBase64Image = async (dataUrl: string, pageIndex: number): Promise<string | null> => {
-    try {
-      // Convert base64 to Blob
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
-      const file = new File([blob], `image-${Date.now()}.png`, { type: blob.type || 'image/png' });
-
-      const formData = new FormData();
-      formData.append('image', file);
-      formData.append('pageIndex', String(pageIndex));
-
-      const response = await api.post(`/books/${bookId}/page-image`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      if (response.data.success) {
-        const imageData = response.data.data?.image || response.data.data;
-        return imageData?.url || response.data.data?.imageUrl || null;
-      }
-      return null;
-    } catch (err) {
-      console.error('Failed to upload base64 image:', err);
-      return null;
-    }
-  };
-
   const saveLayout = async (isAutoSave = false) => {
     if (!book) return;
 
     setSaving(true);
     try {
-      // First, upload any base64 images to the server so they get proper URLs.
-      // This prevents payload size issues and ensures images persist.
-      let updatedPages = [...pages];
-      let hadBase64Uploads = false;
-
-      for (let pi = 0; pi < updatedPages.length; pi++) {
-        const pageImages = updatedPages[pi].images || [];
-        for (let ii = 0; ii < pageImages.length; ii++) {
-          const img = pageImages[ii];
-          if (img.url && img.url.startsWith('data:')) {
-            const serverUrl = await uploadBase64Image(img.url, pi);
-            if (serverUrl) {
-              pageImages[ii] = { ...img, url: serverUrl };
-              hadBase64Uploads = true;
-            }
-          }
-        }
-      }
-
-      // If we uploaded base64 images, update local state so they have server URLs now
-      if (hadBase64Uploads) {
-        setPages(updatedPages);
-      }
-
-      const pagesForSave = updatedPages.map(page => ({
+      const pagesForSave = pages.map(page => ({
         ...page,
         images: (page.images || []).map(img => ({
           id: img.id,
@@ -1298,7 +1247,7 @@ export default function BookLayoutPage() {
           textWrap: img.textWrap,
           flipH: img.flipH,
           flipV: img.flipV,
-        })).filter(img => img.url && !img.url.startsWith('data:')), // Only save server URLs
+        })).filter(img => img.url), // Keep all image URLs (including base64)
       }));
 
       const response = await api.put(`/books/${bookId}`, {
