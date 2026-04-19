@@ -2704,24 +2704,17 @@ export default function BookLayoutPage() {
             onMouseUp={(e) => handleSwipeEnd(e.clientX, e.clientY)}
           >
 
-          {/* react-pageflip book — dimensions driven by selected page size */}
-          <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden" style={{ width: '100%', padding: '8px' }}>
-            <div style={{
-              width: `min(${pageDimensions.pageW * 2}px, 100%)`,
-              height: `min(${pageDimensions.pageH}px, 100%)`,
-              position: 'relative',
-              flexShrink: 0,
-            }}>
+          {/* react-pageflip book — aspect ratio from selected page size, no remount */}
+          <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden" style={{ width: '100%' }}>
             <HTMLFlipBook
-              key={`flipbook-${settings.pageSize}-${settings.customPageSize?.width}-${settings.customPageSize?.height}`}
               ref={flipBookRef}
               width={pageDimensions.pageW}
               height={pageDimensions.pageH}
               size="stretch"
-              minWidth={Math.round(pageDimensions.pageW * 0.4)}
+              minWidth={Math.round(pageDimensions.pageW * 0.5)}
               maxWidth={Math.round(pageDimensions.pageW * 1.2)}
-              minHeight={Math.round(pageDimensions.pageH * 0.4)}
-              maxHeight={Math.round(pageDimensions.pageH * 1.2)}
+              minHeight={Math.round(pageDimensions.pageH * 0.5)}
+              maxHeight={Math.round(pageDimensions.pageH * 1.1)}
               maxShadowOpacity={0.5}
               showCover={true}
               mobileScrollSupport={false}
@@ -2870,7 +2863,6 @@ export default function BookLayoutPage() {
                 </FlipPage>
               )}
             </HTMLFlipBook>
-            </div>{/* end page-size constrained wrapper */}
           </div>{/* end centering flex wrapper */}
 
           {/* Book reflection effect */}

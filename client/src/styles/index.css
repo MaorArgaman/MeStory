@@ -4,6 +4,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==================== BOOK FLIP CENTERING ==================== */
+/* react-pageflip takes over the DOM so we center via CSS, not JSX wrappers */
+.book-flip {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+.book-flip .stf__parent {
+  margin: 0 auto !important;
+}
+
 /* ==================== COSMIC ANIMATIONS ==================== */
 
 @keyframes float-stars {
