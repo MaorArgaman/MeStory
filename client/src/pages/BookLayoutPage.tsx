@@ -2937,9 +2937,9 @@ export default function BookLayoutPage() {
               usePortrait={false}
               autoSize={true}
               clickEventForward={true}
-              useMouseEvents={false}
-              swipeDistance={30}
-              showPageCorners={true}
+              useMouseEvents={true}
+              swipeDistance={200}
+              showPageCorners={false}
               disableFlipByClick={true}
               startPage={initialFlipPage}
               startZIndex={0}
