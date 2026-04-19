@@ -1,6 +1,5 @@
 import { randomUUID } from 'crypto';
 import { Response } from 'express';
-import { waitUntil } from '@vercel/functions';
 import { Book } from '../models/Book';
 import { User } from '../models/User';
 
