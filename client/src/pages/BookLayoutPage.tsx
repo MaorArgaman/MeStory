@@ -1273,12 +1273,26 @@ export default function BookLayoutPage() {
       const formData = new FormData();
       formData.append('image', file);
       formData.append('pageIndex', String(pageIndex));
-      // Do NOT override Content-Type — Axios detects FormData and lets the browser
-      // set "multipart/form-data; boundary=..." automatically.
-      const response = await api.post(`/books/${bookId}/page-image`, formData);
-      if (response.data.success) {
-        const d = response.data.data?.image || response.data.data;
-        return d?.url || response.data.data?.imageUrl || null;
+
+      // Use native fetch (not Axios) so the browser sets multipart/form-data
+      // with boundary automatically — Axios's default Content-Type: application/json
+      // would otherwise prevent multer from parsing the file on the server.
+      const serverBase = import.meta.env.VITE_API_URL ||
+        (import.meta.env.PROD
+          ? 'https://me-story-server-7wdx.vercel.app/api'
+          : 'http://localhost:5001/api');
+      const token = localStorage.getItem('token');
+      const fetchRes = await fetch(`${serverBase}/books/${bookId}/page-image`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        credentials: 'include',
+        body: formData,
+      });
+      if (!fetchRes.ok) return null;
+      const json = await fetchRes.json();
+      if (json.success) {
+        const d = json.data?.image || json.data;
+        return d?.url || json.data?.imageUrl || null;
       }
       return null;
     } catch {

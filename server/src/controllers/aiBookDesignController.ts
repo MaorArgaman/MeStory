@@ -1355,7 +1355,7 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       maxInteriorImages = 5,
     } = req.body;
 
-    // Validate book ID
+    // Validate book ID — pure CPU check, no I/O, safe to do before responding
     if (!isValidUUID(bookId)) {
       res.status(400).json({
         success: false,
@@ -1364,32 +1364,11 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    // Find book with all data
-    const book = await Book.findById(bookId);
-    if (!book) {
-      console.error(`[premiumDesignWizard] Book not found — bookId=${bookId} userId=${req.user.id}`);
-      res.status(404).json({
-        success: false,
-        error: 'Book not found',
-        bookId,
-      });
-      return;
-    }
-
-    // Ensure user owns this book
-    if (book.author !== req.user.id) {
-      console.error(`[premiumDesignWizard] Permission denied — book.author=${book.author} userId=${req.user.id}`);
-      res.status(403).json({
-        success: false,
-        error: 'You do not have permission to design this book',
-      });
-      return;
-    }
-
-    // Pre-generate job ID so we can respond 202 before any Supabase round-trips
+    // Pre-generate job ID and respond 202 IMMEDIATELY — before any Supabase/DB I/O.
+    // Book lookup, ownership check, enqueue, and all heavy work happen in the background
+    // IIFE below so we never hit Vercel's 60s request timeout.
     const jobId = randomUUID();
-
-    // Return the job ID to the client immediately — do NOT await Supabase before this
+    const userId = req.user.id;
     res.status(202).json({ success: true, data: { jobId, status: 'pending' } });
 
     // All Supabase / heavy work runs after the response is sent
@@ -1405,12 +1384,23 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       ...(generateInteriorImages ? ['מנתח מיקומי תמונות...', 'מייצר איורים פנימיים...'] : []),
     ];
 
-    // Fire-and-forget: enqueue job in Supabase, then start background work
+    // Fire-and-forget: all DB/AI work runs after the 202 response is sent
     (async () => {
+      // Fetch the book (moved here so it doesn't block the HTTP response)
+      const book = await Book.findById(bookId);
+      if (!book) {
+        console.error(`[premiumDesignWizard] Book not found in background — bookId=${bookId}`);
+        return;
+      }
+      if (book.author !== userId) {
+        console.error(`[premiumDesignWizard] Permission denied in background — book.author=${book.author} userId=${userId}`);
+        return;
+      }
+
       try {
         await enqueueJob({
           id: jobId,
-          userId: req.user!.id,
+          userId,
           bookId,
           type: 'design_generation',
           input: { generateCoverImages, generateInteriorImages, maxInteriorImages },
@@ -1420,7 +1410,7 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
         return; // Can't proceed without a job row
       }
 
-      // Mark book as in-progress (best-effort — don't let this block the design job)
+      // Mark book as in-progress (best-effort)
       Book.findByIdAndUpdate(bookId, {
         aiDesignState: {
           status: 'analyzing',
