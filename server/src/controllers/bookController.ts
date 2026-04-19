@@ -3211,7 +3211,6 @@ export const uploadPageImage = async (req: AuthRequest, res: Response): Promise<
     }
 
     const { id } = req.params;
-    const { pageIndex, x, y, width, height, rotation } = req.body;
 
     // Validate UUID
     if (!isValidUUID(id)) {
@@ -3222,62 +3221,31 @@ export const uploadPageImage = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    // Validate pageIndex
-    if (pageIndex === undefined || pageIndex < 0) {
-      res.status(400).json({
-        success: false,
-        error: 'Valid page index is required',
-      });
-      return;
-    }
-
-    // Find book
-    const book = await Book.findById(id);
-    if (!book) {
-      res.status(404).json({
-        success: false,
-        error: 'Book not found',
-      });
-      return;
-    }
-
-    // Ensure user owns this book
-    if (!canEditBook(book, req.user.id)) {
-      res.status(403).json({
-        success: false,
-        error: 'You do not have permission to update this book',
-      });
-      return;
-    }
-
-    // Check if running in Vercel serverless environment
+    // Convert the uploaded file to a URL.
+    // NOTE: We intentionally skip Book.findById / ownership check here — the user
+    // is already authenticated via JWT, and the image URL is only useful to the
+    // client that uploaded it. The image gets persisted to the book via the
+    // normal PUT /api/books/:id save flow, so no separate DB write is needed here.
     const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
 
     let imageUrl: string;
 
     if (isVercel && req.file.buffer) {
-      // On Vercel: convert to base64 data URL for storage in database
+      // On Vercel: return as base64 data URL (no writable filesystem)
       const mimeType = req.file.mimetype || 'image/jpeg';
       const base64Data = req.file.buffer.toString('base64');
       imageUrl = `data:${mimeType};base64,${base64Data}`;
     } else if (req.file.filename) {
-      // On local: use file path
       imageUrl = `/uploads/${req.file.filename}`;
     } else {
-      res.status(400).json({
-        success: false,
-        error: 'Invalid file upload',
-      });
+      res.status(400).json({ success: false, error: 'Invalid file upload' });
       return;
     }
 
-    // Initialize pageImages array if it doesn't exist
-    const pageImages = book.pageImages || [];
-
-    // Create page image entry
+    const { pageIndex, x, y, width, height, rotation } = req.body;
     const pageImage = {
-      id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      pageIndex: parseInt(pageIndex, 10),
+      id: crypto.randomUUID(),
+      pageIndex: parseInt(pageIndex, 10) || 0,
       url: imageUrl,
       x: parseFloat(x) || 10,
       y: parseFloat(y) || 10,
@@ -3288,18 +3256,10 @@ export const uploadPageImage = async (req: AuthRequest, res: Response): Promise<
       createdAt: new Date(),
     };
 
-    pageImages.push(pageImage as any);
-    await Book.findByIdAndUpdate(id, { pageImages });
-
-    // Get the saved image
-    const savedImage = pageImage;
-
     res.status(201).json({
       success: true,
       message: 'Page image uploaded successfully',
-      data: {
-        image: savedImage,
-      },
+      data: { image: pageImage },
     });
   } catch (error: any) {
     console.error('Upload page image error:', error);
