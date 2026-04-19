@@ -1507,12 +1507,27 @@ export default function BookLayoutPage() {
     loadGoogleFonts(newSettings);
     setShowTemplateGallery(false);
 
+    // Remap existing page images to the new template's placeholder positions
+    // so images don't disappear when switching templates
+    const newPlaceholders = (newSettings.imagePlaceholders || []);
+    const remappedPages = pages.map(page => {
+      const existingImages = (page.images || []).filter(img => img.url);
+      if (existingImages.length === 0 || newPlaceholders.length === 0) return page;
+      const remapped = existingImages.map((img, idx) => {
+        const target = newPlaceholders[idx];
+        if (!target) return img;
+        return { ...img, x: target.x, y: target.y, width: target.width, height: target.height };
+      });
+      return { ...page, images: remapped };
+    });
+    setPages(remappedPages);
+
     // Save immediately with the new settings
     if (book) {
       setSaving(true);
       try {
         // Preserve image URLs (including base64) so images persist across reloads
-        const pagesForSave = pages.map(page => ({
+        const pagesForSave = remappedPages.map(page => ({
           ...page,
           images: (page.images || []).map(img => ({
             id: img.id,
@@ -4422,13 +4437,20 @@ function PageRenderer({
   const [containerWidth, setContainerWidth] = useState(0);
   useEffect(() => {
     if (!containerRef.current) return;
+    let rafId: number;
     const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setContainerWidth(entry.contentRect.width);
-      }
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        for (const entry of entries) {
+          setContainerWidth(entry.contentRect.width);
+        }
+      });
     });
     observer.observe(containerRef.current);
-    return () => observer.disconnect();
+    return () => {
+      cancelAnimationFrame(rafId);
+      observer.disconnect();
+    };
   }, []);
 
   // Scale proportionally: 350px container = full size, smaller = proportionally smaller
