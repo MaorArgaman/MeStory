@@ -4634,6 +4634,7 @@ function PageRenderer({
   // Scale font size and margins based on actual container width — reactive to resize/rotation.
   // Pages render at ~200-350px wide on small screens, so template sizes need scaling.
   const [containerWidth, setContainerWidth] = useState(0);
+  const lastWidthRef = useRef(0);
   useEffect(() => {
     if (!containerRef.current) return;
     let rafId: number;
@@ -4641,7 +4642,13 @@ function PageRenderer({
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
         for (const entry of entries) {
-          setContainerWidth(entry.contentRect.width);
+          // Only update if width changed by more than 10px to prevent
+          // resize → re-render → font change → reflow → resize loop
+          const w = Math.round(entry.contentRect.width);
+          if (Math.abs(w - lastWidthRef.current) > 10) {
+            lastWidthRef.current = w;
+            setContainerWidth(w);
+          }
         }
       });
     });
