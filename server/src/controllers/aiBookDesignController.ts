@@ -1431,36 +1431,42 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       );
 
       // Convert design to book state format
-      const designState = convertPremiumDesignToBookState(premiumDesign);
+      // Safe access helpers
+      const typo = premiumDesign.typography || {} as any;
+      const lay = premiumDesign.layout || {} as any;
+      const cov = premiumDesign.cover || {} as any;
+      const covFront = cov.front || {} as any;
+      const covBack = cov.back || {} as any;
+      const covSpine = cov.spine || {} as any;
+      const colors = typo.colors || {} as any;
+      const margins = lay.margins || { top: 35, bottom: 30, inner: 30, outer: 25 };
+      const pageNum = lay.pageNumbering || { enabled: true, position: 'bottom-center' };
+      const headers = lay.headers || { enabled: true };
+      const footers = lay.footers || { enabled: false };
 
-      // Build page layout
+      // Build page layout with safe access
       const newPageLayout = {
-        bodyFont: premiumDesign.typography.bodyFont,
-        fontSize: premiumDesign.typography.fontSize,
-        lineHeight: premiumDesign.typography.lineHeight,
-        pageSize: premiumDesign.layout.pageSize as 'A4' | 'A5' | 'Letter' | 'Custom',
-        margins: {
-          top: premiumDesign.layout.margins.top,
-          bottom: premiumDesign.layout.margins.bottom,
-          left: premiumDesign.layout.margins.inner,
-          right: premiumDesign.layout.margins.outer,
-        },
+        bodyFont: typo.bodyFont || 'David Libre',
+        fontSize: typo.fontSize || 12,
+        lineHeight: typo.lineHeight || 1.7,
+        pageSize: (lay.pageSize || 'A5') as 'A4' | 'A5' | 'Letter' | 'Custom',
+        margins: { top: margins.top || 35, bottom: margins.bottom || 30, left: margins.inner || 30, right: margins.outer || 25 },
         includeTableOfContents: true,
-        tableOfContentsStyle: premiumDesign.tableOfContents.style,
+        tableOfContentsStyle: premiumDesign.tableOfContents?.style || 'elegant',
         headerFooter: {
-          includeHeader: premiumDesign.layout.headers.enabled,
-          includeFooter: premiumDesign.layout.footers.enabled,
-          includePageNumbers: premiumDesign.layout.pageNumbering.enabled,
-          pageNumberPosition: premiumDesign.layout.pageNumbering.position.includes('bottom') ? 'bottom' : 'top' as 'top' | 'bottom' | 'none',
+          includeHeader: headers.enabled ?? true,
+          includeFooter: footers.enabled ?? false,
+          includePageNumbers: pageNum.enabled ?? true,
+          pageNumberPosition: (pageNum.position || 'bottom-center').includes('bottom') ? 'bottom' : 'top' as 'top' | 'bottom' | 'none',
         },
-        textColor: premiumDesign.typography.colors.text,
-        titleFont: premiumDesign.typography.titleFont,
-        headerFont: premiumDesign.typography.headingFont,
-        accentColor: premiumDesign.typography.colors.accent,
-        backgroundColor: premiumDesign.layout.background.primaryColor,
-        columns: premiumDesign.layout.columns,
-        paragraphIndent: premiumDesign.typography.formatting.firstParagraphIndent ? 20 : 0,
-        paragraphSpacing: premiumDesign.typography.paragraphSpacing,
+        textColor: colors.text || '#2c2c2c',
+        titleFont: typo.titleFont || 'Suez One',
+        headerFont: typo.headingFont || 'Secular One',
+        accentColor: colors.accent || '#8b6914',
+        backgroundColor: lay.background?.primaryColor || '#fffdf7',
+        columns: lay.columns || 1,
+        paragraphIndent: typo.formatting?.firstParagraphIndent ? 20 : 0,
+        paragraphSpacing: typo.paragraphSpacing || 12,
         settings: {
           premiumDesign: {
             theme: premiumDesign.theme,
@@ -1468,80 +1474,58 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
             tableOfContents: premiumDesign.tableOfContents,
             chapterDecoration: premiumDesign.chapterDecoration,
             layout: premiumDesign.layout,
-            imagePlacements: premiumDesign.imagePlacements,
+            imagePlacements: premiumDesign.imagePlacements || [],
             overallStyle: premiumDesign.overallStyle,
             qualityScore: premiumDesign.qualityScore,
           },
         },
       };
 
-      // Build cover design
+      // Build cover design with safe access
       const authorName = await getAuthorName(book.author);
       const newCoverDesign = {
         front: {
-          type: premiumDesign.covers.frontImageUrl ? 'ai-generated' : 'gradient' as 'ai-generated' | 'uploaded' | 'gradient' | 'solid',
-          imageUrl: premiumDesign.covers.frontImageUrl,
-          backgroundColor: premiumDesign.cover.front.colorPalette[0] || '#1a1a2e',
-          gradientColors: premiumDesign.cover.front.colorPalette,
+          type: 'gradient' as 'ai-generated' | 'uploaded' | 'gradient' | 'solid',
+          backgroundColor: covFront.colorPalette?.[0] || covFront.backgroundColor || '#1a1a2e',
+          gradientColors: covFront.colorPalette || [colors.accent || '#6366f1'],
           title: {
             text: book.title,
-            font: premiumDesign.cover.front.title.font,
-            size: premiumDesign.cover.front.title.size,
-            color: premiumDesign.cover.front.title.color,
-            position: premiumDesign.cover.front.title.position,
+            font: covFront.title?.font || typo.titleFont || 'Suez One',
+            size: covFront.title?.size || 48,
+            color: covFront.title?.color || '#ffffff',
+            position: covFront.title?.position || 'center',
           },
-          subtitle: premiumDesign.cover.front.subtitle,
           authorName: {
             text: authorName,
-            font: premiumDesign.cover.front.author.font,
-            size: premiumDesign.cover.front.author.size,
-            color: premiumDesign.cover.front.author.color,
+            font: covFront.author?.font || typo.bodyFont || 'David Libre',
+            size: covFront.author?.size || 18,
+            color: covFront.author?.color || '#ffffff',
           },
         },
         back: {
-          imageUrl: premiumDesign.covers.backImageUrl,
-          backgroundColor: premiumDesign.cover.back.backgroundColor,
+          backgroundColor: covBack.backgroundColor || '#1a1a2e',
           synopsis: book.synopsis || book.description || '',
-          authorBio: premiumDesign.cover.back.authorBio?.text,
         },
         spine: {
           width: Math.ceil((book.statistics?.pageCount || 100) / 10) + 5,
           title: book.title,
           author: authorName,
-          backgroundColor: premiumDesign.cover.spine.backgroundColor,
+          backgroundColor: covSpine.backgroundColor || colors.accent || '#6366f1',
         },
       };
 
-      // Build page images
-      const newPageImages = premiumDesign.generatedImages.map((img, idx) => ({
-        _id: `premium-${Date.now()}-${idx}`,
-        pageIndex: img.chapterIndex * 2 + 1,
-        url: img.imageUrl,
-        x: 10,
-        y: img.position === 'chapter-start' ? 10 : img.position === 'chapter-end' ? 60 : 35,
-        width: 80,
-        height: 40,
-        rotation: 0,
-        isAiGenerated: true,
-        prompt: img.prompt,
-        createdAt: new Date().toISOString(),
-      }));
-
-      const allPageImages = [...(book.pageImages || []), ...newPageImages];
-
-      // Save everything to the database
+      // Save to database (no images to process — fast design skips image gen)
       const updatedBook = await Book.findByIdAndUpdate(
         bookId,
         {
           aiDesignState: {
-            ...designState,
             status: 'completed',
             jobId,
             completedAt: new Date().toISOString(),
+            design: premiumDesign,
           },
           pageLayout: newPageLayout,
           coverDesign: newCoverDesign,
-          pageImages: allPageImages,
         },
         { new: true }
       );
