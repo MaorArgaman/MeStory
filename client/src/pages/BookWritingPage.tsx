@@ -314,11 +314,26 @@ export default function BookWritingPage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [saved, t]);
 
+  // Sanitize chapter titles that were saved as raw i18n keys (legacy data issue).
+  // Real i18n keys are lowercase with underscores; user titles typically aren't.
+  const sanitizeBookData = (bookData: Book): Book => {
+    const i18nKeyPattern = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_.]*)+$/;
+    if (!bookData.chapters) return bookData;
+    return {
+      ...bookData,
+      chapters: bookData.chapters.map((ch) => {
+        if (!i18nKeyPattern.test(ch.title)) return ch;
+        const translated = t(ch.title);
+        return { ...ch, title: translated !== ch.title ? translated : ch.title };
+      }),
+    };
+  };
+
   const loadBook = async () => {
     try {
       const response = await api.get(`/books/${bookId}`);
       if (response.data.success) {
-        const bookData = response.data.data.book;
+        const bookData = sanitizeBookData(response.data.data.book);
         setBook(bookData);
 
         // If book has chapters, load the first one
@@ -663,7 +678,7 @@ export default function BookWritingPage() {
   };
 
   if (loading) {
-    return <BookLoader variant="fullscreen" message="טוען את הספר..." />;
+    return <BookLoader variant="fullscreen" />;
   }
 
   if (!book) {

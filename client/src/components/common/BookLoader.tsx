@@ -11,6 +11,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface BookLoaderProps {
   variant?: 'fullscreen' | 'overlay' | 'inline';
@@ -252,6 +253,8 @@ export default function BookLoader({
   showLogo,
   className = '',
 }: BookLoaderProps) {
+  const { language } = useLanguage();
+  const isHebrew = language === 'he';
   const isFullOrOverlay = variant === 'fullscreen' || variant === 'overlay';
   const autoShowLogo = showLogo !== undefined ? showLogo : isFullOrOverlay;
 
@@ -279,10 +282,13 @@ export default function BookLoader({
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-2xl font-bold gradient-gold mb-2 tracking-widest"
-          style={{ fontFamily: "'Cinzel', serif" }}
+          className="flex flex-col items-center gap-1 mb-2"
         >
-          MeStory
+          <img
+            src="/img/new/logo-mestory-large.png"
+            alt="MeStory"
+            className="h-20 w-auto object-contain nav-logo-glow"
+          />
         </motion.div>
       )}
 
@@ -302,7 +308,7 @@ export default function BookLoader({
         transition={{ delay: 0.25, duration: 0.4 }}
         className="text-memorial-gold/80 text-sm tracking-wide font-light mt-1"
       >
-        {message ?? 'טוען...'}
+        {message ?? (isHebrew ? 'טוען...' : 'Loading...')}
       </motion.p>
 
       {/* Animated progress dots */}

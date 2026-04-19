@@ -5,5 +5,5 @@ import BookLoader from './common/BookLoader';
  * Uses the BookLoader fullscreen variant with page-flip animation.
  */
 export default function LoadingScreen() {
-  return <BookLoader variant="fullscreen" message="טוען..." />;
+  return <BookLoader variant="fullscreen" />;
 }

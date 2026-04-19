@@ -2266,7 +2266,7 @@ export default function BookLayoutPage() {
   }, [currentSpread, selectedPageIndex, isBookRTL]);
 
   if (loading) {
-    return <BookLoader variant="fullscreen" message="טוען את הספר..." />;
+    return <BookLoader variant="fullscreen" />;
   }
 
   if (!book) return null;

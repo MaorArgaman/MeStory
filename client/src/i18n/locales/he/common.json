@@ -707,7 +707,11 @@
       "bullet_list": "רשימת תבליטים",
       "numbered_list": "רשימה ממוספרת",
       "quote": "ציטוט",
-      "horizontal_line": "קו אופקי"
+      "horizontal_line": "קו אופקי",
+      "mode_advanced": "מתקדם",
+      "mode_simple": "פשוט",
+      "advanced_mode": "עבור למצב מתקדם",
+      "simple_mode": "עבור למצב פשוט"
     },
     "empty": {
       "select_chapter": "בחר פרק או צור חדש — ובואו נתחיל לכתוב יחד",

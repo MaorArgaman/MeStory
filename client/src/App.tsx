@@ -160,7 +160,7 @@ function AppContent() {
         <ErrorBoundary>
           <LanguageRedirect>
             {/* Suspense wraps lazy-loaded pages — BookLoader is shown while the chunk downloads */}
-            <Suspense fallback={<BookLoader variant="fullscreen" message="טוען..." />}>
+            <Suspense fallback={<BookLoader variant="fullscreen" />}>
             <Routes location={location} key={location.pathname}>
               {/* Root path - LanguageRedirect handles redirecting to /en or /he */}
               <Route path="/" element={<RedirectIfAuth><LandingPage /></RedirectIfAuth>} />

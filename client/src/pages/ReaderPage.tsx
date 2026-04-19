@@ -584,7 +584,7 @@ export default function ReaderPage() {
   };
 
   if (loading) {
-    return <BookLoader variant="fullscreen" message="טוען ספר..." />;
+    return <BookLoader variant="fullscreen" />;
   }
 
   if (!book || !currentChapter) {

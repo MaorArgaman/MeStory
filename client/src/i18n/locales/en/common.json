@@ -642,7 +642,11 @@
       "bullet_list": "Bullet List",
       "numbered_list": "Numbered List",
       "quote": "Quote",
-      "horizontal_line": "Horizontal Line"
+      "horizontal_line": "Horizontal Line",
+      "mode_advanced": "Advanced",
+      "mode_simple": "Simple",
+      "advanced_mode": "Switch to Advanced mode",
+      "simple_mode": "Switch to Simple mode"
     },
     "empty": {
       "select_chapter": "Select or create a chapter to start writing",
