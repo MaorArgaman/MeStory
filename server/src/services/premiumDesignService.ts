@@ -1509,119 +1509,15 @@ export async function generateFastDesign(
   onProgress?: (progress: PremiumDesignProgress) => void,
 ): Promise<PremiumCompleteDesign> {
   const isHebrew = input.language === 'he' || /[\u0590-\u05FF]/.test(input.title);
+  const hebrewFonts = 'David Libre, Heebo, Secular One, Suez One, Rubik, Frank Ruhl Libre';
 
-  if (onProgress) onProgress({ currentStep: 1, totalSteps: 2, stepName: 'מעצב את הספר...', percentage: 10 });
+  if (onProgress) onProgress({ currentStep: 1, totalSteps: 2, stepName: 'מעצב...', percentage: 10 });
 
-  const sampleContent = input.chapters
-    .map(ch => `[${ch.title}]: ${ch.content.slice(0, 800)}`)
-    .slice(0, 5)
-    .join('\n\n');
+  const prompt = `Design a book. Title: "${input.title}", Genre: ${input.genre}, Language: ${isHebrew ? 'Hebrew' : 'English'}.
+Synopsis: ${(input.synopsis || '').slice(0, 300)}
 
-  const prompt = `You are an expert book designer. Generate a COMPLETE professional book design for this book in a SINGLE response.
-
-BOOK: "${input.title}" by ${input.authorName}
-Genre: ${input.genre} | Language: ${isHebrew ? 'Hebrew (RTL)' : 'English'}
-Synopsis: ${(input.synopsis || '').slice(0, 500)}
-Sample: ${sampleContent.slice(0, 2000)}
-
-Generate a COMPLETE design as JSON. For Hebrew books, use Hebrew-compatible fonts (David Libre, Heebo, Secular One, Suez One, Amatic SC, Rubik, Frank Ruhl Libre, Noto Sans Hebrew).
-
-{
-  "theme": {
-    "primaryTheme": "core theme in one sentence",
-    "mood": "emotional mood word",
-    "atmosphere": "visual atmosphere",
-    "emotionalTone": "reader feeling",
-    "visualStyle": "design style (minimalist/ornate/modern/vintage/artistic)",
-    "colorMood": "color feeling description",
-    "era": "time period feel",
-    "setting": "environment type",
-    "keywords": ["5-8 visual keywords"]
-  },
-  "typography": {
-    "bodyFont": "font name",
-    "headingFont": "font name",
-    "titleFont": "font name",
-    "accentFont": "font name",
-    "fontSize": 12,
-    "lineHeight": 1.7,
-    "chapterTitleSize": 28,
-    "sectionTitleSize": 18,
-    "pageNumberSize": 10,
-    "paragraphSpacing": 12,
-    "colors": {
-      "text": "#hex (rich, not plain black)",
-      "heading": "#hex (bold, distinctive)",
-      "accent": "#hex (warm gold/complementary)",
-      "highlight": "#hex",
-      "quote": "#hex",
-      "pageNumber": "#hex (subtle)"
-    },
-    "formatting": {
-      "dropCaps": "none|simple|decorated|boxed",
-      "quoteStyle": "italic|indented|bordered|highlighted",
-      "emphasis": "bold|italic|color|underline",
-      "firstParagraphIndent": false
-    }
-  },
-  "layout": {
-    "pageSize": "A5",
-    "margins": { "top": 35, "bottom": 30, "inner": 30, "outer": 25 },
-    "columns": 1,
-    "chapterStartStyle": "new-page-centered",
-    "pageNumbering": { "enabled": true, "position": "bottom-center", "style": "numeric", "startFrom": 1 },
-    "headers": { "enabled": true, "style": "chapter-title", "separator": "ornament" },
-    "footers": { "enabled": false },
-    "dropCaps": { "enabled": true, "style": "simple", "lines": 3 },
-    "sectionBreaks": { "style": "ornament", "ornament": "✦" },
-    "background": { "style": "clean", "primaryColor": "#fffdf7", "secondaryColor": "#faf6ee" }
-  },
-  "tableOfContents": {
-    "style": "elegant",
-    "title": { "text": "${isHebrew ? 'תוכן עניינים' : 'Contents'}", "font": "heading font", "size": 24, "color": "#hex" },
-    "entryStyle": { "font": "body font", "size": 12, "color": "#hex", "pageNumberFormat": "dotted-line" },
-    "decorative": true,
-    "dividerStyle": "ornament"
-  },
-  "chapterDecoration": {
-    "headerStyle": "centered",
-    "numberStyle": "${isHebrew ? 'word' : 'numeric'}",
-    "numberPosition": "above-title",
-    "titleDecoration": "ornament",
-    "openingOrnament": "✦",
-    "closingOrnament": "✦",
-    "spacing": { "beforeTitle": 40, "afterTitle": 20, "beforeContent": 15 },
-    "backgroundColor": null,
-    "borderTop": null,
-    "borderBottom": null
-  },
-  "cover": {
-    "front": {
-      "imagePrompt": "detailed 200+ char image prompt for stunning cover",
-      "composition": "centered",
-      "title": { "text": "${input.title}", "font": "title font", "size": 48, "color": "#fff", "position": "center" },
-      "author": { "text": "${input.authorName}", "font": "body font", "size": 18, "color": "#fff" },
-      "colorPalette": ["#hex1", "#hex2", "#hex3"],
-      "backgroundColor": "#1a1a2e"
-    },
-    "back": {
-      "synopsis": { "text": "", "font": "body font", "size": 14, "color": "#fff" },
-      "author": { "text": "${input.authorName}", "font": "body font", "size": 16, "color": "#fff" },
-      "backgroundColor": "#1a1a2e"
-    },
-    "spine": {
-      "title": "${input.title}",
-      "author": "${input.authorName}",
-      "font": "body font",
-      "color": "#fff",
-      "backgroundColor": "#accent color"
-    },
-    "style": { "genre": "${input.genre}", "mood": "from theme", "visualTheme": "from theme" },
-    "reasoning": "one sentence about the cover design approach"
-  }
-}
-
-IMPORTANT: Return ONLY valid JSON, no markdown.`;
+Return JSON only:
+{"theme":{"primaryTheme":"...","mood":"...","visualStyle":"...","colorMood":"...","keywords":["..."]},"typography":{"bodyFont":"${isHebrew ? 'David Libre' : 'Merriweather'}","headingFont":"${isHebrew ? 'Secular One' : 'Playfair Display'}","titleFont":"${isHebrew ? 'Suez One' : 'Playfair Display'}","colors":{"text":"#2c2c2c","heading":"#1a1a2e","accent":"#8b6914"}},"cover":{"front":{"colorPalette":["#hex1","#hex2","#hex3"],"backgroundColor":"#1a1a2e"},"spine":{"backgroundColor":"#accent"},"reasoning":"..."}${isHebrew ? `\nUse ONLY these Hebrew fonts: ${hebrewFonts}` : ''}}`;
 
   try {
     const result = await generateWithBreaker(prompt);

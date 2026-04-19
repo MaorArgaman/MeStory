@@ -310,7 +310,7 @@ export default function AICompleteDesignWizard({
         generateCoverImages,
         generateInteriorImages,
         maxInteriorImages: 5,
-      }, { timeout: 270000 }); // 270s timeout to match server maxDuration
+      }, { timeout: 55000 }); // 55s timeout — Vercel Hobby plan limits functions to 60s
 
       if (!designResponse.data.success) {
         throw new Error(designResponse.data.error || 'Failed to generate design');
