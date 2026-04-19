@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { TrendingUp, ChevronRight, Star, Eye, Flame } from 'lucide-react';
-import api from '../../services/api';
+import { getPromotions } from '../../services/promotionsCache';
 import GlassCard from '../ui/GlassCard';
 import OptimizedImage, { getBookCoverAlt } from '../ui/OptimizedImage';
 
@@ -44,25 +44,20 @@ export default function TrendingBooks({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchTrending = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get('/promotions/trending', {
-          params: { limit },
-        });
-
-        if (response.data.success) {
-          setBooks(response.data.data.books);
+    let cancelled = false;
+    setLoading(true);
+    getPromotions()
+      .then(data => {
+        if (!cancelled) setBooks(data.trending.slice(0, limit));
+      })
+      .catch(err => {
+        if (!cancelled) {
+          console.error('Failed to fetch trending books:', err);
+          setError('Failed to load trending books');
         }
-      } catch (err) {
-        console.error('Failed to fetch trending books:', err);
-        setError('Failed to load trending books');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTrending();
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [limit]);
 
   const getCoverUrl = (book: Book) => {

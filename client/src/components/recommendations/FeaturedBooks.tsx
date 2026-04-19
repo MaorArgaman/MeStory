@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Award, ChevronRight, Star, Crown } from 'lucide-react';
-import api from '../../services/api';
+import { getPromotions } from '../../services/promotionsCache';
 import GlassCard from '../ui/GlassCard';
 import OptimizedImage, { getBookCoverAlt } from '../ui/OptimizedImage';
 
@@ -45,25 +45,20 @@ export default function FeaturedBooks({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchFeatured = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get('/promotions/featured', {
-          params: { limit },
-        });
-
-        if (response.data.success) {
-          setBooks(response.data.data.books);
+    let cancelled = false;
+    setLoading(true);
+    getPromotions()
+      .then(data => {
+        if (!cancelled) setBooks(data.featured.slice(0, limit));
+      })
+      .catch(err => {
+        if (!cancelled) {
+          console.error('Failed to fetch featured books:', err);
+          setError('Failed to load featured books');
         }
-      } catch (err) {
-        console.error('Failed to fetch featured books:', err);
-        setError('Failed to load featured books');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFeatured();
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [limit]);
 
   const getCoverUrl = (book: Book) => {

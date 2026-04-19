@@ -30,12 +30,29 @@ export default defineConfig({
         // independently from app code. Each group ships as its own file and
         // won't bust the cache when we edit components.
         manualChunks: {
+          // Core framework — changes rarely, long-lived cache
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-query': ['@tanstack/react-query'],
           'vendor-motion': ['framer-motion'],
           'vendor-icons': ['lucide-react'],
           'vendor-i18n': ['i18next', 'react-i18next'],
           'vendor-forms': ['react-hot-toast'],
+          // Heavy feature libs — isolated so other pages don't pay their cost
+          'vendor-tiptap': [
+            '@tiptap/react',
+            '@tiptap/starter-kit',
+            '@tiptap/extension-underline',
+            '@tiptap/extension-color',
+            '@tiptap/extension-text-style',
+            '@tiptap/extension-highlight',
+            '@tiptap/extension-text-align',
+            '@tiptap/extension-character-count',
+            '@tiptap/extension-image',
+            '@tiptap/extension-bubble-menu',
+          ],
+          'vendor-charts': ['recharts'],
+          'vendor-socket': ['socket.io-client'],
+          'vendor-pageflip': ['react-pageflip'],
         },
       },
     },

@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { api } from '../services/api';
+import { useMyBooks, bookKeys } from '../hooks/useBooks';
 import { exportBookAsPdfAsync } from '../utils/asyncExport';
 import analytics from '../utils/analytics';
 import { Plus, Loader2, BookOpen, Edit, Upload, Mic, PenTool, MessageCircle, FileUp, Lightbulb, Sparkles } from 'lucide-react';
@@ -93,8 +95,6 @@ interface BookItem {
 }
 
 export default function DashboardPage() {
-  const [books, setBooks] = useState<BookItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showWizard, setShowWizard] = useState(false);
   const [showInterviewModal, setShowInterviewModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -115,27 +115,14 @@ export default function DashboardPage() {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const { showOnboarding, completeOnboarding } = useOnboarding(true);
+  const qc = useQueryClient();
 
-  useEffect(() => {
-    loadBooks();
-  }, []);
+  // React Query — cached for 5 min so returning to dashboard is instant
+  const { data: booksData, isLoading: loading } = useMyBooks();
+  const books: BookItem[] = booksData?.books || [];
 
-  const loadBooks = async () => {
-    try {
-      const response = await api.get('/books');
-      if (response.data.success) {
-        setBooks(response.data.data.books || []);
-      } else {
-        console.error('Failed to load books:', response.data.error);
-        toast.error(t('dashboard.messages.load_failed', 'Failed to load books'));
-      }
-    } catch (error: any) {
-      console.error('Failed to load books:', error);
-      toast.error(error.response?.data?.error || t('dashboard.messages.load_failed', 'Failed to load books'));
-    } finally {
-      setLoading(false);
-    }
-  };
+  // After any mutation that creates/modifies a book, invalidate the list cache
+  const invalidateBooks = () => qc.invalidateQueries({ queryKey: bookKeys.lists() });
 
   const openWizard = () => {
     setShowWizard(true);
@@ -147,6 +134,7 @@ export default function DashboardPage() {
 
   const handleBookCreated = (bookId: string) => {
     setShowWizard(false);
+    invalidateBooks(); // refresh book list when user returns to dashboard
     navigate(`/editor/${bookId}`);
   };
 
@@ -211,6 +199,7 @@ export default function DashboardPage() {
       if (response.data.success) {
         toast.success(t('dashboard.messages.upload_success'));
         setShowUploadModal(false);
+        invalidateBooks();
         navigate(`/editor/${response.data.data.book.id}`);
       }
     } catch (error: any) {
@@ -279,6 +268,7 @@ export default function DashboardPage() {
         toast.success(t('dashboard.messages.book_created'));
         setShowQuickCreateModal(false);
         setQuickTitle('');
+        invalidateBooks();
         navigate(`/editor/${response.data.data.id}`);
       }
     } catch (error: any) {
