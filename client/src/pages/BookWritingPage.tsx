@@ -26,6 +26,7 @@ import {
   Replace,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import analytics from '../utils/analytics';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
@@ -392,6 +393,7 @@ export default function BookWritingPage() {
         setBook(response.data.data.book);
         setSaved(true);
         setLastSavedAt(new Date());
+        analytics.bookSave(bookId!);
         retryCountRef.current = 0;
         // Clear backup on successful save
         try {

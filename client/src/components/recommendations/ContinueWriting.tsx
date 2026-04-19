@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { PenLine, Clock, ChevronRight, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import api from '../../services/api';
+import { getProgressDetails } from '../../services/progressDetailsCache';
 import GlassCard from '../ui/GlassCard';
 
 interface Book {
@@ -44,23 +44,27 @@ export default function ContinueWriting({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchDrafts = async () => {
       try {
         setLoading(true);
-        const response = await api.get('/recommendations/progress-details');
-
-        if (response.data.success) {
-          setDrafts(response.data.data.continueWriting || []);
+        const data = await getProgressDetails();
+        if (!cancelled) {
+          setDrafts(data.continueWriting || []);
         }
-      } catch (err) {
-        console.error('Failed to fetch writing progress:', err);
-        setError('Failed to load writing progress');
+      } catch (err: any) {
+        if (!cancelled) {
+          if (import.meta.env.DEV) console.error('Failed to fetch writing progress:', err);
+          setError('Failed to load writing progress');
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchDrafts();
+    return () => { cancelled = true; };
   }, []);
 
   const getCoverUrl = (book: Book) => {
@@ -181,6 +185,7 @@ export default function ContinueWriting({
                       <img
                         src={getCoverUrl(item.book)!}
                         alt={item.book.title}
+                        loading="lazy"
                         className="w-full h-full object-cover"
                       />
                     ) : (

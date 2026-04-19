@@ -269,7 +269,10 @@
       "historical_fiction": "Historical Fiction",
       "non_fiction": "Non-Fiction",
       "biography": "Biography",
+      "autobiography": "Autobiography",
       "self_help": "Self-Help",
+      "memorial": "Memorial",
+      "family": "Family Story",
       "other": "Other",
       "fallen_soldier": "In Memory of a Fallen Soldier",
       "life_story": "Life Story",
@@ -1248,7 +1251,11 @@
     "story_types": {
       "my-life-story": "My Life Story",
       "in-memory": "In Memory of a Loved One",
+      "fallen-soldier": "In Memory of a Fallen Soldier",
       "family-story": "Family Story",
+      "family-legacy": "Family Legacy",
+      "holocaust-survivor": "Holocaust Survivor Testimony",
+      "shared-memories": "Shared Memories",
       "personal-testimony": "Personal Testimony",
       "something-else": "Something Else"
     }

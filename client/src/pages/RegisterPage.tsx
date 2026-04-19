@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { Mail, Lock, User, Loader2, Eye, EyeOff, Sparkles, Ticket, Check, X } from 'lucide-react';
+import analytics from '../utils/analytics';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
@@ -92,6 +93,7 @@ export default function RegisterPage() {
 
     try {
       await register(name, email, password);
+      analytics.signup('email');
 
       // Apply coupon if valid
       if (couponValid?.valid && couponCode) {

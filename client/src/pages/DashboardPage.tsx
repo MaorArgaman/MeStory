@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { api } from '../services/api';
 import { exportBookAsPdfAsync } from '../utils/asyncExport';
+import analytics from '../utils/analytics';
 import { Plus, Loader2, BookOpen, Edit, Upload, Mic, PenTool, MessageCircle, FileUp, Lightbulb, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -161,6 +162,7 @@ export default function DashboardPage() {
           toast.loading(`${message} (${progress}%)`, { id: toastId });
         },
       });
+      analytics.bookExport(bookId);
       toast.success(t('dashboard.messages.export_success'), { id: toastId });
     } catch (error: any) {
       console.error('Failed to export book:', error);
@@ -641,7 +643,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-white line-clamp-1">{book.title}</h3>
-                    <p className="text-sm text-gray-400">{book.genre}</p>
+                    <p className="text-sm text-gray-400">{t(`dashboard.genres.${book.genre}`, { defaultValue: book.genre })}</p>
                   </div>
                 </div>
 

@@ -269,7 +269,10 @@
       "historical_fiction": "היסטורי בדיוני",
       "non_fiction": "עיון",
       "biography": "ביוגרפיה",
+      "autobiography": "אוטוביוגרפיה",
       "self_help": "עזרה עצמית",
+      "memorial": "הנצחה וזיכרון",
+      "family": "סיפור משפחתי",
       "other": "אחר",
       "fallen_soldier": "לזכר חייל/ת שנפל/ה",
       "life_story": "סיפור חיים",
@@ -1319,7 +1322,11 @@
     "story_types": {
       "my-life-story": "סיפור החיים שלי",
       "in-memory": "זיכרון לאדם אהוב",
+      "fallen-soldier": "לזכר חייל/ת שנפל/ה",
       "family-story": "סיפור משפחתי",
+      "family-legacy": "מורשת משפחתית",
+      "holocaust-survivor": "עדות ניצול שואה",
+      "shared-memories": "זיכרונות משותפים",
       "personal-testimony": "עדות אישית",
       "something-else": "משהו אחר"
     }

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { BookOpen, Clock, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import api from '../../services/api';
+import { getProgressDetails } from '../../services/progressDetailsCache';
 import GlassCard from '../ui/GlassCard';
 import OptimizedImage, { getBookCoverAlt } from '../ui/OptimizedImage';
 
@@ -46,23 +46,27 @@ export default function ContinueReading({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchProgress = async () => {
       try {
         setLoading(true);
-        const response = await api.get('/recommendations/progress-details');
-
-        if (response.data.success) {
-          setBooks(response.data.data.continueReading || []);
+        const data = await getProgressDetails();
+        if (!cancelled) {
+          setBooks(data.continueReading || []);
         }
-      } catch (err) {
-        console.error('Failed to fetch reading progress:', err);
-        setError('Failed to load reading progress');
+      } catch (err: any) {
+        if (!cancelled) {
+          if (import.meta.env.DEV) console.error('Failed to fetch reading progress:', err);
+          setError('Failed to load reading progress');
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchProgress();
+    return () => { cancelled = true; };
   }, []);
 
   const getCoverUrl = (book: Book) => {

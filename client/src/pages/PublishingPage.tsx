@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
+import analytics from '../utils/analytics';
 import BookLoader from '../components/common/BookLoader';
 import confetti from 'canvas-confetti';
 import {
@@ -189,6 +190,7 @@ export default function PublishingPage() {
           });
         }, 400);
 
+        analytics.bookPublish(bookId!, book?.genre || 'other');
         toast.success('Book published successfully!');
         setStep(4); // Congratulations step
       }

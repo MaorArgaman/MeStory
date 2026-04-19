@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { Sparkles, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
+import analytics from '../utils/analytics';
 import { motion, AnimatePresence } from 'framer-motion';
 // Legacy imports - keeping for fallback
 import _loginSideImageLegacy from '../assets/images/login-side-image.png';
@@ -42,6 +43,7 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
+      analytics.login('email');
       navigate('/dashboard');
     } catch (error: any) {
       // Error is already handled by axios interceptor

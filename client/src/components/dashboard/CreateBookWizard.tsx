@@ -10,11 +10,16 @@ import {
   ScrollText,
   PenLine,
   Loader2,
+  Star,
+  Shield,
+  Globe,
+  MessageSquare,
 } from 'lucide-react';
 import { api } from '../../services/api';
 import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton } from '../ui';
 import { applyTemplateToBook } from '../../services/templateApi';
+import analytics from '../../utils/analytics';
 
 interface StoryType {
   id: string;
@@ -40,11 +45,39 @@ const storyTypes: StoryType[] = [
     color: 'from-rose-500 to-pink-600',
   },
   {
+    id: 'fallen-soldier',
+    genre: 'fallen_soldier',
+    templateSlug: 'in-memory',
+    icon: Shield,
+    color: 'from-slate-500 to-slate-700',
+  },
+  {
     id: 'family-story',
     genre: 'family',
     templateSlug: 'family-roots',
     icon: Users,
     color: 'from-emerald-500 to-teal-600',
+  },
+  {
+    id: 'family-legacy',
+    genre: 'family_legacy',
+    templateSlug: 'family-roots',
+    icon: Globe,
+    color: 'from-green-500 to-emerald-700',
+  },
+  {
+    id: 'holocaust-survivor',
+    genre: 'holocaust_survivor',
+    templateSlug: 'my-life-story',
+    icon: Star,
+    color: 'from-yellow-600 to-amber-800',
+  },
+  {
+    id: 'shared-memories',
+    genre: 'shared_memories',
+    templateSlug: 'family-roots',
+    icon: MessageSquare,
+    color: 'from-sky-500 to-cyan-600',
   },
   {
     id: 'personal-testimony',
@@ -113,6 +146,7 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
           }
         }
 
+        analytics.bookCreate(storyType.genre);
         toast.success(t('create_book.book_created'));
         onSuccess(bookId);
       }

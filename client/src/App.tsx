@@ -17,6 +17,7 @@ import { OrganizationSchema, WebsiteSchema } from './components/seo';
 import { GoogleAnalytics } from './components/analytics';
 import { LanguageRedirect, LanguageRoute } from './components/routing';
 import AdminCheck from './components/AdminCheck';
+import { useOfflineDetection } from './hooks/useOfflineDetection';
 
 // Initialize i18n
 import './i18n';
@@ -123,6 +124,7 @@ function AppContent() {
   const { loading } = useAuth();
   const { direction, language } = useLanguage();
   const location = useLocation();
+  useOfflineDetection();
 
   // Show loading screen while checking authentication
   if (loading) {
