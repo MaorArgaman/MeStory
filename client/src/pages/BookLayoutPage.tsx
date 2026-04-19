@@ -1225,12 +1225,68 @@ export default function BookLayoutPage() {
     }
   };
 
+  // Compress a base64 image to reduce payload size (max 600px wide, JPEG quality 0.7)
+  const compressBase64 = (dataUrl: string): Promise<string> =>
+    new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX_W = 600;
+        let w = img.width;
+        let h = img.height;
+        if (w > MAX_W) { h = Math.round((h * MAX_W) / w); w = MAX_W; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.70));
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+
+  // Try to upload a base64 image to the server; returns server URL or null
+  const uploadBase64Image = async (dataUrl: string, pageIndex: number): Promise<string | null> => {
+    try {
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], `image-${Date.now()}.png`, { type: blob.type || 'image/png' });
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('pageIndex', String(pageIndex));
+      const response = await api.post(`/books/${bookId}/page-image`, formData);
+      if (response.data.success) {
+        const d = response.data.data?.image || response.data.data;
+        return d?.url || response.data.data?.imageUrl || null;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
   const saveLayout = async (isAutoSave = false) => {
     if (!book) return;
 
     setSaving(true);
     try {
-      const pagesForSave = pages.map(page => ({
+      // Process images: try to upload base64 ones to get server URLs.
+      // If upload fails, compress them so the PUT payload stays under Vercel's 4.5MB limit.
+      const processedPages = await Promise.all(
+        pages.map(async (page, pi) => ({
+          ...page,
+          images: await Promise.all(
+            (page.images || [])
+              .filter(img => img.url)
+              .map(async img => {
+                if (!img.url.startsWith('data:')) return img;
+                const serverUrl = await uploadBase64Image(img.url, pi);
+                const finalUrl = serverUrl ?? await compressBase64(img.url);
+                return { ...img, url: finalUrl };
+              })
+          ),
+        }))
+      );
+
+      const pagesForSave = processedPages.map(page => ({
         ...page,
         images: (page.images || []).map(img => ({
           id: img.id,
@@ -1247,7 +1303,7 @@ export default function BookLayoutPage() {
           textWrap: img.textWrap,
           flipH: img.flipH,
           flipV: img.flipV,
-        })).filter(img => img.url), // Keep all image URLs (including base64)
+        })),
       }));
 
       const response = await api.put(`/books/${bookId}`, {

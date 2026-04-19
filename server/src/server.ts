@@ -338,18 +338,25 @@ app.use('/', sitemapRoutes);
 app.use('/api', apiLimiter);
 
 // Request timeout middleware - prevent hanging requests
-const REQUEST_TIMEOUT = 55000; // 55 seconds (just under Vercel's 60s limit)
+// Long AI operations (premium-design, design-complete) get 270s (just under Vercel's 300s maxDuration).
+// Everything else gets 55s.
+const REQUEST_TIMEOUT = 55000;
+const AI_LONG_TIMEOUT = 270000;
+const LONG_AI_PATHS = ['/ai/premium-design/', '/ai/design-complete/', '/ai/design-wizard/'];
+
 app.use('/api', (req: Request, res: Response, next: NextFunction) => {
-  // Set a timeout for the request
+  const isLongAI = LONG_AI_PATHS.some(p => req.path.startsWith(p));
+  const timeoutMs = isLongAI ? AI_LONG_TIMEOUT : REQUEST_TIMEOUT;
+
   const timeout = setTimeout(() => {
     if (!res.headersSent) {
-      console.error(`[TIMEOUT] Request timed out: ${req.method} ${req.originalUrl}`);
+      console.error(`[TIMEOUT] Request timed out after ${timeoutMs}ms: ${req.method} ${req.originalUrl}`);
       res.status(504).json({
         success: false,
         error: 'Request timeout - please try again',
       });
     }
-  }, REQUEST_TIMEOUT);
+  }, timeoutMs);
 
   // Clear timeout when response is finished
   res.on('finish', () => clearTimeout(timeout));
