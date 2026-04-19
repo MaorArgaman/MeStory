@@ -1385,7 +1385,7 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       // Single AI call — no job system, no progress updates, no extra DB calls
       const premiumDesign = await generateFastDesign({
         title: book.title,
-        authorName: book.authorName || 'Author',
+        authorName: (book as any).authorName || 'Author',
         genre: book.genre,
         language: book.language || 'en',
         synopsis: book.synopsis || book.description,
@@ -1410,7 +1410,7 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       const pageNum = lay.pageNumbering || { enabled: true, position: 'bottom-center' };
       const headers = lay.headers || { enabled: true };
       const footers = lay.footers || { enabled: false };
-      const authorName = book.authorName || 'Author';
+      const authorName = (book as any).authorName || 'Author';
 
       // Build page layout with safe access
       const newPageLayout = {
@@ -1450,7 +1450,6 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       };
 
       // Build cover design with safe access
-      const authorName = await getAuthorName(book.author);
       const newCoverDesign = {
         front: {
           type: 'gradient' as 'ai-generated' | 'uploaded' | 'gradient' | 'solid',
