@@ -1670,34 +1670,43 @@ export default function BookLayoutPage() {
     design: any,
     coverImageUrls: { front?: string; back?: string }
   ) => {
-    // Apply typography settings
+    // Apply typography settings — safe access with fallbacks
+    const typo = design.typography || {} as any;
+    const layout = design.layout || {} as any;
+    const colors = typo.colors || {} as any;
+    const designMargins = layout.margins || {} as any;
+
+    // Clamp margins to reasonable values for screen display (max ~40% of page dimension)
+    const clampMargin = (val: number | undefined, fallback: number, max: number) =>
+      val !== undefined ? Math.min(val, max) : fallback;
+
     const newSettings = {
       ...settings,
-      fontFamily: design.typography.bodyFont,
-      titleFont: design.typography.titleFont,
-      headerFont: design.typography.headingFont,
-      fontSize: design.typography.fontSize,
-      lineHeight: design.typography.lineHeight,
-      textColor: design.typography.colors.text,
-      accentColor: design.typography.colors.accent,
+      fontFamily: typo.bodyFont || settings.fontFamily,
+      titleFont: typo.titleFont || settings.titleFont,
+      headerFont: typo.headingFont || settings.headerFont,
+      fontSize: Math.min(typo.fontSize || settings.fontSize, 13),
+      lineHeight: typo.lineHeight || settings.lineHeight,
+      textColor: colors.text || settings.textColor,
+      accentColor: colors.accent || settings.accentColor,
       margins: {
-        top: design.layout.margins?.top ?? settings.margins.top,
-        bottom: design.layout.margins?.bottom ?? settings.margins.bottom,
-        left: design.layout.margins?.inner ?? settings.margins.left,
-        right: design.layout.margins?.outer ?? settings.margins.right,
+        top: clampMargin(designMargins.top, settings.margins.top, 45),
+        bottom: clampMargin(designMargins.bottom, settings.margins.bottom, 45),
+        left: clampMargin(designMargins.inner ?? designMargins.left, settings.margins.left, 40),
+        right: clampMargin(designMargins.outer ?? designMargins.right, settings.margins.right, 40),
       },
-      showPageNumbers: design.layout.pageNumberPosition !== 'none',
-      pageNumberPosition: design.layout.pageNumberPosition,
-      chapterStartStyle: design.layout.chapterStartStyle,
-      headerStyle: design.layout.headerStyle,
-      dropCapEnabled: design.layout.dropCaps,
+      showPageNumbers: layout.pageNumberPosition !== 'none',
+      pageNumberPosition: layout.pageNumberPosition || settings.pageNumberPosition,
+      chapterStartStyle: layout.chapterStartStyle || 'new-page-centered',
+      headerStyle: layout.headerStyle || 'none',
+      dropCapEnabled: layout.dropCaps || false,
       // New design elements from style variant
-      dropCapStyle: design.dropCapStyle || (design.layout.dropCaps ? 'classic' : 'none'),
+      dropCapStyle: design.dropCapStyle || (layout.dropCaps ? 'classic' : 'none'),
       dividerStyle: design.dividerStyle || 'ornament',
       pageFrame: design.pageFrame || 'none',
-      frameColor: design.frameColor || design.typography.colors.accent,
+      frameColor: design.frameColor || colors.accent || settings.accentColor,
       backgroundPattern: design.backgroundPattern || 'none',
-      headerDecoration: design.headerDecoration || (design.layout.headerStyle !== 'none' ? 'line' : 'none'),
+      headerDecoration: design.headerDecoration || (layout.headerStyle && layout.headerStyle !== 'none' ? 'line' : 'none'),
       cornerDecorations: design.cornerDecorations || 'none',
       sectionDivider: design.sectionDivider || '',
       titleUnderline: design.titleUnderline || 'none',
@@ -1706,6 +1715,86 @@ export default function BookLayoutPage() {
 
     setSettings(newSettings);
     loadGoogleFonts(newSettings as PageLayoutSettings);
+
+    // Re-paginate with new settings (font size, margins changed → text per page changes)
+    if (book) {
+      const bookIsRTLLocal = isRTL(book.title) || book.language === 'he';
+      const newCharsPerPage = estimateCharsPerPage(newSettings, bookIsRTLLocal);
+      const freshPages: PageContent[] = [];
+
+      // Title page
+      freshPages.push({
+        id: 'page-title',
+        type: 'title',
+        content: `<h1 class="book-title">${book.title}</h1><p class="book-author">${book.author?.name || ''}</p>`,
+        images: pages.find(p => p.id === 'page-title')?.images || [],
+      });
+      freshPages.push({
+        id: 'page-blank-1',
+        type: 'blank',
+        content: '',
+        images: [],
+      });
+
+      // Chapters
+      const chapterPages: PageContent[] = [];
+      const chapterStartPages: number[] = [];
+
+      book.chapters.forEach((chapter: any, index: number) => {
+        const chapterContent = chapter.content || '';
+        const basePages = newSettings.includeToc && book.chapters.length > 1 ? 4 : 2;
+        chapterStartPages.push(basePages + chapterPages.length + 1);
+
+        const contentPages = splitContentIntoPages(chapterContent, newCharsPerPage, true);
+        contentPages.forEach((pageContent: string, pageIndex: number) => {
+          const isFirstPageOfChapter = pageIndex === 0;
+          const pageId = pageIndex === 0
+            ? `page-chapter-${index}`
+            : `page-chapter-${index}-cont-${pageIndex}`;
+
+          // Preserve existing images for this page
+          const existingImages = pages.find(p => p.id === pageId)?.images || [];
+
+          chapterPages.push({
+            id: pageId,
+            type: 'chapter',
+            chapterIndex: index,
+            content: isFirstPageOfChapter
+              ? `<h2 class="chapter-title">${chapter.title}</h2>${pageContent}`
+              : pageContent,
+            images: existingImages,
+          });
+        });
+      });
+
+      // TOC
+      if (newSettings.includeToc && book.chapters.length > 1) {
+        const tocContent = book.chapters
+          .map((ch: any, i: number) => `<div class="toc-item"><span class="toc-title">${ch.title}</span><span class="toc-page">${chapterStartPages[i] || ''}</span></div>`)
+          .join('');
+        freshPages.push({
+          id: 'page-toc',
+          type: 'toc',
+          content: `<h2 class="toc-header">${bookIsRTLLocal ? 'תוכן עניינים' : 'Table of Contents'}</h2>${tocContent}`,
+          images: [],
+        });
+        freshPages.push({ id: 'page-blank-2', type: 'blank', content: '', images: [] });
+      }
+
+      freshPages.push(...chapterPages);
+
+      if (newSettings.includeBackCover) {
+        freshPages.push({
+          id: 'page-summary',
+          type: 'summary',
+          content: book.synopsis || book.description || '',
+          images: [],
+        });
+      }
+
+      const finalPages = repaginateForImages(freshPages, newSettings, bookIsRTLLocal);
+      setPages(finalPages);
+    }
 
     // Set cover image if generated
     if (coverImageUrls.front) {
