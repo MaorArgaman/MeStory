@@ -110,15 +110,21 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Logo - Left Side */}
-            <Link to="/dashboard" className="flex items-center group flex-shrink-0" aria-label="MeStory - Go to dashboard">
+            <Link to="/dashboard" className="flex items-center gap-2.5 group flex-shrink-0" aria-label="MeStory - Go to dashboard">
               <div className="logo-brand-wrap">
                 <OptimizedImage
                   src={logoIcon}
                   alt="MeStory"
                   lazy={false}
-                  className="h-10 sm:h-12 w-auto object-contain nav-logo-glow"
+                  className="h-12 sm:h-14 w-auto object-contain nav-logo-glow"
                 />
               </div>
+              <span
+                className="hidden sm:block text-xl sm:text-2xl font-bold gradient-gold tracking-widest select-none group-hover:opacity-90 transition-opacity"
+                style={{ fontFamily: "'Cinzel', serif", textShadow: '0 0 20px rgba(201,168,76,0.4)' }}
+              >
+                MeStory
+              </span>
             </Link>
 
             {/* Navigation Links - Centered (Hidden on mobile) */}

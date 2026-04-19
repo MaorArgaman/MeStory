@@ -1254,11 +1254,11 @@
 
 /* Logo glow pulse */
 .nav-logo-glow {
-  filter: drop-shadow(0 0 6px rgba(218,165,32,0.4)) drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+  filter: sepia(0.35) saturate(1.4) drop-shadow(0 0 10px rgba(218,165,32,0.55)) drop-shadow(0 2px 12px rgba(0,0,0,0.5));
   transition: filter 0.35s ease, transform 0.35s ease;
 }
 .nav-logo-glow:hover {
-  filter: drop-shadow(0 0 18px rgba(218,165,32,0.75)) drop-shadow(0 0 6px rgba(255,215,0,0.4)) drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+  filter: sepia(0.35) saturate(1.6) drop-shadow(0 0 22px rgba(218,165,32,0.85)) drop-shadow(0 0 8px rgba(255,215,0,0.5)) drop-shadow(0 4px 16px rgba(0,0,0,0.5));
   transform: scale(1.04);
 }
 
