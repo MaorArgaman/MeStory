@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, BarChart3, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Sparkles, BarChart3, Loader2, CheckCircle } from 'lucide-react';
 import { getAiSuggestions, getQualityAnalysis, QualityAnalysis } from '../../services/aiApi';
 import toast from 'react-hot-toast';
 
@@ -268,53 +268,17 @@ export default function AICopilot({
                 </div>
               </div>
 
-              {/* Score Breakdown */}
-              <div className="space-y-3">
-                <p className="text-xs text-gray-400 uppercase tracking-wide">{t('editor.ai_copilot.breakdown')}</p>
-                {Object.entries(analysis.scores).map(([key, value]) => (
-                  <div key={key}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-400 capitalize">
-                        {key.replace(/([A-Z])/g, ' $1').trim()}
-                      </span>
-                      <span className="text-xs text-gray-300">{value}/100</span>
-                    </div>
-                    <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${value}%` }}
-                        transition={{ duration: 0.8, delay: 0.2 }}
-                        className={`h-full bg-gradient-to-r ${getProgressColor(value)}`}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Feedback */}
-              <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+              {/* Single actionable tip — most useful feedback only */}
+              <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-gray-300">{analysis.feedback}</p>
+                  <CheckCircle className="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-gray-300 leading-relaxed">
+                    {analysis.feedback ||
+                      (analysis.suggestions && analysis.suggestions[0]) ||
+                      t('editor.ai_copilot.great_writing')}
+                  </p>
                 </div>
               </div>
-
-              {/* Suggestions */}
-              {analysis.suggestions && analysis.suggestions.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs text-gray-400 uppercase tracking-wide">
-                    {t('editor.ai_copilot.improvement_tips')}
-                  </p>
-                  <ul className="space-y-1">
-                    {analysis.suggestions.map((suggestion, index) => (
-                      <li key={index} className="text-xs text-gray-400 flex items-start gap-2">
-                        <span className="text-indigo-400 mt-0.5">•</span>
-                        <span>{suggestion}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
             </motion.div>
           ) : (
             <div className="text-center py-8 text-gray-500 text-sm">

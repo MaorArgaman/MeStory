@@ -42,11 +42,9 @@ import AIHelpMenu from '../components/editor/AIHelpMenu';
 import DraftNotes from '../components/editor/DraftNotes';
 import AIFloatingToolbar, { AIEnhancePreview } from '../components/editor/AIFloatingToolbar';
 import { enhanceText } from '../services/analysisApi';
-import { EnhanceAction, EnhanceResult, AnalysisTab } from '../types/analysis';
+import { EnhanceAction, EnhanceResult } from '../types/analysis';
 import { useWritingGuidance } from '../components/analysis/WritingGuidanceAlert';
-import PlotStructurePanel from '../components/analysis/PlotStructurePanel';
 import TensionArcChart from '../components/analysis/TensionArcChart';
-import WritingTechniquesCard from '../components/analysis/WritingTechniquesCard';
 import { useLanguage } from '../contexts/LanguageContext';
 import BrandWatermark from '../components/common/BrandWatermark';
 import BookProgressStepper from '../components/common/BookProgressStepper';
@@ -192,15 +190,12 @@ export default function BookWritingPage() {
     selectionTo: 0,
   });
 
-  // Analysis tab state
-  const [activeTab] = useState<AnalysisTab>('copilot');
-
   // Writing guidance hook
   const { guidance: _guidance, dismiss: _dismissGuidance } = useWritingGuidance(
     bookId,
     selectedChapterIndex,
     content,
-    activeTab === 'copilot'
+    true
   );
 
   // Initialize TipTap editor with enhanced configuration
@@ -1443,19 +1438,6 @@ export default function BookWritingPage() {
                     chapterCount={book.chapters?.length || 0}
                     currentChapterIndex={selectedChapterIndex}
                     onChapterClick={(idx) => selectChapter(idx)}
-                  />
-
-                  {/* Plot Structure — 3-act breakdown */}
-                  <PlotStructurePanel
-                    bookId={bookId || ''}
-                    chapterCount={book.chapters?.length || 0}
-                    onChapterClick={(idx) => selectChapter(idx)}
-                  />
-
-                  {/* Writing Techniques */}
-                  <WritingTechniquesCard
-                    bookId={bookId || ''}
-                    chapterCount={book.chapters?.length || 0}
                   />
                 </div>
               )}

@@ -995,7 +995,8 @@
       "export_includes_summaries": "Story summaries and outlines",
       "export_includes_transactions": "Transaction history",
       "export_includes_activity": "Reading and writing activity",
-      "export_button": "Export My Data"
+      "export_button": "Export My Data",
+      "change_password": "Change Password"
     },
     "earnings_tab": {
       "title": "Earnings Dashboard",
@@ -1048,6 +1049,24 @@
       "password_failed": "Failed to change password",
       "language_changed": "Language changed to {{language}}",
       "language_failed": "Failed to change language"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "subtitle": "Choose which updates you want to receive",
+      "all": "All",
+      "all_desc": "Receive all notifications",
+      "important": "Important only",
+      "important_desc": "Sales, reviews, and system updates only",
+      "off": "Off",
+      "off_desc": "No notifications"
+    },
+    "language": {
+      "title": "Language",
+      "subtitle": "Choose your interface language"
+    },
+    "account": {
+      "delete_account": "Delete Account",
+      "delete_warning": "This action is irreversible. All your books, data, and history will be permanently deleted."
     }
   },
   "draft_notes": {

@@ -1066,7 +1066,8 @@
       "export_includes_summaries": "תקצירי סיפורים ומתווים",
       "export_includes_transactions": "היסטוריית עסקאות",
       "export_includes_activity": "פעילות קריאה וכתיבה",
-      "export_button": "ייצא את הנתונים שלי"
+      "export_button": "ייצא את הנתונים שלי",
+      "change_password": "שינוי סיסמה"
     },
     "earnings_tab": {
       "title": "לוח הכנסות",
@@ -1108,6 +1109,24 @@
       "system_updates_desc": "קבל התראות על עדכוני פלטפורמה והודעות",
       "weekly_digest": "סיכום שבועי",
       "weekly_digest_desc": "קבל סיכום שבועי של הפעילות והסטטיסטיקות שלך"
+    },
+    "notifications": {
+      "title": "התראות",
+      "subtitle": "בחר אילו עדכונים אתה רוצה לקבל",
+      "all": "הכל",
+      "all_desc": "קבל את כל ההתראות",
+      "important": "רק חשוב",
+      "important_desc": "מכירות, ביקורות ועדכוני מערכת בלבד",
+      "off": "כבוי",
+      "off_desc": "ללא התראות"
+    },
+    "language": {
+      "title": "שפה",
+      "subtitle": "בחר את שפת הממשק"
+    },
+    "account": {
+      "delete_account": "מחק חשבון",
+      "delete_warning": "פעולה זו אינה הפיכה. כל הספרים, הנתונים וההיסטוריה שלך יימחקו לצמיתות."
     },
     "messages": {
       "min_withdrawal": "סכום משיכה מינימלי הוא $10",

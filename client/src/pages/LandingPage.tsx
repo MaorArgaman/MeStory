@@ -32,23 +32,15 @@ const heroImages = [
   { src: '/img/new/hero-bereaved-herzl.png', alt: 'bereaved family at Mount Herzl' },
 ];
 
-// Social proof portraits
+// Social proof portraits — 3 focused stories representing core audience
 const socialProofHe = [
-  { image: '/img/new/social-young-creative.png', name: 'נועה כהן', bookType: 'ספר הנצחה צבאי', quote: 'מעולם לא כתבתי ספר. פשוט סיפרתי, וה-AI של MeStory הפך את הסיפור שלי לספר אמיתי. כמו שותף ליצירה שתמיד יודע מה רצית להגיד.' },
   { image: '/img/new/social-bereaved-brother.png', name: 'יוסי אברהם', bookType: 'ספר זיכרון לאח', quote: 'האח שלי היה גיבור שקט. הספר הזה נותן לו את הבמה שמגיעה לו.' },
-  { image: '/img/new/social-retired-officer.png', name: 'אלי בן-דוד', bookType: 'סיפור חיים צבאיים', quote: '35 שנות שירות בצה"ל. עכשיו הנכדים יודעים למה סבא תמיד שותק ביום הזיכרון.' },
-  { image: '/img/new/social-couple-telaviv.png', name: 'מיכל ודני', bookType: 'סיפור אהבה', quote: 'יצרנו ספר מהסיפור שלנו כמתנה להורים. אמא בכתה מאושר.' },
-  { image: '/img/new/social-ethiopian-graduate.png', name: 'אביי טדסה', bookType: 'מסע עלייה', quote: 'הסיפור של המשפחה שלי מאתיופיה לישראל. דור שלם של גבורה שקטה.' },
   { image: '/img/new/social-grandma-yemenite.png', name: 'מרים שושן', bookType: 'מורשת תימנית', quote: 'בגיל 82, סוף סוף סיפרתי לנכדים על תימן. הם לא מפסיקים לקרוא.' },
   { image: '/img/new/social-young-father.png', name: 'עומר לוי', bookType: 'ספר לילדים', quote: 'כתבתי ספר לבת שלי על סבא רבא שלה, שנפל במלחמת יום כיפור.' },
 ];
 
 const socialProofEn = [
-  { image: '/img/new/social-young-creative.png', name: 'Noa Cohen', bookType: 'Military Memorial Book', quote: 'I never wrote a book before. I just told my story, and MeStory\'s AI turned it into a real book. Like a creative partner who always knows what you meant to say.' },
   { image: '/img/new/social-bereaved-brother.png', name: 'Yossi Abraham', bookType: 'Brother\'s Memorial', quote: 'My brother was a quiet hero. This book gives him the stage he deserves.' },
-  { image: '/img/new/social-retired-officer.png', name: 'Eli Ben-David', bookType: 'Military Life Story', quote: '35 years of IDF service. Now my grandchildren understand why grandpa is always silent on Memorial Day.' },
-  { image: '/img/new/social-couple-telaviv.png', name: 'Michal & Danny', bookType: 'Love Story', quote: 'We made a book from our story as a gift for our parents. Mom cried tears of joy.' },
-  { image: '/img/new/social-ethiopian-graduate.png', name: 'Abay Tadesse', bookType: 'Immigration Journey', quote: 'My family\'s story from Ethiopia to Israel. A whole generation of quiet heroism.' },
   { image: '/img/new/social-grandma-yemenite.png', name: 'Miriam Shoshan', bookType: 'Yemenite Heritage', quote: 'At 82, I finally told my grandchildren about Yemen. They can\'t stop reading.' },
   { image: '/img/new/social-young-father.png', name: 'Omer Levy', bookType: 'Book for Children', quote: 'I wrote a book for my daughter about her great-grandfather who fell in the Yom Kippur War.' },
 ];
