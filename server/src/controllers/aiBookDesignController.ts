@@ -12,7 +12,7 @@ const getAuthorName = async (authorId: string): Promise<string> => {
   return user?.name || 'Unknown Author';
 };
 import { AuthRequest } from '../types';
-import { enqueueJob, runJobInBackground } from '../services/jobQueue';
+import { enqueueJob, runJobInBackground, failJob } from '../services/jobQueue';
 import {
   generateCompleteBookDesign,
   generateTypographyDesign,
@@ -1364,14 +1364,28 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    // Pre-generate job ID and respond 202 IMMEDIATELY — before any Supabase/DB I/O.
-    // Book lookup, ownership check, enqueue, and all heavy work happen in the background
-    // IIFE below so we never hit Vercel's 60s request timeout.
+    // Create job row FIRST so the client can always find it when polling.
     const jobId = randomUUID();
     const userId = req.user.id;
+
+    try {
+      await enqueueJob({
+        id: jobId,
+        userId,
+        bookId,
+        type: 'design_generation',
+        input: { generateCoverImages, generateInteriorImages, maxInteriorImages },
+      });
+    } catch (err) {
+      console.error(`[premiumDesignWizard] enqueueJob failed — jobId=${jobId}`, err);
+      res.status(500).json({ success: false, error: 'Failed to create design job' });
+      return;
+    }
+
+    // Job row exists — safe to respond 202 and let the client poll
     res.status(202).json({ success: true, data: { jobId, status: 'pending' } });
 
-    // All Supabase / heavy work runs after the response is sent
+    // All heavy work runs after the response is sent
     const totalSteps = generateInteriorImages ? 9 : 7;
     const stepNames = [
       'מנתח את תוכן הספר...',
@@ -1384,30 +1398,18 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       ...(generateInteriorImages ? ['מנתח מיקומי תמונות...', 'מייצר איורים פנימיים...'] : []),
     ];
 
-    // Fire-and-forget: all DB/AI work runs after the 202 response is sent
+    // Fire-and-forget: book lookup + AI work runs after the 202 response is sent
     (async () => {
-      // Fetch the book (moved here so it doesn't block the HTTP response)
       const book = await Book.findByIdForDesign(bookId);
       if (!book) {
         console.error(`[premiumDesignWizard] Book not found in background — bookId=${bookId}`);
+        await failJob(jobId, 'Book not found');
         return;
       }
       if (book.author !== userId) {
         console.error(`[premiumDesignWizard] Permission denied in background — book.author=${book.author} userId=${userId}`);
+        await failJob(jobId, 'Permission denied');
         return;
-      }
-
-      try {
-        await enqueueJob({
-          id: jobId,
-          userId,
-          bookId,
-          type: 'design_generation',
-          input: { generateCoverImages, generateInteriorImages, maxInteriorImages },
-        });
-      } catch (err) {
-        console.error(`[premiumDesignWizard] enqueueJob failed — jobId=${jobId}`, err);
-        return; // Can't proceed without a job row
       }
 
       // Mark book as in-progress (best-effort)
