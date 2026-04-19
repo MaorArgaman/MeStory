@@ -1786,6 +1786,16 @@ export default function BookLayoutPage() {
         images: [],
       });
 
+      // Collect ALL existing images per chapter before re-paginating
+      const existingImagesByChapter = new Map<number, any[]>();
+      for (const p of pages) {
+        if (p.type === 'chapter' && p.chapterIndex !== undefined && p.images?.length) {
+          const imgs = existingImagesByChapter.get(p.chapterIndex) || [];
+          imgs.push(...p.images);
+          existingImagesByChapter.set(p.chapterIndex, imgs);
+        }
+      }
+
       // Chapters
       const chapterPages: PageContent[] = [];
       const chapterStartPages: number[] = [];
@@ -1796,14 +1806,14 @@ export default function BookLayoutPage() {
         chapterStartPages.push(basePages + chapterPages.length + 1);
 
         const contentPages = splitContentIntoPages(chapterContent, newCharsPerPage, true);
+        // Preserve all images from this chapter — place on first page
+        const chapterImages = existingImagesByChapter.get(index) || [];
+
         contentPages.forEach((pageContent: string, pageIndex: number) => {
           const isFirstPageOfChapter = pageIndex === 0;
           const pageId = pageIndex === 0
             ? `page-chapter-${index}`
             : `page-chapter-${index}-cont-${pageIndex}`;
-
-          // Preserve existing images for this page
-          const existingImages = pages.find(p => p.id === pageId)?.images || [];
 
           chapterPages.push({
             id: pageId,
@@ -1812,7 +1822,7 @@ export default function BookLayoutPage() {
             content: isFirstPageOfChapter
               ? `<h2 class="chapter-title">${chapter.title}</h2>${pageContent}`
               : pageContent,
-            images: existingImages,
+            images: isFirstPageOfChapter ? chapterImages : [],
           });
         });
       });
