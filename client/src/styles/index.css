@@ -1804,9 +1804,9 @@
 /* --- CORNER DECORATIONS --- */
 .book-corner-decoration {
   position: absolute;
-  width: 40px;
-  height: 40px;
-  opacity: 0.6;
+  width: 70px;
+  height: 70px;
+  opacity: 0.85;
   color: var(--accent-color, #8b6914);
   pointer-events: none;
 }
