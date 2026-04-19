@@ -423,7 +423,9 @@ export default function AICompleteDesignWizard({
           if (synopsisResponse.data.success && synopsisResponse.data.data.synopsis) {
             setSynopsis(synopsisResponse.data.data.synopsis);
             processedDesign.synopsis = synopsisResponse.data.data.synopsis;
-            processedDesign.cover.back.synopsis.text = synopsisResponse.data.data.synopsis;
+            if (processedDesign.cover?.back?.synopsis) {
+              processedDesign.cover.back.synopsis.text = synopsisResponse.data.data.synopsis;
+            }
           }
         } catch (_synopsisError) {
           // non-fatal
@@ -583,11 +585,11 @@ export default function AICompleteDesignWizard({
         backgroundColor: '#ffffff',
         previewGradient: `linear-gradient(135deg, ${design.typography.colors.accent}40, ${design.typography.colors.heading}40)`,
         coverStyle: {
-          backgroundColor: design.cover.spine.backgroundColor,
+          backgroundColor: design.cover?.spine?.backgroundColor || '#6366f1',
           titlePosition: 'center' as const,
           titleAlignment: 'center' as const,
-          titleColor: design.cover.front.title.color,
-          authorColor: design.cover.front.author.color,
+          titleColor: design.cover?.front?.title?.color || '#ffffff',
+          authorColor: design.cover?.front?.author?.color || '#ffffff',
         },
         creativeImageLayout: {
           pattern: 'custom' as any,
@@ -1051,7 +1053,7 @@ export default function AICompleteDesignWizard({
                         {/* Back Cover */}
                         <div
                           className="relative w-40 h-56 rounded-lg overflow-hidden shadow-xl order-2 lg:order-1"
-                          style={{ backgroundColor: design.cover.back.backgroundColor }}
+                          style={{ backgroundColor: design.cover?.back?.backgroundColor || '#1a1a2e' }}
                         >
                           {coverImages.back ? (
                             <img src={coverImages.back} alt="Back Cover" className="w-full h-full object-cover opacity-60" />
@@ -1060,10 +1062,10 @@ export default function AICompleteDesignWizard({
                           )}
                           <div className="absolute inset-0 p-3 flex flex-col justify-center items-center text-center">
                             <p className="text-white/90 text-[10px] leading-relaxed mb-2 line-clamp-5">
-                              {synopsis || design.cover.back.synopsis.text || book.synopsis || ''}
+                              {synopsis || design.cover?.back?.synopsis?.text || book.synopsis || ''}
                             </p>
                             <p className="text-white/70 text-xs mt-auto">
-                              {design.cover.back.author.text || book.author?.name}
+                              {design.cover?.back?.author?.text || book.author?.name || ''}
                             </p>
                           </div>
                         </div>
@@ -1071,13 +1073,13 @@ export default function AICompleteDesignWizard({
                         {/* Spine */}
                         <div
                           className="w-6 h-56 rounded-sm shadow-xl flex items-center justify-center order-3 lg:order-2"
-                          style={{ backgroundColor: design.cover.spine.backgroundColor }}
+                          style={{ backgroundColor: design.cover?.spine?.backgroundColor || '#6366f1' }}
                         >
                           <div
                             className="transform -rotate-90 whitespace-nowrap text-xs font-medium"
-                            style={{ color: design.cover.spine.color }}
+                            style={{ color: design.cover?.spine?.color || '#ffffff' }}
                           >
-                            {design.cover.spine.title}
+                            {design.cover?.spine?.title || book.title}
                           </div>
                         </div>
 
@@ -1089,16 +1091,16 @@ export default function AICompleteDesignWizard({
                             <div
                               className="w-full h-full"
                               style={{
-                                background: `linear-gradient(135deg, ${design.cover.front.colorPalette?.[0] || '#6366f1'}, ${design.cover.front.colorPalette?.[1] || '#8b5cf6'})`,
+                                background: `linear-gradient(135deg, ${design.cover?.front?.colorPalette?.[0] || '#6366f1'}, ${design.cover?.front?.colorPalette?.[1] || '#8b5cf6'})`,
                               }}
                             />
                           )}
                           <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center">
-                            <h3 className="text-lg font-bold mb-1 drop-shadow-lg" style={{ color: design.cover.front.title.color }}>
-                              {design.cover.front.title.text}
+                            <h3 className="text-lg font-bold mb-1 drop-shadow-lg" style={{ color: design.cover?.front?.title?.color || '#ffffff' }}>
+                              {design.cover?.front?.title?.text || book.title}
                             </h3>
-                            <p className="text-xs drop-shadow" style={{ color: design.cover.front.author.color }}>
-                              {design.cover.front.author.text || book.author?.name}
+                            <p className="text-xs drop-shadow" style={{ color: design.cover?.front?.author?.color || '#ffffff' }}>
+                              {design.cover?.front?.author?.text || book.author?.name || ''}
                             </p>
                           </div>
                         </div>
@@ -1282,8 +1284,8 @@ function DesignSummaryCard({ design, isHebrew }: { design: CompleteDesign; isHeb
     design.typography.colors.text,
     design.typography.colors.heading,
     design.typography.colors.accent,
-    design.cover.front.colorPalette?.[0] || '#6366f1',
-    design.cover.spine.backgroundColor,
+    design.cover?.front?.colorPalette?.[0] || '#6366f1',
+    design.cover?.spine?.backgroundColor || '#6366f1',
   ];
 
   return (
