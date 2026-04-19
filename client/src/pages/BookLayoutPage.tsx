@@ -676,6 +676,16 @@ export default function BookLayoutPage() {
           // Regenerate pages with content from chapters
           const freshPages: PageContent[] = [];
 
+          // RTL books: blank page first (inside front cover)
+          if (bookIsRTLCheck) {
+            freshPages.push({
+              id: `page-blank-0`,
+              type: 'blank',
+              content: '',
+              images: savedImagesMap.get('page-blank-0') || [],
+            });
+          }
+
           // Title page
           freshPages.push({
             id: `page-title`,
@@ -698,7 +708,8 @@ export default function BookLayoutPage() {
 
           bookData.chapters.forEach((chapter: any, index: number) => {
             const chapterContent = chapter.content || '';
-            const basePages = loadedSettings.includeToc && bookData.chapters.length > 1 ? 4 : 2;
+            const rtlExtra = bookIsRTLCheck ? 1 : 0;
+            const basePages = (loadedSettings.includeToc && bookData.chapters.length > 1 ? 4 : 2) + rtlExtra;
             chapterStartPages.push(basePages + chapterPages.length + 1);
 
             const contentPages = splitContentIntoPages(chapterContent, charsPerPage, true);
@@ -1124,6 +1135,17 @@ export default function BookLayoutPage() {
     const newPages: PageContent[] = [];
     const bookIsRTL = isRTL(bookData.title) || bookData.language === 'he';
 
+    // In RTL books: blank page first (inside front cover on RIGHT),
+    // then title page on LEFT side of the spread
+    if (bookIsRTL) {
+      newPages.push({
+        id: `page-blank-0`,
+        type: 'blank',
+        content: '',
+        images: [],
+      });
+    }
+
     // Title page
     newPages.push({
       id: `page-title`,
@@ -1149,8 +1171,9 @@ export default function BookLayoutPage() {
       const chapterContent = chapter.content || '';
 
       // Track the page number where this chapter starts
-      // Account for: title page (1), blank page (1), TOC (2 if enabled)
-      const basePages = settings.includeToc && bookData.chapters.length > 1 ? 4 : 2;
+      // Account for: RTL blank (1 if RTL), title page (1), blank page (1), TOC (2 if enabled)
+      const rtlExtra = isRTL(bookData.title) || bookData.language === 'he' ? 1 : 0;
+      const basePages = (settings.includeToc && bookData.chapters.length > 1 ? 4 : 2) + rtlExtra;
       chapterStartPages.push(basePages + chapterPages.length + 1);
 
       // Split content into pages if needed
@@ -1739,6 +1762,16 @@ export default function BookLayoutPage() {
       const newCharsPerPage = estimateCharsPerPage(newSettings, bookIsRTLLocal);
       const freshPages: PageContent[] = [];
 
+      // RTL books: blank page first (inside front cover)
+      if (bookIsRTLLocal) {
+        freshPages.push({
+          id: 'page-blank-0',
+          type: 'blank',
+          content: '',
+          images: [],
+        });
+      }
+
       // Title page
       freshPages.push({
         id: 'page-title',
@@ -1759,7 +1792,7 @@ export default function BookLayoutPage() {
 
       book.chapters.forEach((chapter: any, index: number) => {
         const chapterContent = chapter.content || '';
-        const basePages = newSettings.includeToc && book.chapters.length > 1 ? 4 : 2;
+        const basePages = (newSettings.includeToc && book.chapters.length > 1 ? 4 : 2) + (bookIsRTLLocal ? 1 : 0);
         chapterStartPages.push(basePages + chapterPages.length + 1);
 
         const contentPages = splitContentIntoPages(chapterContent, newCharsPerPage, true);
