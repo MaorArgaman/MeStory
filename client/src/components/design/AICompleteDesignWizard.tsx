@@ -545,6 +545,12 @@ export default function AICompleteDesignWizard({
     if (!design) return;
 
     try {
+      // Safely destructure with defaults — server may return partial objects
+      const typo = design.typography || {} as any;
+      const layout = design.layout || {} as any;
+      const margins = layout.margins || { top: 50, bottom: 50, inner: 60, outer: 40 };
+      const colors = typo.colors || { text: '#1a1a2e', heading: '#2c3e50', accent: '#6366f1' };
+
       const customTemplate: BookTemplate = {
         id: `ai-custom-${Date.now()}`,
         name: `AI Design for ${book.title}`,
@@ -553,37 +559,37 @@ export default function AICompleteDesignWizard({
         descriptionHe: `עיצוב מותאם אישית שנוצר על ידי AI`,
         category: 'custom',
         fonts: {
-          title: design.typography.titleFont,
-          body: design.typography.bodyFont,
-          headers: design.typography.headingFont,
+          title: typo.titleFont || 'Suez One',
+          body: typo.bodyFont || 'David Libre',
+          headers: typo.headingFont || 'Secular One',
         },
-        headerSizes: { h1: design.typography.chapterTitleSize, h2: 22, h3: 18 },
-        fontSize: design.typography.fontSize,
-        lineHeight: design.typography.lineHeight,
+        headerSizes: { h1: typo.chapterTitleSize || 28, h2: 22, h3: 18 },
+        fontSize: typo.fontSize || 14,
+        lineHeight: typo.lineHeight || 1.7,
         columns: 1,
         paragraphStyle: 'vertical',
         pageNumberPosition:
-          design.layout.pageNumberPosition === 'bottom-outer' || design.layout.pageNumberPosition === 'top-outer'
+          layout.pageNumberPosition === 'bottom-outer' || layout.pageNumberPosition === 'top-outer'
             ? 'bottom-outside' as const
-            : design.layout.pageNumberPosition as 'none' | 'top-left' | 'top-right' | 'bottom-center' | 'bottom-outside',
+            : (layout.pageNumberPosition || 'bottom-center') as 'none' | 'top-left' | 'top-right' | 'bottom-center' | 'bottom-outside',
         margins: {
-          top: design.layout.margins.top,
-          bottom: design.layout.margins.bottom,
-          left: design.layout.margins.inner,
-          right: design.layout.margins.outer,
+          top: margins.top,
+          bottom: margins.bottom,
+          left: margins.inner || margins.left || 60,
+          right: margins.outer || margins.right || 40,
         },
         paragraphIndent: 0,
         paragraphSpacing: 12,
-        chapterStartStyle: design.layout.chapterStartStyle,
-        dropCapStyle: design.dropCapStyle || (design.layout.dropCaps ? 'classic' : 'none'),
+        chapterStartStyle: layout.chapterStartStyle || 'new-page-centered',
+        dropCapStyle: design.dropCapStyle || (layout.dropCaps ? 'classic' : 'none'),
         headerDecoration: design.headerDecoration || 'ornament',
         dividerStyle: design.dividerStyle || 'ornament',
         imagePositions: ['top', 'center'],
         imageFrameStyle: 'rounded',
-        textColor: design.typography.colors.text,
-        accentColor: design.typography.colors.accent,
+        textColor: colors.text,
+        accentColor: colors.accent,
         backgroundColor: '#ffffff',
-        previewGradient: `linear-gradient(135deg, ${design.typography.colors.accent}40, ${design.typography.colors.heading}40)`,
+        previewGradient: `linear-gradient(135deg, ${colors.accent}40, ${colors.heading}40)`,
         coverStyle: {
           backgroundColor: design.cover?.spine?.backgroundColor || '#6366f1',
           titlePosition: 'center' as const,
@@ -593,8 +599,8 @@ export default function AICompleteDesignWizard({
         },
         creativeImageLayout: {
           pattern: 'custom' as any,
-          imageCount: design.imagePlacements.length,
-          customPositions: design.imagePlacements.map((p) => ({
+          imageCount: (design.imagePlacements || []).length,
+          customPositions: (design.imagePlacements || []).map((p) => ({
             x: 10,
             y: p.position === 'chapter-start' ? 10 : p.position === 'mid-chapter' ? 40 : 70,
             width: 40,
