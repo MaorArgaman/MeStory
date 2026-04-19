@@ -5,16 +5,19 @@
 @tailwind utilities;
 
 /* ==================== BOOK FLIP CENTERING ==================== */
-/* react-pageflip takes over the DOM so we center via CSS, not JSX wrappers */
+/* react-pageflip renders .stf__parent as position:absolute left:0 top:0    */
+/* so we override with translate-based centering on the parent element.      */
 .book-flip {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
+  position: relative !important;
   width: 100% !important;
   height: 100% !important;
+  overflow: hidden !important;
 }
 .book-flip .stf__parent {
-  margin: 0 auto !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
 }
 
 /* ==================== COSMIC ANIMATIONS ==================== */
