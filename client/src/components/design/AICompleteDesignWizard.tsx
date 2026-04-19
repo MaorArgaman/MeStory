@@ -304,52 +304,19 @@ export default function AICompleteDesignWizard({
       // Step 1: Analyzing
       updateStep('analyzing', 0, 0);
 
-      // Kick off the job — server returns immediately with a jobId (202)
-      const kickoffResponse = await api.post(`/ai/premium-design/${bookId}`, {
+      // Send design request — server does all work synchronously and returns result
+      // (no more polling — the request itself takes 20-60s with timeout of 270s)
+      const designResponse = await api.post(`/ai/premium-design/${bookId}`, {
         generateCoverImages,
         generateInteriorImages,
         maxInteriorImages: 5,
-      });
+      }, { timeout: 270000 }); // 270s timeout to match server maxDuration
 
-      if (!kickoffResponse.data.success) {
-        throw new Error(kickoffResponse.data.error || 'Failed to start design job');
+      if (!designResponse.data.success) {
+        throw new Error(designResponse.data.error || 'Failed to generate design');
       }
 
-      const { jobId } = kickoffResponse.data.data;
-
-      // Poll /api/jobs/:jobId every 4 seconds until completed or failed (max 8 min)
-      const MAX_POLL_MS = 8 * 60 * 1000;
-      const POLL_INTERVAL = 4000;
-      const started = Date.now();
-      let jobData: any = null;
-
-      while (Date.now() - started < MAX_POLL_MS) {
-        await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
-        const pollRes = await api.get(`/jobs/${jobId}`);
-        const job = pollRes.data.data;
-
-        if (job.status === 'completed') {
-          jobData = job.result;
-          break;
-        }
-        if (job.status === 'failed') {
-          throw new Error(job.error || 'עיצוב נכשל בשרת');
-        }
-
-        // Reflect server progress in the UI
-        const progress = job.progress || 0;
-        const msg = job.progressMessage || '';
-        const stepIdx = Math.min(Math.floor((progress / 90) * 6), 5);
-        setAnimatedPercent(progress);
-        setProgressStepIndex(stepIdx);
-        if (msg) updateStep('analyzing', progress, stepIdx);
-      }
-
-      if (!jobData) {
-        throw new Error('עיצוב לקח יותר מדי זמן — נסה שוב');
-      }
-
-      const data = jobData;
+      const data = designResponse.data.data?.result || designResponse.data.data;
 
       // Step 2: Typography
       updateStep('typography', 1, 1);

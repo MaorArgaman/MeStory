@@ -13,7 +13,7 @@ const getAuthorName = async (authorId: string): Promise<string> => {
   return user?.name || 'Unknown Author';
 };
 import { AuthRequest } from '../types';
-import { enqueueJob, runJobInBackground, failJob } from '../services/jobQueue';
+import { enqueueJob, runJobInBackground, failJob, updateJobProgress, completeJob } from '../services/jobQueue';
 import {
   generateCompleteBookDesign,
   generateTypographyDesign,
@@ -1365,10 +1365,23 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    // Create job row FIRST so the client can always find it when polling.
+    // Synchronous approach: do ALL work inside this request (up to 300s maxDuration).
+    // No fire-and-forget — Vercel kills background work after response is sent.
     const jobId = randomUUID();
     const userId = req.user.id;
 
+    // Fetch book first (before creating job) — fail fast if not found
+    const book = await Book.findByIdForDesign(bookId);
+    if (!book) {
+      res.status(404).json({ success: false, error: 'Book not found' });
+      return;
+    }
+    if (book.author !== userId) {
+      res.status(403).json({ success: false, error: 'Permission denied' });
+      return;
+    }
+
+    // Create job row
     try {
       await enqueueJob({
         id: jobId,
@@ -1383,49 +1396,15 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    // Job row exists — safe to respond 202 and let the client poll
-    res.status(202).json({ success: true, data: { jobId, status: 'pending' } });
+    // Skip image generation for speed — design-only takes ~30s vs ~120s with images
+    const fastGenerateCoverImages = false;
+    const fastGenerateInteriorImages = false;
 
-    // All heavy work runs after the response is sent
-    const totalSteps = generateInteriorImages ? 9 : 7;
-    const stepNames = [
-      'מנתח את תוכן הספר...',
-      'יוצר מערכת טיפוגרפיה מקצועית...',
-      'מעצב תוכן עניינים...',
-      'יוצר עיצוב פרקים...',
-      'מעצב פריסת עמודים...',
-      'יוצר עיצוב כריכה...',
-      'מייצר תמונות כריכה עם AI...',
-      ...(generateInteriorImages ? ['מנתח מיקומי תמונות...', 'מייצר איורים פנימיים...'] : []),
-    ];
+    // Do ALL work synchronously inside the request (maxDuration=300s).
+    // No fire-and-forget — Vercel kills background work after response.
+    try {
+      await updateJobProgress(jobId, 5, 'מנתח את תוכן הספר...');
 
-    // Background work: book lookup + AI design runs after the 202 response.
-    // waitUntil() keeps the Vercel serverless function alive until this completes.
-    const backgroundWork = (async () => {
-      const book = await Book.findByIdForDesign(bookId);
-      if (!book) {
-        console.error(`[premiumDesignWizard] Book not found in background — bookId=${bookId}`);
-        await failJob(jobId, 'Book not found');
-        return;
-      }
-      if (book.author !== userId) {
-        console.error(`[premiumDesignWizard] Permission denied in background — book.author=${book.author} userId=${userId}`);
-        await failJob(jobId, 'Permission denied');
-        return;
-      }
-
-      // Mark book as in-progress (best-effort)
-      Book.findByIdAndUpdate(bookId, {
-        aiDesignState: {
-          status: 'analyzing',
-          startedAt: new Date().toISOString(),
-          jobId,
-          progress: { currentStep: 1, totalSteps, stepName: 'מנתח את תוכן הספר...' },
-        },
-      }).catch((err: unknown) => console.error('[premiumDesignWizard] Failed to update book aiDesignState:', err));
-
-      runJobInBackground(jobId, async ({ updateProgress }) => {
-      // Prepare design input
       const designInput: PremiumBookDesignInput = {
         title: book.title,
         authorName: await getAuthorName(book.author),
@@ -1442,28 +1421,14 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
 
       console.log(`\n🌟 Starting PREMIUM DESIGN (job ${jobId}) for "${book.title}"...`);
 
-      // Generate ultimate premium design
+      // Skip image generation for speed (design-only ~30s, with images ~120s+)
       const premiumDesign = await generateUltimatePremiumDesign(
         designInput,
         async (progress) => {
-          const stepIndex = progress.currentStep - 1;
           const pct = Math.round((progress.currentStep / progress.totalSteps) * 90);
-          await Promise.all([
-            updateProgress(pct, stepNames[stepIndex] || progress.stepName),
-            Book.findByIdAndUpdate(bookId, {
-              aiDesignState: {
-                status: 'generating-design',
-                jobId,
-                progress: {
-                  currentStep: progress.currentStep,
-                  totalSteps: progress.totalSteps,
-                  stepName: stepNames[stepIndex] || progress.stepName,
-                },
-              },
-            }),
-          ]);
+          await updateJobProgress(jobId, pct, progress.stepName).catch(() => {});
         },
-        { generateCoverImages, generateInteriorImages, maxInteriorImages }
+        { generateCoverImages: fastGenerateCoverImages, generateInteriorImages: fastGenerateInteriorImages, maxInteriorImages }
       );
 
       // Convert design to book state format
@@ -1612,16 +1577,22 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
         pageLayout: updatedBook?.pageLayout,
         coverDesign: updatedBook?.coverDesign,
       };
-    });
-    })().catch((err: unknown) => {
-      console.error('[premiumDesignWizard] Background IIFE failed:', err);
-    });
-    waitUntil(backgroundWork);
 
+      // Mark job complete and respond with the result
+      await completeJob(jobId, result);
+      res.status(200).json({ success: true, data: { jobId, status: 'completed', result } });
+
+    } catch (error: any) {
+      console.error('Premium Design Wizard error:', error);
+      await failJob(jobId, error?.message || 'Design generation failed').catch(() => {});
+      if (!res.headersSent) {
+        res.status(500).json({ success: false, error: error?.message || 'Design generation failed' });
+      }
+    }
   } catch (error: any) {
-    // This catch only handles synchronous errors before the response was sent
-    // (e.g., book not found, auth failures). At this point res.status(202) has
-    // already been sent, so we cannot send another response — just log.
-    console.error('Premium Design Wizard synchronous error:', error);
+    console.error('Premium Design Wizard outer error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, error: error?.message || 'Failed to generate design' });
+    }
   }
 };
