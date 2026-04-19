@@ -941,12 +941,15 @@ export default function BookWritingPage() {
           role="region"
           aria-label="Chapters sidebar"
           className={`
-          ${showLeftSidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          ${focusMode ? '!-translate-x-full !w-0 !p-0 !border-0 !overflow-hidden' : ''}
+          ${showLeftSidebar ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+          ${focusMode ? '!translate-x-full !w-0 !p-0 !border-0 !overflow-hidden' : ''}
           fixed lg:relative z-50 lg:z-auto
-          w-full sm:w-80 lg:w-64 h-full
-          glass-strong border-r border-white/10 p-4 sm:p-5 overflow-y-auto
+          top-16 right-0 left-auto lg:top-0
+          w-72 sm:w-80 lg:w-64
+          h-[calc(100vh-4rem)] lg:h-full
+          glass-strong border-l lg:border-l-0 lg:border-r border-white/10 p-4 sm:p-5 overflow-y-auto
           transition-all duration-300 ease-in-out
+          rounded-tl-2xl lg:rounded-none shadow-2xl lg:shadow-none
         `}>
           {/* Mobile Header */}
           <div className="flex items-center justify-between mb-6 lg:mb-4">
