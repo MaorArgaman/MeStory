@@ -2343,18 +2343,9 @@ export default function BookLayoutPage() {
   const orderedContentPages = isBookRTL ? [...normalizedPages].reverse() : normalizedPages;
   const initialFlipPage = isBookRTL ? totalDomPages - 1 : 0;
 
-  // Flipbook navigation helpers
-  const flipNext = () => {
-    const pf = flipBookRef.current?.pageFlip();
-    if (pf) pf.flipNext();
-  };
-  const flipPrev = () => {
-    const pf = flipBookRef.current?.pageFlip();
-    if (pf) pf.flipPrev();
-  };
-  // In RTL, DOM page order is reversed: flipPrev = next reading page, flipNext = previous reading page
-  const readNext = isBookRTL ? flipPrev : flipNext;
-  const readPrev = isBookRTL ? flipNext : flipPrev;
+  // Flipbook navigation — use jumpToSpread which syncs both flipbook and UI state
+  const readNext = () => jumpToSpread(Math.min(totalSpreads - 1, currentSpread + 1));
+  const readPrev = () => jumpToSpread(Math.max(0, currentSpread - 1));
 
   // Custom swipe gesture handlers — works on the flipbook container without
   // conflicting with image drag (which uses stopPropagation on the image elements)
