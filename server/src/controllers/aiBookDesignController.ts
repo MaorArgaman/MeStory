@@ -12,7 +12,7 @@ const getAuthorName = async (authorId: string): Promise<string> => {
   return user?.name || 'Unknown Author';
 };
 import { AuthRequest } from '../types';
-import { enqueueJob, runJobInBackground, failJob, updateJobProgress, completeJob } from '../services/jobQueue';
+import { enqueueJob, runJobInBackground, failJob } from '../services/jobQueue';
 import {
   generateCompleteBookDesign,
   generateTypographyDesign,
@@ -28,7 +28,6 @@ import {
 } from '../services/aiBookDesignService';
 import {
   generateUltimatePremiumDesign,
-  generateFastDesign,
   convertPremiumDesignToBookState,
   BookDesignInput as PremiumBookDesignInput,
   PremiumCompleteDesign,
@@ -1365,76 +1364,137 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    // MINIMAL overhead: book lookup + AI call + save. No job system.
+    // Create job row FIRST so the client can always find it when polling.
+    const jobId = randomUUID();
     const userId = req.user.id;
 
-    // Fetch book — single DB call
-    const book = await Book.findByIdForDesign(bookId);
-    if (!book) {
-      res.status(404).json({ success: false, error: 'Book not found' });
-      return;
-    }
-    if (book.author !== userId) {
-      res.status(403).json({ success: false, error: 'Permission denied' });
-      return;
-    }
-
     try {
-      console.log(`\n🌟 Starting FAST DESIGN for "${book.title}"...`);
+      await enqueueJob({
+        id: jobId,
+        userId,
+        bookId,
+        type: 'design_generation',
+        input: { generateCoverImages, generateInteriorImages, maxInteriorImages },
+      });
+    } catch (err) {
+      console.error(`[premiumDesignWizard] enqueueJob failed — jobId=${jobId}`, err);
+      res.status(500).json({ success: false, error: 'Failed to create design job' });
+      return;
+    }
 
-      // Single AI call — no job system, no progress updates, no extra DB calls
-      const premiumDesign = await generateFastDesign({
+    // Job row exists — safe to respond 202 and let the client poll
+    res.status(202).json({ success: true, data: { jobId, status: 'pending' } });
+
+    // All heavy work runs after the response is sent
+    const totalSteps = generateInteriorImages ? 9 : 7;
+    const stepNames = [
+      'מנתח את תוכן הספר...',
+      'יוצר מערכת טיפוגרפיה מקצועית...',
+      'מעצב תוכן עניינים...',
+      'יוצר עיצוב פרקים...',
+      'מעצב פריסת עמודים...',
+      'יוצר עיצוב כריכה...',
+      'מייצר תמונות כריכה עם AI...',
+      ...(generateInteriorImages ? ['מנתח מיקומי תמונות...', 'מייצר איורים פנימיים...'] : []),
+    ];
+
+    // Fire-and-forget: book lookup + AI work runs after the 202 response is sent
+    (async () => {
+      const book = await Book.findByIdForDesign(bookId);
+      if (!book) {
+        console.error(`[premiumDesignWizard] Book not found in background — bookId=${bookId}`);
+        await failJob(jobId, 'Book not found');
+        return;
+      }
+      if (book.author !== userId) {
+        console.error(`[premiumDesignWizard] Permission denied in background — book.author=${book.author} userId=${userId}`);
+        await failJob(jobId, 'Permission denied');
+        return;
+      }
+
+      // Mark book as in-progress (best-effort)
+      Book.findByIdAndUpdate(bookId, {
+        aiDesignState: {
+          status: 'analyzing',
+          startedAt: new Date().toISOString(),
+          jobId,
+          progress: { currentStep: 1, totalSteps, stepName: 'מנתח את תוכן הספר...' },
+        },
+      }).catch((err: unknown) => console.error('[premiumDesignWizard] Failed to update book aiDesignState:', err));
+
+      runJobInBackground(jobId, async ({ updateProgress }) => {
+      // Prepare design input
+      const designInput: PremiumBookDesignInput = {
         title: book.title,
-        authorName: (book as any).authorName || 'Author',
+        authorName: await getAuthorName(book.author),
         genre: book.genre,
         language: book.language || 'en',
         synopsis: book.synopsis || book.description,
         chapters: book.chapters.map((ch) => ({
           title: ch.title,
-          content: ch.content?.slice(0, 500) || '',
+          content: ch.content,
           wordCount: ch.wordCount,
         })),
         targetAudience: book.targetAudience,
-      });
+      };
+
+      console.log(`\n🌟 Starting PREMIUM DESIGN (job ${jobId}) for "${book.title}"...`);
+
+      // Generate ultimate premium design
+      const premiumDesign = await generateUltimatePremiumDesign(
+        designInput,
+        async (progress) => {
+          const stepIndex = progress.currentStep - 1;
+          const pct = Math.round((progress.currentStep / progress.totalSteps) * 90);
+          await Promise.all([
+            updateProgress(pct, stepNames[stepIndex] || progress.stepName),
+            Book.findByIdAndUpdate(bookId, {
+              aiDesignState: {
+                status: 'generating-design',
+                jobId,
+                progress: {
+                  currentStep: progress.currentStep,
+                  totalSteps: progress.totalSteps,
+                  stepName: stepNames[stepIndex] || progress.stepName,
+                },
+              },
+            }),
+          ]);
+        },
+        { generateCoverImages, generateInteriorImages, maxInteriorImages }
+      );
 
       // Convert design to book state format
-      // Safe access helpers
-      const typo = premiumDesign.typography || {} as any;
-      const lay = premiumDesign.layout || {} as any;
-      const cov = premiumDesign.cover || {} as any;
-      const covFront = cov.front || {} as any;
-      const covBack = cov.back || {} as any;
-      const covSpine = cov.spine || {} as any;
-      const colors = typo.colors || {} as any;
-      const margins = lay.margins || { top: 35, bottom: 30, inner: 30, outer: 25 };
-      const pageNum = lay.pageNumbering || { enabled: true, position: 'bottom-center' };
-      const headers = lay.headers || { enabled: true };
-      const footers = lay.footers || { enabled: false };
-      const authorName = (book as any).authorName || 'Author';
+      const designState = convertPremiumDesignToBookState(premiumDesign);
 
-      // Build page layout with safe access
+      // Build page layout
       const newPageLayout = {
-        bodyFont: typo.bodyFont || 'David Libre',
-        fontSize: typo.fontSize || 12,
-        lineHeight: typo.lineHeight || 1.7,
-        pageSize: (lay.pageSize || 'A5') as 'A4' | 'A5' | 'Letter' | 'Custom',
-        margins: { top: margins.top || 35, bottom: margins.bottom || 30, left: margins.inner || 30, right: margins.outer || 25 },
-        includeTableOfContents: true,
-        tableOfContentsStyle: premiumDesign.tableOfContents?.style || 'elegant',
-        headerFooter: {
-          includeHeader: headers.enabled ?? true,
-          includeFooter: footers.enabled ?? false,
-          includePageNumbers: pageNum.enabled ?? true,
-          pageNumberPosition: (pageNum.position || 'bottom-center').includes('bottom') ? 'bottom' : 'top' as 'top' | 'bottom' | 'none',
+        bodyFont: premiumDesign.typography.bodyFont,
+        fontSize: premiumDesign.typography.fontSize,
+        lineHeight: premiumDesign.typography.lineHeight,
+        pageSize: premiumDesign.layout.pageSize as 'A4' | 'A5' | 'Letter' | 'Custom',
+        margins: {
+          top: premiumDesign.layout.margins.top,
+          bottom: premiumDesign.layout.margins.bottom,
+          left: premiumDesign.layout.margins.inner,
+          right: premiumDesign.layout.margins.outer,
         },
-        textColor: colors.text || '#2c2c2c',
-        titleFont: typo.titleFont || 'Suez One',
-        headerFont: typo.headingFont || 'Secular One',
-        accentColor: colors.accent || '#8b6914',
-        backgroundColor: lay.background?.primaryColor || '#fffdf7',
-        columns: lay.columns || 1,
-        paragraphIndent: typo.formatting?.firstParagraphIndent ? 20 : 0,
-        paragraphSpacing: typo.paragraphSpacing || 12,
+        includeTableOfContents: true,
+        tableOfContentsStyle: premiumDesign.tableOfContents.style,
+        headerFooter: {
+          includeHeader: premiumDesign.layout.headers.enabled,
+          includeFooter: premiumDesign.layout.footers.enabled,
+          includePageNumbers: premiumDesign.layout.pageNumbering.enabled,
+          pageNumberPosition: premiumDesign.layout.pageNumbering.position.includes('bottom') ? 'bottom' : 'top' as 'top' | 'bottom' | 'none',
+        },
+        textColor: premiumDesign.typography.colors.text,
+        titleFont: premiumDesign.typography.titleFont,
+        headerFont: premiumDesign.typography.headingFont,
+        accentColor: premiumDesign.typography.colors.accent,
+        backgroundColor: premiumDesign.layout.background.primaryColor,
+        columns: premiumDesign.layout.columns,
+        paragraphIndent: premiumDesign.typography.formatting.firstParagraphIndent ? 20 : 0,
+        paragraphSpacing: premiumDesign.typography.paragraphSpacing,
         settings: {
           premiumDesign: {
             theme: premiumDesign.theme,
@@ -1442,88 +1502,123 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
             tableOfContents: premiumDesign.tableOfContents,
             chapterDecoration: premiumDesign.chapterDecoration,
             layout: premiumDesign.layout,
-            imagePlacements: premiumDesign.imagePlacements || [],
+            imagePlacements: premiumDesign.imagePlacements,
             overallStyle: premiumDesign.overallStyle,
             qualityScore: premiumDesign.qualityScore,
           },
         },
       };
 
-      // Build cover design with safe access
+      // Build cover design
+      const authorName = await getAuthorName(book.author);
       const newCoverDesign = {
         front: {
-          type: 'gradient' as 'ai-generated' | 'uploaded' | 'gradient' | 'solid',
-          backgroundColor: covFront.colorPalette?.[0] || covFront.backgroundColor || '#1a1a2e',
-          gradientColors: covFront.colorPalette || [colors.accent || '#6366f1'],
+          type: premiumDesign.covers.frontImageUrl ? 'ai-generated' : 'gradient' as 'ai-generated' | 'uploaded' | 'gradient' | 'solid',
+          imageUrl: premiumDesign.covers.frontImageUrl,
+          backgroundColor: premiumDesign.cover.front.colorPalette[0] || '#1a1a2e',
+          gradientColors: premiumDesign.cover.front.colorPalette,
           title: {
             text: book.title,
-            font: covFront.title?.font || typo.titleFont || 'Suez One',
-            size: covFront.title?.size || 48,
-            color: covFront.title?.color || '#ffffff',
-            position: covFront.title?.position || 'center',
+            font: premiumDesign.cover.front.title.font,
+            size: premiumDesign.cover.front.title.size,
+            color: premiumDesign.cover.front.title.color,
+            position: premiumDesign.cover.front.title.position,
           },
+          subtitle: premiumDesign.cover.front.subtitle,
           authorName: {
             text: authorName,
-            font: covFront.author?.font || typo.bodyFont || 'David Libre',
-            size: covFront.author?.size || 18,
-            color: covFront.author?.color || '#ffffff',
+            font: premiumDesign.cover.front.author.font,
+            size: premiumDesign.cover.front.author.size,
+            color: premiumDesign.cover.front.author.color,
           },
         },
         back: {
-          backgroundColor: covBack.backgroundColor || '#1a1a2e',
+          imageUrl: premiumDesign.covers.backImageUrl,
+          backgroundColor: premiumDesign.cover.back.backgroundColor,
           synopsis: book.synopsis || book.description || '',
+          authorBio: premiumDesign.cover.back.authorBio?.text,
         },
         spine: {
           width: Math.ceil((book.statistics?.pageCount || 100) / 10) + 5,
           title: book.title,
           author: authorName,
-          backgroundColor: covSpine.backgroundColor || colors.accent || '#6366f1',
+          backgroundColor: premiumDesign.cover.spine.backgroundColor,
         },
       };
 
-      // Save to database
+      // Build page images
+      const newPageImages = premiumDesign.generatedImages.map((img, idx) => ({
+        _id: `premium-${Date.now()}-${idx}`,
+        pageIndex: img.chapterIndex * 2 + 1,
+        url: img.imageUrl,
+        x: 10,
+        y: img.position === 'chapter-start' ? 10 : img.position === 'chapter-end' ? 60 : 35,
+        width: 80,
+        height: 40,
+        rotation: 0,
+        isAiGenerated: true,
+        prompt: img.prompt,
+        createdAt: new Date().toISOString(),
+      }));
+
+      const allPageImages = [...(book.pageImages || []), ...newPageImages];
+
+      // Save everything to the database
       const updatedBook = await Book.findByIdAndUpdate(
         bookId,
         {
           aiDesignState: {
+            ...designState,
             status: 'completed',
+            jobId,
             completedAt: new Date().toISOString(),
-            design: premiumDesign,
           },
           pageLayout: newPageLayout,
           coverDesign: newCoverDesign,
+          pageImages: allPageImages,
         },
         { new: true }
       );
 
-      console.log(`\n✅ FAST DESIGN SAVED for "${book.title}"!`);
+      console.log(`\n✅ PREMIUM DESIGN SAVED (job ${jobId}) for "${book.title}"!`);
 
-      // Respond directly with the result
-      const result = {
+      // Return the result payload — the job queue stores it and the client reads it on poll
+      return {
         bookId,
-        typography: premiumDesign.typography,
-        layout: premiumDesign.layout,
-        cover: premiumDesign.cover,
+        qualityScore: premiumDesign.qualityScore,
         theme: premiumDesign.theme,
+        typography: {
+          bodyFont: premiumDesign.typography.bodyFont,
+          headingFont: premiumDesign.typography.headingFont,
+          colors: premiumDesign.typography.colors,
+        },
         tableOfContents: premiumDesign.tableOfContents,
         chapterDecoration: premiumDesign.chapterDecoration,
+        layout: {
+          pageSize: premiumDesign.layout.pageSize,
+          chapterStartStyle: premiumDesign.layout.chapterStartStyle,
+          pageNumbering: premiumDesign.layout.pageNumbering,
+          background: premiumDesign.layout.background,
+        },
+        covers: {
+          frontImageUrl: premiumDesign.covers.frontImageUrl,
+          backImageUrl: premiumDesign.covers.backImageUrl,
+        },
+        imagePlacements: premiumDesign.imagePlacements.length,
+        generatedImages: premiumDesign.generatedImages.length,
         overallStyle: premiumDesign.overallStyle,
         pageLayout: updatedBook?.pageLayout,
         coverDesign: updatedBook?.coverDesign,
       };
+    });
+    })().catch((err: unknown) => {
+      console.error('[premiumDesignWizard] Background IIFE failed:', err);
+    });
 
-      res.status(200).json({ success: true, data: { result } });
-
-    } catch (error: any) {
-      console.error('Fast Design error:', error);
-      if (!res.headersSent) {
-        res.status(500).json({ success: false, error: error?.message || 'Design generation failed' });
-      }
-    }
   } catch (error: any) {
-    console.error('Fast Design outer error:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ success: false, error: error?.message || 'Failed to generate design' });
-    }
+    // This catch only handles synchronous errors before the response was sent
+    // (e.g., book not found, auth failures). At this point res.status(202) has
+    // already been sent, so we cannot send another response — just log.
+    console.error('Premium Design Wizard synchronous error:', error);
   }
 };

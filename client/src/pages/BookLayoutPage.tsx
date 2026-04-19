@@ -265,8 +265,8 @@ const estimateCharsPerPage = (settings: typeof defaultSettings, isHebrew: boolea
   const lineHeightPx = settings.fontSize * settings.lineHeight;
   const linesPerPage = Math.floor(availableHeight / lineHeightPx);
 
-  // Conservative buffer (0.45) — better to have more pages than overflowing text
-  return Math.floor(charsPerLine * linesPerPage * 0.45);
+  // Buffer accounts for HTML tags, spacing, chapter titles
+  return Math.floor(charsPerLine * linesPerPage * 0.55);
 };
 
 /**
