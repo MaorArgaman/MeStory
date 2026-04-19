@@ -621,32 +621,6 @@ export default function BookLayoutPage() {
 
         // Load existing layout or generate new one
         if (bookData.pageLayout?.pages) {
-          // Ensure each page has an images array (for backwards compatibility)
-          const pagesWithImages = bookData.pageLayout.pages.map((page: any, pageIndex: number) => {
-            // Merge any pageImages from the server for this page
-            const serverImages = (bookData.pageImages || [])
-              .filter((img: any) => img.pageIndex === pageIndex)
-              .map((img: any) => ({
-                id: img._id || `img-${img.createdAt || Date.now()}`,
-                url: img.url,
-                x: img.x || 10,
-                y: img.y || 10,
-                width: img.width || 30,
-                height: img.height || 30,
-                rotation: img.rotation || 0,
-              }));
-
-            // Combine existing images with server images (avoid duplicates)
-            const existingImages = page.images || [];
-            const existingIds = new Set(existingImages.map((img: any) => img.id));
-            const newImages = serverImages.filter((img: any) => !existingIds.has(img.id));
-
-            return {
-              ...page,
-              images: [...existingImages, ...newImages],
-            };
-          });
-          // Ensure summary page exists if includeBackCover is enabled
           const rawSettings = { ...defaultSettings, ...bookData.pageLayout.settings };
           // Migrate old books with oversized fonts/margins — they caused text overflow
           const loadedSettings = {
@@ -659,15 +633,112 @@ export default function BookLayoutPage() {
               right: rawSettings.margins.right > 40 ? Math.round(rawSettings.margins.right * 0.65) : rawSettings.margins.right,
             },
           };
-          const hasSummaryPage = pagesWithImages.some((p: any) => p.type === 'summary');
-          if (loadedSettings.includeBackCover && !hasSummaryPage) {
-            pagesWithImages.push({
+
+          // Content is NOT saved to the server (stripped in saveLayout to keep payload small).
+          // Regenerate page content from chapters, then merge saved images back.
+          const bookIsRTLCheck = isRTL(bookData.title) || bookData.language === 'he';
+          const charsPerPage = estimateCharsPerPage(loadedSettings, bookIsRTLCheck);
+          const savedPages = bookData.pageLayout.pages;
+
+          // Build a map of saved page id -> images (what was persisted)
+          const savedImagesMap = new Map<string, any[]>();
+          savedPages.forEach((page: any, pageIndex: number) => {
+            const serverImages = (bookData.pageImages || [])
+              .filter((img: any) => img.pageIndex === pageIndex)
+              .map((img: any) => ({
+                id: img._id || `img-${img.createdAt || Date.now()}`,
+                url: img.url,
+                x: img.x || 10,
+                y: img.y || 10,
+                width: img.width || 30,
+                height: img.height || 30,
+                rotation: img.rotation || 0,
+              }));
+            const existingImages = page.images || [];
+            const existingIds = new Set(existingImages.map((img: any) => img.id));
+            const newImages = serverImages.filter((img: any) => !existingIds.has(img.id));
+            savedImagesMap.set(page.id, [...existingImages, ...newImages]);
+          });
+
+          // Regenerate pages with content from chapters
+          const freshPages: PageContent[] = [];
+
+          // Title page
+          freshPages.push({
+            id: `page-title`,
+            type: 'title',
+            content: `<h1 class="book-title">${bookData.title}</h1><p class="book-author">${bookData.author?.name || ''}</p>`,
+            images: savedImagesMap.get('page-title') || [],
+          });
+
+          // Blank page after title
+          freshPages.push({
+            id: `page-blank-1`,
+            type: 'blank',
+            content: '',
+            images: savedImagesMap.get('page-blank-1') || [],
+          });
+
+          // Chapter pages
+          const chapterPages: PageContent[] = [];
+          const chapterStartPages: number[] = [];
+
+          bookData.chapters.forEach((chapter: any, index: number) => {
+            const chapterContent = chapter.content || '';
+            const basePages = loadedSettings.includeToc && bookData.chapters.length > 1 ? 4 : 2;
+            chapterStartPages.push(basePages + chapterPages.length + 1);
+
+            const contentPages = splitContentIntoPages(chapterContent, charsPerPage, true);
+            contentPages.forEach((pageContent: string, pageIndex: number) => {
+              const isFirstPageOfChapter = pageIndex === 0;
+              const pageId = pageIndex === 0
+                ? `page-chapter-${index}`
+                : `page-chapter-${index}-cont-${pageIndex}`;
+
+              chapterPages.push({
+                id: pageId,
+                type: 'chapter',
+                chapterIndex: index,
+                content: isFirstPageOfChapter
+                  ? `<h2 class="chapter-title">${chapter.title}</h2>${pageContent}`
+                  : pageContent,
+                images: savedImagesMap.get(pageId) || [],
+              });
+            });
+          });
+
+          // TOC
+          if (loadedSettings.includeToc && bookData.chapters.length > 1) {
+            const tocContent = bookData.chapters
+              .map((ch: any, i: number) => `<div class="toc-item"><span class="toc-title">${ch.title}</span><span class="toc-page">${chapterStartPages[i] || ''}</span></div>`)
+              .join('');
+            freshPages.push({
+              id: `page-toc`,
+              type: 'toc',
+              content: `<h2 class="toc-header">${bookIsRTLCheck ? 'תוכן עניינים' : 'Table of Contents'}</h2>${tocContent}`,
+              images: savedImagesMap.get('page-toc') || [],
+            });
+            freshPages.push({
+              id: `page-blank-2`,
+              type: 'blank',
+              content: '',
+              images: savedImagesMap.get('page-blank-2') || [],
+            });
+          }
+
+          freshPages.push(...chapterPages);
+
+          // Back cover
+          if (loadedSettings.includeBackCover) {
+            freshPages.push({
               id: `page-summary`,
               type: 'summary',
               content: bookData.synopsis || bookData.description || '',
-              images: [],
+              images: savedImagesMap.get('page-summary') || [],
             });
           }
+
+          const pagesWithImages = freshPages;
           // Inject AI-generated images from aiDesignState.design.imagePlacements
           // into the matching chapter pages BEFORE the first render.
           const aiPlacements = bookData.aiDesignState?.design?.imagePlacements || [];
@@ -700,8 +771,7 @@ export default function BookLayoutPage() {
 
           // Re-paginate: if images reduced available text space on a page,
           // split the overflow into a new continuation page so text isn't cut off.
-          const bookIsRTL = isRTL(bookData.title) || bookData.language === 'he';
-          const finalPages = repaginateForImages(pagesWithImages, loadedSettings, bookIsRTL);
+          const finalPages = repaginateForImages(pagesWithImages, loadedSettings, bookIsRTLCheck);
           setPages(finalPages);
           setSettings(loadedSettings);
         } else {
