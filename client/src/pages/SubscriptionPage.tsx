@@ -324,17 +324,25 @@ export default function SubscriptionPage() {
 
                   {/* Plan Name */}
                   <h3
-                    className={`text-xl sm:text-2xl font-bold mb-2 capitalize ${
+                    className={`text-xl sm:text-2xl font-bold mb-2 ${
                       premium ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent' : 'text-white'
                     }`}
                   >
-                    {plan.id}
+                    {plan.id === 'free'
+                      ? (language === 'he' ? 'חינמי' : 'Free')
+                      : plan.id === 'standard'
+                      ? (language === 'he' ? 'סטנדרטי' : 'Standard')
+                      : plan.id === 'premium'
+                      ? (language === 'he' ? 'פרמיום' : 'Premium')
+                      : plan.id}
                   </h3>
 
                   {/* Price */}
                   <div className="mb-4 sm:mb-6">
                     {plan.price === 0 ? (
-                      <div className="text-3xl sm:text-4xl font-bold text-white">Free</div>
+                      <div className="text-3xl sm:text-4xl font-bold text-white">
+                        {language === 'he' ? 'חינם' : 'Free'}
+                      </div>
                     ) : (
                       <div className="flex items-baseline gap-2">
                         <span className={`text-3xl sm:text-4xl font-bold ${premium ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent' : 'text-white'}`}>
@@ -342,14 +350,14 @@ export default function SubscriptionPage() {
                             ? formatCurrency(plan.priceILS, 'ILS')
                             : formatCurrency(plan.price, 'USD')}
                         </span>
-                        <span className="text-gray-400">/month</span>
+                        <span className="text-gray-400">{language === 'he' ? '/חודש' : '/month'}</span>
                       </div>
                     )}
                     {plan.price > 0 && (
                       <div className="text-sm text-gray-400 mt-1">
                         {currency === 'ILS'
                           ? formatCurrency(plan.price, 'USD')
-                          : formatCurrency(plan.priceILS, 'ILS')}/month
+                          : formatCurrency(plan.priceILS, 'ILS')}{language === 'he' ? '/חודש' : '/month'}
                       </div>
                     )}
                   </div>
@@ -357,7 +365,9 @@ export default function SubscriptionPage() {
                   {/* Credits */}
                   <div className="mb-4 sm:mb-6">
                     <div className={`text-xs sm:text-sm font-semibold ${premium ? 'text-yellow-400' : 'text-indigo-400'}`}>
-                      {plan.credits === -1 ? 'Unlimited Credits' : `${plan.credits} Credits/Month`}
+                      {plan.credits === -1
+                        ? (language === 'he' ? 'קרדיטים ללא הגבלה' : 'Unlimited Credits')
+                        : `${plan.credits} ${language === 'he' ? 'קרדיטים לחודש' : 'Credits/Month'}`}
                     </div>
                   </div>
 
@@ -383,7 +393,7 @@ export default function SubscriptionPage() {
                       aria-label="Current Plan - already subscribed"
                       className="w-full py-3 sm:py-4 bg-gray-700 text-gray-400 rounded-lg sm:rounded-xl font-semibold cursor-not-allowed text-sm sm:text-base"
                     >
-                      Current Plan
+                      {language === 'he' ? 'המנוי הנוכחי שלך' : 'Current Plan'}
                     </button>
                   ) : plan.id === 'free' ? (
                     <button
@@ -396,10 +406,10 @@ export default function SubscriptionPage() {
                       {isUpgrading ? (
                         <>
                           <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                          Processing...
+                          {language === 'he' ? 'מעבד...' : 'Processing...'}
                         </>
                       ) : (
-                        'Downgrade to Free'
+                        language === 'he' ? 'מעבר לתכנית החינמית' : 'Downgrade to Free'
                       )}
                     </button>
                   ) : (
@@ -417,11 +427,11 @@ export default function SubscriptionPage() {
                       {isUpgrading ? (
                         <>
                           <Loader2 className="w-5 h-5 animate-spin" />
-                          Processing...
+                          {language === 'he' ? 'מעבד...' : 'Processing...'}
                         </>
                       ) : (
                         <>
-                          Upgrade Now
+                          {language === 'he' ? 'שדרג עכשיו' : 'Upgrade Now'}
                           <ArrowRight className="w-5 h-5" />
                         </>
                       )}
@@ -442,10 +452,14 @@ export default function SubscriptionPage() {
           className="mt-12 text-center"
         >
           <p className="text-gray-400 mb-4">
-            All plans include access to the marketplace and basic writing tools
+            {language === 'he'
+              ? 'כל התכניות כוללות גישה לכלי הכתיבה הבסיסיים'
+              : 'All plans include access to the marketplace and basic writing tools'}
           </p>
           <p className="text-sm text-gray-500">
-            Cancel anytime - No long-term commitments - Secure payment
+            {language === 'he'
+              ? 'ביטול בכל עת · ללא התחייבות ארוכת טווח · תשלום מאובטח'
+              : 'Cancel anytime - No long-term commitments - Secure payment'}
           </p>
         </motion.div>
       </div>

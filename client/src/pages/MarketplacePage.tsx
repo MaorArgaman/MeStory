@@ -1012,7 +1012,7 @@ export default function MarketplacePage() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3, duration: 0.6 }}
                     className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-gold mb-2 sm:mb-3"
-                    style={{ fontFamily: "'Cinzel', serif" }}
+                   
                   >
                     {t('marketplace.banners.fantasy.title')}
                   </motion.h1>
@@ -1113,7 +1113,7 @@ export default function MarketplacePage() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3, duration: 0.6 }}
                     className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2 sm:mb-3"
-                    style={{ fontFamily: "'Cinzel', serif" }}
+                   
                   >
                     {t('marketplace.banners.scifi.title')}
                   </motion.h1>
@@ -1456,7 +1456,7 @@ export default function MarketplacePage() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3, duration: 0.6 }}
                     className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-purple-400 to-red-500 bg-clip-text text-transparent mb-2 sm:mb-3"
-                    style={{ fontFamily: "'Cinzel', serif" }}
+                   
                   >
                     {t('marketplace.banners.mystery.title')}
                   </motion.h1>

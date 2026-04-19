@@ -689,7 +689,7 @@ export default function BookWritingPage() {
               className="flex items-center hover:opacity-80 transition-opacity"
             >
               <img
-                src="/img/new/logo-mestory-small.jpeg"
+                src="/img/new/logo-mestory-small.png"
                 alt="MeStory"
                 className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.3)]"
               />

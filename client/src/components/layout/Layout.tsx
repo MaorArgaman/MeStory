@@ -4,7 +4,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { WifiOff } from 'lucide-react';
 import Navbar from './Navbar';
 
-const logoIcon = '/img/new/logo-mestory-large.jpeg';
+const logoIcon = '/img/new/logo-mestory-large.png';
 
 interface LayoutProps {
   children: ReactNode;

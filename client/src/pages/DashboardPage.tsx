@@ -433,7 +433,7 @@ export default function DashboardPage() {
       {/* Hero Section - Begin Your Next Masterpiece */}
       <div className="max-w-7xl mx-auto mb-8 sm:mb-12 lg:mb-16">
         <div className="text-center mb-6 sm:mb-8 lg:mb-10">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold gradient-gold mb-2 sm:mb-3" style={{ fontFamily: "'Cinzel', serif" }}>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold gradient-gold mb-2 sm:mb-3">
             {t('dashboard.hero.title')}
           </h2>
           <p className="text-sm sm:text-base lg:text-xl text-gray-400 px-2">{t('dashboard.hero.subtitle')}</p>
@@ -549,7 +549,7 @@ export default function DashboardPage() {
       {/* Your Library Section */}
       <div className="max-w-7xl mx-auto">
         <div className="mb-4 sm:mb-6 lg:mb-8">
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-gold mb-1 sm:mb-2" style={{ fontFamily: "'Cinzel', serif" }}>
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-gold mb-1 sm:mb-2">
             {t('dashboard.sections.your_library')}
           </h2>
           <p className="text-sm sm:text-base text-gray-400">{t('dashboard.sections.your_library_subtitle')}</p>
@@ -581,7 +581,7 @@ export default function DashboardPage() {
             >
               <h2
                 className="text-3xl sm:text-4xl lg:text-5xl font-bold gradient-gold mb-4 text-center"
-                style={{ fontFamily: "'Cinzel', serif" }}
+               
               >
                 {t('dashboard.empty.headline', '\u05D4\u05E1\u05D9\u05E4\u05D5\u05E8 \u05E9\u05DC\u05DA \u05DE\u05D7\u05DB\u05D4 \u05DC\u05D4\u05D9\u05DB\u05EA\u05D1')}
               </h2>
@@ -779,7 +779,7 @@ export default function DashboardPage() {
                 <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mx-auto mb-6 glow-purple">
                   <Upload className="w-10 h-10 text-white" />
                 </div>
-                <h2 className="text-3xl font-bold gradient-gold mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
+                <h2 className="text-3xl font-bold gradient-gold mb-4">
                   {t('dashboard.modals.upload.title')}
                 </h2>
                 <p className="text-gray-300 mb-6 leading-relaxed">
@@ -894,7 +894,7 @@ export default function DashboardPage() {
                 <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center mx-auto mb-6 glow">
                   <PenTool className="w-10 h-10 text-white" />
                 </div>
-                <h2 className="text-3xl font-bold gradient-gold mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
+                <h2 className="text-3xl font-bold gradient-gold mb-4">
                   {t('dashboard.modals.quick_create.title')}
                 </h2>
                 <p className="text-gray-300 mb-6 leading-relaxed">
@@ -1000,7 +1000,7 @@ export default function DashboardPage() {
                 <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto mb-6 glow">
                   <Mic className="w-10 h-10 text-white" />
                 </div>
-                <h2 className="text-3xl font-bold gradient-gold mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
+                <h2 className="text-3xl font-bold gradient-gold mb-4">
                   {t('dashboard.modals.voice.title')}
                 </h2>
                 <p className="text-gray-300 mb-6 leading-relaxed">

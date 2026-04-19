@@ -12,7 +12,7 @@ import ConversationsList from '../messaging/ConversationsList';
 import NotificationCenter from '../notifications/NotificationCenter';
 import OptimizedImage from '../ui/OptimizedImage';
 // MeStory Logo
-const logoIcon = '/img/new/logo-mestory-small.jpeg';
+const logoIcon = '/img/new/logo-mestory-small.png';
 
 export default function Navbar() {
   const { t } = useTranslation('common');

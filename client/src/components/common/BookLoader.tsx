@@ -276,7 +276,7 @@ export default function BookLoader({
       {/* Logo */}
       {autoShowLogo && (
         <motion.img
-          src="/img/new/logo-mestory-large.jpeg"
+          src="/img/new/logo-mestory-large.png"
           alt="MeStory"
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}

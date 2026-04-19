@@ -125,6 +125,11 @@
     letter-spacing: 0.02em;
   }
 
+  [dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3 {
+    font-family: 'Heebo', sans-serif;
+    letter-spacing: 0;
+  }
+
   /* ==================== CUSTOM SCROLLBAR ==================== */
 
   ::-webkit-scrollbar {
@@ -221,6 +226,10 @@
     @apply px-4 py-2 bg-gradient-to-r from-memorial-gold to-amber-600 text-slate-900 rounded-lg hover:from-memorial-gold/90 hover:to-amber-500 transition-all duration-300 font-semibold;
     box-shadow: 0 4px 14px rgba(201, 162, 39, 0.3);
     font-family: 'Cinzel', serif;
+  }
+
+  [dir="rtl"] .btn-gold {
+    font-family: 'Heebo', sans-serif;
   }
 
   /* Inputs - Memorial Theme */
@@ -717,6 +726,11 @@
     text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
   }
 
+  [dir="rtl"] .majestic-heading {
+    font-family: 'Heebo', sans-serif;
+    letter-spacing: 0;
+  }
+
   /* RTL Support for Hebrew and other RTL languages */
   .rtl-grid {
     direction: rtl;
@@ -1203,6 +1217,10 @@
 .text-book-title { font: 700 22px/1.2 'Cinzel', serif; }
 .text-handwriting { font: 400 18px/1.5 'Caveat', cursive; }
 
+[dir="rtl"] .text-display { font-family: 'Heebo', sans-serif; letter-spacing: 0; }
+[dir="rtl"] .text-title { font-family: 'Heebo', sans-serif; letter-spacing: 0; }
+[dir="rtl"] .text-book-title { font-family: 'David Libre', serif; }
+
 /* ==================== COLOR TOKENS ==================== */
 
 :root {
@@ -1238,7 +1256,6 @@
 .nav-logo-glow {
   filter: drop-shadow(0 0 6px rgba(218,165,32,0.4)) drop-shadow(0 2px 8px rgba(0,0,0,0.3));
   transition: filter 0.35s ease, transform 0.35s ease;
-  border-radius: 10px;
 }
 .nav-logo-glow:hover {
   filter: drop-shadow(0 0 18px rgba(218,165,32,0.75)) drop-shadow(0 0 6px rgba(255,215,0,0.4)) drop-shadow(0 4px 12px rgba(0,0,0,0.4));

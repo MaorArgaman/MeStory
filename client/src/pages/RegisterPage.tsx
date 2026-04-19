@@ -13,7 +13,7 @@ import _logoIconLegacy from '../assets/images/logo-icon.png';
 
 // Use new realistic images from public folder
 const registerSideImage = '/img/new/hero-soldiers-unit.png';
-const logoIcon = '/img/new/logo-mestory-large.jpeg';
+const logoIcon = '/img/new/logo-mestory-large.png';
 
 export default function RegisterPage() {
   const { t, i18n } = useTranslation('auth');
@@ -135,7 +135,7 @@ export default function RegisterPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
           >
-            <h2 className="text-5xl font-bold text-white mb-4" style={{ fontFamily: "'Cinzel', serif" }}>
+            <h2 className="text-5xl font-bold text-white mb-4">
               {t('register.side_title_1', 'Start Your')}
               <br />
               <span className="gradient-gold">{t('register.side_title_2', 'Writing Journey')}</span>

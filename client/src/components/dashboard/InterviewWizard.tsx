@@ -223,7 +223,7 @@ export default function InterviewWizard({ onClose, onSuccess }: InterviewWizardP
                 <Check className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 id="interview-summary-title" className="text-2xl font-bold gradient-gold" style={{ fontFamily: "'Cinzel', serif" }}>
+                <h2 id="interview-summary-title" className="text-2xl font-bold gradient-gold">
                   {t('interview.complete', 'Interview Complete!')}
                 </h2>
                 <p className="text-sm text-gray-400">

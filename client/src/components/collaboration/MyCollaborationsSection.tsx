@@ -113,7 +113,7 @@ export default function MyCollaborationsSection() {
           <div>
             <h2
               className="text-2xl font-bold gradient-gold"
-              style={{ fontFamily: "'Cinzel', serif" }}
+             
             >
               {isHebrew ? 'ספרים שאני תורם להם' : 'Books I Contribute To'}
             </h2>
