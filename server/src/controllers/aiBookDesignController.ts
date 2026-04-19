@@ -1366,12 +1366,10 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    // Synchronous approach: do ALL work inside this request (up to 300s maxDuration).
-    // No fire-and-forget — Vercel kills background work after response is sent.
-    const jobId = randomUUID();
+    // MINIMAL overhead: book lookup + AI call + save. No job system.
     const userId = req.user.id;
 
-    // Fetch book first (before creating job) — fail fast if not found
+    // Fetch book — single DB call
     const book = await Book.findByIdForDesign(bookId);
     if (!book) {
       res.status(404).json({ success: false, error: 'Book not found' });
@@ -1382,53 +1380,23 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    // Create job row
     try {
-      await enqueueJob({
-        id: jobId,
-        userId,
-        bookId,
-        type: 'design_generation',
-        input: { generateCoverImages, generateInteriorImages, maxInteriorImages },
-      });
-    } catch (err) {
-      console.error(`[premiumDesignWizard] enqueueJob failed — jobId=${jobId}`, err);
-      res.status(500).json({ success: false, error: 'Failed to create design job' });
-      return;
-    }
+      console.log(`\n🌟 Starting FAST DESIGN for "${book.title}"...`);
 
-    // Skip image generation for speed — design-only takes ~30s vs ~120s with images
-    const fastGenerateCoverImages = false;
-    const fastGenerateInteriorImages = false;
-
-    // Do ALL work synchronously inside the request (maxDuration=300s).
-    // No fire-and-forget — Vercel kills background work after response.
-    try {
-      await updateJobProgress(jobId, 5, 'מנתח את תוכן הספר...');
-
-      const designInput: PremiumBookDesignInput = {
+      // Single AI call — no job system, no progress updates, no extra DB calls
+      const premiumDesign = await generateFastDesign({
         title: book.title,
-        authorName: await getAuthorName(book.author),
+        authorName: book.authorName || 'Author',
         genre: book.genre,
         language: book.language || 'en',
         synopsis: book.synopsis || book.description,
         chapters: book.chapters.map((ch) => ({
           title: ch.title,
-          content: ch.content,
+          content: ch.content?.slice(0, 500) || '',
           wordCount: ch.wordCount,
         })),
         targetAudience: book.targetAudience,
-      };
-
-      console.log(`\n🌟 Starting PREMIUM DESIGN (job ${jobId}) for "${book.title}"...`);
-
-      // Use fast single-call design (~10-15s instead of ~120s+)
-      const premiumDesign = await generateFastDesign(
-        designInput,
-        async (progress) => {
-          await updateJobProgress(jobId, progress.percentage, progress.stepName).catch(() => {});
-        },
-      );
+      });
 
       // Convert design to book state format
       // Safe access helpers
@@ -1443,6 +1411,7 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       const pageNum = lay.pageNumbering || { enabled: true, position: 'bottom-center' };
       const headers = lay.headers || { enabled: true };
       const footers = lay.footers || { enabled: false };
+      const authorName = book.authorName || 'Author';
 
       // Build page layout with safe access
       const newPageLayout = {
@@ -1514,13 +1483,12 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
         },
       };
 
-      // Save to database (no images to process — fast design skips image gen)
+      // Save to database
       const updatedBook = await Book.findByIdAndUpdate(
         bookId,
         {
           aiDesignState: {
             status: 'completed',
-            jobId,
             completedAt: new Date().toISOString(),
             design: premiumDesign,
           },
@@ -1530,50 +1498,32 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
         { new: true }
       );
 
-      console.log(`\n✅ PREMIUM DESIGN SAVED (job ${jobId}) for "${book.title}"!`);
+      console.log(`\n✅ FAST DESIGN SAVED for "${book.title}"!`);
 
-      // Return the result payload — the job queue stores it and the client reads it on poll
-      return {
+      // Respond directly with the result
+      const result = {
         bookId,
-        qualityScore: premiumDesign.qualityScore,
+        typography: premiumDesign.typography,
+        layout: premiumDesign.layout,
+        cover: premiumDesign.cover,
         theme: premiumDesign.theme,
-        typography: {
-          bodyFont: premiumDesign.typography.bodyFont,
-          headingFont: premiumDesign.typography.headingFont,
-          colors: premiumDesign.typography.colors,
-        },
         tableOfContents: premiumDesign.tableOfContents,
         chapterDecoration: premiumDesign.chapterDecoration,
-        layout: {
-          pageSize: premiumDesign.layout.pageSize,
-          chapterStartStyle: premiumDesign.layout.chapterStartStyle,
-          pageNumbering: premiumDesign.layout.pageNumbering,
-          background: premiumDesign.layout.background,
-        },
-        covers: {
-          frontImageUrl: premiumDesign.covers.frontImageUrl,
-          backImageUrl: premiumDesign.covers.backImageUrl,
-        },
-        imagePlacements: premiumDesign.imagePlacements.length,
-        generatedImages: premiumDesign.generatedImages.length,
         overallStyle: premiumDesign.overallStyle,
         pageLayout: updatedBook?.pageLayout,
         coverDesign: updatedBook?.coverDesign,
       };
 
-      // Mark job complete and respond with the result
-      await completeJob(jobId, result);
-      res.status(200).json({ success: true, data: { jobId, status: 'completed', result } });
+      res.status(200).json({ success: true, data: { result } });
 
     } catch (error: any) {
-      console.error('Premium Design Wizard error:', error);
-      await failJob(jobId, error?.message || 'Design generation failed').catch(() => {});
+      console.error('Fast Design error:', error);
       if (!res.headersSent) {
         res.status(500).json({ success: false, error: error?.message || 'Design generation failed' });
       }
     }
   } catch (error: any) {
-    console.error('Premium Design Wizard outer error:', error);
+    console.error('Fast Design outer error:', error);
     if (!res.headersSent) {
       res.status(500).json({ success: false, error: error?.message || 'Failed to generate design' });
     }
