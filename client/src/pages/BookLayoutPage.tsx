@@ -286,7 +286,7 @@ const repaginateForImages = (
     const adjustedCharsPerPage = Math.floor(baseCharsPerPage * reductionFactor);
 
     // Strip HTML to measure text length
-    const textLength = page.content.replace(/<[^>]*>/g, '').length;
+    const textLength = (page.content || '').replace(/<[^>]*>/g, '').length;
 
     if (textLength <= adjustedCharsPerPage) {
       result.push(page);
@@ -2744,8 +2744,8 @@ export default function BookLayoutPage() {
             onMouseUp={(e) => handleSwipeEnd(e.clientX, e.clientY)}
           >
 
-          {/* react-pageflip book — aspect ratio from selected page size, no remount */}
-          <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden" style={{ width: '100%' }}>
+          {/* react-pageflip book — key on page count forces clean remount when TOC added/removed */}
+          <div key={`flipbook-${orderedContentPages.length}`} className="flex-1 min-h-0 flex items-center justify-center overflow-hidden" style={{ width: '100%' }}>
             <HTMLFlipBook
               ref={flipBookRef}
               width={pageDimensions.pageW}

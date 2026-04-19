@@ -604,7 +604,11 @@ export class Book {
       .eq('id', id)
       .single();
 
-    if (error || !data) return null;
+    if (error) {
+      if (error.code === 'PGRST116') return null; // Genuinely not found
+      throw new Error(`Database error in findById: ${error.message}`);
+    }
+    if (!data) return null;
     return rowToBook(data as BookRow);
   }
 
