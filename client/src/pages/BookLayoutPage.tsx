@@ -1252,7 +1252,10 @@ export default function BookLayoutPage() {
       const formData = new FormData();
       formData.append('image', file);
       formData.append('pageIndex', String(pageIndex));
-      const response = await api.post(`/books/${bookId}/page-image`, formData);
+      // Clear Content-Type so browser sets multipart/form-data with boundary automatically
+      const response = await api.post(`/books/${bookId}/page-image`, formData, {
+        headers: { 'Content-Type': undefined },
+      });
       if (response.data.success) {
         const d = response.data.data?.image || response.data.data;
         return d?.url || response.data.data?.imageUrl || null;
@@ -1286,8 +1289,12 @@ export default function BookLayoutPage() {
         }))
       );
 
+      // Only send layout fields — exclude `content` (chapter HTML) to keep payload small
       const pagesForSave = processedPages.map(page => ({
-        ...page,
+        id: page.id,
+        type: page.type,
+        chapterIndex: page.chapterIndex,
+        pageIndex: page.pageIndex,
         images: (page.images || []).map(img => ({
           id: img.id,
           url: img.url || '',
