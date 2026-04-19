@@ -455,6 +455,10 @@ const defaultSettings = {
   sectionDivider: '' as string,
   cornerDecorations: 'none' as 'none' | 'flourish' | 'geometric' | 'floral' | 'stars' | 'hearts' | 'leaves',
   titleUnderline: 'none' as 'none' | 'simple' | 'double' | 'wavy' | 'dotted' | 'gradient' | 'ornate',
+  // Rich backgrounds
+  backgroundGradient: undefined as string | undefined,
+  backgroundTexture: 'none' as 'none' | 'paper' | 'parchment' | 'linen',
+  backgroundTextureOpacity: 0.15,
 };
 
 // Page wrapper required by react-pageflip (must be forwardRef)
@@ -1700,17 +1704,21 @@ export default function BookLayoutPage() {
       chapterStartStyle: layout.chapterStartStyle || 'new-page-centered',
       headerStyle: layout.headerStyle || 'none',
       dropCapEnabled: layout.dropCaps || false,
-      // New design elements from style variant
+      // Design elements — rich defaults from AI design
       dropCapStyle: design.dropCapStyle || (layout.dropCaps ? 'classic' : 'none'),
       dividerStyle: design.dividerStyle || 'ornament',
-      pageFrame: design.pageFrame || 'none',
+      pageFrame: design.pageFrame || 'royal',
       frameColor: design.frameColor || colors.accent || settings.accentColor,
       backgroundPattern: design.backgroundPattern || 'none',
-      headerDecoration: design.headerDecoration || (layout.headerStyle && layout.headerStyle !== 'none' ? 'line' : 'none'),
-      cornerDecorations: design.cornerDecorations || 'none',
+      headerDecoration: design.headerDecoration || 'banner',
+      cornerDecorations: design.cornerDecorations || 'royal',
       sectionDivider: design.sectionDivider || '',
-      titleUnderline: design.titleUnderline || 'none',
+      titleUnderline: design.titleUnderline || 'ornate',
       pageSize: design.pageSize || settings.pageSize || 'A5',
+      // Rich background — gradient from AI color palette
+      backgroundGradient: design.backgroundGradient || `linear-gradient(170deg, ${colors.background || '#fefdfb'} 0%, ${(colors.accent || '#8b6914')}08 100%)`,
+      backgroundTexture: design.backgroundTexture || 'parchment',
+      backgroundTextureOpacity: design.backgroundTextureOpacity ?? 0.12,
     };
 
     setSettings(newSettings);
@@ -4684,7 +4692,20 @@ function PageRenderer({
       case 'dashed': return { outline: `1.5px dashed ${c}60`, outlineOffset: '-5px' };
       case 'dotted': return { outline: `1.5px dotted ${c}60`, outlineOffset: '-5px' };
       case 'rounded': return { boxShadow: `inset 0 0 0 1.5px ${c}60`, borderRadius: '6px', overflow: 'hidden' };
+      case 'royal': return { boxShadow: `inset 0 0 0 2px ${c}, inset 0 0 0 4px ${c}15, inset 0 0 0 6px ${c}, inset 0 0 0 8px ${c}20, inset 0 0 0 12px ${c}08` };
+      case 'elegant': return { boxShadow: `inset 0 0 0 1px ${c}50, inset 0 0 0 4px ${c}10, inset 0 0 0 5px ${c}80` };
+      case 'art-deco': return { boxShadow: `inset 0 0 0 3px ${c}, inset 0 0 0 5px transparent, inset 0 0 0 6px ${c}60, inset 0 0 0 10px ${c}15` };
       default: return {};
+    }
+  };
+
+  // Texture URL helper
+  const getTextureUrl = (texture: string): string | null => {
+    switch (texture) {
+      case 'paper': return '/img/new/texture-paper.jpeg';
+      case 'parchment': return '/img/new/texture-paper-2.jpeg';
+      case 'linen': return '/img/new/texture-paper-3.jpeg';
+      default: return null;
     }
   };
 
@@ -4714,6 +4735,7 @@ function PageRenderer({
         lineHeight: settings.lineHeight,
         color: settings.textColor || '#000000',
         backgroundColor: settings.backgroundColor || '#ffffff',
+        ...(settings.backgroundGradient ? { background: settings.backgroundGradient } : {}),
         direction: isRTL ? 'rtl' : 'ltr',
         textAlign: isRTL ? 'right' : 'left',
         '--accent-color': settings.accentColor || '#8b6914',
@@ -4722,6 +4744,19 @@ function PageRenderer({
         ...getPageFrameStyle(),
       } as React.CSSProperties}
     >
+      {/* Texture overlay */}
+      {settings.backgroundTexture && settings.backgroundTexture !== 'none' && getTextureUrl(settings.backgroundTexture) && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: `url(${getTextureUrl(settings.backgroundTexture)})`,
+          backgroundSize: 'cover',
+          opacity: settings.backgroundTextureOpacity ?? 0.15,
+          mixBlendMode: 'multiply',
+          pointerEvents: 'none',
+        }} />
+      )}
+
       {/* Corner Decorations */}
       {settings.cornerDecorations && settings.cornerDecorations !== 'none' && (
         <>
@@ -4741,8 +4776,31 @@ function PageRenderer({
         </>
       )}
 
-      {/* Decorative header line + book title — hidden on mobile (too small to read) */}
-      {showHeader && headerStyle !== 'none' && page.type !== 'title' && page.type !== 'toc' && (
+      {/* Decorative header — banner style or classic */}
+      {showHeader && settings.headerDecoration === 'banner' && page.type !== 'title' && page.type !== 'toc' ? (
+        <div className="absolute top-0 left-0 right-0 hidden sm:block" style={{
+          background: `linear-gradient(180deg, ${settings.accentColor || '#8b6914'}30 0%, ${settings.accentColor || '#8b6914'}08 100%)`,
+          borderBottom: `1px solid ${settings.accentColor || '#8b6914'}40`,
+          padding: `4px ${settings.margins.right}px 3px`,
+        }}>
+          <div className="flex items-center justify-center gap-2">
+            <span style={{ fontSize: '5px', color: settings.accentColor, opacity: 0.6 }}>✦</span>
+            <div style={{ flex: 1, maxWidth: 40, height: '0.5px', background: `linear-gradient(to right, transparent, ${settings.accentColor}50)` }} />
+            <span style={{
+              fontSize: '6px',
+              color: settings.accentColor,
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              fontWeight: 500,
+              fontFamily: settings.titleFont || settings.fontFamily,
+            }}>
+              {getHeaderText()}
+            </span>
+            <div style={{ flex: 1, maxWidth: 40, height: '0.5px', background: `linear-gradient(to left, transparent, ${settings.accentColor}50)` }} />
+            <span style={{ fontSize: '5px', color: settings.accentColor, opacity: 0.6 }}>✦</span>
+          </div>
+        </div>
+      ) : showHeader && headerStyle !== 'none' && page.type !== 'title' && page.type !== 'toc' && (
         <div className="absolute top-0 left-0 right-0 hidden sm:block" style={{ padding: `0 ${settings.margins.right}px` }}>
           <div
             className={`flex items-center gap-3 pt-3 pb-2 ${

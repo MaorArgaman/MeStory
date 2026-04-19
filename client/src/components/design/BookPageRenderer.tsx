@@ -38,6 +38,10 @@ export interface PageDesignSettings {
   textColor?: string;
   accentColor?: string;
   backgroundColor?: string;
+  // Rich backgrounds
+  backgroundGradient?: string;
+  backgroundTexture?: 'none' | 'paper' | 'parchment' | 'linen';
+  backgroundTextureOpacity?: number;
   // Layout
   columns?: 1 | 2 | 3 | 4;
   paragraphSpacing?: number;
@@ -48,12 +52,12 @@ export interface PageDesignSettings {
   dropCapStyle?: 'none' | 'classic' | 'decorative' | 'box' | 'modern';
   dividerStyle?: 'none' | 'line' | 'ornament' | 'stars' | 'dots' | 'wave';
   pullQuoteStyle?: 'none' | 'bordered' | 'background' | 'side-accent' | 'centered';
-  pageFrame?: 'none' | 'simple' | 'double' | 'ornate' | 'rounded' | 'dashed' | 'dotted' | 'gradient';
+  pageFrame?: 'none' | 'simple' | 'double' | 'ornate' | 'rounded' | 'dashed' | 'dotted' | 'gradient' | 'royal' | 'elegant' | 'art-deco';
   frameColor?: string;
   backgroundPattern?: 'none' | 'dots' | 'stripes' | 'grid' | 'waves' | 'confetti' | 'stars' | 'hearts' | 'geometric';
-  headerDecoration?: 'none' | 'line' | 'ornament' | 'gradient-line' | 'dots';
+  headerDecoration?: 'none' | 'line' | 'ornament' | 'gradient-line' | 'dots' | 'banner';
   sectionDivider?: string;
-  cornerDecorations?: 'none' | 'flourish' | 'geometric' | 'floral' | 'stars' | 'hearts' | 'leaves';
+  cornerDecorations?: 'none' | 'flourish' | 'geometric' | 'floral' | 'stars' | 'hearts' | 'leaves' | 'royal' | 'vine';
   titleUnderline?: 'none' | 'simple' | 'double' | 'wavy' | 'dotted' | 'gradient' | 'ornate';
   // Page size
   pageSize?: string;
@@ -129,6 +133,16 @@ function getPatternStyle(
   }
 }
 
+// ─── Helper: texture URL map ──────────────────────────────────────────────────
+function getTextureUrl(texture: string): string | null {
+  switch (texture) {
+    case 'paper':     return '/img/new/texture-paper.jpeg';
+    case 'parchment': return '/img/new/texture-paper-2.jpeg';
+    case 'linen':     return '/img/new/texture-paper-3.jpeg';
+    default:          return null;
+  }
+}
+
 // ─── Helper: get page frame CSS ────────────────────────────────────────────────
 function getFrameStyle(
   frame: string,
@@ -143,47 +157,116 @@ function getFrameStyle(
     case 'dotted':   return { outline: `2px dotted ${c}`, outlineOffset: '-6px' };
     case 'rounded':  return { boxShadow: `inset 0 0 0 1.5px ${c}`, borderRadius: '8px', overflow: 'hidden' };
     case 'gradient': return { boxShadow: `inset 0 0 0 2px ${c}` };
+    // Rich new frame types — rendered as layered box-shadows for depth
+    case 'royal':    return { boxShadow: `inset 0 0 0 2px ${c}, inset 0 0 0 4px ${c}15, inset 0 0 0 6px ${c}, inset 0 0 0 8px ${c}20, inset 0 0 0 12px ${c}08` };
+    case 'elegant':  return { boxShadow: `inset 0 0 0 1px ${c}50, inset 0 0 0 4px ${c}10, inset 0 0 0 5px ${c}80` };
+    case 'art-deco': return { boxShadow: `inset 0 0 0 3px ${c}, inset 0 0 0 5px transparent, inset 0 0 0 6px ${c}60, inset 0 0 0 10px ${c}15` };
     default:         return {};
   }
 }
 
 // ─── Corner Decoration SVGs ────────────────────────────────────────────────────
-function CornerSVG({ type, color, size = 36 }: { type: string; color: string; size?: number }) {
+function CornerSVG({ type, color, size = 60 }: { type: string; color: string; size?: number }) {
   const style: React.CSSProperties = { color, width: size, height: size };
   if (type === 'flourish') {
     return (
-      <svg viewBox="0 0 60 60" style={style} fill="none" stroke="currentColor" aria-hidden="true">
-        <path d="M2,2 L50,2 L50,4 L4,4 L4,50 L2,50 Z" fill="currentColor" opacity="0.35"/>
-        <path d="M8,8 Q8,22 8,32 Q22,8 32,8" strokeWidth="1.5"/>
-        <circle cx="8" cy="8" r="2.5" fill="currentColor"/>
+      <svg viewBox="0 0 80 80" style={style} fill="none" stroke="currentColor" aria-hidden="true">
+        <path d="M2,2 L65,2 L65,4 L4,4 L4,65 L2,65 Z" fill="currentColor" opacity="0.4"/>
+        <path d="M8,8 Q8,28 8,42 Q28,8 42,8" strokeWidth="1.8"/>
+        <path d="M12,12 Q12,24 12,34 Q24,12 34,12" strokeWidth="1" opacity="0.5"/>
+        <circle cx="8" cy="8" r="3.5" fill="currentColor" opacity="0.8"/>
+        <path d="M42,8 Q50,8 55,12" strokeWidth="1" opacity="0.4"/>
+        <path d="M8,42 Q8,50 12,55" strokeWidth="1" opacity="0.4"/>
       </svg>
     );
   }
   if (type === 'floral') {
     return (
-      <svg viewBox="0 0 60 60" style={style} fill="none" stroke="currentColor" aria-hidden="true">
-        <path d="M0,0 L48,0 L48,2 L2,2 L2,48 L0,48 Z" fill="currentColor" opacity="0.4"/>
-        <circle cx="14" cy="14" r="5" strokeWidth="1.2"/>
-        <circle cx="14" cy="14" r="2.5" fill="currentColor"/>
-        <path d="M19,14 Q24,9 29,14" strokeWidth="1"/>
-        <path d="M14,19 Q9,24 14,29" strokeWidth="1"/>
+      <svg viewBox="0 0 80 80" style={style} fill="none" stroke="currentColor" aria-hidden="true">
+        <path d="M0,0 L62,0 L62,2.5 L2.5,2.5 L2.5,62 L0,62 Z" fill="currentColor" opacity="0.45"/>
+        <circle cx="16" cy="16" r="7" strokeWidth="1.4"/>
+        <circle cx="16" cy="16" r="3" fill="currentColor" opacity="0.7"/>
+        <path d="M23,16 Q30,10 37,16" strokeWidth="1.2"/>
+        <path d="M16,23 Q10,30 16,37" strokeWidth="1.2"/>
+        <path d="M23,10 Q28,5 33,10" strokeWidth="0.8" opacity="0.5"/>
+        <path d="M10,23 Q5,28 10,33" strokeWidth="0.8" opacity="0.5"/>
+        <circle cx="37" cy="8" r="1.5" fill="currentColor" opacity="0.3"/>
+        <circle cx="8" cy="37" r="1.5" fill="currentColor" opacity="0.3"/>
       </svg>
     );
   }
   if (type === 'geometric') {
     return (
-      <svg viewBox="0 0 60 60" style={style} fill="none" stroke="currentColor" aria-hidden="true">
-        <polyline points="0,42 0,0 42,0" strokeWidth="2"/>
-        <polyline points="0,30 0,8 8,0 30,0" strokeWidth="1" opacity="0.5"/>
-        <rect x="2" y="2" width="8" height="8" fill="currentColor" opacity="0.3"/>
+      <svg viewBox="0 0 80 80" style={style} fill="none" stroke="currentColor" aria-hidden="true">
+        <polyline points="0,56 0,0 56,0" strokeWidth="2.5"/>
+        <polyline points="0,40 0,8 8,0 40,0" strokeWidth="1.2" opacity="0.5"/>
+        <rect x="2" y="2" width="10" height="10" fill="currentColor" opacity="0.3"/>
+        <rect x="14" y="2" width="6" height="6" fill="currentColor" opacity="0.15"/>
+        <rect x="2" y="14" width="6" height="6" fill="currentColor" opacity="0.15"/>
       </svg>
     );
   }
   if (type === 'stars') {
     return (
-      <svg viewBox="0 0 40 40" style={style} fill="currentColor" aria-hidden="true">
-        <text x="2" y="18" fontSize="14" opacity="0.7">✦</text>
-        <text x="16" y="32" fontSize="10" opacity="0.5">✧</text>
+      <svg viewBox="0 0 60 60" style={style} fill="currentColor" aria-hidden="true">
+        <text x="2" y="22" fontSize="18" opacity="0.8">✦</text>
+        <text x="22" y="42" fontSize="12" opacity="0.5">✧</text>
+        <text x="36" y="14" fontSize="8" opacity="0.3">✦</text>
+      </svg>
+    );
+  }
+  if (type === 'hearts') {
+    return (
+      <svg viewBox="0 0 60 60" style={style} fill="currentColor" aria-hidden="true">
+        <text x="2" y="22" fontSize="18" opacity="0.7">♥</text>
+        <text x="22" y="38" fontSize="10" opacity="0.4">♥</text>
+      </svg>
+    );
+  }
+  if (type === 'leaves') {
+    return (
+      <svg viewBox="0 0 80 80" style={style} fill="none" stroke="currentColor" aria-hidden="true">
+        <path d="M8,8 Q20,4 32,12 Q20,20 8,8 Z" fill="currentColor" opacity="0.3" strokeWidth="1"/>
+        <path d="M8,8 L20,12" strokeWidth="0.8" opacity="0.5"/>
+        <path d="M12,20 Q18,28 28,32 Q18,36 12,20 Z" fill="currentColor" opacity="0.2" strokeWidth="0.8"/>
+      </svg>
+    );
+  }
+  if (type === 'royal') {
+    return (
+      <svg viewBox="0 0 90 90" style={style} fill="none" stroke="currentColor" aria-hidden="true">
+        {/* Outer L-shaped border */}
+        <path d="M0,0 L72,0 L72,3 L3,3 L3,72 L0,72 Z" fill="currentColor" opacity="0.5"/>
+        {/* Inner decorative L */}
+        <path d="M6,6 L60,6 L60,8 L8,8 L8,60 L6,60 Z" fill="currentColor" opacity="0.25"/>
+        {/* Ornamental corner flourish */}
+        <path d="M12,12 Q12,30 12,44 Q30,12 44,12" strokeWidth="2" opacity="0.8"/>
+        <path d="M16,16 Q16,28 16,36 Q28,16 36,16" strokeWidth="1" opacity="0.4"/>
+        {/* Diamond accent */}
+        <path d="M12,12 L16,8 L20,12 L16,16 Z" fill="currentColor" opacity="0.6"/>
+        {/* End flourishes */}
+        <path d="M44,12 Q52,10 58,14" strokeWidth="1.2" opacity="0.5"/>
+        <path d="M12,44 Q10,52 14,58" strokeWidth="1.2" opacity="0.5"/>
+        <circle cx="58" cy="14" r="1.5" fill="currentColor" opacity="0.4"/>
+        <circle cx="14" cy="58" r="1.5" fill="currentColor" opacity="0.4"/>
+      </svg>
+    );
+  }
+  if (type === 'vine') {
+    return (
+      <svg viewBox="0 0 80 80" style={style} fill="none" stroke="currentColor" aria-hidden="true">
+        {/* Main vine curve */}
+        <path d="M4,4 Q4,32 8,48 Q12,56 20,60 Q32,64 48,60" strokeWidth="1.8" opacity="0.7"/>
+        {/* Secondary vine */}
+        <path d="M4,4 Q16,4 32,8 Q44,12 52,20 Q60,32 60,48" strokeWidth="1.8" opacity="0.7"/>
+        {/* Leaves */}
+        <path d="M10,20 Q16,14 22,20 Q16,26 10,20 Z" fill="currentColor" opacity="0.25" strokeWidth="0.8"/>
+        <path d="M20,10 Q26,4 32,10 Q26,16 20,10 Z" fill="currentColor" opacity="0.25" strokeWidth="0.8"/>
+        <path d="M28,28 Q34,22 40,28 Q34,34 28,28 Z" fill="currentColor" opacity="0.2" strokeWidth="0.8"/>
+        {/* Small berries/buds */}
+        <circle cx="4" cy="4" r="3" fill="currentColor" opacity="0.5"/>
+        <circle cx="48" cy="60" r="2" fill="currentColor" opacity="0.3"/>
+        <circle cx="60" cy="48" r="2" fill="currentColor" opacity="0.3"/>
       </svg>
     );
   }
@@ -299,6 +382,9 @@ export default function BookPageRenderer({
     textColor = '#1a1a1a',
     accentColor = '#8b6914',
     backgroundColor = '#ffffff',
+    backgroundGradient,
+    backgroundTexture = 'none',
+    backgroundTextureOpacity = 0.15,
     columns = 1,
     paragraphSpacing = 10,
     margins = { top: 32, bottom: 30, left: 28, right: 28 },
@@ -360,13 +446,20 @@ export default function BookPageRenderer({
 
   const showHeader = headerDecoration !== 'none' && bookTitle && pageType !== 'title';
   const showCorners = cornerDecorations && cornerDecorations !== 'none';
-  const cornerColor = `${accentColor}90`;
+  const cornerColor = accentColor;
+  const textureUrl = getTextureUrl(backgroundTexture);
+
+  // Build layered background style
+  const bgStyle: React.CSSProperties = { backgroundColor };
+  if (backgroundGradient) {
+    bgStyle.background = backgroundGradient;
+  }
 
   return (
     <div
       className={`relative overflow-hidden book-page-preview ${className}`}
       style={{
-        backgroundColor,
+        ...bgStyle,
         fontFamily,
         fontSize: scaledFontSize,
         lineHeight,
@@ -379,26 +472,71 @@ export default function BookPageRenderer({
       }}
       onClick={onClick}
     >
+      {/* ── Texture Overlay ── */}
+      {textureUrl && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: `url(${textureUrl})`,
+            backgroundSize: 'cover',
+            opacity: backgroundTextureOpacity,
+            mixBlendMode: 'multiply',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+
       {/* ── Corner Decorations ── */}
       {showCorners && (
         <>
           <div className="book-corner-decoration book-corner-tl" style={{ color: cornerColor }}>
-            <CornerSVG type={cornerDecorations} color={cornerColor} size={Math.round(36 * scale)} />
+            <CornerSVG type={cornerDecorations} color={cornerColor} size={Math.round(60 * scale)} />
           </div>
           <div className="book-corner-decoration book-corner-tr" style={{ color: cornerColor, transform: 'scaleX(-1)' }}>
-            <CornerSVG type={cornerDecorations} color={cornerColor} size={Math.round(36 * scale)} />
+            <CornerSVG type={cornerDecorations} color={cornerColor} size={Math.round(60 * scale)} />
           </div>
           <div className="book-corner-decoration book-corner-bl" style={{ color: cornerColor, transform: 'scaleY(-1)' }}>
-            <CornerSVG type={cornerDecorations} color={cornerColor} size={Math.round(36 * scale)} />
+            <CornerSVG type={cornerDecorations} color={cornerColor} size={Math.round(60 * scale)} />
           </div>
           <div className="book-corner-decoration book-corner-br" style={{ color: cornerColor, transform: 'scale(-1)' }}>
-            <CornerSVG type={cornerDecorations} color={cornerColor} size={Math.round(36 * scale)} />
+            <CornerSVG type={cornerDecorations} color={cornerColor} size={Math.round(60 * scale)} />
           </div>
         </>
       )}
 
       {/* ── Decorated Header ── */}
-      {showHeader && (
+      {showHeader && headerDecoration === 'banner' ? (
+        <div
+          className="absolute top-0 left-0 right-0"
+          style={{
+            background: `linear-gradient(180deg, ${accentColor}30 0%, ${accentColor}08 100%)`,
+            borderBottom: `1.5px solid ${accentColor}40`,
+            padding: `${Math.round(6 * scale)}px ${scaledMargins.right}px ${Math.round(4 * scale)}px`,
+          }}
+        >
+          <div className="flex items-center justify-center gap-2">
+            <span style={{ fontSize: Math.max(6, scaledFontSize * 0.55), color: accentColor, opacity: 0.6 }}>✦</span>
+            <div style={{ flex: 1, maxWidth: 60 * scale, height: 1, background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, transparent, ${accentColor}50)` }} />
+            <span style={{
+              fontSize: Math.max(6, scaledFontSize * 0.65),
+              color: accentColor,
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              fontWeight: 500,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: '60%',
+              fontFamily: settings.titleFont || fontFamily,
+            }}>
+              {chapterTitle || bookTitle}
+            </span>
+            <div style={{ flex: 1, maxWidth: 60 * scale, height: 1, background: `linear-gradient(to ${isRTL ? 'right' : 'left'}, transparent, ${accentColor}50)` }} />
+            <span style={{ fontSize: Math.max(6, scaledFontSize * 0.55), color: accentColor, opacity: 0.6 }}>✦</span>
+          </div>
+        </div>
+      ) : showHeader && (
         <div
           className="absolute top-0 left-0 right-0 book-header-decorated"
           style={{
