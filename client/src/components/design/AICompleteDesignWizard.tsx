@@ -37,6 +37,81 @@ import { api } from '../../services/api';
 import { BookTemplate, saveCustomTemplate } from '../../data/bookTemplates';
 import toast from 'react-hot-toast';
 
+// ─── Genre-Based Design Templates (instant, no API call) ─────────────────────
+
+function generateDesignFromGenre(genre: string, title: string, authorName: string, isHebrew: boolean) {
+  const g = (genre || '').toLowerCase();
+
+  // Color palettes per genre family
+  const palettes: Record<string, { text: string; heading: string; accent: string; bg: string; coverBg: string; coverPalette: string[] }> = {
+    memoir:    { text: '#2c2416', heading: '#1a1a0e', accent: '#8b6914', bg: '#fffdf7', coverBg: '#2c1810', coverPalette: ['#8b6914', '#d4a853', '#2c1810'] },
+    biography: { text: '#1e293b', heading: '#0f172a', accent: '#6366f1', bg: '#faf8ff', coverBg: '#1e1b4b', coverPalette: ['#6366f1', '#818cf8', '#1e1b4b'] },
+    fiction:   { text: '#1a1a2e', heading: '#16213e', accent: '#e94560', bg: '#fefcfb', coverBg: '#16213e', coverPalette: ['#e94560', '#0f3460', '#16213e'] },
+    romance:   { text: '#3d0c11', heading: '#5c1a28', accent: '#c2185b', bg: '#fef7f9', coverBg: '#4a0e1b', coverPalette: ['#c2185b', '#e91e63', '#f8bbd0'] },
+    children:  { text: '#1b5e20', heading: '#2e7d32', accent: '#ff9800', bg: '#fffde7', coverBg: '#1b5e20', coverPalette: ['#ff9800', '#4caf50', '#2196f3'] },
+    thriller:  { text: '#1a1a1a', heading: '#212121', accent: '#b71c1c', bg: '#fafafa', coverBg: '#1a1a1a', coverPalette: ['#b71c1c', '#d32f2f', '#212121'] },
+    scifi:     { text: '#0d1b2a', heading: '#1b2838', accent: '#00bcd4', bg: '#f0f9ff', coverBg: '#0d1b2a', coverPalette: ['#00bcd4', '#0288d1', '#0d1b2a'] },
+    fantasy:   { text: '#1a0a2e', heading: '#2d1b4e', accent: '#9c27b0', bg: '#fdf5ff', coverBg: '#1a0a2e', coverPalette: ['#9c27b0', '#ce93d8', '#4a148c'] },
+    history:   { text: '#3e2723', heading: '#4e342e', accent: '#795548', bg: '#faf6f3', coverBg: '#3e2723', coverPalette: ['#795548', '#a1887f', '#3e2723'] },
+    poetry:    { text: '#263238', heading: '#37474f', accent: '#607d8b', bg: '#f5f7fa', coverBg: '#263238', coverPalette: ['#607d8b', '#90a4ae', '#263238'] },
+    cooking:   { text: '#33220b', heading: '#4e3317', accent: '#e65100', bg: '#fff8f0', coverBg: '#4e3317', coverPalette: ['#e65100', '#ff9800', '#4e3317'] },
+    selfhelp:  { text: '#004d40', heading: '#00695c', accent: '#009688', bg: '#f0faf8', coverBg: '#004d40', coverPalette: ['#009688', '#4db6ac', '#004d40'] },
+  };
+
+  // Match genre to closest palette
+  let palette = palettes.memoir; // default
+  for (const [key, val] of Object.entries(palettes)) {
+    if (g.includes(key) || g.includes(key.slice(0, 4))) { palette = val; break; }
+  }
+  // Hebrew genre matching
+  if (g.includes('זיכרון') || g.includes('אוטו') || g.includes('ביוגרפ')) palette = palettes.memoir;
+  else if (g.includes('רומ') || g.includes('אהבה')) palette = palettes.romance;
+  else if (g.includes('ילד') || g.includes('נוער')) palette = palettes.children;
+  else if (g.includes('מתח') || g.includes('מסתורין')) palette = palettes.thriller;
+  else if (g.includes('פנטז') || g.includes('דמיון')) palette = palettes.fantasy;
+  else if (g.includes('שיר') || g.includes('פואמ')) palette = palettes.poetry;
+  else if (g.includes('היסטור')) palette = palettes.history;
+  else if (g.includes('בישול') || g.includes('מתכון')) palette = palettes.cooking;
+  else if (g.includes('עזרה') || g.includes('self')) palette = palettes.selfhelp;
+  else if (g.includes('מד"ב') || g.includes('sci')) palette = palettes.scifi;
+
+  const bodyFont = isHebrew ? 'David Libre' : 'Merriweather';
+  const headingFont = isHebrew ? 'Secular One' : 'Playfair Display';
+  const titleFont = isHebrew ? 'Suez One' : 'Playfair Display';
+
+  return {
+    typography: {
+      bodyFont, headingFont, titleFont,
+      fontSize: 12, lineHeight: 1.7, chapterTitleSize: 28,
+      colors: { text: palette.text, heading: palette.heading, accent: palette.accent },
+    },
+    layout: {
+      pageSize: 'A5',
+      margins: { top: 32, bottom: 28, inner: 28, outer: 24 },
+      chapterStartStyle: 'new-page-centered',
+      pageNumberPosition: 'bottom-center',
+      background: { primaryColor: palette.bg },
+    },
+    cover: {
+      front: { colorPalette: palette.coverPalette, backgroundColor: palette.coverBg,
+        title: { text: title, font: titleFont, size: 48, color: '#ffffff', position: 'center' },
+        author: { text: authorName, font: bodyFont, size: 18, color: '#ffffffcc' },
+      },
+      back: { backgroundColor: palette.coverBg,
+        synopsis: { text: '', font: bodyFont, size: 14, color: '#ffffff' },
+        author: { text: authorName, font: bodyFont, size: 16, color: '#ffffff' },
+      },
+      spine: { title, author: authorName, font: bodyFont, color: '#ffffff', backgroundColor: palette.accent },
+    },
+    theme: { primaryTheme: genre, mood: 'professional', visualStyle: 'elegant', colorMood: 'warm' },
+    overallStyle: `${genre} elegant design`,
+    moodDescription: `Professional ${genre} book design`,
+    tableOfContents: { style: 'elegant' },
+    chapterDecoration: { headerStyle: 'centered', titleDecoration: 'ornament' },
+    imagePlacements: [],
+  };
+}
+
 // ─── Style Variants ───────────────────────────────────────────────────────────
 
 type StyleVariantKey = 'minimal' | 'classic' | 'luxurious';
@@ -301,22 +376,11 @@ export default function AICompleteDesignWizard({
       setAnimatedPercent(0);
       setProgressStepIndex(0);
 
-      // Step 1: Analyzing
+      // Step 1: Analyzing — generate design LOCALLY from genre-based templates (instant, no API)
       updateStep('analyzing', 0, 0);
 
-      // Send design request — server does all work synchronously and returns result
-      // (no more polling — the request itself takes 20-60s with timeout of 270s)
-      const designResponse = await api.post(`/ai/premium-design/${bookId}`, {
-        generateCoverImages,
-        generateInteriorImages,
-        maxInteriorImages: 5,
-      }, { timeout: 55000 }); // 55s timeout — Vercel Hobby plan limits functions to 60s
-
-      if (!designResponse.data.success) {
-        throw new Error(designResponse.data.error || 'Failed to generate design');
-      }
-
-      const data = designResponse.data.data?.result || designResponse.data.data;
+      const data = generateDesignFromGenre(book.genre, book.title, book.author?.name || '', isHebrew);
+      await new Promise(r => setTimeout(r, 400)); // Brief visual pause
 
       // Step 2: Typography
       updateStep('typography', 1, 1);
