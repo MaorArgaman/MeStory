@@ -44,6 +44,7 @@ export interface Job {
 }
 
 export interface EnqueueJobParams {
+  id?: string;          // Pre-generated UUID; Supabase gen_random_uuid() used if omitted
   userId: string;
   bookId?: string | null;
   type: JobType;
@@ -55,16 +56,19 @@ export interface EnqueueJobParams {
  * Does not start execution — call `runJobInBackground` or rely on a worker.
  */
 export async function enqueueJob(params: EnqueueJobParams): Promise<Job> {
+  const row: Record<string, any> = {
+    user_id: params.userId,
+    book_id: params.bookId ?? null,
+    type: params.type,
+    status: 'pending',
+    progress: 0,
+    input: params.input,
+  };
+  if (params.id) row.id = params.id;
+
   const { data, error } = await supabaseAdmin
     .from('jobs')
-    .insert({
-      user_id: params.userId,
-      book_id: params.bookId ?? null,
-      type: params.type,
-      status: 'pending',
-      progress: 0,
-      input: params.input,
-    })
+    .insert(row)
     .select()
     .single();
 

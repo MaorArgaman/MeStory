@@ -45,7 +45,7 @@ import {
   diagnoseBookImages,
   repersistBookImages,
 } from '../controllers/imageDiagnosticController';
-import { upload, uploadImage, uploadAudio as uploadAudioMiddleware } from '../middleware/uploadMiddleware';
+import { upload, uploadImage, uploadAudio as uploadAudioMiddleware, handleUploadError } from '../middleware/uploadMiddleware';
 import { authenticate } from '../middleware/auth';
 import { runValidation } from '../middleware/validate';
 import {
@@ -260,6 +260,7 @@ router.get(
 router.post(
   '/:id/page-image',
   uploadImage.single('image'),
+  handleUploadError as any,
   uploadPageImage as any
 );
 

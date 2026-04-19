@@ -1273,10 +1273,9 @@ export default function BookLayoutPage() {
       const formData = new FormData();
       formData.append('image', file);
       formData.append('pageIndex', String(pageIndex));
-      // Clear Content-Type so browser sets multipart/form-data with boundary automatically
-      const response = await api.post(`/books/${bookId}/page-image`, formData, {
-        headers: { 'Content-Type': undefined },
-      });
+      // Do NOT override Content-Type — Axios detects FormData and lets the browser
+      // set "multipart/form-data; boundary=..." automatically.
+      const response = await api.post(`/books/${bookId}/page-image`, formData);
       if (response.data.success) {
         const d = response.data.data?.image || response.data.data;
         return d?.url || response.data.data?.imageUrl || null;
@@ -1311,7 +1310,7 @@ export default function BookLayoutPage() {
       );
 
       // Only send layout fields — exclude `content` (chapter HTML) to keep payload small
-      const pagesForSave = processedPages.map(page => ({
+      let pagesForSave = processedPages.map(page => ({
         id: page.id,
         type: page.type,
         chapterIndex: page.chapterIndex,
@@ -1333,6 +1332,18 @@ export default function BookLayoutPage() {
           flipV: img.flipV,
         })),
       }));
+
+      // Vercel has a 4.5MB body limit. If any base64 images remain (upload failed),
+      // strip their data so the PUT doesn't 413 — layout/position metadata is kept.
+      const VERCEL_LIMIT = 3.5 * 1024 * 1024; // 3.5MB safety margin
+      if (new Blob([JSON.stringify(pagesForSave)]).size > VERCEL_LIMIT) {
+        pagesForSave = pagesForSave.map(page => ({
+          ...page,
+          images: page.images.map(img =>
+            img.url.startsWith('data:') ? { ...img, url: '' } : img
+          ),
+        }));
+      }
 
       const response = await api.put(`/books/${bookId}`, {
         pageLayout: {

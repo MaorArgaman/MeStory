@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { Response } from 'express';
 import { Book } from '../models/Book';
 import { User } from '../models/User';
@@ -1385,28 +1386,13 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    // Enqueue the job and return immediately (avoids Vercel 60s timeout)
-    const job = await enqueueJob({
-      userId: req.user.id,
-      bookId,
-      type: 'design_generation',
-      input: { generateCoverImages, generateInteriorImages, maxInteriorImages },
-    });
+    // Pre-generate job ID so we can respond 202 before any Supabase round-trips
+    const jobId = randomUUID();
 
-    // Mark the book as in-progress immediately so the UI can show a spinner
-    await Book.findByIdAndUpdate(bookId, {
-      aiDesignState: {
-        status: 'analyzing',
-        startedAt: new Date().toISOString(),
-        jobId: job.id,
-        progress: { currentStep: 1, totalSteps: generateInteriorImages ? 9 : 7, stepName: 'מנתח את תוכן הספר...' },
-      },
-    });
+    // Return the job ID to the client immediately — do NOT await Supabase before this
+    res.status(202).json({ success: true, data: { jobId, status: 'pending' } });
 
-    // Return the job ID to the client immediately (202 Accepted)
-    res.status(202).json({ success: true, data: { jobId: job.id, status: 'pending' } });
-
-    // Run the heavy work in the background
+    // All Supabase / heavy work runs after the response is sent
     const totalSteps = generateInteriorImages ? 9 : 7;
     const stepNames = [
       'מנתח את תוכן הספר...',
@@ -1419,7 +1405,32 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       ...(generateInteriorImages ? ['מנתח מיקומי תמונות...', 'מייצר איורים פנימיים...'] : []),
     ];
 
-    runJobInBackground(job.id, async ({ updateProgress }) => {
+    // Fire-and-forget: enqueue job in Supabase, then start background work
+    (async () => {
+      try {
+        await enqueueJob({
+          id: jobId,
+          userId: req.user!.id,
+          bookId,
+          type: 'design_generation',
+          input: { generateCoverImages, generateInteriorImages, maxInteriorImages },
+        });
+      } catch (err) {
+        console.error(`[premiumDesignWizard] enqueueJob failed — jobId=${jobId}`, err);
+        return; // Can't proceed without a job row
+      }
+
+      // Mark book as in-progress (best-effort — don't let this block the design job)
+      Book.findByIdAndUpdate(bookId, {
+        aiDesignState: {
+          status: 'analyzing',
+          startedAt: new Date().toISOString(),
+          jobId,
+          progress: { currentStep: 1, totalSteps, stepName: 'מנתח את תוכן הספר...' },
+        },
+      }).catch((err: unknown) => console.error('[premiumDesignWizard] Failed to update book aiDesignState:', err));
+
+      runJobInBackground(jobId, async ({ updateProgress }) => {
       // Prepare design input
       const designInput: PremiumBookDesignInput = {
         title: book.title,
@@ -1435,7 +1446,7 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
         targetAudience: book.targetAudience,
       };
 
-      console.log(`\n🌟 Starting PREMIUM DESIGN (job ${job.id}) for "${book.title}"...`);
+      console.log(`\n🌟 Starting PREMIUM DESIGN (job ${jobId}) for "${book.title}"...`);
 
       // Generate ultimate premium design
       const premiumDesign = await generateUltimatePremiumDesign(
@@ -1448,7 +1459,7 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
             Book.findByIdAndUpdate(bookId, {
               aiDesignState: {
                 status: 'generating-design',
-                jobId: job.id,
+                jobId,
                 progress: {
                   currentStep: progress.currentStep,
                   totalSteps: progress.totalSteps,
@@ -1567,7 +1578,7 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
           aiDesignState: {
             ...designState,
             status: 'completed',
-            jobId: job.id,
+            jobId,
             completedAt: new Date().toISOString(),
           },
           pageLayout: newPageLayout,
@@ -1577,7 +1588,7 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
         { new: true }
       );
 
-      console.log(`\n✅ PREMIUM DESIGN SAVED (job ${job.id}) for "${book.title}"!`);
+      console.log(`\n✅ PREMIUM DESIGN SAVED (job ${jobId}) for "${book.title}"!`);
 
       // Return the result payload — the job queue stores it and the client reads it on poll
       return {
@@ -1608,22 +1619,14 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
         coverDesign: updatedBook?.coverDesign,
       };
     });
-  } catch (error: any) {
-    console.error('Premium Design Wizard error:', error);
-
-    // Update book with error state
-    try {
-      const { bookId } = req.params;
-      await Book.findByIdAndUpdate(bookId, {
-        aiDesignState: { status: 'error', error: error.message },
-      });
-    } catch (e) {
-      console.error('Failed to update error state:', e);
-    }
-
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Premium design wizard failed',
+    })().catch((err: unknown) => {
+      console.error('[premiumDesignWizard] Background IIFE failed:', err);
     });
+
+  } catch (error: any) {
+    // This catch only handles synchronous errors before the response was sent
+    // (e.g., book not found, auth failures). At this point res.status(202) has
+    // already been sent, so we cannot send another response — just log.
+    console.error('Premium Design Wizard synchronous error:', error);
   }
 };
