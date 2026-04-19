@@ -4771,6 +4771,10 @@ function PageRenderer({
     <div
       ref={containerRef}
       className={`relative h-full overflow-hidden ${isSelected ? 'ring-2 ring-memorial-gold' : ''}`}
+      onClick={() => {
+        // Click on page background deselects any selected image
+        if (selectedImageId) onImageSelect(null);
+      }}
       style={{
         padding: `${scaledMargins.top}px ${scaledMargins.right}px ${scaledMargins.bottom}px ${scaledMargins.left}px`,
         fontFamily: settings.fontFamily,
@@ -5049,14 +5053,28 @@ function PageRenderer({
             : undefined,
         };
 
+        const isSelected = selectedImageId === image.id;
         return (
           <div
             key={image.id}
-            className={`absolute cursor-move transition-shadow ${
-              selectedImageId === image.id ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-transparent' : ''
+            className={`absolute transition-shadow ${
+              isSelected ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-transparent cursor-move' : 'cursor-pointer'
             }`}
             style={imageStyles}
-            onMouseDown={(e) => handleImageMouseDown(e, image, 'drag')}
+            onClick={(e) => {
+              if (!isSelected) {
+                // First click: select the image (don't start dragging)
+                e.stopPropagation();
+                onImageSelect(image.id);
+              }
+            }}
+            onMouseDown={(e) => {
+              if (isSelected) {
+                // Already selected: start dragging
+                handleImageMouseDown(e, image, 'drag');
+              }
+              // Not selected: let event bubble to react-pageflip for page flipping
+            }}
             onDoubleClick={() => setShowEditToolbar(true)}
           >
             <img
