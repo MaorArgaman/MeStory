@@ -310,7 +310,7 @@ export default function FAQPage() {
   useSEO({
     title: pageTitle,
     description: pageDescription,
-    canonicalUrl: 'https://mestory.co.il/faq',
+    canonicalUrl: 'https://mestory-ai.com/faq',
   });
 
   return (

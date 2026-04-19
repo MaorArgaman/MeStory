@@ -208,7 +208,7 @@ async function generateSpeechFromGemini(
   const result = await response.json();
 
   // Extract audio data from response
-  const audioData = result.candidates?.[0]?.content?.parts?.[0];
+  const audioData = (result as any).candidates?.[0]?.content?.parts?.[0];
 
   if (!audioData || !audioData.inlineData?.data) {
     throw new Error('No audio data in response');

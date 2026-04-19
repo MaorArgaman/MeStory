@@ -18,7 +18,7 @@ interface SEOProps {
 }
 
 const DEFAULT_SITE_NAME = 'MeStory';
-const DEFAULT_SITE_URL = 'https://mestory.co.il';
+const DEFAULT_SITE_URL = 'https://mestory-ai.com';
 const DEFAULT_IMAGE = `${DEFAULT_SITE_URL}/img/new/logo-mestory-large.png`;
 
 const DEFAULT_DESCRIPTIONS = {

@@ -750,10 +750,12 @@ export async function connectAuthorPayPal(
     author.paypal = {
       email: paypalEmail.toLowerCase(),
       isVerified: false, // Will be verified on first payout
-      connectedAt: new Date(),
+      connectedAt: new Date().toISOString(),
     };
 
-    await author.save();
+    await User.findByIdAndUpdate(authorId, {
+      paypal: author.paypal,
+    });
 
     return { success: true };
   } catch (error: any) {

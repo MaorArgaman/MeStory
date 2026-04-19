@@ -21,7 +21,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false,
     // Warn if any single chunk exceeds 500kb gzipped-ish
     chunkSizeWarningLimit: 600,
     rollupOptions: {

@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '../config/database';
+import supabaseAdmin from '../config/database';
 import { randomUUID } from 'crypto';
 
 // Organization types

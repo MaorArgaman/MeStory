@@ -17,6 +17,7 @@ import BookLoader from '../components/common/BookLoader';
 import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
+import { AuthorSEO } from '../components/seo/SEO';
 
 /**
  * Hook that animates a number from 0 to the target value over a given duration.
@@ -211,6 +212,12 @@ export default function AuthorProfilePage() {
 
   return (
     <div className="min-h-screen">
+      <AuthorSEO
+        name={author.name}
+        bio={author.bio}
+        profileImage={author.profileImage}
+        authorId={userId || ''}
+      />
       {/* Header Section */}
       <div
         className="h-48 sm:h-64 md:h-80 lg:h-96 relative"

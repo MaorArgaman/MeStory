@@ -359,7 +359,7 @@ export default function BookWritingPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to load book:', error);
+      if (import.meta.env.DEV) console.error('Failed to load book:', error);
       toast.error(isHebrew ? 'לא הצלחנו לטעון את הספר' : 'Failed to load book');
       navigate('/dashboard');
     } finally {
@@ -420,7 +420,7 @@ export default function BookWritingPage() {
         toast.success(t('status.saved'), { duration: 1500 });
       }
     } catch (error) {
-      console.error('Failed to save book:', error);
+      if (import.meta.env.DEV) console.error('Failed to save book:', error);
 
       // Retry logic
       if (retryCountRef.current < MAX_RETRIES) {
@@ -546,7 +546,7 @@ export default function BookWritingPage() {
           setBook(response.data.data.book);
         }
       } catch (error) {
-        console.error('Failed to save before switching chapter:', error);
+        if (import.meta.env.DEV) console.error('Failed to save before switching chapter:', error);
         // Continue switching even if save fails
       }
     }
@@ -605,7 +605,7 @@ export default function BookWritingPage() {
         toast.success(t('status.saved'));
       }
     } catch (error) {
-      console.error('Failed to delete chapter:', error);
+      if (import.meta.env.DEV) console.error('Failed to delete chapter:', error);
       toast.error(t('errors.generic'));
     }
   }, [book, bookId, selectedChapterIndex, t]);
@@ -637,7 +637,7 @@ export default function BookWritingPage() {
     try {
       await api.put(`/books/${bookId}`, { chapters: reordered });
     } catch (error) {
-      console.error('Failed to reorder chapters:', error);
+      if (import.meta.env.DEV) console.error('Failed to reorder chapters:', error);
       toast.error(t('errors.generic'));
     }
   }, [book, bookId, selectedChapterIndex, t]);
@@ -690,7 +690,7 @@ export default function BookWritingPage() {
         });
       }
     } catch (error) {
-      console.error('Enhancement failed:', error);
+      if (import.meta.env.DEV) console.error('Enhancement failed:', error);
       toast.error(isHebrew ? 'שגיאה בשיפור הטקסט' : 'Error improving text');
     } finally {
       setEnhancing(false);

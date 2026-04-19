@@ -69,15 +69,6 @@ app.get('/version', (_req, res) => {
   res.status(200).json({
     version: SERVER_VERSION,
     timestamp: new Date().toISOString(),
-    node: process.version,
-    env: {
-      isVercel,
-      nodeEnv: process.env.NODE_ENV,
-      hasSupabaseUrl: !!process.env.SUPABASE_URL,
-      hasSupabaseKey: !!process.env.SUPABASE_ANON_KEY,
-      hasJwtSecret: !!process.env.JWT_SECRET,
-      hasClientUrl: !!process.env.CLIENT_URL,
-    },
   });
 });
 
@@ -159,10 +150,10 @@ if (isVercel) {
 // CORS Configuration
 // ============================================
 const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://mestory.co.il',
-  'https://www.mestory.co.il',
+  // Localhost only in development
+  ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:5173', 'http://localhost:3000'] : []),
+  'https://mestory-ai.com',
+  'https://www.mestory-ai.com',
   process.env.CLIENT_URL,
 ].filter(Boolean) as string[];
 
@@ -171,6 +162,9 @@ const allowedOrigins = [
 // ============================================
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false, // CSP handled by frontend/Vercel
+  hsts: { maxAge: 31536000, includeSubDomains: true },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 }));
 app.use(cors({
   origin: (origin, callback) => {
@@ -199,10 +193,10 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(morgan('dev'));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(compression());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 // SEC-003 FIX: Validate JWT_SECRET in production
@@ -249,7 +243,7 @@ app.use(
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      sameSite: 'lax', // 'lax' required for Google OAuth redirect to carry cookies
     },
   })
 );
@@ -299,29 +293,33 @@ app.get('/health', async (_req, res) => {
     configIssues.push('GEMINI_API_KEY is not set (required for AI features)');
   }
 
+  const isProduction = process.env.NODE_ENV === 'production';
+
   res.status(200).json({
     status: configIssues.length === 0 ? 'ok' : 'warning',
     message: 'MeStory API is running',
     initialized: isInitialized,
-    initError: lastInitError?.message || null,
-    configIssues: configIssues.length > 0 ? configIssues : undefined,
-    database: dbStatus,
-    socket: {
-      onlineUsers: getOnlineUsersCount(),
-    },
-    env: {
-      hasSupabaseUrl: !!process.env.SUPABASE_URL,
-      hasSupabaseKey: !!process.env.SUPABASE_ANON_KEY,
-      hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
-      hasGoogleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
-      hasGoogleCallbackUrl: !!process.env.GOOGLE_CALLBACK_URL,
-      hasOpenAiKey: !!process.env.OPENAI_API_KEY,
-      hasGeminiKey: !!process.env.GEMINI_API_KEY,
-      hasClientUrl: !!process.env.CLIENT_URL,
-      clientUrl: process.env.CLIENT_URL || 'not set',
-      nodeEnv: process.env.NODE_ENV,
-      isVercel: isVercelEnv,
-    }
+    // Hide internal details in production
+    ...(isProduction ? {} : {
+      initError: lastInitError?.message || null,
+      configIssues: configIssues.length > 0 ? configIssues : undefined,
+      database: dbStatus,
+      socket: {
+        onlineUsers: getOnlineUsersCount(),
+      },
+      env: {
+        hasSupabaseUrl: !!process.env.SUPABASE_URL,
+        hasSupabaseKey: !!process.env.SUPABASE_ANON_KEY,
+        hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
+        hasGoogleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+        hasGoogleCallbackUrl: !!process.env.GOOGLE_CALLBACK_URL,
+        hasOpenAiKey: !!process.env.OPENAI_API_KEY,
+        hasGeminiKey: !!process.env.GEMINI_API_KEY,
+        hasClientUrl: !!process.env.CLIENT_URL,
+        nodeEnv: process.env.NODE_ENV,
+        isVercel: isVercelEnv,
+      },
+    }),
   });
 });
 
@@ -436,5 +434,3 @@ if (!isVercel) {
 }
 
 export default app;
-// restart Mon Apr 13 21:41:37     2026
-// restart

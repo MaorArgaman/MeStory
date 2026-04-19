@@ -22,7 +22,7 @@ if (!process.env.SUPABASE_ANON_KEY) {
 }
 
 // Create a fetch-like function using axios (better Windows compatibility)
-const axiosFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+const axiosFetch = async (input: any, init?: any): Promise<Response> => {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
   const method = init?.method || 'GET';
   const body = init?.body;
@@ -77,7 +77,7 @@ const axiosFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise
       body: null,
       bodyUsed: false,
       redirected: false,
-      type: 'basic' as ResponseType,
+      type: 'basic' as any,
       url,
       formData: async () => new FormData(),
     } as Response;
@@ -126,10 +126,10 @@ export const getDatabaseStatus = async (retries = 3) => {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const { error } = await withTimeout(
-        supabaseAdmin.from('users').select('id').limit(1),
+        supabaseAdmin.from('users').select('id').limit(1) as any,
         5000, // 5 second timeout per attempt
         'Connection timeout'
-      );
+      ) as any;
       return {
         isConnected: !error,
         readyState: error ? 0 : 1,

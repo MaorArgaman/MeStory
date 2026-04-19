@@ -56,10 +56,11 @@ export const errorHandler = (
   // Determine status code
   const statusCode = err.status || err.statusCode || 500;
 
-  // Build error response
+  // Build error response - hide internal error messages from users in production
+  const isProduction = process.env.NODE_ENV === 'production';
   const errorResponse: any = {
     success: false,
-    error: err.message || 'Internal server error',
+    error: (isProduction && statusCode === 500) ? 'Internal server error' : (err.message || 'Internal server error'),
   };
 
   // Add stack trace in development mode
@@ -82,13 +83,6 @@ export const errorHandler = (
 
   if (err.name === 'CastError') {
     errorResponse.error = 'Invalid ID format';
-  }
-
-  if (err.name === 'MongoError' || err.name === 'MongoServerError') {
-    errorResponse.error = 'Database error';
-    if (process.env.NODE_ENV === 'development') {
-      errorResponse.details = err.message;
-    }
   }
 
   if (err.name === 'JsonWebTokenError') {

@@ -972,7 +972,7 @@ export const applyCompleteDesign = async (req: AuthRequest, res: Response): Prom
           rotation: 0,
           isAiGenerated: true,
           prompt: p.prompt,
-          createdAt: new Date(),
+          createdAt: new Date().toISOString(),
         }));
 
       pageImagesUpdate = [...pageImagesUpdate, ...newPageImages];

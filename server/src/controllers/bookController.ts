@@ -1412,7 +1412,7 @@ export const purchaseBook = async (req: AuthRequest, res: Response): Promise<voi
     readingHistory.push({
       bookId: id,
       progress: 0,
-      lastRead: new Date(),
+      lastRead: new Date().toISOString(),
     });
 
     await User.findByIdAndUpdate(req.user.id, {
@@ -2720,6 +2720,8 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
           purchases: 0,
           revenue: 0,
           totalReviews: 0,
+          shares: 0,
+          comments: 0,
         },
       });
 
@@ -2925,6 +2927,8 @@ export const uploadAudio = async (req: AuthRequest, res: Response): Promise<void
           purchases: 0,
           revenue: 0,
           totalReviews: 0,
+          shares: 0,
+          comments: 0,
         },
       });
 

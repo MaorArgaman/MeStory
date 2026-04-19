@@ -15,7 +15,7 @@ export default function NotFoundPage() {
     description: isHebrew
       ? 'הדף שחיפשת לא נמצא. חזרו לדף הבית של MeStory או חפשו ספרים בשוק שלנו.'
       : 'The page you were looking for was not found. Return to MeStory home or search for books in our marketplace.',
-    canonicalUrl: 'https://mestory.co.il/404',
+    canonicalUrl: 'https://mestory-ai.com/404',
   });
 
   const content = {

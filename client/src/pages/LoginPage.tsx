@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { Sparkles, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 import analytics from '../utils/analytics';
+import { SEO } from '../components/seo';
 import { motion, AnimatePresence } from 'framer-motion';
 // Legacy imports - keeping for fallback
 import _loginSideImageLegacy from '../assets/images/login-side-image.png';
@@ -55,6 +56,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+      <SEO title="התחברות" description="התחבר לחשבון MeStory שלך וצור ספרים מדהימים עם בינה מלאכותית" noIndex />
       {/* Left Column - Side Image (hidden on mobile) */}
       <div
         className="hidden lg:block relative bg-cover bg-center"

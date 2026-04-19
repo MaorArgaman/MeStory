@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { GlassCard, GlowingButton, OptimizedImage } from '../components/ui';
 import { useLanguage } from '../contexts/LanguageContext';
-import { SEO } from '../components/seo';
+import { SEO, OrganizationSchema, WebsiteSchema, SoftwareApplicationSchema } from '../components/seo';
 // Memorial-themed images from public folder
 const logoIcon = '/img/new/logo-mestory-large.png';
 
@@ -164,12 +164,22 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen overflow-hidden">
       <SEO
-        title="MeStory - Memorial Book Writing Platform"
-        description="Create meaningful memorial books to honor your loved ones. AI-guided writing, respectful design, and print-ready PDF export. Preserve their memory for generations."
+        title={language === 'he' ? 'MeStory - פלטפורמה ליצירת ספרי הנצחה ואוטוביוגרפיה' : 'MeStory - Memorial Book Writing Platform'}
+        description={language === 'he'
+          ? 'צרו ספרי הנצחה מרגשים לזכר יקיריכם. כתיבה מונחית בינה מלאכותית, עיצוב מכבד והפקת PDF מוכן לדפוס. שמרו את הסיפור שלהם לדורות הבאים.'
+          : 'Create meaningful memorial books to honor your loved ones. AI-guided writing, respectful design, and print-ready PDF export. Preserve their memory for generations.'}
         type="website"
         locale={language === 'he' ? 'he_IL' : 'en_US'}
-        url="/"
+        alternateLocale={language === 'he' ? 'en_US' : 'he_IL'}
+        url="https://mestory-ai.com"
+        canonicalUrl="https://mestory-ai.com"
+        keywords={language === 'he'
+          ? ['ספרי הנצחה', 'ספר זיכרון', 'כתיבת אוטוביוגרפיה', 'ספר משפחתי', 'הנצחה דיגיטלית', 'MeStory', 'בינה מלאכותית', 'ספר אישי']
+          : ['memorial books', 'memory book', 'autobiography writing', 'family book', 'digital memorial', 'MeStory', 'AI writing', 'personal story']}
       />
+      <OrganizationSchema />
+      <WebsiteSchema />
+      <SoftwareApplicationSchema />
 
       {/* Transparent Navbar */}
       <motion.header

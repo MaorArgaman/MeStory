@@ -1377,9 +1377,9 @@ export async function generateUltimatePremiumDesign(
           genre: input.genre,
           synopsis: input.synopsis,
           mood: `${theme.mood}, ${theme.atmosphere}, ${theme.colorMood}`,
-          style: theme.visualStyle,
+          style: theme.visualStyle as any,
           customPrompt: cover.front.imagePrompt,
-        });
+        } as any);
 
         if (coverResults.frontCover.success && coverResults.frontCover.imageUrl) {
           covers.frontImageUrl = coverResults.frontCover.imageUrl;
@@ -1540,6 +1540,7 @@ Return JSON only:
         accentFont: design.typography?.accentFont || design.typography?.headingFont || 'Secular One',
         fontSize: design.typography?.fontSize || 12,
         lineHeight: design.typography?.lineHeight || 1.7,
+        letterSpacing: design.typography?.letterSpacing || 0,
         chapterTitleSize: design.typography?.chapterTitleSize || 28,
         sectionTitleSize: design.typography?.sectionTitleSize || 18,
         pageNumberSize: design.typography?.pageNumberSize || 10,
@@ -1553,6 +1554,7 @@ Return JSON only:
           pageNumber: design.typography?.colors?.pageNumber || '#999999',
         },
         formatting: design.typography?.formatting || { dropCaps: 'simple', quoteStyle: 'italic', emphasis: 'bold', firstParagraphIndent: false },
+        reasoning: design.typography?.reasoning || '',
       },
       tableOfContents: design.tableOfContents || { style: 'elegant', title: { text: isHebrew ? 'תוכן עניינים' : 'Contents', font: 'Secular One', size: 24, color: '#1a1a2e' }, entryStyle: { font: 'David Libre', size: 12, color: '#333', pageNumberFormat: 'dotted-line' }, decorative: true, dividerStyle: 'ornament' },
       chapterDecoration: design.chapterDecoration || { headerStyle: 'centered', numberStyle: 'word', numberPosition: 'above-title', titleDecoration: 'ornament', openingOrnament: '✦', closingOrnament: '✦', spacing: { beforeTitle: 40, afterTitle: 20, beforeContent: 15 } },
@@ -1567,6 +1569,7 @@ Return JSON only:
         dropCaps: design.layout?.dropCaps || { enabled: true, style: 'simple', lines: 3 },
         sectionBreaks: design.layout?.sectionBreaks || { style: 'ornament', ornament: '✦' },
         background: design.layout?.background || { style: 'clean', primaryColor: '#fffdf7', secondaryColor: '#faf6ee' },
+        reasoning: design.layout?.reasoning || '',
       },
       cover: design.cover || {
         front: { imagePrompt: `Professional book cover for "${input.title}"`, composition: 'centered', title: { text: input.title, font: 'Suez One', size: 48, color: '#fff', position: 'center' }, author: { text: input.authorName, font: 'David Libre', size: 18, color: '#fff' }, colorPalette: ['#6366f1', '#8b5cf6', '#a855f7'], backgroundColor: '#1a1a2e' },

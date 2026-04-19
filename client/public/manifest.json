@@ -1,0 +1,27 @@
+{
+  "name": "MeStory - Memorial Book Writing Platform",
+  "short_name": "MeStory",
+  "description": "Create meaningful memorial books to honor your loved ones with AI-guided writing and professional design",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111123",
+  "theme_color": "#c9a227",
+  "dir": "rtl",
+  "lang": "he",
+  "icons": [
+    {
+      "src": "/img/new/logo-mestory-small.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/img/new/logo-mestory-large.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["books", "education", "productivity"],
+  "screenshots": [],
+  "prefer_related_applications": false
+}

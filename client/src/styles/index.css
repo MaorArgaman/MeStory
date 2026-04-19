@@ -941,35 +941,9 @@
   color: #333;
 }
 
-/* Drop cap — first letter of first paragraph after a chapter title */
-.book-page-content h2 + p::first-letter,
-.book-page-content > p:first-child::first-letter {
-  float: right;
-  font-size: 3em;
-  line-height: 0.85;
-  padding-left: 0.1em;
-  padding-right: 0.05em;
-  margin-top: 0.05em;
-  font-weight: 700;
-  color: #8b6914;
-  font-family: 'Cinzel', 'David Libre', serif;
-}
-
-/* RTL drop cap — float to right side */
-[dir="rtl"] .book-page-content h2 + p::first-letter,
-[dir="rtl"] .book-page-content > p:first-child::first-letter {
-  float: right;
-  padding-left: 0.1em;
-  padding-right: 0;
-}
-
-/* LTR drop cap */
-[dir="ltr"] .book-page-content h2 + p::first-letter,
-[dir="ltr"] .book-page-content > p:first-child::first-letter {
-  float: left;
-  padding-right: 0.1em;
-  padding-left: 0;
-}
+/* Drop cap — only applies when drop cap class is active (not unconditionally) */
+/* The .book-drop-cap, .book-drop-cap-decorative, .book-drop-cap-box classes
+   are added by PageRenderer based on settings.dropCapStyle */
 
 /* Paragraph spacing — professional book feel */
 .book-page-content p {
@@ -1364,48 +1338,50 @@
 
 /* ==================== BOOK DESIGN ELEMENTS ==================== */
 
-/* --- DROP CAPS --- */
+/* --- DROP CAPS (only applied when the matching class is on the page container) --- */
 .book-drop-cap p:first-of-type::first-letter {
-  float: right; /* RTL */
-  font-size: 4.2em;
+  float: right; /* RTL default */
+  font-size: 3.2em;
   line-height: 0.85;
-  font-weight: bold;
-  margin-left: 8px;
-  margin-bottom: 0;
+  font-weight: 700;
+  margin: 0 0 0 8px;
+  padding: 2px 4px;
   font-family: inherit;
   color: var(--accent-color, #8b6914);
 }
 [dir="ltr"] .book-drop-cap p:first-of-type::first-letter {
   float: left;
-  margin-right: 8px;
-  margin-left: 0;
+  margin: 0 8px 0 0;
 }
 .book-drop-cap-decorative p:first-of-type::first-letter {
   float: right;
-  font-size: 4.5em;
+  font-size: 3.4em;
   line-height: 0.8;
-  font-weight: bold;
-  margin-left: 10px;
+  font-weight: 700;
+  margin: 0 0 0 10px;
   padding: 4px 8px;
   border: 2px solid var(--accent-color, #8b6914);
   color: var(--accent-color, #8b6914);
   background: var(--bg-secondary, #faf6ef);
 }
+[dir="ltr"] .book-drop-cap-decorative p:first-of-type::first-letter {
+  float: left;
+  margin: 0 10px 0 0;
+}
 .book-drop-cap-box p:first-of-type::first-letter {
   float: right;
-  font-size: 3.8em;
-  line-height: 0.85;
-  font-weight: bold;
-  margin-left: 10px;
-  padding: 6px 10px;
+  font-size: 3em;
+  line-height: 0.9;
+  font-weight: 700;
+  margin: 0 0 0 10px;
+  padding: 4px 8px;
   background: var(--accent-color, #8b6914);
   color: white;
+  border-radius: 3px;
 }
-[dir="ltr"] .book-drop-cap-decorative p:first-of-type::first-letter,
 [dir="ltr"] .book-drop-cap-box p:first-of-type::first-letter {
   float: left;
-  margin-right: 10px;
-  margin-left: 0;
+  margin: 0 10px 0 0;
 }
 
 /* --- PULL QUOTES --- */
@@ -1775,6 +1751,44 @@
 .page-size-square { width: 210mm; min-height: 210mm; }
 .page-size-pocket { width: 127mm; min-height: 178mm; }
 
+/* --- TABLE OF CONTENTS --- */
+.toc-header {
+  text-align: center;
+  font-size: 1.4em;
+  font-weight: 700;
+  margin-bottom: 1.2em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+.toc-header::after {
+  content: '✦';
+  display: block;
+  text-align: center;
+  font-size: 0.6em;
+  color: var(--accent-color, #c9a84c);
+  margin-top: 0.5em;
+}
+.toc-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.4em 0;
+  border-bottom: 1px dotted rgba(0,0,0,0.12);
+  gap: 1em;
+}
+.toc-item:last-child {
+  border-bottom: none;
+}
+.toc-title {
+  unicode-bidi: isolate;
+  flex-shrink: 0;
+}
+.toc-page {
+  unicode-bidi: isolate;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
 /* --- PRINT PREVIEW CONTAINER --- */
 .book-page-preview {
   background: white;
@@ -1848,35 +1862,4 @@
   letter-spacing: 0.5px;
 }
 
-/* Enhanced drop-cap for banner style */
-.book-drop-cap p:first-of-type::first-letter,
-.book-drop-cap-decorative p:first-of-type::first-letter {
-  font-size: 3.2em;
-  line-height: 0.85;
-  float: right;
-  margin: 0 0 0 8px;
-  padding: 2px 4px;
-  color: var(--accent-color, #8b6914);
-  font-weight: 700;
-}
-[dir="ltr"] .book-drop-cap p:first-of-type::first-letter,
-[dir="ltr"] .book-drop-cap-decorative p:first-of-type::first-letter {
-  float: left;
-  margin: 0 8px 0 0;
-}
-
-.book-drop-cap-box p:first-of-type::first-letter {
-  font-size: 3em;
-  line-height: 0.9;
-  float: right;
-  margin: 0 0 0 8px;
-  padding: 4px 8px;
-  background: var(--accent-color, #8b6914);
-  color: white;
-  font-weight: 700;
-  border-radius: 3px;
-}
-[dir="ltr"] .book-drop-cap-box p:first-of-type::first-letter {
-  float: left;
-  margin: 0 8px 0 0;
-}
+/* Drop cap rules consolidated above in the DROP CAPS section */

@@ -927,7 +927,7 @@ Respond with ONLY the image prompt, nothing else.`;
   const frontCover = await generateImage({
     prompt: frontCoverPrompt,
     bookContext: { title, genre },
-    style: style || 'illustration',
+    style: (style || 'illustration') as any,
     aspectRatio: '3:4', // Standard book cover ratio
   });
   console.log(`📚 Front cover result: success=${frontCover.success}, hasUrl=${!!frontCover.imageUrl}`);
@@ -962,7 +962,7 @@ Respond with ONLY the image prompt (under 250 characters), no other text.`;
   const backCover = await generateImage({
     prompt: backCoverPrompt,
     bookContext: { title, genre },
-    style: style || 'illustration',
+    style: (style || 'illustration') as any,
     aspectRatio: '3:4',
   });
   console.log(`📚 Back cover result: success=${backCover.success}, hasUrl=${!!backCover.imageUrl}`);

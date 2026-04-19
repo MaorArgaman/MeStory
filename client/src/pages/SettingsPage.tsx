@@ -71,7 +71,7 @@ export default function SettingsPage() {
         else setNotificationLevel('important');
       }
     } catch (error) {
-      console.error('Failed to load notification preferences:', error);
+      if (import.meta.env.DEV) console.error('Failed to load notification preferences:', error);
     }
   };
 
@@ -107,7 +107,7 @@ export default function SettingsPage() {
         toast.success(language === 'he' ? 'העדפות ההתראות נשמרו' : 'Notification preferences saved');
       }
     } catch (error) {
-      console.error('Failed to save notification preferences:', error);
+      if (import.meta.env.DEV) console.error('Failed to save notification preferences:', error);
       toast.error(t('settings.toast.save_notification_prefs_failed', 'Failed to save notification preferences'));
     } finally {
       setSavingNotificationPrefs(false);
@@ -123,7 +123,7 @@ export default function SettingsPage() {
         await refreshUser();
       }
     } catch (error: any) {
-      console.error('Failed to update profile:', error);
+      if (import.meta.env.DEV) console.error('Failed to update profile:', error);
       toast.error(error.response?.data?.error || t('settings.toast.profile_failed'));
     } finally {
       setLoading(false);
@@ -149,7 +149,7 @@ export default function SettingsPage() {
       toast.success(t('settings.toast.avatar_uploaded', 'Profile picture uploaded'));
       await refreshUser();
     } catch (error: any) {
-      console.error('Failed to upload avatar:', error);
+      if (import.meta.env.DEV) console.error('Failed to upload avatar:', error);
       toast.error(error.message || t('settings.toast.avatar_failed', 'Failed to upload profile picture'));
     } finally {
       setAvatarUploading(false);
@@ -181,7 +181,7 @@ export default function SettingsPage() {
         setShowPasswordForm(false);
       }
     } catch (error: any) {
-      console.error('Failed to change password:', error);
+      if (import.meta.env.DEV) console.error('Failed to change password:', error);
       toast.error(error.response?.data?.error || t('settings.toast.password_failed'));
     } finally {
       setLoading(false);
@@ -194,7 +194,7 @@ export default function SettingsPage() {
       await setLanguage(newLanguage);
       toast.success(newLanguage === 'he' ? t('settings.toast.language_hebrew') : t('settings.toast.language_english'));
     } catch (error) {
-      console.error('Failed to change language:', error);
+      if (import.meta.env.DEV) console.error('Failed to change language:', error);
       toast.error(t('settings.toast.language_failed'));
     } finally {
       setLanguageLoading(false);
@@ -216,7 +216,7 @@ export default function SettingsPage() {
       window.URL.revokeObjectURL(url);
       toast.success(t('settings.toast.export_success'));
     } catch (error: any) {
-      console.error('Failed to export data:', error);
+      if (import.meta.env.DEV) console.error('Failed to export data:', error);
       toast.error(error.response?.data?.error || t('settings.toast.export_failed'));
     } finally {
       setExportingData(false);
@@ -231,7 +231,7 @@ export default function SettingsPage() {
       toast.success(language === 'he' ? 'החשבון נמחק' : 'Account deleted');
       window.location.href = '/';
     } catch (error: any) {
-      console.error('Failed to delete account:', error);
+      if (import.meta.env.DEV) console.error('Failed to delete account:', error);
       toast.error(error.response?.data?.error || (language === 'he' ? 'מחיקת החשבון נכשלה' : 'Failed to delete account'));
     } finally {
       setDeletingAccount(false);

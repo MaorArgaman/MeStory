@@ -162,7 +162,7 @@ export default function HowToEarnMoney() {
   useSEO({
     title: pageTitle,
     description: pageDescription,
-    canonicalUrl: 'https://mestory.co.il/guides/earn-money',
+    canonicalUrl: 'https://mestory-ai.com/guides/earn-money',
     keywords: pageKeywords,
     ogType: 'article',
   });
@@ -175,7 +175,7 @@ export default function HowToEarnMoney() {
         description={pageDescription}
         datePublished="2024-02-01"
         dateModified="2024-12-01"
-        url="https://mestory.co.il/guides/earn-money"
+        url="https://mestory-ai.com/guides/earn-money"
         articleType="HowTo"
         wordCount={1800}
         speakable={['.gradient-gold', 'h2', 'h3']}

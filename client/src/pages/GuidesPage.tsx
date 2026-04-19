@@ -135,7 +135,7 @@ export default function GuidesPage() {
   useSEO({
     title: pageTitle,
     description: pageDescription,
-    canonicalUrl: 'https://mestory.co.il/guides',
+    canonicalUrl: 'https://mestory-ai.com/guides',
     keywords: pageKeywords,
   });
 

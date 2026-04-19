@@ -57,8 +57,8 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2 text-sm text-gray-400">
               <li>
-                <a href="mailto:support@mestory.co.il" className="hover:text-memorial-gold transition">
-                  support@mestory.co.il
+                <a href="mailto:support@mestory-ai.com" className="hover:text-memorial-gold transition">
+                  support@mestory-ai.com
                 </a>
               </li>
             </ul>

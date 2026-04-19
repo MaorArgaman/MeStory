@@ -192,7 +192,7 @@ export default function HowToWriteBook() {
   useSEO({
     title: pageTitle,
     description: pageDescription,
-    canonicalUrl: 'https://mestory.co.il/guides/write-book',
+    canonicalUrl: 'https://mestory-ai.com/guides/write-book',
     keywords: pageKeywords,
     ogType: 'article',
   });
@@ -205,7 +205,7 @@ export default function HowToWriteBook() {
         description={pageDescription}
         datePublished="2024-01-15"
         dateModified="2024-12-01"
-        url="https://mestory.co.il/guides/write-book"
+        url="https://mestory-ai.com/guides/write-book"
         articleType="HowTo"
         wordCount={2500}
         speakable={['.gradient-gold', 'h2', 'h3']}

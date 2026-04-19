@@ -111,7 +111,7 @@ const content = {
       title: 'Contact Us',
       subtitle: 'We\'re Here to Help',
       description: 'Have questions or need assistance? Our support team is ready to help you on your writing journey.',
-      email: 'support@mestory.co.il',
+      email: 'support@mestory-ai.com',
       emailLabel: 'Email Support',
       companyName: 'MeStory Ltd.',
       companyLabel: 'Company',
@@ -213,7 +213,7 @@ const content = {
       title: 'צרו קשר',
       subtitle: 'אנחנו כאן לעזור',
       description: 'יש לכם שאלות או צריכים עזרה? צוות התמיכה שלנו מוכן לעזור לכם במסע הכתיבה שלכם.',
-      email: 'support@mestory.co.il',
+      email: 'support@mestory-ai.com',
       emailLabel: 'תמיכה במייל',
       companyName: 'MeStory Ltd.',
       companyLabel: 'חברה',
@@ -252,14 +252,14 @@ export default function AboutPage() {
 
   // Breadcrumb for SEO
   const breadcrumbs = [
-    { name: isHebrew ? 'דף הבית' : 'Home', url: 'https://mestory.co.il' },
-    { name: isHebrew ? 'אודות' : 'About', url: 'https://mestory.co.il/about' },
+    { name: isHebrew ? 'דף הבית' : 'Home', url: 'https://mestory-ai.com' },
+    { name: isHebrew ? 'אודות' : 'About', url: 'https://mestory-ai.com/about' },
   ];
 
   useSEO({
     title: t.seo.title,
     description: t.seo.description,
-    canonicalUrl: 'https://mestory.co.il/about',
+    canonicalUrl: 'https://mestory-ai.com/about',
   });
 
   return (

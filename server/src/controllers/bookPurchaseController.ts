@@ -590,12 +590,12 @@ export const updateReadingProgress = async (req: AuthRequest, res: Response): Pr
       readingHistory.push({
         bookId: bookId as any,
         progress,
-        lastRead: new Date(),
+        lastRead: new Date().toISOString(),
       });
     } else {
       // Update existing entry
       readingHistory[historyIndex].progress = progress;
-      readingHistory[historyIndex].lastRead = new Date();
+      readingHistory[historyIndex].lastRead = new Date().toISOString();
     }
 
     await User.findByIdAndUpdate(req.user.id, {

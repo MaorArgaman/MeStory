@@ -4,53 +4,53 @@
 
   <!-- Homepage -->
   <url>
-    <loc>https://mestory.co.il/</loc>
+    <loc>https://mestory-ai.com/</loc>
     <lastmod>2026-03-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="he" href="https://mestory.co.il/"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://mestory.co.il/"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://mestory.co.il/"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://mestory-ai.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://mestory-ai.com/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://mestory-ai.com/"/>
   </url>
 
   <!-- Marketplace -->
   <url>
-    <loc>https://mestory.co.il/marketplace</loc>
+    <loc>https://mestory-ai.com/marketplace</loc>
     <lastmod>2026-03-26</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
-    <xhtml:link rel="alternate" hreflang="he" href="https://mestory.co.il/marketplace"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://mestory.co.il/marketplace"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://mestory-ai.com/marketplace"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://mestory-ai.com/marketplace"/>
   </url>
 
   <!-- FAQ Page -->
   <url>
-    <loc>https://mestory.co.il/faq</loc>
+    <loc>https://mestory-ai.com/faq</loc>
     <lastmod>2026-03-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="he" href="https://mestory.co.il/faq"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://mestory.co.il/faq"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://mestory-ai.com/faq"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://mestory-ai.com/faq"/>
   </url>
 
   <!-- Privacy Policy -->
   <url>
-    <loc>https://mestory.co.il/privacy</loc>
+    <loc>https://mestory-ai.com/privacy</loc>
     <lastmod>2026-03-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
-    <xhtml:link rel="alternate" hreflang="he" href="https://mestory.co.il/privacy"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://mestory.co.il/privacy"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://mestory-ai.com/privacy"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://mestory-ai.com/privacy"/>
   </url>
 
   <!-- Terms of Service -->
   <url>
-    <loc>https://mestory.co.il/terms</loc>
+    <loc>https://mestory-ai.com/terms</loc>
     <lastmod>2026-03-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
-    <xhtml:link rel="alternate" hreflang="he" href="https://mestory.co.il/terms"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://mestory.co.il/terms"/>
+    <xhtml:link rel="alternate" hreflang="he" href="https://mestory-ai.com/terms"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://mestory-ai.com/terms"/>
   </url>
 
 </urlset>

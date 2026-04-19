@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { Mail, Lock, User, Loader2, Eye, EyeOff, Sparkles, Ticket, Check, X } from 'lucide-react';
 import analytics from '../utils/analytics';
+import { SEO } from '../components/seo';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
@@ -120,6 +121,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+      <SEO title="הרשמה" description="הצטרף ל-MeStory וצור ספרים מקצועיים עם בינה מלאכותית. חינם להתחיל!" noIndex />
       {/* Left Column - Side Image (hidden on mobile) */}
       <div
         className="hidden lg:block relative bg-cover bg-center"

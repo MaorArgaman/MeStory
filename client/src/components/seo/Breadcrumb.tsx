@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Home, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 
-const DEFAULT_SITE_URL = 'https://mestory.co.il';
+const DEFAULT_SITE_URL = 'https://mestory-ai.com';
 
 export interface BreadcrumbItem {
   name: string;

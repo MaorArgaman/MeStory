@@ -178,7 +178,7 @@ export default function HowToPublishBook() {
   useSEO({
     title: pageTitle,
     description: pageDescription,
-    canonicalUrl: 'https://mestory.co.il/guides/publish-book',
+    canonicalUrl: 'https://mestory-ai.com/guides/publish-book',
     keywords: pageKeywords,
     ogType: 'article',
   });
@@ -191,7 +191,7 @@ export default function HowToPublishBook() {
         description={pageDescription}
         datePublished="2024-01-20"
         dateModified="2024-12-01"
-        url="https://mestory.co.il/guides/publish-book"
+        url="https://mestory-ai.com/guides/publish-book"
         articleType="HowTo"
         wordCount={2000}
         speakable={['.gradient-gold', 'h2', 'h3']}

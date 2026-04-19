@@ -261,9 +261,11 @@ const estimateCharsPerPage = (settings: typeof defaultSettings, isHebrew: boolea
   const avgCharWidth = settings.fontSize * (isHebrew ? 0.65 : 0.5);
   const charsPerLine = Math.floor(availableWidth / avgCharWidth);
 
-  // Estimate lines per page
+  // Estimate lines per page — account for paragraph spacing
   const lineHeightPx = settings.fontSize * settings.lineHeight;
-  const linesPerPage = Math.floor(availableHeight / lineHeightPx);
+  // Each paragraph (~5 lines avg) adds extra spacing; estimate ~3-4px per line as overhead
+  const effectiveLineHeight = lineHeightPx + (settings.paragraphSpacing || 0) / 5;
+  const linesPerPage = Math.floor(availableHeight / effectiveLineHeight);
 
   // Buffer accounts for HTML tags, spacing, chapter titles
   return Math.floor(charsPerLine * linesPerPage * 0.55);
@@ -331,8 +333,10 @@ const splitContentIntoPages = (
 ): string[] => {
   const pages: string[] = [];
 
-  // If content is short enough, return as single page
-  if (htmlContent.length <= charsPerPage) {
+  // If text content is short enough, return as single page
+  // Compare text-only length (strip HTML tags) against the chars-per-page budget
+  const textOnly = htmlContent.replace(/<[^>]*>/g, '');
+  if (textOnly.length <= charsPerPage) {
     return [htmlContent];
   }
 
@@ -734,7 +738,7 @@ export default function BookLayoutPage() {
           // TOC
           if (loadedSettings.includeToc && bookData.chapters.length > 1) {
             const tocContent = bookData.chapters
-              .map((ch: any, i: number) => `<div class="toc-item"><span class="toc-title">${ch.title}</span><span class="toc-page">${chapterStartPages[i] || ''}</span></div>`)
+              .map((ch: any, i: number) => `<div class="toc-item"><span class="toc-title">${ch.title}</span><span class="toc-page" dir="ltr">${chapterStartPages[i] || ''}</span></div>`)
               .join('');
             freshPages.push({
               id: `page-toc`,
@@ -861,7 +865,7 @@ export default function BookLayoutPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to load book:', error);
+      if (import.meta.env.DEV) console.error('Failed to load book:', error);
       toast.error('Error loading book');
       navigate('/dashboard');
     } finally {
@@ -1013,7 +1017,7 @@ export default function BookLayoutPage() {
       });
 
     } catch (error) {
-      console.error('Error applying stored AI design:', error);
+      if (import.meta.env.DEV) console.error('Error applying stored AI design:', error);
     }
   };
 
@@ -1109,7 +1113,7 @@ export default function BookLayoutPage() {
           previewGradient: `linear-gradient(135deg, ${settings.backgroundColor || '#fff'} 0%, ${settings.accentColor || '#6366f1'} 100%)`,
         } as any);
       } catch (localErr) {
-        console.warn('localStorage template save failed:', localErr);
+        if (import.meta.env.DEV) console.warn('localStorage template save failed:', localErr);
       }
 
       const response = await api.post('/templates', templateData);
@@ -1123,7 +1127,7 @@ export default function BookLayoutPage() {
         throw new Error(response.data.error || 'Failed to save template');
       }
     } catch (error: any) {
-      console.error('Error saving template:', error);
+      if (import.meta.env.DEV) console.error('Error saving template:', error);
       toast.error(error.message || (language === 'he' ? 'שגיאה בשמירת התבנית' : 'Failed to save template'));
     } finally {
       setSavingTemplate(false);
@@ -1200,7 +1204,7 @@ export default function BookLayoutPage() {
     // Table of contents (if enabled) - now with correct page numbers
     if (settings.includeToc && bookData.chapters.length > 1) {
       const tocContent = bookData.chapters
-        .map((ch, i) => `<div class="toc-item"><span class="toc-title">${ch.title}</span><span class="toc-page">${chapterStartPages[i] || ''}</span></div>`)
+        .map((ch, i) => `<div class="toc-item"><span class="toc-title">${ch.title}</span><span class="toc-page" dir="ltr">${chapterStartPages[i] || ''}</span></div>`)
         .join('');
       newPages.push({
         id: `page-toc`,
@@ -1248,7 +1252,7 @@ export default function BookLayoutPage() {
         setSelectedPrice(strategy.recommendedPrice);
       }
     } catch (error: any) {
-      console.error('Failed to load pricing strategy:', error);
+      if (import.meta.env.DEV) console.error('Failed to load pricing strategy:', error);
       setPricingStrategy({
         recommendedPrice: 0,
         recommendFree: true,
@@ -1302,7 +1306,7 @@ export default function BookLayoutPage() {
         navigate('/marketplace');
       }
     } catch (error: any) {
-      console.error('Failed to publish book:', error);
+      if (import.meta.env.DEV) console.error('Failed to publish book:', error);
       toast.error(error.response?.data?.error || 'Error publishing book');
     } finally {
       setPublishing(false);
@@ -1345,7 +1349,7 @@ export default function BookLayoutPage() {
       toast.success('File downloaded successfully!', { id: 'export' });
       setShowExportModal(false);
     } catch (error: any) {
-      console.error('Failed to export book:', error);
+      if (import.meta.env.DEV) console.error('Failed to export book:', error);
       toast.error(error?.message || error.response?.data?.error || 'Error exporting book', { id: 'export' });
     } finally {
       setExporting(false);
@@ -1481,7 +1485,7 @@ export default function BookLayoutPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to save layout:', error);
+      if (import.meta.env.DEV) console.error('Failed to save layout:', error);
       if (isAutoSave) {
         setAutoSaveFailed(true); // Set failure state for persistent warning
       } else {
@@ -1590,7 +1594,7 @@ export default function BookLayoutPage() {
       });
       toast.success(t('book_layout.content_saved', 'Content saved'));
     } catch (error) {
-      console.error('Failed to save chapter content:', error);
+      if (import.meta.env.DEV) console.error('Failed to save chapter content:', error);
       toast.error(t('book_layout.messages.save_failed', 'Failed to save content'));
     }
   };
@@ -1691,10 +1695,11 @@ export default function BookLayoutPage() {
           toast.success(`תבנית "${template.name}" הוחלה ונשמרה בהצלחה!`);
         }
       } catch (error: any) {
-        console.error('Failed to save template:', error);
-        const errorMessage = error.response?.data?.error || error.message || 'Unknown error';
-        console.error('Error details:', error.response?.data);
-        toast.error(`התבנית הוחלה אך השמירה נכשלה: ${errorMessage}`);
+        if (import.meta.env.DEV) {
+          console.error('Failed to save template:', error);
+          console.error('Error details:', error.response?.data);
+        }
+        toast.error(`התבנית הוחלה אך השמירה נכשלה: ${error.response?.data?.error || error.message || 'Unknown error'}`);
       } finally {
         setSaving(false);
       }
@@ -1830,7 +1835,7 @@ export default function BookLayoutPage() {
       // TOC
       if (newSettings.includeToc && book.chapters.length > 1) {
         const tocContent = book.chapters
-          .map((ch: any, i: number) => `<div class="toc-item"><span class="toc-title">${ch.title}</span><span class="toc-page">${chapterStartPages[i] || ''}</span></div>`)
+          .map((ch: any, i: number) => `<div class="toc-item"><span class="toc-title">${ch.title}</span><span class="toc-page" dir="ltr">${chapterStartPages[i] || ''}</span></div>`)
           .join('');
         freshPages.push({
           id: 'page-toc',
@@ -1986,7 +1991,7 @@ export default function BookLayoutPage() {
     try {
       saveCustomTemplate(autoTemplate);
     } catch (err) {
-      console.warn('Could not save template to localStorage:', err);
+      if (import.meta.env.DEV) console.warn('Could not save template to localStorage:', err);
     }
 
     // 2. Save to server (background, best-effort)
@@ -2016,7 +2021,7 @@ export default function BookLayoutPage() {
       dividerStyle: autoTemplate.dividerStyle,
       decorativeElements: autoTemplate.decorativeElements,
       aiDesignData: { typography: design.typography, layout: design.layout },
-    }).catch(err => console.warn('Could not save template to server:', err));
+    }).catch(err => { if (import.meta.env.DEV) console.warn('Could not save template to server:', err); });
     // ─────────────────────────────────────────────────────────────────────────
 
     // Save to database
@@ -2041,7 +2046,7 @@ export default function BookLayoutPage() {
             : '✨ Design applied! Template saved to your gallery'
         );
       } catch (error) {
-        console.error('Failed to save AI design:', error);
+        if (import.meta.env.DEV) console.error('Failed to save AI design:', error);
         toast.error(language === 'he' ? 'העיצוב הוחל אך השמירה נכשלה' : 'Design applied but save failed');
       } finally {
         setSaving(false);
@@ -2108,7 +2113,7 @@ export default function BookLayoutPage() {
         setShowImageModal(false);
       }
     } catch (error: any) {
-      console.error('Upload error:', error);
+      if (import.meta.env.DEV) console.error('Upload error:', error);
       toast.error(error.response?.data?.error || 'Error uploading image', { id: 'upload-image' });
     }
   };
@@ -2160,7 +2165,7 @@ export default function BookLayoutPage() {
         setImagePrompt('');
       }
     } catch (error: any) {
-      console.error('Generate image error:', error);
+      if (import.meta.env.DEV) console.error('Generate image error:', error);
       toast.error(error.response?.data?.error || 'Error generating image', { id: 'generate-image' });
     } finally {
       setGeneratingImage(false);
@@ -2173,12 +2178,12 @@ export default function BookLayoutPage() {
     setPages(prevPages => {
       // Handle empty pages array
       if (!prevPages || prevPages.length === 0) {
-        console.error('Pages array is empty');
+        if (import.meta.env.DEV) console.error('Pages array is empty');
         return prevPages;
       }
       const updatedPages = [...prevPages];
       if (!updatedPages[pageIndex]) {
-        console.error('Page not found at index:', pageIndex);
+        if (import.meta.env.DEV) console.error('Page not found at index:', pageIndex);
         return prevPages;
       }
       // Ensure images array exists
@@ -2195,7 +2200,7 @@ export default function BookLayoutPage() {
         };
         return updatedPages;
       }
-      console.error('Image not found with id:', imageId);
+      if (import.meta.env.DEV) console.error('Image not found with id:', imageId);
       return prevPages;
     });
   };
@@ -2204,7 +2209,7 @@ export default function BookLayoutPage() {
   const deleteImage = (pageIndex: number, imageId: string) => {
     // Handle empty pages array
     if (!pages || pages.length === 0 || !pages[pageIndex]) {
-      console.error('Invalid page index or empty pages array');
+      if (import.meta.env.DEV) console.error('Invalid page index or empty pages array');
       return;
     }
     const updatedPages = [...pages];
@@ -2222,7 +2227,7 @@ export default function BookLayoutPage() {
   const duplicateImage = (pageIndex: number, imageId: string) => {
     // Handle empty pages array
     if (!pages || pages.length === 0 || !pages[pageIndex]) {
-      console.error('Invalid page index or empty pages array');
+      if (import.meta.env.DEV) console.error('Invalid page index or empty pages array');
       return;
     }
     const updatedPages = [...pages];
@@ -2256,7 +2261,7 @@ export default function BookLayoutPage() {
     prompt?: string;
   }) => {
     if (!pages || pages.length === 0 || !pages[pageIndex]) {
-      console.error('Invalid page index');
+      if (import.meta.env.DEV) console.error('Invalid page index');
       return;
     }
 
@@ -2354,7 +2359,7 @@ export default function BookLayoutPage() {
 
       // Generate TOC content
       const tocContent = book.chapters
-        .map((ch, i) => `<div class="toc-item"><span class="toc-title">${ch.title}</span><span class="toc-page">${chapterStartPages[i] || ''}</span></div>`)
+        .map((ch, i) => `<div class="toc-item"><span class="toc-title">${ch.title}</span><span class="toc-page" dir="ltr">${chapterStartPages[i] || ''}</span></div>`)
         .join('');
 
       const tocPage: PageContent = {
@@ -3995,7 +4000,7 @@ export default function BookLayoutPage() {
                             uploadedCount++;
                           }
                         } catch (err) {
-                          console.error(`Failed to upload image ${i + 1}:`, err);
+                          if (import.meta.env.DEV) console.error(`Failed to upload image ${i + 1}:`, err);
                         }
                       }
 

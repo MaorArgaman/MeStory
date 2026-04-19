@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const DEFAULT_SITE_URL = 'https://mestory.co.il';
+const DEFAULT_SITE_URL = 'https://mestory-ai.com';
 
 // Helper to render JSON-LD script
 function useJsonLd(data: object, id: string) {
@@ -56,7 +56,7 @@ export function OrganizationSchema({ locale = 'he' }: OrganizationSchemaProps) {
       '@type': 'ContactPoint',
       contactType: 'customer support',
       availableLanguage: ['Hebrew', 'English'],
-      email: 'support@mestory.co.il',
+      email: 'support@mestory-ai.com',
     },
     address: {
       '@type': 'PostalAddress',
