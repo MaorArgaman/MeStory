@@ -1705,7 +1705,7 @@ export default function BookLayoutPage() {
       headerStyle: layout.headerStyle || 'none',
       dropCapEnabled: layout.dropCaps || false,
       // Design elements — rich defaults from AI design
-      dropCapStyle: design.dropCapStyle || (layout.dropCaps ? 'classic' : 'none'),
+      dropCapStyle: design.dropCapStyle || 'classic',
       dividerStyle: design.dividerStyle || 'ornament',
       pageFrame: design.pageFrame || 'royal',
       frameColor: design.frameColor || colors.accent || settings.accentColor,
@@ -1715,10 +1715,10 @@ export default function BookLayoutPage() {
       sectionDivider: design.sectionDivider || '',
       titleUnderline: design.titleUnderline || 'ornate',
       pageSize: design.pageSize || settings.pageSize || 'A5',
-      // Rich background — gradient from AI color palette
-      backgroundGradient: design.backgroundGradient || `linear-gradient(170deg, ${colors.background || '#fefdfb'} 0%, ${(colors.accent || '#8b6914')}08 100%)`,
+      // Rich background — warm gradient with accent color influence
+      backgroundGradient: design.backgroundGradient || `linear-gradient(170deg, #faf5eb 0%, #f3ece0 40%, ${(colors.accent || '#8b6914')}12 100%)`,
       backgroundTexture: design.backgroundTexture || 'parchment',
-      backgroundTextureOpacity: design.backgroundTextureOpacity ?? 0.12,
+      backgroundTextureOpacity: design.backgroundTextureOpacity ?? 0.18,
     };
 
     setSettings(newSettings);
@@ -3014,7 +3014,6 @@ export default function BookLayoutPage() {
                     <div
                       key={`page-${page.id}-${editingPageIndex === actualIdx ? 'edit' : 'view'}`}
                       className="w-full h-full"
-                      style={{ backgroundColor: settings.backgroundColor || '#ffffff' }}
                     >
                       <PageRenderer
                         page={page}
@@ -4716,19 +4715,22 @@ function PageRenderer({
     }
   };
 
-  // Corner decoration SVG paths by type
-  const getCornerSVG = (type: string, rotate: number) => {
+  // Corner decoration SVG by type — rich, detailed ornaments
+  const getCornerSVG = (type: string, _rotate: number) => {
     const accent = settings.accentColor || '#8b6914';
-    const svgPaths: Record<string, string> = {
-      flourish: 'M2,2 Q8,2 8,8 M2,2 Q2,8 8,8 M4,4 C6,4 6,6 4,6',
-      geometric: 'M2,2 L14,2 L14,4 L4,4 L4,14 L2,14 Z',
-      floral: 'M8,8 Q4,4 2,2 M8,8 Q4,12 2,14 M8,8 Q12,4 14,2 M8,8 C7,6 5,4 4,4 C6,4 7,6 8,8',
-      stars: 'M8,2 L9,6 L13,6 L10,9 L11,13 L8,10 L5,13 L6,9 L3,6 L7,6 Z',
-      hearts: 'M8,12 C8,12 2,8 2,5 A3,3 0 0 1 8,5 A3,3 0 0 1 14,5 C14,8 8,12 8,12 Z',
-      leaves: 'M2,14 Q2,8 8,2 Q8,8 14,8 Q8,8 8,14 Q4,14 2,14 Z',
+    const size = 50;
+    const svgContent: Record<string, string> = {
+      flourish: `<path d="M2,2 L45,2 L45,3.5 L3.5,3.5 L3.5,45 L2,45 Z" fill="${accent}" opacity="0.4"/><path d="M7,7 Q7,22 7,34 Q22,7 34,7" stroke="${accent}" stroke-width="1.5" fill="none" opacity="0.8"/><path d="M10,10 Q10,18 10,26 Q18,10 26,10" stroke="${accent}" stroke-width="0.8" fill="none" opacity="0.4"/><circle cx="7" cy="7" r="2.5" fill="${accent}" opacity="0.7"/>`,
+      geometric: `<polyline points="0,40 0,0 40,0" stroke="${accent}" stroke-width="2.5" fill="none"/><polyline points="0,28 0,6 6,0 28,0" stroke="${accent}" stroke-width="1" fill="none" opacity="0.4"/><rect x="2" y="2" width="8" height="8" fill="${accent}" opacity="0.25"/><rect x="12" y="2" width="5" height="5" fill="${accent}" opacity="0.12"/>`,
+      floral: `<path d="M0,0 L44,0 L44,2 L2,2 L2,44 L0,44 Z" fill="${accent}" opacity="0.4"/><circle cx="12" cy="12" r="5.5" stroke="${accent}" stroke-width="1.2" fill="none"/><circle cx="12" cy="12" r="2.5" fill="${accent}" opacity="0.6"/><path d="M17.5,12 Q23,7 28,12" stroke="${accent}" stroke-width="1" fill="none"/><path d="M12,17.5 Q7,23 12,28" stroke="${accent}" stroke-width="1" fill="none"/>`,
+      stars: `<text x="2" y="18" font-size="16" fill="${accent}" opacity="0.7">✦</text><text x="18" y="34" font-size="10" fill="${accent}" opacity="0.45">✧</text><text x="30" y="12" font-size="7" fill="${accent}" opacity="0.3">✦</text>`,
+      hearts: `<text x="2" y="20" font-size="18" fill="${accent}" opacity="0.6">♥</text><text x="20" y="34" font-size="10" fill="${accent}" opacity="0.35">♥</text>`,
+      leaves: `<path d="M6,6 Q16,3 26,10 Q16,17 6,6 Z" fill="${accent}" opacity="0.2" stroke="${accent}" stroke-width="0.8"/><path d="M6,6 L16,10" stroke="${accent}" stroke-width="0.6" opacity="0.4"/><path d="M10,18 Q16,24 24,26 Q16,28 10,18 Z" fill="${accent}" opacity="0.15" stroke="${accent}" stroke-width="0.6"/>`,
+      royal: `<path d="M0,0 L52,0 L52,2.5 L2.5,2.5 L2.5,52 L0,52 Z" fill="${accent}" opacity="0.5"/><path d="M5,5 L44,5 L44,6.5 L6.5,6.5 L6.5,44 L5,44 Z" fill="${accent}" opacity="0.2"/><path d="M10,10 Q10,24 10,34 Q24,10 34,10" stroke="${accent}" stroke-width="1.8" fill="none" opacity="0.7"/><path d="M10,10 L13,7 L16,10 L13,13 Z" fill="${accent}" opacity="0.5"/><path d="M34,10 Q40,9 44,12" stroke="${accent}" stroke-width="1" fill="none" opacity="0.4"/><path d="M10,34 Q9,40 12,44" stroke="${accent}" stroke-width="1" fill="none" opacity="0.4"/><circle cx="44" cy="12" r="1.2" fill="${accent}" opacity="0.35"/>`,
+      vine: `<path d="M4,4 Q4,26 7,38 Q10,44 16,47 Q26,50 38,47" stroke="${accent}" stroke-width="1.5" fill="none" opacity="0.6"/><path d="M4,4 Q14,4 26,7 Q36,10 42,16 Q48,26 48,38" stroke="${accent}" stroke-width="1.5" fill="none" opacity="0.6"/><path d="M8,16 Q13,11 18,16 Q13,21 8,16 Z" fill="${accent}" opacity="0.2" stroke="${accent}" stroke-width="0.6"/><path d="M16,8 Q21,3 26,8 Q21,13 16,8 Z" fill="${accent}" opacity="0.2" stroke="${accent}" stroke-width="0.6"/><circle cx="4" cy="4" r="2.5" fill="${accent}" opacity="0.45"/>`,
     };
-    const path = svgPaths[type] || svgPaths.geometric;
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="${accent}" stroke-width="1.5" transform="rotate(${rotate},8,8)">${path}</svg>`;
+    const content = svgContent[type] || svgContent.geometric;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">${content}</svg>`;
   };
 
   return (
@@ -4764,20 +4766,20 @@ function PageRenderer({
         }} />
       )}
 
-      {/* Corner Decorations */}
+      {/* Corner Decorations — larger, richer SVGs with proper mirroring */}
       {settings.cornerDecorations && settings.cornerDecorations !== 'none' && (
         <>
           {[
-            { cls: 'book-corner-decoration book-corner-tl', rot: 0 },
-            { cls: 'book-corner-decoration book-corner-tr', rot: 90 },
-            { cls: 'book-corner-decoration book-corner-bl', rot: 270 },
-            { cls: 'book-corner-decoration book-corner-br', rot: 180 },
-          ].map(({ cls, rot }) => (
+            { cls: 'book-corner-decoration book-corner-tl', transform: 'none' },
+            { cls: 'book-corner-decoration book-corner-tr', transform: 'scaleX(-1)' },
+            { cls: 'book-corner-decoration book-corner-bl', transform: 'scaleY(-1)' },
+            { cls: 'book-corner-decoration book-corner-br', transform: 'scale(-1)' },
+          ].map(({ cls, transform }) => (
             <div
               key={cls}
               className={cls}
-              dangerouslySetInnerHTML={{ __html: getCornerSVG(settings.cornerDecorations, rot) }}
-              style={{ '--accent-color': settings.accentColor || '#8b6914' } as React.CSSProperties}
+              dangerouslySetInnerHTML={{ __html: getCornerSVG(settings.cornerDecorations, 0) }}
+              style={{ transform, '--accent-color': settings.accentColor || '#8b6914' } as React.CSSProperties}
             />
           ))}
         </>
