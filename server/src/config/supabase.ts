@@ -51,7 +51,7 @@ const axiosFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise
       method,
       headers,
       data: body,
-      timeout: 10000, // 10 second timeout
+      timeout: 45000, // 45 second timeout (Supabase free tier can be very slow after pause)
       validateStatus: () => true, // Don't throw on non-2xx
     });
 

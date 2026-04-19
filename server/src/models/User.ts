@@ -4,6 +4,23 @@ import crypto from 'crypto';
 // Use crypto.randomUUID() instead of uuid package (Node 14.17+)
 const uuidv4 = () => crypto.randomUUID();
 
+/** Retry wrapper with exponential backoff for transient Supabase errors. */
+async function withRetry<T>(fn: () => Promise<T>, label: string, maxRetries = 2): Promise<T> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      const msg = err?.message || '';
+      const isTransient = msg.includes('timeout') || msg.includes('TIMEOUT') || msg.includes('Network') || msg.includes('ECONNRESET') || msg.includes('ECONNREFUSED') || msg.includes('fetch failed') || msg.includes('aborted');
+      if (!isTransient || attempt === maxRetries) throw err;
+      const delay = Math.min(1000 * 2 ** attempt, 5000);
+      console.warn(`[User.${label}] Transient error (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${delay}ms: ${msg}`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+  throw new Error(`[User.${label}] All retries exhausted`);
+}
+
 // User role enum
 export enum UserRole {
   FREE = 'FREE',
@@ -157,23 +174,29 @@ function rowToUser(row: UserRow): IUser {
 export class User {
   // Find user by ID
   static async findById(id: string, includePassword = false): Promise<IUser | null> {
-    const columns = includePassword
-      ? '*'
-      : 'id, name, email, role, credits, subscription, profile, paypal, email_verification, created_at, updated_at';
+    return withRetry(async () => {
+      const columns = includePassword
+        ? '*'
+        : 'id, name, email, role, credits, subscription, profile, paypal, email_verification, created_at, updated_at';
 
-    const { data, error } = await supabaseAdmin
-      .from('users')
-      .select(columns)
-      .eq('id', id)
-      .single();
+      const { data, error } = await supabaseAdmin
+        .from('users')
+        .select(columns)
+        .eq('id', id)
+        .single();
 
-    if (error || !data) return null;
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw new Error(`Database error in User.findById: ${error.message}`);
+      }
+      if (!data) return null;
 
-    const user = rowToUser(data as unknown as UserRow);
-    if (!includePassword) {
-      user.password = '';
-    }
-    return user;
+      const user = rowToUser(data as unknown as UserRow);
+      if (!includePassword) {
+        user.password = '';
+      }
+      return user;
+    }, 'findById');
   }
 
   // PERF: Batch fetch multiple users in a single query. Replaces the N+1
@@ -196,23 +219,29 @@ export class User {
 
   // Find user by email
   static async findByEmail(email: string, includePassword = false): Promise<IUser | null> {
-    const columns = includePassword
-      ? '*'
-      : 'id, name, email, role, credits, subscription, profile, paypal, email_verification, created_at, updated_at';
+    return withRetry(async () => {
+      const columns = includePassword
+        ? '*'
+        : 'id, name, email, role, credits, subscription, profile, paypal, email_verification, created_at, updated_at';
 
-    const { data, error } = await supabaseAdmin
-      .from('users')
-      .select(columns)
-      .eq('email', email.toLowerCase())
-      .single();
+      const { data, error } = await supabaseAdmin
+        .from('users')
+        .select(columns)
+        .eq('email', email.toLowerCase())
+        .single();
 
-    if (error || !data) return null;
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw new Error(`Database error in User.findByEmail: ${error.message}`);
+      }
+      if (!data) return null;
 
-    const user = rowToUser(data as unknown as UserRow);
-    if (!includePassword) {
-      user.password = '';
-    }
-    return user;
+      const user = rowToUser(data as unknown as UserRow);
+      if (!includePassword) {
+        user.password = '';
+      }
+      return user;
+    }, 'findByEmail');
   }
 
   // Find one user by query

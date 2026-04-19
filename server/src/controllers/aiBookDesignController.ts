@@ -59,7 +59,7 @@ export const generateBookDesign = async (req: AuthRequest, res: Response): Promi
     }
 
     // Find book with all data
-    const book = await Book.findById(bookId);
+    const book = await Book.findByIdForDesign(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -147,7 +147,7 @@ export const applyBookDesign = async (req: AuthRequest, res: Response): Promise<
     }
 
     // Find book
-    const book = await Book.findById(bookId);
+    const book = await Book.findByIdForDesign(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -242,7 +242,7 @@ export const generateTypography = async (req: AuthRequest, res: Response): Promi
     }
 
     // Find book
-    const book = await Book.findById(bookId);
+    const book = await Book.findByIdForDesign(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -315,7 +315,7 @@ export const getImageSuggestions = async (req: AuthRequest, res: Response): Prom
     }
 
     // Find book
-    const book = await Book.findById(bookId);
+    const book = await Book.findByIdForDesign(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -395,7 +395,7 @@ export const generateContextualImage = async (req: AuthRequest, res: Response): 
     }
 
     // Find book
-    const book = await Book.findById(bookId);
+    const book = await Book.findByIdForDesign(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -493,7 +493,7 @@ export const generateCompleteDesign = async (req: AuthRequest, res: Response): P
     }
 
     // Find book with all data
-    const book = await Book.findById(bookId);
+    const book = await Book.findByIdForDesign(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -613,7 +613,7 @@ export const generateCompleteDesignAsync = async (req: AuthRequest, res: Respons
       return;
     }
 
-    const book = await Book.findById(bookId);
+    const book = await Book.findByIdForDesign(bookId);
     if (!book) {
       res.status(404).json({ success: false, error: 'Book not found' });
       return;
@@ -737,7 +737,7 @@ export const getDesignPreview = async (req: AuthRequest, res: Response): Promise
     }
 
     // Find book
-    const book = await Book.findById(bookId);
+    const book = await Book.findByIdForDesign(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -810,7 +810,7 @@ export const getDesignState = async (req: AuthRequest, res: Response): Promise<v
     }
 
     // Find book
-    const book = await Book.findById(bookId);
+    const book = await Book.findByIdForDesign(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -869,7 +869,7 @@ export const applyCompleteDesign = async (req: AuthRequest, res: Response): Prom
     }
 
     // Find book
-    const book = await Book.findById(bookId);
+    const book = await Book.findByIdForDesign(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -1043,7 +1043,7 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     // Find book with all data
-    const book = await Book.findById(bookId);
+    const book = await Book.findByIdForDesign(bookId);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -1285,7 +1285,7 @@ export const generateTemplateDesign = async (req: AuthRequest, res: Response): P
         return;
       }
 
-      const book = await Book.findById(bookId);
+      const book = await Book.findByIdForDesign(bookId);
       if (book && book.author !== req.user.id) {
         res.status(403).json({
           success: false,
@@ -1387,7 +1387,7 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
     // Fire-and-forget: all DB/AI work runs after the 202 response is sent
     (async () => {
       // Fetch the book (moved here so it doesn't block the HTTP response)
-      const book = await Book.findById(bookId);
+      const book = await Book.findByIdForDesign(bookId);
       if (!book) {
         console.error(`[premiumDesignWizard] Book not found in background — bookId=${bookId}`);
         return;

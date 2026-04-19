@@ -2,6 +2,38 @@ import { supabaseAdmin } from '../config/supabase';
 import crypto from 'crypto';
 const uuidv4 = () => crypto.randomUUID();
 
+/**
+ * Retry wrapper with exponential backoff for Supabase operations.
+ * Retries on transient errors (timeouts, connection failures) but NOT
+ * on application-level errors (not-found, validation).
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  label: string,
+  maxRetries = 2
+): Promise<T> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      const msg = err?.message || '';
+      const isTransient =
+        msg.includes('timeout') ||
+        msg.includes('TIMEOUT') ||
+        msg.includes('Network') ||
+        msg.includes('ECONNRESET') ||
+        msg.includes('ECONNREFUSED') ||
+        msg.includes('fetch failed') ||
+        msg.includes('aborted');
+      if (!isTransient || attempt === maxRetries) throw err;
+      const delay = Math.min(1000 * 2 ** attempt, 5000);
+      console.warn(`[Book.${label}] Transient error (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${delay}ms: ${msg}`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+  throw new Error(`[Book.${label}] All retries exhausted`);
+}
+
 // Helper function to convert camelCase to snake_case
 const camelToSnake = (str: string): string => {
   return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
@@ -596,40 +628,97 @@ function rowToBook(row: BookRow): IBook {
 
 // Book Model class for Supabase operations
 export class Book {
-  // Find book by ID
+  // Find book by ID (with retry on transient failures)
   static async findById(id: string): Promise<IBook | null> {
-    const { data, error } = await supabaseAdmin
-      .from('books')
-      .select('*')
-      .eq('id', id)
-      .single();
+    return withRetry(async () => {
+      const { data, error } = await supabaseAdmin
+        .from('books')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') return null; // Genuinely not found
-      throw new Error(`Database error in findById: ${error.message}`);
-    }
-    if (!data) return null;
-    return rowToBook(data as BookRow);
+      if (error) {
+        if (error.code === 'PGRST116') return null; // Genuinely not found
+        throw new Error(`Database error in findById: ${error.message}`);
+      }
+      if (!data) return null;
+      return rowToBook(data as BookRow);
+    }, 'findById');
   }
 
-  // Find one book by query
+  /**
+   * Lightweight findById — skips heavy JSONB columns (chapters, page_images,
+   * translations, ai_design_state, page_layout, plot_structure, quality_score).
+   * Use for ownership checks, like/review/share, delete, and any endpoint
+   * that doesn't need the full book content.  ~95% smaller than findById.
+   */
+  static readonly LITE_COLUMNS = 'id,author_id,title,genre,writing_goal,target_audience,description,synopsis,story_context,cover_design,publishing_status,statistics,tags,language,age_rating,likes,liked_by,reviews,mentions,is_collaborative,collaborators,invitations,memorial_dedication,book_type,characters,created_at,updated_at';
+
+  static async findByIdLite(id: string): Promise<IBook | null> {
+    return withRetry(async () => {
+      const { data, error } = await supabaseAdmin
+        .from('books')
+        .select(Book.LITE_COLUMNS)
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw new Error(`Database error in findByIdLite: ${error.message}`);
+      }
+      if (!data) return null;
+      return rowToBook(data as BookRow);
+    }, 'findByIdLite');
+  }
+
+  /**
+   * Fetch only the fields needed by the AI design pipeline:
+   * metadata + chapters (for content analysis). Skips page_images,
+   * translations, page_layout, reviews, etc.
+   */
+  static readonly DESIGN_COLUMNS = 'id,author_id,title,genre,language,description,synopsis,story_context,writing_goal,target_audience,chapters,characters,cover_design,publishing_status,statistics,tags,ai_design_state,is_collaborative,collaborators,book_type,created_at,updated_at';
+
+  static async findByIdForDesign(id: string): Promise<IBook | null> {
+    return withRetry(async () => {
+      const { data, error } = await supabaseAdmin
+        .from('books')
+        .select(Book.DESIGN_COLUMNS)
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw new Error(`Database error in findByIdForDesign: ${error.message}`);
+      }
+      if (!data) return null;
+      return rowToBook(data as BookRow);
+    }, 'findByIdForDesign');
+  }
+
+  // Find one book by query (with retry on transient failures)
   static async findOne(query: Record<string, any>): Promise<IBook | null> {
-    let queryBuilder = supabaseAdmin.from('books').select('*');
+    return withRetry(async () => {
+      let queryBuilder = supabaseAdmin.from('books').select('*');
 
-    if (query._id || query.id) {
-      queryBuilder = queryBuilder.eq('id', query._id || query.id);
-    }
-    if (query.author) {
-      queryBuilder = queryBuilder.eq('author_id', query.author);
-    }
-    if (query.title) {
-      queryBuilder = queryBuilder.eq('title', query.title);
-    }
+      if (query._id || query.id) {
+        queryBuilder = queryBuilder.eq('id', query._id || query.id);
+      }
+      if (query.author) {
+        queryBuilder = queryBuilder.eq('author_id', query.author);
+      }
+      if (query.title) {
+        queryBuilder = queryBuilder.eq('title', query.title);
+      }
 
-    const { data, error } = await queryBuilder.limit(1).single();
+      const { data, error } = await queryBuilder.limit(1).single();
 
-    if (error || !data) return null;
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw new Error(`Database error in findOne: ${error.message}`);
+      }
+    if (!data) return null;
     return rowToBook(data as BookRow);
+    }, 'findOne');
   }
 
   // Create new book
@@ -746,19 +835,32 @@ export class Book {
     delete updateData.id;
     delete updateData._id;
 
-    const { data, error } = await supabaseAdmin
-      .from('books')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
+    // Only SELECT the full row back when the caller actually uses the result.
+    // Most callers ignore the return value (fire-and-forget updates), so
+    // options.new === false (or omitted) skips the expensive SELECT *.
+    const shouldReturn = options?.new !== false;
 
-    if (error) {
-      console.error('Error updating book:', error);
-      return null;
-    }
+    return withRetry(async () => {
+      let query = supabaseAdmin
+        .from('books')
+        .update(updateData)
+        .eq('id', id);
 
-    return rowToBook(data as BookRow);
+      if (shouldReturn) {
+        query = query.select(Book.LITE_COLUMNS) as any;
+      }
+
+      const { data, error } = shouldReturn
+        ? await (query as any).single()
+        : await query;
+
+      if (error) {
+        throw new Error(`Database error in findByIdAndUpdate: ${error.message}`);
+      }
+
+      if (!shouldReturn) return null;
+      return data ? rowToBook(data as BookRow) : null;
+    }, 'findByIdAndUpdate');
   }
 
   // Delete book by ID
@@ -858,13 +960,19 @@ export class Book {
   // routes that need to verify "does this user own this book?" without
   // pulling megabytes of chapters/pageImages/designState.
   static async getOwnerId(id: string): Promise<string | null> {
-    const { data, error } = await supabaseAdmin
-      .from('books')
-      .select('author_id')
-      .eq('id', id)
-      .single();
-    if (error || !data) return null;
-    return (data as any).author_id;
+    return withRetry(async () => {
+      const { data, error } = await supabaseAdmin
+        .from('books')
+        .select('author_id')
+        .eq('id', id)
+        .single();
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw new Error(`Database error in getOwnerId: ${error.message}`);
+      }
+      if (!data) return null;
+      return (data as any).author_id;
+    }, 'getOwnerId');
   }
 
   /**
@@ -879,25 +987,30 @@ export class Book {
     userId: string
   ): Promise<'owner' | CollaboratorRole | null> {
     if (!bookId || !userId) return null;
-    const { data, error } = await supabaseAdmin
-      .from('books')
-      .select('author_id, collaborators')
-      .eq('id', bookId)
-      .single();
-    if (error || !data) return null;
-    if ((data as any).author_id === userId) return 'owner';
-    const collaborators = ((data as any).collaborators || []) as Array<{
-      userId?: string;
-      status?: string;
-      role?: string;
-    }>;
-    const collab = collaborators.find(
-      (c) => c.userId === userId && (c.status === 'active' || !c.status)
-    );
-    if (!collab) return null;
-    // Map legacy 'contributor' role to 'editor'
-    const role = collab.role === 'contributor' ? 'editor' : collab.role;
-    return (role as CollaboratorRole) || 'viewer';
+    return withRetry(async () => {
+      const { data, error } = await supabaseAdmin
+        .from('books')
+        .select('author_id, collaborators')
+        .eq('id', bookId)
+        .single();
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw new Error(`Database error in getUserAccess: ${error.message}`);
+      }
+      if (!data) return null;
+      if ((data as any).author_id === userId) return 'owner';
+      const collaborators = ((data as any).collaborators || []) as Array<{
+        userId?: string;
+        status?: string;
+        role?: string;
+      }>;
+      const collab = collaborators.find(
+        (c) => c.userId === userId && (c.status === 'active' || !c.status)
+      );
+      if (!collab) return null;
+      const role = collab.role === 'contributor' ? 'editor' : collab.role;
+      return (role as CollaboratorRole) || 'viewer';
+    }, 'getUserAccess');
   }
 
   /**

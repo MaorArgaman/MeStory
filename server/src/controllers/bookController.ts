@@ -920,7 +920,7 @@ export const updateBook = async (req: AuthRequest, res: Response): Promise<void>
     });
 
     // Update book + broadcast change to other editors in the room
-    const updatedBook = await Book.findByIdAndUpdate(id, updateData);
+    const updatedBook = await Book.findByIdAndUpdate(id, updateData, { new: true });
 
     // Notify other collaborators in real-time that the book has changed
     try {
@@ -1017,8 +1017,8 @@ export const deleteBook = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    // Find book
-    const book = await Book.findById(id);
+    // Lightweight fetch — only need author + publishingStatus, not full chapters/images
+    const book = await Book.findByIdLite(id);
 
     if (!book) {
       res.status(404).json({
@@ -1256,7 +1256,7 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
 
     const updatedBook = await Book.findByIdAndUpdate(id, {
       publishingStatus: updatedPublishingStatus,
-    });
+    }, { new: true });
 
     // TTS DISABLED - Too expensive ($32+ per book)
     // Was generating 8 audio versions automatically (2 languages × 2 genders × 2 versions)
@@ -1340,8 +1340,8 @@ export const purchaseBook = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    // Find book
-    const book = await Book.findById(id);
+    // Lightweight fetch — only need publishingStatus + author for purchase check
+    const book = await Book.findByIdLite(id);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -1706,8 +1706,8 @@ export const recordBookView = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // Find book
-    const book = await Book.findById(id);
+    // Lightweight fetch — only need statistics for view count
+    const book = await Book.findByIdLite(id);
 
     if (!book) {
       res.status(404).json({
@@ -2022,7 +2022,8 @@ export const likeBook = async (req: AuthRequest, res: Response): Promise<void> =
       return;
     }
 
-    const book = await Book.findById(id);
+    // Lightweight fetch — only need likes/likedBy
+    const book = await Book.findByIdLite(id);
 
     if (!book) {
       res.status(404).json({
@@ -2126,7 +2127,8 @@ export const addReview = async (req: AuthRequest, res: Response): Promise<void> 
       return;
     }
 
-    const book = await Book.findById(id);
+    // Lightweight fetch — only need author + reviews
+    const book = await Book.findByIdLite(id);
 
     if (!book) {
       res.status(404).json({
@@ -2234,7 +2236,7 @@ export const getBookReviews = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const book = await Book.findById(id);
+    const book = await Book.findByIdLite(id);
 
     if (!book) {
       res.status(404).json({
@@ -2303,7 +2305,7 @@ export const updateReview = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    const book = await Book.findById(id);
+    const book = await Book.findByIdLite(id);
 
     if (!book) {
       res.status(404).json({
@@ -2394,7 +2396,7 @@ export const deleteReview = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    const book = await Book.findById(id);
+    const book = await Book.findByIdLite(id);
 
     if (!book) {
       res.status(404).json({
@@ -2488,7 +2490,7 @@ export const uploadCoverImage = async (req: AuthRequest, res: Response): Promise
       return;
     }
 
-    const book = await Book.findById(id);
+    const book = await Book.findByIdLite(id);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -3036,8 +3038,8 @@ export const getPricingStrategy = async (req: AuthRequest, res: Response): Promi
       return;
     }
 
-    // Find book
-    const book = await Book.findById(id);
+    // Lightweight fetch — only need author for ownership check
+    const book = await Book.findByIdLite(id);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -3628,7 +3630,7 @@ export const shareBook = async (req: AuthRequest, res: Response): Promise<void> 
       return;
     }
 
-    const book = await Book.findById(id);
+    const book = await Book.findByIdLite(id);
 
     if (!book) {
       res.status(404).json({
@@ -3689,7 +3691,7 @@ export const getBookSocialStats = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    const book = await Book.findById(id);
+    const book = await Book.findByIdLite(id);
 
     if (!book) {
       res.status(404).json({
@@ -3750,7 +3752,7 @@ export const addMention = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    const book = await Book.findById(id);
+    const book = await Book.findByIdLite(id);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -3843,7 +3845,7 @@ export const removeMention = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    const book = await Book.findById(id);
+    const book = await Book.findByIdLite(id);
     if (!book) {
       res.status(404).json({
         success: false,
@@ -3910,7 +3912,7 @@ export const getBookMentions = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    const book = await Book.findById(id);
+    const book = await Book.findByIdLite(id);
     if (!book) {
       res.status(404).json({ success: false, error: 'Book not found' });
       return;

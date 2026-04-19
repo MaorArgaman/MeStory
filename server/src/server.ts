@@ -112,9 +112,10 @@ const initializeApp = async () => {
       console.log('✅ Google OAuth configured successfully');
     }
 
-    // Initialize default book templates
-    await initializeDefaultTemplates();
-    console.log('✅ Book templates initialized');
+    // Initialize default book templates (non-blocking — don't delay cold start)
+    initializeDefaultTemplates()
+      .then(() => console.log('✅ Book templates initialized'))
+      .catch((err: any) => console.warn('⚠️ Template init failed (non-fatal):', err.message));
 
     isInitialized = true;
     console.log('✅ Server initialization complete');
