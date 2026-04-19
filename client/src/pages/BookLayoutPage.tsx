@@ -4698,9 +4698,9 @@ function PageRenderer({
       case 'dashed': return { outline: `1.5px dashed ${c}60`, outlineOffset: '-5px' };
       case 'dotted': return { outline: `1.5px dotted ${c}60`, outlineOffset: '-5px' };
       case 'rounded': return { boxShadow: `inset 0 0 0 1.5px ${c}60`, borderRadius: '6px', overflow: 'hidden' };
-      case 'royal': return { boxShadow: `inset 0 0 0 2px ${c}, inset 0 0 0 4px ${c}15, inset 0 0 0 6px ${c}, inset 0 0 0 8px ${c}20, inset 0 0 0 12px ${c}08` };
-      case 'elegant': return { boxShadow: `inset 0 0 0 1px ${c}50, inset 0 0 0 4px ${c}10, inset 0 0 0 5px ${c}80` };
-      case 'art-deco': return { boxShadow: `inset 0 0 0 3px ${c}, inset 0 0 0 5px transparent, inset 0 0 0 6px ${c}60, inset 0 0 0 10px ${c}15` };
+      case 'royal': return { boxShadow: `inset 0 0 0 3px ${c}, inset 0 0 0 6px ${c}20, inset 0 0 0 8px ${c}cc, inset 0 0 0 10px ${c}20, inset 0 0 0 14px ${c}10` };
+      case 'elegant': return { boxShadow: `inset 0 0 0 1.5px ${c}90, inset 0 0 0 5px ${c}15, inset 0 0 0 6.5px ${c}90` };
+      case 'art-deco': return { boxShadow: `inset 0 0 0 4px ${c}, inset 0 0 0 7px transparent, inset 0 0 0 8px ${c}80, inset 0 0 0 12px ${c}18` };
       default: return {};
     }
   };
@@ -4788,26 +4788,28 @@ function PageRenderer({
       {/* Decorative header — banner style or classic */}
       {showHeader && settings.headerDecoration === 'banner' && page.type !== 'title' && page.type !== 'toc' ? (
         <div className="absolute top-0 left-0 right-0 hidden sm:block" style={{
-          background: `linear-gradient(180deg, ${settings.accentColor || '#8b6914'}30 0%, ${settings.accentColor || '#8b6914'}08 100%)`,
-          borderBottom: `1px solid ${settings.accentColor || '#8b6914'}40`,
-          padding: `4px ${settings.margins.right}px 3px`,
+          background: `linear-gradient(180deg, ${settings.accentColor || '#8b6914'}45 0%, ${settings.accentColor || '#8b6914'}18 70%, transparent 100%)`,
+          borderBottom: `2px solid ${settings.accentColor || '#8b6914'}50`,
+          padding: `6px ${settings.margins.right}px 4px`,
         }}>
-          <div className="flex items-center justify-center gap-2">
-            <span style={{ fontSize: '5px', color: settings.accentColor, opacity: 0.6 }}>✦</span>
-            <div style={{ flex: 1, maxWidth: 40, height: '0.5px', background: `linear-gradient(to right, transparent, ${settings.accentColor}50)` }} />
+          <div style={{ height: '0.5px', background: `linear-gradient(90deg, transparent, ${settings.accentColor}60, transparent)`, marginBottom: 3 }} />
+          <div className="flex items-center justify-center gap-1">
+            <span style={{ fontSize: '6px', color: settings.accentColor, opacity: 0.8 }}>❖</span>
+            <div style={{ flex: 1, maxWidth: 35, height: 1, background: `linear-gradient(to right, transparent, ${settings.accentColor}70)` }} />
             <span style={{
               fontSize: '6px',
               color: settings.accentColor,
-              letterSpacing: '2px',
+              letterSpacing: '2.5px',
               textTransform: 'uppercase',
-              fontWeight: 500,
+              fontWeight: 600,
               fontFamily: settings.titleFont || settings.fontFamily,
             }}>
               {getHeaderText()}
             </span>
-            <div style={{ flex: 1, maxWidth: 40, height: '0.5px', background: `linear-gradient(to left, transparent, ${settings.accentColor}50)` }} />
-            <span style={{ fontSize: '5px', color: settings.accentColor, opacity: 0.6 }}>✦</span>
+            <div style={{ flex: 1, maxWidth: 35, height: 1, background: `linear-gradient(to left, transparent, ${settings.accentColor}70)` }} />
+            <span style={{ fontSize: '6px', color: settings.accentColor, opacity: 0.8 }}>❖</span>
           </div>
+          <div style={{ height: '0.5px', background: `linear-gradient(90deg, transparent 10%, ${settings.accentColor}30 50%, transparent 90%)`, marginTop: 2 }} />
         </div>
       ) : showHeader && headerStyle !== 'none' && page.type !== 'title' && page.type !== 'toc' && (
         <div className="absolute top-0 left-0 right-0 hidden sm:block" style={{ padding: `0 ${settings.margins.right}px` }}>
