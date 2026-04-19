@@ -3047,6 +3047,7 @@ export default function BookLayoutPage() {
                     <div
                       key={`page-${page.id}-${editingPageIndex === actualIdx ? 'edit' : 'view'}`}
                       className="w-full h-full"
+                      style={{ backgroundColor: settings.backgroundColor || '#ffffff' }}
                     >
                       <PageRenderer
                         page={page}
