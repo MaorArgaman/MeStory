@@ -4804,20 +4804,24 @@ function PageRenderer({
         }} />
       )}
 
-      {/* Corner Decorations — larger, richer SVGs with proper mirroring */}
+      {/* Corner Decorations — use physical positioning (not RTL-aware CSS classes) */}
       {settings.cornerDecorations && settings.cornerDecorations !== 'none' && (
         <>
           {[
-            { cls: 'book-corner-decoration book-corner-tl', transform: 'none' },
-            { cls: 'book-corner-decoration book-corner-tr', transform: 'scaleX(-1)' },
-            { cls: 'book-corner-decoration book-corner-bl', transform: 'scaleY(-1)' },
-            { cls: 'book-corner-decoration book-corner-br', transform: 'scale(-1)' },
-          ].map(({ cls, transform }) => (
+            { key: 'tl', pos: { top: 8, left: 8 },     transform: 'none' },
+            { key: 'tr', pos: { top: 8, right: 8 },    transform: 'scaleX(-1)' },
+            { key: 'bl', pos: { bottom: 8, left: 8 },  transform: 'scaleY(-1)' },
+            { key: 'br', pos: { bottom: 8, right: 8 }, transform: 'scale(-1)' },
+          ].map(({ key, pos, transform }) => (
             <div
-              key={cls}
-              className={cls}
+              key={key}
+              className="book-corner-decoration"
               dangerouslySetInnerHTML={{ __html: getCornerSVG(settings.cornerDecorations, 0) }}
-              style={{ transform, '--accent-color': settings.accentColor || '#8b6914' } as React.CSSProperties}
+              style={{
+                ...pos,
+                transform,
+                '--accent-color': settings.accentColor || '#8b6914',
+              } as React.CSSProperties}
             />
           ))}
         </>

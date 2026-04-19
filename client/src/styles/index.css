@@ -1810,15 +1810,7 @@
   color: var(--accent-color, #8b6914);
   pointer-events: none;
 }
-/* RTL defaults: logical top-right = physical top-right */
-.book-corner-tl { top: 8px; right: 8px; }
-.book-corner-tr { top: 8px; left: 8px;  }
-.book-corner-bl { bottom: 8px; right: 8px; }
-.book-corner-br { bottom: 8px; left: 8px;  }
-[dir="ltr"] .book-corner-tl { top: 8px; left: 8px;   right: auto; }
-[dir="ltr"] .book-corner-tr { top: 8px; right: 8px;  left: auto;  }
-[dir="ltr"] .book-corner-bl { bottom: 8px; left: 8px;  right: auto; }
-[dir="ltr"] .book-corner-br { bottom: 8px; right: 8px; left: auto;  }
+/* Corner positions are now set via inline styles (physical, not logical) */
 
 /* --- PAGE-LEVEL TITLE UNDERLINE (applied to h1/h2 inside the page content) --- */
 .page-title-underline-simple h1, .page-title-underline-simple h2 { border-bottom: 1px solid var(--accent-color, #8b6914); padding-bottom: 6px; }
