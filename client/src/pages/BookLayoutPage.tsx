@@ -2510,13 +2510,17 @@ export default function BookLayoutPage() {
               const leftNum  = isBookRTL ? i * 2 + 2 : i * 2 + 1;
               const rightNum = isBookRTL ? i * 2 + 1 : i * 2 + 2;
 
-              // Render a single mini page cell (no page number inside — shown in label below)
+              // Render a single mini page cell showing actual content
               const miniPage = (page: PageContent | undefined) => {
-                const hasImg = (page?.images?.length ?? 0) > 0;
                 const bg = '#f5f0e8';
                 if (!page || page.type === 'blank') {
                   return <div className="flex-1" style={{ background: bg }} />;
                 }
+                const firstImgUrl = page.images?.[0]?.url;
+                const textSnippet = page.content
+                  ? page.content.replace(/<[^>]+>/g, '').replace(/&[a-zA-Z]+;/g, ' ').trim().slice(0, 120)
+                  : '';
+
                 if (page.type === 'toc') return (
                   <div className="flex-1 flex flex-col p-1 gap-0.5" style={{ background: bg }}>
                     <div className="h-[2px] w-3/4 rounded mx-auto mb-1" style={{ background: '#aaa' }} />
@@ -2529,32 +2533,52 @@ export default function BookLayoutPage() {
                   </div>
                 );
                 if (page.type === 'title') return (
-                  <div className="flex-1 flex flex-col items-center justify-center gap-1" style={{ background: bg }}>
+                  <div className="flex-1 flex flex-col items-center justify-center gap-1 p-1" style={{ background: bg }}>
                     <div className="h-[2px] w-3/4 rounded" style={{ background: '#aaa' }} />
-                    <div className="h-[1.5px] w-1/2 rounded" style={{ background: '#ccc' }} />
+                    {textSnippet && (
+                      <p style={{ fontSize: '3.5px', color: '#666', textAlign: 'center', lineHeight: 1.3, direction: isBookRTL ? 'rtl' : 'ltr' }}>
+                        {textSnippet.slice(0, 40)}
+                      </p>
+                    )}
                   </div>
                 );
                 if (page.type === 'dedication') return (
-                  <div className="flex-1 flex items-center justify-center" style={{ background: bg }}>
-                    <span style={{ fontSize: '10px', color: '#bbb' }}>❝</span>
+                  <div className="flex-1 flex flex-col items-center justify-center p-1" style={{ background: bg }}>
+                    <span style={{ fontSize: '8px', color: '#bbb' }}>❝</span>
+                    {textSnippet && (
+                      <p style={{ fontSize: '3px', color: '#888', textAlign: 'center', lineHeight: 1.3, marginTop: 1, direction: isBookRTL ? 'rtl' : 'ltr' }}>
+                        {textSnippet.slice(0, 60)}
+                      </p>
+                    )}
                   </div>
                 );
-                // chapter / summary / continuation
+                // chapter / summary / continuation — show real image + text
                 return (
-                  <div className="flex-1 flex flex-col p-0.5 pt-1" style={{ background: bg }}>
-                    {/* Heading line */}
-                    <div className="h-[2px] w-2/3 rounded mb-1" style={{ background: '#999' }} />
-                    {/* Image placeholder if page has images */}
-                    {hasImg && (
-                      <div className="h-3 w-full rounded mb-1 flex items-center justify-center"
-                        style={{ background: '#dde8f0', border: '1px solid #b8d0e0' }}>
-                        <span style={{ fontSize: '5px', color: '#7aaccc' }}>◼</span>
+                  <div className="flex-1 flex flex-col overflow-hidden" style={{ background: bg }}>
+                    {firstImgUrl ? (
+                      <>
+                        <div style={{ height: '45%', flexShrink: 0 }}>
+                          <img
+                            src={firstImgUrl}
+                            alt=""
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                            loading="lazy"
+                          />
+                        </div>
+                        <div className="flex-1 p-0.5 overflow-hidden" style={{ direction: isBookRTL ? 'rtl' : 'ltr' }}>
+                          <p style={{ fontSize: '3px', color: '#444', lineHeight: 1.4, wordBreak: 'break-word' }}>
+                            {textSnippet}
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex-1 p-1 overflow-hidden" style={{ direction: isBookRTL ? 'rtl' : 'ltr' }}>
+                        <div className="h-[2px] w-2/3 rounded mb-1" style={{ background: '#999' }} />
+                        <p style={{ fontSize: '3px', color: '#444', lineHeight: 1.4, wordBreak: 'break-word' }}>
+                          {textSnippet}
+                        </p>
                       </div>
                     )}
-                    {/* Text-line simulation */}
-                    {[95,80,100,88,92,75,96].slice(0, hasImg ? 4 : 7).map((w, j) => (
-                      <div key={j} className="h-[1.5px] rounded mb-0.5" style={{ background: '#ccc', width: `${w}%` }} />
-                    ))}
                   </div>
                 );
               };
@@ -2649,7 +2673,8 @@ export default function BookLayoutPage() {
           >
 
           {/* react-pageflip book with editing — 350×500 base, auto-scales via size="stretch" */}
-          <div className="relative w-full flex-1 min-h-0 flex items-center justify-center">
+          <div className="relative flex-1 min-h-0 flex items-center justify-center" style={{ width: '100%' }}>
+            <div className="flex items-center justify-center" style={{ width: 'min(700px, 100%)', height: '100%', margin: '0 auto' }}>
             <HTMLFlipBook
               ref={flipBookRef}
               width={280}
@@ -2807,6 +2832,7 @@ export default function BookLayoutPage() {
                 </FlipPage>
               )}
             </HTMLFlipBook>
+            </div>
             {/* Book reflection effect */}
             <div
               className="w-full h-16 mt-1 opacity-20 pointer-events-none"
@@ -3876,7 +3902,7 @@ export default function BookLayoutPage() {
 
       {/* Brand Watermark - Marketing */}
       <BrandWatermark
-        position="bottom-right"
+        position="bottom-left"
         size="small"
         opacity={0.12}
         className="hidden lg:block"

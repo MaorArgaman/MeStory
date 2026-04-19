@@ -273,17 +273,17 @@ export default function BookLoader({
   // ── Shared animated content ───────────────────────────────────────────────
   const content = (
     <div className="flex flex-col items-center gap-4 select-none">
-      {/* Logo */}
+      {/* Logo text instead of image to avoid white-background issue */}
       {autoShowLogo && (
-        <motion.img
-          src="/img/new/logo-mestory-large.png"
-          alt="MeStory"
+        <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-32 sm:w-40 h-auto object-contain mb-2"
-          style={{ filter: 'drop-shadow(0 2px 16px rgba(201,168,76,0.45))' }}
-        />
+          className="text-2xl font-bold gradient-gold mb-2 tracking-widest"
+          style={{ fontFamily: "'Cinzel', serif" }}
+        >
+          MeStory
+        </motion.div>
       )}
 
       {/* Book animation */}
