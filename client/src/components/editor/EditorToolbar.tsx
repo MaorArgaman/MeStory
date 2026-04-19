@@ -74,9 +74,11 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   const [showColorMenu, setShowColorMenu] = useState(false);
   const [showHighlightMenu, setShowHighlightMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const [isSimpleMode, setIsSimpleMode] = useState(() =>
-    localStorage.getItem('editor-simple-mode') === 'true'
-  );
+  const [isSimpleMode, setIsSimpleMode] = useState(() => {
+    const saved = localStorage.getItem('editor-simple-mode');
+    // Default to simple mode for new users (key not set yet)
+    return saved === null ? true : saved === 'true';
+  });
 
   // Save selection when opening menus (to restore before applying commands in portals)
   const savedSelection = useRef<{ from: number; to: number } | null>(null);
