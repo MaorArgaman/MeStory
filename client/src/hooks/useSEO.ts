@@ -12,7 +12,7 @@ interface SEOOptions {
 
 const DEFAULT_SITE_NAME = 'MeStory';
 const DEFAULT_SITE_URL = 'https://mestory.co.il';
-const DEFAULT_IMAGE = `${DEFAULT_SITE_URL}/img/new/logo-mestory-large.png`;
+const DEFAULT_IMAGE = `${DEFAULT_SITE_URL}/img/new/logo-mestory-large.jpeg`;
 
 function setMetaTag(name: string, content: string, isProperty = false) {
   const attribute = isProperty ? 'property' : 'name';

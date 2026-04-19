@@ -22,7 +22,7 @@ import { GlassCard, GlowingButton, OptimizedImage } from '../components/ui';
 import { useLanguage } from '../contexts/LanguageContext';
 import { SEO } from '../components/seo';
 // Memorial-themed images from public folder
-const logoIcon = '/img/new/logo-mestory-large.png';
+const logoIcon = '/img/new/logo-mestory-large.jpeg';
 
 // Hero carousel images
 const heroImages = [

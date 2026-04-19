@@ -1236,11 +1236,34 @@
 
 /* Logo glow pulse */
 .nav-logo-glow {
-  filter: drop-shadow(0 0 8px rgba(218,165,32,0.3));
-  transition: filter 0.3s ease;
+  filter: drop-shadow(0 0 6px rgba(218,165,32,0.4)) drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+  transition: filter 0.35s ease, transform 0.35s ease;
+  border-radius: 10px;
 }
 .nav-logo-glow:hover {
-  filter: drop-shadow(0 0 16px rgba(218,165,32,0.6));
+  filter: drop-shadow(0 0 18px rgba(218,165,32,0.75)) drop-shadow(0 0 6px rgba(255,215,0,0.4)) drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+  transform: scale(1.04);
+}
+
+/* Logo brand wrapper — use on any container wrapping a logo image */
+.logo-brand-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-brand-wrap::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 14px;
+  background: radial-gradient(ellipse at center, rgba(218,165,32,0.15) 0%, transparent 70%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.logo-brand-wrap:hover::after {
+  opacity: 1;
 }
 
 /* Notification bell shake */

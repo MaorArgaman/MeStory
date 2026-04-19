@@ -630,7 +630,7 @@ export default function DesignStudioPage() {
     const baseColor = coverColor || '#1a1a2e';
     const newSpineColor = generateHarmoniousColor(baseColor);
     setSpineColor(newSpineColor);
-    toast.success(t('design_studio.messages.color_generated', 'New color generated!'));
+    toast.success(language === 'he' ? 'צבע חדש נוצר!' : 'New color generated!');
   };
 
   // Generate synopsis with AI
@@ -678,7 +678,7 @@ export default function DesignStudioPage() {
     }
 
     try {
-      toast.loading(t('design_studio.messages.uploading', 'Uploading image...'), { id: 'upload' });
+      toast.loading(language === 'he' ? 'מעלה תמונה...' : 'Uploading image...', { id: 'upload' });
 
       const formData = new FormData();
       formData.append('cover', file);
@@ -716,10 +716,10 @@ export default function DesignStudioPage() {
             imageUrl: fullImageUrl,
           };
           await api.put(`/books/${bookId}`, { coverDesign });
-          toast.success(t('design_studio.messages.image_saved', 'Image uploaded and saved!'), { id: 'upload' });
+          toast.success(language === 'he' ? 'התמונה הועלתה ונשמרה!' : 'Image uploaded and saved!', { id: 'upload' });
         } catch (saveError) {
           console.error('Failed to auto-save image:', saveError);
-          toast.success(t('design_studio.messages.image_uploaded', 'Image uploaded! Click Save to persist.'), { id: 'upload' });
+          toast.success(language === 'he' ? 'התמונה הועלתה! לחץ שמור כדי לשמור.' : 'Image uploaded! Click Save to persist.', { id: 'upload' });
         }
       }
     } catch (error: any) {
@@ -947,7 +947,7 @@ export default function DesignStudioPage() {
               className="flex items-center hover:opacity-80 transition-opacity"
             >
               <img
-                src="/img/new/logo-mestory-small.png"
+                src="/img/new/logo-mestory-small.jpeg"
                 alt="MeStory"
                 className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.3)]"
               />

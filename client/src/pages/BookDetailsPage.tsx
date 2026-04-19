@@ -368,8 +368,8 @@ export default function BookDetailsPage() {
             <PaymentSuccessAnimation
               size="lg"
               variant="gold"
-              message={t('payment.purchase_success', 'Purchase Successful!')}
-              subMessage={t('payment.redirecting_reader', 'Redirecting to reader...')}
+              message={language === 'he' ? 'הרכישה הושלמה!' : 'Purchase Successful!'}
+              subMessage={language === 'he' ? 'מעביר לקורא...' : 'Redirecting to reader...'}
             />
           </motion.div>
         )}
@@ -510,7 +510,7 @@ export default function BookDetailsPage() {
                 {isPurchasing ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    {t('payment.processing', 'Processing...')}
+                    {language === 'he' ? 'מעבד...' : 'Processing...'}
                   </>
                 ) : (
                   <>

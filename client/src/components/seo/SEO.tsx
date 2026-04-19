@@ -19,7 +19,7 @@ interface SEOProps {
 
 const DEFAULT_SITE_NAME = 'MeStory';
 const DEFAULT_SITE_URL = 'https://mestory.co.il';
-const DEFAULT_IMAGE = `${DEFAULT_SITE_URL}/img/new/logo-mestory-large.png`;
+const DEFAULT_IMAGE = `${DEFAULT_SITE_URL}/img/new/logo-mestory-large.jpeg`;
 
 const DEFAULT_DESCRIPTIONS = {
   he: 'MeStory - הפלטפורמה המובילה לכתיבת ספרים עם בינה מלאכותית. כתוב, עצב ופרסם את הסיפור שלך בקלות.',

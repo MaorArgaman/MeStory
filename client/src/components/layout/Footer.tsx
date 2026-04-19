@@ -17,7 +17,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
-              <img src="/img/new/logo-mestory-small.png" alt="MeStory" className="w-8 h-8 rounded-lg" />
+              <img src="/img/new/logo-mestory-small.jpeg" alt="MeStory" className="w-8 h-8 rounded-lg" />
               <span className="font-bold text-white text-lg" style={{ fontFamily: "'Cinzel', serif" }}>MeStory</span>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">

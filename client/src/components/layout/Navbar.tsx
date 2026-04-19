@@ -12,7 +12,7 @@ import ConversationsList from '../messaging/ConversationsList';
 import NotificationCenter from '../notifications/NotificationCenter';
 import OptimizedImage from '../ui/OptimizedImage';
 // MeStory Logo
-const logoIcon = '/img/new/logo-mestory-small.png';
+const logoIcon = '/img/new/logo-mestory-small.jpeg';
 
 export default function Navbar() {
   const { t } = useTranslation('common');
@@ -111,18 +111,14 @@ export default function Navbar() {
           <div className="flex items-center justify-between">
             {/* Logo - Left Side */}
             <Link to="/dashboard" className="flex items-center group flex-shrink-0" aria-label="MeStory - Go to dashboard">
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-                className="flex items-center"
-              >
+              <div className="logo-brand-wrap">
                 <OptimizedImage
                   src={logoIcon}
                   alt="MeStory"
                   lazy={false}
                   className="h-10 sm:h-12 w-auto object-contain nav-logo-glow"
                 />
-              </motion.div>
+              </div>
             </Link>
 
             {/* Navigation Links - Centered (Hidden on mobile) */}

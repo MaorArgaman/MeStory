@@ -104,7 +104,7 @@ export default function SettingsPage() {
       }
       const response = await api.put('/notifications/preferences', updates);
       if (response.data.success) {
-        toast.success(t('settings.toast.notification_prefs_saved', 'Notification preferences saved'));
+        toast.success(language === 'he' ? 'העדפות ההתראות נשמרו' : 'Notification preferences saved');
       }
     } catch (error) {
       console.error('Failed to save notification preferences:', error);
@@ -228,11 +228,11 @@ export default function SettingsPage() {
     try {
       setDeletingAccount(true);
       await api.delete('/user/account');
-      toast.success(t('settings.account.deleted', 'Account deleted'));
+      toast.success(language === 'he' ? 'החשבון נמחק' : 'Account deleted');
       window.location.href = '/';
     } catch (error: any) {
       console.error('Failed to delete account:', error);
-      toast.error(error.response?.data?.error || t('settings.account.delete_failed', 'Failed to delete account'));
+      toast.error(error.response?.data?.error || (language === 'he' ? 'מחיקת החשבון נכשלה' : 'Failed to delete account'));
     } finally {
       setDeletingAccount(false);
     }
@@ -395,7 +395,7 @@ export default function SettingsPage() {
             {savingNotificationPrefs && (
               <div className="flex items-center gap-2 mt-3 text-sm text-gray-400">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                {t('common.saving', 'Saving...')}
+                {language === 'he' ? 'שומר...' : 'Saving...'}
               </div>
             )}
           </motion.section>
@@ -531,7 +531,7 @@ export default function SettingsPage() {
                     onClick={() => { setShowPasswordForm(false); setOldPassword(''); setNewPassword(''); setConfirmPassword(''); }}
                     className="px-6 py-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-all"
                   >
-                    {t('common.cancel', 'Cancel')}
+                    {language === 'he' ? 'ביטול' : 'Cancel'}
                   </button>
                 </div>
               </motion.div>
@@ -618,7 +618,7 @@ export default function SettingsPage() {
                     onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); }}
                     className="px-6 py-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-all"
                   >
-                    {t('common.cancel', 'Cancel')}
+                    {language === 'he' ? 'ביטול' : 'Cancel'}
                   </button>
                 </div>
               </motion.div>

@@ -2005,7 +2005,7 @@ export default function BookLayoutPage() {
     const updatedPages = [...pages];
     updatedPages.splice(afterIndex + 1, 0, newPage);
     setPages(updatedPages);
-    toast.success(t('book_layout.blank_page_added', 'Blank page added'));
+    toast.success(language === 'he' ? 'דף ריק נוסף' : 'Blank page added');
   };
 
   // Remove page
@@ -2017,7 +2017,7 @@ export default function BookLayoutPage() {
     if (pages[index].type === 'blank') {
       const updatedPages = pages.filter((_, i) => i !== index);
       setPages(updatedPages);
-      toast.success(t('book_layout.page_removed', 'Page removed'));
+      toast.success(language === 'he' ? 'הדף הוסר' : 'Page removed');
     } else {
       toast.error(t('book_layout.only_blank_removable', 'Only blank pages can be removed'));
     }
@@ -2040,7 +2040,7 @@ export default function BookLayoutPage() {
       });
       setPages(updatedPages);
       setSettings({ ...settings, includeToc: false });
-      toast.success(t('book_layout.toc_removed', 'Table of Contents removed'));
+      toast.success(language === 'he' ? 'תוכן עניינים הוסר' : 'Table of Contents removed');
     } else {
       // Add TOC pages after title/blank pages without regenerating chapter pages
       // Find where to insert TOC (after title page and first blank page)
@@ -2068,7 +2068,7 @@ export default function BookLayoutPage() {
       const tocPage: PageContent = {
         id: `page-toc`,
         type: 'toc',
-        content: `<h2 class="toc-header">${t('book_layout.table_of_contents', 'Table of Contents')}</h2>${tocContent}`,
+        content: `<h2 class="toc-header">${language === 'he' ? 'תוכן עניינים' : 'Table of Contents'}</h2>${tocContent}`,
         images: [],
       };
 
@@ -2083,7 +2083,7 @@ export default function BookLayoutPage() {
       updatedPages.splice(insertIndex, 0, tocPage, blankAfterToc);
       setPages(updatedPages);
       setSettings({ ...settings, includeToc: true });
-      toast.success(t('book_layout.toc_added', 'Table of Contents added'));
+      toast.success(language === 'he' ? 'תוכן עניינים נוסף' : 'Table of Contents added');
     }
   };
 
@@ -2253,7 +2253,7 @@ export default function BookLayoutPage() {
               className="hidden sm:flex items-center hover:opacity-80 transition-opacity"
             >
               <img
-                src="/img/new/logo-mestory-small.png"
+                src="/img/new/logo-mestory-small.jpeg"
                 alt="MeStory"
                 className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_2px_8px_rgba(255,215,0,0.3)]"
               />
