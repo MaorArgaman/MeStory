@@ -1707,18 +1707,18 @@ export default function BookLayoutPage() {
       // Design elements — rich defaults from AI design
       dropCapStyle: design.dropCapStyle || 'classic',
       dividerStyle: design.dividerStyle || 'ornament',
-      pageFrame: design.pageFrame || 'royal',
+      pageFrame: design.pageFrame || 'elegant',
       frameColor: design.frameColor || colors.accent || settings.accentColor,
       backgroundPattern: design.backgroundPattern || 'none',
       headerDecoration: design.headerDecoration || 'banner',
-      cornerDecorations: design.cornerDecorations || 'royal',
+      cornerDecorations: design.cornerDecorations || 'flourish',
       sectionDivider: design.sectionDivider || '',
-      titleUnderline: design.titleUnderline || 'ornate',
+      titleUnderline: design.titleUnderline || 'gradient',
       pageSize: design.pageSize || settings.pageSize || 'A5',
-      // Rich background — warm gradient with accent color influence
-      backgroundGradient: design.backgroundGradient || `linear-gradient(170deg, #faf5eb 0%, #f3ece0 40%, ${(colors.accent || '#8b6914')}12 100%)`,
-      backgroundTexture: design.backgroundTexture || 'parchment',
-      backgroundTextureOpacity: design.backgroundTextureOpacity ?? 0.18,
+      // Clean warm background — subtle, not muddy
+      backgroundGradient: design.backgroundGradient || `linear-gradient(180deg, #fffdf7 0%, #faf6ee 100%)`,
+      backgroundTexture: design.backgroundTexture || 'paper',
+      backgroundTextureOpacity: design.backgroundTextureOpacity ?? 0.08,
     };
 
     setSettings(newSettings);
@@ -4788,28 +4788,24 @@ function PageRenderer({
       {/* Decorative header — banner style or classic */}
       {showHeader && settings.headerDecoration === 'banner' && page.type !== 'title' && page.type !== 'toc' ? (
         <div className="absolute top-0 left-0 right-0 hidden sm:block" style={{
-          background: `linear-gradient(180deg, ${settings.accentColor || '#8b6914'}45 0%, ${settings.accentColor || '#8b6914'}18 70%, transparent 100%)`,
-          borderBottom: `2px solid ${settings.accentColor || '#8b6914'}50`,
-          padding: `6px ${settings.margins.right}px 4px`,
+          background: `linear-gradient(180deg, ${settings.accentColor || '#8b6914'}15 0%, transparent 100%)`,
+          borderBottom: `1px solid ${settings.accentColor || '#8b6914'}30`,
+          padding: `4px ${settings.margins.right}px 3px`,
         }}>
-          <div style={{ height: '0.5px', background: `linear-gradient(90deg, transparent, ${settings.accentColor}60, transparent)`, marginBottom: 3 }} />
           <div className="flex items-center justify-center gap-1">
-            <span style={{ fontSize: '6px', color: settings.accentColor, opacity: 0.8 }}>❖</span>
-            <div style={{ flex: 1, maxWidth: 35, height: 1, background: `linear-gradient(to right, transparent, ${settings.accentColor}70)` }} />
+            <div style={{ flex: 1, maxWidth: 30, height: '0.5px', background: `linear-gradient(to right, transparent, ${settings.accentColor}40)` }} />
             <span style={{
-              fontSize: '6px',
-              color: settings.accentColor,
-              letterSpacing: '2.5px',
+              fontSize: '5.5px',
+              color: `${settings.accentColor}cc`,
+              letterSpacing: '2px',
               textTransform: 'uppercase',
-              fontWeight: 600,
+              fontWeight: 500,
               fontFamily: settings.titleFont || settings.fontFamily,
             }}>
-              {getHeaderText()}
+              ✦ {getHeaderText()} ✦
             </span>
-            <div style={{ flex: 1, maxWidth: 35, height: 1, background: `linear-gradient(to left, transparent, ${settings.accentColor}70)` }} />
-            <span style={{ fontSize: '6px', color: settings.accentColor, opacity: 0.8 }}>❖</span>
+            <div style={{ flex: 1, maxWidth: 30, height: '0.5px', background: `linear-gradient(to left, transparent, ${settings.accentColor}40)` }} />
           </div>
-          <div style={{ height: '0.5px', background: `linear-gradient(90deg, transparent 10%, ${settings.accentColor}30 50%, transparent 90%)`, marginTop: 2 }} />
         </div>
       ) : showHeader && headerStyle !== 'none' && page.type !== 'title' && page.type !== 'toc' && (
         <div className="absolute top-0 left-0 right-0 hidden sm:block" style={{ padding: `0 ${settings.margins.right}px` }}>

@@ -338,7 +338,7 @@ function processContent(
       ornament: `<div style="text-align:center;color:${accentColor};font-size:0.85em;letter-spacing:0.5em;margin:0.4em 0 0.8em;opacity:0.7;direction:ltr">✦ ✧ ✦</div>`,
       'gradient-line': `<div class="book-chapter-header header-gradient-line" style="--accent-color:${accentColor}"></div>`,
       dots: `<div style="text-align:center;color:${accentColor};margin:0.4em 0 0.8em;letter-spacing:0.5em;opacity:0.5;direction:ltr">• • •</div>`,
-      banner: `<div style="text-align:center;margin:0.2em -12px 0.8em;padding:8px 16px;background:linear-gradient(90deg, transparent 0%, ${accentColor}20 15%, ${accentColor}30 50%, ${accentColor}20 85%, transparent 100%);border-top:2px solid ${accentColor}40;border-bottom:2px solid ${accentColor}40;direction:ltr"><span style="color:${accentColor};font-size:0.75em;letter-spacing:0.4em;opacity:0.8;font-weight:600">✦ ── ❖ ── ✦</span></div>`,
+      banner: `<div style="text-align:center;margin:0.3em 0 0.6em;direction:ltr"><div style="height:1px;background:linear-gradient(90deg, transparent, ${accentColor}40, transparent);margin-bottom:6px"></div><span style="color:${accentColor};font-size:0.7em;letter-spacing:0.5em;opacity:0.6">✦ ✧ ✦</span><div style="height:1px;background:linear-gradient(90deg, transparent, ${accentColor}40, transparent);margin-top:6px"></div></div>`,
     };
     const decoHtml = decoMap[settings.headerDecoration] || '';
     if (decoHtml) {
@@ -346,11 +346,11 @@ function processContent(
     }
   }
 
-  // Wrap chapter titles (h2.chapter-title) with decorative background when banner header is active
+  // Style chapter titles when banner header is active — elegant centered title
   if (settings.headerDecoration === 'banner') {
     processed = processed.replace(
       /<h2([^>]*class="[^"]*chapter-title[^"]*"[^>]*)>([\s\S]*?)<\/h2>/gi,
-      `<h2$1 style="text-align:center;padding:16px 20px 12px;margin:-8px -12px 8px;background:linear-gradient(180deg, ${accentColor}18 0%, ${accentColor}08 100%);border-top:2.5px solid ${accentColor}50;border-bottom:2.5px solid ${accentColor}50;letter-spacing:1.5px;color:${accentColor};font-weight:700">$2</h2>`
+      `<h2$1 style="text-align:center;padding:8px 0 4px;letter-spacing:1px;color:${accentColor}">$2</h2>`
     );
   }
 
@@ -500,16 +500,16 @@ export default function BookPageRenderer({
       {showCorners && (
         <>
           <div className="book-corner-decoration book-corner-tl" style={{ color: cornerColor }}>
-            <CornerSVG type={cornerDecorations} color={cornerColor} size={Math.round(80 * scale)} />
+            <CornerSVG type={cornerDecorations} color={cornerColor} size={Math.round(50 * scale)} />
           </div>
           <div className="book-corner-decoration book-corner-tr" style={{ color: cornerColor, transform: 'scaleX(-1)' }}>
-            <CornerSVG type={cornerDecorations} color={cornerColor} size={Math.round(80 * scale)} />
+            <CornerSVG type={cornerDecorations} color={cornerColor} size={Math.round(50 * scale)} />
           </div>
           <div className="book-corner-decoration book-corner-bl" style={{ color: cornerColor, transform: 'scaleY(-1)' }}>
-            <CornerSVG type={cornerDecorations} color={cornerColor} size={Math.round(80 * scale)} />
+            <CornerSVG type={cornerDecorations} color={cornerColor} size={Math.round(50 * scale)} />
           </div>
           <div className="book-corner-decoration book-corner-br" style={{ color: cornerColor, transform: 'scale(-1)' }}>
-            <CornerSVG type={cornerDecorations} color={cornerColor} size={Math.round(80 * scale)} />
+            <CornerSVG type={cornerDecorations} color={cornerColor} size={Math.round(50 * scale)} />
           </div>
         </>
       )}
@@ -519,36 +519,29 @@ export default function BookPageRenderer({
         <div
           className="absolute top-0 left-0 right-0"
           style={{
-            background: `linear-gradient(180deg, ${accentColor}45 0%, ${accentColor}18 70%, transparent 100%)`,
-            borderBottom: `2px solid ${accentColor}50`,
-            padding: `${Math.round(8 * scale)}px ${scaledMargins.right}px ${Math.round(6 * scale)}px`,
+            background: `linear-gradient(180deg, ${accentColor}15 0%, transparent 100%)`,
+            borderBottom: `1px solid ${accentColor}30`,
+            padding: `${Math.round(5 * scale)}px ${scaledMargins.right}px ${Math.round(3 * scale)}px`,
           }}
         >
-          {/* Top decorative line */}
-          <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${accentColor}60, transparent)`, marginBottom: Math.round(4 * scale) }} />
           <div className="flex items-center justify-center gap-1">
-            <span style={{ fontSize: Math.max(7, scaledFontSize * 0.7), color: accentColor, opacity: 0.8 }}>❖</span>
-            <div style={{ flex: 1, maxWidth: 50 * scale, height: 1.5, background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, transparent, ${accentColor}70)` }} />
+            <div style={{ flex: 1, maxWidth: 40 * scale, height: 0.5, background: `linear-gradient(to ${isRTL ? 'left' : 'right'}, transparent, ${accentColor}40)` }} />
             <span style={{
-              fontSize: Math.max(7, scaledFontSize * 0.7),
-              color: accentColor,
-              letterSpacing: '2.5px',
+              fontSize: Math.max(6, scaledFontSize * 0.55),
+              color: `${accentColor}cc`,
+              letterSpacing: '2px',
               textTransform: 'uppercase',
-              fontWeight: 600,
+              fontWeight: 500,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              maxWidth: '55%',
+              maxWidth: '65%',
               fontFamily: settings.titleFont || fontFamily,
-              textShadow: `0 0 8px ${accentColor}20`,
             }}>
-              {chapterTitle || bookTitle}
+              ✦ {chapterTitle || bookTitle} ✦
             </span>
-            <div style={{ flex: 1, maxWidth: 50 * scale, height: 1.5, background: `linear-gradient(to ${isRTL ? 'right' : 'left'}, transparent, ${accentColor}70)` }} />
-            <span style={{ fontSize: Math.max(7, scaledFontSize * 0.7), color: accentColor, opacity: 0.8 }}>❖</span>
+            <div style={{ flex: 1, maxWidth: 40 * scale, height: 0.5, background: `linear-gradient(to ${isRTL ? 'right' : 'left'}, transparent, ${accentColor}40)` }} />
           </div>
-          {/* Bottom decorative line */}
-          <div style={{ height: 0.5, background: `linear-gradient(90deg, transparent 10%, ${accentColor}30 50%, transparent 90%)`, marginTop: Math.round(3 * scale) }} />
         </div>
       ) : showHeader && (
         <div
