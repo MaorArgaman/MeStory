@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { Response } from 'express';
+import { waitUntil } from '@vercel/functions';
 import { Book } from '../models/Book';
 import { User } from '../models/User';
 
@@ -1398,8 +1399,9 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
       ...(generateInteriorImages ? ['מנתח מיקומי תמונות...', 'מייצר איורים פנימיים...'] : []),
     ];
 
-    // Fire-and-forget: book lookup + AI work runs after the 202 response is sent
-    (async () => {
+    // Background work: book lookup + AI design runs after the 202 response.
+    // waitUntil() keeps the Vercel serverless function alive until this completes.
+    const backgroundWork = (async () => {
       const book = await Book.findByIdForDesign(bookId);
       if (!book) {
         console.error(`[premiumDesignWizard] Book not found in background — bookId=${bookId}`);
@@ -1614,6 +1616,7 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
     })().catch((err: unknown) => {
       console.error('[premiumDesignWizard] Background IIFE failed:', err);
     });
+    waitUntil(backgroundWork);
 
   } catch (error: any) {
     // This catch only handles synchronous errors before the response was sent

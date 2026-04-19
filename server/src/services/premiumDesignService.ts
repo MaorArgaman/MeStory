@@ -1315,90 +1315,94 @@ export async function generateUltimatePremiumDesign(
   console.log(`   Chapters: ${input.chapters.length}`);
   console.log(`   Options: Covers=${generateCoverImages}, Interior=${generateInteriorImages}\n`);
 
-  // Step 1: Deep Theme Analysis
+  // Step 1: Deep Theme Analysis (required by everything)
   reportProgress('Analyzing book theme and essence...');
   const theme = await analyzeBookTheme(input);
   console.log(`   → Theme: ${theme.primaryTheme}`);
   console.log(`   → Mood: ${theme.mood}, Atmosphere: ${theme.atmosphere}`);
 
-  // Step 2: Premium Typography
+  // Step 2: Premium Typography (required by steps 3-6)
   reportProgress('Creating premium typography system...');
   const typography = await generatePremiumTypography(input, theme);
   console.log(`   → Fonts: ${typography.bodyFont} / ${typography.headingFont}`);
 
-  // Step 3: Table of Contents Design
-  reportProgress('Designing table of contents...');
-  const tableOfContents = await generateTableOfContentsDesign(input, theme, typography);
+  // Steps 3-6 + image placements run IN PARALLEL (all only need theme + typography)
+  reportProgress('Designing layout, cover, and images in parallel...');
+
+  const parallelTasks: Promise<any>[] = [
+    generateTableOfContentsDesign(input, theme, typography),       // [0] TOC
+    generateChapterDecoration(input, theme, typography),            // [1] Chapter decoration
+    generatePremiumPageLayout(input, theme, typography),            // [2] Layout
+    generatePremiumCoverDesign(input, theme, typography),           // [3] Cover
+  ];
+
+  // Image placements can also run in parallel (only needs theme)
+  if (generateInteriorImages) {
+    parallelTasks.push(generateSmartImagePlacements(input, theme)); // [4] Image placements
+  }
+
+  const parallelResults = await Promise.all(parallelTasks);
+
+  const tableOfContents = parallelResults[0];
+  const chapterDecoration = parallelResults[1];
+  const layout = parallelResults[2];
+  const cover = parallelResults[3];
+  const imagePlacements: ImagePlacement[] = generateInteriorImages ? (parallelResults[4] || []) : [];
+
   console.log(`   → TOC Style: ${tableOfContents.style}`);
-
-  // Step 4: Chapter Decoration
-  reportProgress('Creating chapter decorations...');
-  const chapterDecoration = await generateChapterDecoration(input, theme, typography);
   console.log(`   → Chapter Style: ${chapterDecoration.headerStyle}`);
-
-  // Step 5: Premium Page Layout
-  reportProgress('Designing premium page layout...');
-  const layout = await generatePremiumPageLayout(input, theme, typography);
   console.log(`   → Layout: ${layout.pageSize}, ${layout.chapterStartStyle}`);
-
-  // Step 6: Premium Cover Design
-  reportProgress('Creating stunning cover design...');
-  const cover = await generatePremiumCoverDesign(input, theme, typography);
   console.log(`   → Cover Style: ${cover.style.visualTheme}`);
+  if (generateInteriorImages) console.log(`   → Found ${imagePlacements.length} image opportunities`);
 
-  // Step 7: Generate Cover Images
+  // Cover images + interior images can ALSO run in parallel
+  reportProgress('Generating images...');
+
   let covers = {
     frontImageUrl: undefined as string | undefined,
     backImageUrl: undefined as string | undefined,
     spineImageUrl: undefined as string | undefined,
   };
-
-  if (generateCoverImages) {
-    reportProgress('Generating AI cover images...');
-    try {
-      const coverResults = await generateBookCovers({
-        title: input.title,
-        author: input.authorName,
-        genre: input.genre,
-        synopsis: input.synopsis,
-        mood: `${theme.mood}, ${theme.atmosphere}, ${theme.colorMood}`,
-        style: theme.visualStyle,
-        customPrompt: cover.front.imagePrompt,
-      });
-
-      if (coverResults.frontCover.success && coverResults.frontCover.imageUrl) {
-        covers.frontImageUrl = coverResults.frontCover.imageUrl;
-        cover.front.imageUrl = coverResults.frontCover.imageUrl;
-      }
-      if (coverResults.backCover?.success && coverResults.backCover.imageUrl) {
-        covers.backImageUrl = coverResults.backCover.imageUrl;
-        cover.back.imageUrl = coverResults.backCover.imageUrl;
-      }
-      if (coverResults.spine?.success && coverResults.spine.imageUrl) {
-        covers.spineImageUrl = coverResults.spine.imageUrl;
-      }
-
-      console.log(`   → Covers Generated: Front=${!!covers.frontImageUrl}, Back=${!!covers.backImageUrl}`);
-    } catch (error) {
-      console.error('   → Cover generation error:', error);
-    }
-  }
-
-  // Steps 8-9: Image Placements and Generation
-  let imagePlacements: ImagePlacement[] = [];
   let generatedImages: Array<{ chapterIndex: number; imageUrl: string; prompt: string; position: string }> = [];
 
-  if (generateInteriorImages) {
-    // Step 8: Smart Image Placements
-    reportProgress('Analyzing chapters for image opportunities...');
-    imagePlacements = await generateSmartImagePlacements(input, theme);
-    console.log(`   → Found ${imagePlacements.length} image opportunities`);
+  const imagePromises: Promise<void>[] = [];
 
-    // Step 9: Generate Interior Images
-    if (imagePlacements.length > 0) {
-      reportProgress('Generating interior illustrations...');
+  // Cover image generation
+  if (generateCoverImages) {
+    imagePromises.push((async () => {
+      try {
+        const coverResults = await generateBookCovers({
+          title: input.title,
+          author: input.authorName,
+          genre: input.genre,
+          synopsis: input.synopsis,
+          mood: `${theme.mood}, ${theme.atmosphere}, ${theme.colorMood}`,
+          style: theme.visualStyle,
+          customPrompt: cover.front.imagePrompt,
+        });
+
+        if (coverResults.frontCover.success && coverResults.frontCover.imageUrl) {
+          covers.frontImageUrl = coverResults.frontCover.imageUrl;
+          cover.front.imageUrl = coverResults.frontCover.imageUrl;
+        }
+        if (coverResults.backCover?.success && coverResults.backCover.imageUrl) {
+          covers.backImageUrl = coverResults.backCover.imageUrl;
+          cover.back.imageUrl = coverResults.backCover.imageUrl;
+        }
+        if (coverResults.spine?.success && coverResults.spine.imageUrl) {
+          covers.spineImageUrl = coverResults.spine.imageUrl;
+        }
+        console.log(`   → Covers Generated: Front=${!!covers.frontImageUrl}, Back=${!!covers.backImageUrl}`);
+      } catch (error) {
+        console.error('   → Cover generation error:', error);
+      }
+    })());
+  }
+
+  // Interior image generation (runs in parallel with cover images)
+  if (generateInteriorImages && imagePlacements.length > 0) {
+    imagePromises.push((async () => {
       const topPlacements = imagePlacements.slice(0, maxInteriorImages);
-
       const bookPlacements: BookImagePlacement[] = topPlacements.map((p) => ({
         chapterIndex: p.chapterIndex,
         pagePosition: p.pagePosition,
@@ -1422,13 +1426,14 @@ export async function generateUltimatePremiumDesign(
             });
           }
         });
-
         console.log(`   → Generated ${generatedImages.length} interior images`);
       } catch (error) {
         console.error('   → Interior image generation error:', error);
       }
-    }
+    })());
   }
+
+  await Promise.all(imagePromises);
 
   // Calculate quality score
   const qualityScore = calculateDesignQuality({

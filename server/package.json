@@ -16,6 +16,7 @@
     "@sparticuz/chromium": "^147.0.0",
     "@supabase/supabase-js": "^2.99.2",
     "@types/express-session": "^1.18.2",
+    "@vercel/functions": "^3.4.3",
     "archiver": "^6.0.1",
     "axios": "^1.15.0",
     "bcrypt": "^5.1.1",
