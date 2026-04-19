@@ -2929,7 +2929,7 @@ export default function BookLayoutPage() {
               usePortrait={false}
               autoSize={true}
               clickEventForward={true}
-              useMouseEvents={true}
+              useMouseEvents={false}
               swipeDistance={30}
               showPageCorners={true}
               disableFlipByClick={true}
