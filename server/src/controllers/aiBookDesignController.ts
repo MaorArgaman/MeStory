@@ -29,6 +29,7 @@ import {
 } from '../services/aiBookDesignService';
 import {
   generateUltimatePremiumDesign,
+  generateFastDesign,
   convertPremiumDesignToBookState,
   BookDesignInput as PremiumBookDesignInput,
   PremiumCompleteDesign,
@@ -1421,14 +1422,12 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
 
       console.log(`\n🌟 Starting PREMIUM DESIGN (job ${jobId}) for "${book.title}"...`);
 
-      // Skip image generation for speed (design-only ~30s, with images ~120s+)
-      const premiumDesign = await generateUltimatePremiumDesign(
+      // Use fast single-call design (~10-15s instead of ~120s+)
+      const premiumDesign = await generateFastDesign(
         designInput,
         async (progress) => {
-          const pct = Math.round((progress.currentStep / progress.totalSteps) * 90);
-          await updateJobProgress(jobId, pct, progress.stepName).catch(() => {});
+          await updateJobProgress(jobId, progress.percentage, progress.stepName).catch(() => {});
         },
-        { generateCoverImages: fastGenerateCoverImages, generateInteriorImages: fastGenerateInteriorImages, maxInteriorImages }
       );
 
       // Convert design to book state format

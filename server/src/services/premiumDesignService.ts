@@ -1501,6 +1501,199 @@ function calculateDesignQuality(factors: Record<string, boolean>): number {
 }
 
 // ============================================
+// FAST SINGLE-CALL DESIGN (1 AI call instead of 6+)
+// ============================================
+
+export async function generateFastDesign(
+  input: BookDesignInput,
+  onProgress?: (progress: PremiumDesignProgress) => void,
+): Promise<PremiumCompleteDesign> {
+  const isHebrew = input.language === 'he' || /[\u0590-\u05FF]/.test(input.title);
+
+  if (onProgress) onProgress({ currentStep: 1, totalSteps: 2, stepName: 'מעצב את הספר...', percentage: 10 });
+
+  const sampleContent = input.chapters
+    .map(ch => `[${ch.title}]: ${ch.content.slice(0, 800)}`)
+    .slice(0, 5)
+    .join('\n\n');
+
+  const prompt = `You are an expert book designer. Generate a COMPLETE professional book design for this book in a SINGLE response.
+
+BOOK: "${input.title}" by ${input.authorName}
+Genre: ${input.genre} | Language: ${isHebrew ? 'Hebrew (RTL)' : 'English'}
+Synopsis: ${(input.synopsis || '').slice(0, 500)}
+Sample: ${sampleContent.slice(0, 2000)}
+
+Generate a COMPLETE design as JSON. For Hebrew books, use Hebrew-compatible fonts (David Libre, Heebo, Secular One, Suez One, Amatic SC, Rubik, Frank Ruhl Libre, Noto Sans Hebrew).
+
+{
+  "theme": {
+    "primaryTheme": "core theme in one sentence",
+    "mood": "emotional mood word",
+    "atmosphere": "visual atmosphere",
+    "emotionalTone": "reader feeling",
+    "visualStyle": "design style (minimalist/ornate/modern/vintage/artistic)",
+    "colorMood": "color feeling description",
+    "era": "time period feel",
+    "setting": "environment type",
+    "keywords": ["5-8 visual keywords"]
+  },
+  "typography": {
+    "bodyFont": "font name",
+    "headingFont": "font name",
+    "titleFont": "font name",
+    "accentFont": "font name",
+    "fontSize": 12,
+    "lineHeight": 1.7,
+    "chapterTitleSize": 28,
+    "sectionTitleSize": 18,
+    "pageNumberSize": 10,
+    "paragraphSpacing": 12,
+    "colors": {
+      "text": "#hex (rich, not plain black)",
+      "heading": "#hex (bold, distinctive)",
+      "accent": "#hex (warm gold/complementary)",
+      "highlight": "#hex",
+      "quote": "#hex",
+      "pageNumber": "#hex (subtle)"
+    },
+    "formatting": {
+      "dropCaps": "none|simple|decorated|boxed",
+      "quoteStyle": "italic|indented|bordered|highlighted",
+      "emphasis": "bold|italic|color|underline",
+      "firstParagraphIndent": false
+    }
+  },
+  "layout": {
+    "pageSize": "A5",
+    "margins": { "top": 35, "bottom": 30, "inner": 30, "outer": 25 },
+    "columns": 1,
+    "chapterStartStyle": "new-page-centered",
+    "pageNumbering": { "enabled": true, "position": "bottom-center", "style": "numeric", "startFrom": 1 },
+    "headers": { "enabled": true, "style": "chapter-title", "separator": "ornament" },
+    "footers": { "enabled": false },
+    "dropCaps": { "enabled": true, "style": "simple", "lines": 3 },
+    "sectionBreaks": { "style": "ornament", "ornament": "✦" },
+    "background": { "style": "clean", "primaryColor": "#fffdf7", "secondaryColor": "#faf6ee" }
+  },
+  "tableOfContents": {
+    "style": "elegant",
+    "title": { "text": "${isHebrew ? 'תוכן עניינים' : 'Contents'}", "font": "heading font", "size": 24, "color": "#hex" },
+    "entryStyle": { "font": "body font", "size": 12, "color": "#hex", "pageNumberFormat": "dotted-line" },
+    "decorative": true,
+    "dividerStyle": "ornament"
+  },
+  "chapterDecoration": {
+    "headerStyle": "centered",
+    "numberStyle": "${isHebrew ? 'word' : 'numeric'}",
+    "numberPosition": "above-title",
+    "titleDecoration": "ornament",
+    "openingOrnament": "✦",
+    "closingOrnament": "✦",
+    "spacing": { "beforeTitle": 40, "afterTitle": 20, "beforeContent": 15 },
+    "backgroundColor": null,
+    "borderTop": null,
+    "borderBottom": null
+  },
+  "cover": {
+    "front": {
+      "imagePrompt": "detailed 200+ char image prompt for stunning cover",
+      "composition": "centered",
+      "title": { "text": "${input.title}", "font": "title font", "size": 48, "color": "#fff", "position": "center" },
+      "author": { "text": "${input.authorName}", "font": "body font", "size": 18, "color": "#fff" },
+      "colorPalette": ["#hex1", "#hex2", "#hex3"],
+      "backgroundColor": "#1a1a2e"
+    },
+    "back": {
+      "synopsis": { "text": "", "font": "body font", "size": 14, "color": "#fff" },
+      "author": { "text": "${input.authorName}", "font": "body font", "size": 16, "color": "#fff" },
+      "backgroundColor": "#1a1a2e"
+    },
+    "spine": {
+      "title": "${input.title}",
+      "author": "${input.authorName}",
+      "font": "body font",
+      "color": "#fff",
+      "backgroundColor": "#accent color"
+    },
+    "style": { "genre": "${input.genre}", "mood": "from theme", "visualTheme": "from theme" },
+    "reasoning": "one sentence about the cover design approach"
+  }
+}
+
+IMPORTANT: Return ONLY valid JSON, no markdown.`;
+
+  try {
+    const result = await generateWithBreaker(prompt);
+    const responseText = result.response.text();
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+
+    if (!jsonMatch) throw new Error('Invalid response');
+
+    const design = JSON.parse(jsonMatch[0]);
+
+    if (onProgress) onProgress({ currentStep: 2, totalSteps: 2, stepName: 'שומר עיצוב...', percentage: 90 });
+
+    // Build the full PremiumCompleteDesign from the single response
+    return {
+      theme: design.theme || { primaryTheme: input.genre, mood: 'professional', atmosphere: 'clean', emotionalTone: 'engaged', visualStyle: 'modern', colorMood: 'warm tones', era: 'contemporary', setting: 'general', keywords: [input.genre] },
+      typography: {
+        bodyFont: design.typography?.bodyFont || 'David Libre',
+        headingFont: design.typography?.headingFont || 'Secular One',
+        titleFont: design.typography?.titleFont || 'Suez One',
+        accentFont: design.typography?.accentFont || design.typography?.headingFont || 'Secular One',
+        fontSize: design.typography?.fontSize || 12,
+        lineHeight: design.typography?.lineHeight || 1.7,
+        chapterTitleSize: design.typography?.chapterTitleSize || 28,
+        sectionTitleSize: design.typography?.sectionTitleSize || 18,
+        pageNumberSize: design.typography?.pageNumberSize || 10,
+        paragraphSpacing: design.typography?.paragraphSpacing || 12,
+        colors: {
+          text: design.typography?.colors?.text || '#2c2c2c',
+          heading: design.typography?.colors?.heading || '#1a1a2e',
+          accent: design.typography?.colors?.accent || '#8b6914',
+          highlight: design.typography?.colors?.highlight || '#d4a853',
+          quote: design.typography?.colors?.quote || '#555555',
+          pageNumber: design.typography?.colors?.pageNumber || '#999999',
+        },
+        formatting: design.typography?.formatting || { dropCaps: 'simple', quoteStyle: 'italic', emphasis: 'bold', firstParagraphIndent: false },
+      },
+      tableOfContents: design.tableOfContents || { style: 'elegant', title: { text: isHebrew ? 'תוכן עניינים' : 'Contents', font: 'Secular One', size: 24, color: '#1a1a2e' }, entryStyle: { font: 'David Libre', size: 12, color: '#333', pageNumberFormat: 'dotted-line' }, decorative: true, dividerStyle: 'ornament' },
+      chapterDecoration: design.chapterDecoration || { headerStyle: 'centered', numberStyle: 'word', numberPosition: 'above-title', titleDecoration: 'ornament', openingOrnament: '✦', closingOrnament: '✦', spacing: { beforeTitle: 40, afterTitle: 20, beforeContent: 15 } },
+      layout: {
+        pageSize: design.layout?.pageSize || 'A5',
+        margins: design.layout?.margins || { top: 35, bottom: 30, inner: 30, outer: 25 },
+        columns: design.layout?.columns || 1,
+        chapterStartStyle: design.layout?.chapterStartStyle || 'new-page-centered',
+        pageNumbering: design.layout?.pageNumbering || { enabled: true, position: 'bottom-center', style: 'numeric', startFrom: 1 },
+        headers: design.layout?.headers || { enabled: true, style: 'chapter-title', separator: 'ornament' },
+        footers: design.layout?.footers || { enabled: false },
+        dropCaps: design.layout?.dropCaps || { enabled: true, style: 'simple', lines: 3 },
+        sectionBreaks: design.layout?.sectionBreaks || { style: 'ornament', ornament: '✦' },
+        background: design.layout?.background || { style: 'clean', primaryColor: '#fffdf7', secondaryColor: '#faf6ee' },
+      },
+      cover: design.cover || {
+        front: { imagePrompt: `Professional book cover for "${input.title}"`, composition: 'centered', title: { text: input.title, font: 'Suez One', size: 48, color: '#fff', position: 'center' }, author: { text: input.authorName, font: 'David Libre', size: 18, color: '#fff' }, colorPalette: ['#6366f1', '#8b5cf6', '#a855f7'], backgroundColor: '#1a1a2e' },
+        back: { synopsis: { text: '', font: 'David Libre', size: 14, color: '#fff' }, author: { text: input.authorName, font: 'David Libre', size: 16, color: '#fff' }, backgroundColor: '#1a1a2e' },
+        spine: { title: input.title, author: input.authorName, font: 'David Libre', color: '#fff', backgroundColor: '#6366f1' },
+        style: { genre: input.genre, mood: 'professional', visualTheme: 'modern' },
+        reasoning: 'Professional design matching the book genre',
+      },
+      imagePlacements: [],
+      covers: { frontImageUrl: undefined, backImageUrl: undefined, spineImageUrl: undefined },
+      generatedImages: [],
+      overallStyle: `${design.theme?.visualStyle || 'professional'} ${input.genre} design`,
+      moodDescription: design.cover?.reasoning || design.theme?.mood || 'professional',
+      qualityScore: 75,
+      generatedAt: new Date(),
+    };
+  } catch (error) {
+    console.error('Fast design generation failed:', error);
+    throw error;
+  }
+}
+
+// ============================================
 // EXPORT: CONVERT TO BOOK MODEL FORMAT
 // ============================================
 
