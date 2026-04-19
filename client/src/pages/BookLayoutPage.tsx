@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, forwardRef } from 'react';
+import { useState, useEffect, useRef, forwardRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -492,6 +492,27 @@ export default function BookLayoutPage() {
   // react-pageflip ref and state
   const flipBookRef = useRef<any>(null);
   const [settings, setSettings] = useState(defaultSettings);
+
+  // Compute page aspect ratio from selected page size — drives both preview and export
+  const pageDimensions = useMemo(() => {
+    const sizes: Record<string, { width: number; height: number }> = {
+      A4:     { width: 210, height: 297 },
+      A5:     { width: 148, height: 210 },
+      B5:     { width: 176, height: 250 },
+      Letter: { width: 216, height: 279 },
+      '6x9':  { width: 152, height: 229 },
+      '5x8':  { width: 127, height: 203 },
+      Square: { width: 210, height: 210 },
+      Pocket: { width: 127, height: 178 },
+    };
+    const size = settings.pageSize === 'Custom' && settings.customPageSize
+      ? settings.customPageSize
+      : (sizes[settings.pageSize] || sizes.A5);
+    const baseH = 400;
+    const ratio = size.width / size.height;
+    const pageW = Math.round(baseH * ratio);
+    return { pageW, pageH: baseH, mmW: size.width, mmH: size.height };
+  }, [settings.pageSize, settings.customPageSize]);
 
   // Custom swipe gesture state — separate from flipbook to avoid conflicts with image drag
   const swipeRef = useRef<{ startX: number; startY: number; startTime: number } | null>(null);
@@ -2339,11 +2360,11 @@ export default function BookLayoutPage() {
               onClick={() => setShowFlipReader(true)}
               disabled={pages.length === 0}
               className="btn-ghost flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 border border-memorial-gold/40 hover:bg-memorial-gold/10 disabled:opacity-30"
-              title={isBookRTL ? 'מצב קריאה' : 'Reader mode'}
+              title={language === 'he' ? 'מצב קריאה' : 'Reader mode'}
             >
               <BookOpen className="w-4 h-4 text-memorial-gold" />
               <span className="hidden sm:inline text-memorial-gold">
-                {isBookRTL ? 'קריאה' : 'Read'}
+                {language === 'he' ? 'קריאה' : 'Read'}
               </span>
             </button>
 
@@ -2351,30 +2372,30 @@ export default function BookLayoutPage() {
             <button
               onClick={() => setShowExportModal(true)}
               className="btn-secondary flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2"
-              title={isBookRTL ? 'ייצוא הספר' : 'Export book'}
+              title={language === 'he' ? 'ייצוא הספר' : 'Export book'}
             >
               <Download className="w-4 h-4" />
-              <span className="hidden lg:inline">{t('design_studio.export_to_file', 'ייצוא')}</span>
+              <span className="hidden lg:inline">{t('design_studio.export_to_file', 'Export')}</span>
             </button>
 
             {/* Print Button */}
             <button
               onClick={() => setShowPrintModal(true)}
               className="btn-secondary flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 border-amber-500/30 text-amber-200 hover:bg-amber-500/10"
-              title={isBookRTL ? 'הדפסת ספר פיזי' : 'Print physical book'}
+              title={language === 'he' ? 'הדפסת ספר פיזי' : 'Print physical book'}
             >
               <Printer className="w-4 h-4" />
-              <span className="hidden lg:inline">{isBookRTL ? 'הדפסה' : 'Print'}</span>
+              <span className="hidden lg:inline">{language === 'he' ? 'הדפסה' : 'Print'}</span>
             </button>
 
             {/* Publish Button */}
             <button
               onClick={openPublishModal}
               className="btn-gold flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 shadow-glow-gold"
-              title={isBookRTL ? 'פרסום בחנות' : 'Publish to store'}
+              title={language === 'he' ? 'פרסום בחנות' : 'Publish to store'}
             >
               <Rocket className="w-4 h-4" />
-              <span className="hidden lg:inline">{t('design_studio.publish_to_store', 'פרסום')}</span>
+              <span className="hidden lg:inline">{t('design_studio.publish_to_store', 'Publish')}</span>
             </button>
 
             {/* Save Button */}
@@ -2637,11 +2658,11 @@ export default function BookLayoutPage() {
               onClick={() => jumpToSpread(0)}
               disabled={currentSpread === 0}
               className="flex items-center gap-2 text-memorial-gold hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              title={isBookRTL ? 'חזרה להתחלה' : 'Back to start'}
+              title={language === 'he' ? 'חזרה להתחלה' : 'Back to start'}
             >
               <RotateCcw className="w-5 h-5" />
               <span className="text-sm font-medium hidden sm:inline">
-                {isBookRTL ? 'חזרה להתחלה' : 'Back to start'}
+                {language === 'he' ? 'חזרה להתחלה' : 'Back to start'}
               </span>
             </button>
 
@@ -2672,18 +2693,24 @@ export default function BookLayoutPage() {
             onMouseUp={(e) => handleSwipeEnd(e.clientX, e.clientY)}
           >
 
-          {/* react-pageflip book with editing — 350×500 base, auto-scales via size="stretch" */}
-          <div className="relative flex-1 min-h-0 flex items-center justify-center" style={{ width: '100%' }}>
-            <div className="flex items-center justify-center" style={{ width: 'min(700px, 100%)', height: '100%', margin: '0 auto' }}>
+          {/* react-pageflip book — dimensions driven by selected page size */}
+          <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden" style={{ width: '100%', padding: '8px' }}>
+            <div style={{
+              width: `min(${pageDimensions.pageW * 2}px, 100%)`,
+              height: `min(${pageDimensions.pageH}px, 100%)`,
+              position: 'relative',
+              flexShrink: 0,
+            }}>
             <HTMLFlipBook
+              key={`flipbook-${settings.pageSize}-${settings.customPageSize?.width}-${settings.customPageSize?.height}`}
               ref={flipBookRef}
-              width={280}
-              height={400}
+              width={pageDimensions.pageW}
+              height={pageDimensions.pageH}
               size="stretch"
-              minWidth={200}
-              maxWidth={350}
-              minHeight={280}
-              maxHeight={450}
+              minWidth={Math.round(pageDimensions.pageW * 0.4)}
+              maxWidth={Math.round(pageDimensions.pageW * 1.2)}
+              minHeight={Math.round(pageDimensions.pageH * 0.4)}
+              maxHeight={Math.round(pageDimensions.pageH * 1.2)}
               maxShadowOpacity={0.5}
               showCover={true}
               mobileScrollSupport={false}
@@ -2832,19 +2859,20 @@ export default function BookLayoutPage() {
                 </FlipPage>
               )}
             </HTMLFlipBook>
-            </div>
-            {/* Book reflection effect */}
-            <div
-              className="w-full h-16 mt-1 opacity-20 pointer-events-none"
-              style={{
-                background: 'linear-gradient(to bottom, rgba(255,255,255,0.1), transparent)',
-                filter: 'blur(4px)',
-                transform: 'scaleY(-0.3)',
-                maskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)',
-              }}
-            />
-          </div>
+            </div>{/* end page-size constrained wrapper */}
+          </div>{/* end centering flex wrapper */}
+
+          {/* Book reflection effect */}
+          <div
+            className="w-full h-8 opacity-20 pointer-events-none"
+            style={{
+              background: 'linear-gradient(to bottom, rgba(255,255,255,0.1), transparent)',
+              filter: 'blur(4px)',
+              transform: 'scaleY(-0.3)',
+              maskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)',
+            }}
+          />
 
           {/* Page info shown in top bar — no duplicate labels needed here */}
 
@@ -2897,7 +2925,7 @@ export default function BookLayoutPage() {
             <button
               onClick={isBookRTL ? readNext : readPrev}
               className="p-3 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
-              title={isBookRTL ? 'הדף הבא' : 'Previous'}
+              title={language === 'he' ? 'הדף הבא' : 'Previous'}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -2905,7 +2933,7 @@ export default function BookLayoutPage() {
             <button
               onClick={isBookRTL ? readPrev : readNext}
               className="p-3 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
-              title={isBookRTL ? 'הדף הקודם' : 'Next'}
+              title={language === 'he' ? 'הדף הקודם' : 'Next'}
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -3591,10 +3619,10 @@ export default function BookLayoutPage() {
             >
               <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-white">{isBookRTL ? 'הוספת תמונה' : 'Add Image'}</h2>
+                  <h2 className="text-lg sm:text-xl font-bold text-white">{language === 'he' ? 'הוספת תמונה' : 'Add Image'}</h2>
                   {selectedPageIndex !== null && (
                     <p className="text-xs text-memorial-gold mt-1">
-                      {isBookRTL ? `מוסיף לעמוד ${selectedPageIndex + 1}` : `Adding to: Page ${selectedPageIndex + 1}`}
+                      {language === 'he' ? `מוסיף לעמוד ${selectedPageIndex + 1}` : `Adding to: Page ${selectedPageIndex + 1}`}
                     </p>
                   )}
                 </div>
