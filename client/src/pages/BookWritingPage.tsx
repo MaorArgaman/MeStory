@@ -38,7 +38,6 @@ import Highlight from '@tiptap/extension-highlight';
 import Image from '@tiptap/extension-image';
 import AICopilot from '../components/editor/AICopilot';
 import EditorToolbar from '../components/editor/EditorToolbar';
-import AIHelpMenu from '../components/editor/AIHelpMenu';
 import DraftNotes from '../components/editor/DraftNotes';
 import AIFloatingToolbar, { AIEnhancePreview } from '../components/editor/AIFloatingToolbar';
 import { enhanceText } from '../services/analysisApi';
@@ -1007,55 +1006,9 @@ export default function BookWritingPage() {
                     style={{ fontFamily: "'Merriweather', Georgia, serif" }}
                   />
 
-                  {/* Rich Text Editor Toolbar + AI Help */}
-                  <div className="overflow-visible max-w-4xl mx-auto relative z-20 flex items-start gap-2">
-                    <div className="flex-1">
-                      <EditorToolbar editor={editor} />
-                    </div>
-                    <div className="flex-shrink-0 hidden lg:block">
-                      <AIHelpMenu
-                        hasContent={!!content && content.length > 10}
-                        isLoading={enhancing}
-                        onAction={(actionId, context) => {
-                          if (!editor) return;
-                          if (actionId === 'start') {
-                            // Trigger AI copilot start suggestion
-                            const copilotEl = document.querySelector('[data-copilot-suggest]') as HTMLButtonElement;
-                            if (copilotEl) copilotEl.click();
-                          } else if (actionId === 'continue') {
-                            const copilotEl = document.querySelector('[data-copilot-suggest]') as HTMLButtonElement;
-                            if (copilotEl) copilotEl.click();
-                          } else if (actionId === 'improve') {
-                            const text = editor.getText();
-                            if (text.length >= 5) {
-                              editor.commands.selectAll();
-                              const { from, to } = editor.state.selection;
-                              const selectedText = editor.state.doc.textBetween(from, to, ' ');
-                              handleEnhance('improve', selectedText);
-                            }
-                          } else if (actionId === 'sensory') {
-                            const text = editor.getText();
-                            if (text.length >= 5) {
-                              editor.commands.selectAll();
-                              const { from, to } = editor.state.selection;
-                              const selectedText = editor.state.doc.textBetween(from, to, ' ');
-                              handleEnhance('expand', selectedText);
-                            }
-                          } else if (actionId === 'rephrase' && context) {
-                            // Insert the context as a prompt for AI to work with
-                            editor.chain().focus().insertContent(`<p>${context}</p>`).run();
-                            setSaved(false);
-                            // Then trigger improve on it
-                            setTimeout(() => {
-                              editor.commands.selectAll();
-                              const { from, to } = editor.state.selection;
-                              const selectedText = editor.state.doc.textBetween(from, to, ' ');
-                              handleEnhance('expand', selectedText);
-                            }, 100);
-                          }
-                        }}
-                      />
-                    </div>
+                  {/* Rich Text Editor Toolbar */}
+                  <div className="overflow-visible max-w-4xl mx-auto relative z-20">
+                    <EditorToolbar editor={editor} />
                   </div>
                 </div>
 
