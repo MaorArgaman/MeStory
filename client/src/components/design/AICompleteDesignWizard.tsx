@@ -304,12 +304,12 @@ export default function AICompleteDesignWizard({
       // Step 1: Analyzing
       updateStep('analyzing', 0, 0);
 
-      // Call premium design endpoint
+      // Call premium design endpoint (AI generation can take up to 4 minutes)
       const response = await api.post(`/ai/premium-design/${bookId}`, {
         generateCoverImages,
         generateInteriorImages,
         maxInteriorImages: 5,
-      });
+      }, { timeout: 240000 }); // 4 min timeout
 
       if (!response.data.success) {
         throw new Error(response.data.error || 'Failed to generate design');
@@ -459,8 +459,12 @@ export default function AICompleteDesignWizard({
       setStep('variant');
 
     } catch (err: any) {
-      console.error('AI Design error:', err);
-      setError(err.message || 'Failed to generate design');
+      const is504 = err?.response?.status === 504 || err?.code === 'ECONNABORTED';
+      const isTimeout = err?.message?.includes('timeout') || is504;
+      const heMsg = isTimeout
+        ? 'עיצוב ה-AI לוקח זמן רב — אנא נסה שוב בעוד כמה דקות (הבקשה עברה את מגבלת הזמן של השרת)'
+        : 'שגיאה ביצירת העיצוב: ' + (err.message || 'שגיאה לא ידועה');
+      setError(heMsg);
       setStep('intro');
     }
   }, [bookId, book, generateCoverImages, generateInteriorImages, generateSynopsis]);

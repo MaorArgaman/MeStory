@@ -215,6 +215,8 @@ export default function BookWritingPage() {
             class: 'border-l-4 border-indigo-500 pl-4 italic',
           },
         },
+        // TipTap v3 includes Underline in StarterKit — disable here to avoid duplicate warning
+        underline: false,
       }),
       Underline,
       TextAlign.configure({
