@@ -24,6 +24,7 @@ import {
   Minimize2,
   Search,
   Replace,
+  GripVertical,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import analytics from '../utils/analytics';
@@ -129,6 +130,10 @@ export default function BookWritingPage() {
   const [showRightSidebar, setShowRightSidebar] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showCollaboratorsPanel, setShowCollaboratorsPanel] = useState(false);
+
+  // Chapter drag-and-drop reordering
+  const [draggedChapterIndex, setDraggedChapterIndex] = useState<number | null>(null);
+  const [dragOverChapterIndex, setDragOverChapterIndex] = useState<number | null>(null);
 
   // Google Docs-like features
   const [zoomLevel, setZoomLevel] = useState(100);
@@ -558,6 +563,13 @@ export default function BookWritingPage() {
     const confirmed = window.confirm(t('editor.chapters.delete_confirm'));
     if (!confirmed) return;
 
+    // Cancel any pending auto-save immediately — prevents race condition where
+    // the auto-save fires during the delete API call and restores the deleted chapter
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
+
     const updatedChapters = [...book.chapters];
     updatedChapters.splice(index, 1);
 
@@ -594,6 +606,38 @@ export default function BookWritingPage() {
       }
     } catch (error) {
       console.error('Failed to delete chapter:', error);
+      toast.error(t('errors.generic'));
+    }
+  }, [book, bookId, selectedChapterIndex, t]);
+
+  const reorderChapters = useCallback(async (fromIndex: number, toIndex: number) => {
+    if (!book || fromIndex === toIndex) return;
+    const reordered = [...(book.chapters || [])];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+    reordered.forEach((ch, i) => { ch.order = i; });
+
+    // Cancel pending auto-save to avoid race condition
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
+
+    // Optimistically update UI
+    setBook(prev => prev ? { ...prev, chapters: reordered } : prev);
+    // Adjust selected index so the same chapter remains selected
+    if (selectedChapterIndex === fromIndex) {
+      setSelectedChapterIndex(toIndex);
+    } else if (fromIndex < toIndex && selectedChapterIndex > fromIndex && selectedChapterIndex <= toIndex) {
+      setSelectedChapterIndex(selectedChapterIndex - 1);
+    } else if (fromIndex > toIndex && selectedChapterIndex >= toIndex && selectedChapterIndex < fromIndex) {
+      setSelectedChapterIndex(selectedChapterIndex + 1);
+    }
+
+    try {
+      await api.put(`/books/${bookId}`, { chapters: reordered });
+    } catch (error) {
+      console.error('Failed to reorder chapters:', error);
       toast.error(t('errors.generic'));
     }
   }, [book, bookId, selectedChapterIndex, t]);
@@ -930,12 +974,26 @@ export default function BookWritingPage() {
               book.chapters.map((chapter, index) => (
                 <div
                   key={index}
+                  draggable
+                  onDragStart={() => setDraggedChapterIndex(index)}
+                  onDragOver={(e) => { e.preventDefault(); setDragOverChapterIndex(index); }}
+                  onDragLeave={() => setDragOverChapterIndex(null)}
+                  onDrop={() => {
+                    if (draggedChapterIndex !== null) reorderChapters(draggedChapterIndex, index);
+                    setDraggedChapterIndex(null);
+                    setDragOverChapterIndex(null);
+                  }}
+                  onDragEnd={() => { setDraggedChapterIndex(null); setDragOverChapterIndex(null); }}
                   className={`group flex items-start gap-2 rounded-xl lg:rounded-lg ${
                     selectedChapterIndex === index
                       ? 'bg-indigo-500/20 border border-indigo-500/30'
                       : 'bg-white/5 lg:bg-transparent border border-white/10 lg:border-transparent hover:bg-white/10'
-                  } p-4 lg:p-3 transition-all`}
+                  } ${dragOverChapterIndex === index && draggedChapterIndex !== index ? 'border-indigo-400/60 bg-indigo-500/10' : ''} p-4 lg:p-3 transition-all cursor-default`}
                 >
+                  {/* Drag handle */}
+                  <div className="flex-shrink-0 mt-1 p-1 text-gray-500 hover:text-gray-300 cursor-grab active:cursor-grabbing transition-colors">
+                    <GripVertical className="w-4 h-4" />
+                  </div>
                   <button
                     onClick={() => {
                       selectChapter(index);
