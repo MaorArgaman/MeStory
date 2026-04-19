@@ -16,9 +16,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="md:col-span-1">
-            <div className="flex items-center gap-2.5 mb-3">
-              <img src="/img/new/logo-mestory-small.png" alt="MeStory" className="h-10 w-auto object-contain nav-logo-glow" />
-              <span className="font-bold gradient-gold text-xl tracking-widest" style={{ fontFamily: "'Cinzel', serif" }}>MeStory</span>
+            <div className="flex items-center mb-3">
+              <img src="/img/new/logo-mestory-small.png" alt="MeStory" className="h-12 w-auto object-contain nav-logo-glow" />
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">
               {isHebrew
