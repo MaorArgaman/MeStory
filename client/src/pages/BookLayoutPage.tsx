@@ -2487,11 +2487,22 @@ export default function BookLayoutPage() {
                   : 'border-white/10 hover:border-white/30'
               }`}
             >
-              {/* Mini open-book: blank left + front cover right */}
+              {/* Mini open-book: back cover left + front cover right */}
               <div className="flex" style={{ aspectRatio: '3/2' }}>
-                {/* Left side – back cover placeholder */}
-                <div className="flex-1 bg-gray-800/60 flex items-center justify-center">
-                  <span style={{ fontSize: '7px', color: '#555' }}>{language === 'he' ? 'אחורי' : 'Back'}</span>
+                {/* Left side – actual back cover preview */}
+                <div
+                  className="flex-1 flex flex-col items-center justify-center px-1 py-1 relative overflow-hidden"
+                  style={{
+                    background: backCoverImageUrl
+                      ? `url(${backCoverImageUrl}) center/cover`
+                      : `linear-gradient(160deg, ${book?.coverDesign?.coverColor || '#1a0a3e'}cc, ${book?.coverDesign?.coverColor || '#0d0820'})`,
+                  }}
+                >
+                  {backCoverImageUrl && <div className="absolute inset-0 bg-black/40" />}
+                  <p className="relative text-[4px] text-center opacity-70 line-clamp-3 leading-tight"
+                    style={{ color: book?.coverDesign?.textColor || '#fff' }}>
+                    {(book?.synopsis || book?.description || '').slice(0, 60)}
+                  </p>
                 </div>
                 {/* Spine */}
                 <div className="w-[3px] flex-shrink-0 bg-gradient-to-b from-black/60 via-gray-500/40 to-black/60" />
@@ -3928,9 +3939,9 @@ export default function BookLayoutPage() {
         )}
       </AnimatePresence>
 
-      {/* Brand Watermark - Marketing */}
+      {/* Brand Watermark - opposite side from the page-thumbnails sidebar */}
       <BrandWatermark
-        position="bottom-left"
+        position={isUIRTL ? 'bottom-left' : 'bottom-right'}
         size="small"
         opacity={0.12}
         className="hidden lg:block"
