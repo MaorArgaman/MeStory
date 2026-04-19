@@ -847,7 +847,7 @@ export class Book {
         .eq('id', id);
 
       if (shouldReturn) {
-        query = query.select(Book.LITE_COLUMNS) as any;
+        query = query.select('*') as any;
       }
 
       const { data, error } = shouldReturn

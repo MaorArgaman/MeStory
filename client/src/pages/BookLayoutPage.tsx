@@ -2177,8 +2177,15 @@ export default function BookLayoutPage() {
   const initialFlipPage = isBookRTL ? totalDomPages - 1 : 0;
 
   // Flipbook navigation helpers
-  const flipNext = () => flipBookRef.current?.pageFlip()?.flipNext();
-  const flipPrev = () => flipBookRef.current?.pageFlip()?.flipPrev();
+  const flipNext = () => {
+    const pf = flipBookRef.current?.pageFlip();
+    if (pf) pf.flipNext();
+  };
+  const flipPrev = () => {
+    const pf = flipBookRef.current?.pageFlip();
+    if (pf) pf.flipPrev();
+  };
+  // In RTL, DOM page order is reversed: flipPrev = next reading page, flipNext = previous reading page
   const readNext = isBookRTL ? flipPrev : flipNext;
   const readPrev = isBookRTL ? flipNext : flipPrev;
 
@@ -2966,19 +2973,19 @@ export default function BookLayoutPage() {
           {/* Bottom bar — compact navigation with safe distance from URL bar */}
           <div className="flex items-center justify-center gap-4 px-4 py-3 pb-safe bg-black/30 backdrop-blur-sm border-t border-memorial-gold/20" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
             <button
-              onClick={isBookRTL ? readNext : readPrev}
+              onClick={readPrev}
               className="p-3 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
-              title={language === 'he' ? 'הדף הבא' : 'Previous'}
+              title={language === 'he' ? 'הדף הקודם' : 'Previous'}
             >
-              <ChevronLeft className="w-5 h-5" />
+              {isBookRTL ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
             </button>
 
             <button
-              onClick={isBookRTL ? readPrev : readNext}
+              onClick={readNext}
               className="p-3 rounded-full bg-memorial-gold/10 hover:bg-memorial-gold/20 text-memorial-gold transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
-              title={language === 'he' ? 'הדף הקודם' : 'Next'}
+              title={language === 'he' ? 'הדף הבא' : 'Next'}
             >
-              <ChevronRight className="w-5 h-5" />
+              {isBookRTL ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
             </button>
           </div>
         </div>
