@@ -1911,37 +1911,53 @@ export const exportBookPDFAsync = async (req: AuthRequest, res: Response): Promi
 
     // Fire-and-forget the actual work
     runJobInBackground(job.id, async ({ updateProgress }) => {
-      // Try the Puppeteer renderer first — it mirrors what the user sees in
-      // the editor exactly (bidi, fonts, images, cover). Fall back to the
-      // legacy PDFKit exporter only if Puppeteer fails (e.g. no Chrome binary).
+      // On Vercel / serverless, skip the React-app Puppeteer renderer
+      // (it's very slow — loads the full SPA, fetches the book via API, etc.)
+      // and go straight to server-side HTML generation which reads from the
+      // DB directly and is much faster.
+      const isServerless =
+        process.env.VERCEL === '1' || process.env.VERCEL === 'true' ||
+        process.env.AWS_LAMBDA_FUNCTION_NAME !== undefined;
+
       let pdfBuffer: Buffer;
       let warnings: string[] = [];
+
+      // Step 1: Try the fast server-side HTML renderer (Puppeteer + generated HTML)
       try {
-        pdfBuffer = await renderBookToPdf({
+        await updateProgress(5, 'Generating PDF...');
+        pdfBuffer = await generateBookPdfFromHtml({
           bookId: id,
-          authToken,
-          onProgress: (pct, msg) => updateProgress(pct * 0.7, msg),
+          onProgress: (pct, msg) => updateProgress(5 + pct * 0.6, msg),
         });
-      } catch (puppeteerErr: any) {
-        console.warn('[exportBookPDFAsync] Puppeteer/React render failed, trying HTML-based fallback:', puppeteerErr?.message);
-        try {
-          // Second attempt: server-side HTML generation (no React app required)
-          pdfBuffer = await generateBookPdfFromHtml({
-            bookId: id,
-            onProgress: (pct, msg) => updateProgress(10 + pct * 0.5, msg),
-          });
-        } catch (htmlErr: any) {
-          console.warn('[exportBookPDFAsync] HTML-based render failed, falling back to PDFKit:', htmlErr?.message);
+      } catch (htmlErr: any) {
+        console.warn('[exportBookPDFAsync] HTML-based render failed:', htmlErr?.message);
+
+        // Step 2: On non-serverless, try the React-app renderer as fallback
+        if (!isServerless && authToken) {
+          try {
+            await updateProgress(10, 'Trying browser renderer...');
+            pdfBuffer = await renderBookToPdf({
+              bookId: id,
+              authToken,
+              onProgress: (pct, msg) => updateProgress(10 + pct * 0.5, msg),
+            });
+          } catch (puppeteerErr: any) {
+            console.warn('[exportBookPDFAsync] Puppeteer/React render also failed:', puppeteerErr?.message);
+            // Step 3: Final fallback — PDFKit (no Chrome needed)
+            await updateProgress(10, 'Generating PDF (fallback)...');
+            const exportResult = await exportBook(id, 'pdf');
+            if (!exportResult?.buffer) throw new Error('Export failed — no output generated');
+            pdfBuffer = exportResult.buffer;
+            warnings = [...(exportResult.warnings || []), 'PDF generated with fallback renderer — for best results use "Save as PDF" from your browser.'];
+          }
+        } else {
+          // Serverless: skip React renderer, go straight to PDFKit fallback
+          console.warn('[exportBookPDFAsync] Serverless — falling back to PDFKit');
           await updateProgress(10, 'Generating PDF (fallback)...');
           const exportResult = await exportBook(id, 'pdf');
-          if (!exportResult?.buffer) {
-            throw new Error('Export failed — no output generated');
-          }
+          if (!exportResult?.buffer) throw new Error('Export failed — no output generated');
           pdfBuffer = exportResult.buffer;
-          warnings = [
-            ...(exportResult.warnings || []),
-            'PDF generated with fallback renderer — some design elements may be missing. For best results use "Save as PDF" from your browser.',
-          ];
+          warnings = [...(exportResult.warnings || []), 'PDF generated with fallback renderer — for best results use "Save as PDF" from your browser.'];
         }
       }
 
