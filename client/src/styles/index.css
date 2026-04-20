@@ -301,8 +301,14 @@
       min-height: auto;
       margin-bottom: 80px;
       max-width: 100%;
+      width: 100%;
       box-shadow: none;
       border-radius: 0;
+      box-sizing: border-box;
+      overflow-x: hidden;
+    }
+    .editor-content {
+      padding: 0 !important;
     }
   }
 
