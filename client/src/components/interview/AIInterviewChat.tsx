@@ -70,6 +70,9 @@ export default function AIInterviewChat({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Synchronous guard against double-submit (state is async, ref is instant)
+  const isSendingRef = useRef(false);
+
   // Track if TTS is enabled at initialization time
   const ttsEnabledRef = useRef(ttsEnabled);
   useEffect(() => {
@@ -85,13 +88,22 @@ export default function AIInterviewChat({
   const speakText = useCallback(async (text: string) => {
     if (!ttsEnabledRef.current || !('speechSynthesis' in window)) return;
 
+    // Cancel any ongoing speech before starting new one
+    speechSynthesis.cancel();
+
     return new Promise<void>((resolve) => {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'he-IL';
       utterance.rate = 0.9;
-      utterance.onend = () => resolve();
-      utterance.onerror = () => resolve();
-      speechSynthesis.speak(utterance);
+
+      // Mobile browsers sometimes need a delay after cancel
+      setTimeout(() => {
+        utterance.onend = () => resolve();
+        utterance.onerror = () => resolve();
+        speechSynthesis.speak(utterance);
+        // Fallback timeout in case onend never fires (common on mobile)
+        setTimeout(resolve, Math.max(5000, text.length * 80));
+      }, 100);
     });
   }, []);
 
@@ -132,7 +144,10 @@ export default function AIInterviewChat({
   }, [messages, scrollToBottom]);
 
   const handleSendMessage = async (text: string) => {
-    if (!text.trim() || !interviewState || isSending) return;
+    // Use ref for synchronous guard — React state updates are async,
+    // so two rapid calls (Enter + onClick) would both see isSending=false.
+    if (!text.trim() || !interviewState || isSendingRef.current) return;
+    isSendingRef.current = true;
 
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -163,8 +178,8 @@ export default function AIInterviewChat({
       setMessages((prev) => [...prev, aiMessage]);
       setAvatarState('speaking');
 
-      // TTS
-      if (ttsEnabled) {
+      // TTS — use ref (not state) to avoid stale closure
+      if (ttsEnabledRef.current) {
         await speakText(aiMessage.content);
       }
 
@@ -179,6 +194,7 @@ export default function AIInterviewChat({
       toast.error('Failed to send message');
       setAvatarState('idle');
     } finally {
+      isSendingRef.current = false;
       setIsSending(false);
     }
   };

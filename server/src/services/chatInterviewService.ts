@@ -571,12 +571,13 @@ export async function processUserMessage(
 }
 
 /**
- * Check if response indicates we should transition to next topic
+ * Check if response indicates we should transition to next topic.
+ * Hebrew is more compact than English, so a lower threshold is used.
+ * Also transitions if the user gave a clear, direct answer (15+ words).
  */
 function shouldTransition(response: string): boolean {
-  // Simple heuristic: if response is comprehensive (50+ words), likely ready to move on
   const wordCount = response.trim().split(/\s+/).length;
-  return wordCount >= 50;
+  return wordCount >= 15;
 }
 
 /**
