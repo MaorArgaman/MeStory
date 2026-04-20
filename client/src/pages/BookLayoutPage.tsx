@@ -825,7 +825,7 @@ export default function BookLayoutPage() {
           if (resolvedBackCoverUrl && !resolvedBackCoverUrl.startsWith('http') && !resolvedBackCoverUrl.startsWith('data:')) {
             // Convert relative URL to absolute
             const apiUrl = import.meta.env.VITE_API_URL ||
-              (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
+              (import.meta.env.PROD ? 'https://api.mestory-ai.com/api' : 'http://localhost:5001/api');
             const serverBaseUrl = apiUrl.replace('/api', '');
             resolvedBackCoverUrl = `${serverBaseUrl}${resolvedBackCoverUrl}`;
           }
@@ -1389,7 +1389,7 @@ export default function BookLayoutPage() {
       // would otherwise prevent multer from parsing the file on the server.
       const serverBase = import.meta.env.VITE_API_URL ||
         (import.meta.env.PROD
-          ? 'https://me-story-server-7wdx.vercel.app/api'
+          ? 'https://api.mestory-ai.com/api'
           : 'http://localhost:5001/api');
       const token = localStorage.getItem('token');
       const fetchRes = await fetch(`${serverBase}/books/${bookId}/page-image`, {

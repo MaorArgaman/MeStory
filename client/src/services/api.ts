@@ -103,7 +103,7 @@ export async function withRetry<T>(
 // In production, use the server URL
 // In development, use localhost
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
+  (import.meta.env.PROD ? 'https://api.mestory-ai.com/api' : 'http://localhost:5001/api');
 
 // Create axios instance with default config
 export const api = axios.create({

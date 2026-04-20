@@ -373,7 +373,7 @@ export default function DesignStudioPage() {
           let existingImageUrl = coverDesign.front?.imageUrl || coverDesign.imageUrl || '';
           if (existingImageUrl && !existingImageUrl.startsWith('http') && !existingImageUrl.startsWith('data:')) {
             const apiUrl = import.meta.env.VITE_API_URL ||
-              (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
+              (import.meta.env.PROD ? 'https://api.mestory-ai.com/api' : 'http://localhost:5001/api');
             const serverBaseUrl = apiUrl.replace('/api', '');
             existingImageUrl = `${serverBaseUrl}${existingImageUrl}`;
           }
@@ -391,7 +391,7 @@ export default function DesignStudioPage() {
           let existingBackCoverUrl = coverDesign.back?.imageUrl || '';
           if (existingBackCoverUrl && !existingBackCoverUrl.startsWith('http') && !existingBackCoverUrl.startsWith('data:')) {
             const apiUrl = import.meta.env.VITE_API_URL ||
-              (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
+              (import.meta.env.PROD ? 'https://api.mestory-ai.com/api' : 'http://localhost:5001/api');
             const serverBaseUrl = apiUrl.replace('/api', '');
             existingBackCoverUrl = `${serverBaseUrl}${existingBackCoverUrl}`;
           }
@@ -701,7 +701,7 @@ export default function DesignStudioPage() {
           fullImageUrl = imageUrlPath;
         } else {
           const apiUrl = import.meta.env.VITE_API_URL ||
-            (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
+            (import.meta.env.PROD ? 'https://api.mestory-ai.com/api' : 'http://localhost:5001/api');
           const serverBaseUrl = apiUrl.replace('/api', '');
           fullImageUrl = `${serverBaseUrl}${imageUrlPath}`;
         }
@@ -760,7 +760,7 @@ export default function DesignStudioPage() {
           fullImageUrl = imageUrlPath;
         } else {
           const apiUrl = import.meta.env.VITE_API_URL ||
-            (import.meta.env.PROD ? 'https://me-story-server-7wdx.vercel.app/api' : 'http://localhost:5001/api');
+            (import.meta.env.PROD ? 'https://api.mestory-ai.com/api' : 'http://localhost:5001/api');
           const serverBaseUrl = apiUrl.replace('/api', '');
           fullImageUrl = `${serverBaseUrl}${imageUrlPath}`;
         }
