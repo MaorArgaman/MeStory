@@ -1453,7 +1453,7 @@ export default function BookWritingPage() {
                       onClick={() => {
                         if (editor) {
                           const text = editor.getText();
-                          if (text && text.length >= 5) {
+                          if (text && text.length >= 10) {
                             // Select all text and trigger improve
                             editor.commands.selectAll();
                             const { from, to } = editor.state.selection;
@@ -1477,7 +1477,7 @@ export default function BookWritingPage() {
                       onClick={() => {
                         if (editor) {
                           const text = editor.getText();
-                          if (text && text.length >= 5) {
+                          if (text && text.length >= 10) {
                             // Move cursor to end and trigger continue
                             editor.commands.selectAll();
                             const { from, to } = editor.state.selection;
@@ -1503,7 +1503,7 @@ export default function BookWritingPage() {
                       onClick={() => {
                         if (editor) {
                           const text = editor.getText();
-                          if (text && text.length >= 5) {
+                          if (text && text.length >= 10) {
                             editor.commands.selectAll();
                             const { from, to } = editor.state.selection;
                             const selectedText = editor.state.doc.textBetween(from, to, ' ');
