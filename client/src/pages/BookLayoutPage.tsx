@@ -1471,12 +1471,14 @@ export default function BookLayoutPage() {
         }))
       );
 
-      // Only send layout fields — exclude `content` (chapter HTML) to keep payload small
+      // Send layout fields INCLUDING content — the export/print renderers read
+      // page content from pageLayout.pages, so it must be persisted.
       let pagesForSave = processedPages.map(page => ({
         id: page.id,
         type: page.type,
         chapterIndex: page.chapterIndex,
         pageIndex: page.pageIndex,
+        content: page.content || '',
         images: (page.images || []).map(img => ({
           id: img.id,
           url: img.url || '',
