@@ -1507,18 +1507,12 @@ export default function BookLayoutPage() {
         }));
       }
 
-      // Strip base64 from coverDesign to avoid 413
-      const coverForSave = book.coverDesign ? { ...book.coverDesign } : undefined;
-      if (coverForSave?.imageUrl?.startsWith('data:')) {
-        coverForSave.imageUrl = '';
-      }
-      if ((coverForSave as any)?.front?.imageUrl?.startsWith('data:')) {
-        (coverForSave as any).front.imageUrl = '';
-      }
+      // Don't send coverDesign during layout saves — it hasn't changed here,
+      // and sending a shallow copy strips image URLs, overwriting the real ones
+      // saved by DesignStudioPage.
 
       const fullPayload = JSON.stringify({
         pageLayout: { pages: pagesForSave, settings },
-        coverDesign: coverForSave,
       });
 
       // Final check — if still over limit, strip ALL base64 from pages
@@ -1536,7 +1530,6 @@ export default function BookLayoutPage() {
           pages: pagesForSave,
           settings,
         },
-        coverDesign: coverForSave,
       });
 
       if (response.data.success) {
