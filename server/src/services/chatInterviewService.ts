@@ -356,10 +356,11 @@ ${messagesByTopic.narrativeArc.join('\n') || 'לא צוין'}
   },
 };
 
-// ---- Persistence layer (Supabase with in-memory fallback) ----
-
-// In-memory cache (per-instance, for fast reads within a single request)
-const memoryFallback = new Map<string, ChatInterviewState>();
+// ---- Persistence layer (Supabase only — no memory cache) ----
+// We intentionally avoid in-memory caching: in Vercel serverless, different
+// instances would hold different cached snapshots of the same session,
+// causing progress to appear to go backwards when requests hit a stale
+// instance. Always read/write to Supabase.
 
 interface InterviewRow {
   id: string;
@@ -397,7 +398,6 @@ function rowToState(row: InterviewRow): ChatInterviewState {
 /** Persist current state to Supabase */
 async function saveState(state: ChatInterviewState): Promise<void> {
   // Also cache in memory for this instance
-  memoryFallback.set(state.id, state);
 
   const { error } = await supabaseAdmin
     .from('interview_sessions')
@@ -472,7 +472,6 @@ export async function createInterview(
   }
 
   // Cache in memory for fast reads within this instance
-  memoryFallback.set(id, state);
   return state;
 }
 
@@ -480,11 +479,6 @@ export async function createInterview(
  * Get interview state by ID
  */
 export async function getInterview(id: string): Promise<ChatInterviewState | undefined> {
-  // Check memory first (fast path, helps within same instance)
-  const memState = memoryFallback.get(id);
-  if (memState) return memState;
-
-  // Read from DB
   const { data, error } = await supabaseAdmin
     .from('interview_sessions')
     .select('*')
@@ -496,16 +490,13 @@ export async function getInterview(id: string): Promise<ChatInterviewState | und
     return undefined;
   }
   if (!data) return undefined;
-  const state = rowToState(data as InterviewRow);
-  memoryFallback.set(id, state);
-  return state;
+  return rowToState(data as InterviewRow);
 }
 
 /**
  * Delete interview
  */
 export async function deleteInterview(id: string): Promise<void> {
-  memoryFallback.delete(id);
   await supabaseAdmin.from('interview_sessions').delete().eq('id', id);
 }
 
