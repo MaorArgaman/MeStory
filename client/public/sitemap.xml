@@ -5,7 +5,7 @@
   <!-- Homepage -->
   <url>
     <loc>https://mestory-ai.com/</loc>
-    <lastmod>2026-03-26</lastmod>
+    <lastmod>2026-04-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="he" href="https://mestory-ai.com/"/>
@@ -16,17 +16,71 @@
   <!-- Marketplace -->
   <url>
     <loc>https://mestory-ai.com/marketplace</loc>
-    <lastmod>2026-03-26</lastmod>
+    <lastmod>2026-04-20</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="he" href="https://mestory-ai.com/marketplace"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://mestory-ai.com/marketplace"/>
   </url>
 
+  <!-- About -->
+  <url>
+    <loc>https://mestory-ai.com/about</loc>
+    <lastmod>2026-04-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://mestory-ai.com/about"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://mestory-ai.com/about"/>
+  </url>
+
+  <!-- Guides -->
+  <url>
+    <loc>https://mestory-ai.com/guides</loc>
+    <lastmod>2026-04-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://mestory-ai.com/guides"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://mestory-ai.com/guides"/>
+  </url>
+
+  <!-- Guide: How to Write a Book -->
+  <url>
+    <loc>https://mestory-ai.com/guides/write-book</loc>
+    <lastmod>2026-04-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Guide: How to Publish a Book -->
+  <url>
+    <loc>https://mestory-ai.com/guides/publish-book</loc>
+    <lastmod>2026-04-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Guide: How to Earn Money -->
+  <url>
+    <loc>https://mestory-ai.com/guides/earn-money</loc>
+    <lastmod>2026-04-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Subscription / Pricing -->
+  <url>
+    <loc>https://mestory-ai.com/subscription</loc>
+    <lastmod>2026-04-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://mestory-ai.com/subscription"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://mestory-ai.com/subscription"/>
+  </url>
+
   <!-- FAQ Page -->
   <url>
     <loc>https://mestory-ai.com/faq</loc>
-    <lastmod>2026-03-26</lastmod>
+    <lastmod>2026-04-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="he" href="https://mestory-ai.com/faq"/>
@@ -36,21 +90,17 @@
   <!-- Privacy Policy -->
   <url>
     <loc>https://mestory-ai.com/privacy</loc>
-    <lastmod>2026-03-26</lastmod>
+    <lastmod>2026-04-20</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
-    <xhtml:link rel="alternate" hreflang="he" href="https://mestory-ai.com/privacy"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://mestory-ai.com/privacy"/>
   </url>
 
   <!-- Terms of Service -->
   <url>
     <loc>https://mestory-ai.com/terms</loc>
-    <lastmod>2026-03-26</lastmod>
+    <lastmod>2026-04-20</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
-    <xhtml:link rel="alternate" hreflang="he" href="https://mestory-ai.com/terms"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://mestory-ai.com/terms"/>
   </url>
 
 </urlset>

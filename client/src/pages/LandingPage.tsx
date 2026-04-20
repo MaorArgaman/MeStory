@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { GlassCard, GlowingButton, OptimizedImage } from '../components/ui';
 import { useLanguage } from '../contexts/LanguageContext';
-import { SEO, OrganizationSchema, WebsiteSchema, SoftwareApplicationSchema } from '../components/seo';
+import { SEO, OrganizationSchema, WebsiteSchema, SoftwareApplicationSchema, FAQSchema } from '../components/seo';
 // Memorial-themed images from public folder
 const logoIcon = '/img/new/logo-mestory-large.png';
 
@@ -180,6 +180,15 @@ export default function LandingPage() {
       <OrganizationSchema />
       <WebsiteSchema />
       <SoftwareApplicationSchema />
+      {/* AEO: FAQ schema for voice search and featured snippets */}
+      <FAQSchema items={[
+        { question: language === 'he' ? 'מה זה MeStory?' : 'What is MeStory?',
+          answer: language === 'he' ? 'MeStory היא פלטפורמה ליצירת ספרי הנצחה, אוטוביוגרפיה וספרים אישיים בעזרת בינה מלאכותית. ניתן לכתוב, לעצב ולהדפיס ספרים מקצועיים בקלות.' : 'MeStory is a platform for creating memorial books, autobiographies, and personal stories with AI assistance. Write, design, and print professional books easily.' },
+        { question: language === 'he' ? 'כמה עולה להשתמש ב-MeStory?' : 'How much does MeStory cost?',
+          answer: language === 'he' ? 'ההרשמה חינמית ומקבלים קרדיטים לניסיון. תוכנית פרימיום עולה $9.99 לחודש עם קרדיטי AI נוספים ותכונות מתקדמות.' : 'Registration is free and includes trial credits. Premium plan costs $9.99/month with extra AI credits and advanced features.' },
+        { question: language === 'he' ? 'איך יוצרים ספר הנצחה?' : 'How do I create a memorial book?',
+          answer: language === 'he' ? 'נרשמים בחינם, בוחרים תבנית הנצחה, כותבים את הסיפור (עם עזרת AI אם צריך), מעצבים את הספר ומייצאים ל-PDF מוכן להדפסה.' : 'Sign up for free, choose a memorial template, write the story (with AI help if needed), design the book, and export to a print-ready PDF.' },
+      ]} />
 
       {/* Transparent Navbar */}
       <motion.header

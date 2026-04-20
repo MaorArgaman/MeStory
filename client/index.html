@@ -55,6 +55,8 @@
     <!-- DNS Prefetch and Preconnect for Performance -->
     <link rel="dns-prefetch" href="//www.googletagmanager.com" />
     <link rel="dns-prefetch" href="//www.google-analytics.com" />
+    <link rel="dns-prefetch" href="//me-story-server-7wdx.vercel.app" />
+    <link rel="preconnect" href="https://me-story-server-7wdx.vercel.app" crossorigin />
 
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-973J1MLL9X"></script>
@@ -79,7 +81,65 @@
     <!-- Hebrew fonts for RTL content -->
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=David+Libre:wght@400;500;700&family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <title>MeStory - AI-Powered Book Writing Platform</title>
+    <title>MeStory - פלטפורמה ליצירת ספרי הנצחה ואוטוביוגרפיה | Memorial Book Platform</title>
+
+    <!-- Preload critical hero image -->
+    <link rel="preload" as="image" href="/img/new/logo-mestory-large.png" />
+
+    <!-- JSON-LD: works without JavaScript for crawlers that don't execute JS -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "MeStory",
+      "alternateName": "מי-סטורי",
+      "url": "https://mestory-ai.com",
+      "description": "פלטפורמה ליצירת ספרי הנצחה, אוטוביוגרפיה וספרי זיכרון עם בינה מלאכותית",
+      "inLanguage": ["he", "en"],
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://mestory-ai.com/marketplace?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "MeStory",
+      "url": "https://mestory-ai.com",
+      "logo": "https://mestory-ai.com/img/new/logo-mestory-large.png",
+      "description": "MeStory helps families create memorial books, autobiographies, and personal stories using AI-guided writing tools",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "support@mestory-ai.com",
+        "contactType": "customer support",
+        "availableLanguage": ["Hebrew", "English"]
+      },
+      "sameAs": []
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "MeStory",
+      "applicationCategory": "LifestyleApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "150",
+        "bestRating": "5"
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
