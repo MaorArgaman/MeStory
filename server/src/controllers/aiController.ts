@@ -12,7 +12,7 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
  */
 export const getSuggestions = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { currentText, genre, context, language } = req.body;
+    const { currentText, genre, context, bookId, language } = req.body;
 
     // Validation
     if (!currentText || !genre) {
@@ -34,8 +34,21 @@ export const getSuggestions = async (req: Request, res: Response): Promise<void>
     // Determine language (from request or auto-detect from text)
     const lang: SupportedLanguage = language || detectLanguage(currentText);
 
+    // Enrich context with book's storyContext (interview results)
+    const enrichedContext: any = { ...(context || {}) };
+    if (bookId && UUID_REGEX.test(bookId)) {
+      try {
+        const book = await Book.findById(bookId);
+        if (book?.storyContext) {
+          enrichedContext.storyContext = book.storyContext;
+        }
+      } catch (bookErr) {
+        console.warn('Could not load book context for suggestions:', bookErr);
+      }
+    }
+
     // Generate suggestions using Gemini AI
-    const suggestions = await generateContinuations(currentText, genre, context, lang);
+    const suggestions = await generateContinuations(currentText, genre, enrichedContext, lang);
 
     res.status(200).json({
       success: true,

@@ -1549,6 +1549,7 @@ export default function BookWritingPage() {
                     genre={book.genre}
                     bookTitle={book.title}
                     chapterTitle={currentChapter.title}
+                    bookId={book._id || book.id}
                     onInsertText={handleInsertText}
                   />
                 </div>

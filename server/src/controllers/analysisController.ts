@@ -60,15 +60,31 @@ export const enhanceText = async (req: Request, res: Response): Promise<void> =>
       surroundingText: context?.surroundingText,
     };
 
-    // If bookId provided, fetch voice interview context
+    // If bookId provided, fetch interview context
     if (context?.bookId) {
       try {
         const book = await Book.findById(context.bookId);
-        if (book?.storyContext?.voiceInterview?.summary) {
-          enhanceContext.voiceInterview = book.storyContext.voiceInterview.summary;
+        const sc: any = book?.storyContext || {};
+
+        // Legacy voice-interview format (nested)
+        if (sc.voiceInterview?.summary) {
+          enhanceContext.voiceInterview = sc.voiceInterview.summary;
+        }
+
+        // Chat-interview format (flat 8-topic fields from InterviewWizard)
+        if (sc.theme || sc.characters || sc.conflict || sc.climax || sc.resolution || sc.setting || sc.keyPoints || sc.narrativeArc) {
+          enhanceContext.chatInterview = {
+            theme: sc.theme,
+            characters: sc.characters,
+            conflict: sc.conflict,
+            climax: sc.climax,
+            resolution: sc.resolution,
+            setting: sc.setting,
+            keyPoints: sc.keyPoints,
+            narrativeArc: sc.narrativeArc,
+          };
         }
       } catch (bookError) {
-        // Continue without voice interview context
         console.warn('Could not fetch book context:', bookError);
       }
     }

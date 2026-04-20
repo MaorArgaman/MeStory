@@ -26,6 +26,7 @@ export interface QualityAnalysis {
 export const getAiSuggestions = async (data: {
   currentText: string;
   genre: string;
+  bookId?: string;
   context?: {
     bookTitle?: string;
     chapterTitle?: string;

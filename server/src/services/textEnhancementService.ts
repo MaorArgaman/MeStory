@@ -38,6 +38,17 @@ export interface EnhanceContext {
     setting?: { atmosphere?: string };
     writingGuidelines?: string[];
   };
+  // Flat chat-interview context (from the 8-topic chat interview)
+  chatInterview?: {
+    theme?: string;
+    characters?: string;
+    conflict?: string;
+    climax?: string;
+    resolution?: string;
+    setting?: string;
+    keyPoints?: string;
+    narrativeArc?: string;
+  };
 }
 
 export interface EnhanceResult {
@@ -71,6 +82,21 @@ function buildContextPrompt(context: EnhanceContext): string {
     if (vi.writingGuidelines && vi.writingGuidelines.length > 0) {
       contextStr += `Guidelines: ${vi.writingGuidelines.slice(0, 3).join('; ')}\n`;
     }
+  }
+
+  // Chat interview context (the 8-topic summary built in InterviewWizard)
+  if (context.chatInterview) {
+    const ci = context.chatInterview;
+    contextStr += '\n--- רקע מהראיון המקדים ---\n';
+    if (ci.theme) contextStr += `נושא ורעיון מרכזי: ${ci.theme}\n`;
+    if (ci.characters) contextStr += `דמויות ראשיות: ${ci.characters}\n`;
+    if (ci.conflict) contextStr += `קונפליקט מרכזי: ${ci.conflict}\n`;
+    if (ci.climax) contextStr += `שיא: ${ci.climax}\n`;
+    if (ci.resolution) contextStr += `סיום ופתרון: ${ci.resolution}\n`;
+    if (ci.setting) contextStr += `סביבה ועולם: ${ci.setting}\n`;
+    if (ci.keyPoints) contextStr += `נקודות מפתח בעלילה: ${ci.keyPoints}\n`;
+    if (ci.narrativeArc) contextStr += `קשת נרטיבית וטון: ${ci.narrativeArc}\n`;
+    contextStr += '\nהשתמש ברקע הזה כדי לתת תשובה ספציפית ומותאמת לסיפור, לא גנרית.\n';
   }
 
   return contextStr;

@@ -10,6 +10,7 @@ interface AICopilotProps {
   genre: string;
   bookTitle?: string;
   chapterTitle?: string;
+  bookId?: string;
   onInsertText: (text: string) => void;
 }
 
@@ -18,6 +19,7 @@ export default function AICopilot({
   genre,
   bookTitle,
   chapterTitle,
+  bookId,
   onInsertText,
 }: AICopilotProps) {
   const { t } = useTranslation('common');
@@ -34,11 +36,12 @@ export default function AICopilot({
       const result = await getAiSuggestions({
         currentText: currentText || '',
         genre,
+        bookId,
         context: {
           bookTitle,
           chapterTitle,
           isChapterOpening: isEmptyChapter,
-        },
+        } as any,
       });
       setSuggestions(result.suggestions);
       toast.success(t('editor.ai_copilot.suggestions_success'));

@@ -167,14 +167,18 @@ ${vi.writingGuidelines && vi.writingGuidelines.length > 0 ? `Writing Guidelines:
 `;
       }
     } else if (context?.storyContext) {
-      // Fallback to regular story context
-      const sc = context.storyContext;
+      // Fallback to regular story context (chat interview format)
+      const sc: any = context.storyContext;
       voiceInterviewPrompt = `
-STORY BACKGROUND:
+STORY BACKGROUND (from author interview — use to make suggestions story-specific, not generic):
 ${sc.theme ? `Theme: ${sc.theme}` : ''}
-${sc.conflict ? `Conflict: ${sc.conflict}` : ''}
-${sc.setting ? `Setting: ${sc.setting}` : ''}
 ${sc.characters ? `Characters: ${sc.characters}` : ''}
+${sc.conflict ? `Central Conflict: ${sc.conflict}` : ''}
+${sc.climax ? `Planned Climax: ${sc.climax}` : ''}
+${sc.resolution ? `Resolution: ${sc.resolution}` : ''}
+${sc.setting ? `Setting: ${sc.setting}` : ''}
+${sc.keyPoints ? `Key Plot Points: ${sc.keyPoints}` : ''}
+${sc.narrativeArc ? `Narrative Arc & Tone: ${sc.narrativeArc}` : ''}
 `;
     }
 
