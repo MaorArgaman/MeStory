@@ -115,7 +115,7 @@ export default function InviteCollaboratorModal({
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-lg bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-memorial-gold/20 overflow-hidden"
+          className="relative w-full max-w-lg max-h-[90vh] bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-memorial-gold/20 flex flex-col overflow-hidden"
           dir={isHebrew ? 'rtl' : 'ltr'}
         >
           {/* Header */}
@@ -139,8 +139,8 @@ export default function InviteCollaboratorModal({
             </button>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {/* Form — scrollable on mobile */}
+          <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1">
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
