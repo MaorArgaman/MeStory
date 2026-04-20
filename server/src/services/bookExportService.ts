@@ -820,24 +820,25 @@ async function extractBookData(bookId: string): Promise<BookExportData> {
     return author?.email?.split('@')[0] || labels.unknownAuthor;
   };
 
-  // Extract page layout
+  // Extract page layout — settings live under book.pageLayout.settings
   const pageLayoutData = book.pageLayout as any;
+  const layoutSettings = pageLayoutData?.settings || {};
   const pageLayout: PageLayoutData = {
-    bodyFont: pageLayoutData?.bodyFont || aiDesignData?.typography?.bodyFont || 'Georgia',
-    fontSize: pageLayoutData?.fontSize || aiDesignData?.typography?.fontSize || 12,
-    lineHeight: pageLayoutData?.lineHeight || aiDesignData?.typography?.lineHeight || 1.6,
-    pageSize: pageLayoutData?.pageSize || 'A5',
+    bodyFont: layoutSettings.fontFamily || aiDesignData?.typography?.bodyFont || 'Georgia',
+    fontSize: layoutSettings.fontSize || aiDesignData?.typography?.fontSize || 12,
+    lineHeight: layoutSettings.lineHeight || aiDesignData?.typography?.lineHeight || 1.6,
+    pageSize: layoutSettings.pageSize || 'A5',
     margins: {
-      top: pageLayoutData?.margins?.top || 25,
-      bottom: pageLayoutData?.margins?.bottom || 25,
-      left: pageLayoutData?.margins?.left || 25,
-      right: pageLayoutData?.margins?.right || 25,
+      top: layoutSettings.margins?.top || 25,
+      bottom: layoutSettings.margins?.bottom || 25,
+      left: layoutSettings.margins?.left || 25,
+      right: layoutSettings.margins?.right || 25,
     },
-    includeTableOfContents: pageLayoutData?.includeTableOfContents !== false,
-    includePageNumbers: pageLayoutData?.headerFooter?.includePageNumbers !== false,
-    pageNumberPosition: pageLayoutData?.headerFooter?.pageNumberPosition || 'bottom',
-    includeHeader: pageLayoutData?.headerFooter?.includeHeader || false,
-    includeFooter: pageLayoutData?.headerFooter?.includeFooter !== false,
+    includeTableOfContents: layoutSettings.includeTableOfContents !== false,
+    includePageNumbers: layoutSettings.showPageNumbers !== false,
+    pageNumberPosition: layoutSettings.pageNumberPosition || 'bottom',
+    includeHeader: layoutSettings.headerDecoration ? layoutSettings.headerDecoration !== 'none' : false,
+    includeFooter: layoutSettings.includeFooter !== false,
   };
 
   // Extract page images and map them to chapters
