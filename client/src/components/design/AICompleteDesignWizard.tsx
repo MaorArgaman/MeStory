@@ -191,12 +191,10 @@ const STYLE_VARIANTS: StyleVariantConfig[] = [
 // ─── Progress Steps ───────────────────────────────────────────────────────────
 
 const PROGRESS_STEPS: { titleHe: string; titleEn: string; percent: number }[] = [
-  { titleHe: 'מנתח את תוכן הספר...', titleEn: 'Analyzing book content...', percent: 8 },
-  { titleHe: 'בוחר פלטת צבעים...', titleEn: 'Selecting color palette...', percent: 18 },
-  { titleHe: 'מתאים גופנים ועיצוב...', titleEn: 'Matching fonts and design...', percent: 28 },
-  { titleHe: 'מעצב כריכה...', titleEn: 'Designing cover...', percent: 35 },
-  { titleHe: 'מייצר תמונת כריכה עם AI...', titleEn: 'Generating cover image with AI...', percent: 50 },
-  { titleHe: 'מייצר איורים לפרקים...', titleEn: 'Generating chapter illustrations...', percent: 70 },
+  { titleHe: 'מנתח את תוכן הספר...', titleEn: 'Analyzing book content...', percent: 15 },
+  { titleHe: 'בוחר פלטת צבעים...', titleEn: 'Selecting color palette...', percent: 35 },
+  { titleHe: 'מתאים גופנים ועיצוב...', titleEn: 'Matching fonts and layout...', percent: 55 },
+  { titleHe: 'מעצב פריסת עמודים...', titleEn: 'Designing page layout...', percent: 75 },
   { titleHe: 'שומר ומסיים...', titleEn: 'Saving and finishing...', percent: 90 },
   { titleHe: 'מוכן!', titleEn: 'Ready!', percent: 100 },
 ];
@@ -380,22 +378,18 @@ export default function AICompleteDesignWizard({
       setAnimatedPercent(0);
       setProgressStepIndex(0);
 
-      // Step 1: Analyzing — generate design LOCALLY from genre-based templates (instant, no API)
+      // Generate design LOCALLY from genre-based templates (instant, no API call)
       updateStep('analyzing', 0, 0);
-
       const data = generateDesignFromGenre(book.genre, book.title, book.author?.name || '', isHebrew);
-      await new Promise(r => setTimeout(r, 400)); // Brief visual pause
+      await new Promise(r => setTimeout(r, 300));
 
-      // Step 2: Typography
       updateStep('typography', 1, 1);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(r => setTimeout(r, 300));
 
-      // Step 3: Layout
       updateStep('layout', 2, 2);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(r => setTimeout(r, 300));
 
-      // Step 4: Cover design
-      updateStep('cover', 3, 3);
+      updateStep('layout', 3, 3);
 
       // Build design from local genre template
       const processedDesign: CompleteDesign = {
@@ -443,75 +437,10 @@ export default function AICompleteDesignWizard({
         } catch (_e) { /* non-fatal */ }
       }
 
-      // ── Step 5: Generate cover image with AI ────────────────────────────────
-      let generatedCoverImages: { front?: string; back?: string } = {};
-      if (generateCoverImages) {
-        setProgressStepIndex(4);
-        try {
-          const coverRes = await api.post('/ai/generate-cover', {
-            title: book.title,
-            genre: book.genre,
-            synopsis: book.synopsis || book.description || processedDesign.synopsis || '',
-          }, { timeout: 120000 });
-          if (coverRes.data.success && coverRes.data.data) {
-            const cd = coverRes.data.data;
-            const frontUrl = cd.frontImageUrl || cd.imageUrl || cd.front?.imageUrl;
-            const backUrl = cd.backImageUrl || cd.back?.imageUrl;
-            if (frontUrl) generatedCoverImages.front = frontUrl;
-            if (backUrl) generatedCoverImages.back = backUrl;
-          }
-        } catch (coverErr: any) {
-          console.warn('[AIDesignWizard] Cover generation failed (non-fatal):', coverErr.message);
-        }
-        setCoverImages(generatedCoverImages);
-      }
-
-      // ── Step 6: Generate interior chapter illustrations ──────────────────────
-      if (generateInteriorImages && book.chapters && book.chapters.length > 0) {
-        updateStep('images', 5, 5);
-        const maxImages = Math.min(book.chapters.length, 5);
-        const placements: ImagePlacement[] = [];
-        for (let i = 0; i < maxImages; i++) {
-          const chapter = book.chapters[i];
-          if (!chapter.content || chapter.content.length < 50) continue;
-          try {
-            const illRes = await api.post(
-              `/ai/generate-illustration/${bookId}/${i}`,
-              { style: 'illustration' },
-              { timeout: 120000 },
-            );
-            if (illRes.data.success && illRes.data.data?.imageUrl) {
-              const d = illRes.data.data;
-              placements.push({
-                chapterIndex: i, position: 'chapter-start',
-                textContext: chapter.content.slice(0, 200),
-                suggestedPrompt: d.prompt || d.enhancedPrompt || '',
-                importance: i === 0 ? 'high' : 'medium',
-                reasoning: `AI illustration for ${chapter.title}`,
-                generatedImageUrl: d.imageUrl,
-              });
-            }
-          } catch (illErr: any) {
-            console.warn(`[AIDesignWizard] Illustration ch${i} failed (non-fatal):`, illErr.message);
-          }
-          setAnimatedPercent(50 + Math.round((i + 1) / maxImages * 20));
-        }
-        processedDesign.imagePlacements = placements;
-      }
-
-      // ── Step 7: Save to server ──────────────────────────────────────────────
-      updateStep('saving', 6, 6);
+      // ── Save layout to server (no cover — user handles cover separately) ──
+      updateStep('saving', 4, 4);
       try {
         const savePayload: any = {
-          coverDesign: {
-            coverColor: processedDesign.cover.front.backgroundColor || processedDesign.cover.front.colorPalette?.[0],
-            textColor: processedDesign.cover.front.title.color,
-            fontFamily: processedDesign.cover.front.title.font,
-            imageUrl: generatedCoverImages.front,
-            front: { ...processedDesign.cover.front, imageUrl: generatedCoverImages.front },
-            back: { ...processedDesign.cover.back, imageUrl: generatedCoverImages.back },
-            spine: processedDesign.cover.spine,
-          },
           pageLayout: {
             bodyFont: processedDesign.typography.bodyFont,
             headingFont: processedDesign.typography.headingFont,
@@ -521,8 +450,10 @@ export default function AICompleteDesignWizard({
             textColor: processedDesign.typography.colors.text,
             accentColor: processedDesign.typography.colors.accent,
             margins: {
-              top: processedDesign.layout.margins.top, bottom: processedDesign.layout.margins.bottom,
-              left: processedDesign.layout.margins.inner, right: processedDesign.layout.margins.outer,
+              top: processedDesign.layout.margins?.top || 32,
+              bottom: processedDesign.layout.margins?.bottom || 28,
+              left: processedDesign.layout.margins?.inner || 28,
+              right: processedDesign.layout.margins?.outer || 24,
             },
             chapterStartStyle: processedDesign.layout.chapterStartStyle,
             pageNumberPosition: processedDesign.layout.pageNumberPosition,
@@ -531,12 +462,6 @@ export default function AICompleteDesignWizard({
             headerFooter: { includePageNumbers: processedDesign.layout.pageNumberPosition !== 'none' },
           },
         };
-        if (processedDesign.imagePlacements.length > 0) {
-          savePayload.aiDesignState = {
-            status: 'completed',
-            design: { imagePlacements: processedDesign.imagePlacements },
-          };
-        }
         if (synopsis || processedDesign.synopsis) {
           savePayload.synopsis = synopsis || processedDesign.synopsis;
         }
@@ -694,6 +619,14 @@ export default function AICompleteDesignWizard({
 
   const isProcessing = step !== 'intro' && step !== 'preview' && step !== 'variant';
 
+  // Elapsed time counter — so user sees the wizard is still alive during long API calls
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  useEffect(() => {
+    if (!isProcessing) { setElapsedSeconds(0); return; }
+    const timer = setInterval(() => setElapsedSeconds(s => s + 1), 1000);
+    return () => clearInterval(timer);
+  }, [isProcessing]);
+
   if (!isOpen) return null;
 
   return (
@@ -760,7 +693,7 @@ export default function AICompleteDesignWizard({
               {/* Progress bar */}
               <div className="h-2.5 bg-white/20 rounded-full overflow-hidden">
                 <motion.div
-                  className="h-full bg-white rounded-full"
+                  className={`h-full rounded-full ${progressStepIndex >= 4 && progressStepIndex <= 5 ? 'bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 animate-pulse' : 'bg-white'}`}
                   style={{ width: `${animatedPercent}%` }}
                   transition={{ duration: 0.4 }}
                 />
@@ -919,9 +852,16 @@ export default function AICompleteDesignWizard({
                 </h3>
 
                 <p className="mt-2 text-white/60 text-center max-w-md">
-                  {isHebrew
-                    ? 'AI מעצב את הספר שלך... זה לוקח כמה שניות'
-                    : 'AI is designing your book... this takes a few seconds'}
+                  {progressStepIndex >= 4 && progressStepIndex <= 5
+                    ? (isHebrew
+                      ? 'יצירת תמונות עם AI לוקחת עד דקה — אנא המתן...'
+                      : 'AI image generation takes up to a minute — please wait...')
+                    : (isHebrew
+                      ? 'יוצר עיצוב מקצועי מלא עבור הספר שלך'
+                      : 'Creating a complete professional design for your book')}
+                </p>
+                <p className="mt-1 text-white/40 text-xs tabular-nums">
+                  {Math.floor(elapsedSeconds / 60)}:{String(elapsedSeconds % 60).padStart(2, '0')}
                 </p>
 
                 {/* Detailed progress steps list */}
