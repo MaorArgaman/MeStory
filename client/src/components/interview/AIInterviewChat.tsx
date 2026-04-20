@@ -189,9 +189,20 @@ export default function AIInterviewChat({
       if (state.isComplete) {
         handleInterviewComplete();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to send message:', error);
-      toast.error('Failed to send message');
+      const status = error?.response?.status;
+      if (status === 404) {
+        toast.error(language === 'he'
+          ? 'הראיון פג תוקף. מתחילים מחדש...'
+          : 'Interview session expired. Restarting...');
+        // Reset and restart
+        setMessages([]);
+        setInterviewState(null);
+        initializeInterview();
+      } else {
+        toast.error(language === 'he' ? 'שליחת ההודעה נכשלה' : 'Failed to send message');
+      }
       setAvatarState('idle');
     } finally {
       isSendingRef.current = false;
@@ -230,16 +241,26 @@ export default function AIInterviewChat({
       const summary = await completeInterview(interviewState.id);
       toast.success('Interview complete!');
       onComplete(summary);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to complete interview:', error);
-      toast.error('Failed to generate summary');
+      const status = error?.response?.status;
+      if (status === 404) {
+        toast.error(language === 'he'
+          ? 'הראיון פג תוקף. מתחילים מחדש...'
+          : 'Interview session expired. Restarting...');
+        setMessages([]);
+        setInterviewState(null);
+        initializeInterview();
+      } else {
+        toast.error(language === 'he' ? 'יצירת הסיכום נכשלה' : 'Failed to generate summary');
+      }
     } finally {
       setIsCompleting(false);
       setAvatarState('idle');
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage(inputText);
@@ -465,7 +486,7 @@ export default function AIInterviewChat({
                   type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyDown}
                   placeholder={t('interview.typeYourAnswer')}
                   dir={isRTL ? 'rtl' : 'ltr'}
                   className="flex-1 bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"

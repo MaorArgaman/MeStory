@@ -13,6 +13,7 @@ import {
   Copy,
   X,
   Image as ImageIcon,
+  ArrowRightLeft,
 } from 'lucide-react';
 import { useTabKeyboardNavigation } from '../../hooks/useModal';
 
@@ -43,6 +44,9 @@ interface ImageEditToolbarProps {
   onUpdate: (updates: Partial<ImageEditToolbarProps['image']>) => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  onMoveToPage?: (toPageIndex: number) => void;
+  currentPageIndex?: number;
+  totalPages?: number;
   onClose: () => void;
   language?: string;
 }
@@ -52,11 +56,15 @@ export default function ImageEditToolbar({
   onUpdate,
   onDelete,
   onDuplicate,
+  onMoveToPage,
+  currentPageIndex = 0,
+  totalPages = 0,
   onClose,
   language = 'he',
 }: ImageEditToolbarProps) {
   const isHebrew = language === 'he';
   const [activeTab, setActiveTab] = useState<'style' | 'position' | 'effects'>('position');
+  const [showMoveMenu, setShowMoveMenu] = useState(false);
 
   // Tab keys for keyboard navigation
   const tabKeys: ('style' | 'position' | 'effects')[] = ['style', 'position', 'effects'];
@@ -537,23 +545,60 @@ export default function ImageEditToolbar({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700/50 bg-gray-800/50">
-          <div className="flex gap-2">
+        <div className="flex flex-col border-t border-gray-700/50 bg-gray-800/50">
+          {/* Move to page picker */}
+          {showMoveMenu && onMoveToPage && totalPages > 1 && (
+            <div className="px-4 pt-3 pb-2 border-b border-gray-700/50">
+              <label className="block text-sm text-gray-400 mb-2">
+                {isHebrew ? 'העבר לעמוד:' : 'Move to page:'}
+              </label>
+              <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
+                {Array.from({ length: totalPages }, (_, i) => i).filter(i => i !== currentPageIndex).map((i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      onMoveToPage(i);
+                      setShowMoveMenu(false);
+                    }}
+                    className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-700 text-gray-300 hover:bg-amber-500/30 hover:text-amber-400 transition-colors text-sm font-medium"
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex gap-2">
+              <button
+                onClick={onDuplicate}
+                className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 rounded-lg text-gray-300 hover:text-white hover:bg-gray-600 transition-colors text-sm"
+              >
+                <Copy className="w-4 h-4" />
+                {isHebrew ? 'שכפל' : 'Duplicate'}
+              </button>
+              {onMoveToPage && totalPages > 1 && (
+                <button
+                  onClick={() => setShowMoveMenu(!showMoveMenu)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
+                    showMoveMenu
+                      ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-500'
+                      : 'bg-gray-700 text-gray-300 hover:text-white hover:bg-gray-600'
+                  }`}
+                >
+                  <ArrowRightLeft className="w-4 h-4" />
+                  {isHebrew ? 'העבר' : 'Move'}
+                </button>
+              )}
+            </div>
             <button
-              onClick={onDuplicate}
-              className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 rounded-lg text-gray-300 hover:text-white hover:bg-gray-600 transition-colors text-sm"
+              onClick={onDelete}
+              className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 rounded-lg text-red-400 hover:bg-red-500/30 transition-colors text-sm"
             >
-              <Copy className="w-4 h-4" />
-              {isHebrew ? 'שכפל' : 'Duplicate'}
+              <Trash2 className="w-4 h-4" />
+              {isHebrew ? 'מחק' : 'Delete'}
             </button>
           </div>
-          <button
-            onClick={onDelete}
-            className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 rounded-lg text-red-400 hover:bg-red-500/30 transition-colors text-sm"
-          >
-            <Trash2 className="w-4 h-4" />
-            {isHebrew ? 'מחק' : 'Delete'}
-          </button>
         </div>
       </div>
     </motion.div>,

@@ -25,7 +25,7 @@ interface AsyncExportOptions {
  *
  * Throws on failure — caller is responsible for showing a toast.
  */
-export async function exportBookAsPdfAsync(opts: AsyncExportOptions): Promise<void> {
+export async function exportBookAsPdfAsync(opts: AsyncExportOptions): Promise<{ warnings?: string[] }> {
   const { bookId, bookTitle, onProgress, pollIntervalMs = 2000, timeoutMs = 5 * 60 * 1000 } = opts;
 
   // 1. Enqueue the job
@@ -66,7 +66,7 @@ export async function exportBookAsPdfAsync(opts: AsyncExportOptions): Promise<vo
       link.click();
       link.remove();
       window.URL.revokeObjectURL(objectUrl);
-      return;
+      return { warnings: job.result?.warnings };
     }
 
     if (job.status === 'failed' || job.status === 'cancelled') {

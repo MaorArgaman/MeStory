@@ -5,6 +5,7 @@
 
 import { Response } from 'express';
 import { AuthRequest } from '../types';
+import { supabaseAdmin } from '../config/supabase';
 
 // UUID validation regex for Supabase IDs
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -35,7 +36,12 @@ export const startInterview = async (
     const validLanguage = ['en', 'he'].includes(language) ? language : 'he';
 
     // Create interview state
-    const state = createInterview(genre, targetAudience, validLanguage);
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ success: false, error: 'Authentication required' });
+      return;
+    }
+    const state = await createInterview(userId, genre, targetAudience, validLanguage);
 
     // Generate first AI message
     const firstMessage = await generateFirstMessage(state);
@@ -95,7 +101,7 @@ export const sendMessage = async (
     }
 
     // Get interview state
-    const state = getInterview(id);
+    const state = await getInterview(id);
 
     if (!state) {
       res.status(404).json({
@@ -162,7 +168,7 @@ export const getInterviewState = async (
       return;
     }
 
-    const state = getInterview(id);
+    const state = await getInterview(id);
 
     if (!state) {
       res.status(404).json({
@@ -213,7 +219,7 @@ export const completeInterview = async (
       return;
     }
 
-    const state = getInterview(id);
+    const state = await getInterview(id);
 
     if (!state) {
       res.status(404).json({
@@ -226,8 +232,12 @@ export const completeInterview = async (
     // Generate summary
     const summary = await generateSummary(state);
 
-    // Mark as complete
+    // Mark as complete and persist
     state.isComplete = true;
+    await supabaseAdmin
+      .from('interview_sessions')
+      .update({ is_complete: true, updated_at: new Date().toISOString() })
+      .eq('id', id);
 
     res.status(200).json({
       success: true,
@@ -262,7 +272,7 @@ export const cancelInterview = async (
       return;
     }
 
-    const state = getInterview(id);
+    const state = await getInterview(id);
 
     if (!state) {
       res.status(404).json({
@@ -272,7 +282,7 @@ export const cancelInterview = async (
       return;
     }
 
-    deleteInterview(id);
+    await deleteInterview(id);
 
     res.status(200).json({
       success: true,

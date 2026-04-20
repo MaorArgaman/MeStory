@@ -2,6 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, RotateCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import {
+  FRONT_OVERLAY, BACK_OVERLAY,
+  DEFAULT_TITLE_POS, DEFAULT_AUTHOR_POS, DEFAULT_SYNOPSIS_POS,
+  titleStyle, authorStyle, synopsisStyle, backAuthorStyle,
+} from '../../utils/coverStyles';
 
 interface Book3DPreviewProps {
   title: string;
@@ -36,9 +41,9 @@ export default function Book3DPreview({
   synopsis = '',
   backCoverImageUrl,
   backCoverColor,
-  titlePosition = { x: 50, y: 20 },
-  authorPosition = { x: 50, y: 85 },
-  synopsisPosition = { x: 50, y: 40 },
+  titlePosition = DEFAULT_TITLE_POS,
+  authorPosition = DEFAULT_AUTHOR_POS,
+  synopsisPosition = DEFAULT_SYNOPSIS_POS,
   editMode = false,
   onTitlePositionChange,
   onAuthorPositionChange,
@@ -281,9 +286,7 @@ export default function Book3DPreview({
             {imageUrl && (
               <div
                 className="absolute inset-0"
-                style={{
-                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.5))',
-                }}
+                style={{ background: FRONT_OVERLAY.studio }}
               />
             )}
 
@@ -299,22 +302,7 @@ export default function Book3DPreview({
               onMouseDown={handleTitleMouseDown}
               onTouchStart={handleTitleTouchStart}
             >
-              <h1
-                style={{
-                  fontFamily: fontFamily,
-                  fontSize: title.length > 30 ? '16px' : title.length > 20 ? '20px' : '26px',
-                  fontWeight: 'bold',
-                  color: textColor,
-                  textShadow: '2px 2px 8px rgba(0,0,0,0.8)',
-                  lineHeight: '1.3',
-                  textAlign: 'center',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 4,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                  wordBreak: 'keep-all',
-                }}
-              >
+              <h1 style={titleStyle(title || 'Book Title', textColor, fontFamily)}>
                 {title || 'Book Title'}
               </h1>
               {editMode && (
@@ -334,16 +322,7 @@ export default function Book3DPreview({
               onMouseDown={handleAuthorMouseDown}
               onTouchStart={handleAuthorTouchStart}
             >
-              <p
-                style={{
-                  fontFamily: fontFamily,
-                  fontSize: '18px',
-                  color: textColor,
-                  textShadow: '1px 1px 4px rgba(0,0,0,0.8)',
-                  opacity: 0.9,
-                  textAlign: 'center',
-                }}
-              >
+              <p style={authorStyle(textColor, fontFamily)}>
                 {author || 'Author Name'}
               </p>
               {editMode && (
@@ -415,9 +394,7 @@ export default function Book3DPreview({
             {/* Background overlay for text readability */}
             <div
               className="absolute inset-0"
-              style={{
-                background: 'linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.7))',
-              }}
+              style={{ background: BACK_OVERLAY.studio }}
             />
 
             {/* Synopsis - Draggable in edit mode */}
@@ -435,23 +412,8 @@ export default function Book3DPreview({
             >
               {(() => {
                 const text = synopsis || (language === 'he' ? 'תקציר הספר יופיע כאן...' : 'Book synopsis will appear here...');
-                const len = text.length;
-                const fontSize = len < 150 ? '11px' : len < 300 ? '9.5px' : len < 450 ? '8px' : '7px';
-                const lineHeight = len < 150 ? '1.5' : len < 300 ? '1.45' : '1.4';
                 return (
-                  <p
-                    style={{
-                      fontFamily: fontFamily,
-                      fontSize,
-                      lineHeight,
-                      color: textColor,
-                      textShadow: '1px 1px 3px rgba(0,0,0,0.8)',
-                      textAlign: isRTL ? 'right' : 'left',
-                      opacity: 0.95,
-                      userSelect: 'none',
-                      whiteSpace: 'pre-wrap',
-                    }}
-                  >
+                  <p style={synopsisStyle(text, textColor, fontFamily, isRTL)}>
                     {text}
                   </p>
                 );
@@ -464,16 +426,7 @@ export default function Book3DPreview({
             {/* Author Section at Bottom */}
             <div className="absolute bottom-4 left-0 right-0 px-4">
               <div className="pt-3 border-t border-white/20">
-                <p
-                  style={{
-                    fontFamily: fontFamily,
-                    fontSize: '10px',
-                    color: textColor,
-                    textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
-                    opacity: 0.85,
-                    textAlign: isRTL ? 'right' : 'left',
-                  }}
-                >
+                <p style={backAuthorStyle(textColor, fontFamily, isRTL)}>
                   {language === 'he' ? 'מאת: ' : 'By: '}{author || 'Author Name'}
                 </p>
               </div>

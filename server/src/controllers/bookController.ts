@@ -1938,7 +1938,10 @@ export const exportBookPDFAsync = async (req: AuthRequest, res: Response): Promi
             throw new Error('Export failed — no output generated');
           }
           pdfBuffer = exportResult.buffer;
-          warnings = exportResult.warnings || [];
+          warnings = [
+            ...(exportResult.warnings || []),
+            'PDF generated with fallback renderer — some design elements may be missing. For best results use "Save as PDF" from your browser.',
+          ];
         }
       }
 

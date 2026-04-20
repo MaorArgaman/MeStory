@@ -18,6 +18,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
+import {
+  FRONT_OVERLAY, BACK_OVERLAY, COVER_SCALE,
+  titleStyle, authorStyle, synopsisStyle, backAuthorStyle,
+} from '../utils/coverStyles';
 
 // ---------- Types (narrow, locally-defined to keep this page self-contained) --
 
@@ -329,6 +333,16 @@ export default function PrintBookPage() {
     };
   }, [book]);
 
+  // Auto-trigger browser print dialog when loaded with ?print=1
+  useEffect(() => {
+    if (!ready) return;
+    const shouldPrint = params.get('print') === '1';
+    if (!shouldPrint) return;
+    // Small delay to ensure fonts and styles are fully applied
+    const timer = setTimeout(() => window.print(), 800);
+    return () => clearTimeout(timer);
+  }, [ready, params]);
+
   if (error) {
     return <div style={{ padding: 40, color: 'red' }}>Error: {error}</div>;
   }
@@ -378,6 +392,9 @@ export default function PrintBookPage() {
           rtl={rtl}
         />
       ))}
+
+      {/* Back cover as the very last physical page */}
+      <BackCoverPage book={book} rtl={rtl} pageDims={pageDims} />
 
       {/* Invisible sentinel — Puppeteer waits for this */}
       <div id="print-ready-sentinel" data-ready={ready ? '1' : '0'} />
@@ -596,10 +613,16 @@ function PrintStyles({
         object-fit: cover;
         z-index: 0;
       }
-      .cover-page .cover-overlay {
+      .cover-page .cover-overlay-front {
         position: absolute;
         inset: 0;
-        background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.75) 100%);
+        background: ${FRONT_OVERLAY.print};
+        z-index: 1;
+      }
+      .cover-page .cover-overlay-back {
+        position: absolute;
+        inset: 0;
+        background: ${BACK_OVERLAY.print};
         z-index: 1;
       }
       .cover-page .cover-text {
@@ -607,19 +630,6 @@ function PrintStyles({
         z-index: 2;
         text-align: center;
         padding: 0 24px;
-      }
-      .cover-page .cover-title {
-        font-family: ${titleFontStack};
-        font-size: 34px;
-        font-weight: 700;
-        margin: 0 0 16px 0;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.6);
-      }
-      .cover-page .cover-author {
-        font-size: 16px;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        opacity: 0.9;
       }
 
       @media print {
@@ -643,10 +653,11 @@ function CoverPage({
   rtl: boolean;
   pageDims?: { width: number; height: number };
 }) {
-  const cover = book.coverDesign || {};
+  const cover = book.coverDesign || {} as any;
   const imageUrl = cover.imageUrl || cover.front?.imageUrl;
   const bgColor = cover.coverColor || cover.front?.colorPalette?.[0] || '#1a1a2e';
-  const titleColor = cover.textColor || cover.front?.title?.color || '#ffffff';
+  const txtColor = cover.textColor || cover.front?.title?.color || '#ffffff';
+  const fontUsed = cover.fontFamily || cover.front?.title?.font || (rtl ? 'David Libre' : 'Georgia');
   const authorName = book.author?.name || '';
 
   return (
@@ -655,14 +666,54 @@ function CoverPage({
       style={{ background: bgColor, direction: rtl ? 'rtl' : 'ltr' }}
     >
       {imageUrl && <img className="cover-img" src={imageUrl} alt="" crossOrigin="anonymous" />}
-      <div className="cover-overlay" />
+      <div className="cover-overlay-front" />
       <div className="cover-text">
-        <h1 className="cover-title" style={{ color: titleColor }}>{book.title}</h1>
+        <h1 style={titleStyle(book.title, txtColor, fontUsed, COVER_SCALE.print)}>{book.title}</h1>
         {authorName && (
-          <div className="cover-author" style={{ color: titleColor }}>
+          <div style={{ ...authorStyle(txtColor, fontUsed, COVER_SCALE.print), marginTop: 16 }}>
             {rtl ? `מאת ${authorName}` : `by ${authorName}`}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ---------- Back Cover -------------------------------------------------------
+
+function BackCoverPage({
+  book,
+  rtl,
+}: {
+  book: BookData;
+  rtl: boolean;
+  pageDims?: { width: number; height: number };
+}) {
+  const cover = book.coverDesign || {} as any;
+  const backImageUrl = cover.back?.imageUrl;
+  const bgColor = cover.back?.backgroundColor || cover.coverColor || cover.front?.colorPalette?.[0] || '#1a1a2e';
+  const txtColor = cover.textColor || cover.front?.title?.color || '#ffffff';
+  const fontUsed = cover.fontFamily || cover.front?.title?.font || (rtl ? 'David Libre' : 'Georgia');
+  const synopsis = book.synopsis || book.description || '';
+
+  return (
+    <div
+      className="cover-page"
+      style={{ background: bgColor, direction: rtl ? 'rtl' : 'ltr' }}
+    >
+      {backImageUrl && (
+        <img className="cover-img" src={backImageUrl} alt="" crossOrigin="anonymous" />
+      )}
+      <div className="cover-overlay-back" />
+      <div className="cover-text" style={{ maxWidth: '85%' }}>
+        {synopsis && (
+          <p style={{ ...synopsisStyle(synopsis, txtColor, fontUsed, rtl, COVER_SCALE.print), margin: 0 }}>
+            {synopsis}
+          </p>
+        )}
+        <div style={{ ...backAuthorStyle(txtColor, fontUsed, rtl, COVER_SCALE.print), marginTop: 32, letterSpacing: '1px' }}>
+          {book.title}
+        </div>
       </div>
     </div>
   );

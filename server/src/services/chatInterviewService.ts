@@ -6,6 +6,7 @@
 
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { generateWithBreaker } from './geminiClient';
+import { supabaseAdmin } from '../config/supabase';
 import crypto from 'crypto';
 
 // Lazy-initialize Gemini AI client
@@ -355,18 +356,71 @@ ${messagesByTopic.narrativeArc.join('\n') || 'לא צוין'}
   },
 };
 
-// In-memory storage for interview states (use Redis in production)
-const interviewStates = new Map<string, ChatInterviewState>();
+// ---- Supabase persistence helpers ----
+
+interface InterviewRow {
+  id: string;
+  user_id: string;
+  current_topic: string;
+  questions_asked: number;
+  questions_per_topic: Record<ChatInterviewTopic, number>;
+  messages: ChatMessage[];
+  is_complete: boolean;
+  genre: string | null;
+  target_audience: string | null;
+  language: string;
+  started_at: string;
+  updated_at: string;
+}
+
+function rowToState(row: InterviewRow): ChatInterviewState {
+  return {
+    id: row.id,
+    currentTopic: row.current_topic as ChatInterviewTopic,
+    questionsAsked: row.questions_asked,
+    questionsPerTopic: row.questions_per_topic,
+    messages: (row.messages || []).map((m: any) => ({
+      ...m,
+      timestamp: new Date(m.timestamp),
+    })),
+    isComplete: row.is_complete,
+    startedAt: new Date(row.started_at),
+    genre: row.genre || undefined,
+    targetAudience: row.target_audience || undefined,
+    language: (row.language || 'he') as InterviewLanguage,
+  };
+}
+
+/** Persist current state to Supabase */
+async function saveState(state: ChatInterviewState): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('interview_sessions')
+    .update({
+      current_topic: state.currentTopic,
+      questions_asked: state.questionsAsked,
+      questions_per_topic: state.questionsPerTopic,
+      messages: state.messages,
+      is_complete: state.isComplete,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', state.id);
+
+  if (error) {
+    console.error('Failed to persist interview state:', error);
+  }
+}
 
 /**
  * Create a new interview
  */
-export function createInterview(
+export async function createInterview(
+  userId: string,
   genre?: string,
   targetAudience?: string,
   language: InterviewLanguage = 'he'
-): ChatInterviewState {
+): Promise<ChatInterviewState> {
   const id = crypto.randomUUID();
+  const now = new Date().toISOString();
 
   const state: ChatInterviewState = {
     id,
@@ -390,22 +444,48 @@ export function createInterview(
     language,
   };
 
-  interviewStates.set(id, state);
+  const { error } = await supabaseAdmin.from('interview_sessions').insert({
+    id,
+    user_id: userId,
+    current_topic: 'theme',
+    questions_asked: 0,
+    questions_per_topic: state.questionsPerTopic,
+    messages: [],
+    is_complete: false,
+    genre: genre || null,
+    target_audience: targetAudience || null,
+    language,
+    started_at: now,
+    updated_at: now,
+  });
+
+  if (error) {
+    console.error('Failed to create interview session:', error);
+    throw new Error('Failed to create interview session');
+  }
+
   return state;
 }
 
 /**
  * Get interview state by ID
  */
-export function getInterview(id: string): ChatInterviewState | undefined {
-  return interviewStates.get(id);
+export async function getInterview(id: string): Promise<ChatInterviewState | undefined> {
+  const { data, error } = await supabaseAdmin
+    .from('interview_sessions')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !data) return undefined;
+  return rowToState(data as InterviewRow);
 }
 
 /**
  * Delete interview
  */
-export function deleteInterview(id: string): void {
-  interviewStates.delete(id);
+export async function deleteInterview(id: string): Promise<void> {
+  await supabaseAdmin.from('interview_sessions').delete().eq('id', id);
 }
 
 /**
@@ -432,7 +512,7 @@ export async function generateFirstMessage(
 
     state.messages.push(message);
     state.questionsPerTopic.theme++;
-    interviewStates.set(state.id, state);
+    await saveState(state);
 
     return message;
   } catch (error) {
@@ -449,7 +529,7 @@ export async function generateFirstMessage(
 
     state.messages.push(message);
     state.questionsPerTopic.theme++;
-    interviewStates.set(state.id, state);
+    await saveState(state);
 
     return message;
   }
@@ -541,7 +621,7 @@ export async function processUserMessage(
     if (!state.isComplete) {
       state.questionsPerTopic[nextTopic]++;
     }
-    interviewStates.set(state.id, state);
+    await saveState(state);
 
     return { state, aiMessage, topicTransition };
   } catch (error) {
@@ -564,7 +644,7 @@ export async function processUserMessage(
     if (!state.isComplete) {
       state.questionsPerTopic[nextTopic]++;
     }
-    interviewStates.set(state.id, state);
+    await saveState(state);
 
     return { state, aiMessage, topicTransition };
   }

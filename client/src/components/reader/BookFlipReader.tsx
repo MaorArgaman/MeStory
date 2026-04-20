@@ -3,6 +3,11 @@ import { forwardRef, useRef, useState, useEffect, Component } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import { X, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import {
+  FRONT_OVERLAY, BACK_OVERLAY, COVER_SCALE,
+  DEFAULT_TITLE_POS, DEFAULT_AUTHOR_POS,
+  titleStyle, authorStyle, synopsisStyle, backAuthorStyle,
+} from '../../utils/coverStyles';
 
 // react-pageflip manipulates the DOM directly, which can conflict with React's
 // reconciliation. This boundary catches those exceptions silently — the flipbook
@@ -257,74 +262,61 @@ export default function BookFlipReader({
             {isRTL ? (
               <Page className="back-cover">
                 <div
-                  className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden"
+                  className="w-full h-full relative overflow-hidden"
                   style={{
                     backgroundColor: book.coverDesign?.back?.backgroundColor || coverColor,
-                    color: textColor,
-                    fontFamily,
+                    color: textColor, fontFamily,
                     backgroundImage: backCoverImageUrl ? `url(${backCoverImageUrl})` : undefined,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    backgroundSize: 'cover', backgroundPosition: 'center', direction: 'rtl',
                   }}
                 >
-                  {backCoverImageUrl && <div className="absolute inset-0 bg-black/50" />}
-                  <div
-                    className="relative z-10 text-center px-8 py-10 max-w-[88%] max-h-[85%] flex items-center justify-center"
-                    style={{ direction: 'rtl' }}
-                  >
-                    {(() => {
-                      const text = book.synopsis || book.description || '';
-                      const len = text.length;
-                      // Auto-scale font: shorter text = bigger, longer text = smaller
-                      const fontSize = len < 200 ? '1rem' : len < 350 ? '0.85rem' : len < 500 ? '0.75rem' : '0.7rem';
-                      const lineHeight = len < 200 ? 1.7 : len < 350 ? 1.6 : 1.5;
-                      return text && (
-                        <p
-                          className="drop-shadow-md break-words"
-                          style={{
-                            fontSize,
-                            lineHeight,
-                            userSelect: 'none',
-                            whiteSpace: 'pre-wrap',
-                          }}
-                        >
-                          {text}
+                  <div className="absolute inset-0" style={{ background: BACK_OVERLAY.flat }} />
+                  <div className="relative z-10 h-full flex flex-col p-6">
+                    <div className="flex-1 flex items-center justify-center">
+                      {(() => {
+                        const text = book.synopsis || book.description || '';
+                        return text && (
+                          <p className="break-words" style={synopsisStyle(text, textColor, fontFamily, true, COVER_SCALE.reader)}>
+                            {text}
+                          </p>
+                        );
+                      })()}
+                    </div>
+                    {authorName && (
+                      <div className="pt-3 border-t border-white/20">
+                        <p style={backAuthorStyle(textColor, fontFamily, true, COVER_SCALE.reader)}>
+                          מאת: {authorName}
                         </p>
-                      );
-                    })()}
+                      </div>
+                    )}
                   </div>
                 </div>
               </Page>
             ) : (
               <Page className="front-cover">
                 <div
-                  className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden"
+                  className="w-full h-full relative overflow-hidden"
                   style={{
-                    backgroundColor: coverColor,
-                    color: textColor,
-                    fontFamily,
+                    backgroundColor: coverColor, color: textColor, fontFamily,
                     backgroundImage: frontCoverImageUrl ? `url(${frontCoverImageUrl})` : undefined,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    backgroundSize: 'cover', backgroundPosition: 'center',
                   }}
                 >
-                  {frontCoverImageUrl && <div className="absolute inset-0 bg-black/30" />}
-                  <div className="relative z-10 text-center px-6 max-w-[90%]">
-                    <h1
-                      className="font-bold mb-6 drop-shadow-lg break-words"
-                      style={{ fontSize: 'clamp(1.2rem, 4vw, 2rem)', lineHeight: 1.2 }}
-                    >
+                  {frontCoverImageUrl && (
+                    <div className="absolute inset-0" style={{ background: FRONT_OVERLAY.flat }} />
+                  )}
+                  <div className="absolute z-10" style={{ left: `${DEFAULT_TITLE_POS.x}%`, top: `${DEFAULT_TITLE_POS.y}%`, transform: 'translate(-50%, -50%)', maxWidth: '85%' }}>
+                    <h1 className="break-words" style={titleStyle(book.title, textColor, fontFamily, COVER_SCALE.reader)}>
                       {book.title}
                     </h1>
-                    {authorName && (
-                      <p
-                        className="drop-shadow-md opacity-90 break-words"
-                        style={{ fontSize: 'clamp(0.8rem, 2.5vw, 1.1rem)' }}
-                      >
+                  </div>
+                  {authorName && (
+                    <div className="absolute z-10" style={{ left: `${DEFAULT_AUTHOR_POS.x}%`, top: `${DEFAULT_AUTHOR_POS.y}%`, transform: 'translate(-50%, -50%)', maxWidth: '80%' }}>
+                      <p className="break-words" style={authorStyle(textColor, fontFamily, COVER_SCALE.reader)}>
                         {authorName}
                       </p>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </Page>
             )}
@@ -522,72 +514,60 @@ export default function BookFlipReader({
             {isRTL ? (
               <Page className="front-cover">
                 <div
-                  className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden"
+                  className="w-full h-full relative overflow-hidden"
                   style={{
-                    backgroundColor: coverColor,
-                    color: textColor,
-                    fontFamily,
+                    backgroundColor: coverColor, color: textColor, fontFamily,
                     backgroundImage: frontCoverImageUrl ? `url(${frontCoverImageUrl})` : undefined,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    backgroundSize: 'cover', backgroundPosition: 'center', direction: 'rtl',
                   }}
                 >
-                  {frontCoverImageUrl && <div className="absolute inset-0 bg-black/30" />}
-                  <div className="relative z-10 text-center px-6 max-w-[90%]">
-                    <h1
-                      className="font-bold mb-6 drop-shadow-lg break-words"
-                      style={{ fontSize: 'clamp(1.2rem, 4vw, 2rem)', lineHeight: 1.2 }}
-                    >
+                  {frontCoverImageUrl && (
+                    <div className="absolute inset-0" style={{ background: FRONT_OVERLAY.flat }} />
+                  )}
+                  <div className="absolute z-10" style={{ left: `${DEFAULT_TITLE_POS.x}%`, top: `${DEFAULT_TITLE_POS.y}%`, transform: 'translate(-50%, -50%)', maxWidth: '85%' }}>
+                    <h1 className="break-words" style={titleStyle(book.title, textColor, fontFamily, COVER_SCALE.reader)}>
                       {book.title}
                     </h1>
-                    {authorName && (
-                      <p
-                        className="drop-shadow-md opacity-90 break-words"
-                        style={{ fontSize: 'clamp(0.8rem, 2.5vw, 1.1rem)' }}
-                      >
+                  </div>
+                  {authorName && (
+                    <div className="absolute z-10" style={{ left: `${DEFAULT_AUTHOR_POS.x}%`, top: `${DEFAULT_AUTHOR_POS.y}%`, transform: 'translate(-50%, -50%)', maxWidth: '80%' }}>
+                      <p className="break-words" style={authorStyle(textColor, fontFamily, COVER_SCALE.reader)}>
                         {authorName}
                       </p>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </Page>
             ) : (
               <Page className="back-cover">
                 <div
-                  className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden"
+                  className="w-full h-full relative overflow-hidden"
                   style={{
                     backgroundColor: book.coverDesign?.back?.backgroundColor || coverColor,
-                    color: textColor,
-                    fontFamily,
+                    color: textColor, fontFamily,
                     backgroundImage: backCoverImageUrl ? `url(${backCoverImageUrl})` : undefined,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    backgroundSize: 'cover', backgroundPosition: 'center', direction: 'ltr',
                   }}
                 >
-                  {backCoverImageUrl && <div className="absolute inset-0 bg-black/50" />}
-                  <div
-                    className="relative z-10 text-center px-8 py-10 max-w-[88%] max-h-[85%] flex items-center justify-center"
-                    style={{ direction: 'ltr' }}
-                  >
-                    {(() => {
-                      const text = book.synopsis || book.description || '';
-                      const len = text.length;
-                      const fontSize = len < 200 ? '1rem' : len < 350 ? '0.85rem' : len < 500 ? '0.75rem' : '0.7rem';
-                      const lineHeight = len < 200 ? 1.7 : len < 350 ? 1.6 : 1.5;
-                      return text && (
-                        <p
-                          className="drop-shadow-md break-words"
-                          style={{
-                            fontSize,
-                            lineHeight,
-                            userSelect: 'none',
-                            whiteSpace: 'pre-wrap',
-                          }}
-                        >
-                          {text}
+                  <div className="absolute inset-0" style={{ background: BACK_OVERLAY.flat }} />
+                  <div className="relative z-10 h-full flex flex-col p-6">
+                    <div className="flex-1 flex items-center justify-center">
+                      {(() => {
+                        const text = book.synopsis || book.description || '';
+                        return text && (
+                          <p className="break-words" style={synopsisStyle(text, textColor, fontFamily, false, COVER_SCALE.reader)}>
+                            {text}
+                          </p>
+                        );
+                      })()}
+                    </div>
+                    {authorName && (
+                      <div className="pt-3 border-t border-white/20">
+                        <p style={backAuthorStyle(textColor, fontFamily, false, COVER_SCALE.reader)}>
+                          By: {authorName}
                         </p>
-                      );
-                    })()}
+                      </div>
+                    )}
                   </div>
                 </div>
               </Page>

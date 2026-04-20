@@ -57,6 +57,11 @@ import PrintOrderModal from '../components/print/PrintOrderModal';
 import BookProgressStepper from '../components/common/BookProgressStepper';
 import { RotateCcw } from 'lucide-react';
 import BookFlipReader from '../components/reader/BookFlipReader';
+import {
+  FRONT_OVERLAY, BACK_OVERLAY,
+  DEFAULT_TITLE_POS, DEFAULT_AUTHOR_POS,
+  titleStyle, authorStyle, synopsisStyle, backAuthorStyle,
+} from '../utils/coverStyles';
 
 interface PageImage {
   id: string;
@@ -1313,7 +1318,29 @@ export default function BookLayoutPage() {
     }
   };
 
-  // Handle export book
+  // Open the print-ready page in a new tab — the browser's own PDF renderer
+  // gives perfect fidelity (Hebrew bidi, fonts, images, covers, layout).
+  const handleBrowserPdf = async () => {
+    if (!book) return;
+    setExporting(true);
+    try {
+      await saveLayout();
+      toast.success(
+        language === 'he'
+          ? 'דף ההדפסה נפתח — בחר "שמור כ-PDF" בחלון ההדפסה'
+          : 'Print page opened — choose "Save as PDF" in the print dialog',
+        { id: 'export' },
+      );
+      window.open(`/print/${bookId}?print=1`, '_blank');
+      setShowExportModal(false);
+    } catch (error: any) {
+      toast.error(error?.message || 'Error opening print page', { id: 'export' });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Handle export book (server-side — DOCX or fallback PDF)
   const handleExport = async () => {
     if (!book) return;
     setExporting(true);
@@ -1323,13 +1350,24 @@ export default function BookLayoutPage() {
 
       if (exportFormat === 'pdf') {
         // PDF goes through the background job queue; large books no longer block or time out.
-        await exportBookAsPdfAsync({
+        const result = await exportBookAsPdfAsync({
           bookId: bookId!,
           bookTitle: book.title,
           onProgress: (progress, message) => {
             toast.loading(`${message} (${progress}%)`, { id: 'export' });
           },
         });
+        // Warn user if server fell back to the low-quality PDFKit renderer
+        if (result?.warnings?.length) {
+          setTimeout(() => {
+            toast(
+              language === 'he'
+                ? 'הייצוא השתמש במנוע חלופי — לאיכות מלאה השתמש ב"שמור כ-PDF (מומלץ)"'
+                : 'Export used fallback renderer — for full quality use "Save as PDF (Recommended)"',
+              { icon: '⚠️', duration: 8000 },
+            );
+          }, 1000);
+        }
       } else {
         // DOCX / other formats still stream from the sync endpoint
         const response = await api.get(`/books/${bookId}/export/${exportFormat}`, { responseType: 'blob' });
@@ -2291,6 +2329,33 @@ export default function BookLayoutPage() {
     }
   };
 
+  // Move image to a different page
+  const moveImageToPage = (fromPageIndex: number, imageId: string, toPageIndex: number) => {
+    if (!pages || pages.length === 0 || !pages[fromPageIndex] || !pages[toPageIndex]) {
+      if (import.meta.env.DEV) console.error('Invalid page index for move');
+      return;
+    }
+    if (fromPageIndex === toPageIndex) return;
+
+    const updatedPages = [...pages];
+    const sourceImages = updatedPages[fromPageIndex].images || [];
+    const image = sourceImages.find(img => img.id === imageId);
+    if (!image) return;
+
+    // Remove from source page
+    updatedPages[fromPageIndex].images = sourceImages.filter(img => img.id !== imageId);
+
+    // Add to target page
+    if (!updatedPages[toPageIndex].images) {
+      updatedPages[toPageIndex].images = [];
+    }
+    updatedPages[toPageIndex].images.push({ ...image });
+
+    setPages(updatedPages);
+    setSelectedImageId(null);
+    toast.success(language === 'he' ? `התמונה הועברה לעמוד ${toPageIndex + 1}` : `Image moved to page ${toPageIndex + 1}`);
+  };
+
   // Handle image added from placeholder
   const handleImageFromPlaceholder = (pageIndex: number, imageUrl: string, imageData: {
     x: number;
@@ -2800,7 +2865,7 @@ export default function BookLayoutPage() {
                       : `linear-gradient(160deg, ${book?.coverDesign?.coverColor || '#1a0a3e'}cc, ${book?.coverDesign?.coverColor || '#0d0820'})`,
                   }}
                 >
-                  {backCoverImageUrl && <div className="absolute inset-0 bg-black/40" />}
+                  {backCoverImageUrl && <div className="absolute inset-0 bg-black/25" />}
                   <p className="relative text-[4px] text-center opacity-70 line-clamp-3 leading-tight"
                     style={{ color: book?.coverDesign?.textColor || '#fff' }}>
                     {(book?.synopsis || book?.description || '').slice(0, 60)}
@@ -2817,7 +2882,7 @@ export default function BookLayoutPage() {
                       : `linear-gradient(160deg, ${book?.coverDesign?.coverColor || '#2d1b69'}, ${(book?.coverDesign?.coverColor || '#1a0a3e')}bb)`,
                   }}
                 >
-                  {book?.coverDesign?.imageUrl && <div className="absolute inset-0 bg-black/30" />}
+                  {book?.coverDesign?.imageUrl && <div className="absolute inset-0 bg-black/10" />}
                   <p className="relative text-[6px] font-bold text-center leading-tight line-clamp-2 w-full"
                     style={{ color: book?.coverDesign?.textColor || '#fff', fontFamily: book?.coverDesign?.fontFamily }}>
                     {book?.title}
@@ -3115,6 +3180,8 @@ export default function BookLayoutPage() {
                         onImageUpdate={(imageId, updates) => updateImagePosition(actualIdx, imageId, updates)}
                         onImageDelete={(imageId) => deleteImage(actualIdx, imageId)}
                         onImageDuplicate={(imageId) => duplicateImage(actualIdx, imageId)}
+                        onMoveToPage={(imageId, toPageIndex) => moveImageToPage(actualIdx, imageId, toPageIndex)}
+                        totalPages={pages.length}
                         pageNumber={actualIdx + 1}
                         bookTitle={book.title}
                         showHeader={aiDesign?.layout?.headerStyle !== 'none'}
@@ -4462,49 +4529,78 @@ export default function BookLayoutPage() {
               <div className="space-y-4">
                 <h3 className="font-semibold text-white">{t('design_studio.export_modal.select_format', 'Select Format')}</h3>
 
+                {/* Primary: Browser PDF — perfect fidelity */}
                 <button
-                  onClick={() => setExportFormat('pdf')}
-                  className={`w-full p-4 rounded-xl border-2 transition-all text-right ${exportFormat === 'pdf' ? 'border-memorial-gold bg-memorial-gold/20' : 'border-gray-700 hover:border-gray-600'}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${exportFormat === 'pdf' ? 'bg-red-500' : 'bg-red-500/50'}`}>
-                      <FileText className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-bold text-white">PDF</p>
-                      <p className="text-sm text-gray-400">{t('design_studio.export_modal.pdf_desc', 'Ready for printing')}</p>
-                    </div>
-                    {exportFormat === 'pdf' && <CheckCircle2 className="w-6 h-6 text-memorial-gold" />}
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setExportFormat('docx')}
-                  className={`w-full p-4 rounded-xl border-2 transition-all text-right ${exportFormat === 'docx' ? 'border-memorial-gold bg-memorial-gold/20' : 'border-gray-700 hover:border-gray-600'}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${exportFormat === 'docx' ? 'bg-blue-500' : 'bg-blue-500/50'}`}>
-                      <FileType className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-bold text-white">{t('design_studio.export_modal.docx_title', 'Word (DOCX)')}</p>
-                      <p className="text-sm text-gray-400">{t('design_studio.export_modal.docx_desc', 'Editable in Word')}</p>
-                    </div>
-                    {exportFormat === 'docx' && <CheckCircle2 className="w-6 h-6 text-memorial-gold" />}
-                  </div>
-                </button>
-
-                <button
-                  onClick={handleExport}
+                  onClick={handleBrowserPdf}
                   disabled={exporting}
-                  className="w-full btn-primary py-4 text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full p-4 rounded-xl border-2 border-memorial-gold bg-memorial-gold/20 transition-all text-right"
                 >
-                  {exporting ? (
-                    <><Loader2 className="w-5 h-5 animate-spin" />{t('design_studio.export_modal.exporting', 'Exporting...')}</>
-                  ) : (
-                    <><Download className="w-5 h-5" />{t('design_studio.export_modal.download', 'Download')} {exportFormat.toUpperCase()}</>
-                  )}
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-red-500">
+                      <Printer className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-white">
+                        {language === 'he' ? 'שמור כ-PDF (מומלץ)' : 'Save as PDF (Recommended)'}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        {language === 'he' ? 'עיצוב מלא — כריכה, תמונות, פונטים ועימוד' : 'Full design — cover, images, fonts & layout'}
+                      </p>
+                    </div>
+                    <CheckCircle2 className="w-6 h-6 text-memorial-gold" />
+                  </div>
                 </button>
+
+                {/* Secondary: Server PDF + DOCX */}
+                <div className="border-t border-gray-700/50 pt-3">
+                  <p className="text-xs text-gray-500 mb-3">
+                    {language === 'he' ? 'אפשרויות נוספות:' : 'More options:'}
+                  </p>
+
+                  <button
+                    onClick={() => setExportFormat('pdf')}
+                    className={`w-full p-3 rounded-xl border-2 transition-all text-right mb-2 ${exportFormat === 'pdf' ? 'border-gray-600 bg-gray-800/50' : 'border-gray-700 hover:border-gray-600'}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-red-500/50">
+                        <FileText className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-white text-sm">
+                          {language === 'he' ? 'PDF (ייצוא שרת)' : 'PDF (Server export)'}
+                        </p>
+                      </div>
+                      {exportFormat === 'pdf' && <CheckCircle2 className="w-5 h-5 text-gray-400" />}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setExportFormat('docx')}
+                    className={`w-full p-3 rounded-xl border-2 transition-all text-right ${exportFormat === 'docx' ? 'border-gray-600 bg-gray-800/50' : 'border-gray-700 hover:border-gray-600'}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-500/50">
+                        <FileType className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-white text-sm">{t('design_studio.export_modal.docx_title', 'Word (DOCX)')}</p>
+                      </div>
+                      {exportFormat === 'docx' && <CheckCircle2 className="w-5 h-5 text-gray-400" />}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={handleExport}
+                    disabled={exporting}
+                    className="w-full mt-3 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                  >
+                    {exporting ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" />{t('design_studio.export_modal.exporting', 'Exporting...')}</>
+                    ) : (
+                      <><Download className="w-4 h-4" />{t('design_studio.export_modal.download', 'Download')} {exportFormat.toUpperCase()}</>
+                    )}
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
@@ -4546,6 +4642,8 @@ interface PageRendererProps {
   onImageUpdate: (imageId: string, updates: Partial<PageImage>) => void;
   onImageDelete: (imageId: string) => void;
   onImageDuplicate: (imageId: string) => void;
+  onMoveToPage: (imageId: string, toPageIndex: number) => void;
+  totalPages: number;
   pageNumber?: number;
   bookTitle?: string;
   showHeader?: boolean;
@@ -4587,6 +4685,8 @@ function PageRenderer({
   onImageUpdate,
   onImageDelete,
   onImageDuplicate,
+  onMoveToPage,
+  totalPages,
   pageNumber,
   bookTitle,
   showHeader = false,
@@ -5151,6 +5251,9 @@ function PageRenderer({
                 onUpdate={(updates) => onImageUpdate(image.id, updates)}
                 onDelete={() => onImageDelete(image.id)}
                 onDuplicate={() => onImageDuplicate(image.id)}
+                onMoveToPage={(toPageIndex) => onMoveToPage(image.id, toPageIndex)}
+                currentPageIndex={pageIndex}
+                totalPages={totalPages}
                 onClose={() => setShowEditToolbar(false)}
                 language={language}
               />
@@ -5336,9 +5439,13 @@ function CoverPreview({
     fontFamily: defaultFont,
   };
 
+  // Resolved values for shared style functions
+  const textColor = coverDesign.textColor || coverDesign.front?.title?.color || '#ffffff';
+  const fontUsed = coverDesign.fontFamily || coverDesign.front?.title?.font || defaultFont;
+
   // Get positions with defaults (center for title, bottom-center for author)
-  const titlePosition = coverDesign.titlePosition || coverDesign.front?.title?.position || { x: 50, y: 30 };
-  const authorPosition = coverDesign.authorPosition || coverDesign.front?.authorName?.position || { x: 50, y: 85 };
+  const titlePosition = coverDesign.titlePosition || coverDesign.front?.title?.position || DEFAULT_TITLE_POS;
+  const authorPosition = coverDesign.authorPosition || coverDesign.front?.authorName?.position || DEFAULT_AUTHOR_POS;
 
   // Get image URL from multiple sources
   const imageUrl = coverImageUrl || coverDesign.imageUrl || coverDesign.front?.imageUrl;
@@ -5360,9 +5467,9 @@ function CoverPreview({
           className="absolute inset-0 w-full h-full object-cover"
         />
       )}
-      {/* Dark overlay for text readability */}
+      {/* Overlay for text readability */}
       {imageUrl && (
-        <div className="absolute inset-0 bg-black/30" />
+        <div className="absolute inset-0" style={{ background: FRONT_OVERLAY.flat }} />
       )}
 
       {/* Draggable Title */}
@@ -5372,19 +5479,7 @@ function CoverPreview({
         containerRef={containerRef as React.RefObject<HTMLDivElement>}
         className="z-10"
       >
-        <h1
-          className="font-bold text-center text-white drop-shadow-lg"
-          style={{
-            fontSize: book.title.length > 30 ? '0.875rem' : book.title.length > 20 ? '1rem' : '1.25rem',
-            lineHeight: '1.3',
-            display: '-webkit-box',
-            WebkitLineClamp: 4,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            maxWidth: '90%',
-            wordBreak: 'keep-all',
-          }}
-        >
+        <h1 style={{ ...titleStyle(book.title, textColor, fontUsed), maxWidth: '85%' }}>
           {book.title}
         </h1>
       </DraggableCoverText>
@@ -5396,10 +5491,7 @@ function CoverPreview({
         containerRef={containerRef as React.RefObject<HTMLDivElement>}
         className="z-10"
       >
-        <p
-          className="text-white drop-shadow-lg text-center"
-          style={{ fontSize: 'clamp(0.75rem, 3vw, 1rem)' }}
-        >
+        <p style={authorStyle(textColor, fontUsed)}>
           {book.author?.name || (book.coverDesign as any)?.front?.authorName?.text || ''}
         </p>
       </DraggableCoverText>
@@ -5453,30 +5545,16 @@ function BackCoverPreview({
         />
       )}
 
-      {/* Dark overlay for text readability */}
-      {backImageUrl && (
-        <div className="absolute inset-0 bg-black/50" />
-      )}
+      {/* Overlay for text readability */}
+      <div className="absolute inset-0" style={{ background: BACK_OVERLAY.flat }} />
 
-      {/* Synopsis content - auto-scaling font to fit all text */}
+      {/* Synopsis content - auto-scaling font */}
       <div className="relative z-10 h-full flex flex-col p-6">
         <div className="flex-1 flex items-center justify-center">
           {(() => {
             const text = displaySynopsis || (language === 'he' ? 'תקציר הספר יופיע כאן...' : 'Book synopsis will appear here...');
-            const len = text.length;
-            const fontSize = len < 200 ? '0.95rem' : len < 350 ? '0.85rem' : len < 500 ? '0.78rem' : '0.72rem';
-            const lineHeight = len < 200 ? 1.7 : len < 350 ? 1.6 : 1.5;
             return (
-              <p
-                className="text-white/90 drop-shadow-md break-words"
-                style={{
-                  fontSize,
-                  lineHeight,
-                  userSelect: 'none',
-                  whiteSpace: 'pre-wrap',
-                  textAlign: isRTL ? 'right' : 'left',
-                }}
-              >
+              <p className="break-words" style={synopsisStyle(text, textColor, fontFamily, isRTL)}>
                 {text}
               </p>
             );
@@ -5484,8 +5562,8 @@ function BackCoverPreview({
         </div>
 
         {/* Author at bottom */}
-        <div className="pt-4 border-t border-white/20 mt-4">
-          <p className="text-sm text-white/80">
+        <div className="pt-3 border-t border-white/20 mt-4">
+          <p style={backAuthorStyle(textColor, fontFamily, isRTL)}>
             {language === 'he' ? 'מאת: ' : 'By: '}{book.author?.name || (language === 'he' ? 'מחבר לא ידוע' : 'Unknown Author')}
           </p>
         </div>
