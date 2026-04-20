@@ -166,15 +166,23 @@ export function invalidateMeCache(): void {
   meCachedAt = 0;
 }
 
-// Response interceptor to handle errors
+// Response interceptor — auto-retry on 503 (Vercel cold start), then handle errors
 api.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error: AxiosError<{ error: string; message?: string }>) => {
+  async (error: AxiosError<{ error: string; message?: string }>) => {
     // Ignore canceled requests - don't show any error
     if (axios.isCancel(error) || error.code === 'ERR_CANCELED' || error.name === 'CanceledError') {
       return Promise.reject(error);
+    }
+
+    // Auto-retry once on 503 (server starting up / cold start)
+    const config = error.config as AxiosRequestConfig & { _retried?: boolean };
+    if (error.response?.status === 503 && config && !config._retried) {
+      config._retried = true;
+      await sleep(2000);
+      return api.request(config);
     }
 
     const url = error.config?.url || '';
@@ -199,8 +207,9 @@ api.interceptors.response.use(
     } else if (error.response?.status === 429) {
       toast.error('Too many requests. Please try again later.');
     } else if (error.response?.status === 500 || error.response?.status === 503) {
-      // Server error - don't show toast for auth checks (handled by AuthContext)
-      if (!isAuthCheck) {
+      // Server error - don't show toast for auth checks or non-critical tracking
+      const isSilent = isAuthCheck || url.endsWith('/view');
+      if (!isSilent) {
         toast.error('Server is temporarily unavailable. Please try again.');
       }
     } else if (!error.response && error.message === 'Network Error') {

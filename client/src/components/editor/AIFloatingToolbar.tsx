@@ -89,16 +89,16 @@ export default function AIFloatingToolbar({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
-      className="flex items-center gap-1 p-1.5 rounded-xl bg-deep-space/95 backdrop-blur-md border border-white/20 shadow-xl shadow-black/20"
+      className="flex items-center gap-1 p-1 sm:p-1.5 rounded-xl bg-deep-space/95 backdrop-blur-md border border-white/20 shadow-xl shadow-black/20 max-w-[calc(100vw-24px)]"
     >
       {/* AI Badge */}
-      <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-500/20 border border-indigo-500/30 mr-1">
+      <div className="flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-lg bg-indigo-500/20 border border-indigo-500/30 mr-0.5 sm:mr-1 flex-shrink-0">
         <Sparkles className="w-3 h-3 text-indigo-400" />
-        <span className="text-xs font-medium text-indigo-300">AI</span>
+        <span className="text-[10px] sm:text-xs font-medium text-indigo-300">AI</span>
       </div>
 
       {/* Divider */}
-      <div className="w-px h-6 bg-white/10" />
+      <div className="w-px h-6 bg-white/10 flex-shrink-0" />
 
       {/* Action Buttons */}
       {actions.map((action) => (
@@ -111,11 +111,11 @@ export default function AIFloatingToolbar({
             onMouseLeave={() => setHoveredAction(null)}
             disabled={isLoading}
             className={`
-              flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all duration-200
+              flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-1.5 rounded-lg transition-all duration-200 touch-manipulation
               ${
                 isLoading && loadingAction === action.action
                   ? 'bg-indigo-500/30 text-indigo-300'
-                  : 'hover:bg-white/10 text-gray-300 hover:text-white'
+                  : 'hover:bg-white/10 active:bg-white/20 text-gray-300 hover:text-white'
               }
               disabled:cursor-not-allowed
             `}
@@ -125,7 +125,7 @@ export default function AIFloatingToolbar({
             ) : (
               action.icon
             )}
-            <span className="text-sm font-medium">{isHebrew ? action.labelHe : action.labelEn}</span>
+            <span className="text-xs sm:text-sm font-medium">{isHebrew ? action.labelHe : action.labelEn}</span>
           </motion.button>
 
           {/* Tooltip */}

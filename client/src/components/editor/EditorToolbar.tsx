@@ -111,7 +111,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const colorButtonRef = useRef<HTMLButtonElement>(null);
-  const colorButtonMobileRef = useRef<HTMLButtonElement>(null);
+  const colorButtonMobileRef = colorButtonRef; // unified — no separate mobile button
   const highlightButtonRef = useRef<HTMLButtonElement>(null);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -312,9 +312,9 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   }, [editor]);
 
   return (
-    <div className="bg-slate-800/90 backdrop-blur-md rounded-xl p-1.5 sm:p-2 mb-3 flex items-center gap-1 border border-white/10 shadow-lg">
-      {/* Undo/Redo - Hidden on mobile, visible on sm+ */}
-      <div className="hidden sm:flex gap-0.5 items-center flex-shrink-0">
+    <div className="bg-slate-800/90 backdrop-blur-md rounded-xl p-1.5 sm:p-2 mb-3 flex items-center gap-1 border border-white/10 shadow-lg overflow-x-auto scrollbar-hide">
+      {/* Undo/Redo */}
+      <div className="flex gap-0.5 items-center flex-shrink-0">
         <ToolbarButton
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
@@ -333,7 +333,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         </ToolbarButton>
       </div>
 
-      <div className="hidden sm:block w-px h-5 bg-white/10 mx-0.5 flex-shrink-0" />
+      <div className="w-px h-5 bg-white/10 mx-0.5 flex-shrink-0" />
 
       {/* Paragraph/Heading Dropdown - Compact */}
       {!isSimpleMode && <div className="relative flex-shrink-0">
@@ -447,30 +447,6 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
           <Underline className={smallIconClass} />
         </ToolbarButton>
 
-        {/* Text Color - Mobile only */}
-        {!isSimpleMode && <div className="relative sm:hidden">
-          <button
-            ref={colorButtonMobileRef}
-            type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => {
-              if (!showColorMenu) saveSelection();
-              setShowColorMenu(!showColorMenu);
-              setShowHighlightMenu(false);
-              setShowMoreMenu(false);
-              setShowHeadingMenu(false);
-            }}
-            title={t('editor.toolbar.text_color')}
-            className="p-2 rounded-lg bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all relative flex items-center justify-center touch-manipulation active:scale-95"
-          >
-            <Palette className="w-4 h-4" />
-            <div
-              className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full"
-              style={{ backgroundColor: editor.getAttributes('textStyle').color || '#374151' }}
-            />
-          </button>
-        </div>}
-
         {/* Voice Recording Button - Always visible */}
         <VoiceRecordButton
           onTranscription={handleVoiceTranscription}
@@ -478,8 +454,8 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         />
       </div>
 
-      {/* Desktop only: Additional formatting */}
-      {!isSimpleMode && <div className="hidden sm:flex gap-0.5 items-center flex-shrink-0">
+      {/* Additional formatting */}
+      {!isSimpleMode && <div className="flex gap-0.5 items-center flex-shrink-0">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleStrike().run()}
           isActive={editor.isActive('strike')}
@@ -532,10 +508,10 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         </div>
       </div>}
 
-      {!isSimpleMode && <div className="w-px h-5 bg-white/10 mx-0.5 flex-shrink-0 hidden sm:block" />}
+      {!isSimpleMode && <div className="w-px h-5 bg-white/10 mx-0.5 flex-shrink-0" />}
 
-      {/* Desktop only: Alignment */}
-      {!isSimpleMode && <div className="hidden md:flex gap-0.5 items-center flex-shrink-0">
+      {/* Alignment */}
+      {!isSimpleMode && <div className="flex gap-0.5 items-center flex-shrink-0">
         <ToolbarButton
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
           isActive={editor.isActive({ textAlign: 'left' })}
@@ -562,10 +538,10 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
         </ToolbarButton>
       </div>}
 
-      {!isSimpleMode && <div className="w-px h-5 bg-white/10 mx-0.5 flex-shrink-0 hidden md:block" />}
+      {!isSimpleMode && <div className="w-px h-5 bg-white/10 mx-0.5 flex-shrink-0" />}
 
-      {/* Desktop only: Lists */}
-      {!isSimpleMode && <div className="hidden lg:flex gap-0.5 items-center flex-shrink-0">
+      {/* Lists */}
+      {!isSimpleMode && <div className="flex gap-0.5 items-center flex-shrink-0">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           isActive={editor.isActive('bulletList')}

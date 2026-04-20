@@ -545,7 +545,7 @@
   .book-page-content.prose h2,
   .book-page-content.prose h3,
   .book-page-content.prose blockquote {
-    color: inherit;
+    color: inherit !important;
   }
 
   /* Spans with inline styles (from editor color picker) are NOT overridden */
@@ -1869,6 +1869,7 @@
 .book-page-content .chapter-title {
   font-weight: 700;
   letter-spacing: 0.5px;
+  color: inherit !important;
 }
 
 /* Drop cap rules consolidated above in the DROP CAPS section */

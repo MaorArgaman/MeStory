@@ -780,6 +780,16 @@ export default function BookWritingPage() {
                     const selectedText = state.doc.textBetween(from, to, ' ');
                     return selectedText.trim().length >= 5;
                   }}
+                  tippyOptions={{
+                    maxWidth: 'calc(100vw - 16px)',
+                    placement: 'top',
+                    popperOptions: {
+                      modifiers: [
+                        { name: 'preventOverflow', options: { boundary: 'viewport', padding: 8 } },
+                        { name: 'flip', options: { fallbackPlacements: ['bottom', 'top'] } },
+                      ],
+                    },
+                  }}
                 >
                   <AIFloatingToolbar
                     editor={editor}
@@ -1230,6 +1240,16 @@ export default function BookWritingPage() {
                           const selectedText = state.doc.textBetween(from, to, ' ');
                           // Show toolbar only when text is selected (min 5 chars)
                           return selectedText.trim().length >= 5;
+                        }}
+                        tippyOptions={{
+                          maxWidth: 'calc(100vw - 16px)',
+                          placement: 'top',
+                          popperOptions: {
+                            modifiers: [
+                              { name: 'preventOverflow', options: { boundary: 'viewport', padding: 8 } },
+                              { name: 'flip', options: { fallbackPlacements: ['bottom', 'top'] } },
+                            ],
+                          },
                         }}
                       >
                         <AIFloatingToolbar

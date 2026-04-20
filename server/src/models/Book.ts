@@ -652,7 +652,7 @@ export class Book {
    * Use for ownership checks, like/review/share, delete, and any endpoint
    * that doesn't need the full book content.  ~95% smaller than findById.
    */
-  static readonly LITE_COLUMNS = 'id,author_id,title,genre,writing_goal,target_audience,description,synopsis,story_context,cover_design,publishing_status,statistics,tags,language,age_rating,likes,liked_by,reviews,mentions,is_collaborative,collaborators,invitations,memorial_dedication,book_type,characters,created_at,updated_at';
+  static readonly LITE_COLUMNS = 'id,author_id,title,genre,writing_goal,target_audience,description,synopsis,story_context,cover_design,publishing_status,statistics,tags,language,age_rating,likes,liked_by,reviews,is_collaborative,invitations,characters,created_at,updated_at';
 
   static async findByIdLite(id: string): Promise<IBook | null> {
     return withRetry(async () => {
@@ -676,7 +676,7 @@ export class Book {
    * metadata + chapters (for content analysis). Skips page_images,
    * translations, page_layout, reviews, etc.
    */
-  static readonly DESIGN_COLUMNS = 'id,author_id,title,genre,language,description,synopsis,story_context,writing_goal,target_audience,chapters,characters,cover_design,publishing_status,statistics,tags,ai_design_state,is_collaborative,collaborators,book_type,created_at,updated_at';
+  static readonly DESIGN_COLUMNS = 'id,author_id,title,genre,language,description,synopsis,story_context,writing_goal,target_audience,chapters,characters,cover_design,publishing_status,statistics,tags,ai_design_state,is_collaborative,invitations,created_at,updated_at';
 
   static async findByIdForDesign(id: string): Promise<IBook | null> {
     return withRetry(async () => {

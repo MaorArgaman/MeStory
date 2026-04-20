@@ -48,46 +48,6 @@ const aiLimiter = rateLimit({
   skip: (req) => req.method === 'GET',
 });
 
-// Public diagnostic endpoint - MUST be before router.use(authenticate)
-router.get('/interview/_diag', async (_req, res) => {
-  try {
-    const { supabaseAdmin } = await import('../config/supabase');
-    const crypto = await import('crypto');
-    const testId = crypto.randomUUID();
-    const testUserId = crypto.randomUUID();
-
-    const insertResult = await supabaseAdmin.from('interview_sessions').insert({
-      id: testId,
-      user_id: testUserId,
-      current_topic: 'theme',
-      questions_asked: 0,
-      questions_per_topic: { theme: 0, characters: 0, conflict: 0, climax: 0, resolution: 0, setting: 0, keyPoints: 0, narrativeArc: 0 },
-      messages: [],
-      is_complete: false,
-      genre: null,
-      target_audience: null,
-      language: 'he',
-      started_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
-
-    if (!insertResult.error) {
-      await supabaseAdmin.from('interview_sessions').delete().eq('id', testId);
-    }
-
-    res.status(200).json({
-      envCheck: {
-        SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'MISSING',
-        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? `SET (len=${process.env.SUPABASE_SERVICE_ROLE_KEY.length})` : 'MISSING',
-        SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET' : 'MISSING',
-      },
-      insertError: insertResult.error || null,
-    });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // All AI routes require authentication
 router.use(authenticate as any);
 router.use(aiLimiter);
