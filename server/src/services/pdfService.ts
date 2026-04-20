@@ -91,6 +91,64 @@ function buildPatternCSS(pattern: string, accentColor: string): string {
       const svg = enc(`<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect x='0' y='0' width='40' height='40' fill='none' stroke='${c(0.05)}' stroke-width='1'/></svg>`);
       return `background-image: url("data:image/svg+xml,${svg}"); background-size: 40px 40px;`;
     }
+    case 'confetti': {
+      const svg = enc(`<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><circle cx='15' cy='15' r='3' fill='${c(0.1)}'/><rect x='30' y='8' width='6' height='6' fill='${c(0.08)}' transform='rotate(20,33,11)'/><circle cx='45' cy='40' r='2' fill='${c(0.12)}'/><rect x='8' y='38' width='5' height='5' fill='${c(0.07)}' transform='rotate(-15,10,40)'/></svg>`);
+      return `background-image: url("data:image/svg+xml,${svg}"); background-size: 60px 60px;`;
+    }
+    case 'stars': {
+      const svg = enc(`<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50'><text x='10' y='20' font-size='12' fill='${c(0.1)}'>✦</text><text x='28' y='38' font-size='8' fill='${c(0.07)}'>✧</text></svg>`);
+      return `background-image: url("data:image/svg+xml,${svg}"); background-size: 50px 50px;`;
+    }
+    case 'hearts': {
+      const svg = enc(`<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50'><text x='10' y='22' font-size='14' fill='${c(0.09)}'>♥</text><text x='30' y='42' font-size='10' fill='${c(0.06)}'>♥</text></svg>`);
+      return `background-image: url("data:image/svg+xml,${svg}"); background-size: 50px 50px;`;
+    }
+    default: return '';
+  }
+}
+
+// ─── Helper: title-underline CSS ───────────────────────────────────────────────
+function buildTitleUnderlineCSS(style: string, accentColor: string): string {
+  if (!style || style === 'none') return '';
+  const acc = accentColor || '#8b6914';
+  switch (style) {
+    case 'simple':   return `.page-body h2 { border-bottom: 1px solid ${acc}; padding-bottom: 6px; }`;
+    case 'double':   return `.page-body h2 { border-bottom: 3px double ${acc}; padding-bottom: 6px; }`;
+    case 'wavy':     return `.page-body h2 { text-decoration: underline wavy ${acc}; text-underline-offset: 6px; }`;
+    case 'dotted':   return `.page-body h2 { border-bottom: 2px dotted ${acc}; padding-bottom: 6px; }`;
+    case 'gradient': return `.page-body h2 { border-bottom: 2px solid; border-image: linear-gradient(to right, transparent, ${acc}, transparent) 1; padding-bottom: 6px; }`;
+    case 'ornate':   return `.page-body h2 { border-bottom: 2px solid ${acc}; padding-bottom: 8px; }`;
+    default: return '';
+  }
+}
+
+// ─── Helper: header-decoration CSS ─────────────────────────────────────────────
+function buildHeaderDecoCSS(style: string, accentColor: string): string {
+  if (!style || style === 'none') return '';
+  const acc = accentColor || '#8b6914';
+  switch (style) {
+    case 'line':          return `.print-page .page-header { border-bottom: 0.5px solid ${acc}40; padding-bottom: 4px; }`;
+    case 'gradient-line': return `.print-page .page-header { border-bottom: 1px solid; border-image: linear-gradient(to right, transparent, ${acc}60, transparent) 1; padding-bottom: 4px; }`;
+    case 'dots':          return `.print-page .page-header::after { content: '• • •'; display: block; color: ${acc}; font-size: 7px; letter-spacing: 4px; }`;
+    default: return '';
+  }
+}
+
+// ─── Helper: corner SVG ────────────────────────────────────────────────────────
+function cornerSVG(type: string, color: string, size: number): string {
+  switch (type) {
+    case 'flourish':
+      return `<svg viewBox="0 0 60 60" width="${size}" height="${size}" fill="none" stroke="${color}"><path d="M2,2 L50,2 L50,4 L4,4 L4,50 L2,50 Z" fill="${color}" opacity="0.35"/><path d="M8,8 Q8,22 8,32 Q22,8 32,8" stroke-width="1.5"/><circle cx="8" cy="8" r="2.5" fill="${color}"/></svg>`;
+    case 'floral':
+      return `<svg viewBox="0 0 60 60" width="${size}" height="${size}" fill="none" stroke="${color}"><path d="M0,0 L48,0 L48,2 L2,2 L2,48 L0,48 Z" fill="${color}" opacity="0.4"/><circle cx="14" cy="14" r="5" stroke-width="1.2"/><circle cx="14" cy="14" r="2.5" fill="${color}"/></svg>`;
+    case 'geometric':
+      return `<svg viewBox="0 0 60 60" width="${size}" height="${size}" fill="none" stroke="${color}"><polyline points="0,42 0,0 42,0" stroke-width="2"/><polyline points="0,30 0,8 8,0 30,0" stroke-width="1" opacity="0.5"/><rect x="2" y="2" width="8" height="8" fill="${color}" opacity="0.3"/></svg>`;
+    case 'stars':
+      return `<svg viewBox="0 0 40 40" width="${size}" height="${size}" fill="${color}"><text x="2" y="18" font-size="14" opacity="0.7">✦</text><text x="16" y="32" font-size="10" opacity="0.5">✧</text></svg>`;
+    case 'hearts':
+      return `<svg viewBox="0 0 40 40" width="${size}" height="${size}" fill="${color}"><text x="4" y="20" font-size="14" opacity="0.6">♥</text></svg>`;
+    case 'leaves':
+      return `<svg viewBox="0 0 40 40" width="${size}" height="${size}" fill="none" stroke="${color}"><path d="M4,36 Q4,4 36,4 Q4,4 4,36 Z" fill="${color}" opacity="0.25"/><path d="M4,36 L20,20" stroke-width="1"/></svg>`;
     default: return '';
   }
 }
@@ -157,9 +215,13 @@ function buildBookHtml(book: any, authorName: string): string {
   const fontStack      = `"${bodyFontRaw}", "David Libre", "Frank Ruhl Libre", Georgia, serif`;
   const titleFontStack = `"${titleFontRaw}", "Playfair Display", serif`;
 
-  const patternCSS   = buildPatternCSS(s.backgroundPattern, acc);
-  const frameCSS     = buildFrameCSS(s.pageFrame, frameColor);
-  const dropCapCSS   = buildDropCapCSS(s.dropCapStyle, acc, isRtl);
+  const patternCSS        = buildPatternCSS(s.backgroundPattern, acc);
+  const frameCSS          = buildFrameCSS(s.pageFrame, frameColor);
+  const dropCapCSS        = buildDropCapCSS(s.dropCapStyle, acc, isRtl);
+  const titleUnderlineCSS = buildTitleUnderlineCSS(s.titleUnderline, acc);
+  const headerDecoCSS     = buildHeaderDecoCSS(s.headerDecoration, acc);
+  const showCorners       = s.cornerDecorations && s.cornerDecorations !== 'none';
+  const cornerColor       = `${acc}90`;
 
   // Cover design
   const cover        = book.coverDesign || {};
@@ -191,19 +253,34 @@ function buildBookHtml(book: any, authorName: string): string {
     const images = (page.images || [])
       .filter((img: any) => img.url)
       .map((img: any) => {
+        const transforms = [
+          img.rotation ? `rotate(${img.rotation}deg)` : '',
+          img.flipH ? 'scaleX(-1)' : '',
+          img.flipV ? 'scaleY(-1)' : '',
+        ].filter(Boolean).join(' ');
         const style = [
           `left:${img.x || 0}%`, `top:${img.y || 0}%`,
           `width:${img.width || 30}%`, `height:${img.height || 30}%`,
-          img.rotation ? `transform:rotate(${img.rotation}deg)` : '',
+          transforms ? `transform:${transforms}` : '',
           img.opacity != null ? `opacity:${img.opacity}` : '',
           img.borderRadius ? `border-radius:${img.borderRadius}px` : '',
+          img.shadow ? 'box-shadow:0 4px 12px rgba(0,0,0,0.3)' : '',
           img.textWrap === 'behind' ? 'z-index:0' : '',
         ].filter(Boolean).join(';');
-        return `<div class="page-image" style="${style}"><img src="${img.url}" alt="" crossorigin="anonymous" /></div>`;
+        const borderStyle = img.border ? `border:${img.border.width}px ${img.border.style} ${img.border.color}` : '';
+        return `<div class="page-image" style="${style};${borderStyle}"><img src="${img.url}" alt="" crossorigin="anonymous" /></div>`;
       })
       .join('');
 
-    return `<div class="print-page ${dropClass}">${headerHtml}<div class="page-body">${page.content || ''}</div>${images}${dividerHtml}${numHtml}</div>`;
+    // Corner decorations
+    const cornersHtml = showCorners ? [
+      `<div class="corner corner-tl">${cornerSVG(s.cornerDecorations, cornerColor, 36)}</div>`,
+      `<div class="corner corner-tr">${cornerSVG(s.cornerDecorations, cornerColor, 36)}</div>`,
+      `<div class="corner corner-bl">${cornerSVG(s.cornerDecorations, cornerColor, 36)}</div>`,
+      `<div class="corner corner-br">${cornerSVG(s.cornerDecorations, cornerColor, 36)}</div>`,
+    ].join('') : '';
+
+    return `<div class="print-page ${dropClass}">${cornersHtml}${headerHtml}<div class="page-body">${page.content || ''}</div>${images}${dividerHtml}${numHtml}</div>`;
   };
 
   const pagesHtml = pages.map((p, i) => renderPage(p, i)).join('\n');
@@ -285,6 +362,8 @@ function buildBookHtml(book: any, authorName: string): string {
     .page-body h3 { font-size: ${Math.round(fs * 1.1)}px; }
     .page-body p  { margin: 0 0 ${pSpacing}px 0; }
     ${dropCapCSS}
+    ${titleUnderlineCSS}
+    ${headerDecoCSS}
     .page-body img {
       max-width: 100%; height: auto; display: block;
       margin: 8px auto; border-radius: 4px;
@@ -296,6 +375,11 @@ function buildBookHtml(book: any, authorName: string): string {
       width: 100%; height: 100%; object-fit: cover;
       margin: 0; max-width: none;
     }
+    .corner { position: absolute; z-index: 2; pointer-events: none; opacity: 0.7; }
+    .corner-tl { top: 6px; ${isRtl ? 'right' : 'left'}: 6px; }
+    .corner-tr { top: 6px; ${isRtl ? 'left' : 'right'}: 6px; transform: scaleX(-1); }
+    .corner-bl { bottom: 6px; ${isRtl ? 'right' : 'left'}: 6px; transform: scaleY(-1); }
+    .corner-br { bottom: 6px; ${isRtl ? 'left' : 'right'}: 6px; transform: scale(-1,-1); }
     .section-divider {
       position: absolute; bottom: 28px; left: 0; right: 0;
       text-align: center; color: ${acc}; font-size: 0.85em;
