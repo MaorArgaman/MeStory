@@ -56,8 +56,10 @@ export async function checkGuidance(
   recentText: string,
   language?: SupportedLanguage
 ): Promise<WritingGuidance | null> {
-  // Get established story elements
-  const voiceInterview = book.storyContext?.voiceInterview?.summary;
+  // Get established story elements — support BOTH legacy voice-interview (nested)
+  // and chat-interview (flat top-level fields on storyContext)
+  const sc: any = book.storyContext || {};
+  const voiceInterview = sc.voiceInterview?.summary;
   const currentChapter = book.chapters[chapterIndex];
 
   if (!currentChapter) {
@@ -89,6 +91,33 @@ ${(voiceInterview as any).tone ? `Tone: ${(voiceInterview as any).tone}` : ''}
 ${voiceInterview.plot?.conflict ? `Central conflict: ${voiceInterview.plot.conflict}` : ''}
 ${voiceInterview.characters && voiceInterview.characters.length > 0 ? `Main characters: ${voiceInterview.characters.map((c: any) => c.name).join(', ')}` : ''}
 ${voiceInterview.writingGuidelines && voiceInterview.writingGuidelines.length > 0 ? `Writing guidelines:\n${voiceInterview.writingGuidelines.map((g: string) => `- ${g}`).join('\n')}` : ''}
+`;
+    }
+  } else if (sc.theme || sc.characters || sc.conflict || sc.climax || sc.resolution || sc.setting || sc.keyPoints || sc.narrativeArc) {
+    // Chat-interview flat format (from the 8-topic InterviewWizard)
+    if (isHebrew) {
+      storyContext = `
+אלמנטים מבוססים של הסיפור (מראיון המחבר):
+${sc.theme ? `נושא מרכזי: ${sc.theme}` : ''}
+${sc.characters ? `דמויות ראשיות: ${sc.characters}` : ''}
+${sc.conflict ? `קונפליקט מרכזי: ${sc.conflict}` : ''}
+${sc.climax ? `שיא מתוכנן: ${sc.climax}` : ''}
+${sc.resolution ? `סיום ופתרון: ${sc.resolution}` : ''}
+${sc.setting ? `סביבה ועולם: ${sc.setting}` : ''}
+${sc.keyPoints ? `נקודות מפתח: ${sc.keyPoints}` : ''}
+${sc.narrativeArc ? `קשת נרטיבית וטון: ${sc.narrativeArc}` : ''}
+`;
+    } else {
+      storyContext = `
+Established story elements (from author interview):
+${sc.theme ? `Main theme: ${sc.theme}` : ''}
+${sc.characters ? `Main characters: ${sc.characters}` : ''}
+${sc.conflict ? `Central conflict: ${sc.conflict}` : ''}
+${sc.climax ? `Planned climax: ${sc.climax}` : ''}
+${sc.resolution ? `Resolution: ${sc.resolution}` : ''}
+${sc.setting ? `Setting: ${sc.setting}` : ''}
+${sc.keyPoints ? `Key plot points: ${sc.keyPoints}` : ''}
+${sc.narrativeArc ? `Narrative arc & tone: ${sc.narrativeArc}` : ''}
 `;
     }
   }

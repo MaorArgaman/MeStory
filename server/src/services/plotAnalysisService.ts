@@ -99,15 +99,29 @@ export async function analyzePlotStructure(book: IBook): Promise<PlotAnalysis> {
 
   const totalWords = book.chapters.reduce((sum, ch) => sum + ch.wordCount, 0);
 
-  // Build voice interview context if available
+  // Build interview context — supports both legacy voiceInterview (nested)
+  // and chat-interview (flat 8-topic fields)
+  const sc: any = book.storyContext || {};
   let contextPrompt = '';
-  if (book.storyContext?.voiceInterview?.summary) {
-    const vi = book.storyContext.voiceInterview.summary;
+  if (sc.voiceInterview?.summary) {
+    const vi = sc.voiceInterview.summary;
     contextPrompt = `
 הקשר מראיון המחבר:
 ${vi.theme?.mainTheme ? `נושא: ${vi.theme.mainTheme}` : ''}
 ${vi.plot?.conflict ? `קונפליקט: ${vi.plot.conflict}` : ''}
 ${vi.plot?.stakes ? `מה בסיכון: ${vi.plot.stakes}` : ''}
+`;
+  } else if (sc.theme || sc.characters || sc.conflict || sc.climax || sc.resolution || sc.setting || sc.keyPoints || sc.narrativeArc) {
+    contextPrompt = `
+הקשר מראיון המחבר (8 נושאים):
+${sc.theme ? `נושא: ${sc.theme}` : ''}
+${sc.characters ? `דמויות: ${sc.characters}` : ''}
+${sc.conflict ? `קונפליקט: ${sc.conflict}` : ''}
+${sc.climax ? `שיא: ${sc.climax}` : ''}
+${sc.resolution ? `פתרון: ${sc.resolution}` : ''}
+${sc.setting ? `סביבה: ${sc.setting}` : ''}
+${sc.keyPoints ? `נקודות מפתח: ${sc.keyPoints}` : ''}
+${sc.narrativeArc ? `קשת נרטיבית: ${sc.narrativeArc}` : ''}
 `;
   }
 
