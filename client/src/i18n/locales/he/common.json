@@ -1258,7 +1258,28 @@
     "thinking": "חושב...",
     "transcribing": "מתמלל...",
     "recordVoice": "הקלט קול",
-    "typeYourAnswer": "הקלד את תשובתך..."
+    "typeYourAnswer": "הקלד את תשובתך...",
+    "review_story": "סקור את הבסיס של הסיפור ויצור את הספר שלך",
+    "book_title": "שם הספר",
+    "enter_title_placeholder": "הזן את שם הספר",
+    "enter_book_title": "נא להזין שם לספר",
+    "summary_missing": "חסר סיכום ראיון",
+    "genre": "ז'אנר",
+    "story_foundation": "בסיס הסיפור",
+    "click_to_edit": "לחץ לעריכה",
+    "back_to_interview": "חזרה לראיון",
+    "create_my_book": "צור את הספר שלי",
+    "creating_book_button": "יוצר ספר...",
+    "fields": {
+      "theme": "נושא ורעיון מרכזי",
+      "characters": "דמויות ראשיות",
+      "conflict": "קונפליקט מרכזי",
+      "climax": "שיא מתוכנן",
+      "resolution": "סיום ופתרון",
+      "setting": "סביבה ועולם",
+      "key_points": "נקודות מפתח בעלילה",
+      "narrative_arc": "קשת נרטיבית וטון"
+    }
   },
   "voice_interview": {
     "title": "בואו נשוחח על הסיפור שלך",

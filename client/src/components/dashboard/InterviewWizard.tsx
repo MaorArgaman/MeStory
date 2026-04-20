@@ -68,13 +68,11 @@ export default function InterviewWizard({ onClose, onSuccess }: InterviewWizardP
 
     setIsSubmitting(true);
     setStep('generating');
-    setGeneratingProgress(5);
-    setGeneratingStep(isHebrew ? 'יוצר את הספר...' : 'Creating book...');
+    setGeneratingProgress(20);
+    setGeneratingStep(isHebrew ? 'שומר את תשתית הספר...' : 'Saving book foundation...');
 
     try {
-      // Step 1: Create the book
-      setGeneratingProgress(10);
-      setGeneratingStep(isHebrew ? 'שומר את פרטי הספר...' : 'Saving book details...');
+      setGeneratingProgress(50);
 
       const createResponse = await api.post('/books', {
         title: bookTitle.trim(),
@@ -99,68 +97,24 @@ export default function InterviewWizard({ onClose, onSuccess }: InterviewWizardP
 
       const bookId = createResponse.data.data.id;
 
-      // Step 2: Generate complete book content with AI
-      setGeneratingProgress(20);
-      setGeneratingStep(isHebrew ? 'ה-AI כותב את הספר שלך...' : 'AI is writing your book...');
+      setGeneratingProgress(100);
+      setGeneratingStep(isHebrew ? 'התשתית מוכנה — ממשיכים לכתיבה!' : 'Foundation ready — off to writing!');
 
-      // Simulate gradual progress while waiting for AI
-      const progressInterval = setInterval(() => {
-        setGeneratingProgress(prev => {
-          if (prev < 80) return prev + 2;
-          return prev;
-        });
-      }, 1500);
+      // Brief completion animation
+      await new Promise(resolve => setTimeout(resolve, 1200));
 
-      const generateResponse = await api.post('/ai/generate-book', {
-        bookId,
-        storyInput: {
-          bookTitle: bookTitle.trim(),
-          genre: bookGenre,
-          language: isHebrew ? 'he' : 'en',
-          // Pass interview data
-          theme: editedSummary.theme,
-          characters: editedSummary.characters,
-          conflict: editedSummary.conflict,
-          setting: editedSummary.setting,
-          climax: editedSummary.climax,
-          resolution: editedSummary.resolution,
-          keyPoints: editedSummary.keyPoints,
-          narrativeArc: editedSummary.narrativeArc,
-          // Build raw text from all fields for context
-          rawAnswers: Object.values(editedSummary).filter(v => typeof v === 'string').join('\n\n'),
-        },
-      }, { timeout: 120000 }); // 2 minute timeout for AI generation
-
-      clearInterval(progressInterval);
-
-      if (generateResponse.data.success) {
-        setGeneratingProgress(90);
-        setGeneratingStep(isHebrew ? 'מסיים...' : 'Finishing...');
-
-        // Short delay for animation
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        setGeneratingProgress(100);
-        setGeneratingStep(isHebrew ? 'הספר שלך מוכן!' : 'Your book is ready!');
-
-        // Wait for completion animation
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        toast.success(
-          isHebrew
-            ? `הספר "${bookTitle}" נוצר עם ${generateResponse.data.data.chapters?.length || 0} פרקים!`
-            : `Book "${bookTitle}" created with ${generateResponse.data.data.chapters?.length || 0} chapters!`
-        );
-        onSuccess(bookId);
-      } else {
-        throw new Error(generateResponse.data.error || 'Generation failed');
-      }
+      toast.success(
+        isHebrew
+          ? `התשתית ל"${bookTitle}" מוכנה — בוא נתחיל לכתוב`
+          : `Foundation for "${bookTitle}" is ready — let's start writing`
+      );
+      onSuccess(bookId);
     } catch (error: any) {
-      console.error('Failed to create/generate book:', error);
+      console.error('Failed to create book:', error);
       toast.error(
         isHebrew
           ? 'שגיאה ביצירת הספר. נסה שוב.'
-          : (error.response?.data?.error || 'Failed to generate book')
+          : (error.response?.data?.error || 'Failed to create book')
       );
       setStep('summary');
     } finally {
