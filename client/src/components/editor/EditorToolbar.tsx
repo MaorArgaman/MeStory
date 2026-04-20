@@ -312,7 +312,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   }, [editor]);
 
   return (
-    <div className="bg-slate-800/90 backdrop-blur-md rounded-xl p-1.5 sm:p-2 mb-3 flex items-center gap-1 border border-white/10 shadow-lg overflow-x-auto scrollbar-hide">
+    <div className="bg-slate-800/90 backdrop-blur-md rounded-xl p-1.5 sm:p-2 mb-3 flex flex-wrap sm:flex-nowrap items-center gap-1 border border-white/10 shadow-lg sm:overflow-x-auto sm:scrollbar-hide">
       {/* Undo/Redo */}
       <div className="flex gap-0.5 items-center flex-shrink-0">
         <ToolbarButton
