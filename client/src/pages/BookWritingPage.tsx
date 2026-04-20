@@ -1417,6 +1417,47 @@ export default function BookWritingPage() {
                 </p>
               </div>
 
+              {/* Story Context from Interview — shown if book has chat-interview fields */}
+              {(() => {
+                const sc: any = book?.storyContext || {};
+                const hasChatCtx = sc.theme || sc.characters || sc.conflict || sc.climax ||
+                  sc.resolution || sc.setting || sc.keyPoints || sc.narrativeArc;
+                if (!hasChatCtx) return null;
+                const fields: { key: keyof typeof sc; labelHe: string; labelEn: string; icon: string }[] = [
+                  { key: 'theme', labelHe: 'נושא ורעיון מרכזי', labelEn: 'Theme & Premise', icon: '🎯' },
+                  { key: 'characters', labelHe: 'דמויות ראשיות', labelEn: 'Main Characters', icon: '👤' },
+                  { key: 'conflict', labelHe: 'קונפליקט מרכזי', labelEn: 'Central Conflict', icon: '⚔️' },
+                  { key: 'climax', labelHe: 'שיא מתוכנן', labelEn: 'Planned Climax', icon: '🔥' },
+                  { key: 'resolution', labelHe: 'סיום ופתרון', labelEn: 'Resolution', icon: '✨' },
+                  { key: 'setting', labelHe: 'סביבה ועולם', labelEn: 'Setting & World', icon: '🌍' },
+                  { key: 'keyPoints', labelHe: 'נקודות מפתח', labelEn: 'Key Plot Points', icon: '📍' },
+                  { key: 'narrativeArc', labelHe: 'קשת נרטיבית וטון', labelEn: 'Narrative Arc & Tone', icon: '📖' },
+                ];
+                return (
+                  <details className="rounded-xl border border-memorial-gold/30 bg-memorial-gold/5 overflow-hidden" open>
+                    <summary className="cursor-pointer list-none px-3 py-2 flex items-center gap-2 text-sm font-semibold text-memorial-gold hover:bg-memorial-gold/10 transition-colors">
+                      <span>📚</span>
+                      <span>{isHebrew ? 'רקע הסיפור מהראיון' : 'Story context from interview'}</span>
+                    </summary>
+                    <div className="px-3 pb-3 space-y-2" dir={isHebrew ? 'rtl' : 'ltr'}>
+                      {fields.map(({ key, labelHe, labelEn, icon }) => {
+                        const val = sc[key];
+                        if (!val) return null;
+                        return (
+                          <div key={String(key)} className="text-xs">
+                            <div className="flex items-center gap-1 text-gray-400 mb-0.5">
+                              <span>{icon}</span>
+                              <span className="font-medium">{isHebrew ? labelHe : labelEn}</span>
+                            </div>
+                            <p className="text-gray-200 leading-relaxed whitespace-pre-wrap pl-4">{val}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </details>
+                );
+              })()}
+
               {/* Quick Action Buttons */}
               <div className="space-y-2">
                 {currentChapter ? (
