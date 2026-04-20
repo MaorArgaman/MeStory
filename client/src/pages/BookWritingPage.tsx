@@ -730,6 +730,88 @@ export default function BookWritingPage() {
 
   const currentChapter = book.chapters?.[selectedChapterIndex];
 
+  // Full-screen zen writing mode
+  if (focusMode && currentChapter && editor) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-[#faf8f5] flex flex-col" dir={isHebrew ? 'rtl' : 'ltr'}>
+        {/* Minimal header */}
+        <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200/50">
+          <img src="/img/new/logo-mestory-large.png" alt="MeStory" className="h-10 object-contain" />
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-400">
+              {saving ? (isHebrew ? 'שומר...' : 'Saving...') : saved ? (isHebrew ? 'נשמר' : 'Saved') : ''}
+            </span>
+            <button
+              onClick={() => setFocusMode(false)}
+              className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
+              title={isHebrew ? 'חזרה לעורך' : 'Back to editor'}
+            >
+              <Minimize2 className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Clean writing area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-3xl mx-auto px-6 sm:px-12 py-8 sm:py-16">
+            {/* Chapter title */}
+            <input
+              type="text"
+              value={currentChapter.title}
+              onChange={(e) => {
+                const updated = [...book.chapters];
+                updated[selectedChapterIndex].title = e.target.value;
+                setBook({ ...book, chapters: updated });
+                setSaved(false);
+              }}
+              className="w-full bg-transparent text-3xl sm:text-4xl font-bold text-gray-900 mb-8 focus:outline-none border-b-2 border-transparent focus:border-memorial-gold/30 pb-3 transition-colors"
+              placeholder={isHebrew ? 'כותרת הפרק' : 'Chapter title'}
+              style={{ fontFamily: "'Merriweather', Georgia, serif" }}
+              dir="auto"
+            />
+
+            {/* Editor with BubbleMenu for AI */}
+            <div className="prose prose-lg max-w-none text-gray-800 leading-relaxed" style={{ fontFamily: "'Merriweather', Georgia, serif", fontSize: '18px', lineHeight: '1.9' }}>
+              {editor && (
+                <BubbleMenu
+                  editor={editor}
+                  shouldShow={({ state }) => {
+                    const { from, to } = state.selection;
+                    const selectedText = state.doc.textBetween(from, to, ' ');
+                    return selectedText.trim().length >= 5;
+                  }}
+                >
+                  <AIFloatingToolbar
+                    editor={editor}
+                    onEnhance={handleEnhance}
+                    isLoading={enhancing}
+                    loadingAction={loadingAction}
+                  />
+                </BubbleMenu>
+              )}
+              <EditorContent editor={editor} />
+            </div>
+          </div>
+        </div>
+
+        {/* AI Enhancement Preview */}
+        {previewData.isOpen && previewData.result && (
+          <AIEnhancePreview
+            originalText={previewData.originalText}
+            result={previewData.result}
+            onAccept={handleAcceptEnhancement}
+            onReject={handleRejectEnhancement}
+          />
+        )}
+
+        {/* Keyboard shortcut: ESC to exit */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-gray-400">
+          {isHebrew ? 'סמן טקסט כדי לקבל עזרת AI | ESC לחזרה' : 'Select text for AI help | ESC to exit'}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       {/* Top Bar */}
