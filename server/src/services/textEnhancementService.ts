@@ -87,7 +87,7 @@ function buildContextPrompt(context: EnhanceContext): string {
   // Chat interview context (the 8-topic summary built in InterviewWizard)
   if (context.chatInterview) {
     const ci = context.chatInterview;
-    contextStr += '\n--- רקע מהראיון המקדים ---\n';
+    contextStr += '\n=== רקע הסיפור (מראיון המחבר) ===\n';
     if (ci.theme) contextStr += `נושא ורעיון מרכזי: ${ci.theme}\n`;
     if (ci.characters) contextStr += `דמויות ראשיות: ${ci.characters}\n`;
     if (ci.conflict) contextStr += `קונפליקט מרכזי: ${ci.conflict}\n`;
@@ -96,7 +96,14 @@ function buildContextPrompt(context: EnhanceContext): string {
     if (ci.setting) contextStr += `סביבה ועולם: ${ci.setting}\n`;
     if (ci.keyPoints) contextStr += `נקודות מפתח בעלילה: ${ci.keyPoints}\n`;
     if (ci.narrativeArc) contextStr += `קשת נרטיבית וטון: ${ci.narrativeArc}\n`;
-    contextStr += '\nהשתמש ברקע הזה כדי לתת תשובה ספציפית ומותאמת לסיפור, לא גנרית.\n';
+    contextStr += `
+הוראות חובה לשימוש ברקע:
+- השתמש בשמות הדמויות שבראיון, לא בדמויות גנריות
+- שמור על הטון והנרטיב שנקבעו בראיון
+- אל תסטה מהקונפליקט, השיא והסיום שהמחבר תכנן
+- אם הטקסט שצריך לשפר סוטה מהראיון, החזר אותו למסלול בעדינות
+- הפלט חייב להיות ספציפי לסיפור הזה, לא עצות כלליות על כתיבה
+`;
   }
 
   return contextStr;
