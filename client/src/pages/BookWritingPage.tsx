@@ -1231,11 +1231,12 @@ export default function BookWritingPage() {
                 )}
 
                 {/* Rich Text Editor - Google Docs page view */}
-                <div className="flex-1 overflow-y-auto relative px-3 sm:px-4 lg:px-6 py-4 bg-slate-800/30 z-10">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden relative px-0 sm:px-4 lg:px-6 py-2 sm:py-4 bg-slate-800/30 z-10">
                   <div
                     className={`editor-paper ${enhancing ? 'ring-2 ring-memorial-gold/30 transition-all' : 'ring-0 transition-all'}`}
                     style={{
-                      transform: `scale(${zoomLevel / 100})`,
+                      // Disable zoom transform on mobile to prevent horizontal overflow
+                      transform: typeof window !== 'undefined' && window.innerWidth < 640 ? 'none' : `scale(${zoomLevel / 100})`,
                       transformOrigin: 'top center',
                       backgroundImage: 'url(/img/new/texture-paper.png)',
                       backgroundSize: '512px 512px',
