@@ -60,6 +60,7 @@ export const startInterview = async (
           language: state.language,
         },
         firstMessage,
+        _dbError: (state as any)._dbError || null,
       },
     });
   } catch (error: any) {

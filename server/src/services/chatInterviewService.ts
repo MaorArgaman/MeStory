@@ -472,8 +472,9 @@ export async function createInterview(
     });
 
     if (error) {
-      console.error('interview_sessions table unavailable, using memory fallback:', error.message);
-      useMemoryFallback = true;
+      console.error('interview_sessions insert failed:', error.message, error.details, error.hint);
+      // Attach the DB error to state for debugging (temporary)
+      (state as any)._dbError = `${error.message} | ${error.details || ''} | ${error.hint || ''}`;
     }
   }
 
