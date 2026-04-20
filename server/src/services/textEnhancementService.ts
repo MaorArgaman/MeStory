@@ -144,7 +144,16 @@ Respond ONLY with valid JSON:
       return { enhanced: text, explanation: 'לא ניתן היה לשפר את הטקסט' };
     }
 
-    return JSON.parse(jsonMatch[0]);
+    try {
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (!parsed.enhanced) {
+        return { enhanced: text, explanation: 'לא ניתן היה לשפר את הטקסט' };
+      }
+      return parsed;
+    } catch {
+      // AI returned malformed JSON — fall back gracefully
+      return { enhanced: text, explanation: 'לא ניתן היה לפענח את התשובה' };
+    }
   } catch (error) {
     console.error('Error improving text:', error);
     throw new Error('Failed to improve text');

@@ -106,7 +106,7 @@ export const enhanceText = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({
       success: false,
       message: 'Failed to enhance text',
-      error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined,
+      error: (error as Error).message,
     });
   }
 };
