@@ -187,7 +187,23 @@ function buildBookHtml(book: any, authorName: string): string {
 
     const numHtml = showNum ? `<div class="page-number">— ${idx + 1} —</div>` : '';
 
-    return `<div class="print-page ${dropClass}">${headerHtml}<div class="page-body">${page.content || ''}</div>${dividerHtml}${numHtml}</div>`;
+    // Render positioned images from page.images array
+    const images = (page.images || [])
+      .filter((img: any) => img.url)
+      .map((img: any) => {
+        const style = [
+          `left:${img.x || 0}%`, `top:${img.y || 0}%`,
+          `width:${img.width || 30}%`, `height:${img.height || 30}%`,
+          img.rotation ? `transform:rotate(${img.rotation}deg)` : '',
+          img.opacity != null ? `opacity:${img.opacity}` : '',
+          img.borderRadius ? `border-radius:${img.borderRadius}px` : '',
+          img.textWrap === 'behind' ? 'z-index:0' : '',
+        ].filter(Boolean).join(';');
+        return `<div class="page-image" style="${style}"><img src="${img.url}" alt="" crossorigin="anonymous" /></div>`;
+      })
+      .join('');
+
+    return `<div class="print-page ${dropClass}">${headerHtml}<div class="page-body">${page.content || ''}</div>${images}${dividerHtml}${numHtml}</div>`;
   };
 
   const pagesHtml = pages.map((p, i) => renderPage(p, i)).join('\n');
@@ -269,6 +285,17 @@ function buildBookHtml(book: any, authorName: string): string {
     .page-body h3 { font-size: ${Math.round(fs * 1.1)}px; }
     .page-body p  { margin: 0 0 ${pSpacing}px 0; }
     ${dropCapCSS}
+    .page-body img {
+      max-width: 100%; height: auto; display: block;
+      margin: 8px auto; border-radius: 4px;
+    }
+    .page-image {
+      position: absolute; z-index: 5; overflow: hidden;
+    }
+    .page-image img {
+      width: 100%; height: 100%; object-fit: cover;
+      margin: 0; max-width: none;
+    }
     .section-divider {
       position: absolute; bottom: 28px; left: 0; right: 0;
       text-align: center; color: ${acc}; font-size: 0.85em;
