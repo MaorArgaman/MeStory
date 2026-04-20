@@ -249,7 +249,9 @@ function buildBookHtml(book: any, authorName: string): string {
 
     const numHtml = showNum ? `<div class="page-number">— ${idx + 1} —</div>` : '';
 
-    // Render positioned images from page.images array
+    // Render positioned images from page.images array.
+    // Default z-index (1) puts images BEHIND text (text has z-index 3).
+    // Only textWrap='front' lifts them above text.
     const images = (page.images || [])
       .filter((img: any) => img.url)
       .map((img: any) => {
@@ -265,10 +267,10 @@ function buildBookHtml(book: any, authorName: string): string {
           img.opacity != null ? `opacity:${img.opacity}` : '',
           img.borderRadius ? `border-radius:${img.borderRadius}px` : '',
           img.shadow ? 'box-shadow:0 4px 12px rgba(0,0,0,0.3)' : '',
-          img.textWrap === 'behind' ? 'z-index:0' : '',
         ].filter(Boolean).join(';');
         const borderStyle = img.border ? `border:${img.border.width}px ${img.border.style} ${img.border.color}` : '';
-        return `<div class="page-image" style="${style};${borderStyle}"><img src="${img.url}" alt="" crossorigin="anonymous" /></div>`;
+        const cls = img.textWrap === 'front' ? 'page-image front' : 'page-image';
+        return `<div class="${cls}" style="${style};${borderStyle}"><img src="${img.url}" alt="" crossorigin="anonymous" /></div>`;
       })
       .join('');
 
@@ -347,6 +349,7 @@ function buildBookHtml(book: any, authorName: string): string {
       text-align: center; font-size: 10px; color: ${textColor}60; letter-spacing: 1px;
     }
     .page-body {
+      position: relative; z-index: 3;
       font-size: ${fs}px; line-height: ${lh};
       padding-top: 22px; padding-bottom: 30px;
       height: 100%; overflow: hidden;
@@ -369,8 +372,9 @@ function buildBookHtml(book: any, authorName: string): string {
       margin: 8px auto; border-radius: 4px;
     }
     .page-image {
-      position: absolute; z-index: 5; overflow: hidden;
+      position: absolute; z-index: 1; overflow: hidden;
     }
+    .page-image.front { z-index: 10; }
     .page-image img {
       width: 100%; height: 100%; object-fit: cover;
       margin: 0; max-width: none;
