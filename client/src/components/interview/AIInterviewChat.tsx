@@ -280,6 +280,12 @@ export default function AIInterviewChat({
         animate={{ opacity: 1 }}
         className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center"
       >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white z-10"
+        >
+          <X className="w-6 h-6" />
+        </button>
         <div className="flex flex-col items-center gap-4">
           <AIAvatar state="thinking" size="lg" />
           <p className="text-gray-300 text-lg">{t('interview.preparingInterview')}</p>

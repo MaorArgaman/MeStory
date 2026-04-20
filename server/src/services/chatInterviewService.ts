@@ -356,7 +356,11 @@ ${messagesByTopic.narrativeArc.join('\n') || 'לא צוין'}
   },
 };
 
-// ---- Supabase persistence helpers ----
+// ---- Persistence layer (Supabase with in-memory fallback) ----
+
+// In-memory fallback for when Supabase table is unavailable
+const memoryFallback = new Map<string, ChatInterviewState>();
+let useMemoryFallback = false;
 
 interface InterviewRow {
   id: string;
@@ -391,8 +395,13 @@ function rowToState(row: InterviewRow): ChatInterviewState {
   };
 }
 
-/** Persist current state to Supabase */
+/** Persist current state to Supabase (or memory fallback) */
 async function saveState(state: ChatInterviewState): Promise<void> {
+  if (useMemoryFallback) {
+    memoryFallback.set(state.id, state);
+    return;
+  }
+
   const { error } = await supabaseAdmin
     .from('interview_sessions')
     .update({
@@ -407,6 +416,8 @@ async function saveState(state: ChatInterviewState): Promise<void> {
 
   if (error) {
     console.error('Failed to persist interview state:', error);
+    // Fall back to memory for this session
+    memoryFallback.set(state.id, state);
   }
 }
 
@@ -444,26 +455,30 @@ export async function createInterview(
     language,
   };
 
-  const { error } = await supabaseAdmin.from('interview_sessions').insert({
-    id,
-    user_id: userId,
-    current_topic: 'theme',
-    questions_asked: 0,
-    questions_per_topic: state.questionsPerTopic,
-    messages: [],
-    is_complete: false,
-    genre: genre || null,
-    target_audience: targetAudience || null,
-    language,
-    started_at: now,
-    updated_at: now,
-  });
+  if (!useMemoryFallback) {
+    const { error } = await supabaseAdmin.from('interview_sessions').insert({
+      id,
+      user_id: userId,
+      current_topic: 'theme',
+      questions_asked: 0,
+      questions_per_topic: state.questionsPerTopic,
+      messages: [],
+      is_complete: false,
+      genre: genre || null,
+      target_audience: targetAudience || null,
+      language,
+      started_at: now,
+      updated_at: now,
+    });
 
-  if (error) {
-    console.error('Failed to create interview session:', error);
-    throw new Error('Failed to create interview session');
+    if (error) {
+      console.error('interview_sessions table unavailable, using memory fallback:', error.message);
+      useMemoryFallback = true;
+    }
   }
 
+  // Always store in memory as well (fast reads + fallback)
+  memoryFallback.set(id, state);
   return state;
 }
 
@@ -471,6 +486,13 @@ export async function createInterview(
  * Get interview state by ID
  */
 export async function getInterview(id: string): Promise<ChatInterviewState | undefined> {
+  // Check memory first (fast path)
+  const memState = memoryFallback.get(id);
+  if (memState) return memState;
+
+  if (useMemoryFallback) return undefined;
+
+  // Fall back to DB
   const { data, error } = await supabaseAdmin
     .from('interview_sessions')
     .select('*')
@@ -478,14 +500,20 @@ export async function getInterview(id: string): Promise<ChatInterviewState | und
     .single();
 
   if (error || !data) return undefined;
-  return rowToState(data as InterviewRow);
+  const state = rowToState(data as InterviewRow);
+  // Cache in memory for subsequent calls
+  memoryFallback.set(id, state);
+  return state;
 }
 
 /**
  * Delete interview
  */
 export async function deleteInterview(id: string): Promise<void> {
-  await supabaseAdmin.from('interview_sessions').delete().eq('id', id);
+  memoryFallback.delete(id);
+  if (!useMemoryFallback) {
+    await supabaseAdmin.from('interview_sessions').delete().eq('id', id);
+  }
 }
 
 /**
