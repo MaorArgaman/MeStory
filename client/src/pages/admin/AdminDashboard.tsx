@@ -345,6 +345,7 @@ export default function AdminDashboard() {
   };
 
   const handlePromoteUser = async (userId: string, newRole: string) => {
+    if (!userId) return;
     try {
       const response = await api.put(`/admin/users/${userId}`, { role: newRole });
       if (response.data.success) {

@@ -46,7 +46,7 @@ export function initializeSocket(token: string): Socket {
   // On Vercel serverless, WebSockets are not supported. Skip socket
   // initialization entirely to avoid flooding the console with errors.
   const socketUrl = getSocketURL();
-  const isVercelProduction = socketUrl.includes('vercel.app');
+  const isVercelProduction = socketUrl.includes('vercel.app') || socketUrl.includes('mestory-ai.com');
   if (isVercelProduction) {
     // Return a dummy socket that won't try to connect.
     // Real-time features (live notifications) gracefully degrade
