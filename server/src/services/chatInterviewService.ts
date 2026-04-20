@@ -358,9 +358,8 @@ ${messagesByTopic.narrativeArc.join('\n') || 'לא צוין'}
 
 // ---- Persistence layer (Supabase with in-memory fallback) ----
 
-// In-memory fallback for when Supabase table is unavailable
+// In-memory cache (per-instance, for fast reads within a single request)
 const memoryFallback = new Map<string, ChatInterviewState>();
-let useMemoryFallback = false;
 
 interface InterviewRow {
   id: string;
@@ -395,12 +394,10 @@ function rowToState(row: InterviewRow): ChatInterviewState {
   };
 }
 
-/** Persist current state to Supabase (or memory fallback) */
+/** Persist current state to Supabase */
 async function saveState(state: ChatInterviewState): Promise<void> {
-  if (useMemoryFallback) {
-    memoryFallback.set(state.id, state);
-    return;
-  }
+  // Also cache in memory for this instance
+  memoryFallback.set(state.id, state);
 
   const { error } = await supabaseAdmin
     .from('interview_sessions')
@@ -415,9 +412,7 @@ async function saveState(state: ChatInterviewState): Promise<void> {
     .eq('id', state.id);
 
   if (error) {
-    console.error('Failed to persist interview state:', error);
-    // Fall back to memory for this session
-    memoryFallback.set(state.id, state);
+    console.error('Failed to persist interview state:', error.message, error.details);
   }
 }
 
@@ -455,30 +450,27 @@ export async function createInterview(
     language,
   };
 
-  if (!useMemoryFallback) {
-    const { error } = await supabaseAdmin.from('interview_sessions').insert({
-      id,
-      user_id: userId,
-      current_topic: 'theme',
-      questions_asked: 0,
-      questions_per_topic: state.questionsPerTopic,
-      messages: [],
-      is_complete: false,
-      genre: genre || null,
-      target_audience: targetAudience || null,
-      language,
-      started_at: now,
-      updated_at: now,
-    });
+  const { error } = await supabaseAdmin.from('interview_sessions').insert({
+    id,
+    user_id: userId,
+    current_topic: 'theme',
+    questions_asked: 0,
+    questions_per_topic: state.questionsPerTopic,
+    messages: [],
+    is_complete: false,
+    genre: genre || null,
+    target_audience: targetAudience || null,
+    language,
+    started_at: now,
+    updated_at: now,
+  });
 
-    if (error) {
-      console.error('interview_sessions insert failed:', error.message, error.details, error.hint);
-      // Attach the DB error to state for debugging (temporary)
-      (state as any)._dbError = `${error.message} | ${error.details || ''} | ${error.hint || ''}`;
-    }
+  if (error) {
+    console.error('interview_sessions insert failed:', error.message, error.details, error.hint);
+    (state as any)._dbError = `${error.message} | ${error.details || ''} | ${error.hint || ''}`;
   }
 
-  // Always store in memory as well (fast reads + fallback)
+  // Cache in memory for fast reads within this instance
   memoryFallback.set(id, state);
   return state;
 }
@@ -487,22 +479,23 @@ export async function createInterview(
  * Get interview state by ID
  */
 export async function getInterview(id: string): Promise<ChatInterviewState | undefined> {
-  // Check memory first (fast path)
+  // Check memory first (fast path, helps within same instance)
   const memState = memoryFallback.get(id);
   if (memState) return memState;
 
-  if (useMemoryFallback) return undefined;
-
-  // Fall back to DB
+  // Read from DB
   const { data, error } = await supabaseAdmin
     .from('interview_sessions')
     .select('*')
     .eq('id', id)
     .single();
 
-  if (error || !data) return undefined;
+  if (error) {
+    console.error('interview_sessions select failed:', error.message, error.details);
+    return undefined;
+  }
+  if (!data) return undefined;
   const state = rowToState(data as InterviewRow);
-  // Cache in memory for subsequent calls
   memoryFallback.set(id, state);
   return state;
 }
@@ -512,9 +505,7 @@ export async function getInterview(id: string): Promise<ChatInterviewState | und
  */
 export async function deleteInterview(id: string): Promise<void> {
   memoryFallback.delete(id);
-  if (!useMemoryFallback) {
-    await supabaseAdmin.from('interview_sessions').delete().eq('id', id);
-  }
+  await supabaseAdmin.from('interview_sessions').delete().eq('id', id);
 }
 
 /**
