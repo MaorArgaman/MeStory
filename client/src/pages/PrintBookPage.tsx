@@ -616,13 +616,13 @@ function PrintStyles({
       .cover-page .cover-overlay-front {
         position: absolute;
         inset: 0;
-        background: ${FRONT_OVERLAY.print};
+        background: ${FRONT_OVERLAY};
         z-index: 1;
       }
       .cover-page .cover-overlay-back {
         position: absolute;
         inset: 0;
-        background: ${BACK_OVERLAY.print};
+        background: ${BACK_OVERLAY};
         z-index: 1;
       }
       .cover-page .cover-text {

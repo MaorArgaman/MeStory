@@ -286,7 +286,7 @@ export default function Book3DPreview({
             {imageUrl && (
               <div
                 className="absolute inset-0"
-                style={{ background: FRONT_OVERLAY.studio }}
+                style={{ background: FRONT_OVERLAY }}
               />
             )}
 
@@ -394,7 +394,7 @@ export default function Book3DPreview({
             {/* Background overlay for text readability */}
             <div
               className="absolute inset-0"
-              style={{ background: BACK_OVERLAY.studio }}
+              style={{ background: BACK_OVERLAY }}
             />
 
             {/* Synopsis - Draggable in edit mode */}

@@ -5469,7 +5469,7 @@ function CoverPreview({
       )}
       {/* Overlay for text readability */}
       {imageUrl && (
-        <div className="absolute inset-0" style={{ background: FRONT_OVERLAY.flat }} />
+        <div className="absolute inset-0" style={{ background: FRONT_OVERLAY }} />
       )}
 
       {/* Draggable Title */}
@@ -5546,7 +5546,7 @@ function BackCoverPreview({
       )}
 
       {/* Overlay for text readability */}
-      <div className="absolute inset-0" style={{ background: BACK_OVERLAY.flat }} />
+      <div className="absolute inset-0" style={{ background: BACK_OVERLAY }} />
 
       {/* Synopsis content - auto-scaling font */}
       <div className="relative z-10 h-full flex flex-col p-6">

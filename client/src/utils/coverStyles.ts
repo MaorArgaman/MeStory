@@ -2,20 +2,15 @@
  * Shared cover styling — single source of truth for all cover renderers.
  *
  * Used by:
- *   - Book3DPreview.tsx         (Design Studio, variant "studio")
- *   - BookLayoutPage.tsx        (CoverPreview / BackCoverPreview, variant "flat")
- *   - BookFlipReader.tsx        (reader modal, variant "flat", scale ~1.4)
- *   - PrintBookPage.tsx         (PDF export, variant "print", scale ~2)
+ *   - Book3DPreview.tsx         (Design Studio)
+ *   - BookLayoutPage.tsx        (CoverPreview / BackCoverPreview)
+ *   - BookFlipReader.tsx        (reader modal, scale ~1.4)
+ *   - PrintBookPage.tsx         (PDF export, scale ~2)
+ *   - pdfService.ts             (server HTML-to-PDF — values duplicated, keep in sync)
  *
- * When changing a value here it updates every consumer automatically.
+ * ONE set of values — no variants. Change here → updates everywhere.
  */
 import type { CSSProperties } from 'react';
-
-// ── Variants ──────────────────────────────────────────────────────
-// "studio" = 3D view (perspective + glow offset the darker overlay)
-// "flat"   = 2D screen preview (lighter overlay, no 3D brightness)
-// "print"  = PDF / paper export (tuned for print readability)
-export type CoverVariant = 'studio' | 'flat' | 'print';
 
 // ── Scale presets for known container sizes ────────────────────────
 // Base is 280×400 (Book3DPreview). Other sizes scale proportionally.
@@ -26,18 +21,9 @@ export const COVER_SCALE = {
   print:  2,       // ~560×794  (A5 at 96 dpi)
 } as const;
 
-// ── Overlay gradients ─────────────────────────────────────────────
-export const FRONT_OVERLAY: Record<CoverVariant, string> = {
-  studio: 'linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.5))',
-  flat:   'linear-gradient(to bottom, rgba(0,0,0,0.08), rgba(0,0,0,0.25))',
-  print:  'linear-gradient(to bottom, rgba(0,0,0,0.10), rgba(0,0,0,0.35))',
-};
-
-export const BACK_OVERLAY: Record<CoverVariant, string> = {
-  studio: 'linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.7))',
-  flat:   'linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0.55))',
-  print:  'linear-gradient(to bottom, rgba(0,0,0,0.40), rgba(0,0,0,0.60))',
-};
+// ── Overlay gradients (single values — same everywhere) ──────────
+export const FRONT_OVERLAY = 'linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.5))';
+export const BACK_OVERLAY  = 'linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.7))';
 
 // ── Default text positions (percentage) ───────────────────────────
 export const DEFAULT_TITLE_POS    = { x: 50, y: 20 };
@@ -45,7 +31,6 @@ export const DEFAULT_AUTHOR_POS   = { x: 50, y: 85 };
 export const DEFAULT_SYNOPSIS_POS = { x: 50, y: 40 };
 
 // ── Title ─────────────────────────────────────────────────────────
-// `scale` adjusts px values for containers larger than the base 280×400.
 export function titleStyle(
   title: string,
   textColor: string,

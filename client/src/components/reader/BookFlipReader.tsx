@@ -270,7 +270,7 @@ export default function BookFlipReader({
                     backgroundSize: 'cover', backgroundPosition: 'center', direction: 'rtl',
                   }}
                 >
-                  <div className="absolute inset-0" style={{ background: BACK_OVERLAY.flat }} />
+                  <div className="absolute inset-0" style={{ background: BACK_OVERLAY }} />
                   <div className="relative z-10 h-full flex flex-col p-6">
                     <div className="flex-1 flex items-center justify-center">
                       {(() => {
@@ -303,7 +303,7 @@ export default function BookFlipReader({
                   }}
                 >
                   {frontCoverImageUrl && (
-                    <div className="absolute inset-0" style={{ background: FRONT_OVERLAY.flat }} />
+                    <div className="absolute inset-0" style={{ background: FRONT_OVERLAY }} />
                   )}
                   <div className="absolute z-10" style={{ left: `${DEFAULT_TITLE_POS.x}%`, top: `${DEFAULT_TITLE_POS.y}%`, transform: 'translate(-50%, -50%)', maxWidth: '85%' }}>
                     <h1 className="break-words" style={titleStyle(book.title, textColor, fontFamily, COVER_SCALE.reader)}>
@@ -522,7 +522,7 @@ export default function BookFlipReader({
                   }}
                 >
                   {frontCoverImageUrl && (
-                    <div className="absolute inset-0" style={{ background: FRONT_OVERLAY.flat }} />
+                    <div className="absolute inset-0" style={{ background: FRONT_OVERLAY }} />
                   )}
                   <div className="absolute z-10" style={{ left: `${DEFAULT_TITLE_POS.x}%`, top: `${DEFAULT_TITLE_POS.y}%`, transform: 'translate(-50%, -50%)', maxWidth: '85%' }}>
                     <h1 className="break-words" style={titleStyle(book.title, textColor, fontFamily, COVER_SCALE.reader)}>
@@ -549,7 +549,7 @@ export default function BookFlipReader({
                     backgroundSize: 'cover', backgroundPosition: 'center', direction: 'ltr',
                   }}
                 >
-                  <div className="absolute inset-0" style={{ background: BACK_OVERLAY.flat }} />
+                  <div className="absolute inset-0" style={{ background: BACK_OVERLAY }} />
                   <div className="relative z-10 h-full flex flex-col p-6">
                     <div className="flex-1 flex items-center justify-center">
                       {(() => {

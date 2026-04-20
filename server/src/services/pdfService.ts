@@ -192,13 +192,18 @@ function buildBookHtml(book: any, authorName: string): string {
 
   const pagesHtml = pages.map((p, i) => renderPage(p, i)).join('\n');
 
+  // Font sizes matching client/src/utils/coverStyles.ts (scale ≈ 2 for A5 print)
+  const titleLen = (book.title || '').length;
+  const coverTitleSize = titleLen > 30 ? 32 : titleLen > 20 ? 40 : 52;
+  const coverAuthorSize = 36;
+
   const coverHtml = `
     <div class="cover-page" style="background:${coverBg}">
       ${coverImg ? `<img class="cover-img" src="${coverImg}" crossorigin="anonymous" alt="" />` : ''}
       <div class="cover-overlay"></div>
       <div class="cover-text">
-        <h1 class="cover-title" style="color:${coverTitleC}">${book.title}</h1>
-        ${authorName ? `<div class="cover-author" style="color:${coverTitleC}">${isRtl ? `מאת ${authorName}` : `by ${authorName}`}</div>` : ''}
+        <h1 class="cover-title" style="color:${coverTitleC}; font-size:${coverTitleSize}px">${book.title}</h1>
+        ${authorName ? `<div class="cover-author" style="color:${coverTitleC}; font-size:${coverAuthorSize}px">${isRtl ? `מאת ${authorName}` : `by ${authorName}`}</div>` : ''}
       </div>
     </div>`;
 
@@ -281,18 +286,22 @@ function buildBookHtml(book: any, authorName: string): string {
       position: absolute; inset: 0;
       width: 100%; height: 100%; object-fit: cover; z-index: 0;
     }
+    /* Keep in sync with client/src/utils/coverStyles.ts */
     .cover-overlay {
       position: absolute; inset: 0;
-      background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.75) 100%);
+      background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.5));
       z-index: 1;
     }
     .cover-text { position: relative; z-index: 2; text-align: center; padding: 0 24px; }
     .cover-title {
       font-family: ${titleFontStack};
-      font-size: 34px; font-weight: 700; margin: 0 0 16px 0;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      font-weight: 700; margin: 0 0 16px 0;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
     }
-    .cover-author { font-size: 16px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.9; }
+    .cover-author {
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+      opacity: 0.9;
+    }
     @media print {
       html, body { background: #fff; }
       .print-page, .cover-page { margin: 0; }
