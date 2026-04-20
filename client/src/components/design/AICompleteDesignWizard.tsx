@@ -191,11 +191,14 @@ const STYLE_VARIANTS: StyleVariantConfig[] = [
 // ─── Progress Steps ───────────────────────────────────────────────────────────
 
 const PROGRESS_STEPS: { titleHe: string; titleEn: string; percent: number }[] = [
-  { titleHe: 'מנתח את תוכן הספר...', titleEn: 'Analyzing book content...', percent: 10 },
-  { titleHe: 'בוחר פלטת צבעים...', titleEn: 'Selecting color palette...', percent: 30 },
-  { titleHe: 'מתאים גופנים ועיצוב...', titleEn: 'Matching fonts and design...', percent: 55 },
-  { titleHe: 'מציב תמונות ומרכיבים...', titleEn: 'Placing images and elements...', percent: 75 },
-  { titleHe: 'מסיים ומכין תצוגה מקדימה...', titleEn: 'Finishing and preparing preview...', percent: 95 },
+  { titleHe: 'מנתח את תוכן הספר...', titleEn: 'Analyzing book content...', percent: 8 },
+  { titleHe: 'בוחר פלטת צבעים...', titleEn: 'Selecting color palette...', percent: 18 },
+  { titleHe: 'מתאים גופנים ועיצוב...', titleEn: 'Matching fonts and design...', percent: 28 },
+  { titleHe: 'מעצב כריכה...', titleEn: 'Designing cover...', percent: 35 },
+  { titleHe: 'מייצר תמונת כריכה עם AI...', titleEn: 'Generating cover image with AI...', percent: 50 },
+  { titleHe: 'מייצר איורים לפרקים...', titleEn: 'Generating chapter illustrations...', percent: 70 },
+  { titleHe: 'שומר ומסיים...', titleEn: 'Saving and finishing...', percent: 90 },
+  { titleHe: 'מוכן!', titleEn: 'Ready!', percent: 100 },
 ];
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
@@ -232,6 +235,7 @@ interface ImagePlacement {
   suggestedPrompt: string;
   importance: 'high' | 'medium' | 'low';
   reasoning: string;
+  generatedImageUrl?: string;
 }
 
 interface Typography {
@@ -390,10 +394,10 @@ export default function AICompleteDesignWizard({
       updateStep('layout', 2, 2);
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Step 4: Cover
-      updateStep('cover', 3, 3);
+      // Step 4: Finalizing layout
+      updateStep('layout', 3, 3);
 
-      // Process the design response
+      // Process the design response (layout only — cover is handled separately by the user)
       const processedDesign: CompleteDesign = {
         typography: data.typography || {
           bodyFont: 'David Libre',
@@ -438,14 +442,6 @@ export default function AICompleteDesignWizard({
         moodDescription: data.moodDescription || data.theme?.primaryTheme || '',
       };
 
-      // Set cover images if generated
-      if (data.covers) {
-        setCoverImages({
-          front: data.covers.frontImageUrl,
-          back: data.covers.backImageUrl,
-        });
-      }
-
       // Step 5: Generate synopsis if enabled and not already exists
       if (generateSynopsis && (!book.synopsis || book.synopsis.length < 50)) {
         updateStep('synopsis', 4, 3);
@@ -470,24 +466,9 @@ export default function AICompleteDesignWizard({
       // Step 7: Saving
       updateStep('saving', 6, 4);
 
-      // Save core data to the book (variant-specific fields will be saved when user picks a variant)
+      // Save layout data only — cover design is handled separately by the user
       try {
         const savePayload: any = {
-          coverDesign: {
-            coverColor: processedDesign.cover.front.backgroundColor || processedDesign.cover.front.colorPalette?.[0],
-            textColor: processedDesign.cover.front.title.color,
-            fontFamily: processedDesign.cover.front.title.font,
-            imageUrl: coverImages.front || data.covers?.frontImageUrl,
-            front: {
-              ...processedDesign.cover.front,
-              imageUrl: coverImages.front || data.covers?.frontImageUrl,
-            },
-            back: {
-              ...processedDesign.cover.back,
-              imageUrl: coverImages.back || data.covers?.backImageUrl,
-            },
-            spine: processedDesign.cover.spine,
-          },
           pageLayout: {
             bodyFont: processedDesign.typography.bodyFont,
             headingFont: processedDesign.typography.headingFont,
