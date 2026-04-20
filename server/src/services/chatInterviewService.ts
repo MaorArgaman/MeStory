@@ -466,8 +466,9 @@ export async function createInterview(
   });
 
   if (error) {
-    console.error('interview_sessions insert failed:', error.message, error.details, error.hint);
-    (state as any)._dbError = `${error.message} | ${error.details || ''} | ${error.hint || ''}`;
+    const msg = `DB insert failed: ${error.message} | details: ${error.details || 'none'} | hint: ${error.hint || 'none'} | code: ${error.code || 'none'}`;
+    console.error('interview_sessions insert failed:', error);
+    throw new Error(msg);
   }
 
   // Cache in memory for fast reads within this instance
