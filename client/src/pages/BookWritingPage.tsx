@@ -1263,8 +1263,8 @@ export default function BookWritingPage() {
                     {/* Guiding questions — shown when chapter is empty */}
                     {(!content || content === '<p></p>' || content.trim() === '') && editor && (
                       <div className="max-w-4xl mx-auto px-4 pb-3">
-                        <div className="rounded-xl border border-dashed border-indigo-500/30 bg-indigo-500/5 p-4">
-                          <p className="text-xs text-indigo-400 mb-3 font-medium">
+                        <div className="rounded-xl border border-dashed border-indigo-500/40 bg-indigo-500/10 p-4">
+                          <p className="text-sm text-indigo-700 mb-3 font-semibold">
                             {isHebrew ? '✍️ שאלות מנחות להתחלה:' : '✍️ Guiding questions to get started:'}
                           </p>
                           <div className="flex flex-wrap gap-2">
@@ -1289,7 +1289,7 @@ export default function BookWritingPage() {
                                     editor.chain().focus().insertContent(`<p>${q}</p>`).run();
                                   }
                                 }}
-                                className="text-xs px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-indigo-500/20 hover:border-indigo-500/40 transition-all text-right"
+                                className="text-sm px-3 py-1.5 rounded-full bg-white border border-indigo-300 text-gray-800 hover:text-white hover:bg-indigo-600 hover:border-indigo-600 transition-all text-right shadow-sm"
                               >
                                 {q}
                               </button>
