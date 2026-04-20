@@ -2515,25 +2515,42 @@ export const uploadCoverImage = async (req: AuthRequest, res: Response): Promise
       return;
     }
 
-    // Check if running in Vercel serverless environment
-    const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
-
     let imageUrl: string;
 
-    if (isVercel && req.file.buffer) {
-      // On Vercel: convert to base64 data URL for storage in database
-      const mimeType = req.file.mimetype || 'image/jpeg';
-      const base64Data = req.file.buffer.toString('base64');
-      imageUrl = `data:${mimeType};base64,${base64Data}`;
-    } else if (req.file.filename) {
-      // On local: use file path
-      imageUrl = `/uploads/${req.file.filename}`;
-    } else {
-      res.status(400).json({
-        success: false,
-        error: 'Invalid file upload',
+    // Always try to upload to Supabase Storage for a stable HTTP URL.
+    // This avoids base64 blobs in the DB that get stripped on layout saves.
+    try {
+      const { persistImage } = await import('../services/imagePersistenceService');
+
+      let tempUrl: string;
+      if (req.file.buffer) {
+        // Vercel / memoryStorage: create a data URL so persistImage can decode it
+        const mimeType = req.file.mimetype || 'image/jpeg';
+        tempUrl = `data:${mimeType};base64,${req.file.buffer.toString('base64')}`;
+      } else if (req.file.filename) {
+        tempUrl = `/uploads/${req.file.filename}`;
+      } else {
+        res.status(400).json({ success: false, error: 'Invalid file upload' });
+        return;
+      }
+
+      imageUrl = await persistImage(tempUrl, {
+        userId: req.user.id,
+        bookId: id,
+        mimeTypeHint: req.file.mimetype,
       });
-      return;
+    } catch (storageErr: any) {
+      console.warn('[uploadCoverImage] Supabase upload failed, falling back:', storageErr?.message);
+      // Fallback: store locally or as base64 (same as old behaviour)
+      if (req.file.filename) {
+        imageUrl = `/uploads/${req.file.filename}`;
+      } else if (req.file.buffer) {
+        const mimeType = req.file.mimetype || 'image/jpeg';
+        imageUrl = `data:${mimeType};base64,${req.file.buffer.toString('base64')}`;
+      } else {
+        res.status(400).json({ success: false, error: 'Invalid file upload' });
+        return;
+      }
     }
 
     // Update book cover design with proper typing
