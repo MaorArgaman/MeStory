@@ -1012,8 +1012,17 @@ export default function BookWritingPage() {
         </div>
         <div className="lg:hidden fixed bottom-4 right-4 z-40 flex flex-col gap-2">
           <button
+            onClick={() => setFocusMode(true)}
+            className="glass-strong p-3 rounded-full border border-white/10 shadow-lg"
+            aria-label={isHebrew ? 'מסך מלא' : 'Fullscreen'}
+            title={isHebrew ? 'מסך מלא' : 'Fullscreen'}
+          >
+            <Maximize2 className="w-5 h-5 text-memorial-gold" />
+          </button>
+          <button
             onClick={() => setShowRightSidebar(!showRightSidebar)}
             className="glass-strong p-3 rounded-full border border-white/10 shadow-lg"
+            aria-label={isHebrew ? 'עוזר כתיבה' : 'Writing helper'}
           >
             <Sparkles className="w-5 h-5 text-purple-400" />
           </button>
