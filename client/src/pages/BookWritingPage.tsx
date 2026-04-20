@@ -734,10 +734,10 @@ export default function BookWritingPage() {
   if (focusMode && currentChapter && editor) {
     return (
       <div className="fixed inset-0 z-[100] bg-[#faf8f5] flex flex-col" dir={isHebrew ? 'rtl' : 'ltr'}>
-        {/* Minimal header */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200/50">
-          <img src="/img/new/logo-mestory-large.png" alt="MeStory" className="h-10 object-contain" />
-          <div className="flex items-center gap-3">
+        {/* Minimal header with centered logo */}
+        <div className="relative flex items-center justify-center px-6 py-4 border-b border-gray-200/50">
+          <img src="/img/new/logo-mestory-large.png" alt="MeStory" className="h-16 object-contain" />
+          <div className="absolute right-4 flex items-center gap-3">
             <span className="text-sm text-gray-400">
               {saving ? (isHebrew ? 'שומר...' : 'Saving...') : saved ? (isHebrew ? 'נשמר' : 'Saved') : ''}
             </span>
