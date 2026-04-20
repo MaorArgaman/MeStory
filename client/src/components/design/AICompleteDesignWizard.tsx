@@ -394,26 +394,20 @@ export default function AICompleteDesignWizard({
       updateStep('layout', 2, 2);
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Step 4: Finalizing layout
-      updateStep('layout', 3, 3);
+      // Step 4: Cover design
+      updateStep('cover', 3, 3);
 
-      // Process the design response (layout only — cover is handled separately by the user)
+      // Build design from local genre template
       const processedDesign: CompleteDesign = {
         typography: data.typography || {
-          bodyFont: 'David Libre',
-          headingFont: 'Secular One',
-          titleFont: 'Suez One',
-          fontSize: 14,
-          lineHeight: 1.7,
-          chapterTitleSize: 28,
+          bodyFont: 'David Libre', headingFont: 'Secular One', titleFont: 'Suez One',
+          fontSize: 14, lineHeight: 1.7, chapterTitleSize: 28,
           colors: { text: '#1a1a2e', heading: '#2c3e50', accent: '#6366f1' },
         },
         layout: data.layout || {
           margins: { top: 50, bottom: 50, inner: 60, outer: 40 },
-          chapterStartStyle: 'new-page-centered',
-          pageNumberPosition: 'bottom-center',
-          headerStyle: 'chapter-title',
-          dropCaps: true,
+          chapterStartStyle: 'new-page-centered', pageNumberPosition: 'bottom-center',
+          headerStyle: 'chapter-title', dropCaps: true,
         },
         cover: data.coverDesign || data.cover || {
           front: {
@@ -429,46 +423,95 @@ export default function AICompleteDesignWizard({
             author: { text: book.author?.name || '', font: 'David Libre', size: 16, color: '#ffffff' },
             backgroundColor: '#1a1a2e',
           },
-          spine: {
-            title: book.title,
-            author: book.author?.name || '',
-            font: 'David Libre',
-            color: '#ffffff',
-            backgroundColor: '#6366f1',
-          },
+          spine: { title: book.title, author: book.author?.name || '', font: 'David Libre', color: '#ffffff', backgroundColor: '#6366f1' },
         },
-        imagePlacements: data.imagePlacements || [],
+        imagePlacements: [],
         overallStyle: data.overallStyle || 'professional',
         moodDescription: data.moodDescription || data.theme?.primaryTheme || '',
       };
 
-      // Step 5: Generate synopsis if enabled and not already exists
+      // Generate synopsis if enabled
       if (generateSynopsis && (!book.synopsis || book.synopsis.length < 50)) {
-        updateStep('synopsis', 4, 3);
         try {
-          const synopsisResponse = await api.post('/ai/generate-synopsis', { bookId });
-          if (synopsisResponse.data.success && synopsisResponse.data.data.synopsis) {
-            setSynopsis(synopsisResponse.data.data.synopsis);
-            processedDesign.synopsis = synopsisResponse.data.data.synopsis;
-            if (processedDesign.cover?.back?.synopsis) {
-              processedDesign.cover.back.synopsis.text = synopsisResponse.data.data.synopsis;
-            }
+          const synRes = await api.post('/ai/generate-synopsis', { bookId });
+          if (synRes.data.success && synRes.data.data.synopsis) {
+            const syn = synRes.data.data.synopsis;
+            setSynopsis(syn);
+            processedDesign.synopsis = syn;
+            if (processedDesign.cover?.back?.synopsis) processedDesign.cover.back.synopsis.text = syn;
           }
-        } catch (_synopsisError) {
-          // non-fatal
-        }
+        } catch (_e) { /* non-fatal */ }
       }
 
-      // Step 6: Images
-      updateStep('images', 5, 4);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // ── Step 5: Generate cover image with AI ────────────────────────────────
+      let generatedCoverImages: { front?: string; back?: string } = {};
+      if (generateCoverImages) {
+        setProgressStepIndex(4);
+        try {
+          const coverRes = await api.post('/ai/generate-cover', {
+            title: book.title,
+            genre: book.genre,
+            synopsis: book.synopsis || book.description || processedDesign.synopsis || '',
+          }, { timeout: 120000 });
+          if (coverRes.data.success && coverRes.data.data) {
+            const cd = coverRes.data.data;
+            const frontUrl = cd.frontImageUrl || cd.imageUrl || cd.front?.imageUrl;
+            const backUrl = cd.backImageUrl || cd.back?.imageUrl;
+            if (frontUrl) generatedCoverImages.front = frontUrl;
+            if (backUrl) generatedCoverImages.back = backUrl;
+          }
+        } catch (coverErr: any) {
+          console.warn('[AIDesignWizard] Cover generation failed (non-fatal):', coverErr.message);
+        }
+        setCoverImages(generatedCoverImages);
+      }
 
-      // Step 7: Saving
-      updateStep('saving', 6, 4);
+      // ── Step 6: Generate interior chapter illustrations ──────────────────────
+      if (generateInteriorImages && book.chapters && book.chapters.length > 0) {
+        updateStep('images', 5, 5);
+        const maxImages = Math.min(book.chapters.length, 5);
+        const placements: ImagePlacement[] = [];
+        for (let i = 0; i < maxImages; i++) {
+          const chapter = book.chapters[i];
+          if (!chapter.content || chapter.content.length < 50) continue;
+          try {
+            const illRes = await api.post(
+              `/ai/generate-illustration/${bookId}/${i}`,
+              { style: 'illustration' },
+              { timeout: 120000 },
+            );
+            if (illRes.data.success && illRes.data.data?.imageUrl) {
+              const d = illRes.data.data;
+              placements.push({
+                chapterIndex: i, position: 'chapter-start',
+                textContext: chapter.content.slice(0, 200),
+                suggestedPrompt: d.prompt || d.enhancedPrompt || '',
+                importance: i === 0 ? 'high' : 'medium',
+                reasoning: `AI illustration for ${chapter.title}`,
+                generatedImageUrl: d.imageUrl,
+              });
+            }
+          } catch (illErr: any) {
+            console.warn(`[AIDesignWizard] Illustration ch${i} failed (non-fatal):`, illErr.message);
+          }
+          setAnimatedPercent(50 + Math.round((i + 1) / maxImages * 20));
+        }
+        processedDesign.imagePlacements = placements;
+      }
 
-      // Save layout data only — cover design is handled separately by the user
+      // ── Step 7: Save to server ──────────────────────────────────────────────
+      updateStep('saving', 6, 6);
       try {
         const savePayload: any = {
+          coverDesign: {
+            coverColor: processedDesign.cover.front.backgroundColor || processedDesign.cover.front.colorPalette?.[0],
+            textColor: processedDesign.cover.front.title.color,
+            fontFamily: processedDesign.cover.front.title.font,
+            imageUrl: generatedCoverImages.front,
+            front: { ...processedDesign.cover.front, imageUrl: generatedCoverImages.front },
+            back: { ...processedDesign.cover.back, imageUrl: generatedCoverImages.back },
+            spine: processedDesign.cover.spine,
+          },
           pageLayout: {
             bodyFont: processedDesign.typography.bodyFont,
             headingFont: processedDesign.typography.headingFont,
@@ -478,32 +521,30 @@ export default function AICompleteDesignWizard({
             textColor: processedDesign.typography.colors.text,
             accentColor: processedDesign.typography.colors.accent,
             margins: {
-              top: processedDesign.layout.margins.top,
-              bottom: processedDesign.layout.margins.bottom,
-              left: processedDesign.layout.margins.inner,
-              right: processedDesign.layout.margins.outer,
+              top: processedDesign.layout.margins.top, bottom: processedDesign.layout.margins.bottom,
+              left: processedDesign.layout.margins.inner, right: processedDesign.layout.margins.outer,
             },
             chapterStartStyle: processedDesign.layout.chapterStartStyle,
             pageNumberPosition: processedDesign.layout.pageNumberPosition,
             headerStyle: processedDesign.layout.headerStyle,
             dropCaps: processedDesign.layout.dropCaps,
-            headerFooter: {
-              includePageNumbers: processedDesign.layout.pageNumberPosition !== 'none',
-            },
+            headerFooter: { includePageNumbers: processedDesign.layout.pageNumberPosition !== 'none' },
           },
         };
-
+        if (processedDesign.imagePlacements.length > 0) {
+          savePayload.aiDesignState = {
+            status: 'completed',
+            design: { imagePlacements: processedDesign.imagePlacements },
+          };
+        }
         if (synopsis || processedDesign.synopsis) {
           savePayload.synopsis = synopsis || processedDesign.synopsis;
         }
-
         await api.put(`/books/${bookId}`, savePayload);
-      } catch (_saveError) {
-        // non-fatal
-      }
+      } catch (_saveError) { /* non-fatal */ }
 
+      setProgressStepIndex(7);
       setDesign(processedDesign);
-      // Go to variant selection before preview
       setStep('variant');
 
     } catch (err: any) {
@@ -526,7 +567,7 @@ export default function AICompleteDesignWizard({
       setError(heMsg);
       setStep('intro');
     }
-  }, [bookId, book, generateCoverImages, generateInteriorImages, generateSynopsis]);
+  }, [bookId, book, generateCoverImages, generateInteriorImages, generateSynopsis, isHebrew]);
 
   const applyVariantToDesign = (base: CompleteDesign, variantKey: StyleVariantKey): CompleteDesign => {
     const v = STYLE_VARIANTS.find(sv => sv.key === variantKey)!;

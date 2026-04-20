@@ -1888,38 +1888,54 @@ export default function BookLayoutPage() {
       generatedAt: new Date(),
     } as CompleteBookDesign);
 
-    // Add image placeholders based on AI suggestions
+    // Add AI-generated images to chapter pages (or placeholders if no image was generated)
     if (design.imagePlacements && design.imagePlacements.length > 0) {
       const updatedPages = [...pages];
       design.imagePlacements.forEach((placement: any) => {
         const chapterPages = updatedPages.filter(p => p.type === 'chapter' && p.chapterIndex === placement.chapterIndex);
-        if (chapterPages.length > 0) {
-          const targetPage = placement.position === 'chapter-start' ? chapterPages[0] :
-                            placement.position === 'chapter-end' ? chapterPages[chapterPages.length - 1] :
-                            chapterPages[Math.floor(chapterPages.length / 2)];
+        if (chapterPages.length === 0) return;
 
-          if (targetPage) {
-            const pageIndex = updatedPages.findIndex(p => p.id === targetPage.id);
-            if (pageIndex !== -1) {
-              // Add image placeholder info to settings
-              const existingPlaceholders = (newSettings as any).imagePlaceholders || [];
-              (newSettings as any).imagePlaceholders = [
-                ...existingPlaceholders,
-                {
-                  pageIndex,
-                  x: 60,
-                  y: placement.position === 'chapter-start' ? 10 : placement.position === 'mid-chapter' ? 40 : 70,
-                  width: 35,
-                  height: 25,
-                  shape: 'rounded',
-                  prompt: placement.suggestedPrompt,
-                },
-              ];
-            }
+        const targetPage = placement.position === 'chapter-start' ? chapterPages[0] :
+                          placement.position === 'chapter-end' ? chapterPages[chapterPages.length - 1] :
+                          chapterPages[Math.floor(chapterPages.length / 2)];
+        if (!targetPage) return;
+
+        const pageIndex = updatedPages.findIndex(p => p.id === targetPage.id);
+        if (pageIndex === -1) return;
+
+        if (placement.generatedImageUrl) {
+          // Actual AI-generated image — add to page images array
+          if (!updatedPages[pageIndex].images) updatedPages[pageIndex].images = [];
+          const alreadyExists = updatedPages[pageIndex].images.some(
+            (img: any) => img.url === placement.generatedImageUrl
+          );
+          if (!alreadyExists) {
+            updatedPages[pageIndex].images.push({
+              id: `ai-wizard-${placement.chapterIndex}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              url: placement.generatedImageUrl,
+              x: 10, y: 5, width: 80, height: 35, rotation: 0,
+            });
           }
+        } else {
+          // No generated image — add placeholder in settings
+          const existingPlaceholders = (newSettings as any).imagePlaceholders || [];
+          (newSettings as any).imagePlaceholders = [
+            ...existingPlaceholders,
+            {
+              pageIndex,
+              x: 60,
+              y: placement.position === 'chapter-start' ? 10 : placement.position === 'mid-chapter' ? 40 : 70,
+              width: 35, height: 25, shape: 'rounded',
+              prompt: placement.suggestedPrompt,
+            },
+          ];
         }
       });
-      setPages(updatedPages);
+
+      // Re-paginate to account for images reducing available text space
+      const bookIsRTLLocal = isRTL(book?.title || '') || book?.language === 'he';
+      const rePaginated = repaginateForImages(updatedPages, newSettings, bookIsRTLLocal);
+      setPages(rePaginated);
       setSettings(newSettings);
     }
 
