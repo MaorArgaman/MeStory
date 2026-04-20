@@ -41,7 +41,7 @@ import AICopilot from '../components/editor/AICopilot';
 import EditorToolbar from '../components/editor/EditorToolbar';
 import DraftNotes from '../components/editor/DraftNotes';
 import AIFloatingToolbar, { AIEnhancePreview } from '../components/editor/AIFloatingToolbar';
-import { enhanceText } from '../services/analysisApi';
+import { enhanceText, getInterviewCoverage, InterviewCoverage } from '../services/analysisApi';
 import { EnhanceAction, EnhanceResult } from '../types/analysis';
 import { useWritingGuidance } from '../components/analysis/WritingGuidanceAlert';
 import TensionArcChart from '../components/analysis/TensionArcChart';
@@ -180,6 +180,8 @@ export default function BookWritingPage() {
   // AI Enhancement state
   const [enhancing, setEnhancing] = useState(false);
   const [loadingAction, setLoadingAction] = useState<EnhanceAction | null>(null);
+  const [coverage, setCoverage] = useState<InterviewCoverage | null>(null);
+  const [loadingCoverage, setLoadingCoverage] = useState(false);
   const [previewData, setPreviewData] = useState<{
     isOpen: boolean;
     originalText: string;
@@ -695,6 +697,25 @@ export default function BookWritingPage() {
     } finally {
       setEnhancing(false);
       setLoadingAction(null);
+    }
+  };
+
+  // Compare what the author has written to the interview topics
+  const handleCheckCoverage = async () => {
+    if (!book) return;
+    setLoadingCoverage(true);
+    try {
+      const result = await getInterviewCoverage(book.id || (book as any)._id);
+      if (!result) {
+        toast.error(isHebrew ? 'צריך לכתוב עוד טקסט כדי לקבל ניתוח' : 'Write more text to get an analysis');
+        return;
+      }
+      setCoverage(result);
+    } catch (error) {
+      console.error('Coverage analysis failed:', error);
+      toast.error(isHebrew ? 'שגיאה בניתוח הכיסוי' : 'Failed to analyze coverage');
+    } finally {
+      setLoadingCoverage(false);
     }
   };
 
@@ -1419,7 +1440,7 @@ export default function BookWritingPage() {
 
               {/* Story Context from Interview — shown if book has chat-interview fields */}
               {(() => {
-                const sc: any = book?.storyContext || {};
+                const sc: any = (book as any)?.storyContext || {};
                 const hasChatCtx = sc.theme || sc.characters || sc.conflict || sc.climax ||
                   sc.resolution || sc.setting || sc.keyPoints || sc.narrativeArc;
                 if (!hasChatCtx) return null;
@@ -1553,6 +1574,84 @@ export default function BookWritingPage() {
                       </span>
                       {isHebrew ? 'תוסיף פרטים' : 'Add details'}
                     </button>
+
+                    {/* Interview Coverage — compare written text to interview topics */}
+                    {(() => {
+                      const sc: any = (book as any)?.storyContext || {};
+                      const hasChatCtx = sc.theme || sc.characters || sc.conflict || sc.climax ||
+                        sc.resolution || sc.setting || sc.keyPoints || sc.narrativeArc;
+                      if (!hasChatCtx) return null;
+                      return (
+                        <button
+                          onClick={handleCheckCoverage}
+                          disabled={loadingCoverage}
+                          className="w-full text-right py-3 px-4 rounded-xl bg-memorial-gold/10 hover:bg-memorial-gold/20 border border-memorial-gold/30 hover:border-memorial-gold/50 text-memorial-gold text-sm font-medium transition-all flex items-center gap-3 disabled:opacity-60"
+                          dir={isHebrew ? 'rtl' : 'ltr'}
+                        >
+                          <span className="w-8 h-8 rounded-lg bg-memorial-gold/20 flex items-center justify-center flex-shrink-0">
+                            {loadingCoverage ? (
+                              <div className="w-4 h-4 border-2 border-memorial-gold/40 border-t-memorial-gold rounded-full animate-spin" />
+                            ) : (
+                              <span className="text-base">📊</span>
+                            )}
+                          </span>
+                          {isHebrew ? 'השוואה לראיון + ציון' : 'Compare to interview + score'}
+                        </button>
+                      );
+                    })()}
+
+                    {/* Coverage results */}
+                    {coverage && (
+                      <div className="rounded-xl border border-memorial-gold/30 bg-memorial-gold/5 p-3 space-y-3" dir={isHebrew ? 'rtl' : 'ltr'}>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-semibold text-memorial-gold">
+                            {isHebrew ? 'ציון כיסוי הראיון' : 'Interview coverage'}
+                          </span>
+                          <button
+                            onClick={() => setCoverage(null)}
+                            className="text-gray-400 hover:text-white text-xs"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-3xl font-bold text-memorial-gold">{coverage.overallScore}<span className="text-base">/100</span></div>
+                          <p className="text-xs text-gray-300 mt-1">{coverage.encouragement}</p>
+                        </div>
+                        {coverage.topGaps.length > 0 && (
+                          <div className="space-y-1">
+                            <div className="text-xs font-medium text-amber-300">
+                              {isHebrew ? '⚠️ פערים עיקריים:' : '⚠️ Main gaps:'}
+                            </div>
+                            {coverage.topGaps.map((gap, i) => (
+                              <div key={i} className="text-xs text-gray-200 pl-2">• {gap}</div>
+                            ))}
+                          </div>
+                        )}
+                        <details className="text-xs">
+                          <summary className="cursor-pointer text-gray-400 hover:text-white">
+                            {isHebrew ? 'פירוט לפי נושא' : 'Per-topic breakdown'}
+                          </summary>
+                          <div className="mt-2 space-y-2">
+                            {coverage.topics.map((t) => (
+                              <div key={t.topic} className="border-t border-white/10 pt-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-medium text-gray-200">{t.label}</span>
+                                  <span className={`px-2 py-0.5 rounded text-[10px] ${
+                                    t.status === 'covered' ? 'bg-green-500/20 text-green-300' :
+                                    t.status === 'partial' ? 'bg-yellow-500/20 text-yellow-300' :
+                                    'bg-red-500/20 text-red-300'
+                                  }`}>{t.coverageScore}/100</span>
+                                </div>
+                                {t.suggestion && (
+                                  <div className="mt-1 text-gray-300">💡 {t.suggestion}</div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="card p-4">

@@ -11,6 +11,7 @@ import {
   analyzeWritingTechniques,
   checkWritingGuidance,
   calculateScoreChange,
+  getInterviewCoverage,
 } from '../controllers/analysisController';
 import { authenticate } from '../middleware/auth';
 import rateLimit from 'express-rate-limit';
@@ -73,6 +74,13 @@ router.post('/enhance-text', enhanceText as any);
  * }
  */
 router.post('/plot-structure/:bookId', analyzePlotStructure as any);
+
+/**
+ * GET /api/analysis/interview-coverage/:bookId
+ * Score how well the written text covers each topic from the interview
+ * and return suggestions for what's missing.
+ */
+router.get('/interview-coverage/:bookId', getInterviewCoverage as any);
 
 /**
  * POST /api/analysis/tension/:bookId

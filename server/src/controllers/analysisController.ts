@@ -112,6 +112,43 @@ export const enhanceText = async (req: Request, res: Response): Promise<void> =>
 };
 
 /**
+ * GET /api/analysis/interview-coverage/:bookId
+ * Score how well the written text covers each topic from the interview
+ * and return suggestions for what's missing.
+ */
+export const getInterviewCoverage = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { bookId } = req.params;
+    const book = await Book.findById(bookId);
+    if (!book) {
+      res.status(404).json({ success: false, message: 'Book not found' });
+      return;
+    }
+
+    const { analyzeInterviewCoverage } = await import('../services/interviewCoverageService');
+    const analysis = await analyzeInterviewCoverage(book);
+
+    if (!analysis) {
+      res.status(200).json({
+        success: true,
+        data: null,
+        message: 'No interview context or not enough written text to analyze',
+      });
+      return;
+    }
+
+    res.status(200).json({ success: true, data: analysis });
+  } catch (error) {
+    console.error('Error analyzing interview coverage:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to analyze interview coverage',
+      error: (error as Error).message,
+    });
+  }
+};
+
+/**
  * POST /api/analysis/plot-structure/:bookId
  * Analyze book plot structure (three-act)
  */

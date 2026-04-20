@@ -72,6 +72,31 @@ export const checkWritingGuidance = async (
 };
 
 /**
+ * Interview coverage analysis
+ */
+export interface TopicCoverage {
+  topic: string;
+  label: string;
+  interviewAnswer: string;
+  coverageScore: number;
+  status: 'covered' | 'partial' | 'missing';
+  gap: string;
+  suggestion: string;
+}
+
+export interface InterviewCoverage {
+  overallScore: number;
+  topics: TopicCoverage[];
+  topGaps: string[];
+  encouragement: string;
+}
+
+export const getInterviewCoverage = async (bookId: string): Promise<InterviewCoverage | null> => {
+  const response = await api.get(`/analysis/interview-coverage/${bookId}`);
+  return response.data.data;
+};
+
+/**
  * Calculate score change after AI suggestion applied
  */
 export const calculateScoreChange = async (
