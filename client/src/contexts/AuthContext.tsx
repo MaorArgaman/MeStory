@@ -10,7 +10,7 @@ interface AuthContextType {
   needsVerification: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginWithToken: (token: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, couponCode?: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   markEmailVerified: () => void;
@@ -126,9 +126,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (name: string, email: string, password: string, couponCode?: string) => {
     try {
-      const response = await api.post('/auth/register', { name, email, password });
+      const response = await api.post('/auth/register', { name, email, password, couponCode: couponCode || undefined });
 
       if (response.data.success) {
         const { user, token, requiresVerification } = response.data.data;

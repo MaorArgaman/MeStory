@@ -42,6 +42,7 @@ import sitemapRoutes from './routes/sitemapRoutes';
 import collaborationRoutes from './routes/collaborationRoutes';
 import organizationRoutes from './routes/organizationRoutes';
 import jobRoutes from './routes/jobRoutes';
+import couponRoutes from './routes/couponRoutes';
 import { initializeDefaultTemplates } from './services/templateService';
 import { initializeSubscriptionJobs } from './jobs/subscriptionJobs';
 import { initializeCleanupJobs } from './jobs/cleanupJobs';
@@ -390,6 +391,7 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/collaboration', collaborationRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api/coupons', couponRoutes);
 
 // ============================================
 // Error Handling (must be last)

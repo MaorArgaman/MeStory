@@ -25,6 +25,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Calendar,
+  Ticket,
+  XCircle,
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useCurrency } from '../../contexts/CurrencyContext';
@@ -175,7 +177,18 @@ interface DetailedRevenueAnalytics {
   }>;
 }
 
-type Tab = 'overview' | 'users' | 'content' | 'analytics' | 'revenue' | 'organizations';
+interface Coupon {
+  id: string;
+  code: string;
+  plan: 'premium' | 'standard';
+  duration_days: number;
+  max_uses: number;
+  used_count: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+type Tab = 'overview' | 'users' | 'content' | 'analytics' | 'revenue' | 'organizations' | 'coupons';
 
 export default function AdminDashboard() {
   const { formatCurrency, formatCurrencyCompact } = useCurrency();
@@ -201,6 +214,11 @@ export default function AdminDashboard() {
   const [revenueError, setRevenueError] = useState<string | null>(null);
   const [revenuePeriod, setRevenuePeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
+  // Coupons state
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [couponsLoading, setCouponsLoading] = useState(false);
+  const [newCoupon, setNewCoupon] = useState({ code: '', plan: 'premium' as 'premium' | 'standard', durationDays: 30, maxUses: 1 });
+
   useEffect(() => {
     loadStats();
   }, []);
@@ -214,6 +232,8 @@ export default function AdminDashboard() {
       loadAnalytics();
     } else if (activeTab === 'revenue') {
       loadRevenueAnalytics();
+    } else if (activeTab === 'coupons') {
+      loadCoupons();
     }
   }, [activeTab]);
 
@@ -344,6 +364,65 @@ export default function AdminDashboard() {
     }
   };
 
+  const loadCoupons = async () => {
+    setCouponsLoading(true);
+    try {
+      const response = await api.get('/coupons');
+      if (response.data.success) {
+        setCoupons(response.data.data || response.data.coupons || []);
+      }
+    } catch (error: any) {
+      console.error('Failed to load coupons:', error);
+      toast.error(error.response?.data?.error || 'Failed to load coupons');
+    } finally {
+      setCouponsLoading(false);
+    }
+  };
+
+  const generateCouponCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    setNewCoupon((prev) => ({ ...prev, code }));
+  };
+
+  const handleCreateCoupon = async () => {
+    if (!newCoupon.code.trim()) {
+      toast.error('Please enter a coupon code');
+      return;
+    }
+    try {
+      const response = await api.post('/coupons', {
+        code: newCoupon.code,
+        plan: newCoupon.plan,
+        duration_days: newCoupon.durationDays,
+        max_uses: newCoupon.maxUses,
+      });
+      if (response.data.success) {
+        toast.success('Coupon created successfully');
+        setNewCoupon({ code: '', plan: 'premium', durationDays: 30, maxUses: 1 });
+        loadCoupons();
+      }
+    } catch (error: any) {
+      console.error('Failed to create coupon:', error);
+      toast.error(error.response?.data?.error || 'Failed to create coupon');
+    }
+  };
+
+  const handleDeactivateCoupon = async (id: string) => {
+    if (!confirm('Are you sure you want to deactivate this coupon?')) return;
+    try {
+      const response = await api.delete(`/coupons/${id}`);
+      if (response.data.success) {
+        toast.success('Coupon deactivated');
+        loadCoupons();
+      }
+    } catch (error: any) {
+      console.error('Failed to deactivate coupon:', error);
+      toast.error(error.response?.data?.error || 'Failed to deactivate coupon');
+    }
+  };
+
   const handlePromoteUser = async (userId: string, newRole: string) => {
     if (!userId) return;
     try {
@@ -440,6 +519,7 @@ export default function AdminDashboard() {
             { id: 'content' as Tab, label: 'Content Moderation', icon: AlertCircle },
             { id: 'analytics' as Tab, label: 'Analytics', icon: BarChart3 },
             { id: 'revenue' as Tab, label: 'Revenue', icon: Wallet },
+            { id: 'coupons' as Tab, label: 'קופונים', icon: Ticket },
           ].map((tab) => {
             const Icon = tab.icon;
             return (
@@ -1590,6 +1670,170 @@ export default function AdminDashboard() {
             exit={{ opacity: 0, y: -20 }}
           >
             <OrganizationsManager />
+          </motion.div>
+        )}
+
+        {/* Coupons Tab */}
+        {activeTab === 'coupons' && (
+          <motion.div
+            key="coupons"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            {/* Create Coupon Form */}
+            <GlassCard>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-display font-bold text-white">יצירת קופון חדש</h3>
+                  <p className="text-gray-400 text-sm">צור קופון למנוי פרימיום או סטנדרט</p>
+                </div>
+                <Ticket className="w-6 h-6 text-memorial-gold" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">קוד קופון</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newCoupon.code}
+                      onChange={(e) => setNewCoupon((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))}
+                      placeholder="PROMO2024"
+                      className="input flex-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={generateCouponCode}
+                      className="p-2 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20 transition"
+                      title="Generate random code"
+                    >
+                      <RefreshCw className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">תוכנית</label>
+                  <select
+                    value={newCoupon.plan}
+                    onChange={(e) => setNewCoupon((prev) => ({ ...prev, plan: e.target.value as 'premium' | 'standard' }))}
+                    className="input w-full"
+                  >
+                    <option value="premium">פרימיום</option>
+                    <option value="standard">סטנדרט</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">משך (ימים)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={newCoupon.durationDays}
+                    onChange={(e) => setNewCoupon((prev) => ({ ...prev, durationDays: parseInt(e.target.value) || 1 }))}
+                    className="input w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">שימושים מקסימליים</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={newCoupon.maxUses}
+                    onChange={(e) => setNewCoupon((prev) => ({ ...prev, maxUses: parseInt(e.target.value) || 1 }))}
+                    className="input w-full"
+                  />
+                </div>
+                <div>
+                  <GlowingButton onClick={handleCreateCoupon} variant="gold" className="w-full">
+                    <Ticket className="w-5 h-5" />
+                    צור קופון
+                  </GlowingButton>
+                </div>
+              </div>
+            </GlassCard>
+
+            {/* Coupons Table */}
+            <GlassCard>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-display font-bold text-white">כל הקופונים</h3>
+                <GlowingButton onClick={loadCoupons} variant="cosmic" disabled={couponsLoading}>
+                  <RefreshCw className={`w-5 h-5 ${couponsLoading ? 'animate-spin' : ''}`} />
+                  {couponsLoading ? 'טוען...' : 'רענן'}
+                </GlowingButton>
+              </div>
+
+              {coupons.length === 0 ? (
+                <div className="text-center py-12">
+                  <Ticket className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-400">אין קופונים עדיין</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-white/10">
+                        <th className="text-left py-3 px-4 text-gray-400 font-semibold">קוד</th>
+                        <th className="text-left py-3 px-4 text-gray-400 font-semibold">תוכנית</th>
+                        <th className="text-left py-3 px-4 text-gray-400 font-semibold">משך</th>
+                        <th className="text-left py-3 px-4 text-gray-400 font-semibold">שימושים</th>
+                        <th className="text-left py-3 px-4 text-gray-400 font-semibold">סטטוס</th>
+                        <th className="text-left py-3 px-4 text-gray-400 font-semibold">נוצר</th>
+                        <th className="text-right py-3 px-4 text-gray-400 font-semibold">פעולות</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {coupons.map((coupon) => (
+                        <tr key={coupon.id} className="border-b border-white/5 hover:bg-white/5">
+                          <td className="py-3 px-4 text-white font-mono font-semibold">{coupon.code}</td>
+                          <td className="py-3 px-4">
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                coupon.plan === 'premium'
+                                  ? 'bg-gradient-to-r from-memorial-gold to-yellow-600 text-deep-space'
+                                  : 'bg-cosmic-purple/20 text-cosmic-purple'
+                              }`}
+                            >
+                              {coupon.plan === 'premium' ? 'פרימיום' : 'סטנדרט'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-gray-300">{coupon.duration_days} ימים</td>
+                          <td className="py-3 px-4 text-gray-300">
+                            {coupon.used_count}/{coupon.max_uses}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                coupon.is_active
+                                  ? 'bg-green-500/20 text-green-400'
+                                  : 'bg-red-500/20 text-red-400'
+                              }`}
+                            >
+                              {coupon.is_active ? 'פעיל' : 'לא פעיל'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-gray-400 text-sm">
+                            {new Date(coupon.created_at).toLocaleDateString('he-IL')}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center justify-end">
+                              {coupon.is_active && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeactivateCoupon(coupon.id)}
+                                  className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"
+                                  title="השבת קופון"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </GlassCard>
           </motion.div>
         )}
       </div>

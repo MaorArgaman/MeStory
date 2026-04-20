@@ -35,8 +35,8 @@ export default function RegisterPage() {
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponValid, setCouponValid] = useState<{
     valid: boolean;
-    organizationName?: string;
-    discountPercent?: number;
+    plan?: string;
+    duration_days?: number;
     message?: string;
   } | null>(null);
 
@@ -49,13 +49,21 @@ export default function RegisterPage() {
 
     setCouponLoading(true);
     try {
-      const response = await api.get(`/organizations/coupon/${couponCode}/validate`);
+      const response = await api.get(`/coupons/validate/${couponCode}`);
       if (response.data.success) {
+        const { plan, duration_days } = response.data.coupon;
         setCouponValid({
           valid: true,
-          organizationName: response.data.data.organizationName,
-          discountPercent: response.data.data.discountPercent,
-          message: isHebrew ? response.data.data.message : response.data.data.messageEn,
+          plan,
+          duration_days,
+          message: isHebrew
+            ? `${duration_days} ימים של גישה ${plan} בחינם!`
+            : `${duration_days} days of free ${plan} access!`,
+        });
+      } else {
+        setCouponValid({
+          valid: false,
+          message: isHebrew ? response.data.error || 'קוד לא תקף' : response.data.error || 'Invalid code',
         });
       }
     } catch (err: any) {
@@ -63,7 +71,7 @@ export default function RegisterPage() {
         valid: false,
         message: isHebrew
           ? err.response?.data?.error || 'קוד לא תקף'
-          : err.response?.data?.errorEn || 'Invalid code',
+          : err.response?.data?.error || 'Invalid code',
       });
     } finally {
       setCouponLoading(false);
@@ -93,21 +101,15 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await register(name, email, password);
+      await register(name, email, password, couponValid?.valid ? couponCode : undefined);
       analytics.signup('email');
 
-      // Apply coupon if valid
-      if (couponValid?.valid && couponCode) {
-        try {
-          await api.post(`/organizations/coupon/${couponCode}/apply`);
-          toast.success(
-            isHebrew
-              ? `הצטרפת ל${couponValid.organizationName}!`
-              : `You joined ${couponValid.organizationName}!`
-          );
-        } catch (couponError) {
-          console.error('Failed to apply coupon:', couponError);
-        }
+      if (couponValid?.valid) {
+        toast.success(
+          isHebrew
+            ? `${couponValid.duration_days} ימים של גישה ${couponValid.plan} הופעלו!`
+            : `${couponValid.duration_days} days of ${couponValid.plan} access activated!`
+        );
       }
 
       navigate('/dashboard');
@@ -363,9 +365,7 @@ export default function RegisterPage() {
                     couponValid.valid ? 'text-green-400' : 'text-red-400'
                   }`}
                 >
-                  {couponValid.valid
-                    ? `${couponValid.organizationName} - ${couponValid.message}`
-                    : couponValid.message}
+                  {couponValid.message}
                 </p>
               )}
             </div>

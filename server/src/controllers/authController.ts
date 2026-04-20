@@ -8,6 +8,7 @@ import {
   sendVerificationEmail,
   sendWelcomeEmail,
 } from '../services/emailService';
+import { Coupon } from '../models/Coupon';
 
 /**
  * Register a new user
@@ -16,7 +17,7 @@ import {
  */
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, couponCode } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
@@ -62,6 +63,41 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       console.error('Failed to send verification email:', err)
     );
 
+    // Apply coupon code if provided
+    let couponApplied = false;
+    let couponMessage = '';
+    if (couponCode) {
+      try {
+        const validation = await Coupon.validate(couponCode);
+        if (validation.valid && validation.coupon) {
+          const coupon = validation.coupon;
+          const redemption = await Coupon.redeem(coupon.id, user.id);
+          const plan = coupon.plan.toUpperCase() as keyof typeof UserRole;
+          const role = UserRole[plan] || UserRole.PREMIUM;
+          const credits = role === UserRole.PREMIUM ? 999999 : 500;
+          await User.findByIdAndUpdate(user.id, {
+            role,
+            credits,
+            subscription: {
+              tier: coupon.plan,
+              price: 0,
+              credits,
+              startDate: new Date().toISOString(),
+              endDate: redemption.access_expires_at,
+              isActive: true,
+              autoRenew: false,
+            },
+          });
+          user.role = role;
+          user.credits = credits;
+          couponApplied = true;
+          couponMessage = `${coupon.duration_days} days of ${coupon.plan} access activated!`;
+        }
+      } catch (err) {
+        // Coupon failed but registration succeeded - don't fail the whole request
+      }
+    }
+
     // Generate JWT token (60-day expiry as per Section 17.1)
     const token = generateToken({
       id: user.id,
@@ -72,7 +108,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     // Return user data (excluding password)
     res.status(201).json({
       success: true,
-      message: 'User registered successfully. Please check your email for verification code.',
+      message: couponApplied
+        ? `User registered successfully. ${couponMessage}`
+        : 'User registered successfully. Please check your email for verification code.',
       data: {
         user: {
           id: user.id,
@@ -87,6 +125,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         },
         token,
         requiresVerification: true,
+        couponApplied,
       },
     });
   } catch (error) {
