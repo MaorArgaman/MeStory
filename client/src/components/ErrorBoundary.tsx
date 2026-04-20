@@ -82,7 +82,7 @@ class ErrorBoundary extends Component<Props, State> {
             <p className="text-gray-400 mb-8 mt-4">
               {isChunk
                 ? 'האפליקציה עודכנה. רענן את הדף כדי לטעון את הגרסה החדשה.'
-                : 'נתקלנו בשגיאה לא צפויה. אפשר לנסות שוב — זה בדרך כלל עוזר.'}
+                : 'נתקלנו בשגיאה לא צפויה. אפשר לנסות שוב, זה בדרך כלל עוזר.'}
             </p>
             <button
               onClick={() => window.location.reload()}

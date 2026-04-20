@@ -28,8 +28,8 @@ const steps: Step[] = [
   {
     titleHe: 'ברוכים הבאים ל-MeStory!',
     titleEn: 'Welcome to MeStory!',
-    descHe: 'הפלטפורמה שמאפשרת לכם לכתוב, לעצב ולפרסם את הסיפור שלכם — עם עזרת בינה מלאכותית. כאן כל זיכרון הופך לספר שמועבר מדור לדור.',
-    descEn: 'The platform that lets you write, design and publish your story — powered by AI. Here every memory becomes a book passed through generations.',
+    descHe: 'הפלטפורמה שמאפשרת לכם לכתוב, לעצב ולפרסם את הסיפור שלכם, עם עזרת בינה מלאכותית. כאן כל זיכרון הופך לספר שמועבר מדור לדור.',
+    descEn: 'The platform that lets you write, design and publish your story, powered by AI. Here every memory becomes a book passed through generations.',
     icon: <Sparkles className="w-12 h-12 text-memorial-gold" />,
     gradient: 'from-memorial-gold/20 to-yellow-600/10',
   },

@@ -695,8 +695,8 @@ export default function DashboardPage() {
                 </h3>
                 <p className="text-gray-300 text-sm leading-relaxed">
                   {language === 'he'
-                    ? 'הבינה המלאכותית תמלא את הפרקים הריקים, תעצב ותארוז את הספר כולו — מוכן להדפסה'
-                    : 'Our AI will complete empty chapters, design, and package the full book — print-ready'}
+                    ? 'הבינה המלאכותית תמלא את הפרקים הריקים, תעצב ותארוז את הספר כולו. מוכן להדפסה'
+                    : 'Our AI will complete empty chapters, design, and package the full book. Print-ready'}
                 </p>
               </div>
               <motion.button

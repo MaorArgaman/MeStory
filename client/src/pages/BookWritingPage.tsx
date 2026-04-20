@@ -1546,7 +1546,7 @@ export default function BookWritingPage() {
                 {isHebrew ? '💌 הזמן משפחה לשתף זיכרונות' : '💌 Invite family to share memories'}
               </h3>
               <p className="text-xs text-gray-400 mb-3">
-                {isHebrew ? 'שלח את הלינק הזה למשפחה — כל אחד יוכל להוסיף זיכרון, סיפור או תמונה לספר שלך.' : 'Send this link to family — anyone can add a memory, story or photo to your book.'}
+                {isHebrew ? 'שלח את הלינק הזה למשפחה. כל אחד יוכל להוסיף זיכרון, סיפור או תמונה לספר שלך.' : 'Send this link to family. Anyone can add a memory, story or photo to your book.'}
               </p>
               <div className="flex gap-2">
                 <input

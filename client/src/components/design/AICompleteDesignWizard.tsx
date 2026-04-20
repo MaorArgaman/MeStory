@@ -514,11 +514,11 @@ export default function AICompleteDesignWizard({
       const is404 = status === 404;
       let heMsg: string;
       if (isTimeout) {
-        heMsg = 'עיצוב ה-AI לוקח זמן רב — אנא נסה שוב בעוד כמה דקות (הבקשה עברה את מגבלת הזמן של השרת)';
+        heMsg = 'עיצוב ה-AI לוקח זמן רב. אנא נסה שוב בעוד כמה דקות (הבקשה עברה את מגבלת הזמן של השרת)';
       } else if (is404) {
         heMsg = serverError
           ? `שגיאה: ${serverError}`
-          : 'הנתיב לא נמצא בשרת (404) — ייתכן שהשרת לא עודכן. אנא נסה שוב.';
+          : 'הנתיב לא נמצא בשרת (404). ייתכן שהשרת לא עודכן. אנא נסה שוב.';
       } else {
         heMsg = 'שגיאה ביצירת העיצוב: ' + (serverError || err.message || 'שגיאה לא ידועה');
       }
@@ -932,8 +932,8 @@ export default function AICompleteDesignWizard({
                   </h3>
                   <p className="text-white/60 text-sm">
                     {isHebrew
-                      ? 'ה-AI יצר את הבסיס — עכשיו בחר את הסגנון שמתאים לך'
-                      : 'The AI created the foundation — now pick the style that fits you'}
+                      ? 'ה-AI יצר את הבסיס. עכשיו בחר את הסגנון שמתאים לך'
+                      : 'The AI created the foundation. Now pick the style that fits you'}
                   </p>
                 </div>
 

@@ -270,7 +270,7 @@ export default function ContributePage() {
           <p className="text-center text-xs text-gray-600">
             הזיכרון ישלח לבעל הספר לאישור לפני שיתווסף.
             <br />
-            MeStory — כל סיפור ראוי להיכתב.
+            MeStory. כל סיפור ראוי להיכתב.
           </p>
         </motion.div>
       </div>

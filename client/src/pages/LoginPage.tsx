@@ -15,10 +15,10 @@ const loginSideImage = '/img/new/hero-grandma-grandkids.png';
 const logoIcon = '/img/new/logo-mestory-large.png';
 
 const rotatingQuotes = [
-  { he: 'אף פעם לא חשבתי שאני יכולה לכתוב ספר — רחל, בת 78', en: 'I never thought I could write a book — Rachel, age 78' },
-  { he: 'הנצחנו את הגיבור שלנו בספר שכל המשפחה גאה בו — משפחת כהן', en: 'We memorialized our hero in a book the whole family is proud of — The Cohen Family' },
-  { he: 'הסיפור של סבא נשמר לדורות הבאים — דנה, בת 32', en: 'Grandpa\'s story is preserved for future generations — Dana, age 32' },
-  { he: 'מהראיון הקצר יצא ספר שהפתיע את כולנו — יוסי, בן 45', en: 'From a short interview came a book that surprised us all — Yossi, age 45' },
+  { he: 'אף פעם לא חשבתי שאני יכולה לכתוב ספר (רחל, בת 78)', en: 'I never thought I could write a book (Rachel, age 78)' },
+  { he: 'הנצחנו את הגיבור שלנו בספר שכל המשפחה גאה בו (משפחת כהן)', en: 'We memorialized our hero in a book the whole family is proud of (The Cohen Family)' },
+  { he: 'הסיפור של סבא נשמר לדורות הבאים (דנה, בת 32)', en: 'Grandpa\'s story is preserved for future generations (Dana, age 32)' },
+  { he: 'מהראיון הקצר יצא ספר שהפתיע את כולנו (יוסי, בן 45)', en: 'From a short interview came a book that surprised us all (Yossi, age 45)' },
 ];
 
 export default function LoginPage() {
