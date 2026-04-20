@@ -1469,12 +1469,36 @@ export default function BookLayoutPage() {
         }));
       }
 
+      // Strip base64 from coverDesign to avoid 413
+      const coverForSave = book.coverDesign ? { ...book.coverDesign } : undefined;
+      if (coverForSave?.imageUrl?.startsWith('data:')) {
+        coverForSave.imageUrl = '';
+      }
+      if ((coverForSave as any)?.front?.imageUrl?.startsWith('data:')) {
+        (coverForSave as any).front.imageUrl = '';
+      }
+
+      const fullPayload = JSON.stringify({
+        pageLayout: { pages: pagesForSave, settings },
+        coverDesign: coverForSave,
+      });
+
+      // Final check — if still over limit, strip ALL base64 from pages
+      if (new Blob([fullPayload]).size > VERCEL_LIMIT) {
+        pagesForSave = pagesForSave.map(page => ({
+          ...page,
+          images: page.images.map(img =>
+            img.url.startsWith('data:') ? { ...img, url: '' } : img
+          ),
+        }));
+      }
+
       const response = await api.put(`/books/${bookId}`, {
         pageLayout: {
           pages: pagesForSave,
           settings,
         },
-        coverDesign: book.coverDesign,
+        coverDesign: coverForSave,
       });
 
       if (response.data.success) {
