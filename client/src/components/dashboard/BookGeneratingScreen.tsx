@@ -5,7 +5,7 @@
  */
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Sparkles, Palette, Image, FileText, Check, Loader2 } from 'lucide-react';
+import { BookOpen, Sparkles, FileText, Check, Loader2 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 interface BookGeneratingScreenProps {
@@ -15,22 +15,17 @@ interface BookGeneratingScreenProps {
   onComplete?: () => void;
 }
 
+// Only the steps that actually run — we build the foundation (no chapter/cover/image generation here)
 const STEPS_HE = [
-  { icon: Sparkles, label: 'מנתח את הסיפור שלך...' },
-  { icon: FileText, label: 'מתכנן את מבנה הספר...' },
-  { icon: BookOpen, label: 'כותב את הפרקים...' },
-  { icon: Palette, label: 'מעצב את הכריכה...' },
-  { icon: Image, label: 'מוסיף תמונות...' },
-  { icon: Check, label: 'הספר מוכן!' },
+  { icon: Sparkles, label: 'מסכם את הראיון...' },
+  { icon: FileText, label: 'שומר את תשתית הספר...' },
+  { icon: Check, label: 'התשתית מוכנה — ממשיכים לכתיבה!' },
 ];
 
 const STEPS_EN = [
-  { icon: Sparkles, label: 'Analyzing your story...' },
-  { icon: FileText, label: 'Planning book structure...' },
-  { icon: BookOpen, label: 'Writing chapters...' },
-  { icon: Palette, label: 'Designing cover...' },
-  { icon: Image, label: 'Adding illustrations...' },
-  { icon: Check, label: 'Book is ready!' },
+  { icon: Sparkles, label: 'Summarizing the interview...' },
+  { icon: FileText, label: 'Saving book foundation...' },
+  { icon: Check, label: 'Foundation ready — on to writing!' },
 ];
 
 export default function BookGeneratingScreen({ isVisible, currentStep, progress, onComplete }: BookGeneratingScreenProps) {
@@ -83,10 +78,10 @@ export default function BookGeneratingScreen({ isVisible, currentStep, progress,
 
           {/* Title */}
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-            {isHebrew ? 'יוצר את הספר שלך' : 'Creating Your Book'}
+            {isHebrew ? 'בונים את התשתית לספר שלך' : 'Building Your Book Foundation'}
           </h2>
           <p className="text-gray-400 mb-8">
-            {isHebrew ? 'ה-AI כותב, מעצב ומכין את הספר. זה ייקח כדקה.' : 'AI is writing, designing and preparing your book. This takes about a minute.'}
+            {isHebrew ? 'שומר את הסיכום מהראיון. בעוד רגע נמשיך לכתיבה.' : 'Saving the interview summary. We\'ll continue to writing in a moment.'}
           </p>
 
           {/* Current step label */}
