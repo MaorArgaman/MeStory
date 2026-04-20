@@ -185,11 +185,17 @@ export function useWritingGuidance(
   const [guidance, setGuidance] = useState<WritingGuidance | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const lastCheckedRef = useRef<string>('');
+  const lastCheckedLengthRef = useRef<number>(0);
+  const lastCheckAtRef = useRef<number>(0);
+  const inFlightRef = useRef<boolean>(false);
   const dismissedRef = useRef<Set<string>>(new Set());
   const timeoutRef = useRef<NodeJS.Timeout>();
 
   const checkGuidance = useCallback(async () => {
     if (!bookId || !content || content.length < 100) {
+      return;
+    }
+    if (inFlightRef.current) {
       return;
     }
 
@@ -201,18 +207,32 @@ export function useWritingGuidance(
       return;
     }
 
+    // Throttle: at most one call per 60 seconds (server rate limit is tight)
+    const now = Date.now();
+    if (now - lastCheckAtRef.current < 60_000) {
+      return;
+    }
+
+    inFlightRef.current = true;
     setIsChecking(true);
     try {
       const result = await checkWritingGuidance(bookId, chapterIndex, recentText);
       lastCheckedRef.current = recentText;
+      lastCheckedLengthRef.current = content.length;
+      lastCheckAtRef.current = Date.now();
 
       // Skip if dismissed
       if (result && !dismissedRef.current.has(result.message)) {
         setGuidance(result);
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Back off hard on 429 so we don't spam more
+      if (error?.response?.status === 429) {
+        lastCheckAtRef.current = Date.now();
+      }
       console.error('Failed to check guidance:', error);
     } finally {
+      inFlightRef.current = false;
       setIsChecking(false);
     }
   }, [bookId, chapterIndex, content]);
@@ -225,15 +245,15 @@ export function useWritingGuidance(
       clearTimeout(timeoutRef.current);
     }
 
-    // Check every 30 seconds or 500 characters
+    // Only schedule one check per content change, 30s after last keystroke
     timeoutRef.current = setTimeout(() => {
       checkGuidance();
-    }, 30000);
+    }, 30_000);
 
-    // Also check on significant content changes
-    const contentLength = content.length;
-    const lastLength = lastCheckedRef.current.length;
-    if (contentLength - lastLength >= 500) {
+    // Large-growth trigger: only if we've written 500+ new chars since last CHECK
+    // (previously compared content.length to recentText.length, which is always <=500
+    // and caused a check on every keystroke above 1000 chars)
+    if (content.length - lastCheckedLengthRef.current >= 500) {
       checkGuidance();
     }
 
