@@ -50,6 +50,10 @@ interface BookItem {
         color?: string;
       };
     };
+    imageUrl?: string;
+    coverColor?: string;
+    backgroundColor?: string;
+    gradientColors?: string[];
   };
   publishingStatus: {
     price: number;
@@ -265,30 +269,27 @@ export default function MarketplacePage() {
   };
 
   const getBookCoverStyle = (book: BookItem) => {
-    const cover = book.coverDesign?.front;
-    if (!cover) {
+    const cd = book.coverDesign;
+    const imageUrl = cd?.front?.imageUrl || cd?.imageUrl;
+    if (imageUrl) {
       return {
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      };
-    }
-
-    if (cover.imageUrl) {
-      return {
-        backgroundImage: `url(${cover.imageUrl})`,
+        backgroundImage: `url(${imageUrl})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       };
     }
 
-    if (cover.gradientColors && cover.gradientColors.length > 0) {
+    const gradientColors = cd?.front?.gradientColors || cd?.gradientColors;
+    if (gradientColors && gradientColors.length > 0) {
       return {
-        background: `linear-gradient(135deg, ${cover.gradientColors.join(', ')})`,
+        background: `linear-gradient(135deg, ${gradientColors.join(', ')})`,
       };
     }
 
-    if (cover.backgroundColor) {
+    const backgroundColor = cd?.front?.backgroundColor || cd?.backgroundColor || cd?.coverColor;
+    if (backgroundColor) {
       return {
-        backgroundColor: cover.backgroundColor,
+        backgroundColor,
       };
     }
 
