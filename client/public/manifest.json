@@ -2,26 +2,66 @@
   "name": "MeStory - Memorial Book Writing Platform",
   "short_name": "MeStory",
   "description": "Create meaningful memorial books to honor your loved ones with AI-guided writing and professional design",
-  "start_url": "/",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
   "background_color": "#111123",
   "theme_color": "#c9a227",
   "dir": "rtl",
   "lang": "he",
   "icons": [
     {
-      "src": "/img/new/logo-mestory-small.png",
-      "sizes": "64x64",
-      "type": "image/png"
+      "src": "/img/new/Logo-Me-32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/img/new/logo-mestory-large.png",
+      "src": "/img/new/Logo-Me-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/new/Logo-Me-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/img/new/Logo-Me-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "categories": ["books", "education", "productivity"],
   "screenshots": [],
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Go to your dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/img/new/Logo-Me-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Library",
+      "short_name": "Library",
+      "description": "Open your library",
+      "url": "/library",
+      "icons": [{ "src": "/img/new/Logo-Me-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Marketplace",
+      "short_name": "Marketplace",
+      "description": "Browse the marketplace",
+      "url": "/marketplace",
+      "icons": [{ "src": "/img/new/Logo-Me-192.png", "sizes": "192x192" }]
+    }
+  ]
 }
