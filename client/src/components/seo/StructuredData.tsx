@@ -47,10 +47,9 @@ export function OrganizationSchema({ locale = 'he' }: OrganizationSchemaProps) {
     description: descriptions[locale],
     foundingDate: '2024',
     sameAs: [
-      'https://www.facebook.com/mestory.il',
-      'https://www.instagram.com/mestory.il',
-      'https://twitter.com/mestory_il',
-      'https://www.linkedin.com/company/mestory',
+      'https://www.facebook.com/MeStoryAI',
+      'https://www.instagram.com/mestory_ai/',
+      'https://www.linkedin.com/company/115788080/',
     ],
     contactPoint: {
       '@type': 'ContactPoint',

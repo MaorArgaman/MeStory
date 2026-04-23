@@ -6,6 +6,8 @@ import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import { queryClient } from './lib/queryClient';
 import './styles/index.css';
+import { isNative } from './platform';
+import { initNative } from './platform/nativeInit';
 
 // Suppress WebSocket / Socket.IO connection errors in production to avoid
 // cluttering the browser console when the real-time server is unreachable.
@@ -18,14 +20,27 @@ if (import.meta.env.PROD) {
   };
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </QueryClientProvider>
-    </ErrorBoundary>
-  </React.StrictMode>,
-);
+function boot() {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </QueryClientProvider>
+      </ErrorBoundary>
+    </React.StrictMode>,
+  );
+}
+
+if (isNative) {
+  initNative((path) => {
+    window.history.pushState({}, '', path);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  })
+    .catch((err) => console.warn('[native] init failed', err))
+    .finally(boot);
+} else {
+  boot();
+}

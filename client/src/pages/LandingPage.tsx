@@ -961,31 +961,31 @@ export default function LandingPage() {
             </p>
             <nav aria-label="Social media links" className="flex items-center gap-4 sm:gap-6 text-sm">
               <a
-                href="https://twitter.com/mestory"
+                href="https://www.instagram.com/mestory_ai/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-memorial-gold transition-colors"
-                aria-label="Follow MeStory on Twitter"
+                aria-label="Follow MeStory on Instagram"
               >
-                Twitter
+                Instagram
               </a>
               <a
-                href="https://linkedin.com/company/mestory"
+                href="https://www.facebook.com/MeStoryAI?locale=he_IL"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-memorial-gold transition-colors"
+                aria-label="Follow MeStory on Facebook"
+              >
+                Facebook
+              </a>
+              <a
+                href="https://www.linkedin.com/company/115788080/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-memorial-gold transition-colors"
                 aria-label="Connect with MeStory on LinkedIn"
               >
                 LinkedIn
-              </a>
-              <a
-                href="https://github.com/mestory"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-memorial-gold transition-colors"
-                aria-label="View MeStory on GitHub"
-              >
-                GitHub
               </a>
             </nav>
           </div>
