@@ -923,7 +923,7 @@ export default function LandingPage() {
                   </a>
                 </li>
                 <li>
-                  <a href="/api-docs" className="hover:text-memorial-gold transition-colors" aria-label="View API documentation">
+                  <a href="/nonprofits" className="hover:text-memorial-gold transition-colors" aria-label="For nonprofits and organizations">
                     {t('landing.footer.api')}
                   </a>
                 </li>

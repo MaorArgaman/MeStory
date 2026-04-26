@@ -60,6 +60,9 @@ const HowToEarnMoney = lazy(() => import('./pages/guides/HowToEarnMoney'));
 const HowToCollaborate = lazy(() => import('./pages/guides/HowToCollaborate'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const AccessibilityStatementPage = lazy(() => import('./pages/AccessibilityStatementPage'));
+const FeaturesPage = lazy(() => import('./pages/FeaturesPage'));
+const PricingPage = lazy(() => import('./pages/PricingPage'));
+const NonprofitsPage = lazy(() => import('./pages/NonprofitsPage'));
 const MyStoryPage = lazy(() => import('./pages/MyStoryPage'));
 const InvitationPage = lazy(() => import('./pages/InvitationPage'));
 const ContributePage = lazy(() => import('./pages/ContributePage'));
@@ -103,6 +106,9 @@ function createLocalizedRoutes() {
       <Route path="/en/guides/earn-money" element={<LocalizedLayout><HowToEarnMoney /></LocalizedLayout>} />
       <Route path="/en/guides/collaborate" element={<LocalizedLayout><HowToCollaborate /></LocalizedLayout>} />
       <Route path="/en/accessibility" element={<LocalizedLayout><AccessibilityStatementPage /></LocalizedLayout>} />
+      <Route path="/en/features" element={<LocalizedLayout><FeaturesPage /></LocalizedLayout>} />
+      <Route path="/en/pricing" element={<LocalizedLayout><PricingPage /></LocalizedLayout>} />
+      <Route path="/en/nonprofits" element={<LocalizedLayout><NonprofitsPage /></LocalizedLayout>} />
 
       {/* Hebrew routes */}
       <Route path="/he" element={<LocalizedLanding />} />
@@ -121,6 +127,9 @@ function createLocalizedRoutes() {
       <Route path="/he/guides/earn-money" element={<LocalizedLayout><HowToEarnMoney /></LocalizedLayout>} />
       <Route path="/he/guides/collaborate" element={<LocalizedLayout><HowToCollaborate /></LocalizedLayout>} />
       <Route path="/he/accessibility" element={<LocalizedLayout><AccessibilityStatementPage /></LocalizedLayout>} />
+      <Route path="/he/features" element={<LocalizedLayout><FeaturesPage /></LocalizedLayout>} />
+      <Route path="/he/pricing" element={<LocalizedLayout><PricingPage /></LocalizedLayout>} />
+      <Route path="/he/nonprofits" element={<LocalizedLayout><NonprofitsPage /></LocalizedLayout>} />
     </>
   );
 }
@@ -365,6 +374,30 @@ function AppContent() {
                 element={
                   <Layout>
                     <PageBoundary><AccessibilityStatementPage /></PageBoundary>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/features"
+                element={
+                  <Layout>
+                    <PageBoundary><FeaturesPage /></PageBoundary>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/pricing"
+                element={
+                  <Layout>
+                    <PageBoundary><PricingPage /></PageBoundary>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/nonprofits"
+                element={
+                  <Layout>
+                    <PageBoundary><NonprofitsPage /></PageBoundary>
                   </Layout>
                 }
               />
