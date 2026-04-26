@@ -122,16 +122,21 @@ export default function SubscriptionPage() {
         throw new Error(orderResponse.error || 'Failed to create order');
       }
 
-      const { orderId, mockMode } = orderResponse.data;
+      const { orderId, mockMode, approvalUrl } = orderResponse.data;
 
-      // Show mock mode indicator
-      if (mockMode) {
-        toast.success('Mock payment order created', { id: 'payment' });
-      } else {
-        toast.success('Order created', { id: 'payment' });
+      // Real PayPal flow: redirect to PayPal approval, capture on return
+      if (approvalUrl) {
+        sessionStorage.setItem(
+          'pendingPayment',
+          JSON.stringify({ orderId, plan: planId, createdAt: Date.now() })
+        );
+        toast.success('מעביר אותך ל-PayPal...', { id: 'payment' });
+        window.location.href = approvalUrl;
+        return;
       }
 
-      // Step 2: Capture payment with idempotency key (simulate processing delay)
+      // Mock mode: capture immediately (no PayPal redirect)
+      toast.success('Mock payment order created', { id: 'payment' });
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast.loading('Processing payment...', { id: 'payment' });
 
@@ -141,12 +146,7 @@ export default function SubscriptionPage() {
         throw new Error(captureResponse.error || 'Failed to capture payment');
       }
 
-      // Success!
-      if (mockMode) {
-        toast.success('Payment successful (Mock Mode)!', { id: 'payment', duration: 3000 });
-      } else {
-        toast.success('Payment successful!', { id: 'payment', duration: 3000 });
-      }
+      toast.success('Payment successful (Mock Mode)!', { id: 'payment', duration: 3000 });
 
       // Close modal
       setShowConfirmModal(false);

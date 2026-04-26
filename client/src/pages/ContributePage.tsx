@@ -230,18 +230,18 @@ export default function ContributePage() {
               <select
                 value={relationship}
                 onChange={(e) => setRelationship(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:border-memorial-gold/50 focus:outline-none transition appearance-none"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:border-memorial-gold/50 focus:outline-none transition appearance-none [&>option]:bg-deep-space [&>option]:text-white"
                 dir="rtl"
               >
-                <option value="">בחרו...</option>
-                <option value="child">בן/בת</option>
-                <option value="sibling">אח/אחות</option>
-                <option value="grandchild">נכד/נכדה</option>
-                <option value="spouse">בן/בת זוג</option>
-                <option value="parent">הורה</option>
-                <option value="friend">חבר/ה</option>
-                <option value="colleague">עמית/ה</option>
-                <option value="other">אחר</option>
+                <option value="" className="bg-deep-space text-white">בחרו...</option>
+                <option value="child" className="bg-deep-space text-white">בן/בת</option>
+                <option value="sibling" className="bg-deep-space text-white">אח/אחות</option>
+                <option value="grandchild" className="bg-deep-space text-white">נכד/נכדה</option>
+                <option value="spouse" className="bg-deep-space text-white">בן/בת זוג</option>
+                <option value="parent" className="bg-deep-space text-white">הורה</option>
+                <option value="friend" className="bg-deep-space text-white">חבר/ה</option>
+                <option value="colleague" className="bg-deep-space text-white">עמית/ה</option>
+                <option value="other" className="bg-deep-space text-white">אחר</option>
               </select>
             </div>
           </div>

@@ -312,7 +312,7 @@ router.get('/:id/contribute-info', async (req: any, res: any) => {
 });
 
 // POST /api/books/:id/contributions - Public: submit a memory/contribution
-router.post('/:id/contributions', async (req: any, res: any) => {
+router.post('/:id/contributions', uploadImage.single('image'), async (req: any, res: any) => {
   try {
     const { Book } = await import('../models/Book');
     const book = await Book.findById(req.params.id);
@@ -329,13 +329,22 @@ router.post('/:id/contributions', async (req: any, res: any) => {
       return res.status(400).json({ success: false, error: 'Name required' });
     }
 
+    let imageUrl: string | null = null;
+    if (req.file) {
+      if (req.file.buffer) {
+        imageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      } else if (req.file.filename) {
+        imageUrl = `/uploads/${req.file.filename}`;
+      }
+    }
+
     // Add contribution to book's pending contributions
     const contribution = {
       id: `contrib-${Date.now()}`,
       memory: memory || '',
       contributorName,
       relationship: relationship || 'other',
-      imageUrl: null, // TODO: handle image upload
+      imageUrl,
       status: 'pending', // pending | approved | rejected
       createdAt: new Date().toISOString(),
     };
