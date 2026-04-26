@@ -8,13 +8,14 @@ import {
   ArrowRight,
   HelpCircle,
 } from 'lucide-react';
-import { GlassCard, GlowingButton } from '../components/ui';
+import { GlassCard, GlowingButton, OptimizedImage } from '../components/ui';
 import { SEO } from '../components/seo';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface PricingTier {
   id: 'free' | 'standard' | 'premium';
   icon: typeof Sparkles;
+  image: string;
   highlighted?: boolean;
   nameHe: string;
   nameEn: string;
@@ -35,6 +36,7 @@ const TIERS: PricingTier[] = [
   {
     id: 'free',
     icon: Sparkles,
+    image: '/img/tier-free.png',
     nameHe: 'חינם',
     nameEn: 'Free',
     taglineHe: 'התחילו לכתוב, בלי כרטיס אשראי',
@@ -64,6 +66,7 @@ const TIERS: PricingTier[] = [
   {
     id: 'standard',
     icon: Crown,
+    image: '/img/tier-standard.png',
     highlighted: true,
     nameHe: 'סטנדרט',
     nameEn: 'Standard',
@@ -98,6 +101,7 @@ const TIERS: PricingTier[] = [
   {
     id: 'premium',
     icon: Crown,
+    image: '/img/tier-premium.png',
     nameHe: 'פרימיום',
     nameEn: 'Premium',
     taglineHe: 'לפרויקטים גדולים, ללא הגבלות',
@@ -188,14 +192,29 @@ export default function PricingPage() {
         url="/pricing"
       />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+      {/* Hero */}
+      <div className="relative overflow-hidden py-16 sm:py-24 px-4 sm:px-6">
+        <div className="absolute inset-0">
+          <OptimizedImage
+            src="/img/pricing-hero.png"
+            alt=""
+            decorative
+            lazy={false}
+            className="w-full h-full object-cover opacity-30"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-deep-space/70 via-deep-space/60 to-deep-space" />
+        </div>
         <motion.header
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-12"
+          className="relative max-w-5xl mx-auto text-center"
         >
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 mb-5 rounded-full bg-memorial-gold/20 border border-memorial-gold/40 text-memorial-gold text-sm">
+            <Sparkles className="w-4 h-4" aria-hidden="true" />
+            {isHebrew ? 'מסלולי תמחור' : 'Pricing plans'}
+          </div>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-4 leading-tight">
             {isHebrew ? 'תמחור פשוט וגמיש' : 'Simple, flexible pricing'}
           </h1>
           <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto">
@@ -204,7 +223,9 @@ export default function PricingPage() {
               : 'Start free, upgrade when you choose. No commitments, cancel anytime.'}
           </p>
         </motion.header>
+      </div>
 
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-8 sm:-mt-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           {TIERS.map((tier, idx) => {
             const Icon = tier.icon;
@@ -218,70 +239,81 @@ export default function PricingPage() {
                 transition={{ duration: 0.4, delay: idx * 0.1 }}
               >
                 <GlassCard
-                  className={`p-6 sm:p-8 h-full flex flex-col relative ${
+                  className={`h-full flex flex-col relative overflow-hidden p-0 ${
                     tier.highlighted ? 'ring-2 ring-memorial-gold' : ''
                   }`}
                 >
                   {tier.highlighted && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-memorial-gold text-deep-space text-xs font-bold rounded-full whitespace-nowrap">
+                    <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 px-3 py-1 bg-memorial-gold text-deep-space text-xs font-bold rounded-full whitespace-nowrap shadow-lg">
                       {isHebrew ? 'הכי פופולרי' : 'Most popular'}
                     </div>
                   )}
 
-                  <div className="flex items-center gap-3 mb-3">
-                    <div
-                      className={`p-2.5 rounded-xl ${
-                        tier.highlighted
-                          ? 'bg-memorial-gold/30 border border-memorial-gold/50'
-                          : 'bg-white/5 border border-white/10'
-                      }`}
-                    >
-                      <Icon
-                        className={`w-6 h-6 ${tier.highlighted ? 'text-memorial-gold' : 'text-white'}`}
-                        aria-hidden="true"
-                      />
-                    </div>
-                    <h2 className="text-2xl font-bold text-white">
-                      {isHebrew ? tier.nameHe : tier.nameEn}
-                    </h2>
-                  </div>
-
-                  <p className="text-gray-400 text-sm mb-5 min-h-[2.5em]">
-                    {isHebrew ? tier.taglineHe : tier.taglineEn}
-                  </p>
-
-                  <div className="mb-6">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl sm:text-5xl font-bold text-white">
-                        {symbol}
-                        {price}
-                      </span>
-                      <span className="text-gray-400 text-sm">
-                        {isHebrew ? tier.unitHe : tier.unitEn}
-                      </span>
-                    </div>
-                  </div>
-
-                  <ul className="flex-1 space-y-2.5 mb-6">
-                    {(isHebrew ? tier.featuresHe : tier.featuresEn).map((f, i) => (
-                      <li key={i} className="flex items-start gap-2 text-gray-300 text-sm">
-                        <Check
-                          className="w-4 h-4 text-memorial-gold flex-shrink-0 mt-0.5"
+                  <div className="relative h-40 overflow-hidden">
+                    <OptimizedImage
+                      src={tier.image}
+                      alt=""
+                      decorative
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/40 to-transparent" />
+                    <div className="absolute bottom-3 right-4 left-4 flex items-center gap-3">
+                      <div
+                        className={`p-2.5 rounded-xl backdrop-blur-sm ${
+                          tier.highlighted
+                            ? 'bg-memorial-gold/40 border border-memorial-gold/60'
+                            : 'bg-white/10 border border-white/20'
+                        }`}
+                      >
+                        <Icon
+                          className={`w-6 h-6 ${tier.highlighted ? 'text-memorial-gold' : 'text-white'}`}
                           aria-hidden="true"
                         />
-                        <span>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
+                      </div>
+                      <h2 className="text-2xl font-bold text-white drop-shadow-lg">
+                        {isHebrew ? tier.nameHe : tier.nameEn}
+                      </h2>
+                    </div>
+                  </div>
 
-                  <GlowingButton
-                    variant={tier.highlighted ? 'gold' : 'primary'}
-                    fullWidth
-                    onClick={() => navigate(tier.ctaPath)}
-                  >
-                    {isHebrew ? tier.ctaHe : tier.ctaEn}
-                    <Arrow className="w-4 h-4" aria-hidden="true" />
-                  </GlowingButton>
+                  <div className="p-6 sm:p-8 flex-1 flex flex-col">
+                    <p className="text-gray-400 text-sm mb-5 min-h-[2.5em]">
+                      {isHebrew ? tier.taglineHe : tier.taglineEn}
+                    </p>
+
+                    <div className="mb-6">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl sm:text-5xl font-bold text-white">
+                          {symbol}
+                          {price}
+                        </span>
+                        <span className="text-gray-400 text-sm">
+                          {isHebrew ? tier.unitHe : tier.unitEn}
+                        </span>
+                      </div>
+                    </div>
+
+                    <ul className="flex-1 space-y-2.5 mb-6">
+                      {(isHebrew ? tier.featuresHe : tier.featuresEn).map((f, i) => (
+                        <li key={i} className="flex items-start gap-2 text-gray-300 text-sm">
+                          <Check
+                            className="w-4 h-4 text-memorial-gold flex-shrink-0 mt-0.5"
+                            aria-hidden="true"
+                          />
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <GlowingButton
+                      variant={tier.highlighted ? 'gold' : 'primary'}
+                      fullWidth
+                      onClick={() => navigate(tier.ctaPath)}
+                    >
+                      {isHebrew ? tier.ctaHe : tier.ctaEn}
+                      <Arrow className="w-4 h-4" aria-hidden="true" />
+                    </GlowingButton>
+                  </div>
                 </GlassCard>
               </motion.div>
             );

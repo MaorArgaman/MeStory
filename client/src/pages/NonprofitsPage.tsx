@@ -10,7 +10,7 @@ import {
   ArrowLeft,
   ArrowRight,
 } from 'lucide-react';
-import { GlassCard } from '../components/ui';
+import { GlassCard, OptimizedImage } from '../components/ui';
 import { SEO } from '../components/seo';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -65,6 +65,7 @@ const BENEFITS: BenefitItem[] = [
 ];
 
 interface UseCaseItem {
+  image: string;
   titleHe: string;
   titleEn: string;
   descHe: string;
@@ -73,24 +74,28 @@ interface UseCaseItem {
 
 const USE_CASES: UseCaseItem[] = [
   {
+    image: '/img/new/hero-soldiers-unit.png',
     titleHe: 'הנצחת חללי צה"ל ופעולות איבה',
     titleEn: 'Memorializing fallen soldiers and victims of terror',
     descHe: 'יצירת ספרי זיכרון לכל חלל, ובהם שילוב סיפורי משפחה, חברים, מפקדים וחיילים, ועיצוב מכבד התואם את רוח האדם.',
     descEn: 'Creating memorial books for each fallen soldier, combining stories from family, friends, commanders, and fellow soldiers, with respectful design fitting the person.',
   },
   {
+    image: '/img/new/hero-grandma-grandkids.png',
     titleHe: 'ארגוני ניצולי שואה והעדה',
     titleEn: 'Holocaust survivor and testimony organizations',
     descHe: 'תיעוד עדויות שאי-אפשר להחליף: הקלטות קוליות של ניצולים, תרגום לאנגלית ושמירה לדורות הבאים.',
     descEn: 'Documenting irreplaceable testimonies: voice recordings of survivors, translation to English, preservation for future generations.',
   },
   {
+    image: '/img/community-workshop.png',
     titleHe: 'קהילות וארגוני מורשת',
     titleEn: 'Communities and heritage organizations',
     descHe: 'תיעוד היסטוריית הקהילה, סיפורי מייסדים ודמויות מפתח, בספר אחד שייצג את הקהילה למאות שנים.',
     descEn: 'Documenting community history, founder stories and key figures, in one book representing the community for hundreds of years.',
   },
   {
+    image: '/img/new/social-grandma-yemenite.png',
     titleHe: 'בתי אבות ודיור מוגן',
     titleEn: 'Senior homes and assisted living',
     descHe: 'פעילות הנצחה משמעותית עם הדיירים: סיפורי חיים אישיים, מתנת אהבה למשפחות, ופעילות טיפולית רגשית.',
@@ -119,18 +124,29 @@ export default function NonprofitsPage() {
         url="/nonprofits"
       />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+      {/* Hero */}
+      <div className="relative overflow-hidden py-20 sm:py-32 px-4 sm:px-6">
+        <div className="absolute inset-0">
+          <OptimizedImage
+            src="/img/new/hero-bereaved-herzl.png"
+            alt=""
+            decorative
+            lazy={false}
+            className="w-full h-full object-cover opacity-40"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-deep-space/70 via-deep-space/60 to-deep-space" />
+        </div>
         <motion.header
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-12"
+          className="relative max-w-5xl mx-auto text-center"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 mb-4 rounded-full bg-memorial-gold/20 border border-memorial-gold/40 text-memorial-gold text-sm">
+          <div className="inline-flex items-center gap-2 px-4 py-2 mb-5 rounded-full bg-memorial-gold/20 border border-memorial-gold/40 text-memorial-gold text-sm">
             <HeartHandshake className="w-4 h-4" aria-hidden="true" />
             {isHebrew ? 'תוכנית עמותות' : 'Nonprofit program'}
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-4">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-4 leading-tight">
             {isHebrew ? 'הנצחה בקנה מידה רחב' : 'Memorial work at scale'}
           </h1>
           <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto">
@@ -139,7 +155,9 @@ export default function NonprofitsPage() {
               : 'MeStory partners with memorial nonprofits, Holocaust organizations, communities, and heritage bodies to turn thousands of stories into dignified books, at a subsidized price and with personal support.'}
           </p>
         </motion.header>
+      </div>
 
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-8 sm:-mt-12">
         <section
           aria-label={isHebrew ? 'יתרונות' : 'Benefits'}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16"
@@ -176,19 +194,37 @@ export default function NonprofitsPage() {
           aria-label={isHebrew ? 'מי משתמש ב־MeStory' : 'Who uses MeStory'}
           className="mb-16"
         >
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-8 text-center">
             {isHebrew ? 'איפה זה עובד הכי טוב' : 'Where it works best'}
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {USE_CASES.map((u, idx) => (
-              <GlassCard key={idx} className="p-6">
-                <h3 className="text-lg font-bold text-memorial-gold mb-2">
-                  {isHebrew ? u.titleHe : u.titleEn}
-                </h3>
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  {isHebrew ? u.descHe : u.descEn}
-                </p>
-              </GlassCard>
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: idx * 0.08 }}
+              >
+                <GlassCard className="overflow-hidden p-0 h-full">
+                  <div className="relative h-48 sm:h-56 overflow-hidden">
+                    <OptimizedImage
+                      src={u.image}
+                      alt=""
+                      decorative
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/30 to-transparent" />
+                    <h3 className="absolute bottom-4 right-4 left-4 text-xl font-bold text-memorial-gold drop-shadow-lg">
+                      {isHebrew ? u.titleHe : u.titleEn}
+                    </h3>
+                  </div>
+                  <div className="p-6">
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                      {isHebrew ? u.descHe : u.descEn}
+                    </p>
+                  </div>
+                </GlassCard>
+              </motion.div>
             ))}
           </div>
         </motion.section>
@@ -199,40 +235,53 @@ export default function NonprofitsPage() {
           transition={{ duration: 0.5, delay: 0.4 }}
           aria-label={isHebrew ? 'יצירת קשר' : 'Contact us'}
         >
-          <GlassCard className="p-8 sm:p-12 text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
-              {isHebrew ? 'מתחילים שיחה' : 'Let\'s start a conversation'}
-            </h2>
-            <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
-              {isHebrew
-                ? 'ספרו לנו על הפרויקט שלכם: מספר אנשים שצריכים תיעוד, היקף הסיפורים, לוח זמנים. נחזור אליכם תוך יום עסקים עם הצעה מותאמת.'
-                : 'Tell us about your project: number of people to document, scope of stories, timeline. We\'ll get back to you within one business day with a tailored proposal.'}
-            </p>
+          <GlassCard className="overflow-hidden p-0">
+            <div className="grid grid-cols-1 md:grid-cols-2">
+              <div className="relative h-48 md:h-auto min-h-[280px] overflow-hidden">
+                <OptimizedImage
+                  src="/img/new/military-hands-book.png"
+                  alt=""
+                  decorative
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-deep-space/30 to-deep-space/80 md:bg-gradient-to-l md:from-transparent md:to-deep-space" />
+              </div>
+              <div className="p-8 sm:p-10">
+                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+                  {isHebrew ? 'מתחילים שיחה' : 'Let\'s start a conversation'}
+                </h2>
+                <p className="text-gray-300 mb-6">
+                  {isHebrew
+                    ? 'ספרו לנו על הפרויקט שלכם: מספר אנשים שצריכים תיעוד, היקף הסיפורים, לוח זמנים. נחזור אליכם תוך יום עסקים עם הצעה מותאמת.'
+                    : 'Tell us about your project: number of people to document, scope of stories, timeline. We\'ll get back to you within one business day with a tailored proposal.'}
+                </p>
 
-            <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
-              <a
-                href={mailHref}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-memorial-gold text-deep-space font-bold hover:brightness-110 transition-all focus:outline-none focus:ring-2 focus:ring-memorial-gold focus:ring-offset-2 focus:ring-offset-deep-space"
-              >
-                <Mail className="w-5 h-5" aria-hidden="true" />
-                {isHebrew ? 'שלחו מייל' : 'Send email'}
-                <Arrow className="w-4 h-4" aria-hidden="true" />
-              </a>
-              <a
-                href={`tel:${CONTACT_PHONE_TEL}`}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-white/20 text-white hover:bg-white/10 transition-colors"
-              >
-                <Phone className="w-5 h-5" aria-hidden="true" />
-                {CONTACT_PHONE_DISPLAY}
-              </a>
+                <div className="flex flex-wrap items-center gap-3 mb-5">
+                  <a
+                    href={mailHref}
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-memorial-gold text-deep-space font-bold hover:brightness-110 transition-all focus:outline-none focus:ring-2 focus:ring-memorial-gold focus:ring-offset-2 focus:ring-offset-deep-space"
+                  >
+                    <Mail className="w-5 h-5" aria-hidden="true" />
+                    {isHebrew ? 'שלחו מייל' : 'Send email'}
+                    <Arrow className="w-4 h-4" aria-hidden="true" />
+                  </a>
+                  <a
+                    href={`tel:${CONTACT_PHONE_TEL}`}
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-white/20 text-white hover:bg-white/10 transition-colors"
+                  >
+                    <Phone className="w-5 h-5" aria-hidden="true" />
+                    {CONTACT_PHONE_DISPLAY}
+                  </a>
+                </div>
+
+                <p className="text-gray-400 text-sm">
+                  {isHebrew ? 'או בדוא"ל ישירות:' : 'Or email directly:'}{' '}
+                  <a href={`mailto:${CONTACT_EMAIL}`} className="text-memorial-gold hover:underline">
+                    {CONTACT_EMAIL}
+                  </a>
+                </p>
+              </div>
             </div>
-
-            <p className="text-gray-400 text-sm">
-              {isHebrew ? 'או בדוא"ל ישירות:' : 'Or email directly:'}{' '}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="text-memorial-gold hover:underline">
-                {CONTACT_EMAIL}
-              </a>
-            </p>
           </GlassCard>
         </motion.section>
       </div>

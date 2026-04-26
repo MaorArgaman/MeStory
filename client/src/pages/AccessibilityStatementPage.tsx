@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Accessibility, CheckCircle, AlertTriangle, Mail, Phone, FileText } from 'lucide-react';
-import { GlassCard } from '../components/ui';
+import { GlassCard, OptimizedImage } from '../components/ui';
 import { useLanguage } from '../contexts/LanguageContext';
 import { SEO } from '../components/seo';
 
@@ -222,13 +222,28 @@ export default function AccessibilityStatementPage() {
         url="/accessibility"
       />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+      {/* Hero */}
+      <div className="relative overflow-hidden py-16 sm:py-20 px-4 sm:px-6">
+        <div className="absolute inset-0">
+          <OptimizedImage
+            src="/img/new/texture-paper-2.png"
+            alt=""
+            decorative
+            lazy={false}
+            className="w-full h-full object-cover opacity-25"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-deep-space/70 via-deep-space/60 to-deep-space" />
+        </div>
         <motion.header
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-10"
+          className="relative max-w-4xl mx-auto text-center"
         >
+          <div className="inline-flex items-center gap-2 px-4 py-2 mb-5 rounded-full bg-memorial-gold/20 border border-memorial-gold/40 text-memorial-gold text-sm">
+            <Accessibility className="w-4 h-4" aria-hidden="true" />
+            {isHebrew ? 'נגישות' : 'Accessibility'}
+          </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3">
             {isHebrew ? 'הצהרת נגישות' : 'Accessibility Statement'}
           </h1>
@@ -236,7 +251,9 @@ export default function AccessibilityStatementPage() {
             {isHebrew ? `עודכן לאחרונה: ${LAST_AUDIT_DATE_HE}` : `Last updated: ${LAST_AUDIT_DATE_EN}`}
           </p>
         </motion.header>
+      </div>
 
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 -mt-4">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

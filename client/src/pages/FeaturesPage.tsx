@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Sparkles,
   Palette,
@@ -12,12 +12,13 @@ import {
   ArrowLeft,
   ArrowRight,
 } from 'lucide-react';
-import { GlassCard, GlowingButton } from '../components/ui';
+import { GlassCard, GlowingButton, OptimizedImage } from '../components/ui';
 import { SEO } from '../components/seo';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface Feature {
   icon: typeof Sparkles;
+  image: string;
   titleHe: string;
   titleEn: string;
   descHe: string;
@@ -29,6 +30,7 @@ interface Feature {
 const FEATURES: Feature[] = [
   {
     icon: Sparkles,
+    image: '/img/feature-ai-writing.png',
     titleHe: 'כתיבה עם בינה מלאכותית',
     titleEn: 'AI-guided writing',
     descHe: 'שאלות מנחות, ניסוח עדין ושיפור סגנוני, כל זה תוך כדי הכתיבה, בלי להחליף את הקול שלך.',
@@ -46,6 +48,7 @@ const FEATURES: Feature[] = [
   },
   {
     icon: Palette,
+    image: '/img/feature-cover-studio.png',
     titleHe: 'סטודיו עיצוב לעטיפות',
     titleEn: 'Cover design studio',
     descHe: 'עיצוב עטיפה מקצועי בכמה קליקים, עם תבניות, גופנים, גרדיאנטים ותמונות AI.',
@@ -63,6 +66,7 @@ const FEATURES: Feature[] = [
   },
   {
     icon: BookOpen,
+    image: '/img/feature-workspace.png',
     titleHe: 'פריסת עמודים מקצועית',
     titleEn: 'Professional page layout',
     descHe: 'עורך לייאאוט מלא: גודלי עמוד, שוליים, ראשי פרקים, אותיות פתיחה, תמונות פנימיות ועוד.',
@@ -80,6 +84,7 @@ const FEATURES: Feature[] = [
   },
   {
     icon: Users,
+    image: '/img/community-group.png',
     titleHe: 'כתיבה משותפת',
     titleEn: 'Collaborative writing',
     descHe: 'הזמינו בני משפחה וחברים לתרום פרקים, סיפורים ותמונות. כולם תורמים, אתם עורכים ומנציחים.',
@@ -97,6 +102,7 @@ const FEATURES: Feature[] = [
   },
   {
     icon: Mic,
+    image: '/img/voice-interview.png',
     titleHe: 'הקלטת סיפורים בהקלדה קולית',
     titleEn: 'Voice-to-text storytelling',
     descHe: 'הקליטו זיכרונות וסיפורים, ו־MeStory יתמלל ויסדר אותם בפרקי ספר מובנים.',
@@ -114,6 +120,7 @@ const FEATURES: Feature[] = [
   },
   {
     icon: Globe,
+    image: '/img/feature-marketplace.png',
     titleHe: 'חנות ספרים ציבורית',
     titleEn: 'Public bookstore',
     descHe: 'פרסמו את הספר שלכם לעיני קהל רחב, או שמרו אותו פרטי. אתם בוחרים.',
@@ -131,6 +138,7 @@ const FEATURES: Feature[] = [
   },
   {
     icon: Printer,
+    image: '/img/launch-day.png',
     titleHe: 'ייצוא PDF מוכן לדפוס',
     titleEn: 'Print-ready PDF export',
     descHe: 'הספר שלכם מוכן להדפסה בכל בית דפוס, גם דיגיטלית וגם פיזית.',
@@ -148,6 +156,7 @@ const FEATURES: Feature[] = [
   },
   {
     icon: ShieldCheck,
+    image: '/img/new/texture-paper.png',
     titleHe: 'אבטחה ופרטיות',
     titleEn: 'Security & privacy',
     descHe: 'הסיפורים שלכם, שלכם בלבד. הצפנה מלאה, גיבויים אוטומטיים ובעלות מלאה על התוכן.',
@@ -183,23 +192,41 @@ export default function FeaturesPage() {
         url="/features"
       />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
-        <motion.header
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-4">
-            {isHebrew ? 'כל מה שצריך כדי להנציח סיפור' : 'Everything you need to preserve a story'}
-          </h1>
-          <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto">
-            {isHebrew
-              ? 'MeStory היא פלטפורמה שלמה ליצירת ספרי הנצחה, אוטוביוגרפיה וספרי משפחה, מהרעיון הראשון ועד לספר המודפס.'
-              : 'MeStory is a complete platform for creating memorial books, autobiographies, and family books, from the first idea to the printed book.'}
-          </p>
-        </motion.header>
+      {/* Hero */}
+      <div className="relative overflow-hidden py-16 sm:py-24 px-4 sm:px-6">
+        <div className="absolute inset-0">
+          <OptimizedImage
+            src="/img/landing-hero-new.png"
+            alt=""
+            decorative
+            lazy={false}
+            className="w-full h-full object-cover opacity-30"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-deep-space/70 via-deep-space/60 to-deep-space" />
+        </div>
+        <div className="relative max-w-5xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 mb-5 rounded-full bg-memorial-gold/20 border border-memorial-gold/40 text-memorial-gold text-sm">
+              <Sparkles className="w-4 h-4" aria-hidden="true" />
+              {isHebrew ? 'תכונות הפלטפורמה' : 'Platform features'}
+            </div>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-4 leading-tight">
+              {isHebrew ? 'כל מה שצריך כדי להנציח סיפור' : 'Everything you need to preserve a story'}
+            </h1>
+            <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto">
+              {isHebrew
+                ? 'MeStory היא פלטפורמה שלמה ליצירת ספרי הנצחה, אוטוביוגרפיה וספרי משפחה, מהרעיון הראשון ועד לספר המודפס.'
+                : 'MeStory is a complete platform for creating memorial books, autobiographies, and family books, from the first idea to the printed book.'}
+            </p>
+          </motion.div>
+        </div>
+      </div>
 
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-8 sm:-mt-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {FEATURES.map((feature, idx) => {
             const Icon = feature.icon;
@@ -210,28 +237,37 @@ export default function FeaturesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: idx * 0.05 }}
               >
-                <GlassCard className="p-6 sm:p-8 h-full">
-                  <div className="flex items-start gap-4 mb-3">
-                    <div className="p-3 rounded-xl bg-memorial-gold/20 border border-memorial-gold/30">
-                      <Icon className="w-7 h-7 text-memorial-gold" aria-hidden="true" />
-                    </div>
-                    <div className="flex-1">
-                      <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
+                <GlassCard className="h-full overflow-hidden p-0">
+                  <div className="relative h-44 sm:h-52 overflow-hidden">
+                    <OptimizedImage
+                      src={feature.image}
+                      alt=""
+                      decorative
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-deep-space via-deep-space/40 to-transparent" />
+                    <div className="absolute bottom-3 right-3 left-3 flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-memorial-gold/30 border border-memorial-gold/50 backdrop-blur-sm">
+                        <Icon className="w-6 h-6 text-memorial-gold" aria-hidden="true" />
+                      </div>
+                      <h2 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg">
                         {isHebrew ? feature.titleHe : feature.titleEn}
                       </h2>
-                      <p className="text-gray-300 leading-relaxed">
-                        {isHebrew ? feature.descHe : feature.descEn}
-                      </p>
                     </div>
                   </div>
-                  <ul className={`space-y-1.5 text-gray-400 text-sm mt-4 ${isHebrew ? 'pr-2' : 'pl-2'}`}>
-                    {(isHebrew ? feature.bulletsHe : feature.bulletsEn).map((b, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="text-memorial-gold mt-1" aria-hidden="true">•</span>
-                        <span>{b}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="p-6">
+                    <p className="text-gray-300 leading-relaxed mb-4">
+                      {isHebrew ? feature.descHe : feature.descEn}
+                    </p>
+                    <ul className="space-y-1.5 text-gray-400 text-sm">
+                      {(isHebrew ? feature.bulletsHe : feature.bulletsEn).map((b, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="text-memorial-gold mt-1" aria-hidden="true">•</span>
+                          <span>{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </GlassCard>
               </motion.div>
             );
@@ -255,12 +291,13 @@ export default function FeaturesPage() {
               {isHebrew ? 'הרשמה חינם' : 'Sign up free'}
               <Arrow className="w-4 h-4" aria-hidden="true" />
             </GlowingButton>
-            <Link
-              to="/pricing"
+            <button
+              type="button"
+              onClick={() => navigate('/pricing')}
               className="px-6 py-3 rounded-lg border border-white/20 text-white hover:bg-white/10 transition-colors text-sm"
             >
               {isHebrew ? 'מסלולי תמחור' : 'View pricing'}
-            </Link>
+            </button>
           </div>
         </motion.div>
       </div>
