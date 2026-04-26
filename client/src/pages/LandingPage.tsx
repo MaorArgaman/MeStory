@@ -17,6 +17,9 @@ import {
   Heart,
   Shield,
   Mic,
+  Instagram,
+  Facebook,
+  Linkedin,
 } from 'lucide-react';
 import { GlassCard, GlowingButton, OptimizedImage } from '../components/ui';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -959,7 +962,7 @@ export default function LandingPage() {
             <p className="text-gray-400 text-xs sm:text-sm text-center md:text-left">
               {t('landing.footer.copyright')}
             </p>
-            <nav aria-label="Social media links" className="flex items-center gap-4 sm:gap-6 text-sm">
+            <nav aria-label="Social media links" className="flex items-center gap-4 sm:gap-5">
               <a
                 href="https://www.instagram.com/mestory_ai/"
                 target="_blank"
@@ -967,7 +970,7 @@ export default function LandingPage() {
                 className="text-gray-400 hover:text-memorial-gold transition-colors"
                 aria-label="Follow MeStory on Instagram"
               >
-                Instagram
+                <Instagram className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
               </a>
               <a
                 href="https://www.facebook.com/MeStoryAI?locale=he_IL"
@@ -976,7 +979,7 @@ export default function LandingPage() {
                 className="text-gray-400 hover:text-memorial-gold transition-colors"
                 aria-label="Follow MeStory on Facebook"
               >
-                Facebook
+                <Facebook className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
               </a>
               <a
                 href="https://www.linkedin.com/company/115788080/"
@@ -985,7 +988,7 @@ export default function LandingPage() {
                 className="text-gray-400 hover:text-memorial-gold transition-colors"
                 aria-label="Connect with MeStory on LinkedIn"
               >
-                LinkedIn
+                <Linkedin className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
               </a>
             </nav>
           </div>
