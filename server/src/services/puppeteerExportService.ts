@@ -100,10 +100,19 @@ export async function renderBookToPdf(opts: PuppeteerPdfOptions): Promise<Buffer
   const {
     bookId,
     authToken,
-    clientUrl = process.env.CLIENT_URL || 'http://localhost:5173',
     format = 'A5',
     onProgress,
   } = opts;
+
+  // Resolve clientUrl with sensible Vercel fallbacks
+  let clientUrl = opts.clientUrl || process.env.CLIENT_URL || '';
+  if (!clientUrl || clientUrl.includes('localhost')) {
+    if (process.env.VERCEL_URL) {
+      clientUrl = `https://${process.env.VERCEL_URL}`;
+    } else if (!clientUrl) {
+      clientUrl = 'http://localhost:5173';
+    }
+  }
 
   await onProgress?.(5, 'Launching browser...');
   const browser = await launchBrowser();
@@ -115,20 +124,22 @@ export async function renderBookToPdf(opts: PuppeteerPdfOptions): Promise<Buffer
     // behaves exactly like the editor preview.
     await page.setViewport({ width: 800, height: 1120, deviceScaleFactor: 2 });
 
-    // The print page reads the token from the URL and stashes it in
-    // localStorage, so subsequent API calls authenticate correctly.
     const url = `${clientUrl}/print/${bookId}?token=${encodeURIComponent(authToken)}`;
 
     await onProgress?.(20, 'Loading book...');
-    await page.goto(url, { waitUntil: 'networkidle0', timeout: 60_000 });
+    // Use `domcontentloaded` instead of `networkidle0` — the latter waits for
+    // ALL network requests to settle which can be slow with React SPAs.
+    // We have the explicit `print-ready` signal below so we know when content
+    // is actually ready.
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 });
 
-    // Wait for the PrintBookPage to mark itself as ready.
-    // The function runs in the browser context, so we pass it as a string
-    // to avoid TypeScript looking up `document` in the Node typings.
+    // Wait for the PrintBookPage to mark itself as ready (book loaded, images
+    // settled). Pass as string so TypeScript doesn't look up `document` in the
+    // Node typings.
     await onProgress?.(60, 'Waiting for render...');
     await page.waitForFunction(
       `document.body.classList.contains('print-ready')`,
-      { timeout: 60_000 }
+      { timeout: 90_000 }
     );
 
     await onProgress?.(80, 'Rendering PDF...');

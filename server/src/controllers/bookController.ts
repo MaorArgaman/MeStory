@@ -1911,48 +1911,33 @@ export const exportBookPDFAsync = async (req: AuthRequest, res: Response): Promi
 
     // Fire-and-forget the actual work
     runJobInBackground(job.id, async ({ updateProgress }) => {
-      // On Vercel / serverless, skip the React-app Puppeteer renderer
-      // (it's very slow — loads the full SPA, fetches the book via API, etc.)
-      // and go straight to server-side HTML generation which reads from the
-      // DB directly and is much faster.
-      const isServerless =
-        process.env.VERCEL === '1' || process.env.VERCEL === 'true' ||
-        process.env.AWS_LAMBDA_FUNCTION_NAME !== undefined;
-
       let pdfBuffer: Buffer;
       let warnings: string[] = [];
 
-      // Step 1: Try the fast server-side HTML renderer (Puppeteer + generated HTML)
+      // Step 1: React-app renderer (PrintBookPage) — EXACT match to Layout editor
+      // since they share the same React code and CSS. This is the source of truth.
       try {
-        await updateProgress(5, 'Generating PDF...');
-        pdfBuffer = await generateBookPdfFromHtml({
+        await updateProgress(5, 'Generating PDF (exact layout match)...');
+        pdfBuffer = await renderBookToPdf({
           bookId: id,
-          onProgress: (pct, msg) => updateProgress(5 + pct * 0.6, msg),
+          authToken,
+          onProgress: (pct, msg) => updateProgress(5 + pct * 0.65, msg),
         });
-      } catch (htmlErr: any) {
-        console.warn('[exportBookPDFAsync] HTML-based render failed:', htmlErr?.message);
+      } catch (puppeteerErr: any) {
+        console.warn('[exportBookPDFAsync] React renderer failed, trying server HTML:', puppeteerErr?.message);
 
-        // Step 2: On non-serverless, try the React-app renderer as fallback
-        if (!isServerless && authToken) {
-          try {
-            await updateProgress(10, 'Trying browser renderer...');
-            pdfBuffer = await renderBookToPdf({
-              bookId: id,
-              authToken,
-              onProgress: (pct, msg) => updateProgress(10 + pct * 0.5, msg),
-            });
-          } catch (puppeteerErr: any) {
-            console.warn('[exportBookPDFAsync] Puppeteer/React render also failed:', puppeteerErr?.message);
-            // Step 3: Final fallback — PDFKit (no Chrome needed)
-            await updateProgress(10, 'Generating PDF (fallback)...');
-            const exportResult = await exportBook(id, 'pdf');
-            if (!exportResult?.buffer) throw new Error('Export failed — no output generated');
-            pdfBuffer = exportResult.buffer;
-            warnings = [...(exportResult.warnings || []), 'PDF generated with fallback renderer — for best results use "Save as PDF" from your browser.'];
-          }
-        } else {
-          // Serverless: skip React renderer, go straight to PDFKit fallback
-          console.warn('[exportBookPDFAsync] Serverless — falling back to PDFKit');
+        // Step 2: Server-side HTML renderer (still uses Puppeteer/Chrome but generates HTML directly)
+        try {
+          await updateProgress(10, 'Generating PDF (server HTML)...');
+          pdfBuffer = await generateBookPdfFromHtml({
+            bookId: id,
+            onProgress: (pct, msg) => updateProgress(10 + pct * 0.55, msg),
+          });
+          warnings.push('Used server-side renderer — layout may differ slightly from editor.');
+        } catch (htmlErr: any) {
+          console.warn('[exportBookPDFAsync] Server HTML failed, falling back to PDFKit:', htmlErr?.message);
+
+          // Step 3: PDFKit fallback (no Chrome needed)
           await updateProgress(10, 'Generating PDF (fallback)...');
           const exportResult = await exportBook(id, 'pdf');
           if (!exportResult?.buffer) throw new Error('Export failed — no output generated');
