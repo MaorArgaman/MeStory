@@ -530,7 +530,7 @@ export default function FAQPage() {
                   : 'Our support team is here to help. Contact us and we\'ll get back to you soon.'}
               </p>
               <a
-                href="mailto:support@mestory.com"
+                href="mailto:mestory.tec@gmail.com"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-memorial-gold to-yellow-500 text-deep-space font-semibold rounded-lg hover:brightness-110 transition-all"
               >
                 {isHebrew ? 'צרו קשר' : 'Contact Support'}

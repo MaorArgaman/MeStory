@@ -55,7 +55,7 @@ export function OrganizationSchema({ locale = 'he' }: OrganizationSchemaProps) {
       '@type': 'ContactPoint',
       contactType: 'customer support',
       availableLanguage: ['Hebrew', 'English'],
-      email: 'support@mestory-ai.com',
+      email: 'mestory.tec@gmail.com',
     },
     address: {
       '@type': 'PostalAddress',

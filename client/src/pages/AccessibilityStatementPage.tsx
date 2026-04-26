@@ -5,8 +5,9 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { SEO } from '../components/seo';
 
 const COORDINATOR_NAME = 'מאור ארגמן';
-const COORDINATOR_EMAIL = 'support@mestory-ai.com';
-const COORDINATOR_PHONE = '';
+const COORDINATOR_EMAIL = 'mestory.tec@gmail.com';
+const COORDINATOR_PHONE = '050-222-4036';
+const COORDINATOR_PHONE_TEL = '+972502224036';
 const LAST_AUDIT_DATE_HE = '23 באפריל 2026';
 const LAST_AUDIT_DATE_EN = 'April 23, 2026';
 
@@ -85,7 +86,7 @@ export default function AccessibilityStatementPage() {
           {COORDINATOR_PHONE && (
             <p>
               <strong>טלפון:</strong>{' '}
-              <a href={`tel:${COORDINATOR_PHONE}`} className="text-memorial-gold hover:underline">
+              <a href={`tel:${COORDINATOR_PHONE_TEL}`} className="text-memorial-gold hover:underline">
                 {COORDINATOR_PHONE}
               </a>
             </p>
@@ -182,7 +183,7 @@ export default function AccessibilityStatementPage() {
           {COORDINATOR_PHONE && (
             <p>
               <strong>Phone:</strong>{' '}
-              <a href={`tel:${COORDINATOR_PHONE}`} className="text-memorial-gold hover:underline">
+              <a href={`tel:${COORDINATOR_PHONE_TEL}`} className="text-memorial-gold hover:underline">
                 {COORDINATOR_PHONE}
               </a>
             </p>

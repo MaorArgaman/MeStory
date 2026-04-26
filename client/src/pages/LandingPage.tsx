@@ -955,7 +955,7 @@ export default function LandingPage() {
                   </a>
                 </li>
                 <li>
-                  <a href="mailto:support@mestory.com" className="hover:text-memorial-gold transition-colors" aria-label="Contact support via email">
+                  <a href="mailto:mestory.tec@gmail.com" className="hover:text-memorial-gold transition-colors" aria-label="Contact support via email">
                     {t('footer.contact')}
                   </a>
                 </li>

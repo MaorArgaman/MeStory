@@ -205,8 +205,8 @@ export default function TermsOfServicePage() {
       content: `
         לשאלות בנוגע לתנאי השימוש:
 
-        **דוא"ל כללי:** support@mestory.com
-        **דוא"ל משפטי:** legal@mestory.com
+        **דוא"ל כללי:** mestory.tec@gmail.com
+        **דוא"ל משפטי:** mestory.tec@gmail.com
 
         **כתובת:**
         MeStory Ltd.

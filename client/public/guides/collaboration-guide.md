@@ -108,7 +108,7 @@ MeStory מאפשר לכם לכתוב ספרים יחד עם חברים, משפח
 
 ## צריכים עזרה?
 
-- **מייל תמיכה:** support@mestory.com
+- **מייל תמיכה:** mestory.tec@gmail.com
 - **שאלות נפוצות:** mestory.com/faq
 
 ---

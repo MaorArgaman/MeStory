@@ -259,7 +259,7 @@ export default function GuidesPage() {
                   {isHebrew ? 'שאלות נפוצות' : 'View FAQ'}
                 </Link>
                 <a
-                  href="mailto:support@mestory.com"
+                  href="mailto:mestory.tec@gmail.com"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-memorial-gold to-yellow-500 text-deep-space font-semibold rounded-lg hover:brightness-110 transition-all"
                 >
                   {isHebrew ? 'צרו קשר' : 'Contact Support'}
