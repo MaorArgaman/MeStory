@@ -24,6 +24,7 @@ import {
 import { GlassCard, GlowingButton, OptimizedImage } from '../components/ui';
 import { useLanguage } from '../contexts/LanguageContext';
 import { SEO, OrganizationSchema, WebsiteSchema, SoftwareApplicationSchema, FAQSchema } from '../components/seo';
+import AccessibilityWidget from '../components/accessibility/AccessibilityWidget';
 // Memorial-themed images from public folder
 const logoIcon = '/img/new/logo-mestory-large.png';
 
@@ -944,6 +945,11 @@ export default function LandingPage() {
                   </a>
                 </li>
                 <li>
+                  <a href="/accessibility" className="hover:text-memorial-gold transition-colors" aria-label="Accessibility statement">
+                    {t('footer.accessibility', 'Accessibility')}
+                  </a>
+                </li>
+                <li>
                   <a href="/library" className="hover:text-memorial-gold transition-colors" aria-label="View your library">
                     {t('nav.library')}
                   </a>
@@ -994,6 +1000,8 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      <AccessibilityWidget />
     </div>
   );
 }

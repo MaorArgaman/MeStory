@@ -1,8 +1,10 @@
 import { ReactNode, useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { WifiOff } from 'lucide-react';
 import Navbar from './Navbar';
+import AccessibilityWidget from '../accessibility/AccessibilityWidget';
 
 const logoIcon = '/img/new/logo-mestory-large.png';
 
@@ -57,6 +59,19 @@ export default function Layout({ children }: LayoutProps) {
             alt="MeStory"
             className="nav-logo-glow h-12 w-auto object-contain"
           />
+          <nav aria-label={isHebrew ? 'קישורים משפטיים' : 'Legal links'} className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
+            <Link to="/accessibility" className="text-gray-300 hover:text-memorial-gold transition-colors">
+              {isHebrew ? 'הצהרת נגישות' : 'Accessibility'}
+            </Link>
+            <span className="text-gray-600" aria-hidden="true">·</span>
+            <Link to="/privacy" className="text-gray-300 hover:text-memorial-gold transition-colors">
+              {isHebrew ? 'פרטיות' : 'Privacy'}
+            </Link>
+            <span className="text-gray-600" aria-hidden="true">·</span>
+            <Link to="/terms" className="text-gray-300 hover:text-memorial-gold transition-colors">
+              {isHebrew ? 'תנאי שימוש' : 'Terms'}
+            </Link>
+          </nav>
           <p className="text-gray-400 text-sm text-center">
             <span dir="rtl">נבנה עם ❤️ בישראל</span>
             {' · '}
@@ -67,6 +82,8 @@ export default function Layout({ children }: LayoutProps) {
           </p>
         </div>
       </footer>
+
+      <AccessibilityWidget />
     </div>
   );
 }

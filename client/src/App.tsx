@@ -42,6 +42,7 @@ const MarketplacePage = lazy(() => import('./pages/MarketplacePage'));
 const SubscriptionPage = lazy(() => import('./pages/SubscriptionPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const UpgradeSuccessPage = lazy(() => import('./pages/UpgradeSuccessPage'));
+const PaymentReturnPage = lazy(() => import('./pages/PaymentReturnPage'));
 const ReaderPage = lazy(() => import('./pages/ReaderPage'));
 const BookDetailsPage = lazy(() => import('./pages/BookDetailsPage'));
 const AuthorProfilePage = lazy(() => import('./pages/AuthorProfilePage'));
@@ -58,6 +59,7 @@ const HowToPublishBook = lazy(() => import('./pages/guides/HowToPublishBook'));
 const HowToEarnMoney = lazy(() => import('./pages/guides/HowToEarnMoney'));
 const HowToCollaborate = lazy(() => import('./pages/guides/HowToCollaborate'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const AccessibilityStatementPage = lazy(() => import('./pages/AccessibilityStatementPage'));
 const MyStoryPage = lazy(() => import('./pages/MyStoryPage'));
 const InvitationPage = lazy(() => import('./pages/InvitationPage'));
 const ContributePage = lazy(() => import('./pages/ContributePage'));
@@ -100,6 +102,7 @@ function createLocalizedRoutes() {
       <Route path="/en/guides/publish-book" element={<LocalizedLayout><HowToPublishBook /></LocalizedLayout>} />
       <Route path="/en/guides/earn-money" element={<LocalizedLayout><HowToEarnMoney /></LocalizedLayout>} />
       <Route path="/en/guides/collaborate" element={<LocalizedLayout><HowToCollaborate /></LocalizedLayout>} />
+      <Route path="/en/accessibility" element={<LocalizedLayout><AccessibilityStatementPage /></LocalizedLayout>} />
 
       {/* Hebrew routes */}
       <Route path="/he" element={<LocalizedLanding />} />
@@ -117,6 +120,7 @@ function createLocalizedRoutes() {
       <Route path="/he/guides/publish-book" element={<LocalizedLayout><HowToPublishBook /></LocalizedLayout>} />
       <Route path="/he/guides/earn-money" element={<LocalizedLayout><HowToEarnMoney /></LocalizedLayout>} />
       <Route path="/he/guides/collaborate" element={<LocalizedLayout><HowToCollaborate /></LocalizedLayout>} />
+      <Route path="/he/accessibility" element={<LocalizedLayout><AccessibilityStatementPage /></LocalizedLayout>} />
     </>
   );
 }
@@ -356,6 +360,14 @@ function AppContent() {
                   </Layout>
                 }
               />
+              <Route
+                path="/accessibility"
+                element={
+                  <Layout>
+                    <PageBoundary><AccessibilityStatementPage /></PageBoundary>
+                  </Layout>
+                }
+              />
 
               {/* More protected routes */}
               <Route
@@ -383,6 +395,22 @@ function AppContent() {
                 element={
                   <RequireAuth>
                     <PageBoundary><UpgradeSuccessPage /></PageBoundary>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/payment/success"
+                element={
+                  <RequireAuth>
+                    <PageBoundary><PaymentReturnPage variant="success" /></PageBoundary>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/payment/cancel"
+                element={
+                  <RequireAuth>
+                    <PageBoundary><PaymentReturnPage variant="cancel" /></PageBoundary>
                   </RequireAuth>
                 }
               />

@@ -1887,3 +1887,68 @@
 }
 
 /* Drop cap rules consolidated above in the DROP CAPS section */
+
+/* ==================== ACCESSIBILITY WIDGET ==================== */
+/* Applied via classes set on <html> by AccessibilityWidget.       */
+
+/* Font scaling: scale only the body so the widget itself is unaffected. */
+html.a11y-font-scaled body {
+  font-size: calc(1rem * var(--a11y-font-scale, 1));
+}
+
+/* High contrast: stronger text/background separation. */
+html.a11y-contrast-high body {
+  background: #000 !important;
+  color: #fff !important;
+}
+html.a11y-contrast-high a,
+html.a11y-contrast-high button {
+  color: #ffeb3b !important;
+}
+
+/* Inverted colors: full document inversion (images counter-inverted to look normal). */
+html.a11y-contrast-inverted body {
+  filter: invert(1) hue-rotate(180deg);
+}
+html.a11y-contrast-inverted img,
+html.a11y-contrast-inverted video,
+html.a11y-contrast-inverted [style*="background-image"] {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Grayscale (monochrome) */
+html.a11y-contrast-grayscale body {
+  filter: grayscale(1);
+}
+
+/* Highlight links: outline + underline so they stand out. */
+html.a11y-highlight-links a {
+  text-decoration: underline !important;
+  outline: 2px solid #ffeb3b !important;
+  outline-offset: 2px !important;
+  background-color: rgba(255, 235, 59, 0.1) !important;
+}
+
+/* Reduce motion: kill animations and transitions globally. */
+html.a11y-reduce-motion *,
+html.a11y-reduce-motion *::before,
+html.a11y-reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Big cursor */
+html.a11y-big-cursor,
+html.a11y-big-cursor * {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'><path fill='%23000' stroke='%23fff' stroke-width='2' d='M6 4l28 22-12 2 8 16-6 2-8-16-10 8z'/></svg>") 4 4, auto !important;
+}
+
+/* Visible focus indicator that survives custom focus styles. */
+html.a11y-highlight-links *:focus-visible,
+html.a11y-contrast-high *:focus-visible {
+  outline: 3px solid #ffeb3b !important;
+  outline-offset: 2px !important;
+}
+
