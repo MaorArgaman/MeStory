@@ -31,8 +31,8 @@ const FEATURES: Feature[] = [
     icon: Sparkles,
     titleHe: 'כתיבה עם בינה מלאכותית',
     titleEn: 'AI-guided writing',
-    descHe: 'שאלות מנחות, ניסוח עדין ושיפור סגנוני — כל זה תוך כדי הכתיבה, בלי להחליף את הקול שלך.',
-    descEn: 'Guided prompts, gentle phrasing and stylistic enhancements — all while you write, without replacing your voice.',
+    descHe: 'שאלות מנחות, ניסוח עדין ושיפור סגנוני, כל זה תוך כדי הכתיבה, בלי להחליף את הקול שלך.',
+    descEn: 'Guided prompts, gentle phrasing and stylistic enhancements, all while you write, without replacing your voice.',
     bulletsHe: [
       'יצירת ראשי פרקים אוטומטית מסיפור גלם',
       'הצעות לשיפור משפטים בעברית טבעית',
@@ -48,17 +48,17 @@ const FEATURES: Feature[] = [
     icon: Palette,
     titleHe: 'סטודיו עיצוב לעטיפות',
     titleEn: 'Cover design studio',
-    descHe: 'עיצוב עטיפה מקצועי בכמה קליקים — תבניות, גופנים, גרדיאנטים ותמונות AI.',
-    descEn: 'Professional cover design in a few clicks — templates, fonts, gradients, and AI imagery.',
+    descHe: 'עיצוב עטיפה מקצועי בכמה קליקים, עם תבניות, גופנים, גרדיאנטים ותמונות AI.',
+    descEn: 'Professional cover design in a few clicks, with templates, fonts, gradients, and AI imagery.',
     bulletsHe: [
       'מאות תבניות מותאמות לספרי הנצחה ואוטוביוגרפיה',
       'יצירת תמונות עטיפה בהתאמה אישית עם AI',
-      'עטיפה קדמית, אחורית ושדרה — מוכן לדפוס',
+      'עטיפה קדמית, אחורית ושדרה, מוכן לדפוס',
     ],
     bulletsEn: [
       'Hundreds of templates for memorial books and autobiographies',
       'Custom AI-generated cover imagery',
-      'Front, back and spine — print-ready',
+      'Front, back and spine, print-ready',
     ],
   },
   {
@@ -82,8 +82,8 @@ const FEATURES: Feature[] = [
     icon: Users,
     titleHe: 'כתיבה משותפת',
     titleEn: 'Collaborative writing',
-    descHe: 'הזמינו בני משפחה וחברים לתרום פרקים, סיפורים ותמונות — כולם תורמים, אתם עורכים ומנציחים.',
-    descEn: 'Invite family and friends to contribute chapters, stories and photos — everyone contributes, you edit and preserve.',
+    descHe: 'הזמינו בני משפחה וחברים לתרום פרקים, סיפורים ותמונות. כולם תורמים, אתם עורכים ומנציחים.',
+    descEn: 'Invite family and friends to contribute chapters, stories and photos. Everyone contributes, you edit and preserve.',
     bulletsHe: [
       'הזמנות בקישור ייחודי, ללא צורך ברישום',
       'ניהול הרשאות ואישור תרומות',
@@ -116,8 +116,8 @@ const FEATURES: Feature[] = [
     icon: Globe,
     titleHe: 'חנות ספרים ציבורית',
     titleEn: 'Public bookstore',
-    descHe: 'פרסמו את הספר שלכם לעיני קהל רחב, או שמרו אותו פרטי — אתם בוחרים.',
-    descEn: 'Publish your book to a wide audience, or keep it private — you decide.',
+    descHe: 'פרסמו את הספר שלכם לעיני קהל רחב, או שמרו אותו פרטי. אתם בוחרים.',
+    descEn: 'Publish your book to a wide audience, or keep it private. You decide.',
     bulletsHe: [
       'בחירה בין פרסום ציבורי או פרטי',
       'תמחור גמיש: חינם, בתשלום או מתנה',
@@ -133,8 +133,8 @@ const FEATURES: Feature[] = [
     icon: Printer,
     titleHe: 'ייצוא PDF מוכן לדפוס',
     titleEn: 'Print-ready PDF export',
-    descHe: 'הספר שלכם מוכן להדפסה בכל בית דפוס — גם דיגיטלית וגם פיזית.',
-    descEn: 'Your book is ready for printing at any printer — both digital and physical.',
+    descHe: 'הספר שלכם מוכן להדפסה בכל בית דפוס, גם דיגיטלית וגם פיזית.',
+    descEn: 'Your book is ready for printing at any printer, both digital and physical.',
     bulletsHe: [
       'PDF איכותי ב־300 DPI',
       'תמיכה בגדלים סטנדרטיים (A4, A5, פוקט-בוק)',
@@ -150,7 +150,7 @@ const FEATURES: Feature[] = [
     icon: ShieldCheck,
     titleHe: 'אבטחה ופרטיות',
     titleEn: 'Security & privacy',
-    descHe: 'הסיפורים שלכם — שלכם בלבד. הצפנה מלאה, גיבויים אוטומטיים ובעלות מלאה על התוכן.',
+    descHe: 'הסיפורים שלכם, שלכם בלבד. הצפנה מלאה, גיבויים אוטומטיים ובעלות מלאה על התוכן.',
     descEn: 'Your stories are yours alone. Full encryption, automatic backups, and full content ownership.',
     bulletsHe: [
       'הצפנת SSL/TLS בכל התקשורת',
@@ -195,8 +195,8 @@ export default function FeaturesPage() {
           </h1>
           <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto">
             {isHebrew
-              ? 'MeStory היא פלטפורמה שלמה ליצירת ספרי הנצחה, אוטוביוגרפיה וספרי משפחה — מהרעיון הראשון ועד לספר המודפס.'
-              : 'MeStory is a complete platform for creating memorial books, autobiographies, and family books — from the first idea to the printed book.'}
+              ? 'MeStory היא פלטפורמה שלמה ליצירת ספרי הנצחה, אוטוביוגרפיה וספרי משפחה, מהרעיון הראשון ועד לספר המודפס.'
+              : 'MeStory is a complete platform for creating memorial books, autobiographies, and family books, from the first idea to the printed book.'}
           </p>
         </motion.header>
 
@@ -248,7 +248,7 @@ export default function FeaturesPage() {
             {isHebrew ? 'מוכנים להתחיל?' : 'Ready to get started?'}
           </h2>
           <p className="text-gray-300 mb-6">
-            {isHebrew ? 'התחילו לכתוב את הסיפור שלכם — בחינם.' : 'Start writing your story — for free.'}
+            {isHebrew ? 'התחילו לכתוב את הסיפור שלכם, בחינם.' : 'Start writing your story, for free.'}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <GlowingButton variant="gold" size="lg" onClick={() => navigate('/register')}>

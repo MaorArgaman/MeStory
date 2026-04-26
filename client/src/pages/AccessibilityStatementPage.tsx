@@ -155,9 +155,9 @@ export default function AccessibilityStatementPage() {
           Despite our best efforts, some areas may not be fully accessible:
         </p>
         <ul className="text-gray-300 leading-relaxed space-y-2 list-disc pl-5">
-          <li>User-generated content (books uploaded by authors) — we work with creators to make their content accessible whenever possible.</li>
-          <li>Third-party services (e.g. PayPal/Stripe payment forms) — accessibility is the responsibility of the provider.</li>
-          <li>The graphical design and layout studio — complex graphical operations may be less accessible to screen readers by their nature.</li>
+          <li>User-generated content (books uploaded by authors): we work with creators to make their content accessible whenever possible.</li>
+          <li>Third-party services (e.g. PayPal/Stripe payment forms): accessibility is the responsibility of the provider.</li>
+          <li>The graphical design and layout studio: complex graphical operations may be less accessible to screen readers by their nature.</li>
         </ul>
         <p className="text-gray-300 leading-relaxed mt-3">
           If you encounter an inaccessible component, please let us know and we will fix it as soon as possible.

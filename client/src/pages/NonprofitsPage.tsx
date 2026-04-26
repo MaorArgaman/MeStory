@@ -31,8 +31,8 @@ const BENEFITS: BenefitItem[] = [
     icon: HeartHandshake,
     titleHe: 'מסלול עמותות מסובסד',
     titleEn: 'Subsidized nonprofit plan',
-    descHe: 'עמותות מוכרות מקבלות הנחה משמעותית על כל מסלולי הפלטפורמה — כולל ספרים ללא הגבלה, קרדיטי AI מורחבים והדרכה אישית.',
-    descEn: 'Recognized nonprofits receive a significant discount on all platform tiers — including unlimited books, expanded AI credits, and personal training.',
+    descHe: 'עמותות מוכרות מקבלות הנחה משמעותית על כל מסלולי הפלטפורמה, כולל ספרים ללא הגבלה, קרדיטי AI מורחבים והדרכה אישית.',
+    descEn: 'Recognized nonprofits receive a significant discount on all platform tiers, including unlimited books, expanded AI credits, and personal training.',
   },
   {
     icon: Users,
@@ -45,15 +45,15 @@ const BENEFITS: BenefitItem[] = [
     icon: BookOpen,
     titleHe: 'פרויקטים של הנצחה רחבי היקף',
     titleEn: 'Large-scale memorial projects',
-    descHe: 'מתאים במיוחד לעמותות הנצחת חללים, ארגוני שואה, קהילות וגופי שימור מורשת — כלי מקצועי לפרויקטים מהותיים.',
-    descEn: 'Especially suited for fallen-soldier memorial organizations, Holocaust groups, communities, and heritage preservation bodies — a professional tool for meaningful projects.',
+    descHe: 'מתאים במיוחד לעמותות הנצחת חללים, ארגוני שואה, קהילות וגופי שימור מורשת. כלי מקצועי לפרויקטים מהותיים.',
+    descEn: 'Especially suited for fallen-soldier memorial organizations, Holocaust groups, communities, and heritage preservation bodies. A professional tool for meaningful projects.',
   },
   {
     icon: Sparkles,
     titleHe: 'עזרה של בינה מלאכותית',
     titleEn: 'AI assistance',
-    descHe: 'AI שמנחה את התורמים בשאלות עדינות, משפר ניסוח, ומסייע לסדר זיכרונות לפרקים — חוסך עשרות שעות עבודה.',
-    descEn: 'AI guides contributors with gentle prompts, improves phrasing, and helps arrange memories into chapters — saving dozens of hours of work.',
+    descHe: 'AI שמנחה את התורמים בשאלות עדינות, משפר ניסוח, ומסייע לסדר זיכרונות לפרקים, וחוסך עשרות שעות עבודה.',
+    descEn: 'AI guides contributors with gentle prompts, improves phrasing, and helps arrange memories into chapters, saving dozens of hours of work.',
   },
   {
     icon: ShieldCheck,
@@ -75,26 +75,26 @@ const USE_CASES: UseCaseItem[] = [
   {
     titleHe: 'הנצחת חללי צה"ל ופעולות איבה',
     titleEn: 'Memorializing fallen soldiers and victims of terror',
-    descHe: 'יצירת ספרי זיכרון לכל חלל — שילוב סיפורי משפחה, חברים, מפקדים וחיילים, ועיצוב מכבד התואם את רוח האדם.',
-    descEn: 'Creating memorial books for each fallen soldier — combining stories from family, friends, commanders, and fellow soldiers, with respectful design fitting the person.',
+    descHe: 'יצירת ספרי זיכרון לכל חלל, ובהם שילוב סיפורי משפחה, חברים, מפקדים וחיילים, ועיצוב מכבד התואם את רוח האדם.',
+    descEn: 'Creating memorial books for each fallen soldier, combining stories from family, friends, commanders, and fellow soldiers, with respectful design fitting the person.',
   },
   {
     titleHe: 'ארגוני ניצולי שואה והעדה',
     titleEn: 'Holocaust survivor and testimony organizations',
-    descHe: 'תיעוד עדויות שאי-אפשר להחליף — הקלטות קוליות של ניצולים, תרגום לאנגלית ושמירה לדורות הבאים.',
-    descEn: 'Documenting irreplaceable testimonies — voice recordings of survivors, translation to English, preservation for future generations.',
+    descHe: 'תיעוד עדויות שאי-אפשר להחליף: הקלטות קוליות של ניצולים, תרגום לאנגלית ושמירה לדורות הבאים.',
+    descEn: 'Documenting irreplaceable testimonies: voice recordings of survivors, translation to English, preservation for future generations.',
   },
   {
     titleHe: 'קהילות וארגוני מורשת',
     titleEn: 'Communities and heritage organizations',
-    descHe: 'תיעוד היסטוריית הקהילה, סיפורי מייסדים ודמויות מפתח — בספר אחד שייצג את הקהילה למאות שנים.',
-    descEn: 'Documenting community history, founder stories and key figures — in one book representing the community for hundreds of years.',
+    descHe: 'תיעוד היסטוריית הקהילה, סיפורי מייסדים ודמויות מפתח, בספר אחד שייצג את הקהילה למאות שנים.',
+    descEn: 'Documenting community history, founder stories and key figures, in one book representing the community for hundreds of years.',
   },
   {
     titleHe: 'בתי אבות ודיור מוגן',
     titleEn: 'Senior homes and assisted living',
-    descHe: 'פעילות הנצחה משמעותית עם הדיירים — סיפורי חיים אישיים, מתנת אהבה למשפחות, ופעילות טיפולית רגשית.',
-    descEn: 'Meaningful preservation activity with residents — personal life stories, a love-gift for families, and emotional therapeutic activity.',
+    descHe: 'פעילות הנצחה משמעותית עם הדיירים: סיפורי חיים אישיים, מתנת אהבה למשפחות, ופעילות טיפולית רגשית.',
+    descEn: 'Meaningful preservation activity with residents: personal life stories, a love-gift for families, and emotional therapeutic activity.',
   },
 ];
 
@@ -103,8 +103,8 @@ export default function NonprofitsPage() {
   const isHebrew = language === 'he';
   const Arrow = isHebrew ? ArrowLeft : ArrowRight;
 
-  const subjectHe = encodeURIComponent('פניית עמותה — MeStory');
-  const subjectEn = encodeURIComponent('Nonprofit inquiry — MeStory');
+  const subjectHe = encodeURIComponent('פניית עמותה ל־MeStory');
+  const subjectEn = encodeURIComponent('Nonprofit inquiry to MeStory');
   const mailHref = `mailto:${CONTACT_EMAIL}?subject=${isHebrew ? subjectHe : subjectEn}`;
 
   return (
@@ -112,8 +112,8 @@ export default function NonprofitsPage() {
       <SEO
         title={isHebrew ? 'לעמותות וארגונים | MeStory' : 'For Nonprofits & Organizations | MeStory'}
         description={isHebrew
-          ? 'MeStory לעמותות הנצחה, ארגוני שואה, קהילות וגופי מורשת — כלי מקצועי ליצירת ספרי זיכרון בקנה מידה רחב, במחיר מסובסד.'
-          : 'MeStory for memorial nonprofits, Holocaust organizations, communities, and heritage bodies — a professional tool for large-scale memorial books, at a subsidized price.'}
+          ? 'MeStory לעמותות הנצחה, ארגוני שואה, קהילות וגופי מורשת. כלי מקצועי ליצירת ספרי זיכרון בקנה מידה רחב, במחיר מסובסד.'
+          : 'MeStory for memorial nonprofits, Holocaust organizations, communities, and heritage bodies. A professional tool for large-scale memorial books, at a subsidized price.'}
         type="website"
         locale={isHebrew ? 'he_IL' : 'en_US'}
         url="/nonprofits"
@@ -135,8 +135,8 @@ export default function NonprofitsPage() {
           </h1>
           <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto">
             {isHebrew
-              ? 'MeStory עובדת עם עמותות הנצחה, ארגוני שואה, קהילות וגופי מורשת כדי להפוך אלפי סיפורים לספרים מכובדים — במחיר מסובסד וליווי אישי.'
-              : 'MeStory partners with memorial nonprofits, Holocaust organizations, communities, and heritage bodies to turn thousands of stories into dignified books — at a subsidized price and with personal support.'}
+              ? 'MeStory עובדת עם עמותות הנצחה, ארגוני שואה, קהילות וגופי מורשת כדי להפוך אלפי סיפורים לספרים מכובדים, במחיר מסובסד וליווי אישי.'
+              : 'MeStory partners with memorial nonprofits, Holocaust organizations, communities, and heritage bodies to turn thousands of stories into dignified books, at a subsidized price and with personal support.'}
           </p>
         </motion.header>
 
@@ -205,8 +205,8 @@ export default function NonprofitsPage() {
             </h2>
             <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
               {isHebrew
-                ? 'ספרו לנו על הפרויקט שלכם — מספר אנשים שצריכים תיעוד, היקף הסיפורים, לוח זמנים — ונחזור אליכם תוך יום עסקים עם הצעה מותאמת.'
-                : 'Tell us about your project — number of people to document, scope of stories, timeline — and we\'ll get back to you within one business day with a tailored proposal.'}
+                ? 'ספרו לנו על הפרויקט שלכם: מספר אנשים שצריכים תיעוד, היקף הסיפורים, לוח זמנים. נחזור אליכם תוך יום עסקים עם הצעה מותאמת.'
+                : 'Tell us about your project: number of people to document, scope of stories, timeline. We\'ll get back to you within one business day with a tailored proposal.'}
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
