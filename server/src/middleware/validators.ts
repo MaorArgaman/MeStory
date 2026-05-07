@@ -144,16 +144,18 @@ export const updateBookValidation = [
     .isArray()
     .withMessage('Chapters must be an array'),
 
+  // Allow empty strings during autosave - the user may have just created
+  // a new chapter that has no title/content yet, and we don't want every
+  // keystroke that empties a field to break the save.
   body('chapters.*.title')
     .optional()
-    .trim()
-    .notEmpty()
-    .withMessage('Chapter title is required'),
+    .isString()
+    .withMessage('Chapter title must be a string'),
 
   body('chapters.*.content')
     .optional()
-    .notEmpty()
-    .withMessage('Chapter content is required'),
+    .isString()
+    .withMessage('Chapter content must be a string'),
 
   body('chapters.*.order')
     .optional()
@@ -165,11 +167,12 @@ export const updateBookValidation = [
     .isArray()
     .withMessage('Characters must be an array'),
 
+  // Same relaxation as chapters: characters get auto-saved while still
+  // being edited, name field can transiently be empty.
   body('characters.*.name')
     .optional()
-    .trim()
-    .notEmpty()
-    .withMessage('Character name is required'),
+    .isString()
+    .withMessage('Character name must be a string'),
 ];
 
 /**
