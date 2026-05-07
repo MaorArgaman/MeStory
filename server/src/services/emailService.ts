@@ -497,7 +497,7 @@ export async function sendBookPurchaseEmail(
       </div>
 
       <div style="text-align: center;">
-        <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/reader/${bookId}" class="button">
+        <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/read/${bookId}" class="button">
           התחל לקרוא עכשיו
         </a>
       </div>

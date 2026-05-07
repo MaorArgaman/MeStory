@@ -3722,7 +3722,7 @@ export const shareBook = async (req: AuthRequest, res: Response): Promise<void> 
     );
 
     // Generate share URL
-    const shareUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reader/${id}`;
+    const shareUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/read/${id}`;
 
     res.status(200).json({
       success: true,

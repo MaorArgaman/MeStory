@@ -354,7 +354,7 @@ export async function notifyBookLike(
     data: {
       bookId: bookId,
       bookTitle: book.title,
-      link: `/reader/${bookId}`,
+      link: `/read/${bookId}`,
     },
   });
 }
@@ -390,7 +390,7 @@ export async function notifyBookComment(
     data: {
       bookId: bookId,
       bookTitle: book.title,
-      link: `/reader/${bookId}`,
+      link: `/read/${bookId}`,
     },
   });
 }
@@ -426,7 +426,7 @@ export async function notifyBookShare(
     data: {
       bookId: bookId,
       bookTitle: book.title,
-      link: `/reader/${bookId}`,
+      link: `/read/${bookId}`,
     },
   });
 }
@@ -581,7 +581,9 @@ export async function notifyBookPublished(
     data: {
       bookId: bookId,
       bookTitle,
-      link: `/reader/${bookId}`,
+      // Frontend route is /read/:bookId, not /reader/:bookId.
+      // Old notification path produced 404s when authors clicked through.
+      link: `/read/${bookId}`,
     },
   });
 }
