@@ -32,6 +32,22 @@ import {
   BookDesignInput as PremiumBookDesignInput,
   PremiumCompleteDesign,
 } from '../services/premiumDesignService';
+import { persistImage } from '../services/imagePersistenceService';
+
+/**
+ * Persist all generated cover/page images to Supabase Storage so they
+ * survive provider URL expiration (Gemini ~1h, DALL-E ~1h, etc.).
+ * Returns the URL unchanged if it's already on supabase or persistence
+ * fails (the original URL is the safe fallback).
+ */
+async function persistCoverUrl(
+  url: string | undefined,
+  userId: string,
+  bookId: string
+): Promise<string | undefined> {
+  if (!url || url.includes('supabase')) return url;
+  return persistImage(url, { userId, bookId });
+}
 
 /**
  * Generate complete AI book design
@@ -175,6 +191,22 @@ export const applyBookDesign = async (req: AuthRequest, res: Response): Promise<
 
     if (applyCover) {
       const updatedCover = applyDesignToCoverDesign(typedDesign);
+      // Persist any temp Gemini/DALL-E URLs on the cover before saving
+      // so they survive provider expiration. Mutates updatedCover in place.
+      if (updatedCover?.front?.imageUrl) {
+        updatedCover.front.imageUrl = await persistCoverUrl(
+          updatedCover.front.imageUrl,
+          req.user.id,
+          bookId
+        ) || updatedCover.front.imageUrl;
+      }
+      if (updatedCover?.back?.imageUrl) {
+        updatedCover.back.imageUrl = await persistCoverUrl(
+          updatedCover.back.imageUrl,
+          req.user.id,
+          bookId
+        ) || updatedCover.back.imageUrl;
+      }
       book.coverDesign = updatedCover;
     }
 
@@ -921,12 +953,23 @@ export const applyCompleteDesign = async (req: AuthRequest, res: Response): Prom
       };
     }
 
-    // Apply cover design
+    // Apply cover design. Persist temp Gemini/DALL-E URLs to Storage
+    // BEFORE saving so the cover doesn't disappear when the URL expires.
     if (design.covers) {
+      const persistedFrontUrl = await persistCoverUrl(
+        design.covers.front?.generatedImageUrl,
+        req.user.id,
+        bookId
+      );
+      const persistedBackUrl = await persistCoverUrl(
+        design.covers.back?.generatedImageUrl,
+        req.user.id,
+        bookId
+      );
       book.coverDesign = {
         front: {
-          type: design.covers.front?.generatedImageUrl ? 'ai-generated' : 'gradient',
-          imageUrl: design.covers.front?.generatedImageUrl,
+          type: persistedFrontUrl ? 'ai-generated' : 'gradient',
+          imageUrl: persistedFrontUrl,
           backgroundColor: design.covers.front?.backgroundColor,
           gradientColors: design.covers.front?.gradientColors,
           title: {
@@ -944,7 +987,7 @@ export const applyCompleteDesign = async (req: AuthRequest, res: Response): Prom
           },
         },
         back: {
-          imageUrl: design.covers.back?.generatedImageUrl,
+          imageUrl: persistedBackUrl,
           backgroundColor: design.covers.back?.backgroundColor,
           synopsis: book.synopsis || '',
         },
@@ -1162,10 +1205,24 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
       console.log('🧙 Design Wizard: Applying cover design to book...');
       console.log(`🧙 design.covers.frontImageUrl: ${design.covers?.frontImageUrl ? 'SET' : 'UNDEFINED'}`);
 
+      // Persist temp Gemini/DALL-E URLs to Supabase Storage before
+      // saving on the book - otherwise they expire and the cover
+      // disappears from the layout, reader, and exported PDF.
+      const persistedFrontUrl = await persistCoverUrl(
+        design.covers?.frontImageUrl,
+        req.user.id,
+        bookId
+      );
+      const persistedBackUrl = await persistCoverUrl(
+        design.covers?.backImageUrl,
+        req.user.id,
+        bookId
+      );
+
       book.coverDesign = {
         front: {
-          type: design.covers?.frontImageUrl ? 'ai-generated' : 'gradient',
-          imageUrl: design.covers?.frontImageUrl,
+          type: persistedFrontUrl ? 'ai-generated' : 'gradient',
+          imageUrl: persistedFrontUrl,
           backgroundColor: coverData?.front?.colorPalette?.[0] || '#1a1a2e',
           gradientColors: coverData?.front?.colorPalette,
           title: {
@@ -1183,7 +1240,7 @@ export const designWizard = async (req: AuthRequest, res: Response): Promise<voi
           },
         },
         back: {
-          imageUrl: design.covers?.backImageUrl,
+          imageUrl: persistedBackUrl,
           backgroundColor: coverData?.back?.backgroundColor || '#1a1a2e',
           synopsis: book.synopsis || book.description || '',
         },
@@ -1509,12 +1566,24 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
         },
       };
 
-      // Build cover design
+      // Build cover design. Persist Gemini/DALL-E temp URLs to Supabase
+      // Storage so the cover doesn't disappear from layout/reader/PDF
+      // when the provider URL expires (~1h for most providers).
       const authorName = await getAuthorName(book.author);
+      const persistedFrontUrl = await persistCoverUrl(
+        premiumDesign.covers.frontImageUrl,
+        req.user.id,
+        bookId
+      );
+      const persistedBackUrl = await persistCoverUrl(
+        premiumDesign.covers.backImageUrl,
+        req.user.id,
+        bookId
+      );
       const newCoverDesign = {
         front: {
-          type: premiumDesign.covers.frontImageUrl ? 'ai-generated' : 'gradient' as 'ai-generated' | 'uploaded' | 'gradient' | 'solid',
-          imageUrl: premiumDesign.covers.frontImageUrl,
+          type: persistedFrontUrl ? 'ai-generated' : 'gradient' as 'ai-generated' | 'uploaded' | 'gradient' | 'solid',
+          imageUrl: persistedFrontUrl,
           backgroundColor: premiumDesign.cover.front.colorPalette[0] || '#1a1a2e',
           gradientColors: premiumDesign.cover.front.colorPalette,
           title: {
@@ -1533,7 +1602,7 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
           },
         },
         back: {
-          imageUrl: premiumDesign.covers.backImageUrl,
+          imageUrl: persistedBackUrl,
           backgroundColor: premiumDesign.cover.back.backgroundColor,
           synopsis: book.synopsis || book.description || '',
           authorBio: premiumDesign.cover.back.authorBio?.text,
@@ -1546,11 +1615,17 @@ export const premiumDesignWizard = async (req: AuthRequest, res: Response): Prom
         },
       };
 
-      // Build page images
+      // Build page images. Persist each interior image's URL to
+      // Supabase Storage in parallel - same expiration risk as covers.
+      const persistedPageImageUrls = await Promise.all(
+        premiumDesign.generatedImages.map((img) =>
+          persistCoverUrl(img.imageUrl, req.user!.id, bookId)
+        )
+      );
       const newPageImages = premiumDesign.generatedImages.map((img, idx) => ({
         _id: `premium-${Date.now()}-${idx}`,
         pageIndex: img.chapterIndex * 2 + 1,
-        url: img.imageUrl,
+        url: persistedPageImageUrls[idx] || img.imageUrl,
         x: 10,
         y: img.position === 'chapter-start' ? 10 : img.position === 'chapter-end' ? 60 : 35,
         width: 80,
