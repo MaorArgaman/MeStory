@@ -578,11 +578,36 @@ export async function sendSaleNotificationToAuthor(
 export async function sendPasswordResetEmail(
   to: string,
   name: string,
-  resetToken: string
+  // Accept either the bare token (legacy callers) or the fully-built
+  // reset URL (new callers in authController). Detect which we got
+  // by looking for `://`.
+  resetTokenOrUrl: string,
+  lang: 'en' | 'he' = 'he'
 ): Promise<boolean> {
-  const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+  const resetUrl = resetTokenOrUrl.includes('://')
+    ? resetTokenOrUrl
+    : `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${resetTokenOrUrl}`;
 
-  const content = `
+  const content = lang === 'en' ? `
+    <h1>Reset your password</h1>
+    <div class="content">
+      <p>Hi <span class="highlight">${name}</span>,</p>
+      <p>We got a request to reset your MeStory password. Click the button below to choose a new one:</p>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${resetUrl}" class="button">
+          Reset Password
+        </a>
+      </div>
+
+      <p><strong>Heads up:</strong> This link expires in 1 hour.</p>
+
+      <p style="margin-top: 30px; padding: 20px; background: rgba(255,0,0,0.1); border-radius: 10px; border-left: 4px solid #ff4444;">
+        <strong>Didn't ask for this?</strong><br>
+        If you didn't request a password reset, just ignore this email - your account stays safe.
+      </p>
+    </div>
+  ` : `
     <h1>איפוס סיסמה</h1>
     <div class="content">
       <p>שלום <span class="highlight">${name}</span>,</p>
@@ -603,10 +628,11 @@ export async function sendPasswordResetEmail(
     </div>
   `;
 
+  const subject = lang === 'en' ? 'Password reset - MeStory' : 'איפוס סיסמה - MeStory';
   return sendEmail({
     to,
-    subject: 'איפוס סיסמה - MeStory',
-    html: getBaseTemplate(content, 'איפוס סיסמה'),
+    subject,
+    html: getBaseTemplate(content, subject),
   });
 }
 

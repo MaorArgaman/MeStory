@@ -123,6 +123,8 @@ export interface IUser {
   profile?: IProfile;
   paypal?: IPayPal;
   emailVerification: IEmailVerification;
+  /** Active password-reset token (hash + expiry). null/undefined means none. */
+  password_reset?: { tokenHash: string; expiresAt: string; requestedAt: string } | null;
   organizationId?: string; // Link to organization (for association members)
   created_at: string;
   updated_at: string;
@@ -143,6 +145,7 @@ interface UserRow {
   profile: IProfile | null;
   paypal: IPayPal | null;
   email_verification: IEmailVerification | null;
+  password_reset: { tokenHash: string; expiresAt: string; requestedAt: string } | null;
   organization_id: string | null;
   created_at: string;
   updated_at: string;
@@ -162,6 +165,7 @@ function rowToUser(row: UserRow): IUser {
     profile: row.profile || undefined,
     paypal: row.paypal || undefined,
     emailVerification: row.email_verification || { isVerified: false },
+    password_reset: row.password_reset || null,
     organizationId: row.organization_id || undefined,
     created_at: row.created_at,
     updated_at: row.updated_at,
@@ -496,6 +500,61 @@ export class User {
   // Check if user is premium
   static isPremium(user: IUser): boolean {
     return user.role === UserRole.PREMIUM || user.role === UserRole.ADMIN;
+  }
+
+  // ----- Password reset helpers ------------------------------------
+  // The token itself is never persisted. We hash it (sha256) so a DB
+  // leak doesn't hand attackers active reset links. The plaintext
+  // token only travels through email and back via the reset URL.
+
+  /** Save a hashed reset token + expiry on the user. */
+  static async setPasswordResetToken(
+    userId: string,
+    tokenHash: string,
+    expiresAt: Date
+  ): Promise<boolean> {
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update({
+        password_reset: {
+          tokenHash,
+          expiresAt: expiresAt.toISOString(),
+          requestedAt: new Date().toISOString(),
+        },
+      })
+      .eq('id', userId);
+    return !error;
+  }
+
+  /** Look up a user whose active reset token hash matches. */
+  static async findByPasswordResetTokenHash(tokenHash: string): Promise<IUser | null> {
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .filter('password_reset->>tokenHash', 'eq', tokenHash)
+      .limit(1)
+      .maybeSingle();
+    if (error || !data) return null;
+    return rowToUser(data as unknown as UserRow);
+  }
+
+  /**
+   * Set a new (already hashed) password and clear the reset token in a
+   * single update so they can't be desynced.
+   */
+  static async resetPasswordAndClearToken(
+    userId: string,
+    newHashedPassword: string
+  ): Promise<boolean> {
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update({
+        password: newHashedPassword,
+        password_reset: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId);
+    return !error;
   }
 
   // Check if user has credits

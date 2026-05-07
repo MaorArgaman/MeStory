@@ -7,6 +7,8 @@ import {
   updateProfile,
   verifyEmail,
   resendVerificationCode,
+  forgotPassword,
+  resetPassword,
 } from '../controllers/authController';
 import { authenticate } from '../middleware/auth';
 import { authLimiter } from '../middleware/rateLimiter';
@@ -83,6 +85,22 @@ router.post(
   authLimiter, // Rate limit to prevent abuse
   authenticate as any, // Requires authentication
   resendVerificationCode as any
+);
+
+// POST /api/auth/forgot-password - Email a one-time reset link.
+// Rate limited tightly because this both costs us (SMTP) and is a
+// vector for abusers to spam victims with reset emails.
+router.post(
+  '/forgot-password',
+  authLimiter,
+  forgotPassword
+);
+
+// POST /api/auth/reset-password - Confirm reset with the emailed token.
+router.post(
+  '/reset-password',
+  authLimiter,
+  resetPassword
 );
 
 /**

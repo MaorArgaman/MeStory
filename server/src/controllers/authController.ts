@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { User, UserRole, IUser } from '../models/User';
 import { generateToken } from '../utils/jwt';
 import { AuthRequest } from '../types';
@@ -7,8 +8,18 @@ import {
   generateVerificationCode,
   sendVerificationEmail,
   sendWelcomeEmail,
+  sendPasswordResetEmail,
 } from '../services/emailService';
 import { Coupon } from '../models/Coupon';
+
+// 1 hour reset window. Long enough for users to find the email in
+// promotions/spam folders, short enough that a leaked email link
+// becomes useless quickly.
+const PASSWORD_RESET_EXPIRY_MS = 60 * 60 * 1000;
+
+function hashResetToken(rawToken: string): string {
+  return crypto.createHash('sha256').update(rawToken).digest('hex');
+}
 
 /**
  * Register a new user
@@ -590,5 +601,150 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
       success: false,
       error: 'Failed to update profile',
     });
+  }
+};
+
+/**
+ * Initiate password reset - email a one-time link.
+ * POST /api/auth/forgot-password
+ *
+ * Always returns 200 with a generic success message regardless of whether
+ * the email exists in the DB. Revealing 'no such user' here would leak
+ * which emails are registered (account-enumeration vulnerability).
+ */
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+  const { email } = req.body;
+  const lang: 'en' | 'he' = req.body.lang === 'he' ? 'he' : 'en';
+
+  // Generic success response. Used both for success and 'user not found'
+  // so attackers can't enumerate accounts from response timing/content.
+  const genericResponse = {
+    success: true,
+    message:
+      lang === 'he'
+        ? 'אם החשבון קיים, נשלח אליו מייל עם קישור איפוס.'
+        : 'If the account exists, a reset link has been sent.',
+  };
+
+  try {
+    if (!email || typeof email !== 'string') {
+      res.status(400).json({ success: false, error: 'Email is required' });
+      return;
+    }
+
+    const user = await User.findByEmail(email.toLowerCase());
+
+    // Always respond the same way to prevent enumeration. Only do real
+    // work when the user actually exists.
+    if (!user) {
+      res.status(200).json(genericResponse);
+      return;
+    }
+
+    // Generate the raw token (sent in email) and store only its hash
+    // in the DB. If the DB leaks, attackers can't replay the link.
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = hashResetToken(rawToken);
+    const expiresAt = new Date(Date.now() + PASSWORD_RESET_EXPIRY_MS);
+
+    const ok = await User.setPasswordResetToken(user.id, tokenHash, expiresAt);
+    if (!ok) {
+      console.error('[forgotPassword] failed to persist token for', user.email);
+      res.status(200).json(genericResponse);
+      return;
+    }
+
+    const resetUrl = `${process.env.CLIENT_URL || 'https://mestory-ai.com'}/reset-password?token=${rawToken}`;
+
+    // Fire-and-forget email send. Don't block the response on SMTP.
+    sendPasswordResetEmail(user.email, user.name, resetUrl, lang).catch((err) =>
+      console.error('[forgotPassword] email send failed:', err.message)
+    );
+
+    res.status(200).json(genericResponse);
+  } catch (error: any) {
+    console.error('[forgotPassword] error:', error);
+    // Even on internal error, return generic success to keep enumeration
+    // surface closed. The error is logged for ops to investigate.
+    res.status(200).json(genericResponse);
+  }
+};
+
+/**
+ * Confirm password reset.
+ * POST /api/auth/reset-password
+ * Body: { token: string, password: string }
+ */
+export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || typeof token !== 'string') {
+      res.status(400).json({ success: false, error: 'Reset token is required' });
+      return;
+    }
+    if (!password || typeof password !== 'string') {
+      res.status(400).json({ success: false, error: 'Password is required' });
+      return;
+    }
+
+    // Same strength rules as registration. Mirrored here because users
+    // shouldn't be able to bypass them by going through reset flow.
+    const passwordStrong =
+      password.length >= 8 &&
+      /[a-z]/.test(password) &&
+      /[A-Z]/.test(password) &&
+      /\d/.test(password) &&
+      /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password);
+    if (!passwordStrong) {
+      res.status(400).json({
+        success: false,
+        error:
+          'Password must contain at least 8 characters with uppercase, lowercase, number, and special character',
+      });
+      return;
+    }
+
+    const tokenHash = hashResetToken(token);
+    const user = await User.findByPasswordResetTokenHash(tokenHash);
+
+    // Token unknown OR no active reset on this user.
+    if (!user || !user.password_reset || user.password_reset.tokenHash !== tokenHash) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid or expired reset link. Please request a new one.',
+      });
+      return;
+    }
+
+    // Expiry check.
+    const expiresAt = new Date(user.password_reset.expiresAt);
+    if (Number.isNaN(expiresAt.getTime()) || expiresAt < new Date()) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid or expired reset link. Please request a new one.',
+      });
+      return;
+    }
+
+    // Hash and persist the new password. The token is cleared in the same
+    // update so a leaked link can't be replayed.
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const updated = await User.resetPasswordAndClearToken(user.id, hashedPassword);
+    if (!updated) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update password. Please try again.',
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Password updated. You can now log in with your new password.',
+    });
+  } catch (error: any) {
+    console.error('[resetPassword] error:', error);
+    res.status(500).json({ success: false, error: 'Failed to reset password' });
   }
 };
