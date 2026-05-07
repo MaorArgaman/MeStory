@@ -136,6 +136,21 @@ export default function Navbar() {
               </Link>
 
               <Link
+                to="/library"
+                className={`flex items-center gap-2 px-4 xl:px-5 py-2 xl:py-2.5 rounded-xl transition-all duration-300 ${
+                  isActive('/library')
+                    ? 'bg-gradient-to-r from-memorial-gold/20 to-yellow-500/20 text-memorial-gold border border-memorial-gold/30 shadow-glow-gold'
+                    : 'text-gray-300 hover:text-white hover:bg-white/5'
+                }`}
+                aria-label={t('nav.my_library', 'הספרייה שלי')}
+              >
+                <BookOpen className="w-4 h-4 xl:w-5 xl:h-5" />
+                <span className="font-semibold text-sm xl:text-base">
+                  {t('nav.my_library', 'הספרייה שלי')}
+                </span>
+              </Link>
+
+              <Link
                 to="/marketplace"
                 className={`flex items-center gap-2 px-4 xl:px-5 py-2 xl:py-2.5 rounded-xl transition-all duration-300 ${
                   isActive('/marketplace')

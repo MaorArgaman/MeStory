@@ -361,7 +361,7 @@ export default function LibraryPage() {
                       <GlowingButton
                         variant="gold"
                         size="md"
-                        onClick={() => navigate(`/reader/${book._id}`)}
+                        onClick={() => navigate(`/read/${book._id}`)}
                       >
                         <BookOpen className="w-5 h-5" />
                         {t('library.book.continue_reading')}
@@ -380,7 +380,7 @@ export default function LibraryPage() {
                       <GlowingButton
                         variant="gold"
                         size="md"
-                        onClick={() => navigate(`/book/${book._id}/write`)}
+                        onClick={() => navigate(`/editor/${book._id}`)}
                       >
                         <PenTool className="w-5 h-5" />
                         {t('library.book.continue_writing')}
@@ -470,7 +470,7 @@ export default function LibraryPage() {
                   variant="cosmic"
                   size="sm"
                   fullWidth
-                  onClick={() => navigate(`/reader/${book._id}`)}
+                  onClick={() => navigate(`/read/${book._id}`)}
                 >
                   <BookOpen className="w-4 h-4" />
                   {t('library.book.read_now')}
@@ -481,7 +481,7 @@ export default function LibraryPage() {
                 variant="primary"
                 size="sm"
                 fullWidth
-                onClick={() => navigate(`/book/${book._id}/write`)}
+                onClick={() => navigate(`/editor/${book._id}`)}
               >
                 <PenTool className="w-4 h-4" />
                 {t('library.book.continue_editing')}

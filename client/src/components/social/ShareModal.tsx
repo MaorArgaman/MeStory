@@ -62,7 +62,13 @@ const ShareModal: React.FC<ShareModalProps> = ({
   // ESC key handling and scroll lock
   useModal(isOpen, onClose);
 
-  const shareUrl = `${window.location.origin}/reader/${bookId}`;
+  // Frontend route is /read/:bookId, not /reader/:bookId.
+  // Old path produced 404s when shared on WhatsApp/social. Also guard
+  // against undefined bookId - falling back to marketplace prevents
+  // sending /read/undefined links.
+  const shareUrl = bookId
+    ? `${window.location.origin}/read/${bookId}`
+    : `${window.location.origin}/marketplace`;
   const shareText = `I read "${bookTitle}" by ${authorName} and highly recommend it! 📚`;
 
   const trackShare = async (platform: string) => {
