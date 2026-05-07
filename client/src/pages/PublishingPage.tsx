@@ -302,7 +302,14 @@ export default function PublishingPage() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
-                    {Object.entries(book.qualityScore.categories).map(([key, value]) => (
+                    {Object.entries(book.qualityScore.categories || {}).map(([key, value]) => {
+                      // Guard against malformed data: category value might be a
+                      // bare number, an object with .score, or missing entirely.
+                      const score =
+                        typeof value === 'number'
+                          ? value
+                          : (value as any)?.score ?? 0;
+                      return (
                       <div key={key} className="glass rounded-lg p-3 sm:p-4">
                         <div className="text-xs sm:text-sm text-gray-400 mb-1 capitalize">
                           {key.replace(/([A-Z])/g, ' $1').trim()}
@@ -311,13 +318,14 @@ export default function PublishingPage() {
                           <div className="flex-1 bg-gray-700 rounded-full h-1.5 sm:h-2">
                             <div
                               className="bg-gradient-to-r from-indigo-500 to-purple-600 h-1.5 sm:h-2 rounded-full transition-all"
-                              style={{ width: `${value.score}%` }}
+                              style={{ width: `${score}%` }}
                             />
                           </div>
-                          <span className="text-xs sm:text-sm font-semibold">{value.score}</span>
+                          <span className="text-xs sm:text-sm font-semibold">{score}</span>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {canProceedFromStep1 ? (
