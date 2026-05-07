@@ -1198,8 +1198,24 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
+    // Diagnostic snapshot of the fields we're about to validate. Lets us
+    // see in Vercel logs exactly which field tripped the 400 instead of
+    // guessing from the user's report.
+    console.log('[publishBook] validating:', JSON.stringify({
+      id,
+      hasChapters: book.chapters?.length > 0,
+      chapterCount: book.chapters?.length || 0,
+      synopsisWords: (book.synopsis || '').trim().split(/\s+/).filter(Boolean).length,
+      synopsisLen: (book.synopsis || '').length,
+      tagsCount: book.tags?.length || 0,
+      hasCover: !!book.coverDesign?.front?.imageUrl,
+      isFree: req.body.isFree,
+      price: req.body.price,
+    }));
+
     // Validate book has content
     if (book.chapters.length === 0) {
+      console.warn('[publishBook] reject: no chapters');
       res.status(400).json({
         success: false,
         error: 'Cannot publish a book without chapters',
@@ -1215,6 +1231,7 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
       .split(/\s+/)
       .filter((w) => w.length > 0).length;
     if (!book.synopsis || synopsisWordCount < 15) {
+      console.warn(`[publishBook] reject: synopsis ${synopsisWordCount} words`);
       res.status(400).json({
         success: false,
         error: 'Please add a synopsis (minimum 15 words) before publishing',
@@ -1223,6 +1240,7 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
     }
 
     if (!book.tags || book.tags.length === 0) {
+      console.warn('[publishBook] reject: no tags');
       res.status(400).json({
         success: false,
         error: 'Please add at least one tag before publishing',
@@ -1232,6 +1250,7 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
 
     // Validate cover design exists
     if (!book.coverDesign || !book.coverDesign.front?.imageUrl) {
+      console.warn('[publishBook] reject: no cover');
       res.status(400).json({
         success: false,
         error: 'Please design a cover for your book before publishing',
