@@ -749,7 +749,9 @@ export default function DesignStudioPage() {
       const formData = new FormData();
       formData.append('cover', file);
 
-      const response = await api.post(`/books/${bookId}/upload-cover`, formData, {
+      // CRITICAL: pass side=back so the server saves to coverDesign.back.imageUrl
+      // instead of overwriting the front cover.
+      const response = await api.post(`/books/${bookId}/upload-cover?side=back`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 

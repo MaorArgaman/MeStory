@@ -2554,28 +2554,45 @@ export const uploadCoverImage = async (req: AuthRequest, res: Response): Promise
       }
     }
 
+    // Caller can target front or back cover via ?side=back (or body.side).
+    // Default = front for backward compatibility with old clients.
+    const side: 'front' | 'back' =
+      (req.query.side === 'back' || req.body?.side === 'back') ? 'back' : 'front';
+
     // Update book cover design with proper typing
     let coverDesign = book.coverDesign || {};
-    if (!coverDesign.front) {
-      coverDesign.front = {
-        type: 'uploaded',
-        imageUrl,
-        title: {
-          text: book.title,
-          font: 'Arial',
-          size: 48,
-          color: '#ffffff',
-        },
-        authorName: {
-          text: '',
-          font: 'Arial',
-          size: 24,
-          color: '#ffffff',
-        },
-      } as any;
+    if (side === 'back') {
+      if (!coverDesign.back) {
+        coverDesign.back = {
+          imageUrl,
+          backgroundColor: '#1a1a2e',
+          synopsis: book.synopsis || book.description || '',
+        } as any;
+      } else {
+        coverDesign.back.imageUrl = imageUrl;
+      }
     } else {
-      coverDesign.front.imageUrl = imageUrl;
-      coverDesign.front.type = 'uploaded';
+      if (!coverDesign.front) {
+        coverDesign.front = {
+          type: 'uploaded',
+          imageUrl,
+          title: {
+            text: book.title,
+            font: 'Arial',
+            size: 48,
+            color: '#ffffff',
+          },
+          authorName: {
+            text: '',
+            font: 'Arial',
+            size: 24,
+            color: '#ffffff',
+          },
+        } as any;
+      } else {
+        coverDesign.front.imageUrl = imageUrl;
+        coverDesign.front.type = 'uploaded';
+      }
     }
 
     await Book.findByIdAndUpdate(id, { coverDesign });
