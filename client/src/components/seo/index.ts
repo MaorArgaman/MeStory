@@ -24,6 +24,11 @@ export {
   SpeakableSchema,
   VideoSchema,
   ReviewSchema,
+  CollectionPageSchema,
+  AboutPageSchema,
+  ProfilePageSchema,
+  CourseSchema,
+  DefinedTermSetSchema,
   DEFAULT_FAQ_ITEMS,
   DEFAULT_HOWTO_STEPS,
 } from './StructuredData';

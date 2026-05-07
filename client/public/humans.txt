@@ -1,0 +1,25 @@
+/* TEAM */
+
+Site: MeStory
+Contact: mestory.tec@gmail.com
+Location: Israel
+Year: 2024–present
+
+/* SITE */
+
+Last update: 2026-04-26
+Languages: Hebrew (he-IL), English (en-US)
+Domain: https://mestory-ai.com
+Built with: React, Vite, Tailwind, TypeScript, Vercel
+
+/* THANKS */
+
+To the families who trust MeStory with their memories.
+To the authors who publish their stories on the marketplace.
+To the open-source community whose tools make this platform possible.
+
+/* SOCIAL */
+
+Facebook: https://www.facebook.com/MeStoryAI
+Instagram: https://www.instagram.com/mestory_ai/
+LinkedIn: https://www.linkedin.com/company/115788080/

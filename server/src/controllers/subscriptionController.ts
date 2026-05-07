@@ -6,43 +6,37 @@ import { PLANS as PLAN_CONFIG } from '../config/plans';
 
 // Plan details adapter - real source of truth lives in
 // server/src/config/plans.ts. Do not duplicate pricing here.
+const buildPlan = (id: 'free' | 'standard' | 'premium', lang: 'en' | 'he') => {
+  const cfg = PLAN_CONFIG[id];
+  return {
+    tier: cfg.tier,
+    price: cfg.priceUSD,
+    priceILS: cfg.priceILS,
+    credits: cfg.monthlyCredits,
+    features: lang === 'he' ? cfg.featuresHebrew : cfg.features,
+  };
+};
+
 const PLANS = {
-  free: {
-    tier: PLAN_CONFIG.free.tier,
-    price: PLAN_CONFIG.free.priceUSD,
-    priceILS: PLAN_CONFIG.free.priceILS,
-    credits: PLAN_CONFIG.free.monthlyCredits,
-    features: PLAN_CONFIG.free.features,
-  },
-  standard: {
-    tier: PLAN_CONFIG.standard.tier,
-    price: PLAN_CONFIG.standard.priceUSD,
-    priceILS: PLAN_CONFIG.standard.priceILS,
-    credits: PLAN_CONFIG.standard.monthlyCredits,
-    features: PLAN_CONFIG.standard.features,
-  },
-  premium: {
-    tier: PLAN_CONFIG.premium.tier,
-    price: PLAN_CONFIG.premium.priceUSD,
-    priceILS: PLAN_CONFIG.premium.priceILS,
-    credits: PLAN_CONFIG.premium.monthlyCredits,
-    features: PLAN_CONFIG.premium.features,
-  },
+  free: buildPlan('free', 'en'),
+  standard: buildPlan('standard', 'en'),
+  premium: buildPlan('premium', 'en'),
 };
 
 /**
  * Get all subscription plans
- * GET /api/subscription/plans
+ * GET /api/subscription/plans?lang=he|en
  */
-export const getPlans = async (_req: AuthRequest, res: Response): Promise<void> => {
+export const getPlans = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const lang: 'en' | 'he' = req.query.lang === 'he' ? 'he' : 'en';
     res.status(200).json({
       success: true,
       data: {
         plans: [
-          { id: 'free', ...PLANS.free },
-          { id: 'standard', ...PLANS.standard },
-          { id: 'premium', ...PLANS.premium },
+          { id: 'free', ...buildPlan('free', lang) },
+          { id: 'standard', ...buildPlan('standard', lang) },
+          { id: 'premium', ...buildPlan('premium', lang) },
         ],
       },
     });

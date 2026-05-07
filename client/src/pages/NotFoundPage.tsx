@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home, BookOpen, Search, ArrowRight, ArrowLeft, AlertTriangle } from 'lucide-react';
@@ -17,6 +18,28 @@ export default function NotFoundPage() {
       : 'The page you were looking for was not found. Return to MeStory home or search for books in our marketplace.',
     canonicalUrl: 'https://mestory-ai.com/404',
   });
+
+  // Vite SPA serves every route with HTTP 200, so we cannot return a real 404.
+  // Tell crawlers explicitly not to index this fallback page so missing-route
+  // hits don't accumulate as "soft 404s" in Search Console.
+  useEffect(() => {
+    const setMeta = (name: string, content: string) => {
+      let meta = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute('name', name);
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute('content', content);
+    };
+    const previousRobots = document.querySelector('meta[name="robots"]')?.getAttribute('content') ?? null;
+    setMeta('robots', 'noindex, follow');
+    return () => {
+      if (previousRobots !== null) {
+        setMeta('robots', previousRobots);
+      }
+    };
+  }, []);
 
   const content = {
     title: {

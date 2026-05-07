@@ -17,7 +17,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { GlassCard } from '../../components/ui';
-import { HowToSchema, Breadcrumb, ArticleSchema } from '../../components/seo';
+import { HowToSchema, Breadcrumb, ArticleSchema, CourseSchema } from '../../components/seo';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 interface Step {
@@ -188,6 +188,16 @@ export default function HowToEarnMoney() {
         steps={schemaSteps}
         estimatedDuration="PT20M"
         tool={['MeStory Platform', 'PayPal Account', 'Earnings Dashboard']}
+      />
+
+      {/* Course Schema */}
+      <CourseSchema
+        name={isHebrew ? 'איך להרוויח כסף ממכירת ספרים ב-MeStory' : 'How to Earn Money Selling Books on MeStory'}
+        description={pageDescription}
+        url="https://mestory-ai.com/guides/earn-money"
+        inLanguage={isHebrew ? 'he' : 'en'}
+        educationalLevel="Beginner"
+        timeRequired="PT20M"
       />
 
       <div className="min-h-screen py-20 px-4 sm:px-8" dir={isHebrew ? 'rtl' : 'ltr'}>

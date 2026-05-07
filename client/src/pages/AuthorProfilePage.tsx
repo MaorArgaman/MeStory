@@ -18,6 +18,7 @@ import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { AuthorSEO } from '../components/seo/SEO';
+import { AuthorSchema, BreadcrumbSchema, ProfilePageSchema } from '../components/seo/StructuredData';
 
 /**
  * Hook that animates a number from 0 to the target value over a given duration.
@@ -215,8 +216,26 @@ export default function AuthorProfilePage() {
       <AuthorSEO
         name={author.name}
         bio={author.bio}
-        profileImage={author.profileImage}
-        authorId={userId || ''}
+        profileImage={author.avatar}
+        authorId={id || ''}
+      />
+      <AuthorSchema
+        name={author.name}
+        description={author.bio}
+        image={author.avatar}
+        url={`https://mestory-ai.com/profile/${id || ''}`}
+      />
+      <ProfilePageSchema
+        name={author.name}
+        url={`https://mestory-ai.com/profile/${id || ''}`}
+        description={author.bio}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://mestory-ai.com/' },
+          { name: 'Marketplace', url: 'https://mestory-ai.com/marketplace' },
+          { name: author.name, url: `https://mestory-ai.com/profile/${id || ''}` },
+        ]}
       />
       {/* Header Section */}
       <div

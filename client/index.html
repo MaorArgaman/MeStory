@@ -9,9 +9,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="MeStory - פלטפורמת כתיבת ספרים עם בינה מלאכותית. כתבו, עצבו ופרסמו את הסיפור שלכם. AI-Powered Book Writing Platform." />
 
-    <!-- Search Console verification — add real codes when available -->
-    <!-- <meta name="google-site-verification" content="" /> -->
-    <!-- <meta name="msvalidate.01" content="" /> -->
+    <!--
+      Search Console verification.
+      Google: already verified via /googleaf639d85ed2c1026.html (file method).
+      Bing: replace the placeholder below after registering at https://www.bing.com/webmasters.
+      Yandex (RU market, optional): uncomment and add at https://webmaster.yandex.com/.
+    -->
+    <meta name="msvalidate.01" content="REPLACE_WITH_BING_WEBMASTER_CODE" />
+    <!-- <meta name="yandex-verification" content="REPLACE_WITH_YANDEX_CODE" /> -->
+    <!-- <meta name="p:domain_verify" content="REPLACE_WITH_PINTEREST_CODE" /> -->
+    <!-- <meta name="facebook-domain-verification" content="REPLACE_WITH_FB_DOMAIN_CODE" /> -->
+
+    <!-- LLM-readable site summaries for AI search engines (ChatGPT, Claude, Perplexity, Gemini) -->
+    <link rel="alternate" type="text/plain" title="MeStory summary for LLMs (short)" href="/llms.txt" />
+    <link rel="alternate" type="text/plain" title="MeStory summary for LLMs (full)" href="/llms-full.txt" />
+
+    <!-- RSS / Atom feed for content -->
+    <link rel="alternate" type="application/rss+xml" title="MeStory Guides RSS" href="/feed.xml" />
+
+    <!-- OpenSearch description (lets browsers add MeStory to their address-bar search engines) -->
+    <link rel="search" type="application/opensearchdescription+xml" title="MeStory" href="/opensearch.xml" />
+
+    <!-- Sitemap discovery (in addition to robots.txt) -->
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap-index.xml" />
 
     <!-- SEO Meta Tags -->
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
@@ -115,11 +135,15 @@
       "description": "MeStory helps families create memorial books, autobiographies, and personal stories using AI-guided writing tools",
       "contactPoint": {
         "@type": "ContactPoint",
-        "email": "support@mestory-ai.com",
+        "email": "mestory.tec@gmail.com",
         "contactType": "customer support",
         "availableLanguage": ["Hebrew", "English"]
       },
-      "sameAs": []
+      "sameAs": [
+        "https://www.facebook.com/MeStoryAI",
+        "https://www.instagram.com/mestory_ai/",
+        "https://www.linkedin.com/company/115788080/"
+      ]
     }
     </script>
     <script type="application/ld+json">
@@ -133,17 +157,182 @@
         "@type": "Offer",
         "price": "0",
         "priceCurrency": "USD"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "ratingCount": "150",
-        "bestRating": "5"
       }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Brand",
+      "name": "MeStory",
+      "alternateName": ["מי-סטורי", "MeStory.ai"],
+      "logo": "https://mestory-ai.com/img/new/Logo-Me-512.png",
+      "url": "https://mestory-ai.com",
+      "slogan": "Write, design, and publish your story with AI"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "serviceType": "AI-Assisted Book Writing & Publishing",
+      "provider": {
+        "@type": "Organization",
+        "name": "MeStory",
+        "url": "https://mestory-ai.com"
+      },
+      "areaServed": [
+        { "@type": "Country", "name": "Israel" },
+        { "@type": "Country", "name": "United States" }
+      ],
+      "availableLanguage": ["he", "en"],
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "writers, families creating memorial books, autobiographers, self-publishers"
+      },
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "MeStory Plans",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "name": "Free",
+            "price": "0",
+            "priceCurrency": "USD",
+            "description": "Free signup with starter AI credits"
+          },
+          {
+            "@type": "Offer",
+            "name": "Premium",
+            "price": "9.99",
+            "priceCurrency": "USD",
+            "description": "More AI credits, advanced templates"
+          },
+          {
+            "@type": "Offer",
+            "name": "Professional",
+            "price": "19.99",
+            "priceCurrency": "USD",
+            "description": "Maximum AI credits, priority support, marketplace promotion"
+          }
+        ]
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "MeStory main sections",
+      "itemListElement": [
+        { "@type": "SiteNavigationElement", "position": 1, "name": "Home", "url": "https://mestory-ai.com/" },
+        { "@type": "SiteNavigationElement", "position": 2, "name": "Marketplace", "url": "https://mestory-ai.com/marketplace" },
+        { "@type": "SiteNavigationElement", "position": 3, "name": "Guides", "url": "https://mestory-ai.com/guides" },
+        { "@type": "SiteNavigationElement", "position": 4, "name": "FAQ", "url": "https://mestory-ai.com/faq" },
+        { "@type": "SiteNavigationElement", "position": 5, "name": "Pricing", "url": "https://mestory-ai.com/subscription" },
+        { "@type": "SiteNavigationElement", "position": 6, "name": "About", "url": "https://mestory-ai.com/about" }
+      ]
     }
     </script>
   </head>
   <body>
+    <!--
+      noscript fallback: content for AI crawlers and search engines that do
+      not execute JavaScript (most AI bots: ClaudeBot, PerplexityBot, CCBot,
+      and partial rendering by GPTBot). Real browsers run React and never see
+      this; AI crawlers see it as the canonical site description.
+    -->
+    <noscript>
+      <main>
+        <header>
+          <h1>MeStory — AI-Powered Book Writing &amp; Publishing Platform</h1>
+          <p lang="he" dir="rtl">MeStory היא הפלטפורמה המובילה בישראל ליצירת ספרי הנצחה, אוטוביוגרפיה וספרי זיכרון בעזרת בינה מלאכותית. כתבו, עצבו ופרסמו את הסיפור שלכם בעברית ובאנגלית.</p>
+          <p lang="en">MeStory is an Israeli AI-powered platform for writing, designing, and publishing memorial books, autobiographies, family stories, and self-published works in Hebrew and English. Authors get AI-guided writing, cover design, and a built-in marketplace.</p>
+        </header>
+
+        <section>
+          <h2>What MeStory does</h2>
+          <ul>
+            <li><strong>AI-guided writing</strong> — content suggestions, plot development, voice-to-text</li>
+            <li><strong>Cover &amp; layout design</strong> — automatic cover generation and book templates</li>
+            <li><strong>Marketplace publishing</strong> — sell your book directly to readers</li>
+            <li><strong>Hebrew-first</strong> — full RTL support, Hebrew AI prompts, Hebrew fonts</li>
+            <li><strong>Memorial-book focus</strong> — built specifically for honoring family stories (ספרי הנצחה)</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>How to write a book with MeStory (5 steps)</h2>
+          <ol>
+            <li>Sign up for a free MeStory account</li>
+            <li>Choose a book template (memorial, autobiography, novel, children&apos;s book)</li>
+            <li>Write with AI assistance — chapter outlines, drafting help, voice input</li>
+            <li>Design the cover and interior layout</li>
+            <li>Publish to the MeStory marketplace and earn from sales</li>
+          </ol>
+        </section>
+
+        <section>
+          <h2>Pricing</h2>
+          <ul>
+            <li><strong>Free</strong> — sign up with starter AI credits, no card required</li>
+            <li><strong>Premium</strong> — $9.99/month, more AI credits and advanced templates</li>
+            <li><strong>Professional</strong> — $19.99/month, maximum AI credits and priority support</li>
+          </ul>
+        </section>
+
+        <nav>
+          <h2>Main pages</h2>
+          <ul>
+            <li><a href="/">Home — overview &amp; signup</a></li>
+            <li><a href="/marketplace">Marketplace — browse published books</a></li>
+            <li><a href="/about">About MeStory</a></li>
+            <li><a href="/faq">FAQ — 40+ common questions</a></li>
+            <li><a href="/subscription">Pricing &amp; plans</a></li>
+            <li><a href="/guides/write-book">Guide — How to write a book with AI</a></li>
+            <li><a href="/guides/publish-book">Guide — How to publish your book</a></li>
+            <li><a href="/guides/earn-money">Guide — How to earn money from your book</a></li>
+            <li><a href="/privacy">Privacy policy</a></li>
+            <li><a href="/terms">Terms of service</a></li>
+          </ul>
+        </nav>
+
+        <footer>
+          <h2>About</h2>
+          <!--
+            h-card microformat: gives Mastodon/IndieWeb/Bluesky/h-feed parsers a
+            structured representation of the publishing entity, in addition to
+            the JSON-LD Organization above.
+          -->
+          <div class="h-card">
+            <p>
+              <a class="p-name u-url" href="https://mestory-ai.com">
+                <strong>MeStory</strong>
+              </a>
+              — <span class="p-org">MeStory</span>,
+              <span class="p-country-name">Israel</span>.
+              Founded <time class="dt-founded" datetime="2024">2024</time>.
+              Languages: <span class="p-lang">Hebrew (he-IL)</span>,
+              <span class="p-lang">English (en-US)</span>.
+            </p>
+            <p>
+              Contact: <a class="u-email" href="mailto:mestory.tec@gmail.com">mestory.tec@gmail.com</a>
+            </p>
+            <p>
+              <img class="u-logo" src="https://mestory-ai.com/img/new/Logo-Me-512.png" alt="MeStory logo" width="64" height="64" />
+            </p>
+          </div>
+          <p>For an LLM-readable site summary, see <a rel="alternate" href="/llms.txt">/llms.txt</a> and <a rel="alternate" href="/llms-full.txt">/llms-full.txt</a>.</p>
+          <p>For AI training preferences, see <a href="/ai.txt">/ai.txt</a> and <a href="/.well-known/llm-policy.json">/.well-known/llm-policy.json</a>.</p>
+          <p>Find us on
+            <a class="u-url" rel="me" href="https://www.facebook.com/MeStoryAI">Facebook</a>,
+            <a class="u-url" rel="me" href="https://www.instagram.com/mestory_ai/">Instagram</a>,
+            <a class="u-url" rel="me" href="https://www.linkedin.com/company/115788080/">LinkedIn</a>.
+          </p>
+        </footer>
+      </main>
+    </noscript>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

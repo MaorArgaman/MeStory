@@ -17,7 +17,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { GlassCard } from '../../components/ui';
-import { HowToSchema, Breadcrumb, ArticleSchema } from '../../components/seo';
+import { HowToSchema, Breadcrumb, ArticleSchema, CourseSchema } from '../../components/seo';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 interface Step {
@@ -204,6 +204,16 @@ export default function HowToPublishBook() {
         steps={schemaSteps}
         estimatedDuration="PT30M"
         tool={['MeStory Platform', 'Cover Designer', 'Quality Score Tool']}
+      />
+
+      {/* Course Schema */}
+      <CourseSchema
+        name={isHebrew ? 'איך לפרסם ספר ב-MeStory' : 'How to Publish a Book on MeStory'}
+        description={pageDescription}
+        url="https://mestory-ai.com/guides/publish-book"
+        inLanguage={isHebrew ? 'he' : 'en'}
+        educationalLevel="Beginner"
+        timeRequired="PT30M"
       />
 
       <div className="min-h-screen py-20 px-4 sm:px-8" dir={isHebrew ? 'rtl' : 'ltr'}>

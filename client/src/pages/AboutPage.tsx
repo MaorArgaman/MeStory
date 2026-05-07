@@ -19,7 +19,7 @@ import {
   BadgeCheck,
 } from 'lucide-react';
 import { GlassCard } from '../components/ui';
-import { OrganizationSchema, BreadcrumbSchema } from '../components/seo';
+import { OrganizationSchema, BreadcrumbSchema, AboutPageSchema } from '../components/seo';
 import { useLanguage } from '../contexts/LanguageContext';
 
 // Content translations
@@ -267,6 +267,12 @@ export default function AboutPage() {
       {/* Structured Data for SEO */}
       <OrganizationSchema locale={locale} />
       <BreadcrumbSchema items={breadcrumbs} />
+      <AboutPageSchema
+        name={t.seo.title}
+        description={t.seo.description}
+        url="https://mestory-ai.com/about"
+        inLanguage={isHebrew ? 'he' : 'en'}
+      />
 
       <div className="min-h-screen py-20 px-4 sm:px-8" dir={isHebrew ? 'rtl' : 'ltr'}>
         <div className="max-w-6xl mx-auto">

@@ -1,26 +1,16 @@
 # MeStory Robots.txt
 # https://mestory-ai.com
 
+# Default rule: allow general crawling, block private/auth/admin areas
 User-agent: *
 Allow: /
-
-# Allow search engines to access main pages
-Allow: /
-Allow: /marketplace
-Allow: /book/*
-Allow: /profile/*
-Allow: /privacy
-Allow: /terms
-Allow: /faq
-
-# Disallow protected/private routes
 Disallow: /dashboard
-Disallow: /editor/*
-Disallow: /design/*
-Disallow: /layout/*
-Disallow: /book-design/*
-Disallow: /publish/*
-Disallow: /publish-metadata/*
+Disallow: /editor/
+Disallow: /design/
+Disallow: /layout/
+Disallow: /book-design/
+Disallow: /publish/
+Disallow: /publish-metadata/
 Disallow: /subscription
 Disallow: /settings
 Disallow: /success
@@ -28,21 +18,12 @@ Disallow: /library
 Disallow: /earnings
 Disallow: /admin
 Disallow: /auth-success
-
-# Disallow API routes
-Disallow: /api/*
-
-# Disallow login/register pages (no SEO value)
+Disallow: /api/
 Disallow: /login
 Disallow: /register
-
-# Crawl-delay for respectful crawling
 Crawl-delay: 1
 
-# Sitemap location
-Sitemap: https://mestory-ai.com/sitemap.xml
-
-# Specific bot rules
+# ---------- Search engines (explicit, friendly) ----------
 User-agent: Googlebot
 Allow: /
 Crawl-delay: 1
@@ -51,14 +32,106 @@ User-agent: Bingbot
 Allow: /
 Crawl-delay: 1
 
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: YandexBot
+Allow: /
+Crawl-delay: 2
+
+# ---------- AI / generative search crawlers (allowed for GEO/AEO) ----------
+# We want MeStory to be discoverable in Google AI Overviews, ChatGPT Search,
+# Perplexity, Claude search, Bing Copilot, Gemini, and Apple Intelligence.
+# All AI bots inherit the global Disallow list above for private/auth routes.
+
 User-agent: GPTBot
-Disallow: /
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /editor/
+Disallow: /admin
+Crawl-delay: 2
 
 User-agent: ChatGPT-User
-Disallow: /
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /editor/
+Disallow: /admin
 
-User-agent: CCBot
-Disallow: /
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /editor/
+Disallow: /admin
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /editor/
+Disallow: /admin
+Crawl-delay: 2
 
 User-agent: anthropic-ai
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /editor/
+Disallow: /admin
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /editor/
+Disallow: /admin
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /editor/
+Disallow: /admin
+Crawl-delay: 2
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /editor/
+Disallow: /admin
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /editor/
+Disallow: /admin
+
+User-agent: CCBot
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /editor/
+Disallow: /admin
+Crawl-delay: 5
+
+User-agent: Bytespider
 Disallow: /
+
+# Sitemaps
+Sitemap: https://mestory-ai.com/sitemap-index.xml
+Sitemap: https://mestory-ai.com/sitemap.xml
+Sitemap: https://me-story-server-7wdx.vercel.app/sitemap.xml
+
+# Additional crawler-discoverable resources
+# /llms.txt          — short LLM-readable site summary
+# /llms-full.txt     — extended LLM reference document
+# /feed.xml          — RSS feed of guides
+# /opensearch.xml    — OpenSearch description
+# /humans.txt        — team / acknowledgements
+# /.well-known/security.txt — security disclosure contact
+# /manifest.json     — PWA manifest

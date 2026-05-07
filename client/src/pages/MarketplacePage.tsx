@@ -11,7 +11,7 @@ import {
   TrendingBooks,
   FeaturedBooks,
 } from '../components/recommendations';
-import { SEO } from '../components/seo';
+import { SEO, CollectionPageSchema, BreadcrumbSchema } from '../components/seo';
 // Memorial book genre banners from public folder
 const genreBanners: Record<string, string> = {
   'fallen_soldier': '/img/october7.png',
@@ -306,6 +306,20 @@ export default function MarketplacePage() {
         type="website"
         locale={language === 'he' ? 'he_IL' : 'en_US'}
         url="/marketplace"
+      />
+      <CollectionPageSchema
+        name={language === 'he' ? 'חנות הספרים של MeStory' : 'MeStory Book Marketplace'}
+        description={language === 'he'
+          ? 'גלו ספרים מקוריים מסופרים ישראלים — ספרי הנצחה, אוטוביוגרפיה, רומנים וספרי ילדים.'
+          : 'Browse original books from Israeli authors — memorial books, autobiographies, novels, and children\u2019s books.'}
+        url="https://mestory-ai.com/marketplace"
+        inLanguage={language === 'he' ? 'he' : 'en'}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: language === 'he' ? 'ראשי' : 'Home', url: 'https://mestory-ai.com/' },
+          { name: language === 'he' ? 'חנות הספרים' : 'Marketplace', url: 'https://mestory-ai.com/marketplace' },
+        ]}
       />
 
       {/* Hero Section with Background Image */}

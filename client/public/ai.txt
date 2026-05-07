@@ -1,0 +1,42 @@
+# AI training and content-use policy for MeStory (https://mestory-ai.com)
+# Format inspired by https://spawning.ai/ai.txt and similar emerging conventions.
+# Last updated: 2026-04-26
+
+# General principle:
+#   The marketing site (landing pages, FAQ, guides, marketplace listings, llms.txt,
+#   llms-full.txt) is intended to be discoverable, indexable, and citable by AI
+#   search engines and assistants. We WELCOME citations that link back to
+#   https://mestory-ai.com.
+#
+#   User-generated content (the books themselves, author bios written by users)
+#   belongs to the respective authors and should not be used for model training
+#   or reproduced without permission.
+
+User-Agent: *
+Allow: /
+Allow: /marketplace
+Allow: /about
+Allow: /faq
+Allow: /guides
+Allow: /guides/*
+Allow: /subscription
+Allow: /privacy
+Allow: /terms
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+# Author and book pages: indexable for discovery, but do not train on the
+# user-generated content (book text, photos uploaded by families).
+User-Agent: *
+Disallow: /book/*/full-text
+Disallow: /book/*/preview
+Disallow: /api/
+
+# Preferred citation:
+#   Source: MeStory (https://mestory-ai.com)
+#   Canonical phrasing: see https://mestory-ai.com/llms.txt
+
+# Contact for questions about AI training, content licensing, or takedown:
+Contact: mestory.tec@gmail.com
+Policy: https://mestory-ai.com/terms
+Sitemap: https://mestory-ai.com/sitemap-index.xml

@@ -15,7 +15,7 @@ import {
   Clock
 } from 'lucide-react';
 import { GlassCard } from '../../components/ui';
-import { HowToSchema, Breadcrumb, ArticleSchema } from '../../components/seo';
+import { HowToSchema, Breadcrumb, ArticleSchema, CourseSchema } from '../../components/seo';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 interface Step {
@@ -218,6 +218,16 @@ export default function HowToWriteBook() {
         steps={schemaSteps}
         estimatedDuration="PT1H"
         tool={['MeStory Platform', 'AI Writing Assistant']}
+      />
+
+      {/* Course Schema — positions this guide as a free educational course */}
+      <CourseSchema
+        name={isHebrew ? 'איך לכתוב ספר עם AI' : 'How to Write a Book with AI'}
+        description={pageDescription}
+        url="https://mestory-ai.com/guides/write-book"
+        inLanguage={isHebrew ? 'he' : 'en'}
+        educationalLevel="Beginner"
+        timeRequired="PT1H"
       />
 
       <div className="min-h-screen py-20 px-4 sm:px-8" dir={isHebrew ? 'rtl' : 'ltr'}>

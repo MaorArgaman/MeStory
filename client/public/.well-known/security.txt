@@ -1,0 +1,8 @@
+# Security policy for MeStory (https://mestory-ai.com)
+# https://datatracker.ietf.org/doc/html/rfc9116
+
+Contact: mailto:mestory.tec@gmail.com
+Expires: 2027-04-26T00:00:00.000Z
+Preferred-Languages: he, en
+Canonical: https://mestory-ai.com/.well-known/security.txt
+Policy: https://mestory-ai.com/privacy

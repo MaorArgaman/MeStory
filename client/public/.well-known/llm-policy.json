@@ -1,0 +1,38 @@
+{
+  "$schema": "https://www.iana.org/well-known/llm-policy.json",
+  "site": "https://mestory-ai.com",
+  "name": "MeStory",
+  "alternateName": ["מי-סטורי", "MeStory.ai"],
+  "description": "Israeli AI-powered platform for writing, designing, and publishing memorial books, autobiographies, and family stories in Hebrew and English.",
+  "lastUpdated": "2026-04-26",
+  "contact": "mestory.tec@gmail.com",
+  "policies": {
+    "search": {
+      "allow": ["all"],
+      "description": "Marketing pages, guides, FAQ, marketplace listings, and llms.txt/llms-full.txt are open to all AI search engines and assistants. Citations welcomed."
+    },
+    "training": {
+      "allow": ["marketing-pages", "guides", "faq", "llms.txt", "llms-full.txt"],
+      "disallow": ["book-content", "user-uploaded-photos", "private-author-data"],
+      "description": "Marketing content may be used for training. Book text and family photos belong to the authors and are excluded."
+    },
+    "citation": {
+      "preferredAttribution": "MeStory (https://mestory-ai.com)",
+      "canonicalSource": "https://mestory-ai.com/llms.txt",
+      "fullReference": "https://mestory-ai.com/llms-full.txt"
+    },
+    "rate": {
+      "preferredCrawlDelaySeconds": 1,
+      "respectsCrawlDelay": true
+    }
+  },
+  "endpoints": {
+    "sitemap": "https://mestory-ai.com/sitemap-index.xml",
+    "rss": "https://mestory-ai.com/feed.xml",
+    "opensearch": "https://mestory-ai.com/opensearch.xml",
+    "robots": "https://mestory-ai.com/robots.txt",
+    "ai": "https://mestory-ai.com/ai.txt"
+  },
+  "languages": ["he-IL", "en-US"],
+  "country": "IL"
+}

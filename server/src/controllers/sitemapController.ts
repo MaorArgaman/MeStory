@@ -8,7 +8,7 @@ import { supabaseAdmin } from '../config/supabase';
 
 // Base URL for the site
 const getBaseUrl = (): string => {
-  return process.env.CLIENT_URL || 'https://mestory.app';
+  return process.env.CLIENT_URL || 'https://mestory-ai.com';
 };
 
 // Static pages with their metadata
@@ -17,7 +17,11 @@ const staticPages = [
   { path: '/marketplace', changefreq: 'hourly', priority: '0.9' },
   { path: '/faq', changefreq: 'weekly', priority: '0.6' },
   { path: '/about', changefreq: 'monthly', priority: '0.6' },
-  { path: '/pricing', changefreq: 'weekly', priority: '0.8' },
+  { path: '/subscription', changefreq: 'weekly', priority: '0.8' },
+  { path: '/guides', changefreq: 'monthly', priority: '0.8' },
+  { path: '/guides/write-book', changefreq: 'monthly', priority: '0.7' },
+  { path: '/guides/publish-book', changefreq: 'monthly', priority: '0.7' },
+  { path: '/guides/earn-money', changefreq: 'monthly', priority: '0.7' },
   { path: '/privacy', changefreq: 'monthly', priority: '0.3' },
   { path: '/terms', changefreq: 'monthly', priority: '0.3' },
 ];
@@ -193,11 +197,11 @@ export const generateSitemap = async (_req: Request, res: Response): Promise<voi
       );
     }
 
-    // Add author profiles
+    // Add author profiles (route is /profile/:id, not /author/:id)
     for (const author of authors) {
       sitemap += generateUrlEntry(
         baseUrl,
-        `/author/${author.id}`,
+        `/profile/${author.id}`,
         author.updated_at,
         'weekly',
         '0.6',
@@ -225,22 +229,69 @@ export const generateSitemap = async (_req: Request, res: Response): Promise<voi
 export const generateRobotsTxt = (_req: Request, res: Response): void => {
   const baseUrl = getBaseUrl();
 
-  const robotsTxt = `# MeStory Robots.txt
-# Generated dynamically
+  const robotsTxt = `# MeStory Robots.txt (server-generated)
+# Mirrors client/public/robots.txt — keep both in sync.
 
 User-agent: *
 Allow: /
 Disallow: /api/
-Disallow: /dashboard/
+Disallow: /dashboard
 Disallow: /editor/
-Disallow: /settings/
-Disallow: /admin/
-
-# Sitemap location
-Sitemap: ${baseUrl}/sitemap.xml
-
-# Crawl-delay for polite crawling
+Disallow: /design/
+Disallow: /admin
+Disallow: /settings
+Disallow: /library
+Disallow: /earnings
+Disallow: /login
+Disallow: /register
 Crawl-delay: 1
+
+# AI / generative search crawlers — allowed for GEO/AEO
+User-agent: GPTBot
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /editor/
+Disallow: /admin
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /api/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /api/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /api/
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /api/
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /api/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /api/
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /api/
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /api/
+
+User-agent: CCBot
+Allow: /
+Disallow: /api/
+
+# Sitemap
+Sitemap: ${baseUrl}/sitemap.xml
 `;
 
   res.set('Content-Type', 'text/plain');

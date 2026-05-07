@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+  <ShortName>MeStory</ShortName>
+  <LongName>MeStory — AI Book Writing &amp; Marketplace</LongName>
+  <Description>Search MeStory for AI-powered book writing, memorial books, autobiographies, and Hebrew/English self-publishing.</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Image height="32" width="32" type="image/png">https://mestory-ai.com/img/new/Logo-Me-32.png</Image>
+  <Image height="192" width="192" type="image/png">https://mestory-ai.com/img/new/Logo-Me-192.png</Image>
+  <Url type="text/html" template="https://mestory-ai.com/marketplace?search={searchTerms}"/>
+  <Url type="application/opensearchdescription+xml" rel="self" template="https://mestory-ai.com/opensearch.xml"/>
+  <Language>he</Language>
+  <Language>en</Language>
+  <SearchForm>https://mestory-ai.com/marketplace</SearchForm>
+  <Developer>MeStory</Developer>
+  <Contact>mestory.tec@gmail.com</Contact>
+  <moz:SearchForm xmlns:moz="http://www.mozilla.org/2006/browser/search/">https://mestory-ai.com/marketplace</moz:SearchForm>
+</OpenSearchDescription>

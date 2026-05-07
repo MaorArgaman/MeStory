@@ -8,6 +8,7 @@ import { queryClient } from './lib/queryClient';
 import './styles/index.css';
 import { isNative } from './platform';
 import { initNative } from './platform/nativeInit';
+import { reportWebVitals } from './lib/webVitals';
 
 // Suppress WebSocket / Socket.IO connection errors in production to avoid
 // cluttering the browser console when the real-time server is unreachable.
@@ -44,3 +45,8 @@ if (isNative) {
 } else {
   boot();
 }
+
+// Stream Core Web Vitals into Google Analytics so the GSC "Page experience"
+// report has fresh field data and we can correlate slow pages to user drop-off.
+// Runs after boot to avoid interfering with paint timing.
+reportWebVitals();

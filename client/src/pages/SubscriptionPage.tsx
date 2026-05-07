@@ -54,6 +54,7 @@ export default function SubscriptionPage() {
         setLoading(true);
         const response = await api.get('/subscription/plans', {
           signal: abortController.signal,
+          params: { lang: language },
         });
         if (response.data.success) {
           setPlans(response.data.data.plans);
@@ -250,10 +251,12 @@ export default function SubscriptionPage() {
             className="text-center mb-8 sm:mb-12"
           >
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4">
-              Choose Your Writing Journey
+              {language === 'he' ? 'בחרו את מסע הכתיבה שלכם' : 'Choose Your Writing Journey'}
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-gray-300 px-4">
-              Unlock powerful AI tools to bring your stories to life
+              {language === 'he'
+                ? 'גלו כלי AI עוצמתיים שיביאו את הסיפורים שלכם לחיים'
+                : 'Unlock powerful AI tools to bring your stories to life'}
             </p>
           </motion.div>
         </div>
@@ -284,7 +287,7 @@ export default function SubscriptionPage() {
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
                     <div className="px-6 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full text-sm font-bold text-gray-900 shadow-lg">
                       <Star className="w-4 h-4 inline mr-1" />
-                      Best Value
+                      {language === 'he' ? 'הכי משתלם' : 'Best Value'}
                     </div>
                   </div>
                 )}

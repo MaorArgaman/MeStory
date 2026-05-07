@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:atom="http://www.w3.org/2005/Atom"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>MeStory — Guides &amp; Articles</title>
+    <link>https://mestory-ai.com/guides</link>
+    <description>Guides on writing, designing, publishing, and earning from books with MeStory's AI-powered platform.</description>
+    <language>en</language>
+    <copyright>MeStory © 2024–2026</copyright>
+    <lastBuildDate>Sun, 26 Apr 2026 00:00:00 GMT</lastBuildDate>
+    <atom:link href="https://mestory-ai.com/feed.xml" rel="self" type="application/rss+xml"/>
+    <image>
+      <url>https://mestory-ai.com/img/new/Logo-Me-512.png</url>
+      <title>MeStory</title>
+      <link>https://mestory-ai.com</link>
+    </image>
+
+    <item>
+      <title>How to Write a Book with AI — Step-by-Step Guide</title>
+      <link>https://mestory-ai.com/guides/write-book</link>
+      <guid isPermaLink="true">https://mestory-ai.com/guides/write-book</guid>
+      <pubDate>Mon, 15 Jan 2024 00:00:00 GMT</pubDate>
+      <dc:creator>MeStory</dc:creator>
+      <description>A comprehensive guide to writing your first book using MeStory's AI tools — from idea to finished manuscript.</description>
+      <category>Writing</category>
+      <category>AI</category>
+    </item>
+
+    <item>
+      <title>How to Publish a Book — From Manuscript to Marketplace</title>
+      <link>https://mestory-ai.com/guides/publish-book</link>
+      <guid isPermaLink="true">https://mestory-ai.com/guides/publish-book</guid>
+      <pubDate>Mon, 15 Jan 2024 00:00:00 GMT</pubDate>
+      <dc:creator>MeStory</dc:creator>
+      <description>Step-by-step guide to publishing your finished book on the MeStory marketplace and reaching readers.</description>
+      <category>Publishing</category>
+      <category>Marketplace</category>
+    </item>
+
+    <item>
+      <title>How to Earn Money from Your Book</title>
+      <link>https://mestory-ai.com/guides/earn-money</link>
+      <guid isPermaLink="true">https://mestory-ai.com/guides/earn-money</guid>
+      <pubDate>Mon, 15 Jan 2024 00:00:00 GMT</pubDate>
+      <dc:creator>MeStory</dc:creator>
+      <description>Pricing, marketing, and monetisation strategies for self-published authors on MeStory's marketplace.</description>
+      <category>Monetisation</category>
+      <category>Self-publishing</category>
+    </item>
+
+  </channel>
+</rss>

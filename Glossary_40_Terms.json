@@ -1,0 +1,282 @@
+[
+  {
+    "category": "Book Creation",
+    "name": "Manuscript",
+    "description": "The complete text of a book before it is published, typically a working file the author edits over many drafts. The term predates digital writing but still applies to any unpublished text in any format. In MeStory, the manuscript is the central document inside a book project; AI editing, structure changes, and chapter reordering all act on it.",
+    "hebrew_name": "כתב יד",
+    "hebrew_description": "המסמך השלם של ספר לפני הפרסום, בדרך כלל קובץ עבודה שהמחבר עורך לאורך טיוטות רבות. המונח קדם לכתיבה דיגיטלית אך תקף לכל טקסט לא מפורסם. ב-MeStory, כתב היד הוא המסמך המרכזי בפרויקט ספר; עריכת ה-AI, שינויי מבנה וסידור פרקים פועלים עליו."
+  },
+  {
+    "category": "Book Creation",
+    "name": "Draft",
+    "description": "A version of a manuscript at a specific stage of completion, from rough first draft to final polished draft. Most books go through 3 to 7 drafts. MeStory keeps version history so authors can revert to or compare earlier drafts at any point during writing.",
+    "hebrew_name": "טיוטה",
+    "hebrew_description": "גרסה של כתב יד בשלב מסוים של גמר, מטיוטה ראשונה גסה ועד טיוטה סופית מלוטשת. רוב הספרים עוברים 3 עד 7 טיוטות. MeStory שומרת היסטוריית גרסאות כך שהמחבר יכול לחזור אל טיוטות קודמות או להשוות אליהן בכל שלב."
+  },
+  {
+    "category": "Book Creation",
+    "name": "Chapter outline",
+    "description": "A planned breakdown of the book into chapters, usually with a one-paragraph summary of what happens in each. Authors use chapter outlines to test the structure of a story before writing it in full. MeStory's AI generates suggested chapter outlines based on the book's topic and target length.",
+    "hebrew_name": "מתווה פרקים",
+    "hebrew_description": "פירוק מתוכנן של הספר לפרקים, לרוב עם תקציר של פסקה לכל פרק. מחברים משתמשים במתווה כדי לבדוק את מבנה הסיפור לפני הכתיבה המלאה. ה-AI של MeStory מפיק מתווה פרקים מוצע לפי נושא הספר והאורך הרצוי."
+  },
+  {
+    "category": "Book Creation",
+    "name": "Beat sheet",
+    "description": "A list of the key turning points (beats) in a story, often borrowed from screenwriting craft. Beat sheets are a sub-tool of the chapter outline, used to verify pacing and emotional arcs. MeStory offers beat-sheet templates for memoir and biography, helping authors find the natural turning points in a real life story.",
+    "hebrew_name": "רשימת תפניות",
+    "hebrew_description": "רשימה של נקודות המפנה המרכזיות (תפניות) בסיפור, לרוב מושאלת מאומנות התסריט. רשימות תפניות הן כלי משני למתווה הפרקים, המשמש לבדיקת קצב וקשתות רגשיות. MeStory מציעה תבניות רשימת תפניות לזיכרונות ולביוגרפיה, ומסייעת למחבר למצוא את נקודות המפנה הטבעיות בחיים אמיתיים."
+  },
+  {
+    "category": "Book Creation",
+    "name": "Three-act structure",
+    "description": "A narrative model dividing a story into setup, confrontation, and resolution. Common in fiction, also useful for biography and memoir to give shape to a life story. MeStory's autobiography template is built around an adapted three-act structure: early life, defining decades, and reflection.",
+    "hebrew_name": "מבנה תלת-שלבי",
+    "hebrew_description": "מבנה נרטיבי המחלק את הסיפור להצגה, עימות ופתרון. נפוץ בסיפורת, ושימושי גם לביוגרפיה וזיכרונות לעיצוב סיפור חיים. תבנית האוטוביוגרפיה של MeStory בנויה סביב מבנה תלת-שלבי מותאם: שנות הילדות, העשורים המכריעים, וההתבוננות לאחור."
+  },
+  {
+    "category": "Book Creation",
+    "name": "Drop cap",
+    "description": "A large decorative letter at the start of a chapter or paragraph that drops down two or more lines into the text body. A traditional typographic touch that signals the start of a chapter. MeStory's layout engine handles drop caps automatically, including for Hebrew RTL text where the letter must hang on the right margin.",
+    "hebrew_name": "אות פתיחה",
+    "hebrew_description": "אות עיטורית גדולה בתחילת פרק או פסקה היורדת שתי שורות או יותר לתוך הטקסט. מגע טיפוגרפי מסורתי המסמן תחילת פרק. מנוע הפריסה של MeStory מטפל באותיות פתיחה אוטומטית, כולל לטקסט עברי RTL שבו האות חייבת להיתלות בשוליים הימניים."
+  },
+  {
+    "category": "Book Creation",
+    "name": "Gutter margin",
+    "description": "The inner margin on each page of a printed book, where the binding holds the pages together. Books need a wider gutter than other margins so text remains readable when the book is bound. MeStory's print-ready templates set appropriate gutter widths automatically based on book length and binding type.",
+    "hebrew_name": "שוליים פנימיים",
+    "hebrew_description": "השוליים הפנימיים בכל עמוד של ספר מודפס, במקום שבו הכריכה מחזיקה את העמודים יחד. ספרים זקוקים לשוליים פנימיים רחבים יותר משאר השוליים כדי שהטקסט יישאר קריא לאחר הכריכה. תבניות ההדפסה של MeStory מגדירות אוטומטית את רוחב השוליים הפנימיים לפי אורך הספר וסוג הכריכה."
+  },
+  {
+    "category": "Book Creation",
+    "name": "Front matter",
+    "description": "The pages at the beginning of a book that come before the main text, including title page, copyright page, dedication, and preface. Front matter is technical but heavily affects how a book feels in the reader's hands. MeStory generates front matter from a short questionnaire: title, author, dedication, and acknowledgements.",
+    "hebrew_name": "חלק הפתיחה",
+    "hebrew_description": "העמודים בתחילת הספר שקודמים לטקסט המרכזי, כולל עמוד שער, עמוד זכויות יוצרים, הקדשה והקדמה. חלק הפתיחה הוא טכני אך משפיע מאוד על תחושת הספר בידי הקורא. MeStory מפיקה חלק פתיחה משאלון קצר: כותרת, מחבר, הקדשה ותודות."
+  },
+  {
+    "category": "Book Creation",
+    "name": "Back matter",
+    "description": "The pages at the end of a book that come after the main text, including acknowledgements, notes, glossary, index, and \"about the author.\" Back matter is where readers go after they've finished, and where authors can add the personal context that doesn't fit the main story. MeStory's templates include optional back-matter sections that authors can toggle on or off.",
+    "hebrew_name": "חלק סיום",
+    "hebrew_description": "העמודים בסוף הספר שאחרי הטקסט המרכזי, כולל תודות, הערות, מילון מונחים, מפתח, ו\"על המחבר.\" חלק הסיום הוא המקום שהקוראים מגיעים אליו אחרי שסיימו, ושם המחבר יכול להוסיף הקשר אישי שלא מתאים לסיפור המרכזי. תבניות MeStory כוללות סקציות חלק סיום שניתן להפעיל או לבטל."
+  },
+  {
+    "category": "Book Creation",
+    "name": "Plot arc",
+    "description": "The shape of how tension and emotion rise and fall across a story. A strong plot arc keeps readers turning pages; a flat plot arc loses them. MeStory's editor offers a plot-arc visualization for fiction projects, mapping each chapter to its emotional intensity so authors can spot uneven pacing.",
+    "hebrew_name": "קשת עלילה",
+    "hebrew_description": "צורת ההתפתחות של המתח והרגש לאורך הסיפור. קשת עלילה חזקה גורמת לקוראים להמשיך לדפדף; קשת עלילה שטוחה מאבדת אותם. עורך MeStory מציע תצוגה ויזואלית של קשת העלילה לפרויקטי סיפורת, ממפה כל פרק לעוצמתו הרגשית כדי שהמחבר יזהה אי-אחידות בקצב."
+  },
+  {
+    "category": "Memorial / Biography",
+    "name": "Eulogy",
+    "description": "A speech or piece of writing in praise of a person who has died, usually delivered at a funeral or memorial service. A eulogy focuses on what made the person who they were and what they meant to others. MeStory's memorial-book template includes a section for adapted eulogies and tributes, contributed by family and friends.",
+    "hebrew_name": "הספד",
+    "hebrew_description": "נאום או טקסט שבח על אדם שנפטר, הנישא בדרך כלל בלוויה או באזכרה. הספד מתמקד במה שהפך את האדם למי שהוא היה ובמשמעות שלו לאחרים. תבנית ספר ההנצחה של MeStory כוללת סקציה להספדים מותאמים ולמחוות, שתורמים בני משפחה וחברים."
+  },
+  {
+    "category": "Memorial / Biography",
+    "name": "Legacy",
+    "description": "What a person leaves behind beyond physical possessions: values, stories, lessons, influence on others. Legacy is the central concern of memorial and family-history writing. MeStory positions every memorial book as a vehicle for legacy preservation, allowing children and grandchildren to inherit not just photos but understanding.",
+    "hebrew_name": "מורשת",
+    "hebrew_description": "מה שאדם מותיר אחריו מעבר לרכוש פיזי: ערכים, סיפורים, לקחים, השפעה על אחרים. מורשת היא העניין המרכזי בכתיבת הנצחה ותולדות משפחה. MeStory רואה כל ספר הנצחה ככלי לשימור מורשת, המאפשר לילדים ולנכדים לרשת לא רק תמונות אלא הבנה."
+  },
+  {
+    "category": "Memorial / Biography",
+    "name": "Oral history",
+    "description": "The practice of recording and preserving people's spoken accounts of their own lives or historical events. Oral history captures details and voice that written records miss. MeStory's voice-transcription tool was built specifically for oral-history projects, converting recorded interviews in Hebrew or English into chapter-ready prose.",
+    "hebrew_name": "היסטוריה בעל פה",
+    "hebrew_description": "פרקטיקה של תיעוד ושימור עדויות אישיות של אנשים על חייהם או על אירועים היסטוריים. היסטוריה בעל פה לוכדת פרטים וקול שתיעוד כתוב מפספס. כלי התמלול הקולי של MeStory נבנה במיוחד לפרויקטי היסטוריה בעל פה, ממיר ראיונות מוקלטים בעברית או באנגלית לפסקאות מוכנות לפרק."
+  },
+  {
+    "category": "Memorial / Biography",
+    "name": "Life review",
+    "description": "A reflective process in which a person revisits and evaluates their own life, often associated with later life or end-of-life work. Life review is therapeutic and is the core of most autobiography projects. MeStory's autobiography template guides authors through structured life-review prompts, decade by decade.",
+    "hebrew_name": "סקירת חיים",
+    "hebrew_description": "תהליך התבוננות שבו אדם בוחן ומעריך את חייו, לרוב בגיל מתקדם או בעבודה של סוף חיים. סקירת חיים היא תרפויטית ועומדת בלב רוב פרויקטי האוטוביוגרפיה. תבנית האוטוביוגרפיה של MeStory מנחה את המחבר בשאלות סקירת חיים מובנות, עשור אחר עשור."
+  },
+  {
+    "category": "Memorial / Biography",
+    "name": "Memorial book",
+    "description": "A book written about a person who has died, intended to preserve and share their memory with family, friends, and future generations. Memorial books typically combine biography, photographs, and tributes from people who knew the subject. MeStory's primary niche is memorial books in Hebrew and English.",
+    "hebrew_name": "ספר הנצחה",
+    "hebrew_description": "ספר שנכתב על אדם שנפטר, שמטרתו לשמר ולחלוק את זכרו עם בני משפחה, חברים ודורות הבאים. ספרי הנצחה משלבים בדרך כלל ביוגרפיה, תמונות ומחוות מאנשים שהכירו את האדם. הנישה המרכזית של MeStory היא ספרי הנצחה בעברית ובאנגלית."
+  },
+  {
+    "category": "Memorial / Biography",
+    "name": "Family chronicle",
+    "description": "A book documenting the history of a family across generations, often combining genealogy, biography, and family stories. Family chronicles preserve cultural and personal heritage that would otherwise be lost. MeStory supports collaborative writing on family chronicles, allowing multiple family members to contribute chapters to a shared project.",
+    "hebrew_name": "כרוניקה משפחתית",
+    "hebrew_description": "ספר המתעד את תולדות המשפחה לאורך דורות, המשלב לרוב גנאלוגיה, ביוגרפיה וסיפורי משפחה. כרוניקות משפחתיות משמרות מורשת תרבותית ואישית שאחרת תאבד. MeStory תומכת בכתיבה משותפת של כרוניקות משפחתיות, ומאפשרת למספר בני משפחה לתרום פרקים לפרויקט משותף."
+  },
+  {
+    "category": "Memorial / Biography",
+    "name": "Memoir",
+    "description": "A book written from a person's own memories and experiences, focused on a specific theme, period, or relationship rather than the entire life. Memoir differs from autobiography in being narrower and more thematic. MeStory's memoir template is well suited to projects like \"my year of grief\" or \"my time as a teacher.\"",
+    "hebrew_name": "ממואר",
+    "hebrew_description": "ספר הכתוב מתוך זיכרונותיו וחוויותיו של האדם עצמו, ממוקד בנושא, תקופה או מערכת יחסים מסוימים, ולא בכל החיים. ממואר נבדל מאוטוביוגרפיה בכך שהוא צר יותר ונושאי יותר. תבנית הממואר של MeStory מתאימה לפרויקטים כמו \"שנת האבל שלי\" או \"שנותיי כמורה.\""
+  },
+  {
+    "category": "Memorial / Biography",
+    "name": "Tribute",
+    "description": "A short piece written to honor a person, often shorter and more personal than a eulogy. Tributes are common in memorial books, where multiple people each contribute a tribute alongside the main biographical text. MeStory's memorial-book template has a dedicated section for collected tributes from family, friends, and colleagues.",
+    "hebrew_name": "מחווה",
+    "hebrew_description": "טקסט קצר הנכתב לכבוד אדם, לרוב קצר ואישי יותר מהספד. מחוות נפוצות בספרי הנצחה, שבהם מספר אנשים תורמים כל אחד מחווה לצד הטקסט הביוגרפי המרכזי. תבנית ספר ההנצחה של MeStory כוללת סקציה ייעודית לאוסף מחוות מבני משפחה, חברים ועמיתים."
+  },
+  {
+    "category": "Memorial / Biography",
+    "name": "In memoriam",
+    "description": "A Latin phrase meaning \"in memory of,\" used to mark dedications and memorial publications. The phrase is common on title pages of memorial books. MeStory's memorial template offers \"In Memoriam\" as a standard front-matter option in both English and Hebrew (\"לזכרו / לזכרה\").",
+    "hebrew_name": "לזכרם",
+    "hebrew_description": "ביטוי מקובל המסמן הקדשה ופרסומי הנצחה. הביטוי נפוץ בעמודי השער של ספרי הנצחה. תבנית ההנצחה של MeStory מציעה \"לזכרו / לזכרה / לזכרם\" כאופציה סטנדרטית בחלק הפתיחה, בעברית ובאנגלית."
+  },
+  {
+    "category": "Memorial / Biography",
+    "name": "Yizkor book",
+    "description": "A traditional Jewish memorial book, historically written by survivors to commemorate destroyed communities or individual loved ones. Yizkor books are an important genre in Jewish history, especially after the Holocaust. MeStory supports the Yizkor-book tradition with templates that handle Hebrew RTL layout, traditional fonts, and bilingual structure.",
+    "hebrew_name": "ספר יזכור",
+    "hebrew_description": "ספר הנצחה יהודי מסורתי, שנכתב היסטורית על ידי שורדים להנצחת קהילות שחרבו או אנשים יקרים. ספרי יזכור הם ז'אנר חשוב בהיסטוריה היהודית, במיוחד לאחר השואה. MeStory תומכת במסורת ספר היזכור עם תבניות שמטפלות בפריסת RTL עברית, פונטים מסורתיים ומבנה דו-לשוני."
+  },
+  {
+    "category": "Self-Publishing",
+    "name": "ISBN",
+    "description": "International Standard Book Number — a 13-digit unique identifier assigned to each published book, used by retailers, libraries, and distributors. Books need an ISBN to be sold through major retailers like Amazon. MeStory does not assign ISBNs directly; authors who want one can purchase from a national ISBN agency (in Israel, Beit Hasfarim Ha'leumi).",
+    "hebrew_name": "ISBN",
+    "hebrew_description": "מספר זיהוי בינלאומי לספר — מזהה ייחודי בן 13 ספרות הניתן לכל ספר שיוצא לאור, ומשמש בתי מסחר, ספריות ומפיצים. ספרים זקוקים ל-ISBN כדי להימכר דרך רשתות גדולות כמו אמזון. MeStory אינה מקצה ISBN ישירות; מחברים שרוצים אחד יכולים לרכוש מסוכנות ה-ISBN הלאומית (בישראל, בית הספרים הלאומי)."
+  },
+  {
+    "category": "Self-Publishing",
+    "name": "Royalties",
+    "description": "Payments to the author from each sale of a book, usually a percentage of the cover price. In traditional publishing, royalties are 5-15%; in self-publishing, they can be 35-70% or higher. On the MeStory marketplace, authors keep most of the sale price; the platform's cut is published transparently.",
+    "hebrew_name": "תמלוגים",
+    "hebrew_description": "תשלומים למחבר על כל מכירה של ספר, בדרך כלל אחוז ממחיר הכריכה. בהוצאה לאור מסורתית, התמלוגים הם 5-15%; בהוצאה עצמאית הם יכולים להיות 35-70% או יותר. בשוק של MeStory, המחבר שומר על רוב מחיר המכירה; אחוז הפלטפורמה מפורסם בשקיפות."
+  },
+  {
+    "category": "Self-Publishing",
+    "name": "Marketplace",
+    "description": "A digital storefront where authors can list their books and readers can browse, preview, and purchase them directly. Marketplaces let self-published authors reach readers without a traditional distributor. The MeStory marketplace is built into the writing platform, so authors can finish a book and list it for sale in the same workflow.",
+    "hebrew_name": "שוק ספרים",
+    "hebrew_description": "חנות דיגיטלית שבה המחברים יכולים להציע את ספריהם וקוראים יכולים לעיין, להציץ ולרכוש אותם ישירות. שווקים מאפשרים למחברים בהוצאה עצמאית להגיע לקוראים בלי מפיץ מסורתי. שוק MeStory מובנה בתוך פלטפורמת הכתיבה, כך שהמחבר יכול לסיים ספר ולהציעו למכירה באותו זרימת עבודה."
+  },
+  {
+    "category": "Self-Publishing",
+    "name": "eBook",
+    "description": "A digital book read on an e-reader, tablet, phone, or computer. Common formats are EPUB, MOBI, and PDF. MeStory exports finished books to EPUB and PDF for distribution through any platform; the in-platform marketplace also delivers eBooks directly to readers.",
+    "hebrew_name": "ספר דיגיטלי",
+    "hebrew_description": "ספר דיגיטלי הנקרא על קורא אלקטרוני, טאבלט, סמארטפון או מחשב. הפורמטים הנפוצים הם EPUB, MOBI ו-PDF. MeStory מייצאת ספרים מוגמרים ל-EPUB ול-PDF להפצה בכל פלטפורמה; שוק הספרים הפנימי גם מספק ספרים דיגיטליים ישירות לקוראים."
+  },
+  {
+    "category": "Self-Publishing",
+    "name": "Print-on-demand",
+    "description": "A printing model in which physical book copies are printed only when ordered, eliminating the need to manufacture inventory upfront. Print-on-demand makes self-publishing physical books economically viable for small print runs. MeStory's roadmap includes print-on-demand integrations; today, authors who want physical copies use external services like Amazon KDP Print.",
+    "hebrew_name": "הדפסה לפי דרישה",
+    "hebrew_description": "מודל הדפסה שבו עותקים פיזיים של הספר מודפסים רק כשמזמינים אותם, ומבטל את הצורך לייצר מלאי מראש. הדפסה לפי דרישה הופכת הוצאה עצמאית של ספרים פיזיים לכלכלית גם בכמויות קטנות. במפת הדרכים של MeStory יש שילוב הדפסה לפי דרישה; כיום, מחברים שרוצים עותקים פיזיים פונים לשירותים חיצוניים כמו Amazon KDP Print."
+  },
+  {
+    "category": "Self-Publishing",
+    "name": "Fair use",
+    "description": "A legal doctrine that allows limited use of copyrighted material without permission, for purposes like criticism, comment, research, or education. Fair use is jurisdiction-specific and not unlimited. MeStory does not provide legal advice on fair use; authors who quote others should consult a copyright attorney for any non-trivial quotation.",
+    "hebrew_name": "שימוש הוגן",
+    "hebrew_description": "דוקטרינה משפטית המתירה שימוש מוגבל בחומרים המוגנים בזכויות יוצרים ללא רשות, למטרות כמו ביקורת, פרשנות, מחקר או חינוך. שימוש הוגן הוא תלוי-תחום שיפוט ולא בלתי מוגבל. MeStory אינה מספקת ייעוץ משפטי על שימוש הוגן; מחברים המצטטים אחרים מומלצים להתייעץ עם עורך דין זכויות יוצרים על כל ציטוט לא טריוויאלי."
+  },
+  {
+    "category": "Self-Publishing",
+    "name": "Copyright",
+    "description": "Legal ownership of an original creative work, granting the creator exclusive rights to reproduce, distribute, and adapt it. Copyright applies automatically upon creation in most jurisdictions; registration provides additional legal benefits. Authors on MeStory retain full copyright to everything they write; the platform claims no ownership of user content.",
+    "hebrew_name": "זכויות יוצרים",
+    "hebrew_description": "בעלות חוקית על יצירה מקורית, המעניקה ליוצר זכויות בלעדיות לשכפל, להפיץ ולעבד אותה. זכויות יוצרים חלות אוטומטית עם היצירה ברוב תחומי השיפוט; רישום מעניק יתרונות משפטיים נוספים. מחברים ב-MeStory שומרים על מלוא זכויות היוצרים על כל מה שכתבו; הפלטפורמה אינה תובעת בעלות על תוכן משתמש."
+  },
+  {
+    "category": "Self-Publishing",
+    "name": "Ghostwriting",
+    "description": "Writing a book on behalf of another person who is credited as the author. Ghostwriters are common for memoirs, business books, and biographies of public figures. MeStory's AI assistance is sometimes described loosely as \"ghostwriting,\" but it is a tool that helps the author write their own book — not a separate person credited or hidden.",
+    "hebrew_name": "כתיבה בשם",
+    "hebrew_description": "כתיבת ספר עבור אדם אחר, שמופיע כמחבר. כותבים בשם נפוצים בזיכרונות, ספרי עסקים, וביוגרפיות של אישי ציבור. סיוע ה-AI של MeStory לעיתים מתואר בהקשר של \"כתיבה בשם\", אבל הוא כלי שעוזר למחבר לכתוב את ספרו שלו — לא אדם נפרד שלוקח קרדיט או מסתתר."
+  },
+  {
+    "category": "Self-Publishing",
+    "name": "EPUB",
+    "description": "An open standard format for digital books, supported by most e-readers except Amazon Kindle. EPUB is the most common eBook format outside Amazon's ecosystem. MeStory exports finished books to EPUB by default; for Kindle, the EPUB can be converted to KPF using Amazon's Kindle Create or Kindle Previewer.",
+    "hebrew_name": "EPUB",
+    "hebrew_description": "פורמט סטנדרטי פתוח לספרים דיגיטליים, נתמך ברוב הקוראים האלקטרוניים למעט Amazon Kindle. EPUB הוא פורמט הספר הדיגיטלי הנפוץ ביותר מחוץ לאקוסיסטם של אמזון. MeStory מייצאת ספרים מוגמרים ל-EPUB כברירת מחדל; ל-Kindle ניתן להמיר את ה-EPUB ל-KPF באמצעות Kindle Create או Kindle Previewer של אמזון."
+  },
+  {
+    "category": "Self-Publishing",
+    "name": "Self-publishing",
+    "description": "Publishing a book without a traditional publisher, where the author handles or contracts every step of production and distribution. Self-publishing has grown dramatically with platforms like Amazon KDP, IngramSpark, and Wattpad. MeStory is a self-publishing platform; everything from writing to design to marketplace listing happens within a single end-to-end workflow.",
+    "hebrew_name": "הוצאה עצמאית",
+    "hebrew_description": "פרסום ספר ללא מו\"ל מסורתי, כאשר המחבר מטפל בעצמו או באמצעות שירותים בכל שלב של ההפקה וההפצה. ההוצאה העצמאית גדלה דרמטית עם פלטפורמות כמו Amazon KDP, IngramSpark ו-Wattpad. MeStory היא פלטפורמת הוצאה עצמאית; הכול — מהכתיבה דרך העיצוב ועד ההצעה בשוק — קורה בזרימת עבודה אחת מקצה לקצה."
+  },
+  {
+    "category": "AI Writing",
+    "name": "Prompt",
+    "description": "An instruction or question given to an AI model to elicit a response. Better prompts produce better AI output; prompt design is a learnable skill. MeStory abstracts most prompt engineering away from the user, providing context-aware suggestions that adapt to the chapter, genre, and writing style.",
+    "hebrew_name": "הנחיה",
+    "hebrew_description": "הוראה או שאלה הניתנת למודל AI כדי לקבל תשובה. הנחיות טובות יותר מפיקות פלט AI טוב יותר; עיצוב הנחיות הוא מיומנות שניתן ללמוד. MeStory מסתירה את רוב הנדסת ההנחיות מהמשתמש, ומספקת הצעות תלוית-הקשר שמותאמות לפרק, לז'אנר ולסגנון הכתיבה."
+  },
+  {
+    "category": "AI Writing",
+    "name": "Hallucination",
+    "description": "When an AI model produces content that sounds plausible but is factually incorrect or invented. Hallucinations are a known limitation of large language models. MeStory's editing flows are designed to keep the human author in control of factual claims; AI suggestions are advisory, not authoritative, and authors are reminded to verify any claim about real people or events.",
+    "hebrew_name": "הזיה",
+    "hebrew_description": "מצב שבו מודל AI מפיק תוכן שנשמע סביר אך אינו נכון או מומצא. הזיות הן מגבלה ידועה של מודלי שפה גדולים. זרימות העריכה של MeStory מתוכננות לשמור על המחבר האנושי בשליטה על טענות עובדתיות; הצעות AI הן יעוץ ולא סמכותי, והמחברים מתבקשים לאמת כל טענה על אנשים או אירועים אמיתיים."
+  },
+  {
+    "category": "AI Writing",
+    "name": "Content generation",
+    "description": "Producing text, images, or other media using AI based on prompts and parameters. Content generation can save hours of drafting time but rarely produces final-quality work without human editing. MeStory uses content generation for first-draft suggestions, chapter outlines, and cover concepts — always as a starting point for human refinement, not a finished product.",
+    "hebrew_name": "יצירת תוכן",
+    "hebrew_description": "הפקת טקסט, תמונות או מדיה אחרת באמצעות AI על בסיס הנחיות ופרמטרים. יצירת תוכן יכולה לחסוך שעות של טיוטה, אך לעיתים נדירות מפיקה פלט באיכות סופית ללא עריכה אנושית. MeStory משתמשת ביצירת תוכן להצעות טיוטה ראשונה, מתווי פרקים ורעיונות לכריכה — תמיד כנקודת מוצא לליטוש אנושי, לא כמוצר מוגמר."
+  },
+  {
+    "category": "AI Writing",
+    "name": "Transcription",
+    "description": "Converting spoken audio into written text. AI transcription has become highly accurate for clear recordings in major languages, including Hebrew and English. MeStory's transcription is built for memoir use cases: long interviews, multiple speakers, elderly voices, accented speech.",
+    "hebrew_name": "תמלול",
+    "hebrew_description": "המרת אודיו דבור לטקסט כתוב. תמלול AI הפך מדויק מאוד עבור הקלטות ברורות בשפות עיקריות, כולל עברית ואנגלית. התמלול של MeStory בנוי למקרי שימוש של זיכרונות: ראיונות ארוכים, מספר דוברים, קולות של מבוגרים, מבטא."
+  },
+  {
+    "category": "AI Writing",
+    "name": "Summarization",
+    "description": "Reducing a longer text to its essential points using AI. Useful for chapter summaries, executive summaries, and condensing long source material. MeStory uses summarization to generate chapter overviews from raw transcripts and to produce back-cover blurbs from finished manuscripts.",
+    "hebrew_name": "סיכום",
+    "hebrew_description": "צמצום טקסט ארוך לנקודותיו המהותיות באמצעות AI. שימושי לסיכומי פרקים, תקצירי מנהלים, ולכיווץ חומר מקור ארוך. MeStory משתמשת בסיכום ליצירת תקצירים של פרקים מתוך תמלולים גולמיים, ולהפקת כיתובי כריכה אחורית מכתבי יד גמורים."
+  },
+  {
+    "category": "AI Writing",
+    "name": "Voice-to-text",
+    "description": "Real-time transcription of speech as a person talks, distinct from batch transcription of pre-recorded audio. Voice-to-text enables dictation as a writing input. MeStory's voice-to-text supports both Hebrew and English and is well suited for authors who prefer to speak their first draft and edit later.",
+    "hebrew_name": "מקלדת קולית",
+    "hebrew_description": "תמלול בזמן אמת של דיבור כמו שאדם מדבר, להבדיל מתמלול אצווה של אודיו מוקלט מראש. מקלדת קולית מאפשרת הכתבה ככלי קלט לכתיבה. המקלדת הקולית של MeStory תומכת בעברית ואנגלית, ומתאימה למחברים שמעדיפים לדבר טיוטה ראשונה ולערוך אחר כך."
+  },
+  {
+    "category": "AI Writing",
+    "name": "Token",
+    "description": "A unit of text — roughly a word or fraction of a word — used to measure AI input and output. AI plans typically meter usage in tokens. MeStory abstracts tokens away from end users; subscription plans are quoted in straightforward terms (\"AI credits\" or \"books per month\") rather than raw token counts.",
+    "hebrew_name": "טוקן",
+    "hebrew_description": "יחידת טקסט — בערך מילה או חלק ממילה — המשמשת למדידת קלט ופלט של AI. תוכניות AI מודדות שימוש בדרך כלל בטוקנים. MeStory מסתירה טוקנים ממשתמשי הקצה; תוכניות המנוי מנוסחות במונחים ברורים (\"קרדיטי AI\" או \"ספרים לחודש\") במקום מספרי טוקנים גולמיים."
+  },
+  {
+    "category": "AI Writing",
+    "name": "Fine-tuning",
+    "description": "Adapting an existing AI model on additional data for a specific use case, distinct from training a model from scratch. Fine-tuning can improve performance on niche domains. MeStory does not fine-tune on user content; user manuscripts are private and are not used to train models.",
+    "hebrew_name": "כיוון עדין",
+    "hebrew_description": "התאמת מודל AI קיים על נתונים נוספים למקרה שימוש מסוים, להבדיל מאימון מודל מהיסוד. כיוון עדין יכול לשפר ביצועים בתחומי נישה. MeStory אינה מבצעת כיוון עדין על תוכן משתמשים; כתבי יד של משתמשים פרטיים ואינם משמשים לאימון מודלים."
+  },
+  {
+    "category": "AI Writing",
+    "name": "RTL (right-to-left)",
+    "description": "Writing direction used in Hebrew, Arabic, and several other languages, in which text flows from right to left and pages are bound on the right side. RTL support in software is a known engineering challenge. MeStory was designed RTL-native, meaning the editor, layout engine, and AI prompts all operate correctly in Hebrew without retrofitting.",
+    "hebrew_name": "ימין-לשמאל",
+    "hebrew_description": "כיוון כתיבה המשמש בעברית, ערבית ושפות נוספות, שבו הטקסט זורם מימין לשמאל והעמודים נכרכים בצד ימין. תמיכה ב-RTL בתוכנה היא אתגר הנדסי ידוע. MeStory תוכננה כ-RTL מהיסוד, כלומר העורך, מנוע הפריסה והנחיות ה-AI כולם פועלים נכון בעברית ללא התאמה בדיעבד."
+  },
+  {
+    "category": "AI Writing",
+    "name": "Natural Language Processing",
+    "description": "The branch of AI focused on understanding, generating, and analyzing human language. NLP is the technical field that underlies modern writing tools, transcription, and translation. MeStory's writing assistance is built on NLP technologies from major providers (OpenAI for transcription, Google Gemini for text generation), tuned for Hebrew and English memoir and biography.",
+    "hebrew_name": "עיבוד שפה טבעית",
+    "hebrew_description": "ענף ב-AI המתמקד בהבנה, הפקה וניתוח של שפה אנושית. עיבוד שפה טבעית הוא התחום הטכני שעומד מאחורי כלי כתיבה מודרניים, תמלול ותרגום. סיוע הכתיבה של MeStory בנוי על טכנולוגיות עיבוד שפה טבעית מספקים מובילים (OpenAI לתמלול, Google Gemini לייצור טקסט), מכוונן לעברית ואנגלית במגזר הזיכרונות והביוגרפיה."
+  }
+]

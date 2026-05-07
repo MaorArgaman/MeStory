@@ -40,10 +40,19 @@ export function OrganizationSchema({ locale = 'he' }: OrganizationSchemaProps) {
   const data = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': `${DEFAULT_SITE_URL}#organization`,
     name: 'MeStory',
-    alternateName: 'MeStory Israel',
+    alternateName: ['MeStory Israel', 'מי-סטורי', 'MeStory.ai'],
     url: DEFAULT_SITE_URL,
-    logo: `${DEFAULT_SITE_URL}/img/new/logo-mestory-large.png`,
+    logo: {
+      '@type': 'ImageObject',
+      '@id': `${DEFAULT_SITE_URL}#logo`,
+      url: `${DEFAULT_SITE_URL}/img/new/Logo-Me-512.png`,
+      width: 512,
+      height: 512,
+      caption: 'MeStory',
+    },
+    image: { '@id': `${DEFAULT_SITE_URL}#logo` },
     description: descriptions[locale],
     foundingDate: '2024',
     sameAs: [
@@ -349,13 +358,9 @@ export function SoftwareApplicationSchema({ locale = 'he' }: SoftwareApplication
           'Real-time editing',
         ],
     screenshot: `${DEFAULT_SITE_URL}/img/landing-hero.png`,
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      ratingCount: '150',
-      bestRating: '5',
-      worstRating: '1',
-    },
+    // aggregateRating intentionally omitted: Google issues manual penalties
+    // for unverified rating numbers in schema. Re-add only when wired to real
+    // user reviews from the database.
   };
 
   useJsonLd(data, 'software-application');
@@ -376,18 +381,23 @@ export function WebsiteSchema({ locale = 'he' }: WebsiteSchemaProps) {
   const data = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
+    '@id': `${DEFAULT_SITE_URL}#website`,
     name: 'MeStory',
+    alternateName: ['מי-סטורי', 'MeStory.ai'],
     url: DEFAULT_SITE_URL,
     description: descriptions[locale],
     inLanguage: locale === 'he' ? 'he-IL' : 'en-US',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: `${DEFAULT_SITE_URL}/marketplace?search={search_term_string}`,
+    publisher: { '@id': `${DEFAULT_SITE_URL}#organization` },
+    potentialAction: [
+      {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${DEFAULT_SITE_URL}/marketplace?search={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
       },
-      'query-input': 'required name=search_term_string',
-    },
+    ],
   };
 
   useJsonLd(data, 'website');
@@ -675,6 +685,199 @@ export function ReviewSchema({
   };
 
   useJsonLd(data, `review-${itemReviewed.name.replace(/\s+/g, '-').toLowerCase()}`);
+  return null;
+}
+
+// CollectionPage Schema — for marketplace and other index pages
+interface CollectionPageSchemaProps {
+  name: string;
+  description: string;
+  url: string;
+  numberOfItems?: number;
+  inLanguage?: 'he' | 'en';
+}
+
+export function CollectionPageSchema({
+  name,
+  description,
+  url,
+  numberOfItems,
+  inLanguage = 'he',
+}: CollectionPageSchemaProps) {
+  const data: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': `${url}#collection`,
+    name,
+    description,
+    url,
+    inLanguage: inLanguage === 'he' ? 'he-IL' : 'en-US',
+    isPartOf: { '@id': `${DEFAULT_SITE_URL}#website` },
+    publisher: { '@id': `${DEFAULT_SITE_URL}#organization` },
+  };
+  if (numberOfItems !== undefined) {
+    data.mainEntity = {
+      '@type': 'ItemList',
+      numberOfItems,
+    };
+  }
+  useJsonLd(data, 'collection-page');
+  return null;
+}
+
+// AboutPage Schema
+interface AboutPageSchemaProps {
+  name: string;
+  description: string;
+  url: string;
+  inLanguage?: 'he' | 'en';
+}
+
+export function AboutPageSchema({
+  name,
+  description,
+  url,
+  inLanguage = 'he',
+}: AboutPageSchemaProps) {
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    '@id': `${url}#aboutpage`,
+    name,
+    description,
+    url,
+    inLanguage: inLanguage === 'he' ? 'he-IL' : 'en-US',
+    isPartOf: { '@id': `${DEFAULT_SITE_URL}#website` },
+    about: { '@id': `${DEFAULT_SITE_URL}#organization` },
+    mainEntity: { '@id': `${DEFAULT_SITE_URL}#organization` },
+  };
+  useJsonLd(data, 'about-page');
+  return null;
+}
+
+// ProfilePage Schema — wraps a Person/AuthorSchema in a ProfilePage entity
+// so Google understands this is a profile, not a generic page.
+interface ProfilePageSchemaProps {
+  name: string;
+  url: string;
+  description?: string;
+  dateCreated?: string;
+  inLanguage?: 'he' | 'en';
+}
+
+export function ProfilePageSchema({
+  name,
+  url,
+  description,
+  dateCreated,
+  inLanguage = 'he',
+}: ProfilePageSchemaProps) {
+  const data: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    '@id': `${url}#profilepage`,
+    name: `${name} — MeStory Author Profile`,
+    url,
+    inLanguage: inLanguage === 'he' ? 'he-IL' : 'en-US',
+    isPartOf: { '@id': `${DEFAULT_SITE_URL}#website` },
+    mainEntity: {
+      '@type': 'Person',
+      name,
+      url,
+    },
+  };
+  if (description) data.description = description;
+  if (dateCreated) data.dateCreated = dateCreated;
+  useJsonLd(data, 'profile-page');
+  return null;
+}
+
+// Course Schema — for guides that teach a skill
+interface CourseSchemaProps {
+  name: string;
+  description: string;
+  url: string;
+  provider?: { name: string; url: string };
+  inLanguage?: 'he' | 'en';
+  educationalLevel?: 'Beginner' | 'Intermediate' | 'Advanced';
+  timeRequired?: string; // ISO 8601 duration
+}
+
+export function CourseSchema({
+  name,
+  description,
+  url,
+  provider = { name: 'MeStory', url: DEFAULT_SITE_URL },
+  inLanguage = 'he',
+  educationalLevel = 'Beginner',
+  timeRequired,
+}: CourseSchemaProps) {
+  const data: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    '@id': `${url}#course`,
+    name,
+    description,
+    url,
+    inLanguage: inLanguage === 'he' ? 'he-IL' : 'en-US',
+    provider: {
+      '@type': 'Organization',
+      name: provider.name,
+      url: provider.url,
+      '@id': `${DEFAULT_SITE_URL}#organization`,
+    },
+    educationalLevel,
+    isAccessibleForFree: true,
+    hasCourseInstance: {
+      '@type': 'CourseInstance',
+      courseMode: 'online',
+      inLanguage: inLanguage === 'he' ? 'he-IL' : 'en-US',
+    },
+  };
+  if (timeRequired) data.timeRequired = timeRequired;
+  useJsonLd(data, `course-${name.replace(/\s+/g, '-').toLowerCase().slice(0, 40)}`);
+  return null;
+}
+
+// DefinedTermSet Schema — glossary / dictionary of MeStory terms.
+// Search engines and LLMs heavily favor glossaries for citation.
+interface DefinedTerm {
+  name: string;
+  description: string;
+  termCode?: string;
+  inLanguage?: 'he' | 'en';
+}
+
+interface DefinedTermSetSchemaProps {
+  name: string;
+  url: string;
+  terms: DefinedTerm[];
+  inLanguage?: 'he' | 'en';
+}
+
+export function DefinedTermSetSchema({
+  name,
+  url,
+  terms,
+  inLanguage = 'he',
+}: DefinedTermSetSchemaProps) {
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'DefinedTermSet',
+    '@id': `${url}#glossary`,
+    name,
+    url,
+    inLanguage: inLanguage === 'he' ? 'he-IL' : 'en-US',
+    hasDefinedTerm: terms.map((term, idx) => ({
+      '@type': 'DefinedTerm',
+      '@id': `${url}#term-${idx}`,
+      name: term.name,
+      description: term.description,
+      ...(term.termCode ? { termCode: term.termCode } : {}),
+      inDefinedTermSet: { '@id': `${url}#glossary` },
+    })),
+  };
+  useJsonLd(data, 'defined-term-set');
   return null;
 }
 
