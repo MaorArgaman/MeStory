@@ -32,6 +32,7 @@ import {
   Rocket,
   Download,
   FileText,
+  FileType,
   DollarSign,
   TrendingUp,
   AlertCircle,
@@ -1332,6 +1333,35 @@ export default function BookLayoutPage() {
       setShowExportModal(false);
     } catch (error: any) {
       toast.error(error?.message || 'Error opening print page', { id: 'export' });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Server-side DOCX export (streams the file from the sync endpoint).
+  const handleDocxExport = async () => {
+    if (!book) return;
+    setExporting(true);
+    try {
+      await saveLayout();
+      toast.loading(language === 'he' ? 'יוצר קובץ Word...' : 'Creating Word file...', { id: 'export' });
+      const response = await api.get(`/books/${bookId}/export/docx`, { responseType: 'blob' });
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${book.title}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success(language === 'he' ? 'הקובץ הורד בהצלחה' : 'File downloaded successfully', { id: 'export' });
+      setShowExportModal(false);
+    } catch (error: any) {
+      if (import.meta.env.DEV) console.error('Failed to export book:', error);
+      toast.error(error?.message || error.response?.data?.error || 'Error exporting book', { id: 'export' });
     } finally {
       setExporting(false);
     }
@@ -4467,7 +4497,7 @@ export default function BookLayoutPage() {
               <div className="space-y-4">
                 <h3 className="font-semibold text-white">{t('design_studio.export_modal.select_format', 'Select Format')}</h3>
 
-                {/* Browser PDF — perfect fidelity (only export option) */}
+                {/* Primary: Browser PDF — perfect fidelity */}
                 <button
                   onClick={handleBrowserPdf}
                   disabled={exporting}
@@ -4486,6 +4516,32 @@ export default function BookLayoutPage() {
                       </p>
                     </div>
                     <CheckCircle2 className="w-6 h-6 text-memorial-gold" />
+                  </div>
+                </button>
+
+                {/* Word DOCX — server-side export */}
+                <button
+                  onClick={handleDocxExport}
+                  disabled={exporting}
+                  className="w-full p-4 rounded-xl border-2 border-gray-700 hover:border-gray-600 transition-all text-right"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-blue-500">
+                      <FileType className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-white">
+                        {t('design_studio.export_modal.docx_title', 'Word (DOCX)')}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        {language === 'he' ? 'קובץ עריכה ב־Microsoft Word' : 'Editable Microsoft Word file'}
+                      </p>
+                    </div>
+                    {exporting ? (
+                      <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+                    ) : (
+                      <Download className="w-5 h-5 text-gray-400" />
+                    )}
                   </div>
                 </button>
               </div>
