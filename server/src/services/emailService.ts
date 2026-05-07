@@ -1,18 +1,29 @@
 /**
  * Email Service
  * Handles sending emails for verification, welcome, purchases, etc.
+ *
+ * Supports two providers, picked at runtime:
+ *   1. Resend (preferred when RESEND_API_KEY is set) - HTTP API, no
+ *      SMTP auth complications, dead-simple to roll keys.
+ *   2. Nodemailer + SMTP (fallback) - keeps the legacy Gmail flow alive
+ *      so we don't break dev environments that already have it set up.
  */
 
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 // Email configuration from environment
 const EMAIL_HOST = process.env.EMAIL_HOST || 'smtp.gmail.com';
 const EMAIL_PORT = parseInt(process.env.EMAIL_PORT || '587');
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS;
-const EMAIL_FROM = process.env.EMAIL_FROM || 'MeStory <noreply@mestory.com>';
+const EMAIL_FROM = process.env.EMAIL_FROM || 'MeStory <noreply@mestory-ai.com>';
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
-// Create transporter
+// Resend client (HTTP-based, no socket/auth state). Created once.
+const resendClient = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+
+// Create SMTP transporter (only used as fallback when Resend isn't configured)
 const createTransporter = () => {
   // In development, log emails to console if no credentials
   if (process.env.NODE_ENV === 'development' && (!EMAIL_USER || !EMAIL_PASS)) {
@@ -178,12 +189,28 @@ const getBaseTemplate = (content: string, title: string) => `
   <div class="container">
     <div class="card">
       <div class="logo">
-        <span class="logo-text">MeStory</span>
+        <a href="https://mestory-ai.com" style="text-decoration: none; display: inline-block;">
+          <img
+            src="https://mestory-ai.com/img/new/logo-mestory-large.png"
+            alt="MeStory"
+            width="140"
+            height="auto"
+            style="display: block; margin: 0 auto 10px; max-width: 140px; height: auto; border: 0;"
+          />
+          <div class="logo-text" style="font-size: 22px;">MeStory</div>
+        </a>
       </div>
       ${content}
       <div class="footer">
-        <p>MeStory - הפלטפורמה ליצירת ספרים עם AI</p>
-        <p>אם לא ביקשת את המייל הזה, אנא התעלם ממנו.</p>
+        <p style="font-size: 16px; color: #FFD700; margin-bottom: 12px;">
+          MeStory - הפלטפורמה ליצירת ספרים עם AI
+        </p>
+        <p>
+          <a href="https://mestory-ai.com" style="color: #FFD700; text-decoration: none;">
+            mestory-ai.com
+          </a>
+        </p>
+        <p style="margin-top: 16px;">אם לא ביקשת את המייל הזה, אנא התעלם ממנו.</p>
         <p style="margin-top: 20px; font-size: 12px;">
           © ${new Date().getFullYear()} MeStory. כל הזכויות שמורות.
         </p>
@@ -203,11 +230,32 @@ interface SendEmailParams {
 }
 
 /**
- * Send an email
+ * Send an email - prefers Resend, falls back to SMTP, falls back to mock.
  */
 export async function sendEmail({ to, subject, html }: SendEmailParams): Promise<boolean> {
+  // 1. Resend (HTTP API). Preferred when configured.
+  if (resendClient) {
+    try {
+      const { data, error } = await resendClient.emails.send({
+        from: EMAIL_FROM,
+        to,
+        subject,
+        html,
+      });
+      if (error) {
+        console.error(`❌ Resend send error to ${to}:`, error);
+        return false;
+      }
+      console.log(`✅ Email sent via Resend to ${to} (id=${data?.id}): ${subject}`);
+      return true;
+    } catch (err: any) {
+      console.error(`❌ Resend exception sending to ${to}:`, err.message || err);
+      return false;
+    }
+  }
+
+  // 2. SMTP fallback (legacy Gmail / nodemailer flow)
   try {
-    // Mock mode in development
     if (!transporter) {
       console.log('📧 [MOCK EMAIL]');
       console.log(`   To: ${to}`);
@@ -223,7 +271,7 @@ export async function sendEmail({ to, subject, html }: SendEmailParams): Promise
       html,
     });
 
-    console.log(`✅ Email sent to ${to}: ${subject}`);
+    console.log(`✅ Email sent via SMTP to ${to}: ${subject}`);
     return true;
   } catch (error) {
     console.error(`❌ Failed to send email to ${to}:`, error);
