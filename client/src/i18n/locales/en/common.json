@@ -1111,7 +1111,15 @@
       "low_score": "Quality Score Too Low",
       "low_score_desc": "Your book needs a quality score of at least 70 to publish. Consider improving your content using the AI writing assistant.",
       "no_score": "No Quality Score Yet",
-      "no_score_desc": "Run the AI quality analysis in the editor to get your quality score."
+      "no_score_desc": "Run the AI quality analysis in the editor to get your quality score.",
+      "categories": {
+        "writingQuality": "Writing Quality",
+        "plotStructure": "Plot Structure",
+        "characterDevelopment": "Character Development",
+        "dialogue": "Dialogue",
+        "setting": "Setting",
+        "originality": "Originality"
+      }
     },
     "pricing": {
       "title": "Pricing",

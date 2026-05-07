@@ -340,7 +340,9 @@ export default function PublishingPage() {
                       return (
                       <div key={key} className="glass rounded-lg p-3 sm:p-4">
                         <div className="text-xs sm:text-sm text-gray-400 mb-1 capitalize">
-                          {key.replace(/([A-Z])/g, ' $1').trim()}
+                          {t(`publishing.quality.categories.${key}`, {
+                            defaultValue: key.replace(/([A-Z])/g, ' $1').trim(),
+                          })}
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="flex-1 bg-gray-700 rounded-full h-1.5 sm:h-2">
