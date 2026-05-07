@@ -114,8 +114,31 @@ export default function RegisterPage() {
 
       navigate('/dashboard');
     } catch (error: any) {
-      // Error is already handled by axios interceptor
       console.error(error);
+      // Show the specific reason. Common 400 messages: 'User with this
+      // email already exists', 'Password must contain at least one
+      // uppercase letter, ...' from express-validator. Hebrew users
+      // were getting silent failures because the axios interceptor
+      // suppresses toasts on register/login pages.
+      const status = error?.response?.status;
+      const serverMsg =
+        error?.response?.data?.error ||
+        error?.response?.data?.errors?.[0]?.msg;
+      let msg: string;
+      if (serverMsg?.includes('already exists')) {
+        msg = isHebrew ? 'משתמש עם אימייל זה כבר קיים' : serverMsg;
+      } else if (serverMsg?.includes('Password must')) {
+        msg = isHebrew
+          ? 'הסיסמה חייבת לכלול לפחות 8 תווים, אות גדולה, אות קטנה, מספר ותו מיוחד'
+          : serverMsg;
+      } else if (serverMsg?.includes('valid email')) {
+        msg = isHebrew ? 'נא להזין כתובת אימייל תקינה' : serverMsg;
+      } else if (status === 429) {
+        msg = isHebrew ? 'יותר מדי נסיונות. נסה שוב בעוד דקה' : 'Too many attempts. Try again in a minute.';
+      } else {
+        msg = serverMsg || error?.message || (isHebrew ? 'ההרשמה נכשלה' : 'Registration failed');
+      }
+      toast.error(msg, { duration: 6000 });
     } finally {
       setLoading(false);
     }

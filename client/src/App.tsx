@@ -42,6 +42,7 @@ const PublishMetadata = lazy(() => import('./pages/publish/PublishMetadata'));
 const MarketplacePage = lazy(() => import('./pages/MarketplacePage'));
 const SubscriptionPage = lazy(() => import('./pages/SubscriptionPage'));
 const BuyCreditsPage = lazy(() => import('./pages/BuyCreditsPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const UpgradeSuccessPage = lazy(() => import('./pages/UpgradeSuccessPage'));
 const PaymentReturnPage = lazy(() => import('./pages/PaymentReturnPage'));
@@ -192,6 +193,7 @@ function AppContent() {
               {/* Authentication routes (no language prefix needed) */}
               <Route path="/login" element={<RedirectIfAuth><PageBoundary><LoginPage /></PageBoundary></RedirectIfAuth>} />
               <Route path="/register" element={<RedirectIfAuth><PageBoundary><RegisterPage /></PageBoundary></RedirectIfAuth>} />
+              <Route path="/forgot-password" element={<PageBoundary><ForgotPasswordPage /></PageBoundary>} />
               <Route path="/auth-success" element={<PageBoundary><AuthSuccessPage /></PageBoundary>} />
 
               {/* Invitation route (accessible without auth, will redirect to login if needed) */}

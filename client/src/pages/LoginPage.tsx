@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { Sparkles, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
+import toast from 'react-hot-toast';
 import analytics from '../utils/analytics';
 import { SEO } from '../components/seo';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -47,8 +48,24 @@ export default function LoginPage() {
       analytics.login('email');
       navigate('/dashboard');
     } catch (error: any) {
-      // Error is already handled by axios interceptor
       console.error(error);
+      // The axios interceptor suppresses toasts on /login (because 401
+      // there usually means 'wrong credentials', not 'session expired'),
+      // so the page itself has to render the error or the user sees
+      // nothing happen. Map common HTTP statuses to Hebrew messages.
+      const status = error?.response?.status;
+      const serverMsg = error?.response?.data?.error;
+      let msg: string;
+      if (status === 401) {
+        msg = 'אימייל או סיסמה שגויים';
+      } else if (status === 403 && serverMsg?.includes('not verified')) {
+        msg = 'יש לאמת את כתובת האימייל לפני התחברות';
+      } else if (status === 429) {
+        msg = 'יותר מדי נסיונות התחברות. נסה שוב בעוד דקה';
+      } else {
+        msg = serverMsg || error?.message || 'ההתחברות נכשלה';
+      }
+      toast.error(msg, { duration: 5000 });
     } finally {
       setLoading(false);
     }
@@ -209,6 +226,16 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
                   </button>
                 </div>
+              </div>
+
+              {/* Forgot Password Link */}
+              <div className="text-left -mt-2">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-indigo-400 hover:text-indigo-300 hover:underline"
+                >
+                  {t('login.forgot_password', 'שכחתי סיסמה')}
+                </Link>
               </div>
 
               {/* Submit Button */}
