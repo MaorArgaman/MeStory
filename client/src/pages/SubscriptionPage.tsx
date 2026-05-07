@@ -217,7 +217,7 @@ export default function SubscriptionPage() {
 
       <SEO
         title="Pricing & Plans | MeStory"
-        description="Choose the perfect plan for your writing journey. Unlock AI-powered tools, unlimited credits, and premium features to bring your stories to life."
+        description="Choose the perfect plan for your writing journey. Unlock AI-powered tools, generous monthly credits, and premium features to bring your stories to life."
         type="website"
         locale={language === 'he' ? 'he_IL' : 'en_US'}
         url="/pricing"

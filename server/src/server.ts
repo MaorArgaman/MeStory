@@ -17,6 +17,7 @@ import { apiLimiter } from './middleware/rateLimiter';
 import { configurePassport } from './config/passport';
 import { errorHandler, notFoundHandler } from './middleware/errorMiddleware';
 import { initializeSocketIO, getOnlineUsersCount } from './services/socketService';
+import { validateEnv, logValidationReport } from './config/validateEnv';
 
 // Import routes
 import authRoutes from './routes/authRoutes';
@@ -94,6 +95,11 @@ const initializeApp = async () => {
   try {
     lastInitAttempt = now;
     lastInitError = null;
+
+    // Validate critical environment variables - logs but does not throw,
+    // so a misconfigured deploy still serves /version and the env-status
+    // endpoint for debugging.
+    logValidationReport(validateEnv());
 
     // Connect to Supabase
     await connectDatabase();
@@ -321,6 +327,28 @@ app.get('/health', async (_req, res) => {
         isVercel: isVercelEnv,
       },
     }),
+  });
+});
+
+// ============================================
+// Payment Configuration Status (no auth, no init)
+// ============================================
+// Lightweight endpoint to verify PayPal credentials are wired correctly
+// without exposing the secret values themselves. Hit this from the frontend
+// to decide whether to show a "payments unavailable" banner.
+app.get('/api/payments/config-status', async (_req, res) => {
+  const { getPayPalConfigStatus } = await import('./config/validateEnv');
+  const status = getPayPalConfigStatus();
+  res.status(200).json({
+    success: true,
+    data: {
+      paypalConfigured: status.configured,
+      paypalMode: status.mode,
+      mockEnabled: status.mockEnabled,
+      // Reasons exposed only in non-production so prod doesn't leak
+      // configuration shape.
+      ...(process.env.NODE_ENV !== 'production' && { reasons: status.reasons }),
+    },
   });
 });
 

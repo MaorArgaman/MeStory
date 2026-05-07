@@ -28,6 +28,10 @@ import {
   getTopEngagedBooks,
   getSocialTrends,
 } from '../controllers/analyticsController';
+import {
+  getEarningsSummary,
+  listEarnings,
+} from '../controllers/platformEarningsController';
 import { authenticate } from '../middleware/auth';
 import { requireAdmin } from '../middleware/adminMiddleware';
 
@@ -61,6 +65,14 @@ router.get('/books/flagged', getFlaggedBooks as any);
 
 // PUT /api/admin/books/:id/unpublish - Unpublish a book
 router.put('/books/:id/unpublish', unpublishBook as any);
+
+// ==================== PLATFORM EARNINGS ====================
+
+// GET /api/admin/platform-earnings/summary - Aggregate platform commission income
+router.get('/platform-earnings/summary', getEarningsSummary as any);
+
+// GET /api/admin/platform-earnings - Paginated list of earnings rows
+router.get('/platform-earnings', listEarnings as any);
 
 // ==================== ANALYTICS ====================
 

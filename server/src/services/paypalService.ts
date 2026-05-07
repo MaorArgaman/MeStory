@@ -4,9 +4,11 @@
  */
 
 import axios from 'axios';
-import { User } from '../models/User';
+import { User, UserRole, IUser } from '../models/User';
 import { Book } from '../models/Book';
 import { Transaction } from '../models/Transaction';
+import { supabaseAdmin } from '../config/supabase';
+import { getPlanByTier } from '../config/plans';
 
 // PayPal API Configuration
 const PAYPAL_BASE_URL = process.env.PAYPAL_MODE === 'live'
@@ -16,10 +18,59 @@ const PAYPAL_BASE_URL = process.env.PAYPAL_MODE === 'live'
 const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
 const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET;
 
-// Revenue split configuration (from .env)
-const AUTHOR_SHARE_PERCENTAGE = parseInt(process.env.AUTHOR_REVENUE_PERCENTAGE || '50') / 100;
-const PLATFORM_SHARE_PERCENTAGE = parseInt(process.env.PLATFORM_REVENUE_PERCENTAGE || '50') / 100;
 const PAYOUT_THRESHOLD = parseFloat(process.env.PAYOUT_THRESHOLD || '10');
+
+/**
+ * Marketplace revenue split is driven by the AUTHOR's plan, not by global
+ * env vars. Free authors get 50/50, Standard 70/30, Premium 85/15. See
+ * server/src/config/plans.ts for the source of truth.
+ */
+function getRevenueSplit(authorRole: UserRole): {
+  authorShareRatio: number;
+  platformShareRatio: number;
+} {
+  const plan = getPlanByTier(authorRole);
+  return {
+    authorShareRatio: plan.authorRevenueShare,
+    platformShareRatio: 1 - plan.authorRevenueShare,
+  };
+}
+
+function authorPlanLabel(authorRole: UserRole): string {
+  return getPlanByTier(authorRole).id;
+}
+
+/**
+ * Persist the platform's commission cut from a marketplace sale so admin
+ * can run revenue reports without trawling transaction metadata.
+ */
+async function recordPlatformEarning(args: {
+  transactionId: string;
+  bookId: string;
+  authorId: string;
+  buyerId: string;
+  grossAmount: number;
+  authorShare: number;
+  platformShare: number;
+  currency: string;
+  authorPlan: string;
+}): Promise<void> {
+  const { error } = await supabaseAdmin.from('platform_earnings').insert({
+    transaction_id: args.transactionId,
+    book_id: args.bookId,
+    author_id: args.authorId,
+    buyer_id: args.buyerId,
+    gross_amount: args.grossAmount,
+    author_share: args.authorShare,
+    platform_share: args.platformShare,
+    currency: args.currency,
+    author_plan: args.authorPlan,
+    paid_out: false,
+  });
+  if (error) {
+    console.error('[paypalService] Failed to record platform earning:', error.message);
+  }
+}
 
 
 interface PayPalAccessToken {
@@ -159,6 +210,10 @@ export async function createBookPurchaseOrder(
 
     const price = book.publishingStatus.price;
     const authorName = author?.name || 'Unknown Author';
+    const authorRole = (author?.role as UserRole) || UserRole.FREE;
+    const { authorShareRatio, platformShareRatio } = getRevenueSplit(authorRole);
+    const authorShareAmount = price * authorShareRatio;
+    const platformShareAmount = price * platformShareRatio;
 
     // Development/Mock Mode
     if (!isPayPalConfigured() || process.env.NODE_ENV === 'development') {
@@ -167,8 +222,9 @@ export async function createBookPurchaseOrder(
       console.log(`📚 [MOCK] Creating book purchase order:`);
       console.log(`   Book: ${book.title} by ${authorName}`);
       console.log(`   Price: $${price}`);
-      console.log(`   Author Share: $${(price * AUTHOR_SHARE_PERCENTAGE).toFixed(2)}`);
-      console.log(`   Platform Share: $${(price * PLATFORM_SHARE_PERCENTAGE).toFixed(2)}`);
+      console.log(`   Author plan: ${authorPlanLabel(authorRole)} (${(authorShareRatio * 100).toFixed(0)}%/${(platformShareRatio * 100).toFixed(0)}% split)`);
+      console.log(`   Author Share: $${authorShareAmount.toFixed(2)}`);
+      console.log(`   Platform Share: $${platformShareAmount.toFixed(2)}`);
 
       // Create pending transaction
       await Transaction.create({
@@ -185,8 +241,11 @@ export async function createBookPurchaseOrder(
           bookTitle: book.title,
           authorId: book.author,
           authorName,
-          authorShare: price * AUTHOR_SHARE_PERCENTAGE,
-          platformShare: price * PLATFORM_SHARE_PERCENTAGE,
+          authorPlan: authorPlanLabel(authorRole),
+          authorShareRatio,
+          platformShareRatio,
+          authorShare: authorShareAmount,
+          platformShare: platformShareAmount,
           type: 'book_purchase',
         },
       });
@@ -254,8 +313,11 @@ export async function createBookPurchaseOrder(
         bookTitle: book.title,
         authorId: book.author,
         authorName,
-        authorShare: price * AUTHOR_SHARE_PERCENTAGE,
-        platformShare: price * PLATFORM_SHARE_PERCENTAGE,
+        authorPlan: authorPlanLabel(authorRole),
+        authorShareRatio,
+        platformShareRatio,
+        authorShare: authorShareAmount,
+        platformShare: platformShareAmount,
         type: 'book_purchase',
       },
     });
@@ -304,8 +366,6 @@ export async function captureBookPayment(
     const metadata = transaction.metadata as any;
     const bookId = metadata?.bookId;
     const authorId = metadata?.authorId;
-    const authorShare = metadata?.authorShare || transaction.amount * AUTHOR_SHARE_PERCENTAGE;
-    const platformShare = metadata?.platformShare || transaction.amount * PLATFORM_SHARE_PERCENTAGE;
 
     // Get book and author
     const book = await Book.findById(bookId);
@@ -315,6 +375,19 @@ export async function captureBookPayment(
     if (!book || !author || !buyer) {
       return { success: false, error: 'Book, author, or buyer not found' };
     }
+
+    // Resolve revenue split. Prefer the snapshot stored on the transaction
+    // metadata (so a plan change between order creation and capture
+    // doesn't shift the cut), fall back to author's current plan.
+    const splitRatio =
+      typeof metadata?.authorShareRatio === 'number'
+        ? metadata.authorShareRatio
+        : getRevenueSplit(author.role).authorShareRatio;
+    const platformRatio = 1 - splitRatio;
+    const authorShare = transaction.amount * splitRatio;
+    const platformShare = transaction.amount * platformRatio;
+    const authorPlanAtSale =
+      metadata?.authorPlan || authorPlanLabel(author.role);
 
     // Mock mode
     if (transaction.paymentMethod === 'mock' || !isPayPalConfigured()) {
@@ -371,7 +444,21 @@ export async function captureBookPayment(
         profile: { ...authorProfile, earnings, authorProfile: authorAuthorProfile },
       });
 
+      // Record platform commission cut for admin reporting
+      await recordPlatformEarning({
+        transactionId: transaction.id,
+        bookId: book.id,
+        authorId: author.id,
+        buyerId: buyer.id,
+        grossAmount: transaction.amount,
+        authorShare,
+        platformShare,
+        currency: transaction.currency,
+        authorPlan: authorPlanAtSale,
+      });
+
       console.log(`✅ [MOCK] Payment captured successfully`);
+      console.log(`   Author plan: ${authorPlanAtSale} (${(splitRatio * 100).toFixed(0)}% to author)`);
       console.log(`   Author earned: $${authorShare.toFixed(2)}`);
       console.log(`   Platform earned: $${platformShare.toFixed(2)}`);
 
@@ -484,6 +571,19 @@ export async function captureBookPayment(
     }
     await User.findByIdAndUpdate(authorId, {
       profile: { ...authorProfile2, earnings: earnings2, authorProfile: authorAuthorProfile2 },
+    });
+
+    // Record platform commission cut for admin reporting
+    await recordPlatformEarning({
+      transactionId: transaction.id,
+      bookId: book.id,
+      authorId: author.id,
+      buyerId: buyer.id,
+      grossAmount: transaction.amount,
+      authorShare,
+      platformShare,
+      currency: transaction.currency,
+      authorPlan: authorPlanAtSale,
     });
 
     return {
@@ -711,10 +811,13 @@ export async function getAuthorEarnings(authorId: string) {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 20);
 
+  // Author share percentage is now plan-driven, not a global constant.
+  const { authorShareRatio } = getRevenueSplit(author.role);
+
   return {
     ...earnings,
     payoutThreshold: PAYOUT_THRESHOLD,
-    authorSharePercentage: AUTHOR_SHARE_PERCENTAGE * 100,
+    authorSharePercentage: authorShareRatio * 100,
     canRequestPayout: earnings.pendingPayout >= PAYOUT_THRESHOLD,
     hasPayPalConnected: !!author.paypal?.email,
     paypalEmail: author.paypal?.email ? `${author.paypal.email.substring(0, 3)}***` : null,

@@ -16,6 +16,8 @@ interface PendingPayment {
   orderId: string;
   plan: string;
   createdAt: number;
+  packageId?: string;
+  credits?: number;
 }
 
 interface Props {
@@ -44,9 +46,13 @@ export default function PaymentReturnPage({ variant }: Props) {
     }
 
     // PayPal returns ?token={orderId}&PayerID={...}
+    // For top-ups we also pass ?type=topup in our return_url so we can
+    // route to the right capture endpoint.
     const orderIdFromQuery = searchParams.get('token');
+    const typeFromQuery = searchParams.get('type');
     const orderId = orderIdFromQuery || pending?.orderId;
     const plan = pending?.plan || 'standard';
+    const isTopUp = plan === 'topup' || typeFromQuery === 'topup';
 
     if (!orderId) {
       setError('לא נמצאה הזמנה לאישור. נסה שוב מהדף הראשי.');
@@ -55,13 +61,22 @@ export default function PaymentReturnPage({ variant }: Props) {
 
     (async () => {
       try {
-        const response = await paymentApi.captureSubscriptionOrder(orderId);
+        const response = isTopUp
+          ? await paymentApi.captureTopUpOrder(orderId)
+          : await paymentApi.captureSubscriptionOrder(orderId);
         if (!response.success) {
           throw new Error(response.error || 'Capture failed');
         }
         sessionStorage.removeItem('pendingPayment');
         await refreshUser();
-        navigate('/success', { replace: true, state: { plan, mockMode: false } });
+
+        if (isTopUp) {
+          const credits = response.data?.creditsAdded ?? pending?.credits ?? 0;
+          toast.success(`נוספו ${credits} קרדיטים לחשבון שלך!`);
+          navigate('/subscription', { replace: true });
+        } else {
+          navigate('/success', { replace: true, state: { plan, mockMode: false } });
+        }
       } catch (err: any) {
         const msg = err?.response?.data?.error || err?.message || 'שגיאה באישור התשלום';
         setError(msg);

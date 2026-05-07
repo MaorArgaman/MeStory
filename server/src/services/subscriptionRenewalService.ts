@@ -8,26 +8,28 @@ import { User, IUser, UserRole, ISubscription } from '../models/User';
 import { Transaction } from '../models/Transaction';
 import { createNotification, notifySubscriptionChange, notifySystem } from './notificationService';
 import { sendEmail } from './emailService';
+import { PLANS as PLAN_CONFIG } from '../config/plans';
 
-// Plan details matching subscriptionController
+// Plan adapter - delegates to server/src/config/plans.ts. Do not duplicate
+// pricing/credit values here.
 const PLANS = {
   free: {
-    tier: UserRole.FREE,
-    price: 0,
-    priceILS: 0,
-    credits: 100,
+    tier: PLAN_CONFIG.free.tier,
+    price: PLAN_CONFIG.free.priceUSD,
+    priceILS: PLAN_CONFIG.free.priceILS,
+    credits: PLAN_CONFIG.free.monthlyCredits,
   },
   standard: {
-    tier: UserRole.STANDARD,
-    price: 25,
-    priceILS: 99,
-    credits: 500,
+    tier: PLAN_CONFIG.standard.tier,
+    price: PLAN_CONFIG.standard.priceUSD,
+    priceILS: PLAN_CONFIG.standard.priceILS,
+    credits: PLAN_CONFIG.standard.monthlyCredits,
   },
   premium: {
-    tier: UserRole.PREMIUM,
-    price: 65,
-    priceILS: 250,
-    credits: -1, // Unlimited
+    tier: PLAN_CONFIG.premium.tier,
+    price: PLAN_CONFIG.premium.priceUSD,
+    priceILS: PLAN_CONFIG.premium.priceILS,
+    credits: PLAN_CONFIG.premium.monthlyCredits,
   },
 };
 

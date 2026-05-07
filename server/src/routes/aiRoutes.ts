@@ -29,6 +29,7 @@ import {
   cancelInterview,
 } from '../controllers/chatInterviewController';
 import { authenticate } from '../middleware/auth';
+import { requireCredits } from '../middleware/requireCredits';
 import rateLimit from 'express-rate-limit';
 
 const router = Router();
@@ -67,7 +68,7 @@ router.use(aiLimiter);
  *   }
  * }
  */
-router.post('/suggestions', getSuggestions as any);
+router.post('/suggestions', requireCredits('text_continue') as any, getSuggestions as any);
 
 /**
  * POST /api/ai/analyze
@@ -78,7 +79,7 @@ router.post('/suggestions', getSuggestions as any);
  *   text: string (min 100 chars)
  * }
  */
-router.post('/analyze', analyzeChapter as any);
+router.post('/analyze', requireCredits('analyze_quality') as any, analyzeChapter as any);
 
 /**
  * POST /api/ai/generate-titles
@@ -90,7 +91,7 @@ router.post('/analyze', analyzeChapter as any);
  *   count?: number (1-10, default 5)
  * }
  */
-router.post('/generate-titles', generateTitles as any);
+router.post('/generate-titles', requireCredits('title_generation') as any, generateTitles as any);
 
 /**
  * POST /api/ai/generate-synopsis
@@ -101,7 +102,7 @@ router.post('/generate-titles', generateTitles as any);
  *   bookId: string
  * }
  */
-router.post('/generate-synopsis', generateBookSynopsis as any);
+router.post('/generate-synopsis', requireCredits('synopsis') as any, generateBookSynopsis as any);
 
 /**
  * POST /api/ai/generate-cover-colors
@@ -114,7 +115,7 @@ router.post('/generate-synopsis', generateBookSynopsis as any);
  *   mood?: string
  * }
  */
-router.post('/generate-cover-colors', generateCoverColors as any);
+router.post('/generate-cover-colors', requireCredits('color_scheme') as any, generateCoverColors as any);
 
 /**
  * POST /api/ai/generate-cover
@@ -127,7 +128,7 @@ router.post('/generate-cover-colors', generateCoverColors as any);
  *   title: string
  * }
  */
-router.post('/generate-cover', generateCover as any);
+router.post('/generate-cover', requireCredits('ai_cover_single') as any, generateCover as any);
 
 /**
  * POST /api/ai/translate-chapter
@@ -140,7 +141,7 @@ router.post('/generate-cover', generateCover as any);
  *   targetLanguage: 'hebrew' | 'english'
  * }
  */
-router.post('/translate-chapter', translateChapterContent as any);
+router.post('/translate-chapter', requireCredits('translate_chapter') as any, translateChapterContent as any);
 
 /**
  * POST /api/ai/translate-book/:bookId
@@ -151,7 +152,7 @@ router.post('/translate-chapter', translateChapterContent as any);
  *   targetLanguage: 'hebrew' | 'english'
  * }
  */
-router.post('/translate-book/:bookId', translateBook as any);
+router.post('/translate-book/:bookId', requireCredits('translate_book') as any, translateBook as any);
 
 /**
  * POST /api/ai/generate-image
@@ -166,7 +167,7 @@ router.post('/translate-book/:bookId', translateBook as any);
  *   pageIndex?: number (if provided with bookId, saves image to book)
  * }
  */
-router.post('/generate-image', generateAIImage as any);
+router.post('/generate-image', requireCredits('ai_illustration') as any, generateAIImage as any);
 
 /**
  * POST /api/ai/generate-variations
@@ -181,7 +182,7 @@ router.post('/generate-image', generateAIImage as any);
  *   count?: number (1-4, default 4)
  * }
  */
-router.post('/generate-variations', generateAIImageVariations as any);
+router.post('/generate-variations', requireCredits('ai_cover_variations') as any, generateAIImageVariations as any);
 
 /**
  * POST /api/ai/generate-illustration/:bookId/:chapterIndex
@@ -193,7 +194,7 @@ router.post('/generate-variations', generateAIImageVariations as any);
  *   pageIndex?: number (if provided, saves image to book)
  * }
  */
-router.post('/generate-illustration/:bookId/:chapterIndex', generateChapterIllustration as any);
+router.post('/generate-illustration/:bookId/:chapterIndex', requireCredits('ai_illustration') as any, generateChapterIllustration as any);
 
 /**
  * POST /api/ai/preview-prompt
@@ -217,7 +218,7 @@ router.post('/preview-prompt', previewEnhancedPrompt as any);
  * Generate complete AI book design (typography, layout, cover, image suggestions)
  * This is the main "AI Design" feature
  */
-router.post('/design-book/:bookId', generateBookDesign as any);
+router.post('/design-book/:bookId', requireCredits('design_premium_full') as any, generateBookDesign as any);
 
 /**
  * POST /api/ai/apply-design/:bookId
@@ -238,7 +239,7 @@ router.post('/apply-design/:bookId', applyBookDesign as any);
  * POST /api/ai/design-typography/:bookId
  * Generate only typography design
  */
-router.post('/design-typography/:bookId', generateTypography as any);
+router.post('/design-typography/:bookId', requireCredits('design_typography') as any, generateTypography as any);
 
 /**
  * POST /api/ai/suggest-images/:bookId
@@ -258,7 +259,7 @@ router.post('/suggest-images/:bookId', getImageSuggestions as any);
  *   customPrompt: string (optional)
  * }
  */
-router.post('/generate-contextual-image', generateContextualImage as any);
+router.post('/generate-contextual-image', requireCredits('ai_illustration') as any, generateContextualImage as any);
 
 /**
  * POST /api/ai/design-complete/:bookId
@@ -269,14 +270,14 @@ router.post('/generate-contextual-image', generateContextualImage as any);
  *   generateImages?: boolean (default true)
  * }
  */
-router.post('/design-complete/:bookId', generateCompleteDesign as any);
+router.post('/design-complete/:bookId', requireCredits('design_premium_full') as any, generateCompleteDesign as any);
 
 /**
  * POST /api/ai/design-complete-async/:bookId
  * Async variant - returns { jobId } immediately, client polls /api/jobs/:id
  * Avoids HTTP timeouts and lets the client show a live progress bar.
  */
-router.post('/design-complete-async/:bookId', generateCompleteDesignAsync as any);
+router.post('/design-complete-async/:bookId', requireCredits('design_premium_full') as any, generateCompleteDesignAsync as any);
 
 /**
  * POST /api/ai/design-wizard/:bookId
@@ -288,7 +289,7 @@ router.post('/design-complete-async/:bookId', generateCompleteDesignAsync as any
  *   generateInteriorImages?: boolean (default false)
  * }
  */
-router.post('/design-wizard/:bookId', designWizard as any);
+router.post('/design-wizard/:bookId', requireCredits('design_premium_full') as any, designWizard as any);
 
 /**
  * POST /api/ai/premium-design/:bookId
@@ -311,13 +312,13 @@ router.post('/design-wizard/:bookId', designWizard as any);
  *   maxInteriorImages?: number (default 5)
  * }
  */
-router.post('/premium-design/:bookId', premiumDesignWizard as any);
+router.post('/premium-design/:bookId', requireCredits('design_premium_full') as any, premiumDesignWizard as any);
 
 /**
  * POST /api/ai/design-preview/:bookId
  * Get quick design preview without generating images
  */
-router.post('/design-preview/:bookId', getDesignPreview as any);
+router.post('/design-preview/:bookId', requireCredits('design_quick_preview') as any, getDesignPreview as any);
 
 /**
  * GET /api/ai/design-state/:bookId
@@ -345,7 +346,7 @@ router.post('/apply-complete-design/:bookId', applyCompleteDesign as any);
  *   generateCoverImage?: boolean (default false)
  * }
  */
-router.post('/design/complete', generateTemplateDesign as any);
+router.post('/design/complete', requireCredits('design_quick_preview') as any, generateTemplateDesign as any);
 
 // ============================================
 // AI CHAT INTERVIEW ROUTES
@@ -361,7 +362,7 @@ router.post('/design/complete', generateTemplateDesign as any);
  *   targetAudience?: string
  * }
  */
-router.post('/interview/start', startInterview as any);
+router.post('/interview/start', requireCredits('chat_interview_full') as any, startInterview as any);
 
 /**
  * POST /api/ai/interview/:id/message
@@ -398,7 +399,7 @@ router.delete('/interview/:id', cancelInterview as any);
  * Generate a complete book from interview data / story context.
  * This is the "Tell me your story → get a book" endpoint.
  */
-router.post('/generate-book', authenticate as any, async (req: any, res: any) => {
+router.post('/generate-book', authenticate as any, requireCredits('book_generation_full') as any, async (req: any, res: any) => {
   try {
     const { generateCompleteBook } = await import('../services/storyGenerationService');
     const { Book } = await import('../models/Book');

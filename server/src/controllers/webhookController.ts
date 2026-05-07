@@ -206,6 +206,9 @@ async function handlePaymentCaptureCompleted(event: PayPalWebhookEvent): Promise
   if (metadata?.type === 'book_purchase') {
     // Book purchase - notify author and update book stats
     await handleBookPurchaseComplete(transaction, user, metadata);
+  } else if (metadata?.kind === 'topup') {
+    // Top-up purchase - grant credits if not already granted
+    await handleTopUpComplete(transaction, user, metadata);
   } else {
     // Subscription upgrade
     await handleSubscriptionUpgradeComplete(transaction, user);
@@ -327,6 +330,58 @@ async function handleBookPurchaseComplete(
   );
 
   console.log(`[Webhook] Book purchase complete: ${metadata.bookTitle}`);
+}
+
+/**
+ * Handle top-up purchase completion. Idempotent: if `creditsGrantedAt`
+ * is already set on the transaction metadata, we skip granting again.
+ */
+async function handleTopUpComplete(
+  transaction: any,
+  buyer: any,
+  metadata: any
+): Promise<void> {
+  if (metadata?.creditsGrantedAt) {
+    console.log(`[Webhook] Top-up ${transaction.id} already granted at ${metadata.creditsGrantedAt}, skipping`);
+    return;
+  }
+
+  const credits = metadata?.creditsToAdd || 0;
+  if (credits <= 0) {
+    console.warn(`[Webhook] Top-up ${transaction.id} has no creditsToAdd`);
+    return;
+  }
+
+  const { grantCredits } = await import('../services/creditService');
+  const ok = await grantCredits({
+    userId: buyer.id,
+    amount: credits,
+    reason: 'topup-webhook',
+    metadata: {
+      orderId: transaction.orderId,
+      packageId: metadata?.packageId,
+      transactionId: transaction.id,
+    },
+  });
+
+  if (ok) {
+    await Transaction.findByIdAndUpdate(transaction.id, {
+      metadata: {
+        ...transaction.metadata,
+        creditsGrantedAt: new Date().toISOString(),
+      },
+    });
+    await notifyPaymentReceived(
+      buyer.id,
+      transaction.amount,
+      transaction.currency || 'USD',
+      transaction.orderId || transaction.id,
+      `Top-up: ${credits} credits`
+    );
+    console.log(`[Webhook] Top-up complete: ${credits} credits to user ${buyer.id}`);
+  } else {
+    console.error(`[Webhook] Failed to grant ${credits} credits for top-up ${transaction.id}`);
+  }
 }
 
 /**

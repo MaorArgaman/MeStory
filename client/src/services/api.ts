@@ -114,13 +114,45 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor to add auth token
+// Paths that should auto-receive an idempotency key. The server reads the
+// X-Idempotency-Key header to dedupe retries (especially relevant for
+// payments and AI features where double-charging is bad). Anything that
+// mutates state via POST gets one unless it's a streaming/long-poll route.
+const IDEMPOTENCY_PATH_PATTERNS: RegExp[] = [
+  /^\/payments\//,
+  /^\/book-purchases\//,
+  /^\/ai\//,
+  /^\/analysis\//,
+  /^\/voice\//,
+  /^\/interview\//,
+  /^\/tts\//,
+];
+
+function shouldAutoIdempotent(method: string | undefined, url: string | undefined): boolean {
+  if (!method || !url) return false;
+  if (method.toUpperCase() !== 'POST') return false;
+  return IDEMPOTENCY_PATH_PATTERNS.some((re) => re.test(url));
+}
+
+// Request interceptor to add auth token + idempotency key
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Auto-attach idempotency key to mutating AI/payment requests if the
+    // caller didn't set one explicitly. Lets the server safely dedupe a
+    // retry without double-charging credits or creating duplicate orders.
+    if (
+      shouldAutoIdempotent(config.method, config.url) &&
+      !config.headers['X-Idempotency-Key'] &&
+      !config.headers['x-idempotency-key']
+    ) {
+      config.headers['X-Idempotency-Key'] = generateIdempotencyKey();
+    }
+
     return config;
   },
   (error) => {
@@ -187,6 +219,39 @@ api.interceptors.response.use(
 
     const url = error.config?.url || '';
     const isAuthCheck = url.includes('/auth/me');
+
+    // 402 / 403 with credit-system error codes - dispatch a global event so
+    // a top-level modal can react. We don't toast here since the modal
+    // gives a richer UX (shows top-up packages and upgrade CTA).
+    if (error.response?.status === 402) {
+      const data = error.response.data as any;
+      if (data?.errorCode === 'INSUFFICIENT_CREDITS') {
+        window.dispatchEvent(
+          new CustomEvent('insufficient-credits', {
+            detail: {
+              required: data.required,
+              available: data.available,
+              topUpOptions: data.topUpOptions || [],
+            },
+          })
+        );
+        return Promise.reject(error);
+      }
+    }
+    if (error.response?.status === 403) {
+      const data = error.response.data as any;
+      if (data?.errorCode === 'FEATURE_NOT_AVAILABLE') {
+        window.dispatchEvent(
+          new CustomEvent('feature-not-available', {
+            detail: {
+              feature: data.feature,
+              currentPlan: data.currentPlan,
+            },
+          })
+        );
+        return Promise.reject(error);
+      }
+    }
 
     // Handle specific error cases
     if (error.response?.status === 401) {
@@ -337,6 +402,37 @@ export const paymentApi = {
    */
   captureBookPurchase: async (orderId: string) => {
     return paymentRequest('/book-purchases/capture', { orderId });
+  },
+
+  /**
+   * List one-time top-up packages.
+   */
+  listTopUpPackages: async () => {
+    const res = await api.get('/payments/topup/packages');
+    return res.data;
+  },
+
+  /**
+   * Create a top-up order for a credit package.
+   */
+  createTopUpOrder: async (packageId: string) => {
+    return paymentRequest('/payments/topup/create-order', { packageId });
+  },
+
+  /**
+   * Capture/complete a top-up order.
+   */
+  captureTopUpOrder: async (orderId: string) => {
+    return paymentRequest('/payments/topup/capture-order', { orderId });
+  },
+
+  /**
+   * Server-side PayPal config status. Hit on app load to decide whether
+   * to show "payments unavailable" UI.
+   */
+  getConfigStatus: async () => {
+    const res = await api.get('/payments/config-status');
+    return res.data;
   },
 };
 

@@ -14,6 +14,7 @@ import {
   getInterviewCoverage,
 } from '../controllers/analysisController';
 import { authenticate } from '../middleware/auth';
+import { requireCredits } from '../middleware/requireCredits';
 import rateLimit from 'express-rate-limit';
 
 const router = Router();
@@ -59,7 +60,7 @@ router.use(analysisLimiter);
  *   action: string
  * }
  */
-router.post('/enhance-text', enhanceText as any);
+router.post('/enhance-text', requireCredits('text_enhance') as any, enhanceText as any);
 
 /**
  * POST /api/analysis/plot-structure/:bookId
@@ -73,14 +74,14 @@ router.post('/enhance-text', enhanceText as any);
  *   suggestions: string[]
  * }
  */
-router.post('/plot-structure/:bookId', analyzePlotStructure as any);
+router.post('/plot-structure/:bookId', requireCredits('analyze_plot') as any, analyzePlotStructure as any);
 
 /**
  * GET /api/analysis/interview-coverage/:bookId
  * Score how well the written text covers each topic from the interview
  * and return suggestions for what's missing.
  */
-router.get('/interview-coverage/:bookId', getInterviewCoverage as any);
+router.get('/interview-coverage/:bookId', requireCredits('analyze_coverage') as any, getInterviewCoverage as any);
 
 /**
  * POST /api/analysis/tension/:bookId
@@ -93,7 +94,7 @@ router.get('/interview-coverage/:bookId', getInterviewCoverage as any);
  *   suggestions: string[]
  * }
  */
-router.post('/tension/:bookId', analyzeTension as any);
+router.post('/tension/:bookId', requireCredits('analyze_tension') as any, analyzeTension as any);
 
 /**
  * POST /api/analysis/techniques/:bookId
@@ -113,7 +114,7 @@ router.post('/tension/:bookId', analyzeTension as any);
  *   improvements: string[]
  * }
  */
-router.post('/techniques/:bookId', analyzeWritingTechniques as any);
+router.post('/techniques/:bookId', requireCredits('analyze_techniques') as any, analyzeWritingTechniques as any);
 
 /**
  * POST /api/analysis/guidance
@@ -136,7 +137,7 @@ router.post('/techniques/:bookId', analyzeWritingTechniques as any);
  *   } | null
  * }
  */
-router.post('/guidance', checkWritingGuidance as any);
+router.post('/guidance', requireCredits('writing_guidance') as any, checkWritingGuidance as any);
 
 /**
  * POST /api/analysis/score-change

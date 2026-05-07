@@ -17,6 +17,7 @@ import { OrganizationSchema, WebsiteSchema } from './components/seo';
 import { GoogleAnalytics } from './components/analytics';
 import { LanguageRedirect, LanguageRoute } from './components/routing';
 import AdminCheck from './components/AdminCheck';
+import { InsufficientCreditsModal } from './components/payment';
 import { useOfflineDetection } from './hooks/useOfflineDetection';
 import { useNativeAuthSync } from './hooks/useNativeAuthSync';
 
@@ -40,6 +41,7 @@ const PublishingPage = lazy(() => import('./pages/PublishingPage'));
 const PublishMetadata = lazy(() => import('./pages/publish/PublishMetadata'));
 const MarketplacePage = lazy(() => import('./pages/MarketplacePage'));
 const SubscriptionPage = lazy(() => import('./pages/SubscriptionPage'));
+const BuyCreditsPage = lazy(() => import('./pages/BuyCreditsPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const UpgradeSuccessPage = lazy(() => import('./pages/UpgradeSuccessPage'));
 const PaymentReturnPage = lazy(() => import('./pages/PaymentReturnPage'));
@@ -169,6 +171,10 @@ function AppContent() {
           },
         }}
       />
+
+      {/* Listens for 402/403 credit-system events from api.ts and shows
+          a global modal with top-up / upgrade CTAs. */}
+      <InsufficientCreditsModal />
 
       <AnimatePresence mode="wait">
         {/* Outer ErrorBoundary is the last line of defense for the shell itself */}
@@ -409,6 +415,16 @@ function AppContent() {
                   <RequireAuth>
                     <Layout>
                       <PageBoundary><SubscriptionPage /></PageBoundary>
+                    </Layout>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/buy-credits"
+                element={
+                  <RequireAuth>
+                    <Layout>
+                      <PageBoundary><BuyCreditsPage /></PageBoundary>
                     </Layout>
                   </RequireAuth>
                 }

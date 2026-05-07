@@ -437,7 +437,9 @@ export class User {
     return count || 0;
   }
 
-  // Helper: Deduct credits
+  // Helper: Deduct credits (legacy semantics - Premium/Admin unbounded)
+  // Kept for backward compatibility with callers that haven't migrated to
+  // creditService yet. New callers should use creditService.consume().
   static async deductCredits(userId: string, amount: number): Promise<boolean> {
     const user = await this.findById(userId);
     if (!user) return false;
@@ -450,6 +452,25 @@ export class User {
     if (user.credits < amount) {
       return false;
     }
+
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update({ credits: user.credits - amount })
+      .eq('id', userId);
+
+    return !error;
+  }
+
+  // Helper: Deduct credits with strict accounting. Unlike deductCredits,
+  // this charges Premium users too (they have a real bounded balance now).
+  // Admin still bypasses. Used by the new creditService pipeline.
+  static async deductCreditsStrict(userId: string, amount: number): Promise<boolean> {
+    const user = await this.findById(userId);
+    if (!user) return false;
+
+    if (user.role === UserRole.ADMIN) return true;
+
+    if (user.credits < amount) return false;
 
     const { error } = await supabaseAdmin
       .from('users')

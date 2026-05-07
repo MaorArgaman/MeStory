@@ -6,3 +6,4 @@
 
 export { default as PaymentConfirmationModal } from './PaymentConfirmationModal';
 export { default as PaymentSuccessAnimation } from './PaymentSuccessAnimation';
+export { default as InsufficientCreditsModal } from './InsufficientCreditsModal';

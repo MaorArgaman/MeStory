@@ -14,6 +14,7 @@ import {
   cancelInterview,
 } from '../controllers/voiceController';
 import { authenticate } from '../middleware/auth';
+import { requireCredits } from '../middleware/requireCredits';
 import { uploadAudio, handleUploadError } from '../middleware/uploadMiddleware';
 import rateLimit from 'express-rate-limit';
 
@@ -64,6 +65,7 @@ router.post(
   transcribeLimiter,
   uploadAudio.single('audio'),
   handleUploadError as any,
+  requireCredits('voice_transcribe_per_minute') as any,
   transcribeVoice as any
 );
 
@@ -86,7 +88,7 @@ router.post(
  *   progress: number
  * }
  */
-router.post('/interview/start', startInterview as any);
+router.post('/interview/start', requireCredits('voice_interview_session') as any, startInterview as any);
 
 /**
  * POST /api/interview/respond

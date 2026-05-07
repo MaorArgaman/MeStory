@@ -9,6 +9,8 @@ import {
   sendPayPalReceiptEmail,
 } from '../services/emailService';
 import { supabaseAdmin } from '../config/supabase';
+import { PLANS as PLAN_CONFIG, PlanId } from '../config/plans';
+import { getPayPalConfigStatus } from '../config/validateEnv';
 
 // PayPal API Configuration
 const PAYPAL_BASE_URL = process.env.PAYPAL_MODE === 'live'
@@ -76,22 +78,24 @@ function isPayPalConfigured(): boolean {
  * Handles subscription upgrades with PayPal integration and mock mode for development
  */
 
-// Plan configuration from environment
+// Plan config sourced from server/src/config/plans.ts. Never duplicate
+// pricing/credit values in this file. Adapter shape kept compact so the
+// rest of the controller can read .tier/.price/.credits as before.
 const PLANS = {
   free: {
-    tier: UserRole.FREE,
-    price: 0,
-    credits: parseInt(process.env.FREE_PLAN_CREDITS || '100'),
+    tier: PLAN_CONFIG.free.tier,
+    price: PLAN_CONFIG.free.priceUSD,
+    credits: PLAN_CONFIG.free.monthlyCredits,
   },
   standard: {
-    tier: UserRole.STANDARD,
-    price: parseFloat(process.env.STANDARD_PLAN_PRICE || '25'),
-    credits: parseInt(process.env.STANDARD_PLAN_CREDITS || '500'),
+    tier: PLAN_CONFIG.standard.tier,
+    price: PLAN_CONFIG.standard.priceUSD,
+    credits: PLAN_CONFIG.standard.monthlyCredits,
   },
   premium: {
-    tier: UserRole.PREMIUM,
-    price: parseFloat(process.env.PREMIUM_PLAN_PRICE || '65'),
-    credits: parseInt(process.env.PREMIUM_PLAN_CREDITS || '-1'),
+    tier: PLAN_CONFIG.premium.tier,
+    price: PLAN_CONFIG.premium.priceUSD,
+    credits: PLAN_CONFIG.premium.monthlyCredits,
   },
 } as const;
 
@@ -186,10 +190,18 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
 
     // PRODUCTION MODE: Real PayPal integration
     if (!isPayPalConfigured()) {
-      console.error('PayPal not configured for production');
+      const status = getPayPalConfigStatus();
+      console.error('[PayPal] Not configured. Reasons:', status.reasons.join('; '));
       res.status(503).json({
         success: false,
         error: 'Payment service is not configured. Please contact support.',
+        // Include actionable detail in non-production for the developer.
+        ...(process.env.NODE_ENV !== 'production' && {
+          debug: {
+            reasons: status.reasons,
+            hint: 'Set PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, and PAYPAL_MODE in .env. Or set ENABLE_MOCK_PAYMENTS=true with NODE_ENV=development to use mock mode.',
+          },
+        }),
       });
       return;
     }
@@ -541,10 +553,14 @@ export const captureOrder = async (req: AuthRequest, res: Response): Promise<voi
 
     // PRODUCTION MODE: Real PayPal capture
     if (!isPayPalConfigured()) {
-      console.error('PayPal not configured for production');
+      const status = getPayPalConfigStatus();
+      console.error('[PayPal capture] Not configured. Reasons:', status.reasons.join('; '));
       res.status(503).json({
         success: false,
         error: 'Payment service is not configured. Please contact support.',
+        ...(process.env.NODE_ENV !== 'production' && {
+          debug: { reasons: status.reasons },
+        }),
       });
       return;
     }

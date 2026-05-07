@@ -4,6 +4,11 @@ import {
   captureOrder,
   getTransactionHistory,
 } from '../controllers/paymentController';
+import {
+  listTopUpPackages,
+  createTopUpOrder,
+  captureTopUpOrder,
+} from '../controllers/topUpController';
 import { authenticate } from '../middleware/auth';
 import { apiLimiter } from '../middleware/rateLimiter';
 import { paymentIdempotency } from '../middleware/idempotencyMiddleware';
@@ -42,6 +47,28 @@ router.get(
   authenticate as any,
   apiLimiter,
   getTransactionHistory as any
+);
+
+// ----- Top-up (one-time credit purchase) -------------------------------
+// GET /api/payments/topup/packages - list available top-up packages
+router.get('/topup/packages', listTopUpPackages as any);
+
+// POST /api/payments/topup/create-order
+router.post(
+  '/topup/create-order',
+  authenticate as any,
+  apiLimiter,
+  paymentIdempotency,
+  createTopUpOrder as any
+);
+
+// POST /api/payments/topup/capture-order
+router.post(
+  '/topup/capture-order',
+  authenticate as any,
+  apiLimiter,
+  paymentIdempotency,
+  captureTopUpOrder as any
 );
 
 export default router;

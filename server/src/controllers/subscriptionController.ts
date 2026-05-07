@@ -2,51 +2,31 @@ import { Response } from 'express';
 import { User, UserRole } from '../models/User';
 import { AuthRequest } from '../types';
 import { notifySubscriptionChange } from '../services/notificationService';
+import { PLANS as PLAN_CONFIG } from '../config/plans';
 
-// Plan details as per Section 3.1
+// Plan details adapter - real source of truth lives in
+// server/src/config/plans.ts. Do not duplicate pricing here.
 const PLANS = {
   free: {
-    tier: UserRole.FREE,
-    price: 0,
-    priceILS: 0,
-    credits: 100,
-    features: [
-      'Basic writing tools',
-      'Limited AI assistance',
-      '100 credits/month',
-      'Export to PDF',
-      'Single book writing',
-    ],
+    tier: PLAN_CONFIG.free.tier,
+    price: PLAN_CONFIG.free.priceUSD,
+    priceILS: PLAN_CONFIG.free.priceILS,
+    credits: PLAN_CONFIG.free.monthlyCredits,
+    features: PLAN_CONFIG.free.features,
   },
   standard: {
-    tier: UserRole.STANDARD,
-    price: 25,
-    priceILS: 99,
-    credits: 500,
-    features: [
-      'Full AI writing assistant',
-      'Quality scoring',
-      '500 credits/month',
-      'Publish to marketplace',
-      'Advanced exports',
-      'Cover design studio',
-      'Unlimited books',
-    ],
+    tier: PLAN_CONFIG.standard.tier,
+    price: PLAN_CONFIG.standard.priceUSD,
+    priceILS: PLAN_CONFIG.standard.priceILS,
+    credits: PLAN_CONFIG.standard.monthlyCredits,
+    features: PLAN_CONFIG.standard.features,
   },
   premium: {
-    tier: UserRole.PREMIUM,
-    price: 65,
-    priceILS: 250,
-    credits: -1, // Unlimited
-    features: [
-      'Everything in Standard',
-      'Unlimited AI credits',
-      'Priority AI processing',
-      'Advanced analytics',
-      'Custom branding',
-      'Early access to features',
-      'Priority support',
-    ],
+    tier: PLAN_CONFIG.premium.tier,
+    price: PLAN_CONFIG.premium.priceUSD,
+    priceILS: PLAN_CONFIG.premium.priceILS,
+    credits: PLAN_CONFIG.premium.monthlyCredits,
+    features: PLAN_CONFIG.premium.features,
   },
 };
 
