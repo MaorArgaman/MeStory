@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import HTMLFlipBook from 'react-pageflip';
 import { api } from '../services/api';
 import BookLoader from '../components/common/BookLoader';
-import { exportBookAsPdfAsync } from '../utils/asyncExport';
 import {
   ArrowLeft,
   ArrowRight,
@@ -33,7 +32,6 @@ import {
   Rocket,
   Download,
   FileText,
-  FileType,
   DollarSign,
   TrendingUp,
   AlertCircle,
@@ -561,7 +559,6 @@ export default function BookLayoutPage() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [exportFormat, setExportFormat] = useState<'pdf' | 'docx'>('pdf');
   const [pricingStrategy, setPricingStrategy] = useState<PricingStrategy | null>(null);
   const [loadingStrategy, setLoadingStrategy] = useState(false);
   const [selectedPrice, setSelectedPrice] = useState(0);
@@ -1335,60 +1332,6 @@ export default function BookLayoutPage() {
       setShowExportModal(false);
     } catch (error: any) {
       toast.error(error?.message || 'Error opening print page', { id: 'export' });
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  // Handle export book (server-side — DOCX or fallback PDF)
-  const handleExport = async () => {
-    if (!book) return;
-    setExporting(true);
-    try {
-      await saveLayout();
-      toast.loading(`Creating ${exportFormat.toUpperCase()} file...`, { id: 'export' });
-
-      if (exportFormat === 'pdf') {
-        // PDF goes through the background job queue; large books no longer block or time out.
-        const result = await exportBookAsPdfAsync({
-          bookId: bookId!,
-          bookTitle: book.title,
-          onProgress: (progress, message) => {
-            toast.loading(`${message} (${progress}%)`, { id: 'export' });
-          },
-        });
-        // Warn user if server fell back to the low-quality PDFKit renderer
-        if (result?.warnings?.length) {
-          setTimeout(() => {
-            toast(
-              language === 'he'
-                ? 'הייצוא השתמש במנוע חלופי — לאיכות מלאה השתמש ב"שמור כ-PDF (מומלץ)"'
-                : 'Export used fallback renderer — for full quality use "Save as PDF (Recommended)"',
-              { icon: '⚠️', duration: 8000 },
-            );
-          }, 1000);
-        }
-      } else {
-        // DOCX / other formats still stream from the sync endpoint
-        const response = await api.get(`/books/${bookId}/export/${exportFormat}`, { responseType: 'blob' });
-        const blob = new Blob([response.data], {
-          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${book.title}.${exportFormat}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      }
-
-      toast.success('File downloaded successfully!', { id: 'export' });
-      setShowExportModal(false);
-    } catch (error: any) {
-      if (import.meta.env.DEV) console.error('Failed to export book:', error);
-      toast.error(error?.message || error.response?.data?.error || 'Error exporting book', { id: 'export' });
     } finally {
       setExporting(false);
     }
@@ -4524,7 +4467,7 @@ export default function BookLayoutPage() {
               <div className="space-y-4">
                 <h3 className="font-semibold text-white">{t('design_studio.export_modal.select_format', 'Select Format')}</h3>
 
-                {/* Primary: Browser PDF — perfect fidelity */}
+                {/* Browser PDF — perfect fidelity (only export option) */}
                 <button
                   onClick={handleBrowserPdf}
                   disabled={exporting}
@@ -4539,63 +4482,12 @@ export default function BookLayoutPage() {
                         {language === 'he' ? 'שמור כ-PDF (מומלץ)' : 'Save as PDF (Recommended)'}
                       </p>
                       <p className="text-sm text-gray-400">
-                        {language === 'he' ? 'עיצוב מלא — כריכה, תמונות, פונטים ועימוד' : 'Full design — cover, images, fonts & layout'}
+                        {language === 'he' ? 'עיצוב מלא, כריכה, תמונות, פונטים ועימוד' : 'Full design: cover, images, fonts & layout'}
                       </p>
                     </div>
                     <CheckCircle2 className="w-6 h-6 text-memorial-gold" />
                   </div>
                 </button>
-
-                {/* Secondary: Server PDF + DOCX */}
-                <div className="border-t border-gray-700/50 pt-3">
-                  <p className="text-xs text-gray-500 mb-3">
-                    {language === 'he' ? 'אפשרויות נוספות:' : 'More options:'}
-                  </p>
-
-                  <button
-                    onClick={() => setExportFormat('pdf')}
-                    className={`w-full p-3 rounded-xl border-2 transition-all text-right mb-2 ${exportFormat === 'pdf' ? 'border-gray-600 bg-gray-800/50' : 'border-gray-700 hover:border-gray-600'}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-red-500/50">
-                        <FileText className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-white text-sm">
-                          {language === 'he' ? 'PDF (ייצוא שרת)' : 'PDF (Server export)'}
-                        </p>
-                      </div>
-                      {exportFormat === 'pdf' && <CheckCircle2 className="w-5 h-5 text-gray-400" />}
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => setExportFormat('docx')}
-                    className={`w-full p-3 rounded-xl border-2 transition-all text-right ${exportFormat === 'docx' ? 'border-gray-600 bg-gray-800/50' : 'border-gray-700 hover:border-gray-600'}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-500/50">
-                        <FileType className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-white text-sm">{t('design_studio.export_modal.docx_title', 'Word (DOCX)')}</p>
-                      </div>
-                      {exportFormat === 'docx' && <CheckCircle2 className="w-5 h-5 text-gray-400" />}
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={handleExport}
-                    disabled={exporting}
-                    className="w-full mt-3 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
-                  >
-                    {exporting ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" />{t('design_studio.export_modal.exporting', 'Exporting...')}</>
-                    ) : (
-                      <><Download className="w-4 h-4" />{t('design_studio.export_modal.download', 'Download')} {exportFormat.toUpperCase()}</>
-                    )}
-                  </button>
-                </div>
               </div>
             </motion.div>
           </motion.div>
