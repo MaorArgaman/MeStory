@@ -157,8 +157,14 @@ export default function PublishingPage() {
         },
       });
 
-      // Then publish the book
-      const response = await api.post(`/books/${bookId}/publish`);
+      // Then publish the book. Pass price + isFree in the body too -
+      // the publishBook controller reads them from req.body to enforce
+      // pricing rules; without them isFree defaults to undefined and the
+      // price check fires even when the user picked Free.
+      const response = await api.post(`/books/${bookId}/publish`, {
+        price: isFree ? 0 : price,
+        isFree,
+      });
 
       if (response.data.success) {
         // Trigger confetti!
