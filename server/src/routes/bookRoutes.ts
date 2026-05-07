@@ -47,6 +47,7 @@ import {
 } from '../controllers/imageDiagnosticController';
 import { upload, uploadImage, uploadAudio as uploadAudioMiddleware, handleUploadError } from '../middleware/uploadMiddleware';
 import { authenticate } from '../middleware/auth';
+import { requirePlan } from '../middleware/requirePlan';
 import { runValidation } from '../middleware/validate';
 import {
   createBookValidation,
@@ -141,9 +142,12 @@ router.post(
 );
 
 // GET /api/books/:id/export - Export book as PDF (sync, streams PDF in response)
+// Gated to Standard+. Free users see "upgrade required" via the
+// InsufficientCreditsModal on the frontend.
 router.get(
   '/:id/export',
   runValidation(mongoIdValidation),
+  requirePlan('standard', 'PDF Export') as any,
   exportBookPDF as any
 );
 
@@ -152,6 +156,7 @@ router.get(
 router.post(
   '/:id/export-async',
   runValidation(mongoIdValidation),
+  requirePlan('standard', 'PDF Export') as any,
   exportBookPDFAsync as any
 );
 
@@ -241,9 +246,11 @@ router.get(
 );
 
 // GET /api/books/:id/export/:format - Export book to PDF or DOCX
+// Gated to Standard+. Free users get 403 with upgrade prompt.
 router.get(
   '/:id/export/:format',
   runValidation(mongoIdValidation),
+  requirePlan('standard', 'Book Export') as any,
   exportBookToFormat as any
 );
 

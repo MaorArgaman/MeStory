@@ -48,6 +48,9 @@ const FEATURE_NAMES_HE: Record<string, string> = {
   analyze_tension: 'ניתוח Tension Arc',
   analyze_coverage: 'ניתוח כיסוי ראיון',
   marketplace_publish: 'פרסום ב-Marketplace',
+  // Plan-gated binary features (from requirePlan middleware)
+  'PDF Export': 'ייצוא ל-PDF',
+  'Book Export': 'ייצוא ספר',
 };
 
 export default function InsufficientCreditsModal() {
