@@ -194,9 +194,37 @@ export default function PublishingPage() {
         toast.success('Book published successfully!');
         setStep(4); // Congratulations step
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to publish book:', error);
-      toast.error('Failed to publish book');
+      // Surface the server's specific reason instead of a generic toast.
+      // Backend returns errors like "Please add a synopsis (minimum 100
+      // characters)" or "Please add at least one tag" - users need to
+      // see them so they can fix the missing field.
+      const serverMessage =
+        error?.response?.data?.error ||
+        error?.response?.data?.message;
+      const isHebrew = (serverMessage || '').match(/[֐-׿]/);
+
+      // Translate the most common backend errors to Hebrew so the toast
+      // matches the rest of the UI for Hebrew users.
+      const HEBREW_TRANSLATIONS: Record<string, string> = {
+        'Cannot publish a book without chapters':
+          'אי-אפשר לפרסם ספר בלי פרקים',
+        'Please add a synopsis (minimum 15 words) before publishing':
+          'נא להוסיף תקציר (לפחות 15 מילים) לפני פרסום',
+        'Please add at least one tag before publishing':
+          'נא להוסיף לפחות תגית אחת לפני פרסום',
+        'Please design a cover for your book before publishing':
+          'נא לעצב כריכה לספר לפני פרסום',
+        'Paid books must have a price between $0.01 and $25':
+          'מחיר ספר בתשלום חייב להיות בין $0.01 ל-$25',
+      };
+
+      const display = serverMessage
+        ? (HEBREW_TRANSLATIONS[serverMessage] || serverMessage)
+        : (isHebrew ? 'הפרסום נכשל' : 'Failed to publish book');
+
+      toast.error(display, { duration: 6000 });
     } finally {
       setPublishing(false);
     }

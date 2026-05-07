@@ -1207,11 +1207,17 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    // Validate marketplace metadata
-    if (!book.synopsis || book.synopsis.trim().length < 100) {
+    // Validate marketplace metadata. Minimum 15 words gives readers
+    // enough context to decide on the book without forcing the author
+    // to pad. Whitespace-only words are filtered out before counting.
+    const synopsisWordCount = (book.synopsis || '')
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length > 0).length;
+    if (!book.synopsis || synopsisWordCount < 15) {
       res.status(400).json({
         success: false,
-        error: 'Please add a synopsis (minimum 100 characters) before publishing',
+        error: 'Please add a synopsis (minimum 15 words) before publishing',
       });
       return;
     }
