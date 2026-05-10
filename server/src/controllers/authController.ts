@@ -656,10 +656,21 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 
     const resetUrl = `${process.env.CLIENT_URL || 'https://mestory-ai.com'}/reset-password?token=${rawToken}`;
 
-    // Fire-and-forget email send. Don't block the response on SMTP.
-    sendPasswordResetEmail(user.email, user.name, resetUrl, lang).catch((err) =>
-      console.error('[forgotPassword] email send failed:', err.message)
-    );
+    // Await the send. Vercel serverless terminates the function as soon
+    // as res.json() returns, so a fire-and-forget here would orphan the
+    // SMTP/Resend call mid-flight - the very behavior we just spent an
+    // hour debugging. Log the result either way; the user-facing response
+    // stays identical (anti-enumeration).
+    try {
+      const ok = await sendPasswordResetEmail(user.email, user.name, resetUrl, lang);
+      if (ok) {
+        console.log(`[forgotPassword] reset email queued for ${user.email}`);
+      } else {
+        console.error(`[forgotPassword] email send returned false for ${user.email}`);
+      }
+    } catch (err: any) {
+      console.error('[forgotPassword] email send threw:', err?.message || err);
+    }
 
     res.status(200).json(genericResponse);
   } catch (error: any) {
