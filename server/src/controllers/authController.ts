@@ -632,14 +632,19 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
       return;
     }
 
+    console.log(`[forgotPassword] start email=${email.toLowerCase()}`);
+
     const user = await User.findByEmail(email.toLowerCase());
 
     // Always respond the same way to prevent enumeration. Only do real
     // work when the user actually exists.
     if (!user) {
+      console.log(`[forgotPassword] no user with email=${email.toLowerCase()} - returning generic success`);
       res.status(200).json(genericResponse);
       return;
     }
+
+    console.log(`[forgotPassword] found user id=${user.id} - generating token`);
 
     // Generate the raw token (sent in email) and store only its hash
     // in the DB. If the DB leaks, attackers can't replay the link.
