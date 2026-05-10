@@ -646,13 +646,19 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 
     console.log(`[forgotPassword] found user id=${user.id} - generating token`);
 
+    // Step-by-step logging to find which call freezes the serverless
+    // function. Each step is timed so we can spot a hang vs a crash.
+    const stepStart = Date.now();
+
     // Generate the raw token (sent in email) and store only its hash
     // in the DB. If the DB leaks, attackers can't replay the link.
     const rawToken = crypto.randomBytes(32).toString('hex');
     const tokenHash = hashResetToken(rawToken);
     const expiresAt = new Date(Date.now() + PASSWORD_RESET_EXPIRY_MS);
+    console.log(`[forgotPassword] token generated in ${Date.now() - stepStart}ms`);
 
     const ok = await User.setPasswordResetToken(user.id, tokenHash, expiresAt);
+    console.log(`[forgotPassword] setPasswordResetToken returned ${ok} after ${Date.now() - stepStart}ms`);
     if (!ok) {
       console.error('[forgotPassword] failed to persist token for', user.email);
       res.status(200).json(genericResponse);
@@ -660,6 +666,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     }
 
     const resetUrl = `${process.env.CLIENT_URL || 'https://mestory-ai.com'}/reset-password?token=${rawToken}`;
+    console.log(`[forgotPassword] about to send email via configured provider (RESEND_API_KEY ${process.env.RESEND_API_KEY ? 'present' : 'MISSING'}, EMAIL_FROM=${process.env.EMAIL_FROM || 'default'})`);
 
     // Await the send. Vercel serverless terminates the function as soon
     // as res.json() returns, so a fire-and-forget here would orphan the
