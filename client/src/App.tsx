@@ -71,6 +71,8 @@ const MyStoryPage = lazy(() => import('./pages/MyStoryPage'));
 const InvitationPage = lazy(() => import('./pages/InvitationPage'));
 const ContributePage = lazy(() => import('./pages/ContributePage'));
 const PrintBookPage = lazy(() => import('./pages/PrintBookPage'));
+const PrintDesignedBookPage = lazy(() => import('./pages/PrintDesignedBookPage'));
+const AutoDesignLandingPage = lazy(() => import('./pages/AutoDesignLandingPage'));
 const DiagnoseImagesPage = lazy(() => import('./pages/DiagnoseImagesPage'));
 
 // Localized public routes component factory
@@ -205,6 +207,8 @@ function AppContent() {
               {/* Print-only route used by Puppeteer/headless Chrome to export a book as PDF.
                   No Layout, no auth wrapper — the token is injected via ?token=... query param. */}
               <Route path="/print/:bookId" element={<PageBoundary><PrintBookPage /></PageBoundary>} />
+              <Route path="/print/:bookId/designed" element={<PageBoundary><PrintDesignedBookPage /></PageBoundary>} />
+              <Route path="/auto-design" element={<PageBoundary><AutoDesignLandingPage /></PageBoundary>} />
 
               {/* Internal image diagnostic page — visit /diagnose-images/:bookId
                   to see every image URL saved on the book and migrate them to

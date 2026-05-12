@@ -515,6 +515,8 @@ export interface IBook {
   pageImages?: IPageImage[];
   templateId?: string;
   aiDesignState?: IAIDesignState;
+  autoDesignPlan?: any;
+  autoDesignUses?: number;
   publishingStatus: IPublishingStatus;
   statistics: IStatistics;
   tags?: string[];
@@ -562,6 +564,8 @@ interface BookRow {
   page_layout: IPageLayout | null;
   page_images: IPageImage[];
   ai_design_state: IAIDesignState | null;
+  auto_design_plan: any | null;
+  auto_design_uses: number | null;
   publishing_status: IPublishingStatus;
   statistics: IStatistics;
   tags: string[];
@@ -603,6 +607,8 @@ function rowToBook(row: BookRow): IBook {
     pageLayout: row.page_layout || undefined,
     pageImages: row.page_images || [],
     aiDesignState: row.ai_design_state || undefined,
+    autoDesignPlan: row.auto_design_plan || undefined,
+    autoDesignUses: row.auto_design_uses || 0,
     publishingStatus: row.publishing_status || { status: 'draft', price: 0, isFree: true, isPublic: false },
     statistics: row.statistics || { wordCount: 0, pageCount: 0, chapterCount: 0, characterCount: 0, views: 0, purchases: 0, revenue: 0, totalReviews: 0, shares: 0, comments: 0 },
     tags: row.tags || [],

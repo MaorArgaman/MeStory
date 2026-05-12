@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import HTMLFlipBook from 'react-pageflip';
 import { api } from '../services/api';
 import BookLoader from '../components/common/BookLoader';
+import AutoDesignModal from '../components/autoDesign/AutoDesignModal';
 import {
   ArrowLeft,
   ArrowRight,
@@ -553,6 +554,7 @@ export default function BookLayoutPage() {
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [backCoverImageUrl, setBackCoverImageUrl] = useState<string | null>(null);
   const [showAIDesignWizard, setShowAIDesignWizard] = useState(false);
+  const [showAutoDesignModal, setShowAutoDesignModal] = useState(false);
   const [showFlipReader, setShowFlipReader] = useState(false);
 
   // Publish/Export state (moved from DesignStudioPage)
@@ -3418,6 +3420,30 @@ export default function BookLayoutPage() {
                   </motion.button>
                 </div>
 
+                {/* Premium Auto-Design — multi-agent typesetting (planner + critic + revision) */}
+                <div className="mb-4">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowAutoDesignModal(true)}
+                    className="w-full relative overflow-hidden rounded-xl p-4 bg-gradient-to-r from-indigo-700 via-violet-700 to-fuchsia-700 text-white shadow-lg shadow-violet-700/25"
+                  >
+                    <div className="relative flex flex-col items-center justify-center gap-2">
+                      <Sparkles className="w-7 h-7" />
+                      <div className="text-center">
+                        <div className="font-bold text-lg">
+                          {language === 'he' ? 'עיצוב פרימיום (אייג׳נטים)' : 'Premium Auto-Design (Agents)'}
+                        </div>
+                        <div className="text-xs text-white/85 mt-1">
+                          {language === 'he'
+                            ? 'אייג׳נטים בוחרים סגנון, פלטה ופריסת עמודים. עד 3 גרסאות לכל ספר.'
+                            : 'Agents pick style, palette and page layout. Up to 3 versions per book.'}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.button>
+                </div>
+
                 {/* Template Selection */}
                 <div className="mb-6 space-y-3">
                   <button
@@ -4160,6 +4186,15 @@ export default function BookLayoutPage() {
             author: book.author,
           }}
           onDesignComplete={handleAIDesignComplete}
+        />
+      )}
+
+      {/* Premium Auto-Design Modal (multi-agent typesetting) */}
+      {bookId && (
+        <AutoDesignModal
+          bookId={bookId}
+          isOpen={showAutoDesignModal}
+          onClose={() => setShowAutoDesignModal(false)}
         />
       )}
 

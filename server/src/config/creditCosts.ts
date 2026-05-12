@@ -27,6 +27,7 @@ export type FeatureKey =
   | 'design_premium_full'
   | 'design_typography'
   | 'design_layout'
+  | 'auto_design_premium'
   // Writing assist
   | 'text_enhance'
   | 'text_continue'
@@ -69,6 +70,9 @@ export const CREDIT_COSTS: Record<FeatureKey, number> = {
   design_premium_full: 40,
   design_typography: 8,
   design_layout: 8,
+  // Multi-agent typesetting (planner + critic + revision). Capped to 3 uses
+  // per book by autoDesignCap middleware on top of credit charging.
+  auto_design_premium: 70,
 
   // Writing assist
   text_enhance: 2,
@@ -215,6 +219,7 @@ export const FEATURE_GATES: Record<FeatureKey, keyof PlanFeatureGate | null> = {
   design_premium_full: 'premium_design',
   design_typography: 'premium_design',
   design_layout: 'premium_design',
+  auto_design_premium: 'premium_design',
 
   text_enhance: null,
   text_continue: null,
