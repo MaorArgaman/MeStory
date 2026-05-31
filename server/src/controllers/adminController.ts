@@ -393,14 +393,22 @@ export const deleteUser = async (req: AuthRequest, res: Response): Promise<void>
  */
 export const getFlaggedBooks = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
-    // Get published books with low quality score (below 60)
-    let lowQualityBooks = await Book.find({
+    // Get published books, then filter low quality (0 < score < 60) in JS.
+    // The quality score lives in a JSONB column; numeric range filtering is
+    // done here rather than via an (untranslated) Mongo-style operator so the
+    // moderation list is actually correct.
+    const publishedBooks = await Book.find({
       'publishingStatus.status': 'published',
-      'qualityScore.overallScore': { $lt: 60, $gt: 0 },
+      _limit: 500,
+      _lightweight: true,
     });
 
-    // Sort by quality score ascending and limit to 50
-    lowQualityBooks = lowQualityBooks
+    let lowQualityBooks = publishedBooks
+      .filter((b: any) => {
+        const score = b.qualityScore?.overallScore || 0;
+        return score > 0 && score < 60;
+      })
+      // Sort by quality score ascending and limit to 50
       .sort((a: any, b: any) => (a.qualityScore?.overallScore || 0) - (b.qualityScore?.overallScore || 0))
       .slice(0, 50);
 

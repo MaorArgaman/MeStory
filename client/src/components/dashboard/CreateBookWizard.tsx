@@ -169,34 +169,34 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="w-full max-w-lg"
+        className="w-full max-w-md"
       >
-        <GlassCard className="relative p-8">
+        <GlassCard className="relative p-5">
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/10 transition text-gray-400 hover:text-white"
+            className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-white/10 transition text-gray-400 hover:text-white"
           >
             ✕
           </button>
 
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-memorial-gold to-yellow-600 flex items-center justify-center mx-auto mb-4 shadow-glow-gold">
-              <BookOpen className="w-8 h-8 text-deep-space" />
+          <div className="text-center mb-4">
+            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-memorial-gold to-yellow-600 flex items-center justify-center mx-auto mb-2 shadow-glow-gold">
+              <BookOpen className="w-5 h-5 text-deep-space" />
             </div>
             <h2
               id="create-book-wizard-title"
-              className="text-3xl font-display font-bold gradient-gold mb-2"
+              className="text-xl font-display font-bold gradient-gold mb-1"
             >
               {t('create_book.wizard_title')}
             </h2>
-            <p className="text-gray-400">{t('create_book.wizard_subtitle')}</p>
+            <p className="text-gray-400 text-xs">{t('create_book.wizard_subtitle')}</p>
           </div>
 
           {/* Title Input */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold mb-2 text-gray-300">
+          <div className="mb-4">
+            <label className="block text-xs font-semibold mb-1.5 text-gray-300">
               {t('create_book.book_name_label')}
             </label>
             <input
@@ -204,17 +204,17 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t('create_book.book_name_placeholder')}
-              className="input text-lg"
+              className="input text-sm py-2"
               autoFocus
             />
           </div>
 
           {/* Story Type Selection */}
-          <div className="mb-8">
-            <label className="block text-sm font-semibold mb-4 text-gray-300">
+          <div className="mb-5">
+            <label className="block text-xs font-semibold mb-2 text-gray-300">
               {t('create_book.story_type_label')}
             </label>
-            <div className="space-y-2">
+            <div className="space-y-1.5 max-h-[40vh] overflow-y-auto pr-1">
               {storyTypes.map((type) => {
                 const Icon = type.icon;
                 const isSelected = selectedType === type.id;
@@ -225,22 +225,22 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
                     onClick={() => setSelectedType(type.id)}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
-                    className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all text-right ${
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-right ${
                       isSelected
                         ? 'bg-white/10 border-2 border-memorial-gold shadow-glow-gold'
                         : 'bg-white/5 border border-white/10 hover:bg-white/10'
                     }`}
                   >
                     <div
-                      className={`w-10 h-10 rounded-lg bg-gradient-to-br ${type.color} flex items-center justify-center flex-shrink-0`}
+                      className={`w-8 h-8 rounded-md bg-gradient-to-br ${type.color} flex items-center justify-center flex-shrink-0`}
                     >
-                      <Icon className="w-5 h-5 text-white" />
+                      <Icon className="w-4 h-4 text-white" />
                     </div>
-                    <span className="font-semibold text-white flex-1">
+                    <span className="font-semibold text-white flex-1 text-sm">
                       {t(`create_book.story_types.${type.id}`)}
                     </span>
                     {isSelected && (
-                      <div className="w-3 h-3 rounded-full bg-memorial-gold flex-shrink-0" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-memorial-gold flex-shrink-0" />
                     )}
                   </motion.button>
                 );
@@ -253,8 +253,8 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
             onClick={handleCreateBook}
             disabled={creating || !title.trim()}
             variant="gold"
-            size="lg"
-            className="w-full justify-center text-lg py-4"
+            size="md"
+            className="w-full justify-center text-sm py-2.5"
           >
             {creating ? (
               <>

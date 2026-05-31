@@ -310,7 +310,12 @@ export class UserActivity {
     let queryBuilder = supabaseAdmin.from('user_activities').select('*');
 
     if (query.userId) {
-      queryBuilder = queryBuilder.eq('user_id', query.userId);
+      // Support Mongo-style { $in: [...] } as well as a bare id.
+      if (typeof query.userId === 'object' && Array.isArray(query.userId.$in)) {
+        queryBuilder = queryBuilder.in('user_id', query.userId.$in);
+      } else {
+        queryBuilder = queryBuilder.eq('user_id', query.userId);
+      }
     }
 
     queryBuilder = queryBuilder.order('last_active_at', { ascending: false });

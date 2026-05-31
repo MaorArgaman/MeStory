@@ -196,8 +196,8 @@ export function HomeSEO({ locale = 'he_IL' }: { locale?: 'he_IL' | 'en_US' }) {
   const lang = locale === 'he_IL' ? 'he' : 'en';
 
   const titles = {
-    he: 'MeStory - הפלטפורמה המובילה לכתיבת ספרים עם בינה מלאכותית',
-    en: 'MeStory - The Leading AI-Powered Book Writing Platform',
+    he: 'יצירת ספרי הנצחה ואוטוביוגרפיה עם בינה מלאכותית',
+    en: 'Memorial Books & Autobiographies, Written with AI',
   };
 
   const descriptions = {

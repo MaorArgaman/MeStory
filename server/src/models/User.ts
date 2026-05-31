@@ -174,6 +174,24 @@ function rowToUser(row: UserRow): IUser {
   };
 }
 
+/**
+ * Apply a Mongo-style date range filter ({ $gte, $gt, $lte, $lt } or a bare
+ * Date/string for equality) to a Supabase query builder. Dates are
+ * normalized to ISO strings. Returns the (chained) builder.
+ */
+function applyDateRange(qb: any, column: string, value: any): any {
+  const toIso = (v: any) => (v instanceof Date ? v.toISOString() : new Date(v).toISOString());
+  if (value && typeof value === 'object' && !(value instanceof Date)) {
+    if (value.$gte !== undefined) qb = qb.gte(column, toIso(value.$gte));
+    if (value.$gt !== undefined) qb = qb.gt(column, toIso(value.$gt));
+    if (value.$lte !== undefined) qb = qb.lte(column, toIso(value.$lte));
+    if (value.$lt !== undefined) qb = qb.lt(column, toIso(value.$lt));
+  } else {
+    qb = qb.eq(column, toIso(value));
+  }
+  return qb;
+}
+
 // User Model class for Supabase operations
 export class User {
   // Find user by ID
@@ -342,6 +360,48 @@ export class User {
       updateData = { ...update };
     }
 
+    // Handle MongoDB-style dot-notation keys (e.g.
+    // 'profile.authorProfile.publishedBooks'). Postgres has no such column —
+    // these target a nested field inside a JSONB column. Passing the dotted
+    // key straight to PostgREST fails with PGRST204 ("column not found") and
+    // the update is silently dropped. Read-modify-write the whole parent
+    // object so the nested update actually persists.
+    const dottedKeys = Object.keys(updateData).filter((k) => k.includes('.'));
+    if (dottedKeys.length > 0) {
+      const current = await this.findById(id);
+      if (!current) return null;
+      // IUser field name -> db column name for the JSONB parents we support.
+      const JSONB_COLUMN: Record<string, string> = {
+        profile: 'profile',
+        subscription: 'subscription',
+        paypal: 'paypal',
+        emailVerification: 'email_verification',
+      };
+      const parents: Record<string, any> = {};
+      for (const key of dottedKeys) {
+        const parent = key.split('.')[0];
+        if (!(parent in parents)) {
+          // Deep clone so we never mutate the cached current-user object.
+          parents[parent] = JSON.parse(JSON.stringify((current as any)[parent] ?? {}));
+        }
+      }
+      for (const key of dottedKeys) {
+        const segments = key.split('.');
+        const parent = segments[0];
+        let node = parents[parent];
+        for (let i = 1; i < segments.length - 1; i++) {
+          const seg = segments[i];
+          if (node[seg] === null || typeof node[seg] !== 'object') node[seg] = {};
+          node = node[seg];
+        }
+        node[segments[segments.length - 1]] = updateData[key];
+        delete updateData[key];
+      }
+      for (const parent of Object.keys(parents)) {
+        updateData[JSONB_COLUMN[parent] || parent] = parents[parent];
+      }
+    }
+
     // Convert camelCase to snake_case for specific fields
     if (updateData.emailVerification) {
       updateData.email_verification = updateData.emailVerification;
@@ -406,6 +466,8 @@ export class User {
         queryBuilder = queryBuilder.eq('role', value);
       } else if (key === 'email') {
         queryBuilder = queryBuilder.eq('email', value.toLowerCase());
+      } else if (key === 'createdAt') {
+        queryBuilder = applyDateRange(queryBuilder, 'created_at', value);
       }
     });
 
@@ -428,6 +490,8 @@ export class User {
     Object.entries(query).forEach(([key, value]) => {
       if (key === 'role') {
         queryBuilder = queryBuilder.eq('role', value);
+      } else if (key === 'createdAt') {
+        queryBuilder = applyDateRange(queryBuilder, 'created_at', value);
       }
     });
 

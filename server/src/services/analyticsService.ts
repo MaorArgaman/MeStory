@@ -83,7 +83,7 @@ export async function getPlatformMetrics(): Promise<PlatformMetrics> {
   const activeUsers = allActivities.filter(a => new Date(a.lastActiveAt) >= monthAgo).length;
 
   // Book metrics
-  const allBooks = await Book.find({ _lightweight: true });
+  const allBooks = await Book.findAll({ _lightweight: true });
   const totalBooks = allBooks.length;
   const publishedBooks = allBooks.filter(b => b.publishingStatus?.status === 'published').length;
   const newBooksThisWeek = allBooks.filter(b => new Date(b.createdAt) >= weekAgo).length;
@@ -189,7 +189,7 @@ export async function getNewUsersWithoutEngagement(
  * Get top performing authors
  */
 export async function getTopAuthors(limit: number = 20): Promise<TopAuthorData[]> {
-  const books = await Book.find({
+  const books = await Book.findAll({
     'publishingStatus.status': 'published',
     _lightweight: true,
   });
@@ -268,7 +268,7 @@ export async function getGenreAnalytics(): Promise<GenreAnalytics[]> {
   const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const twoMonthsAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
-  const books = await Book.find({
+  const books = await Book.findAll({
     'publishingStatus.status': 'published',
     _lightweight: true,
   });
@@ -330,7 +330,7 @@ export async function getTopBooks(
   limit: number = 20,
   sortBy: 'views' | 'purchases' | 'quality' | 'revenue' = 'views'
 ): Promise<BookPerformance[]> {
-  const books = await Book.find({
+  const books = await Book.findAll({
     'publishingStatus.status': 'published',
     _lightweight: true,
   });
@@ -413,7 +413,7 @@ export async function getDailyActivityTrends(days: number = 30): Promise<any[]> 
  * Get books that need quality evaluation
  */
 export async function getBooksNeedingEvaluation(limit: number = 50): Promise<any[]> {
-  const books = await Book.find({
+  const books = await Book.findAll({
     'publishingStatus.status': 'published',
     _lightweight: true,
   });
@@ -793,7 +793,7 @@ export async function getRealTimeActivity(): Promise<RealTimeActivity> {
   const allUsers = await User.find({});
   const recentSignups = allUsers.filter(u => new Date(u.createdAt) >= oneHourAgo).length;
 
-  const allBooks = await Book.find({ _lightweight: true });
+  const allBooks = await Book.findAll({ _lightweight: true });
   const recentPublished = allBooks.filter(b => {
     const publishedAt = b.publishingStatus?.publishedAt;
     return publishedAt && new Date(publishedAt) >= oneHourAgo;
@@ -829,7 +829,7 @@ export interface RevenueAnalytics {
 export async function getRevenueAnalytics(
   period: 'day' | 'week' | 'month' = 'month'
 ): Promise<RevenueAnalytics> {
-  const books = await Book.find({
+  const books = await Book.findAll({
     'publishingStatus.status': 'published',
     _lightweight: true,
   });
@@ -923,7 +923,7 @@ export interface SocialEngagementOverview {
  * Get social engagement overview metrics
  */
 export async function getSocialEngagementOverview(): Promise<SocialEngagementOverview> {
-  const books = await Book.find({
+  const books = await Book.findAll({
     'publishingStatus.status': 'published',
     _lightweight: true,
   });
@@ -1048,7 +1048,7 @@ export interface TopEngagedBook {
  * Get top engaged books by social metrics
  */
 export async function getTopEngagedBooks(limit: number = 20): Promise<TopEngagedBook[]> {
-  const books = await Book.find({
+  const books = await Book.findAll({
     'publishingStatus.status': 'published',
     _lightweight: true,
   });
