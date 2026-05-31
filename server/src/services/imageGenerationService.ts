@@ -5,23 +5,11 @@ import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 
-// Lazy-initialize Gemini AI client (only when API key is available)
+// Lazy-initialize Gemini AI client (only when API key is available). Text calls
+// go through the shared generateWithBreaker from geminiClient; this file keeps
+// its own client only for the image model below, which needs custom config.
 let genAIClient: GoogleGenerativeAI | null = null;
-let modelInstance: GenerativeModel | null = null;
 let imageModelInstance: GenerativeModel | null = null;
-
-function getGeminiModel(): GenerativeModel {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY is not configured');
-  }
-  if (!genAIClient) {
-    genAIClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  }
-  if (!modelInstance) {
-    modelInstance = genAIClient.getGenerativeModel({ model: 'gemini-2.5-flash' });
-  }
-  return modelInstance;
-}
 
 /**
  * Get Gemini model configured for image generation (Nano Banana 2)
