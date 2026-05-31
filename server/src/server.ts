@@ -44,9 +44,11 @@ import collaborationRoutes from './routes/collaborationRoutes';
 import organizationRoutes from './routes/organizationRoutes';
 import jobRoutes from './routes/jobRoutes';
 import couponRoutes from './routes/couponRoutes';
+import davidRoutes from './routes/davidRoutes';
 import { initializeDefaultTemplates } from './services/templateService';
 import { initializeSubscriptionJobs } from './jobs/subscriptionJobs';
 import { initializeCleanupJobs } from './jobs/cleanupJobs';
+import { initializeDavidJobs } from './jobs/davidJobs';
 
 const app = express();
 const httpServer = createServer(app);
@@ -423,6 +425,8 @@ app.use('/api/collaboration', collaborationRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/coupons', couponRoutes);
+// David: public articles (/api/articles) + daily cron (/api/agents/david/run)
+app.use('/api', davidRoutes);
 
 // ============================================
 // Error Handling (must be last)
@@ -448,6 +452,10 @@ const startServer = async () => {
     // Initialize cleanup jobs
     initializeCleanupJobs();
     console.log('✅ Cleanup jobs initialized');
+
+    // Initialize David's daily SEO/GEO/AEO job (dev only; prod uses Vercel Cron)
+    initializeDavidJobs();
+    console.log('✅ David daily agent job initialized');
 
     // Start listening
     httpServer.listen(PORT, () => {

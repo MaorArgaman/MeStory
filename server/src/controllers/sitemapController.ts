@@ -154,6 +154,31 @@ const fetchPublicAuthors = async (): Promise<Array<{
 };
 
 /**
+ * Fetch David's published articles (served at /guides/:slug)
+ */
+const fetchDavidArticles = async (): Promise<Array<{
+  slug: string;
+  updated_at: string;
+}>> => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('david_articles')
+      .select('slug, updated_at')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(5000);
+    if (error) {
+      console.error('Error fetching David articles for sitemap:', error);
+      return [];
+    }
+    return data || [];
+  } catch (error) {
+    console.error('Failed to fetch David articles:', error);
+    return [];
+  }
+};
+
+/**
  * Generate complete XML sitemap
  * GET /sitemap.xml
  */
@@ -180,10 +205,23 @@ export const generateSitemap = async (_req: Request, res: Response): Promise<voi
     }
 
     // Fetch dynamic content
-    const [books, authors] = await Promise.all([
+    const [books, authors, articles] = await Promise.all([
       fetchPublishedBooks(),
       fetchPublicAuthors(),
+      fetchDavidArticles(),
     ]);
+
+    // Add David's published articles (/guides/:slug)
+    for (const article of articles) {
+      sitemap += generateUrlEntry(
+        baseUrl,
+        `/guides/${article.slug}`,
+        article.updated_at,
+        'monthly',
+        '0.7',
+        true
+      );
+    }
 
     // Add published books
     for (const book of books) {

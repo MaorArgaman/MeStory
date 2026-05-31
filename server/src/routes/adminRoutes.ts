@@ -32,6 +32,16 @@ import {
   getEarningsSummary,
   listEarnings,
 } from '../controllers/platformEarningsController';
+import {
+  adminGetOverview,
+  adminListRuns,
+  adminGetRun,
+  adminGetConfig,
+  adminUpdateConfig,
+  adminRunNow,
+  adminListArticles,
+  adminSetArticleStatus,
+} from '../controllers/davidController';
 import { authenticate } from '../middleware/auth';
 import { requireAdmin } from '../middleware/adminMiddleware';
 
@@ -134,5 +144,29 @@ router.get('/analytics/engaged-books', getTopEngagedBooks as any);
 
 // GET /api/admin/analytics/social-trends - Social engagement trends
 router.get('/analytics/social-trends', getSocialTrends as any);
+
+// ==================== DAVID (SEO/GEO/AEO AGENT) ====================
+
+// GET /api/admin/david/overview - Status, totals, and progress trend
+router.get('/david/overview', adminGetOverview as any);
+
+// GET /api/admin/david/runs - Daily run log
+router.get('/david/runs', adminListRuns as any);
+
+// GET /api/admin/david/runs/:id - One run with its actions
+router.get('/david/runs/:id', adminGetRun as any);
+
+// GET/PUT /api/admin/david/config - Competitors, schedule scope, on/off
+router.get('/david/config', adminGetConfig as any);
+router.put('/david/config', adminUpdateConfig as any);
+
+// POST /api/admin/david/run-now - Trigger a run immediately
+router.post('/david/run-now', adminRunNow as any);
+
+// GET /api/admin/david/articles - All articles (any status)
+router.get('/david/articles', adminListArticles as any);
+
+// PUT /api/admin/david/articles/:id/status - Publish / unpublish / draft
+router.put('/david/articles/:id/status', adminSetArticleStatus as any);
 
 export default router;

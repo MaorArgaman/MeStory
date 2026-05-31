@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { api } from '../services/api';
 import { useSEO } from '../hooks/useSEO';
 import {
   BookOpen,
@@ -115,10 +117,28 @@ const guides: GuideItem[] = [
   },
 ];
 
+interface DbArticle {
+  slug: string;
+  lang: string;
+  title: string;
+  description: string;
+}
+
 export default function GuidesPage() {
   const { language } = useLanguage();
   const isHebrew = language === 'he';
   const ArrowIcon = isHebrew ? ArrowLeft : ArrowRight;
+
+  // David-authored articles, served from the DB at /guides/:slug.
+  const [dbArticles, setDbArticles] = useState<DbArticle[]>([]);
+  useEffect(() => {
+    api
+      .get('/articles', { suppressErrorToast: true } as any)
+      .then((res) => {
+        if (res.data?.success) setDbArticles(res.data.data || []);
+      })
+      .catch(() => { /* non-critical */ });
+  }, []);
 
   const pageTitle = isHebrew
     ? 'מדריכים - MeStory'
@@ -234,6 +254,37 @@ export default function GuidesPage() {
               })}
             </div>
           </motion.section>
+
+          {/* More articles (DB-backed) */}
+          {dbArticles.length > 0 && (
+            <motion.section
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="mt-16"
+              aria-label={isHebrew ? 'מאמרים נוספים' : 'More Articles'}
+            >
+              <h2 className="text-2xl font-display font-bold text-white mb-6">
+                {isHebrew ? 'מאמרים נוספים' : 'More Articles'}
+              </h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {dbArticles.map((a) => (
+                  <Link key={a.slug} to={`/guides/${a.slug}`}>
+                    <GlassCard hover className="h-full p-6 group transition-all duration-300 hover:border-memorial-gold/30">
+                      <h3 className="text-lg font-display font-bold text-white mb-2 group-hover:text-memorial-gold transition-colors">
+                        {a.title}
+                      </h3>
+                      <p className="text-gray-400 text-sm leading-relaxed line-clamp-3">{a.description}</p>
+                      <div className="flex items-center gap-2 text-memorial-gold font-medium mt-4 group-hover:gap-3 transition-all">
+                        <span>{isHebrew ? 'קרא עכשיו' : 'Read Now'}</span>
+                        <ArrowIcon className="w-4 h-4" />
+                      </div>
+                    </GlassCard>
+                  </Link>
+                ))}
+              </div>
+            </motion.section>
+          )}
 
           {/* Additional Info Section */}
           <motion.section

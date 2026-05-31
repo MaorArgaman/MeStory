@@ -27,8 +27,10 @@ import {
   Calendar,
   Ticket,
   XCircle,
+  Sparkles,
 } from 'lucide-react';
 import { api } from '../../services/api';
+import DavidPanel from './DavidPanel';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton } from '../../components/ui';
@@ -188,7 +190,7 @@ interface Coupon {
   created_at: string;
 }
 
-type Tab = 'overview' | 'users' | 'content' | 'analytics' | 'revenue' | 'organizations' | 'coupons';
+type Tab = 'overview' | 'users' | 'content' | 'analytics' | 'revenue' | 'organizations' | 'coupons' | 'david';
 
 export default function AdminDashboard() {
   const { formatCurrency, formatCurrencyCompact } = useCurrency();
@@ -520,6 +522,7 @@ export default function AdminDashboard() {
             { id: 'analytics' as Tab, label: 'Analytics', icon: BarChart3 },
             { id: 'revenue' as Tab, label: 'Revenue', icon: Wallet },
             { id: 'coupons' as Tab, label: 'קופונים', icon: Ticket },
+            { id: 'david' as Tab, label: 'דוד', icon: Sparkles },
           ].map((tab) => {
             const Icon = tab.icon;
             return (
@@ -545,6 +548,9 @@ export default function AdminDashboard() {
             );
           })}
         </div>
+
+        {/* David Tab */}
+        {activeTab === 'david' && <DavidPanel />}
 
         {/* Overview Tab */}
         {activeTab === 'overview' && stats && (

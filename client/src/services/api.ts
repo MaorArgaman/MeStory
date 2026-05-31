@@ -218,6 +218,9 @@ api.interceptors.response.use(
 
     const url = error.config?.url || '';
     const isAuthCheck = url.includes('/auth/me');
+    // Callers can opt out of the auto error toast (e.g. optional fetches
+    // where a 404 is an expected, handled outcome).
+    const suppressToast = !!(error.config as any)?.suppressErrorToast;
 
     // 402 / 403 with credit-system error codes - dispatch a global event so
     // a top-level modal can react. We don't toast here since the modal
@@ -283,10 +286,10 @@ api.interceptors.response.use(
       }
     } else if (error.response?.data?.error) {
       // Show API error message (but not for silent auth checks)
-      if (!isAuthCheck) {
+      if (!isAuthCheck && !suppressToast) {
         toast.error(error.response.data.error);
       }
-    } else if (error.message && !isAuthCheck) {
+    } else if (error.message && !isAuthCheck && !suppressToast) {
       // Show generic error
       toast.error(error.message);
     }

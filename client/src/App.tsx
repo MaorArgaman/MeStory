@@ -62,6 +62,7 @@ const HowToWriteBook = lazy(() => import('./pages/guides/HowToWriteBook'));
 const HowToPublishBook = lazy(() => import('./pages/guides/HowToPublishBook'));
 const HowToEarnMoney = lazy(() => import('./pages/guides/HowToEarnMoney'));
 const HowToCollaborate = lazy(() => import('./pages/guides/HowToCollaborate'));
+const DynamicGuide = lazy(() => import('./pages/guides/DynamicGuide'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const AccessibilityStatementPage = lazy(() => import('./pages/AccessibilityStatementPage'));
 const FeaturesPage = lazy(() => import('./pages/FeaturesPage'));
@@ -111,6 +112,7 @@ function createLocalizedRoutes() {
       <Route path="/en/guides/publish-book" element={<LocalizedLayout><HowToPublishBook /></LocalizedLayout>} />
       <Route path="/en/guides/earn-money" element={<LocalizedLayout><HowToEarnMoney /></LocalizedLayout>} />
       <Route path="/en/guides/collaborate" element={<LocalizedLayout><HowToCollaborate /></LocalizedLayout>} />
+      <Route path="/en/guides/:slug" element={<LocalizedLayout><DynamicGuide /></LocalizedLayout>} />
       <Route path="/en/accessibility" element={<LocalizedLayout><AccessibilityStatementPage /></LocalizedLayout>} />
       <Route path="/en/features" element={<LocalizedLayout><FeaturesPage /></LocalizedLayout>} />
       <Route path="/en/pricing" element={<LocalizedLayout><PricingPage /></LocalizedLayout>} />
@@ -132,6 +134,7 @@ function createLocalizedRoutes() {
       <Route path="/he/guides/publish-book" element={<LocalizedLayout><HowToPublishBook /></LocalizedLayout>} />
       <Route path="/he/guides/earn-money" element={<LocalizedLayout><HowToEarnMoney /></LocalizedLayout>} />
       <Route path="/he/guides/collaborate" element={<LocalizedLayout><HowToCollaborate /></LocalizedLayout>} />
+      <Route path="/he/guides/:slug" element={<LocalizedLayout><DynamicGuide /></LocalizedLayout>} />
       <Route path="/he/accessibility" element={<LocalizedLayout><AccessibilityStatementPage /></LocalizedLayout>} />
       <Route path="/he/features" element={<LocalizedLayout><FeaturesPage /></LocalizedLayout>} />
       <Route path="/he/pricing" element={<LocalizedLayout><PricingPage /></LocalizedLayout>} />
@@ -380,6 +383,14 @@ function AppContent() {
                 element={
                   <Layout>
                     <PageBoundary><HowToCollaborate /></PageBoundary>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/guides/:slug"
+                element={
+                  <Layout>
+                    <PageBoundary><DynamicGuide /></PageBoundary>
                   </Layout>
                 }
               />
