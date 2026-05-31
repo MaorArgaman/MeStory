@@ -168,7 +168,7 @@ export default function RegisterPage() {
               <span className="gradient-gold">{t('register.side_title_2', 'Writing Journey')}</span>
             </h2>
             <p className="text-xl text-gray-300 max-w-md">
-              {t('register.side_description', 'Join thousands of authors who turned their ideas into published books')}
+              {t('register.side_description', 'Join authors turning their ideas into published books')}
             </p>
           </motion.div>
 

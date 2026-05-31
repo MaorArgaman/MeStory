@@ -201,8 +201,8 @@ export function HomeSEO({ locale = 'he_IL' }: { locale?: 'he_IL' | 'en_US' }) {
   };
 
   const descriptions = {
-    he: 'צור ספרים מקצועיים בקלות עם הכלים החכמים של MeStory. כתיבה, עיצוב ופרסום - הכל במקום אחד. הצטרף לאלפי סופרים ישראלים שכבר יצרו את הסיפור שלהם.',
-    en: 'Create professional books easily with MeStory\'s smart AI tools. Writing, design, and publishing - all in one place. Join thousands of Israeli authors who already created their story.',
+    he: 'צור ספרים מקצועיים בקלות עם הכלים החכמים של MeStory. כתיבה, עיצוב ופרסום - הכל במקום אחד. הצטרף לסופרים ישראלים שיוצרים את הסיפור שלהם.',
+    en: 'Create professional books easily with MeStory\'s smart AI tools. Writing, design, and publishing - all in one place. Join Israeli authors creating their story.',
   };
 
   return (
@@ -228,8 +228,8 @@ export function MarketplaceSEO({ locale = 'he_IL' }: { locale?: 'he_IL' | 'en_US
   };
 
   const descriptions = {
-    he: 'גלה מאות ספרים מדהימים מיוצרים ישראליים בחנות MeStory. סיפורים מקוריים, רומנים, ספרי ילדים ועוד. קנה, קרא ותמוך ביוצרים מקומיים.',
-    en: 'Discover hundreds of amazing books from Israeli creators in the MeStory marketplace. Original stories, novels, children\'s books and more. Buy, read, and support local authors.',
+    he: 'גלה ספרים מדהימים מיוצרים ישראליים בחנות MeStory. סיפורים מקוריים, רומנים, ספרי ילדים ועוד. קנה, קרא ותמוך ביוצרים מקומיים.',
+    en: 'Discover amazing books from Israeli creators in the MeStory marketplace. Original stories, novels, children\'s books and more. Buy, read, and support local authors.',
   };
 
   return (
