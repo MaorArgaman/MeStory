@@ -12,11 +12,18 @@
 import { DesignSystemId } from '../designPlanSchema';
 import { SystemModule, SystemVariant } from './types';
 import { memoirWarm } from './memoirWarm';
+import { editorialModern } from './editorialModern';
+import { romanticVintage } from './romanticVintage';
+import { minimalistNordic } from './minimalistNordic';
+import { fairytaleClassic } from './fairytaleClassic';
 import { buildTypeScale, SCALE_RATIOS, ScaleRatioName } from '../tokens';
 
 export const SYSTEM_MODULES: Partial<Record<DesignSystemId, SystemModule>> = {
   'memoir-warm': memoirWarm,
-  // editorial-modern, storybook-illustrated → added next in Phase A.
+  'editorial-modern': editorialModern,
+  'romantic-vintage': romanticVintage,
+  'minimalist-nordic': minimalistNordic,
+  'fairytale-classic': fairytaleClassic,
 };
 
 export function getSystemModule(id: DesignSystemId): SystemModule | undefined {

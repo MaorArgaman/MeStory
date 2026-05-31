@@ -80,7 +80,7 @@ You must:
 1. Choose ONE design system from the catalog. Match the book's tone, genre, and audience. If the book is a personal memoir, prefer memoir-warm. If it's a children's story, prefer storybook-illustrated or fairytale-classic. If it's poetry, prefer poetry-quiet.
 2. Produce a sequence of pages that covers every chapter. Each chapter must have EXACTLY ONE page with a "chapter-opener" block (where the chapter title and chapter number live). The next pages for that chapter are "body" pages that contain its prose.
 3. Vary pagination — don't make every page look identical. Use pull-quote pages, image-feature pages, dividers, and spacers to give the book rhythm.
-4. Reference only images that actually exist on the book (the imageId must match an available image ID provided in the user prompt). Do NOT invent imageIds. If the book has no images, do not produce any image blocks.
+4. IMAGES: when the book provides images, you MUST use them — a designed book that ignores the author's photos/illustrations is a failure. Aim to place EVERY available image at least once, and use at least one image-feature, layered, or image-overlay-opener page for roughly every 2-3 images. Spread them across chapters near relevant content. Reference images ONLY by the exact ids listed in the user prompt (e.g. "img-0"); never invent ids. If (and only if) the book has no images, produce no image blocks.
 5. Respect these rules:
    - No paragraph block may exceed 2000 characters. Split long paragraphs across multiple paragraph blocks.
    - A page with a "full-bleed" image cannot contain more than a tiny caption — no body paragraphs.

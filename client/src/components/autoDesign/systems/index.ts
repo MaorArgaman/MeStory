@@ -8,10 +8,20 @@ import type { DesignSystemId } from '../designPlanTypes';
 import type { SystemVisual } from './types';
 import memoirWarmVisual from './memoirWarm';
 import { makeGenericVisual } from './generic';
+import { makeSystemVisual } from './systemFactory';
+import {
+  editorialModernSpec,
+  romanticVintageSpec,
+  minimalistNordicSpec,
+  fairytaleClassicSpec,
+} from './factorySpecs';
 
 const BUILT: Partial<Record<DesignSystemId, SystemVisual>> = {
   'memoir-warm': memoirWarmVisual,
-  // editorial-modern, storybook-illustrated → added next in Phase A.
+  'editorial-modern': makeSystemVisual(editorialModernSpec),
+  'romantic-vintage': makeSystemVisual(romanticVintageSpec),
+  'minimalist-nordic': makeSystemVisual(minimalistNordicSpec),
+  'fairytale-classic': makeSystemVisual(fairytaleClassicSpec),
 };
 
 const genericCache = new Map<string, SystemVisual>();

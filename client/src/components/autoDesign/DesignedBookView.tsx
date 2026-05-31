@@ -23,7 +23,7 @@ const PAGE_W_MM = 148;
 const PAGE_H_MM = 210;
 
 const GOOGLE_FONTS_HREF =
-  'https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700&family=Heebo:wght@300;400;600;800&family=Assistant:wght@300;400;600;700&family=Suez+One&family=David+Libre:wght@400;700&family=Alef:wght@400;700&family=Rubik:wght@400;500;700&family=Secular+One&display=swap';
+  'https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;600;800&family=Assistant:wght@300;400;600;700&family=Suez+One&family=David+Libre:wght@400;700&family=Alef:wght@400;700&family=Rubik:wght@400;500;700&family=Secular+One&family=Bellefair&family=Miriam+Libre:wght@400;700&display=swap';
 
 function ensureFontsLoaded() {
   if (typeof document === 'undefined') return;

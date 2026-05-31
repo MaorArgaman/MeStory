@@ -3474,6 +3474,33 @@ export default function BookLayoutPage() {
                   </motion.button>
                 </div>
 
+                {/* Auto-design status — surfaces the saved designed result in the
+                    layout so the user sees it exists and can open the preview. */}
+                {(book as any)?.autoDesignPlan && (
+                  <div className="mb-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-sm text-emerald-200">
+                        {language === 'he' ? 'עיצוב אוטומטי מוכן ושמור' : 'Auto-design saved'}
+                        {(book as any)?.autoDesignPlan?.designSystem && (
+                          <span className="opacity-75"> · {(book as any).autoDesignPlan.designSystem}</span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setShowAutoDesignModal(true)}
+                        className="shrink-0 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
+                      >
+                        {language === 'he' ? 'צפה בעיצוב' : 'View design'}
+                      </button>
+                    </div>
+                    <iframe
+                      src={`/print/${bookId}/designed`}
+                      title="designed-preview"
+                      className="mt-3 w-full rounded-lg border border-white/10 bg-white"
+                      style={{ height: 420 }}
+                    />
+                  </div>
+                )}
+
                 {/* Template Selection */}
                 <div className="mb-6 space-y-3">
                   <button
