@@ -78,7 +78,7 @@ const checks: EnvCheck[] = [
     name: 'GEMINI_API_KEY',
     value: process.env.GEMINI_API_KEY,
     required: true,
-    hint: 'Google Gemini API key. Required for all AI text/design/TTS features.',
+    hint: 'Google Gemini API key. Required for all AI text/design features.',
   },
 ];
 

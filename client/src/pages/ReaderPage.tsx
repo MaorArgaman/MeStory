@@ -12,7 +12,6 @@ import {
   Moon,
   Palette,
   Type,
-  BookOpen,
   Share2,
   Star,
   Volume2,
@@ -31,35 +30,14 @@ import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton } from '../components/ui';
 import ChatModal from '../components/messaging/ChatModal';
 import ShareModal from '../components/social/ShareModal';
-import AudioPlayer from '../components/reader/AudioPlayer';
 import { MentionDisplay } from '../components/mentions';
 import { Mention } from '../services/userApi';
-
-interface AudioTrack {
-  url: string;
-  duration: number;
-  voice: string;
-  language?: 'en' | 'he';
-  generatedAt: string;
-}
-
-interface ChapterAudio {
-  // Language-specific voices
-  maleVoiceEn?: AudioTrack;
-  femaleVoiceEn?: AudioTrack;
-  maleVoiceHe?: AudioTrack;
-  femaleVoiceHe?: AudioTrack;
-  // Legacy fields
-  maleVoice?: AudioTrack;
-  femaleVoice?: AudioTrack;
-}
 
 interface Chapter {
   _id: string;
   title: string;
   content: string;
   order: number;
-  audio?: ChapterAudio;
 }
 
 interface TranslatedContent {
@@ -414,11 +392,6 @@ export default function ReaderPage() {
     return book?.chapters?.[currentChapterIndex];
   };
 
-  // Get original chapter (always from the original book - used for audio)
-  const getOriginalChapter = () => {
-    return book?.chapters?.[currentChapterIndex];
-  };
-
   // Get current book title (original or translated)
   const getCurrentTitle = () => {
     if (showTranslation && translatedBook) {
@@ -437,7 +410,6 @@ export default function ReaderPage() {
   };
 
   const currentChapter = getCurrentChapter();
-  const originalChapter = getOriginalChapter();
   const displayTitle = getCurrentTitle();
   const progress = book?.chapters?.length ? ((currentChapterIndex + 1) / book.chapters.length) * 100 : 0;
 
@@ -1245,32 +1217,8 @@ export default function ReaderPage() {
         authorName={book.author.name}
       />
 
-      {/* Audio Player - always use original chapter for audio data */}
-      {originalChapter?.audio && (
-        originalChapter.audio.maleVoice?.url ||
-        originalChapter.audio.femaleVoice?.url ||
-        originalChapter.audio.maleVoiceEn?.url ||
-        originalChapter.audio.femaleVoiceEn?.url ||
-        originalChapter.audio.maleVoiceHe?.url ||
-        originalChapter.audio.femaleVoiceHe?.url
-      ) && (
-        <AudioPlayer
-          bookId={book._id}
-          chapterId={originalChapter._id}
-          chapterTitle={currentChapter?.title || originalChapter.title}
-          chapterAudio={originalChapter.audio}
-          bookLanguage={getDisplayLanguage()}
-          onChapterChange={(direction) => {
-            if (direction === 'next') {
-              nextChapter();
-            } else {
-              prevChapter();
-            }
-          }}
-          hasNextChapter={currentChapterIndex < (book.chapters?.length || 1) - 1}
-          hasPrevChapter={currentChapterIndex > 0}
-        />
-      )}
+      {/* Server-side audio narration (paid TTS) was removed. In-browser
+          read-aloud is still available via the narration controls above. */}
 
       <style>{`
         .perspective-1000 {

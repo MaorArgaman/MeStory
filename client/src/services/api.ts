@@ -125,7 +125,6 @@ const IDEMPOTENCY_PATH_PATTERNS: RegExp[] = [
   /^\/analysis\//,
   /^\/voice\//,
   /^\/interview\//,
-  /^\/tts\//,
 ];
 
 function shouldAutoIdempotent(method: string | undefined, url: string | undefined): boolean {

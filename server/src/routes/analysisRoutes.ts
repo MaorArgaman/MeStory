@@ -15,14 +15,31 @@ import {
 } from '../controllers/analysisController';
 import { authenticate } from '../middleware/auth';
 import { requireCredits } from '../middleware/requireCredits';
+import { UserRole } from '../models/User';
 import rateLimit from 'express-rate-limit';
 
 const router = Router();
 
-// Rate limiter for analysis endpoints
+// Rate limiter for analysis endpoints. Per-user and role-aware:
+//   - Paying plans get a generous budget so real-time writing guidance and
+//     analysis stay smooth (good UX inside a purchased plan).
+//   - Free / unauthenticated get a tight budget. This is the profit guardrail
+//     for writing_guidance, which is free (0 credits) and would otherwise be
+//     the one uncapped LLM call available to Free users.
 const analysisLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 15, // 15 requests per minute per IP
+  max: (req: any) => {
+    switch (req.user?.role) {
+      case UserRole.PREMIUM:
+      case UserRole.ADMIN:
+        return 150;
+      case UserRole.STANDARD:
+        return 100;
+      default:
+        return 15; // free / unauthenticated
+    }
+  },
+  keyGenerator: (req: any) => req.user?.id || req.ip,
   message: {
     success: false,
     message: 'Too many analysis requests, please try again later',

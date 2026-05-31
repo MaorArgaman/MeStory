@@ -24,7 +24,10 @@ import { plannerSystemsCatalog, getDesignSystem } from './designSystems';
 import { plannerBuiltSystemsDetail } from './systems';
 
 const MODEL = 'claude-sonnet-4-6';
-const MAX_OUTPUT_TOKENS = 16000;
+// Output cap kept at 12k (down from 16k): a design plan JSON fits comfortably,
+// and the tighter cap bounds worst-case Claude cost so auto_design_premium
+// (90 credits) keeps profit >= 4x even on a 2-call revision. See creditCosts.ts.
+const MAX_OUTPUT_TOKENS = 12000;
 
 let client: Anthropic | null = null;
 function getClient(): Anthropic {
@@ -87,7 +90,7 @@ You must:
 8. Set "tone" to a short tag like "intimate-warm" or "playful-bright" — used for analytics only.
 
 RICH DESIGN VOCABULARY — use these to reach a professional, varied result (don't just stack body paragraphs):
-- For FULLY-BUILT systems (detailed below) you MUST set "variant" to the id of the palette variant whose mood best matches the book, and copy that variant's exact palette into "palette". Also set "scaleRatio" to one of the system's allowed ratios.
+- For FULLY-BUILT systems (detailed below) you MUST set "variant" to the id of the palette variant whose mood best matches the book, and copy that variant's exact palette into "palette". Also set "scaleRatio" to one of the system's allowed ratios. EXCEPTION: if the user prompt contains a COVER DESIGN block, pick the variant CLOSEST to the cover colors and you may nudge the copied palette toward the cover's hues so the interior and cover match — visual unity with the cover takes priority over using a variant's defaults verbatim.
 - chapter-opener: set "template" to one of the system's opener templates. Use "image-overlay" (and set its "imageId") ONLY when that chapter has a strong lead photo — it makes a dramatic full-page opening. Otherwise use "numeral-ornament" or the system's other templates. VARY the template across chapters so openings don't feel repetitive.
 - image: set "treatment" (e.g. framed, polaroid, postcard, duotone, vignette, rounded) from the system's supported treatments. Choose treatments that suit the mood (polaroid/postcard feel personal; duotone/vignette feel cinematic). Use "placement" to vary: framed-center, side-left/right (text wraps), full-bleed, full-bleed-top.
 - layered: a full/partial-page image with a few short overlay texts on top, behind a scrim (use "gradient-bottom" or "dark" so text stays legible). Perfect for a dramatic spread or feature page (kind="spread" or "image-feature"). NEVER put long body text in a layered overlay — only a heading + maybe one short line.
@@ -108,6 +111,34 @@ FULLY-BUILT systems — these have palette variants and richer rendering. Prefer
 ${plannerBuiltSystemsDetail()}
 
 Return ONLY through the ${SUBMIT_TOOL_NAME} tool. Do not produce any free text.`;
+}
+
+/**
+ * Extract the cover's colors + title font so the planner can harmonize the
+ * interior palette/typography with the cover the user already designed.
+ * Returns '' when there's no cover to match. This is what makes the cover and
+ * the typeset interior feel like ONE designed object instead of two unrelated
+ * designs.
+ */
+function buildCoverHarmonyBlock(book: any): string {
+  const front = book?.coverDesign?.front;
+  if (!front) return '';
+  const colors: string[] = [];
+  if (front.backgroundColor) colors.push(`background ${front.backgroundColor}`);
+  if (Array.isArray(front.gradientColors) && front.gradientColors.length) {
+    colors.push(`gradient [${front.gradientColors.join(', ')}]`);
+  }
+  if (front.title?.color) colors.push(`title text ${front.title.color}`);
+  if (front.authorName?.color) colors.push(`author text ${front.authorName.color}`);
+  if (book?.coverDesign?.back?.backgroundColor) colors.push(`back-cover ${book.coverDesign.back.backgroundColor}`);
+  const titleFont = front.title?.font;
+  if (colors.length === 0 && !titleFont) return '';
+
+  return `
+
+COVER DESIGN — the user already designed the cover. The interior MUST visually match it so the book feels like one cohesive object:
+- Cover colors: ${colors.join(', ') || '(none specified)'}${titleFont ? `\n- Cover title font: ${titleFont}` : ''}
+Choose the palette VARIANT whose colors are closest to the cover, and tune your "palette" toward these cover hues (same color family / tasteful complement) while staying readable. If a cover title font is given, prefer a heading font that pairs naturally with it. Do NOT pick a palette that clashes with the cover (e.g. a cool blue interior for a warm brown cover).`;
 }
 
 /**
@@ -170,7 +201,7 @@ Chapters (${book.chapters?.length || 0}):
 ${chaptersSummary || '(no chapters)'}
 
 Available images:
-${imagesSummary}${previousSystemsBlock}${revisionBlock}
+${imagesSummary}${buildCoverHarmonyBlock(book)}${previousSystemsBlock}${revisionBlock}
 
 Produce a complete DesignPlan via ${SUBMIT_TOOL_NAME}.`;
 }

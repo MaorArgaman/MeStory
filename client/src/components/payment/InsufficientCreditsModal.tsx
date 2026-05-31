@@ -33,8 +33,6 @@ interface ModalState {
 const FEATURE_NAMES_HE: Record<string, string> = {
   voice_transcribe_per_minute: 'כתיבה קולית',
   voice_interview_session: 'ראיון קולי AI',
-  tts_chapter: 'הקראת פרק',
-  tts_full_book: 'אודיובוק מלא',
   ai_cover_single: 'כריכת AI',
   ai_cover_variations: 'וריאציות כריכה',
   ai_illustration: 'איור AI',

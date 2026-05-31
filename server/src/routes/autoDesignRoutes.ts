@@ -20,10 +20,27 @@ import { AuthRequest } from '../types';
 import { generateDesign } from '../services/autoDesign/orchestrator';
 import { renderDesignedBookDocx } from '../services/autoDesign/renderDocx';
 import { DesignPlan } from '../services/autoDesign/designPlanSchema';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 
 router.use(authenticate as any);
+
+// Exports are free (the design was already paid for) but PDF runs headless
+// Chrome (real compute). A generous per-user burst cap stops a runaway loop /
+// script from turning a free endpoint into an unbounded cost, without getting
+// in the way of a user legitimately re-exporting their book several times.
+const exportLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 30,
+  keyGenerator: (req: any) => req.user?.id || req.ip,
+  message: {
+    success: false,
+    error: 'Too many export requests, please wait a moment and try again',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 /**
  * Trigger a new auto-design pass. Charges credits, bumps the per-book
@@ -106,7 +123,7 @@ router.post(
  * Stream the current designed book as a .docx. No credit charge — the
  * design was paid for at generation time.
  */
-router.get('/:bookId/export.docx', async (req: AuthRequest, res: Response) => {
+router.get('/:bookId/export.docx', exportLimiter, async (req: AuthRequest, res: Response) => {
   const bookId = req.params.bookId;
   if (!req.user) {
     res.status(401).json({ success: false, error: 'Authentication required' });
@@ -149,7 +166,7 @@ router.get('/:bookId/export.docx', async (req: AuthRequest, res: Response) => {
  * page the user previews (/print/:id/designed) via headless Chrome — so the
  * file matches the preview exactly (WYSIWYG). No credit charge.
  */
-router.get('/:bookId/export.pdf', async (req: AuthRequest, res: Response) => {
+router.get('/:bookId/export.pdf', exportLimiter, async (req: AuthRequest, res: Response) => {
   const bookId = req.params.bookId;
   if (!req.user) {
     res.status(401).json({ success: false, error: 'Authentication required' });
