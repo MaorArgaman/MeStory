@@ -153,4 +153,7 @@ export interface BookForRender {
   author?: { name?: string };
   chapters?: Array<{ title: string; content: string }>;
   pageImages?: BookImageRef[];
+  /** Manual-layout pages may also hold placed images; the renderer merges
+   *  these with pageImages (same order as the server planner). */
+  pageLayout?: { pages?: Array<{ images?: Array<{ url?: string }> }> };
 }

@@ -22,6 +22,7 @@ import {
 } from './designPlanSchema';
 import { plannerSystemsCatalog, getDesignSystem } from './designSystems';
 import { plannerBuiltSystemsDetail } from './systems';
+import { collectBookImages } from './collectImages';
 
 const MODEL = 'claude-sonnet-4-6';
 // Output cap kept at 12k (down from 16k): a design plan JSON fits comfortably,
@@ -158,14 +159,15 @@ function buildUserPrompt(input: PlannerInput): string {
     })
     .join('\n');
 
-  // Images are referenced by STABLE ARRAY INDEX ("img-0", "img-1", …), not
-  // by _id — page_images entries are often created without any id field, so
-  // index is the only reliable handle. Renderers resolve the same way.
+  // Images are referenced by STABLE INDEX id ("img-0", …) over a UNIFIED list
+  // that merges book.pageImages + pageLayout.pages[].images (collectBookImages).
+  // Index is the only reliable handle — page_images entries often lack any _id.
+  const collected = collectBookImages(book);
   const imagesSummary =
-    (book.pageImages || [])
-      .map((img: IPageImage, idx: number) => {
+    collected
+      .map((img) => {
         const desc = img.prompt ? `, depicts: ${img.prompt.replace(/\s+/g, ' ').slice(0, 90)}` : '';
-        return `- id="img-${idx}" (${img.isAiGenerated ? 'AI-generated illustration' : 'photo'}${desc})`;
+        return `- id="${img.id}" (${img.isAiGenerated ? 'AI-generated illustration' : 'photo'}${desc})`;
       })
       .join('\n') || '(no images available)';
 

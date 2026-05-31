@@ -20,6 +20,7 @@
 import { generateWithBreaker } from '../geminiClient';
 import { IBook } from '../../models/Book';
 import { DesignPlan, validateDesignPlan, ValidationIssue } from './designPlanSchema';
+import { collectBookImages } from './collectImages';
 
 export interface CriticInput {
   book: IBook;
@@ -39,11 +40,9 @@ export interface CriticOutput {
 export async function critiquePlan(input: CriticInput): Promise<CriticOutput> {
   const { book, plan } = input;
 
-  // Images are referenced by stable array index ("img-0", …) — same scheme
-  // the planner is given. (page_images entries usually lack any _id.)
-  const availableImageIds = new Set(
-    (book.pageImages || []).map((_img, idx) => `img-${idx}`)
-  );
+  // Images are referenced by stable index id over the UNIFIED image list
+  // (pageImages + pageLayout pages) — same scheme the planner is given.
+  const availableImageIds = new Set(collectBookImages(book).map((img) => img.id));
   const chapterCount = book.chapters?.length || 0;
 
   const deterministicIssues = validateDesignPlan(plan, {

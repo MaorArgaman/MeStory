@@ -31,6 +31,7 @@ import {
 import axios from 'axios';
 import { IBook, IPageImage } from '../../models/Book';
 import { DesignPlan, Block, Page } from './designPlanSchema';
+import { imageUrlById } from './collectImages';
 
 const HEBREW_RTL = { bidirectional: true } as const;
 
@@ -83,6 +84,14 @@ export async function renderDesignedBookDocx(
       }
     });
   });
+
+  // Back cover — synopsis + author, on its own final page. Without this the
+  // Word export dropped the blurb the user wrote.
+  const backCover = buildBackCover(book, plan);
+  if (backCover.length) {
+    children.push(new Paragraph({ ...HEBREW_RTL, children: [new PageBreak()] }));
+    children.push(...backCover);
+  }
 
   const doc = new Document({
     creator: 'MeStory',
@@ -176,6 +185,71 @@ async function buildCoverPage(
     console.warn('[renderDocx] cover image fetch failed, skipping cover:', err?.message);
     return [];
   }
+}
+
+/**
+ * Build the back-cover content: synopsis (from coverDesign.back.synopsis →
+ * book.synopsis → book.description) + author bio + title. Text-only — Word
+ * can't composite over a back image, so we render the blurb cleanly.
+ */
+function buildBackCover(book: IBook, plan: DesignPlan): Paragraph[] {
+  const back = (book as any).coverDesign?.back || {};
+  const synopsis = back.synopsis || book.synopsis || book.description || '';
+  const bio = back.authorBio || '';
+  if (!synopsis && !bio) return [];
+
+  const out: Paragraph[] = [
+    new Paragraph({
+      ...HEBREW_RTL,
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 600, after: 240 },
+      children: [
+        new TextRun({
+          text: 'על הספר',
+          bold: true,
+          size: PT(plan.typography.scale[3]),
+          font: plan.typography.headingFamily,
+          color: stripHash(plan.palette.accent),
+        }),
+      ],
+    }),
+  ];
+  if (synopsis) {
+    out.push(
+      new Paragraph({
+        ...HEBREW_RTL,
+        alignment: AlignmentType.RIGHT,
+        spacing: { line: Math.round(plan.typography.leading * 240), after: 200 },
+        children: [
+          new TextRun({
+            text: synopsis,
+            size: PT(plan.typography.baseSize),
+            font: plan.typography.bodyFamily,
+            color: stripHash(plan.palette.text),
+          }),
+        ],
+      })
+    );
+  }
+  if (bio) {
+    out.push(
+      new Paragraph({
+        ...HEBREW_RTL,
+        alignment: AlignmentType.RIGHT,
+        spacing: { after: 120 },
+        children: [
+          new TextRun({
+            text: bio,
+            italics: true,
+            size: PT(plan.typography.scale[1]),
+            font: plan.typography.bodyFamily,
+            color: stripHash(plan.palette.muted),
+          }),
+        ],
+      })
+    );
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -751,15 +825,9 @@ async function prefetchImages(book: IBook, plan: DesignPlan): Promise<Map<string
   });
   if (usedIds.size === 0) return out;
 
-  // Resolve ids the same way the planner/renderers do: primarily by stable
-  // array index ("img-N"); fall back to a real _id when present.
-  const urlById = new Map<string, string>();
-  (book.pageImages || []).forEach((img: IPageImage, idx: number) => {
-    if (img.url) {
-      urlById.set(`img-${idx}`, img.url);
-      if (img._id) urlById.set(img._id, img.url);
-    }
-  });
+  // Resolve ids over the UNIFIED image list (pageImages + pageLayout pages),
+  // exactly as the planner was given them.
+  const urlById = imageUrlById(book);
 
   await Promise.all(
     Array.from(usedIds).map(async (id) => {

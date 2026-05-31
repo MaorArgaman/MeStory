@@ -15,6 +15,7 @@ import { useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import type { Block, BookForRender, DesignPlan, Page as PlanPage } from './designPlanTypes';
 import { deriveColorRoles, rgba, type ColorRoles } from './designTokens';
+import { imageUrlById } from './collectImages';
 import { getSystemVisual } from './systems';
 import type { SystemVisual } from './systems/types';
 
@@ -34,13 +35,11 @@ function ensureFontsLoaded() {
 }
 
 function findImageUrl(book: BookForRender, imageId: string): string | null {
-  // Primary scheme: stable array index "img-N" (page_images often lack _id).
-  const m = /^img-(\d+)$/.exec(imageId);
-  if (m) {
-    const idx = parseInt(m[1], 10);
-    return (book.pageImages || [])[idx]?.url || null;
-  }
-  // Fallback: match by _id if a real one exists.
+  // Resolve over the UNIFIED list (pageImages + pageLayout pages), matching
+  // the server planner's "img-N" scheme exactly.
+  const direct = imageUrlById(book).get(imageId);
+  if (direct) return direct;
+  // Fallback: match by a real _id if one happens to exist.
   const img = (book.pageImages || []).find((i) => i._id === imageId);
   return img?.url || null;
 }
@@ -582,9 +581,12 @@ function PageRenderer({
 export interface DesignedBookViewProps {
   book: BookForRender;
   plan: DesignPlan;
+  /** When true, render just the pages (no outer gray backdrop/padding) —
+   *  the parent supplies the surrounding layout (e.g. cover + interior). */
+  embedded?: boolean;
 }
 
-export default function DesignedBookView({ book, plan }: DesignedBookViewProps) {
+export default function DesignedBookView({ book, plan, embedded }: DesignedBookViewProps) {
   ensureFontsLoaded();
 
   const system = useMemo(() => getSystemVisual(plan.designSystem), [plan.designSystem]);
@@ -608,13 +610,25 @@ export default function DesignedBookView({ book, plan }: DesignedBookViewProps) 
     []
   );
 
+  const pages = plan.pages.map((page, i) => (
+    <PageRenderer key={i} page={page} pageNumber={i + 1} ctx={ctx} />
+  ));
+
+  if (embedded) {
+    // Parent owns the backdrop/padding (cover + interior + back cover wrap).
+    return (
+      <>
+        <style>{pageCss}</style>
+        {pages}
+      </>
+    );
+  }
+
   return (
     <>
       <style>{pageCss}</style>
       <div style={{ background: '#E8E5DD', minHeight: '100vh', padding: '12mm 0', direction: 'rtl' }}>
-        {plan.pages.map((page, i) => (
-          <PageRenderer key={i} page={page} pageNumber={i + 1} ctx={ctx} />
-        ))}
+        {pages}
       </div>
     </>
   );

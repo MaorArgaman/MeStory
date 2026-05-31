@@ -682,7 +682,7 @@ export class Book {
    * metadata + chapters (for content analysis). Skips page_images,
    * translations, page_layout, reviews, etc.
    */
-  static readonly DESIGN_COLUMNS = 'id,author_id,title,genre,language,description,synopsis,story_context,writing_goal,target_audience,chapters,characters,cover_design,page_images,publishing_status,statistics,tags,ai_design_state,auto_design_plan,auto_design_uses,is_collaborative,invitations,created_at,updated_at';
+  static readonly DESIGN_COLUMNS = 'id,author_id,title,genre,language,description,synopsis,story_context,writing_goal,target_audience,chapters,characters,cover_design,page_images,page_layout,publishing_status,statistics,tags,ai_design_state,auto_design_plan,auto_design_uses,is_collaborative,invitations,created_at,updated_at';
 
   static async findByIdForDesign(id: string): Promise<IBook | null> {
     return withRetry(async () => {
