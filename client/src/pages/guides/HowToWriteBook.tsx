@@ -378,8 +378,8 @@ export default function HowToWriteBook() {
               </h2>
               <p className="text-gray-300 mb-6 max-w-xl mx-auto">
                 {isHebrew
-                  ? 'הצטרפו לאלפי סופרים שכבר יצרו ספרים מדהימים עם MeStory. התחילו היום בחינם!'
-                  : 'Join thousands of authors who have already created amazing books with MeStory. Start today for free!'}
+                  ? 'הצטרפו לסופרים שיוצרים ספרים מדהימים עם MeStory. התחילו היום בחינם!'
+                  : 'Join authors creating amazing books with MeStory. Start today for free!'}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link

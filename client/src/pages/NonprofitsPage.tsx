@@ -38,8 +38,8 @@ const BENEFITS: BenefitItem[] = [
     icon: Users,
     titleHe: 'יצירה משותפת בקהילה',
     titleEn: 'Community co-creation',
-    descHe: 'אספו עדויות ממאות בני משפחה במקביל. כל אחד תורם דרך קישור פרטי, וצוות העמותה עורך ומאחד לספר אחד מכובד.',
-    descEn: 'Collect testimonies from hundreds of family members in parallel. Each contributes via a private link, and the organization team edits and combines into one dignified book.',
+    descHe: 'אספו עדויות מבני המשפחה במקביל. כל אחד תורם דרך קישור פרטי, וצוות העמותה עורך ומאחד לספר אחד מכובד.',
+    descEn: 'Collect testimonies from family members in parallel. Each contributes via a private link, and the organization team edits and combines into one dignified book.',
   },
   {
     icon: BookOpen,
@@ -91,8 +91,8 @@ const USE_CASES: UseCaseItem[] = [
     image: '/img/community-workshop.png',
     titleHe: 'קהילות וארגוני מורשת',
     titleEn: 'Communities and heritage organizations',
-    descHe: 'תיעוד היסטוריית הקהילה, סיפורי מייסדים ודמויות מפתח, בספר אחד שייצג את הקהילה למאות שנים.',
-    descEn: 'Documenting community history, founder stories and key figures, in one book representing the community for hundreds of years.',
+    descHe: 'תיעוד היסטוריית הקהילה, סיפורי מייסדים ודמויות מפתח, בספר אחד שייצג את הקהילה לדורות.',
+    descEn: 'Documenting community history, founder stories and key figures, in one book representing the community for generations.',
   },
   {
     image: '/img/new/social-grandma-yemenite.png',
@@ -151,8 +151,8 @@ export default function NonprofitsPage() {
           </h1>
           <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto">
             {isHebrew
-              ? 'MeStory עובדת עם עמותות הנצחה, ארגוני שואה, קהילות וגופי מורשת כדי להפוך אלפי סיפורים לספרים מכובדים, במחיר מסובסד וליווי אישי.'
-              : 'MeStory partners with memorial nonprofits, Holocaust organizations, communities, and heritage bodies to turn thousands of stories into dignified books, at a subsidized price and with personal support.'}
+              ? 'MeStory עובדת עם עמותות הנצחה, ארגוני שואה, קהילות וגופי מורשת כדי להפוך סיפורים לספרים מכובדים, במחיר מסובסד וליווי אישי.'
+              : 'MeStory partners with memorial nonprofits, Holocaust organizations, communities, and heritage bodies to turn stories into dignified books, at a subsidized price and with personal support.'}
           </p>
         </motion.header>
       </div>

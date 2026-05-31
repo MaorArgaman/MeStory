@@ -448,8 +448,8 @@ export default function HowToEarnMoney() {
               </h2>
               <p className="text-gray-300 mb-6 max-w-xl mx-auto">
                 {isHebrew
-                  ? 'הצטרפו לאלפי סופרים שכבר מרוויחים מהספרים שלהם ב-MeStory. כתבו, פרסמו והתחילו להרוויח היום!'
-                  : 'Join thousands of authors already earning from their books on MeStory. Write, publish, and start earning today!'}
+                  ? 'הצטרפו לסופרים שמרוויחים מהספרים שלהם ב-MeStory. כתבו, פרסמו והתחילו להרוויח היום!'
+                  : 'Join authors earning from their books on MeStory. Write, publish, and start earning today!'}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
