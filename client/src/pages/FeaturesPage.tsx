@@ -54,12 +54,12 @@ const FEATURES: Feature[] = [
     descHe: 'עיצוב עטיפה מקצועי בכמה קליקים, עם תבניות, גופנים, גרדיאנטים ותמונות AI.',
     descEn: 'Professional cover design in a few clicks, with templates, fonts, gradients, and AI imagery.',
     bulletsHe: [
-      'מאות תבניות מותאמות לספרי הנצחה ואוטוביוגרפיה',
+      'מבחר עשיר של תבניות מותאמות לספרי הנצחה ואוטוביוגרפיה',
       'יצירת תמונות עטיפה בהתאמה אישית עם AI',
       'עטיפה קדמית, אחורית ושדרה, מוכן לדפוס',
     ],
     bulletsEn: [
-      'Hundreds of templates for memorial books and autobiographies',
+      'A rich selection of templates for memorial books and autobiographies',
       'Custom AI-generated cover imagery',
       'Front, back and spine, print-ready',
     ],

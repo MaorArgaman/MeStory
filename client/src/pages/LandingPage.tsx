@@ -5,7 +5,6 @@ import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import {
   BookOpen,
   Palette,
-  TrendingUp,
   Zap,
   Globe,
   ArrowRight,
@@ -54,9 +53,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const isHebrew = language === 'he';
-  const [booksPublishedToday, setBooksPublishedToday] = useState(127);
   const [heroIndex, setHeroIndex] = useState(0);
-  const [storiesWritten] = useState(3847);
   const { scrollY } = useScroll();
 
   const heroOpacity = useTransform(scrollY, [0, 300], [1, 0]);
@@ -73,15 +70,6 @@ export default function LandingPage() {
     const heroInterval = setInterval(nextHeroImage, 5000);
     return () => clearInterval(heroInterval);
   }, [nextHeroImage]);
-
-  useEffect(() => {
-    // Simulate real-time book counter
-    const interval = setInterval(() => {
-      setBooksPublishedToday((prev) => prev + Math.floor(Math.random() * 3));
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const features = [
     {
@@ -159,16 +147,32 @@ export default function LandingPage() {
   const communityImage = '/img/new/military-unit-sunset.png';
 
   const stats = [
-    { icon: Users, value: '50K+', labelKey: 'landing.stats.active_authors' },
-    { icon: BookOpen, value: '200K+', labelKey: 'landing.stats.books_published' },
-    { icon: Star, value: '4.9/5', labelKey: 'landing.stats.average_rating' },
-    { icon: TrendingUp, value: '$2M+', labelKey: 'landing.stats.author_earnings' },
+    {
+      icon: Users,
+      title: isHebrew ? 'לכל משפחה' : 'For Every Family',
+      desc: isHebrew ? 'כלים פשוטים לכתיבה משותפת' : 'Simple tools for writing together',
+    },
+    {
+      icon: BookOpen,
+      title: isHebrew ? 'ספרי הנצחה' : 'Memorial Books',
+      desc: isHebrew ? 'מהראיון הראשון ועד הספר המודפס' : 'From the first interview to the printed book',
+    },
+    {
+      icon: Heart,
+      title: isHebrew ? 'עיצוב מכבד' : 'Respectful Design',
+      desc: isHebrew ? 'עיצוב רגיש ששומר על כבוד הזיכרון' : 'Sensitive design that honors the memory',
+    },
+    {
+      icon: Sparkles,
+      title: isHebrew ? 'מונחה בינה מלאכותית' : 'AI-Guided',
+      desc: isHebrew ? 'ליווי עדין בכל שלב של הכתיבה' : 'Gentle guidance at every step',
+    },
   ];
 
   return (
     <div className="min-h-screen overflow-hidden">
       <SEO
-        title={language === 'he' ? 'MeStory - פלטפורמה ליצירת ספרי הנצחה ואוטוביוגרפיה' : 'MeStory - Memorial Book Writing Platform'}
+        title={language === 'he' ? 'יצירת ספרי הנצחה ואוטוביוגרפיה עם בינה מלאכותית' : 'Memorial Books & Autobiographies, Written with AI'}
         description={language === 'he'
           ? 'צרו ספרי הנצחה מרגשים לזכר יקיריכם. כתיבה מונחית בינה מלאכותית, עיצוב מכבד והפקת PDF מוכן לדפוס. שמרו את הסיפור שלהם לדורות הבאים.'
           : 'Create meaningful memorial books to honor your loved ones. AI-guided writing, respectful design, and print-ready PDF export. Preserve their memory for generations.'}
@@ -297,7 +301,7 @@ export default function LandingPage() {
             >
               <Heart className="w-4 h-4 text-memorial-gold animate-pulse" />
               <span className="text-memorial-gold font-semibold text-sm sm:text-base">
-                {storiesWritten.toLocaleString()} {t('landing.hero.stories_written')}
+                {t('landing.hero.stories_written')}
               </span>
             </motion.div>
 
@@ -484,19 +488,19 @@ export default function LandingPage() {
               <div className="flex items-center gap-3">
                 <Sparkles className="w-5 h-5 text-memorial-gold" />
                 <span className="text-white font-semibold">
-                  <span className="text-memorial-gold">{booksPublishedToday}</span> {t('landing.ticker.books_today')}
+                  {t('landing.ticker.books_today')}
                 </span>
               </div>
               <div className="flex items-center gap-3">
-                <TrendingUp className="w-5 h-5 text-green-400" />
+                <BookOpen className="w-5 h-5 text-memorial-gold" />
                 <span className="text-white font-semibold">
-                  {t('landing.ticker.authors_earned')} <span className="text-green-400">$47,823</span> {t('landing.ticker.this_week')}
+                  {t('landing.ticker.authors_earned')}
                 </span>
               </div>
               <div className="flex items-center gap-3">
-                <Star className="w-5 h-5 text-yellow-400" />
+                <Heart className="w-5 h-5 text-memorial-gold" />
                 <span className="text-white font-semibold">
-                  <span className="text-yellow-400">342</span> {t('landing.ticker.reviews_today')}
+                  {t('landing.ticker.reviews_today')}
                 </span>
               </div>
             </div>
@@ -668,7 +672,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8">
             {stats.map((stat, index) => (
               <motion.div
-                key={stat.labelKey}
+                key={stat.title}
                 initial={{ opacity: 0, scale: 0.8 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
@@ -678,8 +682,8 @@ export default function LandingPage() {
                   <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 rounded-full bg-gradient-to-br from-memorial-gold/20 to-primary-900/30 flex items-center justify-center mx-auto mb-2 sm:mb-4">
                     <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-memorial-gold" />
                   </div>
-                  <div className="text-xl sm:text-2xl lg:text-4xl font-bold gradient-gold mb-1 sm:mb-2">{stat.value}</div>
-                  <div className="text-gray-400 text-xs sm:text-sm">{t(stat.labelKey)}</div>
+                  <div className="text-base sm:text-lg lg:text-2xl font-bold gradient-gold mb-1 sm:mb-2">{stat.title}</div>
+                  <div className="text-gray-400 text-xs sm:text-sm">{stat.desc}</div>
                 </GlassCard>
               </motion.div>
             ))}
@@ -832,7 +836,7 @@ export default function LandingPage() {
               <div className="flex flex-wrap gap-4">
                 <div className="flex items-center gap-2 text-memorial-gold">
                   <Users className="w-5 h-5" />
-                  <span>{t('landing.writers_community.writers_count', '50K+ Writers')}</span>
+                  <span>{t('landing.writers_community.writers_count', 'Supportive Community')}</span>
                 </div>
                 <div className="flex items-center gap-2 text-memorial-gold">
                   <BookOpen className="w-5 h-5" />

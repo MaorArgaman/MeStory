@@ -394,7 +394,7 @@
       "terms": "By continuing, you agree to MeStory's Terms of Service and Privacy Policy",
       "side_title": "Your Story",
       "side_subtitle": "Awaits",
-      "side_description": "Join thousands of authors crafting their masterpieces with the power of AI."
+      "side_description": "Join authors crafting their masterpieces with the power of AI."
     },
     "register": {
       "title": "Create Account",
@@ -426,7 +426,7 @@
       "title": "You have a story. We'll turn it into a book.",
       "subtitle": "You don't need to know how to write. Just tell — we'll do the rest.",
       "cta_primary": "Let's start — free",
-      "stories_written": "stories already written"
+      "stories_written": "Every story deserves to be told"
     },
     "how_it_works": {
       "title": "How does it work?",
@@ -440,7 +440,7 @@
     "trust": {
       "no_credit_card": "Start for Free",
       "free_credits": "AI-Guided Writing",
-      "authors_trust": "Hundreds of Families Have Memorialized"
+      "authors_trust": "Families Choose to Memorialize Here"
     },
     "features": {
       "title": "From Memories to a Book That Lasts",
@@ -485,10 +485,10 @@
       "copyright": "© 2026 MeStory. All rights reserved."
     },
     "ticker": {
-      "books_today": "memorial books written today",
-      "authors_earned": "chapters added",
+      "books_today": "Memorial books are written here every day",
+      "authors_earned": "Authors share their stories",
       "this_week": "this week",
-      "reviews_today": "families joined today"
+      "reviews_today": "New families join us"
     },
     "writers_community": {
       "title": "A Community That Understands",

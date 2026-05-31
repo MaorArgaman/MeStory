@@ -64,13 +64,13 @@ const content = {
       ],
     },
     stats: {
-      title: 'By the Numbers',
-      subtitle: 'Trusted by families preserving memories',
+      title: 'What We Stand For',
+      subtitle: 'Built for families preserving memories',
       items: [
-        { value: '10K+', label: 'Families', icon: Users },
-        { value: '25K+', label: 'Memorial Books', icon: BookOpen },
-        { value: '100K+', label: 'Memories Preserved', icon: Heart },
-        { value: '4.9', label: 'Average Rating', icon: Award },
+        { value: 'Families', label: 'Built for every family', icon: Users },
+        { value: 'Memorial Books', label: 'From interview to print', icon: BookOpen },
+        { value: 'Memories', label: 'Preserved for generations', icon: Heart },
+        { value: 'Respect', label: 'Sensitive, dignified design', icon: Award },
       ],
     },
     technology: {
@@ -115,7 +115,7 @@ const content = {
       emailLabel: 'Email Support',
       companyName: 'MeStory Ltd.',
       companyLabel: 'Company',
-      responseTime: 'We typically respond within 24 hours',
+      responseTime: 'We typically respond as soon as possible',
     },
     values: {
       title: 'Our Values',
@@ -166,13 +166,13 @@ const content = {
       ],
     },
     stats: {
-      title: 'במספרים',
-      subtitle: 'משפחות שמשמרות זיכרונות',
+      title: 'מה שחשוב לנו',
+      subtitle: 'נבנה עבור משפחות שמשמרות זיכרונות',
       items: [
-        { value: '+10K', label: 'משפחות', icon: Users },
-        { value: '+25K', label: 'ספרי הנצחה', icon: BookOpen },
-        { value: '+100K', label: 'זיכרונות נשמרו', icon: Heart },
-        { value: '4.9', label: 'דירוג ממוצע', icon: Award },
+        { value: 'משפחות', label: 'בנוי לכל משפחה', icon: Users },
+        { value: 'ספרי הנצחה', label: 'מהראיון ועד הדפוס', icon: BookOpen },
+        { value: 'זיכרונות', label: 'נשמרים לדורות', icon: Heart },
+        { value: 'כבוד', label: 'עיצוב רגיש ומכובד', icon: Award },
       ],
     },
     technology: {
@@ -217,7 +217,7 @@ const content = {
       emailLabel: 'תמיכה במייל',
       companyName: 'MeStory Ltd.',
       companyLabel: 'חברה',
-      responseTime: 'אנחנו בדרך כלל עונים תוך 24 שעות',
+      responseTime: 'אנחנו בדרך כלל עונים בהקדם האפשרי',
     },
     values: {
       title: 'הערכים שלנו',

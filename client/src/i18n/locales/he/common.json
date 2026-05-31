@@ -482,7 +482,7 @@
       "title": "יש לך סיפור. אנחנו נהפוך אותו לספר.",
       "subtitle": "לא צריך לדעת לכתוב. פשוט ספרו — ואנחנו נעשה את השאר.",
       "cta_primary": "בואו נתחיל — חינם",
-      "stories_written": "סיפורים כבר נכתבו"
+      "stories_written": "כל סיפור ראוי להישמר"
     },
     "how_it_works": {
       "title": "איך זה עובד?",
@@ -496,7 +496,7 @@
     "trust": {
       "no_credit_card": "התחלה בחינם",
       "free_credits": "כתיבה מודרכת עם AI",
-      "authors_trust": "מאות משפחות כבר הנציחו"
+      "authors_trust": "משפחות בוחרות להנציח כאן"
     },
     "features": {
       "title": "מזיכרון לספר שישמר לדורות",
@@ -550,10 +550,10 @@
       "copyright": "© 2026 MeStory. כל הזכויות שמורות."
     },
     "ticker": {
-      "books_today": "ספרי זיכרון נכתבו היום",
-      "authors_earned": "פרקים נוספו",
+      "books_today": "ספרי זיכרון נכתבים כאן בכל יום",
+      "authors_earned": "מחברים חולקים את הסיפורים שלהם",
       "this_week": "השבוע",
-      "reviews_today": "משפחות הצטרפו היום"
+      "reviews_today": "משפחות חדשות מצטרפות אלינו"
     },
     "writers_community": {
       "title": "קהילה שמבינה",
