@@ -658,7 +658,7 @@ export class Book {
    * Use for ownership checks, like/review/share, delete, and any endpoint
    * that doesn't need the full book content.  ~95% smaller than findById.
    */
-  static readonly LITE_COLUMNS = 'id,author_id,title,genre,writing_goal,target_audience,description,synopsis,story_context,cover_design,publishing_status,statistics,tags,language,age_rating,likes,liked_by,reviews,is_collaborative,invitations,characters,created_at,updated_at';
+  static readonly LITE_COLUMNS = 'id,author_id,title,genre,writing_goal,target_audience,description,synopsis,story_context,cover_design,publishing_status,statistics,tags,language,age_rating,likes,liked_by,reviews,is_collaborative,invitations,characters,auto_design_uses,created_at,updated_at';
 
   static async findByIdLite(id: string): Promise<IBook | null> {
     return withRetry(async () => {
@@ -682,7 +682,7 @@ export class Book {
    * metadata + chapters (for content analysis). Skips page_images,
    * translations, page_layout, reviews, etc.
    */
-  static readonly DESIGN_COLUMNS = 'id,author_id,title,genre,language,description,synopsis,story_context,writing_goal,target_audience,chapters,characters,cover_design,publishing_status,statistics,tags,ai_design_state,is_collaborative,invitations,created_at,updated_at';
+  static readonly DESIGN_COLUMNS = 'id,author_id,title,genre,language,description,synopsis,story_context,writing_goal,target_audience,chapters,characters,cover_design,page_images,publishing_status,statistics,tags,ai_design_state,auto_design_plan,auto_design_uses,is_collaborative,invitations,created_at,updated_at';
 
   static async findByIdForDesign(id: string): Promise<IBook | null> {
     return withRetry(async () => {
@@ -783,56 +783,96 @@ export class Book {
     options?: { new?: boolean }
   ): Promise<IBook | null> {
     let updateData: Record<string, any> = {};
+    const u = update as any;
+    const hasOps = '$set' in u || '$inc' in u || '$push' in u || '$pull' in u;
 
-    // Handle $set operator
-    if ('$set' in update && update.$set) {
-      const setData = update.$set;
-      Object.entries(setData).forEach(([key, value]) => {
-        const snakeKey = camelToSnake(key);
-        updateData[snakeKey] = value;
+    // camelCase IUser/IBook field name -> actual db column. `author` is the
+    // only field whose column name isn't a plain snake_case transform.
+    const colOf = (field: string) => (field === 'author' ? 'author_id' : camelToSnake(field));
+
+    // Gather plain key/value assignments from $set or from a direct update.
+    const assignments: Record<string, any> = {};
+    if (hasOps) {
+      if (u.$set) Object.assign(assignments, u.$set);
+    } else {
+      Object.entries(update).forEach(([key, value]) => {
+        if (key !== 'id' && key !== '_id') assignments[key] = value;
       });
-    } else if ('$push' in update || '$pull' in update || '$inc' in update) {
-      // Handle array operations - need to fetch current data first
-      const currentBook = await this.findById(id);
-      if (!currentBook) return null;
+    }
 
-      if (update.$push) {
-        Object.entries(update.$push).forEach(([key, value]) => {
+    // We must read the current row when doing arithmetic/array ops OR when an
+    // assignment targets a nested field inside a JSONB column (dot-notation):
+    // Postgres has no 'statistics.views' column, so we read-modify-write the
+    // whole JSONB parent. Passing the dotted key raw fails with PGRST204 and
+    // the write is silently dropped.
+    const hasDottedAssignment = Object.keys(assignments).some((k) => k.includes('.'));
+    const needsCurrent = (hasOps && (u.$inc || u.$push || u.$pull)) || hasDottedAssignment;
+    let currentBook: any = null;
+    if (needsCurrent) {
+      currentBook = await this.findById(id);
+      if (!currentBook) return null;
+    }
+
+    // JSONB parents we mutate via dot-notation, keyed by camelCase parent name.
+    const touchedParents: Record<string, any> = {};
+    const seedParent = (parent: string) => {
+      if (!(parent in touchedParents)) {
+        touchedParents[parent] = JSON.parse(JSON.stringify((currentBook as any)?.[parent] ?? {}));
+      }
+    };
+    const deepSet = (parent: string, segments: string[], value: any) => {
+      seedParent(parent);
+      let node = touchedParents[parent];
+      for (let i = 1; i < segments.length - 1; i++) {
+        const seg = segments[i];
+        if (node[seg] === null || typeof node[seg] !== 'object') node[seg] = {};
+        node = node[seg];
+      }
+      node[segments[segments.length - 1]] = value;
+    };
+
+    // Apply $set / direct assignments (splitting dot-notation into JSONB parents)
+    for (const [key, value] of Object.entries(assignments)) {
+      if (key.includes('.')) {
+        const segments = key.split('.');
+        deepSet(segments[0], segments, value);
+      } else {
+        updateData[colOf(key)] = value;
+      }
+    }
+
+    // Array / arithmetic operators — now allowed to co-exist with $set.
+    if (hasOps) {
+      if (u.$push) {
+        Object.entries(u.$push).forEach(([key, value]) => {
           const currentArray = (currentBook as any)[key] || [];
-          updateData[camelToSnake(key)] = [...currentArray, value];
+          updateData[colOf(key)] = [...currentArray, value];
         });
       }
-
-      if (update.$pull) {
-        Object.entries(update.$pull).forEach(([key, condition]) => {
+      if (u.$pull) {
+        Object.entries(u.$pull).forEach(([key, condition]) => {
           const currentArray = (currentBook as any)[key] || [];
-          // Simple filter - remove items matching condition
-          updateData[camelToSnake(key)] = currentArray.filter((item: any) => {
-            return !Object.entries(condition).every(([k, v]) => item[k] === v);
+          updateData[colOf(key)] = currentArray.filter((item: any) => {
+            return !Object.entries(condition as any).every(([k, v]) => item[k] === v);
           });
         });
       }
-
-      if (update.$inc) {
-        Object.entries(update.$inc).forEach(([key, value]) => {
-          // Handle nested keys like 'statistics.views'
+      if (u.$inc) {
+        Object.entries(u.$inc).forEach(([key, value]) => {
           if (key.includes('.')) {
             const [parent, child] = key.split('.');
-            const parentData = (currentBook as any)[parent] || {};
-            parentData[child] = (parentData[child] || 0) + (value as number);
-            updateData[camelToSnake(parent)] = parentData;
+            seedParent(parent);
+            touchedParents[parent][child] = (touchedParents[parent][child] || 0) + (value as number);
           } else {
-            updateData[camelToSnake(key)] = ((currentBook as any)[key] || 0) + (value as number);
+            updateData[colOf(key)] = ((currentBook as any)[key] || 0) + (value as number);
           }
         });
       }
-    } else {
-      // Direct update
-      Object.entries(update).forEach(([key, value]) => {
-        if (key !== 'id' && key !== '_id') {
-          updateData[camelToSnake(key)] = value;
-        }
-      });
+    }
+
+    // Write back every JSONB parent we merged into.
+    for (const parent of Object.keys(touchedParents)) {
+      updateData[colOf(parent)] = touchedParents[parent];
     }
 
     updateData.updated_at = new Date().toISOString();
@@ -926,6 +966,16 @@ export class Book {
     if (query['publishingStatus.isPublic'] !== undefined) {
       queryBuilder = queryBuilder.filter('publishing_status->>isPublic', 'eq', String(query['publishingStatus.isPublic']));
     }
+    // Marketplace category filter: publishing_status.marketingStrategy.categories
+    // is a JSONB array — match rows whose array contains the requested category.
+    if (query['publishingStatus.marketingStrategy.categories']) {
+      const cat = query['publishingStatus.marketingStrategy.categories'];
+      queryBuilder = queryBuilder.filter(
+        'publishing_status->marketingStrategy->categories',
+        'cs',
+        JSON.stringify([cat])
+      );
+    }
 
     // Handle search (text search on title and description)
     // SECURITY: Escape ILIKE wildcards and PostgREST special chars to prevent injection
@@ -947,9 +997,14 @@ export class Book {
     }
 
     // PERF: hard cap to prevent pulling thousands of rows accidentally.
-    // Callers that need more should paginate explicitly via _limit.
+    // Callers that need more should paginate explicitly via _limit/_offset,
+    // or use findAll() which walks every page.
     const limit = typeof query._limit === 'number' ? Math.min(query._limit, 500) : 200;
-    queryBuilder = queryBuilder.limit(limit);
+    if (typeof query._offset === 'number' && query._offset >= 0) {
+      queryBuilder = queryBuilder.range(query._offset, query._offset + limit - 1);
+    } else {
+      queryBuilder = queryBuilder.limit(limit);
+    }
 
     // Execute query
     const { data, error } = await queryBuilder;
@@ -960,6 +1015,25 @@ export class Book {
     }
 
     return (data || []).map((row: any) => rowToBook(row));
+  }
+
+  /**
+   * Fetch EVERY row matching `query`, paginating past the per-query cap.
+   * Use for admin/analytics aggregations that must see the whole catalog
+   * (otherwise `find` silently truncates at 200/500 and metrics are wrong).
+   * Pass `_lightweight: true` to skip heavy JSONB columns.
+   */
+  static async findAll(query: Record<string, any> = {}): Promise<IBook[]> {
+    const pageSize = 500;
+    const all: IBook[] = [];
+    for (let page = 0; ; page++) {
+      const batch = await this.find({ ...query, _limit: pageSize, _offset: page * pageSize });
+      all.push(...batch);
+      if (batch.length < pageSize) break;
+      // Safety valve against an unexpected infinite loop (250k rows).
+      if (page > 500) break;
+    }
+    return all;
   }
 
   // PERF: Lightweight ownership check. Fetches only author_id — used by

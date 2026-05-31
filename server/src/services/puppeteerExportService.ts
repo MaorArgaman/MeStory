@@ -89,6 +89,13 @@ export interface PuppeteerPdfOptions {
   clientUrl?: string;
   /** Paper size — A5 matches the current book layout */
   format?: 'A4' | 'A5' | 'Letter';
+  /**
+   * Which on-screen print page to render:
+   *   'manual'   → /print/:id          (pageLayout + coverDesign editor)
+   *   'designed' → /print/:id/designed (auto-design / עימוד DesignPlan)
+   * Both pages set body.print-ready, so the wait logic is identical.
+   */
+  variant?: 'manual' | 'designed';
   /** Called with a coarse progress percent [0,100] */
   onProgress?: (pct: number, message: string) => void | Promise<void>;
 }
@@ -101,6 +108,7 @@ export async function renderBookToPdf(opts: PuppeteerPdfOptions): Promise<Buffer
     bookId,
     authToken,
     format = 'A5',
+    variant = 'manual',
     onProgress,
   } = opts;
 
@@ -124,7 +132,8 @@ export async function renderBookToPdf(opts: PuppeteerPdfOptions): Promise<Buffer
     // behaves exactly like the editor preview.
     await page.setViewport({ width: 800, height: 1120, deviceScaleFactor: 2 });
 
-    const url = `${clientUrl}/print/${bookId}?token=${encodeURIComponent(authToken)}`;
+    const printPath = variant === 'designed' ? `/print/${bookId}/designed` : `/print/${bookId}`;
+    const url = `${clientUrl}${printPath}?token=${encodeURIComponent(authToken)}`;
 
     await onProgress?.(20, 'Loading book...');
     // Use `domcontentloaded` instead of `networkidle0` — the latter waits for

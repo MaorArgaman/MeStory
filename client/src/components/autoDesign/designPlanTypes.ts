@@ -29,10 +29,52 @@ export type ImagePlacement =
   | 'side-right'
   | 'framed-center';
 
+export type ImageTreatment =
+  | 'plain'
+  | 'framed'
+  | 'polaroid'
+  | 'rounded'
+  | 'duotone'
+  | 'vignette'
+  | 'postcard';
+
+export type ChapterOpenerTemplate =
+  | 'numeral-ornament'
+  | 'image-overlay'
+  | 'vertical-title'
+  | 'rule-stack';
+
 export type Block =
   | { type: 'heading'; level: 1 | 2 | 3; text: string; align?: 'start' | 'center' | 'end' }
-  | { type: 'paragraph'; text: string; dropCap?: boolean; lead?: boolean; align?: 'start' | 'justify' | 'center' }
-  | { type: 'image'; imageId: string; placement: ImagePlacement; widthFraction?: number; caption?: string }
+  | {
+      type: 'paragraph';
+      text: string;
+      dropCap?: boolean;
+      lead?: boolean;
+      align?: 'start' | 'justify' | 'center';
+      runInHead?: string;
+    }
+  | {
+      type: 'image';
+      imageId: string;
+      placement: ImagePlacement;
+      widthFraction?: number;
+      caption?: string;
+      treatment?: ImageTreatment;
+    }
+  | {
+      type: 'layered';
+      imageId: string;
+      scrim: 'dark' | 'light' | 'gradient-bottom' | 'gradient-top' | 'none';
+      align: 'center' | 'bottom' | 'top';
+      overlay: Array<
+        | { type: 'heading'; level: 1 | 2 | 3; text: string }
+        | { type: 'paragraph'; text: string }
+      >;
+      heightFraction?: number;
+    }
+  | { type: 'margin-note'; text: string }
+  | { type: 'accent-bar'; widthFraction?: number; thicknessPt?: number }
   | { type: 'pull-quote'; text: string; attribution?: string }
   | { type: 'divider'; style: 'rule' | 'ornament' | 'stars' | 'none' }
   | { type: 'callout'; text: string; tone: 'note' | 'warning' | 'quote' }
@@ -40,7 +82,13 @@ export type Block =
   | { type: 'page-break' }
   | { type: 'toc' }
   | { type: 'title-page'; title: string; subtitle?: string; author: string }
-  | { type: 'chapter-opener'; chapterIndex: number; epigraph?: string };
+  | {
+      type: 'chapter-opener';
+      chapterIndex: number;
+      epigraph?: string;
+      template?: ChapterOpenerTemplate;
+      imageId?: string;
+    };
 
 export type PageKind =
   | 'title'
@@ -48,6 +96,7 @@ export type PageKind =
   | 'chapter-opener'
   | 'body'
   | 'image-feature'
+  | 'spread'
   | 'pull-quote'
   | 'blank';
 
@@ -83,6 +132,8 @@ export interface DesignPlan {
   version: 1;
   seed: number;
   designSystem: DesignSystemId;
+  variant?: string;
+  scaleRatio?: string;
   tone: string;
   palette: Palette;
   typography: Typography;

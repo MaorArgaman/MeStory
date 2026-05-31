@@ -67,7 +67,12 @@ router.post(
       await Book.findByIdAndUpdate(
         bookId,
         {
-          $set: { autoDesignPlan: result.plan },
+          $set: {
+            autoDesignPlan: result.plan,
+            // Mark auto-design as the active pipeline so exports/previews use
+            // the designed renderer. Dot-path merges into ai_design_state JSONB.
+            'aiDesignState.activeDesign': 'auto',
+          },
           $inc: { autoDesignUses: 1 },
         },
         { new: false }
@@ -136,6 +141,50 @@ router.get('/:bookId/export.docx', async (req: AuthRequest, res: Response) => {
   } catch (err: any) {
     console.error('[autoDesign] docx export failed:', err?.message);
     res.status(500).json({ success: false, error: 'Export failed', details: err?.message });
+  }
+});
+
+/**
+ * Stream the current designed book as a PDF, rendered from the SAME on-screen
+ * page the user previews (/print/:id/designed) via headless Chrome — so the
+ * file matches the preview exactly (WYSIWYG). No credit charge.
+ */
+router.get('/:bookId/export.pdf', async (req: AuthRequest, res: Response) => {
+  const bookId = req.params.bookId;
+  if (!req.user) {
+    res.status(401).json({ success: false, error: 'Authentication required' });
+    return;
+  }
+  const ownerId = await Book.getOwnerId(bookId);
+  if (!ownerId) {
+    res.status(404).json({ success: false, error: 'Book not found' });
+    return;
+  }
+  if (ownerId !== req.user.id) {
+    res.status(403).json({ success: false, error: 'Not your book' });
+    return;
+  }
+  const book = await Book.findByIdForDesign(bookId);
+  if (!book?.autoDesignPlan) {
+    res.status(404).json({
+      success: false,
+      error: 'No auto-design plan on this book. Generate one first.',
+      errorCode: 'NO_AUTO_DESIGN_PLAN',
+    });
+    return;
+  }
+
+  try {
+    const { renderBookToPdf } = await import('../services/puppeteerExportService');
+    const authToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    const buffer = await renderBookToPdf({ bookId, authToken, variant: 'designed' });
+    const safeName = (book.title || 'book').replace(/[^a-zA-Z0-9֐-׿\s-]/g, '').slice(0, 60);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(safeName)}.pdf"`);
+    res.send(buffer);
+  } catch (err: any) {
+    console.error('[autoDesign] pdf export failed:', err?.message);
+    res.status(500).json({ success: false, error: 'PDF export failed', details: err?.message });
   }
 });
 

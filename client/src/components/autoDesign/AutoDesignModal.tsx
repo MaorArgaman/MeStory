@@ -125,6 +125,24 @@ export default function AutoDesignModal({ bookId, isOpen, onClose }: AutoDesignM
     }
   };
 
+  const handleDownloadPdf = async () => {
+    try {
+      // Server renders the SAME /print/:id/designed page to PDF (WYSIWYG).
+      const res = await api.get(`/auto-design/${bookId}/export.pdf`, { responseType: 'blob' });
+      const blob = new Blob([res.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'book-designed.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setErrorMsg(err?.response?.data?.error || err?.message || 'הורדה נכשלה');
+    }
+  };
+
   if (!isOpen) return null;
 
   const previewSrc = `/print/${bookId}/designed`;
@@ -224,6 +242,13 @@ export default function AutoDesignModal({ bookId, isOpen, onClose }: AutoDesignM
                   עצב מחדש ({status.usesRemaining} נותרו)
                 </button>
                 <button
+                  onClick={handleDownloadPdf}
+                  className="w-full py-3 rounded-xl bg-rose-600 text-white font-medium flex items-center justify-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  הורד כ-PDF (זהה לתצוגה)
+                </button>
+                <button
                   onClick={handleDownloadDocx}
                   className="w-full py-3 rounded-xl bg-blue-600 text-white font-medium flex items-center justify-center gap-2"
                 >
@@ -231,7 +256,8 @@ export default function AutoDesignModal({ bookId, isOpen, onClose }: AutoDesignM
                   הורד כקובץ Word
                 </button>
                 <p className="mt-6 text-xs text-gray-500 leading-relaxed">
-                  ה-PDF יוצא דרך הכפתור הראשי של ייצוא בעורך; הוא ישתמש בעיצוב הזה אוטומטית.
+                  ה-PDF נוצר מאותו דף תצוגה שאתה רואה כאן — מה שרואים זה מה שמיוצא, כולל הכריכה.
+                  גם הכפתור הראשי של ייצוא בעורך ישתמש בעיצוב הזה אוטומטית.
                 </p>
               </>
             )}

@@ -371,7 +371,10 @@ app.use('/api', apiLimiter);
 // Everything else gets 55s.
 const REQUEST_TIMEOUT = 55000;
 const AI_LONG_TIMEOUT = 270000;
-const LONG_AI_PATHS = ['/ai/premium-design/', '/ai/design-complete/', '/ai/design-wizard/'];
+// Auto-design (עימוד) runs the Claude planner + critic (+ optional revision)
+// and can legitimately take 60–180s — it must NOT be capped at the default 55s.
+// The auto-design PDF export also drives headless Chrome, so it's covered too.
+const LONG_AI_PATHS = ['/ai/premium-design/', '/ai/design-complete/', '/ai/design-wizard/', '/auto-design/'];
 
 app.use('/api', (req: Request, res: Response, next: NextFunction) => {
   const isLongAI = LONG_AI_PATHS.some(p => req.path.startsWith(p));

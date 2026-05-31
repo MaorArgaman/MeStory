@@ -60,6 +60,12 @@ export async function renderDesignedBookDocx(
 
   const children: Paragraph[] = [];
 
+  // Cover page — render the book's chosen cover image (coverDesign.front)
+  // as the first page so the DOCX matches what the user designed. Without
+  // this the auto-design Word export had no cover at all.
+  const coverParagraphs = await buildCoverPage(book, plan, options);
+  children.push(...coverParagraphs);
+
   plan.pages.forEach((page, pageIdx) => {
     const isLastPage = pageIdx === plan.pages.length - 1;
     page.blocks.forEach((block, blockIdx) => {
@@ -133,6 +139,45 @@ export async function renderDesignedBookDocx(
   return Packer.toBuffer(doc);
 }
 
+/**
+ * Build the cover page: the user's chosen front-cover image scaled to ~the
+ * page size, followed by a page break. Returns [] if there's no cover image
+ * or the fetch fails (we never fail the whole export over a cover).
+ */
+async function buildCoverPage(
+  book: IBook,
+  plan: DesignPlan,
+  options: RenderDocxOptions
+): Promise<Paragraph[]> {
+  if (options.skipImages) return [];
+  const url = (book as any).coverDesign?.front?.imageUrl;
+  if (!url) return [];
+  try {
+    const res = await axios.get(url, { responseType: 'arraybuffer', timeout: 20000 });
+    const buffer = Buffer.from(res.data);
+    // A5 page is 148×210mm. Use a near-full-page cover (3:4 portrait).
+    const widthMm = 130;
+    const heightMm = 180;
+    return [
+      new Paragraph({
+        ...HEBREW_RTL,
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 0 },
+        children: [
+          new ImageRun({
+            data: buffer,
+            transformation: { width: mmToPx(widthMm), height: mmToPx(heightMm) },
+          } as any),
+        ],
+      }),
+      new Paragraph({ ...HEBREW_RTL, children: [new PageBreak()] }),
+    ];
+  } catch (err: any) {
+    console.warn('[renderDocx] cover image fetch failed, skipping cover:', err?.message);
+    return [];
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Block → Paragraph[] translation
 // ---------------------------------------------------------------------------
@@ -150,6 +195,12 @@ function renderBlock(
       return [renderParagraph(block, plan)];
     case 'image':
       return renderImage(block, plan, images);
+    case 'layered':
+      return renderLayered(block, plan, images);
+    case 'margin-note':
+      return [renderMarginNote(block, plan)];
+    case 'accent-bar':
+      return [renderAccentBar(block, plan)];
     case 'pull-quote':
       return renderPullQuote(block, plan);
     case 'divider':
@@ -163,12 +214,123 @@ function renderBlock(
     case 'title-page':
       return renderTitlePage(block, plan);
     case 'chapter-opener':
-      return renderChapterOpener(block, plan, book);
+      return renderChapterOpener(block, plan, book, images);
     case 'toc':
       return renderToc(book, plan);
     default:
       return [];
   }
+}
+
+/**
+ * Word can't composite text over an image. We degrade a `layered` block to:
+ * the image at full column width, followed by its overlay texts as centered
+ * caption-style lines beneath it. The drama is lost but the content survives.
+ */
+function renderLayered(
+  block: Extract<Block, { type: 'layered' }>,
+  plan: DesignPlan,
+  images: Map<string, Buffer>
+): Paragraph[] {
+  const buffer = images.get(block.imageId);
+  const out: Paragraph[] = [];
+  if (buffer) {
+    const availableMm = 148 - plan.grid.marginsMm.start - plan.grid.marginsMm.end;
+    out.push(
+      new Paragraph({
+        ...HEBREW_RTL,
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 120, after: 80 },
+        children: [
+          new ImageRun({
+            data: buffer,
+            transformation: { width: mmToPx(availableMm), height: mmToPx(Math.round(availableMm * 0.62)) },
+          } as any),
+        ],
+      })
+    );
+  }
+  for (const o of block.overlay) {
+    if (o.type === 'heading') {
+      out.push(
+        new Paragraph({
+          ...HEBREW_RTL,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 80 },
+          children: [
+            new TextRun({
+              text: o.text,
+              bold: true,
+              size: PT(plan.typography.scale[o.level === 1 ? 4 : 3]),
+              font: plan.typography.headingFamily,
+              color: stripHash(plan.palette.text),
+            }),
+          ],
+        })
+      );
+    } else {
+      out.push(
+        new Paragraph({
+          ...HEBREW_RTL,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 120 },
+          children: [
+            new TextRun({
+              text: o.text,
+              size: PT(plan.typography.scale[2]),
+              font: plan.typography.bodyFamily,
+              color: stripHash(plan.palette.muted),
+            }),
+          ],
+        })
+      );
+    }
+  }
+  return out;
+}
+
+function renderMarginNote(
+  block: Extract<Block, { type: 'margin-note' }>,
+  plan: DesignPlan
+): Paragraph {
+  // No true margins in flow-DOCX — render as an indented italic aside.
+  return new Paragraph({
+    ...HEBREW_RTL,
+    alignment: AlignmentType.RIGHT,
+    indent: { left: 1440 },
+    spacing: { before: 80, after: 80 },
+    border: { right: { style: 'single' as any, size: 6, space: 8, color: stripHash(plan.palette.muted) } },
+    children: [
+      new TextRun({
+        text: block.text,
+        italics: true,
+        size: PT(plan.typography.scale[1] * 0.92),
+        font: plan.typography.bodyFamily,
+        color: stripHash(plan.palette.muted),
+      }),
+    ],
+  });
+}
+
+function renderAccentBar(
+  block: Extract<Block, { type: 'accent-bar' }>,
+  plan: DesignPlan
+): Paragraph {
+  // A short colored rule via a bottom border on an empty paragraph.
+  return new Paragraph({
+    ...HEBREW_RTL,
+    alignment: AlignmentType.RIGHT,
+    spacing: { before: 120, after: 120 },
+    border: {
+      bottom: {
+        style: 'single' as any,
+        size: Math.max(6, Math.round((block.thicknessPt ?? 3) * 4)),
+        space: 1,
+        color: stripHash(plan.palette.accent),
+      },
+    },
+    children: [new TextRun({ text: '' })],
+  });
 }
 
 function renderHeading(block: Extract<Block, { type: 'heading' }>, plan: DesignPlan): Paragraph {
@@ -200,7 +362,21 @@ function renderParagraph(
   const fontSize = block.lead ? plan.typography.scale[2] : plan.typography.baseSize;
 
   const runs: TextRun[] = [];
-  if (block.dropCap && block.text.length > 0) {
+  if (block.runInHead) {
+    // Bold accent lead phrase running into the body text.
+    runs.push(
+      new TextRun({
+        text: block.runInHead + ' ',
+        font: plan.typography.headingFamily,
+        color: stripHash(plan.palette.accent),
+        size: PT(fontSize),
+        bold: true,
+      })
+    );
+    runs.push(
+      new TextRun({ text: block.text, font: plan.typography.bodyFamily, size: PT(fontSize) })
+    );
+  } else if (block.dropCap && block.text.length > 0) {
     runs.push(
       new TextRun({
         text: block.text.charAt(0),
@@ -434,15 +610,40 @@ function renderTitlePage(
 function renderChapterOpener(
   block: Extract<Block, { type: 'chapter-opener' }>,
   plan: DesignPlan,
-  book: IBook
+  book: IBook,
+  images: Map<string, Buffer>
 ): Paragraph[] {
   const chapter = book.chapters?.[block.chapterIndex];
   const title = chapter?.title || `פרק ${block.chapterIndex + 1}`;
+
+  // image-overlay opener → in Word, place the lead image first (full width),
+  // then the numeral + title beneath it.
+  const leadImage = block.imageId ? images.get(block.imageId) : undefined;
+  const imageLead: Paragraph[] = leadImage
+    ? [
+        new Paragraph({
+          ...HEBREW_RTL,
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 0, after: 240 },
+          children: [
+            new ImageRun({
+              data: leadImage,
+              transformation: {
+                width: mmToPx(148 - plan.grid.marginsMm.start - plan.grid.marginsMm.end),
+                height: mmToPx(90),
+              },
+            } as any),
+          ],
+        }),
+      ]
+    : [];
+
   const result: Paragraph[] = [
+    ...imageLead,
     new Paragraph({
       ...HEBREW_RTL,
       alignment: AlignmentType.CENTER,
-      spacing: { before: 1200, after: 120 },
+      spacing: { before: leadImage ? 0 : 1200, after: 120 },
       children: [
         new TextRun({
           text: `פרק ${block.chapterIndex + 1}`,
@@ -544,13 +745,20 @@ async function prefetchImages(book: IBook, plan: DesignPlan): Promise<Map<string
   plan.pages.forEach((p: Page) => {
     p.blocks.forEach((b) => {
       if (b.type === 'image') usedIds.add(b.imageId);
+      if (b.type === 'layered') usedIds.add(b.imageId);
+      if (b.type === 'chapter-opener' && b.imageId) usedIds.add(b.imageId);
     });
   });
   if (usedIds.size === 0) return out;
 
+  // Resolve ids the same way the planner/renderers do: primarily by stable
+  // array index ("img-N"); fall back to a real _id when present.
   const urlById = new Map<string, string>();
-  (book.pageImages || []).forEach((img: IPageImage) => {
-    if (img._id && img.url) urlById.set(img._id, img.url);
+  (book.pageImages || []).forEach((img: IPageImage, idx: number) => {
+    if (img.url) {
+      urlById.set(`img-${idx}`, img.url);
+      if (img._id) urlById.set(img._id, img.url);
+    }
   });
 
   await Promise.all(

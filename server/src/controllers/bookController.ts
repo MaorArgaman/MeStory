@@ -16,6 +16,7 @@ import { generatePricingStrategy } from '../services/pricingStrategyService';
 import { exportBook } from '../services/bookExportService';
 import { enqueueJob, runJobInBackground } from '../services/jobQueue';
 import { renderBookToPdf } from '../services/puppeteerExportService';
+import { resolveActiveDesign } from '../utils/activeDesign';
 import { generateBookPdfFromHtml } from '../services/pdfService';
 import {
   notifyBookLike,
@@ -918,6 +919,14 @@ export const updateBook = async (req: AuthRequest, res: Response): Promise<void>
         updateData[key] = req.body[key];
       }
     });
+
+    // Track that the user is building with the MANUAL design pipeline so
+    // exports/previews pick pageLayout+coverDesign over any autoDesignPlan.
+    // Uses a dot-path into the ai_design_state JSONB (handled by the Book
+    // adapter's read-modify-write) so we don't clobber the legacy `status`.
+    if (('pageLayout' in updateData || 'coverDesign' in updateData) && !('aiDesignState' in updateData)) {
+      updateData['aiDesignState.activeDesign'] = 'manual';
+    }
 
     // Update book + broadcast change to other editors in the room
     const updatedBook = await Book.findByIdAndUpdate(id, updateData, { new: true });
@@ -1926,6 +1935,11 @@ export const exportBookPDFAsync = async (req: AuthRequest, res: Response): Promi
     const authHeader = req.headers.authorization || '';
     const authToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : '';
 
+    // Render the design the user actually built last: 'designed' (auto-design /
+    // עימוד) renders /print/:id/designed; 'manual' renders /print/:id. This is
+    // what makes "export === what you see".
+    const exportVariant = resolveActiveDesign(book) === 'auto' ? 'designed' : 'manual';
+
     // Enqueue job and return immediately
     const job = await enqueueJob({
       userId: req.user.id,
@@ -1946,9 +1960,18 @@ export const exportBookPDFAsync = async (req: AuthRequest, res: Response): Promi
         pdfBuffer = await renderBookToPdf({
           bookId: id,
           authToken,
+          variant: exportVariant,
           onProgress: (pct, msg) => updateProgress(5 + pct * 0.65, msg),
         });
+        if (exportVariant === 'designed') {
+          // The fallback renderers below only understand the manual pageLayout,
+          // so for auto-designed books the WYSIWYG path is the only faithful one.
+          // (Reaching the fallbacks would silently produce manual-layout output.)
+        }
       } catch (puppeteerErr: any) {
+        if (exportVariant === 'designed') {
+          warnings.push('Auto-design PDF fell back to the manual renderer — layout may differ from the עימוד preview.');
+        }
         console.warn('[exportBookPDFAsync] React renderer failed, trying server HTML:', puppeteerErr?.message);
 
         // Step 2: Server-side HTML renderer (still uses Puppeteer/Chrome but generates HTML directly)

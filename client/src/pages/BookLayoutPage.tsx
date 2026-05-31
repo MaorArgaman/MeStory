@@ -1318,36 +1318,66 @@ export default function BookLayoutPage() {
     }
   };
 
-  // Open the print-ready page in a new tab — the browser's own PDF renderer
-  // gives perfect fidelity (Hebrew bidi, fonts, images, covers, layout).
+  // Which design pipeline the user last built with — decides what every
+  // export renders so the file matches the preview ("export === what you see").
+  const getActiveDesign = (): 'manual' | 'auto' => {
+    const b: any = book;
+    const stored = b?.aiDesignState?.activeDesign;
+    if (stored === 'auto' && b?.autoDesignPlan) return 'auto';
+    if (stored === 'manual') return 'manual';
+    if (b?.autoDesignPlan && !(b?.pageLayout?.pages?.length)) return 'auto';
+    return 'manual';
+  };
+
+  // PDF export. Routes by active design:
+  //   manual   → open /print/:id (browser "Save as PDF" — perfect fidelity)
+  //   designed → download the server-rendered PDF of /print/:id/designed (WYSIWYG)
   const handleBrowserPdf = async () => {
     if (!book) return;
     setExporting(true);
     try {
       await saveLayout();
-      toast.success(
-        language === 'he'
-          ? 'דף ההדפסה נפתח — בחר "שמור כ-PDF" בחלון ההדפסה'
-          : 'Print page opened — choose "Save as PDF" in the print dialog',
-        { id: 'export' },
-      );
-      window.open(`/print/${bookId}?print=1`, '_blank');
+      if (getActiveDesign() === 'auto') {
+        toast.loading(language === 'he' ? 'יוצר PDF מהעימוד...' : 'Rendering designed PDF...', { id: 'export' });
+        const res = await api.get(`/auto-design/${bookId}/export.pdf`, { responseType: 'blob' });
+        const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${book.title}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast.success(language === 'he' ? 'ה-PDF הורד בהצלחה' : 'PDF downloaded', { id: 'export' });
+      } else {
+        toast.success(
+          language === 'he'
+            ? 'דף ההדפסה נפתח — בחר "שמור כ-PDF" בחלון ההדפסה'
+            : 'Print page opened — choose "Save as PDF" in the print dialog',
+          { id: 'export' },
+        );
+        window.open(`/print/${bookId}?print=1`, '_blank');
+      }
       setShowExportModal(false);
     } catch (error: any) {
-      toast.error(error?.message || 'Error opening print page', { id: 'export' });
+      toast.error(error?.response?.data?.error || error?.message || 'Error exporting PDF', { id: 'export' });
     } finally {
       setExporting(false);
     }
   };
 
-  // Server-side DOCX export (streams the file from the sync endpoint).
+  // Server-side DOCX export. Routes by active design: designed → the
+  // auto-design renderer (typeset plan + cover); manual → pageLayout renderer.
   const handleDocxExport = async () => {
     if (!book) return;
     setExporting(true);
     try {
       await saveLayout();
       toast.loading(language === 'he' ? 'יוצר קובץ Word...' : 'Creating Word file...', { id: 'export' });
-      const response = await api.get(`/books/${bookId}/export/docx`, { responseType: 'blob' });
+      const docxEndpoint = getActiveDesign() === 'auto'
+        ? `/auto-design/${bookId}/export.docx`
+        : `/books/${bookId}/export/docx`;
+      const response = await api.get(docxEndpoint, { responseType: 'blob' });
       const blob = new Blob([response.data], {
         type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       });
@@ -4532,6 +4562,21 @@ export default function BookLayoutPage() {
               <div className="space-y-4">
                 <h3 className="font-semibold text-white">{t('design_studio.export_modal.select_format', 'Select Format')}</h3>
 
+                {/* Active-design indicator — tells the user (and guarantees) that
+                    the export reflects exactly the design they built. */}
+                <div className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2">
+                  <Sparkles className="w-4 h-4 text-memorial-gold flex-shrink-0" />
+                  <p className="text-xs text-gray-300">
+                    {language === 'he' ? 'מעוצב עם: ' : 'Designed with: '}
+                    <span className="font-semibold text-white">
+                      {getActiveDesign() === 'auto'
+                        ? (language === 'he' ? 'עימוד אוטומטי' : 'Auto-design')
+                        : (language === 'he' ? 'עיצוב ידני' : 'Manual layout')}
+                    </span>
+                    {language === 'he' ? ' — הייצוא יהיה זהה לתצוגה.' : ' — the export matches this preview.'}
+                  </p>
+                </div>
+
                 {/* Primary: Browser PDF — perfect fidelity */}
                 <button
                   onClick={handleBrowserPdf}
@@ -4579,6 +4624,15 @@ export default function BookLayoutPage() {
                     )}
                   </div>
                 </button>
+
+                {/* Set expectations: PDF is the exact visual copy; Word is an
+                    editable file with the typography + cover but not the
+                    print-only decorations Word can't represent. */}
+                <p className="text-[11px] text-gray-500 leading-relaxed pt-1">
+                  {language === 'he'
+                    ? 'PDF = עותק ויזואלי מדויק (כולל כריכה, תמונות, מסגרות ועיצוב). Word = קובץ עריכה — טקסט, טיפוגרפיה וכריכה; קישוטים ותמונות ממוקמות עשויים להיראות שונה.'
+                    : 'PDF = exact visual copy (cover, images, frames & design). Word = editable file — text, typography & cover; decorations and positioned images may look different.'}
+                </p>
               </div>
             </motion.div>
           </motion.div>

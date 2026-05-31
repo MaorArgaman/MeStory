@@ -39,8 +39,10 @@ export interface CriticOutput {
 export async function critiquePlan(input: CriticInput): Promise<CriticOutput> {
   const { book, plan } = input;
 
+  // Images are referenced by stable array index ("img-0", …) — same scheme
+  // the planner is given. (page_images entries usually lack any _id.)
   const availableImageIds = new Set(
-    (book.pageImages || []).map((img) => img._id).filter((id): id is string => !!id)
+    (book.pageImages || []).map((_img, idx) => `img-${idx}`)
   );
   const chapterCount = book.chapters?.length || 0;
 

@@ -1,39 +1,28 @@
 /**
- * DesignedBookView — renders a book according to a DesignPlan produced
- * by the planner agent. Used both:
- *   - inside the editor, as an iframe preview
- *   - inside PrintDesignedBookPage, which Puppeteer captures for PDF
+ * DesignedBookView — renders a book from a DesignPlan. Owns page geometry
+ * (A5 boxes, RTL margins, columns, pagination, page numbers) and delegates
+ * every decorative/system-specific visual (backgrounds, ornaments, drop
+ * caps, chapter openers, image treatments) to a SystemVisual resolved from
+ * plan.designSystem. That separation is what lets the same renderer produce
+ * a warm memoir and a bold magazine that look nothing alike.
  *
- * Style strategy: every page is an absolutely-positioned A5 (or A4) box
- * with explicit width/height in mm. CSS `@page` rules ensure one logical
- * page per physical printed page. RTL is the default since MeStory is
- * Hebrew-first.
- *
- * Unknown block types are silently skipped — this lets a client built
- * against schema v1 keep working when v2 plans land in the database.
+ * Used both as the in-editor iframe preview and (via PrintDesignedBookPage)
+ * as the page Puppeteer captures for PDF. Unknown block types are skipped so
+ * a v1 client keeps working against newer plans.
  */
 
 import { useMemo } from 'react';
-import type {
-  Block,
-  BookForRender,
-  DesignPlan,
-  Page as PlanPage,
-} from './designPlanTypes';
-
-// -- Page size ---------------------------------------------------------------
-// Default A5 portrait. Could be made configurable later — but for now the
-// planner doesn't pick page size; it picks margins inside a fixed canvas.
+import type { CSSProperties } from 'react';
+import type { Block, BookForRender, DesignPlan, Page as PlanPage } from './designPlanTypes';
+import { deriveColorRoles, rgba, type ColorRoles } from './designTokens';
+import { getSystemVisual } from './systems';
+import type { SystemVisual } from './systems/types';
 
 const PAGE_W_MM = 148;
 const PAGE_H_MM = 210;
 
-// -- Web font loading --------------------------------------------------------
-// We inject one <link> for the Hebrew Google fonts used across the 10
-// design systems. Deduped by checking document.head for the same href.
-
 const GOOGLE_FONTS_HREF =
-  'https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700&family=Heebo:wght@300;400;600;800&family=Assistant:wght@300;400;600;700&family=Suez+One&family=David+Libre:wght@400;700&display=swap';
+  'https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700&family=Heebo:wght@300;400;600;800&family=Assistant:wght@300;400;600;700&family=Suez+One&family=David+Libre:wght@400;700&family=Alef:wght@400;700&family=Rubik:wght@400;500;700&family=Secular+One&display=swap';
 
 function ensureFontsLoaded() {
   if (typeof document === 'undefined') return;
@@ -44,37 +33,42 @@ function ensureFontsLoaded() {
   document.head.appendChild(link);
 }
 
-// -- Image lookup ------------------------------------------------------------
-
 function findImageUrl(book: BookForRender, imageId: string): string | null {
+  // Primary scheme: stable array index "img-N" (page_images often lack _id).
+  const m = /^img-(\d+)$/.exec(imageId);
+  if (m) {
+    const idx = parseInt(m[1], 10);
+    return (book.pageImages || [])[idx]?.url || null;
+  }
+  // Fallback: match by _id if a real one exists.
   const img = (book.pageImages || []).find((i) => i._id === imageId);
   return img?.url || null;
 }
 
-// -- Block renderer ----------------------------------------------------------
-// One JSX node per block. Layout (page break, full-bleed positioning)
-// happens at the page level, not here.
+// ---------------------------------------------------------------------------
+// Block renderer
+// ---------------------------------------------------------------------------
 
-interface BlockRendererProps {
-  block: Block;
+interface RenderCtx {
   book: BookForRender;
   plan: DesignPlan;
+  roles: ColorRoles;
+  system: SystemVisual;
 }
 
-function BlockRenderer({ block, book, plan }: BlockRendererProps) {
-  const { palette, typography } = plan;
+function BlockRenderer({ block, ctx }: { block: Block; ctx: RenderCtx }) {
+  const { plan, roles, system, book } = ctx;
+  const { typography } = plan;
 
   switch (block.type) {
     case 'heading': {
       const sizeIdx = block.level === 1 ? 4 : block.level === 2 ? 3 : 2;
-      const fontSize = typography.scale[sizeIdx];
       return (
         <h2
-          className="adv-heading"
           style={{
             fontFamily: typography.headingFamily,
-            fontSize: `${fontSize}pt`,
-            color: palette.text,
+            fontSize: `${typography.scale[sizeIdx]}pt`,
+            color: roles.text,
             textAlign: block.align === 'center' ? 'center' : block.align === 'end' ? 'left' : 'right',
             margin: '0 0 8pt 0',
             lineHeight: 1.2,
@@ -85,87 +79,75 @@ function BlockRenderer({ block, book, plan }: BlockRendererProps) {
         </h2>
       );
     }
+
     case 'paragraph': {
       const align =
         block.align === 'center' ? 'center' : block.align === 'justify' ? 'justify' : 'right';
       const fontSize = block.lead ? typography.scale[2] : typography.baseSize;
-      return (
-        <p
-          className={`adv-paragraph${block.dropCap ? ' adv-paragraph--dropcap' : ''}${block.lead ? ' adv-paragraph--lead' : ''}`}
-          style={{
-            fontFamily: typography.bodyFamily,
-            fontSize: `${fontSize}pt`,
-            lineHeight: typography.leading,
-            color: palette.text,
-            textAlign: align,
-            margin: '0 0 6pt 0',
-            textIndent: block.dropCap ? 0 : '1em',
-          }}
-        >
-          {block.dropCap ? (
-            <>
-              <span
-                className="adv-dropcap"
-                style={{
-                  fontFamily: typography.displayFamily || typography.headingFamily,
-                  color: palette.accent,
-                  fontSize: `${typography.baseSize * 3.2}pt`,
-                  lineHeight: 0.9,
-                  float: 'right',
-                  marginLeft: '4pt',
-                  marginTop: '2pt',
-                }}
-              >
-                {block.text.charAt(0)}
-              </span>
-              {block.text.slice(1)}
-            </>
-          ) : (
-            block.text
-          )}
-        </p>
-      );
+      const style: CSSProperties = {
+        fontFamily: typography.bodyFamily,
+        fontSize: `${fontSize}pt`,
+        lineHeight: typography.leading,
+        color: block.lead ? roles.muted : roles.text,
+        textAlign: align,
+        margin: '0 0 6pt 0',
+        textIndent: block.dropCap || block.runInHead || block.lead ? 0 : '1em',
+      };
+      if (block.dropCap && block.text.length > 0) {
+        return (
+          <p style={style}>
+            {system.DropCap({ letter: block.text.charAt(0), roles, typography })}
+            {block.text.slice(1)}
+          </p>
+        );
+      }
+      if (block.runInHead) {
+        return (
+          <p style={style}>
+            <span
+              style={{
+                fontFamily: typography.headingFamily,
+                fontWeight: 700,
+                color: roles.accent,
+                marginLeft: '0.4em',
+              }}
+            >
+              {block.runInHead}
+            </span>
+            {block.text}
+          </p>
+        );
+      }
+      return <p style={style}>{block.text}</p>;
     }
+
     case 'image': {
       const url = findImageUrl(book, block.imageId);
       if (!url) return null;
-      const widthPct = Math.round((block.widthFraction ?? 0.6) * 100);
-      const baseImg = (
-        <img
-          src={url}
-          alt={block.caption || ''}
-          style={{ width: '100%', height: 'auto', display: 'block' }}
-        />
-      );
-      if (block.placement === 'full-bleed' || block.placement === 'full-bleed-top' || block.placement === 'full-bleed-bottom') {
+
+      // Full-bleed variants are positioned by the page, not flowed.
+      if (block.placement.startsWith('full-bleed')) {
+        const pos: CSSProperties =
+          block.placement === 'full-bleed-bottom'
+            ? { bottom: 0, height: '50%' }
+            : block.placement === 'full-bleed-top'
+            ? { top: 0, height: '50%' }
+            : { top: 0, bottom: 0 };
         return (
-          <div
-            className="adv-image adv-image--full-bleed"
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              ...(block.placement === 'full-bleed-bottom'
-                ? { bottom: 0, height: '50%' }
-                : block.placement === 'full-bleed-top'
-                ? { top: 0, height: '50%' }
-                : { top: 0, bottom: 0 }),
-              overflow: 'hidden',
-            }}
-          >
+          <div style={{ position: 'absolute', left: 0, right: 0, overflow: 'hidden', ...pos }}>
             <img
               src={url}
               alt={block.caption || ''}
+              crossOrigin="anonymous"
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
             {block.caption && (
               <div
-                className="adv-image__caption"
                 style={{
                   position: 'absolute',
                   bottom: '8pt',
                   right: '12pt',
-                  color: palette.background,
+                  color: '#fff',
                   fontFamily: typography.bodyFamily,
                   fontSize: `${typography.scale[1]}pt`,
                   textShadow: '0 1px 4px rgba(0,0,0,0.6)',
@@ -177,72 +159,159 @@ function BlockRenderer({ block, book, plan }: BlockRendererProps) {
           </div>
         );
       }
-      if (block.placement === 'side-left' || block.placement === 'side-right') {
-        return (
-          <div
-            className="adv-image adv-image--side"
-            style={{
+
+      // Flowed image with a system-specific treatment.
+      const widthPct = Math.round((block.widthFraction ?? 0.6) * 100);
+      const tr = system.imageTreatment(block.treatment, roles, plan.seed);
+      const isSide = block.placement === 'side-left' || block.placement === 'side-right';
+      const figureStyle: CSSProperties = {
+        ...tr.figureStyle,
+        position: tr.figureStyle.position ?? 'relative',
+        width: `${widthPct}%`,
+        ...(isSide
+          ? {
               float: block.placement === 'side-right' ? 'right' : 'left',
-              width: `${widthPct}%`,
               margin: block.placement === 'side-right' ? '0 0 6pt 8pt' : '0 8pt 6pt 0',
-            }}
-          >
-            {baseImg}
-            {block.caption && (
-              <div
-                style={{
-                  marginTop: '3pt',
-                  fontFamily: typography.bodyFamily,
-                  fontSize: `${typography.scale[1]}pt`,
-                  color: palette.muted,
-                  fontStyle: 'italic',
-                }}
-              >
-                {block.caption}
-              </div>
-            )}
-          </div>
-        );
-      }
-      // framed-center / inline
+            }
+          : {}),
+      };
       return (
-        <figure
-          className="adv-image adv-image--framed"
-          style={{
-            margin: '8pt auto',
-            width: `${widthPct}%`,
-            padding: block.placement === 'framed-center' ? '6pt' : 0,
-            border: block.placement === 'framed-center' ? `1px solid ${palette.muted}` : 'none',
-          }}
-        >
-          {baseImg}
-          {block.caption && (
-            <figcaption
-              style={{
-                marginTop: '4pt',
-                fontFamily: typography.bodyFamily,
-                fontSize: `${typography.scale[1]}pt`,
-                color: palette.muted,
-                fontStyle: 'italic',
-                textAlign: 'center',
-              }}
-            >
-              {block.caption}
-            </figcaption>
-          )}
+        <figure style={figureStyle}>
+          <img src={url} alt={block.caption || ''} crossOrigin="anonymous" style={tr.imgStyle} />
+          {tr.overlay}
+          {block.caption && <figcaption style={tr.captionStyle}>{block.caption}</figcaption>}
         </figure>
       );
     }
+
+    case 'layered': {
+      const url = findImageUrl(book, block.imageId);
+      if (!url) return null;
+      const heightPct = Math.round((block.heightFraction ?? 1) * 100);
+      const scrimBg =
+        block.scrim === 'dark'
+          ? rgba('#000000', 0.42)
+          : block.scrim === 'light'
+          ? rgba('#ffffff', 0.5)
+          : block.scrim === 'gradient-bottom'
+          ? `linear-gradient(0deg, ${rgba('#000000', 0.62)} 0%, ${rgba('#000000', 0)} 60%)`
+          : block.scrim === 'gradient-top'
+          ? `linear-gradient(180deg, ${rgba('#000000', 0.62)} 0%, ${rgba('#000000', 0)} 60%)`
+          : 'transparent';
+      const lightText = block.scrim !== 'light';
+      const justify =
+        block.align === 'top' ? 'flex-start' : block.align === 'bottom' ? 'flex-end' : 'center';
+      return (
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 0,
+            height: `${heightPct}%`,
+            overflow: 'hidden',
+          }}
+        >
+          <img
+            src={url}
+            alt=""
+            crossOrigin="anonymous"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+          <div style={{ position: 'absolute', inset: 0, background: scrimBg }} />
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: justify,
+              padding: '14mm 12mm',
+              textAlign: 'center',
+            }}
+          >
+            {block.overlay.map((o, i) =>
+              o.type === 'heading' ? (
+                <h2
+                  key={i}
+                  style={{
+                    fontFamily: typography.headingFamily,
+                    fontSize: `${typography.scale[o.level === 1 ? 4 : 3]}pt`,
+                    color: lightText ? '#fff' : roles.text,
+                    margin: '0 0 6pt 0',
+                    lineHeight: 1.15,
+                    textShadow: lightText ? '0 2px 12px rgba(0,0,0,0.5)' : 'none',
+                  }}
+                >
+                  {o.text}
+                </h2>
+              ) : (
+                <p
+                  key={i}
+                  style={{
+                    fontFamily: typography.bodyFamily,
+                    fontSize: `${typography.scale[2]}pt`,
+                    color: lightText ? 'rgba(255,255,255,0.92)' : roles.text,
+                    margin: 0,
+                    lineHeight: 1.5,
+                    textShadow: lightText ? '0 1px 8px rgba(0,0,0,0.5)' : 'none',
+                  }}
+                >
+                  {o.text}
+                </p>
+              )
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    case 'margin-note': {
+      // Set in the outer (left, in RTL) margin, small and muted.
+      return (
+        <aside
+          style={{
+            position: 'absolute',
+            left: '4mm',
+            width: `${ctx.plan.grid.marginsMm.end - 6}mm`,
+            fontFamily: typography.bodyFamily,
+            fontSize: `${typography.scale[1] * 0.92}pt`,
+            color: roles.muted,
+            fontStyle: 'italic',
+            lineHeight: 1.4,
+            borderTop: `0.5pt solid ${roles.hairline}`,
+            paddingTop: '3pt',
+            direction: 'rtl',
+          }}
+        >
+          {block.text}
+        </aside>
+      );
+    }
+
+    case 'accent-bar': {
+      return (
+        <div
+          style={{
+            width: `${Math.round((block.widthFraction ?? 0.25) * 100)}%`,
+            height: `${block.thicknessPt ?? 3}pt`,
+            background: roles.accent,
+            margin: '10pt 0',
+            borderRadius: '1pt',
+          }}
+        />
+      );
+    }
+
     case 'pull-quote': {
       return (
         <blockquote
-          className="adv-pullquote"
           style={{
             fontFamily: typography.headingFamily,
             fontSize: `${typography.scale[2]}pt`,
             lineHeight: 1.4,
-            color: palette.accent,
-            borderInlineStart: `3px solid ${palette.accent}`,
+            color: roles.accent,
+            borderInlineStart: `3px solid ${roles.accent}`,
             paddingInlineStart: '12pt',
             margin: '12pt 0',
             fontStyle: 'italic',
@@ -253,7 +322,7 @@ function BlockRenderer({ block, book, plan }: BlockRendererProps) {
             <footer
               style={{
                 marginTop: '6pt',
-                color: palette.muted,
+                color: roles.muted,
                 fontSize: `${typography.scale[1]}pt`,
                 fontStyle: 'normal',
               }}
@@ -264,39 +333,19 @@ function BlockRenderer({ block, book, plan }: BlockRendererProps) {
         </blockquote>
       );
     }
-    case 'divider': {
-      if (block.style === 'none') return <div style={{ height: '8pt' }} />;
-      // For now we use a single CSS-only ornament. The 10 design systems
-      // each have richer SVG ornaments on the server; once we wire those
-      // through to the client we'll pick by plan.designSystem + style.
-      const glyph =
-        block.style === 'stars' ? '✦ ✦ ✦' : block.style === 'ornament' ? '◆ ◆ ◆' : '———';
-      return (
-        <div
-          className="adv-divider"
-          style={{
-            textAlign: 'center',
-            margin: '14pt 0',
-            color: palette.accent,
-            fontFamily: typography.displayFamily || typography.headingFamily,
-            letterSpacing: '0.4em',
-            fontSize: `${typography.scale[1]}pt`,
-          }}
-        >
-          {glyph}
-        </div>
-      );
-    }
+
+    case 'divider':
+      return <>{system.Ornament({ style: block.style, roles, seed: plan.seed })}</>;
+
     case 'callout': {
       return (
         <aside
-          className={`adv-callout adv-callout--${block.tone}`}
           style={{
-            background: block.tone === 'warning' ? '#FFF4E6' : block.tone === 'note' ? '#F0F4F8' : 'transparent',
-            borderInlineStart: `3px solid ${palette.accent}`,
+            background: block.tone === 'quote' ? 'transparent' : roles.surface,
+            borderInlineStart: `3px solid ${roles.accent}`,
             padding: '8pt 12pt',
             margin: '8pt 0',
-            color: palette.text,
+            color: roles.text,
             fontFamily: typography.bodyFamily,
             fontSize: `${typography.baseSize}pt`,
             fontStyle: block.tone === 'quote' ? 'italic' : 'normal',
@@ -306,13 +355,13 @@ function BlockRenderer({ block, book, plan }: BlockRendererProps) {
         </aside>
       );
     }
-    case 'spacer': {
+
+    case 'spacer':
       return <div style={{ height: `${block.sizeMm}mm` }} />;
-    }
+
     case 'title-page': {
       return (
         <div
-          className="adv-titlepage"
           style={{
             position: 'absolute',
             inset: 0,
@@ -328,7 +377,7 @@ function BlockRenderer({ block, book, plan }: BlockRendererProps) {
             style={{
               fontFamily: typography.displayFamily || typography.headingFamily,
               fontSize: `${typography.scale[4] * 1.4}pt`,
-              color: palette.text,
+              color: roles.text,
               margin: 0,
               lineHeight: 1.1,
             }}
@@ -340,26 +389,19 @@ function BlockRenderer({ block, book, plan }: BlockRendererProps) {
               style={{
                 fontFamily: typography.headingFamily,
                 fontSize: `${typography.scale[2]}pt`,
-                color: palette.muted,
+                color: roles.muted,
                 marginTop: '12pt',
               }}
             >
               {block.subtitle}
             </p>
           )}
-          <div
-            style={{
-              marginTop: '40pt',
-              width: '40%',
-              height: '1px',
-              background: palette.accent,
-            }}
-          />
+          <div style={{ marginTop: '40pt', width: '40%', height: '1px', background: roles.accent }} />
           <p
             style={{
               fontFamily: typography.bodyFamily,
               fontSize: `${typography.scale[2]}pt`,
-              color: palette.text,
+              color: roles.text,
               marginTop: '20pt',
             }}
           >
@@ -368,69 +410,36 @@ function BlockRenderer({ block, book, plan }: BlockRendererProps) {
         </div>
       );
     }
+
     case 'chapter-opener': {
       const chapter = book.chapters?.[block.chapterIndex];
-      const chapterTitle = chapter?.title || `פרק ${block.chapterIndex + 1}`;
+      const title = chapter?.title || `פרק ${block.chapterIndex + 1}`;
+      const imageUrl = block.imageId ? findImageUrl(book, block.imageId) : null;
       return (
-        <div className="adv-chapter-opener" style={{ marginTop: '20mm', marginBottom: '12pt' }}>
-          <div
-            style={{
-              fontFamily: typography.displayFamily || typography.headingFamily,
-              fontSize: `${typography.scale[3]}pt`,
-              color: palette.accent,
-              textAlign: 'center',
-              letterSpacing: '0.2em',
-            }}
-          >
-            פרק {block.chapterIndex + 1}
-          </div>
-          <h2
-            style={{
-              fontFamily: typography.headingFamily,
-              fontSize: `${typography.scale[4]}pt`,
-              color: palette.text,
-              textAlign: 'center',
-              margin: '6pt 0 14pt 0',
-              lineHeight: 1.2,
-            }}
-          >
-            {chapterTitle}
-          </h2>
-          {block.epigraph && (
-            <p
-              style={{
-                fontFamily: typography.bodyFamily,
-                fontSize: `${typography.scale[1]}pt`,
-                color: palette.muted,
-                fontStyle: 'italic',
-                textAlign: 'center',
-                margin: '0 auto 18pt auto',
-                maxWidth: '70%',
-              }}
-            >
-              {block.epigraph}
-            </p>
-          )}
-          <div
-            style={{
-              width: '40%',
-              height: '1px',
-              background: palette.accent,
-              margin: '0 auto',
-            }}
-          />
-        </div>
+        <>
+          {system.ChapterOpener({
+            chapterIndex: block.chapterIndex,
+            title,
+            epigraph: block.epigraph,
+            imageUrl,
+            template: block.template,
+            roles,
+            typography,
+            seed: plan.seed,
+          })}
+        </>
       );
     }
+
     case 'toc': {
       const chapters = book.chapters || [];
       return (
-        <div className="adv-toc">
+        <div>
           <h2
             style={{
               fontFamily: typography.headingFamily,
               fontSize: `${typography.scale[3]}pt`,
-              color: palette.text,
+              color: roles.text,
               textAlign: 'center',
               marginBottom: '20pt',
             }}
@@ -444,7 +453,7 @@ function BlockRenderer({ block, book, plan }: BlockRendererProps) {
               margin: 0,
               fontFamily: typography.bodyFamily,
               fontSize: `${typography.baseSize}pt`,
-              color: palette.text,
+              color: roles.text,
             }}
           >
             {chapters.map((ch, i) => (
@@ -454,76 +463,100 @@ function BlockRenderer({ block, book, plan }: BlockRendererProps) {
                   display: 'flex',
                   justifyContent: 'space-between',
                   padding: '6pt 0',
-                  borderBottom: `1px dotted ${palette.muted}`,
+                  borderBottom: `1px dotted ${roles.hairline}`,
                 }}
               >
                 <span>{ch.title}</span>
-                <span style={{ color: palette.muted }}>{i + 1}</span>
+                <span style={{ color: roles.muted }}>{i + 1}</span>
               </li>
             ))}
           </ol>
         </div>
       );
     }
+
     case 'page-break':
-      return null; // Page boundaries are owned by the Page layer.
+      return null;
     default:
       return null;
   }
 }
 
-// -- Page renderer -----------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Page renderer
+// ---------------------------------------------------------------------------
 
-interface PageRendererProps {
+function PageRenderer({
+  page,
+  pageNumber,
+  ctx,
+}: {
   page: PlanPage;
   pageNumber: number;
-  book: BookForRender;
-  plan: DesignPlan;
-}
+  ctx: RenderCtx;
+}) {
+  const { plan, roles, system } = ctx;
+  const grid = plan.grid;
 
-function PageRenderer({ page, pageNumber, book, plan }: PageRendererProps) {
-  const { palette, grid } = plan;
+  // A page is "edge-to-edge" when it owns the whole canvas: title pages,
+  // image-overlay openers, full-bleed images, layered blocks, spreads.
+  const hasFullBleed = page.blocks.some(
+    (b) =>
+      (b.type === 'image' && b.placement === 'full-bleed') ||
+      b.type === 'layered' ||
+      b.type === 'title-page' ||
+      (b.type === 'chapter-opener' && b.template === 'image-overlay')
+  );
+  const isEdgeToEdge = hasFullBleed || page.kind === 'spread';
 
-  // Full-bleed pages: no padding, image fills entire page.
-  const isFullBleed = page.blocks.some((b) => b.type === 'image' && b.placement === 'full-bleed');
+  const bg = system.pageBackground(roles, page.kind);
+  const showFrame =
+    !isEdgeToEdge && (page.kind === 'chapter-opener' || page.kind === 'image-feature');
 
   return (
     <div
-      className={`adv-page adv-page--${page.kind}`}
+      className="adv-page"
       style={{
         width: `${PAGE_W_MM}mm`,
         height: `${PAGE_H_MM}mm`,
         position: 'relative',
-        background: palette.background,
-        color: palette.text,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        color: roles.text,
+        boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
         margin: '0 auto 12mm auto',
         overflow: 'hidden',
         pageBreakAfter: 'always',
         breakAfter: 'page',
+        ...bg,
       }}
     >
+      {showFrame && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: '6mm',
+            border: `0.5pt solid ${rgba(roles.accent, 0.4)}`,
+            pointerEvents: 'none',
+          }}
+        />
+      )}
       <div
-        className="adv-page__content"
         style={{
           position: 'absolute',
-          top: isFullBleed ? 0 : `${grid.marginsMm.top}mm`,
-          bottom: isFullBleed ? 0 : `${grid.marginsMm.bottom}mm`,
-          // Hebrew RTL: `start` = right, `end` = left
-          right: isFullBleed ? 0 : `${grid.marginsMm.start}mm`,
-          left: isFullBleed ? 0 : `${grid.marginsMm.end}mm`,
+          top: isEdgeToEdge ? 0 : `${grid.marginsMm.top}mm`,
+          bottom: isEdgeToEdge ? 0 : `${grid.marginsMm.bottom}mm`,
+          right: isEdgeToEdge ? 0 : `${grid.marginsMm.start}mm`,
+          left: isEdgeToEdge ? 0 : `${grid.marginsMm.end}mm`,
           direction: 'rtl',
-          columnCount: grid.columns,
+          columnCount: isEdgeToEdge ? 1 : grid.columns,
           columnGap: `${grid.gutterMm}mm`,
         }}
       >
         {page.blocks.map((block, i) => (
-          <BlockRenderer key={i} block={block} book={book} plan={plan} />
+          <BlockRenderer key={i} block={block} ctx={ctx} />
         ))}
       </div>
-      {page.kind !== 'title' && page.kind !== 'blank' && (
+      {page.kind !== 'title' && page.kind !== 'blank' && !isEdgeToEdge && (
         <div
-          className="adv-page__number"
           style={{
             position: 'absolute',
             bottom: '10mm',
@@ -532,7 +565,7 @@ function PageRenderer({ page, pageNumber, book, plan }: PageRendererProps) {
             textAlign: 'center',
             fontFamily: plan.typography.bodyFamily,
             fontSize: `${plan.typography.scale[1]}pt`,
-            color: palette.muted,
+            color: roles.muted,
           }}
         >
           {pageNumber}
@@ -542,7 +575,9 @@ function PageRenderer({ page, pageNumber, book, plan }: PageRendererProps) {
   );
 }
 
-// -- Top-level component ------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Top-level
+// ---------------------------------------------------------------------------
 
 export interface DesignedBookViewProps {
   book: BookForRender;
@@ -552,8 +587,16 @@ export interface DesignedBookViewProps {
 export default function DesignedBookView({ book, plan }: DesignedBookViewProps) {
   ensureFontsLoaded();
 
-  // Inject @page rules so print/PDF gets correct page sizing. Runs once
-  // per plan render — the size never changes.
+  const system = useMemo(() => getSystemVisual(plan.designSystem), [plan.designSystem]);
+  const roles = useMemo(
+    () =>
+      system.resolveRoles
+        ? system.resolveRoles(plan.variant, plan.palette)
+        : deriveColorRoles(plan.palette),
+    [system, plan.variant, plan.palette]
+  );
+  const ctx: RenderCtx = { book, plan, roles, system };
+
   const pageCss = useMemo(
     () => `
 @page { size: ${PAGE_W_MM}mm ${PAGE_H_MM}mm; margin: 0; }
@@ -561,7 +604,6 @@ export default function DesignedBookView({ book, plan }: DesignedBookViewProps) 
   body { background: white !important; margin: 0 !important; padding: 0 !important; }
   .adv-page { box-shadow: none !important; margin: 0 !important; page-break-after: always; }
 }
-.adv-paragraph--dropcap::first-letter { /* fallback when JS-rendered dropcap fails */ }
 `,
     []
   );
@@ -569,17 +611,9 @@ export default function DesignedBookView({ book, plan }: DesignedBookViewProps) 
   return (
     <>
       <style>{pageCss}</style>
-      <div
-        className="adv-book"
-        style={{
-          background: '#E8E5DD',
-          minHeight: '100vh',
-          padding: '12mm 0',
-          direction: 'rtl',
-        }}
-      >
+      <div style={{ background: '#E8E5DD', minHeight: '100vh', padding: '12mm 0', direction: 'rtl' }}>
         {plan.pages.map((page, i) => (
-          <PageRenderer key={i} page={page} pageNumber={i + 1} book={book} plan={plan} />
+          <PageRenderer key={i} page={page} pageNumber={i + 1} ctx={ctx} />
         ))}
       </div>
     </>

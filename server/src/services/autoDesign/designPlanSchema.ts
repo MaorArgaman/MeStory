@@ -27,6 +27,10 @@ export type BlockParagraph = {
   dropCap?: boolean;
   lead?: boolean; // larger, lighter — used for first paragraph after a chapter opener
   align?: 'start' | 'justify' | 'center';
+  /** Optional bold lead phrase that runs into the start of the paragraph
+   *  (a "run-in head"). Classic editorial device — the first few words set
+   *  in the heading face, the rest flows as body. */
+  runInHead?: string;
 };
 
 export type ImagePlacement =
@@ -38,12 +42,60 @@ export type ImagePlacement =
   | 'side-right'
   | 'framed-center'; // centered, framed/captioned, ~60% page width
 
+/** Visual treatment applied to an image. The system module decides the
+ *  exact look (e.g. how a polaroid frame is drawn); the plan just names it. */
+export type ImageTreatment =
+  | 'plain' // no frame, square corners
+  | 'framed' // thin keyline frame in the accent/hairline color
+  | 'polaroid' // white border, slight rotation, soft shadow
+  | 'rounded' // rounded corners
+  | 'duotone' // recolored into the palette (accent ↔ background)
+  | 'vignette' // soft darkened edges
+  | 'postcard'; // framed + caption set as a handwritten-style note
+
 export type BlockImage = {
   type: 'image';
   imageId: string; // refers to a page_image's _id on the book row
   placement: ImagePlacement;
   widthFraction?: number; // 0..1, only meaningful for inline/framed/side
   caption?: string;
+  /** Visual treatment. Defaults to system's preferred treatment if omitted. */
+  treatment?: ImageTreatment;
+};
+
+/** A full-page (or half-page) image with text composited ON TOP, behind a
+ *  controlled scrim so text stays legible. This is how we get dramatic
+ *  chapter openers and feature spreads WITHOUT text accidentally landing
+ *  on a busy image — the scrim guarantees contrast. */
+export type BlockLayered = {
+  type: 'layered';
+  imageId: string;
+  /** Contrast layer between image and text. */
+  scrim: 'dark' | 'light' | 'gradient-bottom' | 'gradient-top' | 'none';
+  /** Where the text block sits within the image. */
+  align: 'center' | 'bottom' | 'top';
+  /** The text composited over the image. Limited to a few short blocks. */
+  overlay: Array<
+    | { type: 'heading'; level: 1 | 2 | 3; text: string }
+    | { type: 'paragraph'; text: string }
+  >;
+  /** Fraction of page height the layered area occupies (0.5..1). */
+  heightFraction?: number;
+};
+
+/** A short note set in the outer margin, aligned to nearby body text.
+ *  Editorial/academic device — annotations, dates, asides. */
+export type BlockMarginNote = {
+  type: 'margin-note';
+  text: string;
+};
+
+/** A purely decorative accent bar/rule — structural punctuation in the
+ *  accent color. Used to open sections or frame a heading. */
+export type BlockAccentBar = {
+  type: 'accent-bar';
+  widthFraction?: number; // 0..1 of the text column, default 0.25
+  thicknessPt?: number; // default 3
 };
 
 export type BlockPullQuote = {
@@ -79,16 +131,32 @@ export type BlockTitlePage = {
   author: string;
 };
 
+/** How a chapter's opening page is composed. The system module owns the
+ *  actual visual; the planner picks the template that fits the chapter
+ *  (e.g. image-overlay only when the chapter has a strong lead image). */
+export type ChapterOpenerTemplate =
+  | 'numeral-ornament' // large chapter numeral + ornament + centered title
+  | 'image-overlay' // full-bleed lead image with title composited over it
+  | 'vertical-title' // title set vertically along the outer edge, big numeral
+  | 'rule-stack'; // stacked hairline rules, accent numeral, left-set title
+
 export type BlockChapterOpener = {
   type: 'chapter-opener';
   chapterIndex: number; // 0-based index into book.chapters
   epigraph?: string;
+  /** Which opener composition to use. Defaults to 'numeral-ornament'. */
+  template?: ChapterOpenerTemplate;
+  /** Lead image for the 'image-overlay' template. Must be a real imageId. */
+  imageId?: string;
 };
 
 export type Block =
   | BlockHeading
   | BlockParagraph
   | BlockImage
+  | BlockLayered
+  | BlockMarginNote
+  | BlockAccentBar
   | BlockPullQuote
   | BlockDivider
   | BlockCallout
@@ -108,6 +176,7 @@ export type PageKind =
   | 'chapter-opener' // first page of a chapter — sets the tone
   | 'body' // regular body text
   | 'image-feature' // image-dominant page
+  | 'spread' // edge-to-edge dramatic page (usually a layered block)
   | 'pull-quote' // single quote, centered, lots of space
   | 'blank'; // intentional whitespace
 
@@ -171,6 +240,13 @@ export interface DesignPlan {
   /** Which of the 10 systems the planner chose. Renderers may use this to
    *  select ornament glyphs, drop-cap style, etc. */
   designSystem: DesignSystemId;
+  /** The chosen variant id within the system (e.g. memoir-warm's "autumn"
+   *  vs "dusk"). Drives palette + ornament-set selection. The planner picks
+   *  it; renderers look up the system module for the visual implementation. */
+  variant?: string;
+  /** Modular-scale ratio name the type scale was built from. Analytics +
+   *  lets renderers derive intermediate sizes coherently. */
+  scaleRatio?: string;
   /** Short human-readable tone tag. Free-form, used for analytics only. */
   tone: string;
   palette: Palette;
@@ -202,6 +278,8 @@ export const designPlanJsonSchema = {
   properties: {
     version: { type: 'integer', enum: [1] },
     seed: { type: 'integer', minimum: 0, maximum: 2147483647 },
+    variant: { type: 'string', maxLength: 40 },
+    scaleRatio: { type: 'string', maxLength: 40 },
     designSystem: {
       type: 'string',
       enum: [
@@ -341,13 +419,28 @@ export function validateDesignPlan(
         );
       }
     });
-    // Image references must exist on the book.
+    // Image references must exist on the book — across every block type
+    // that can carry an imageId (image, layered, image-overlay opener).
     page.blocks.forEach((block) => {
-      if (block.type === 'image' && !context.availableImageIds.has(block.imageId)) {
+      const refs: string[] = [];
+      if (block.type === 'image') refs.push(block.imageId);
+      if (block.type === 'layered') refs.push(block.imageId);
+      if (block.type === 'chapter-opener' && block.imageId) refs.push(block.imageId);
+      for (const ref of refs) {
+        if (!context.availableImageIds.has(ref)) {
+          issues.push({
+            severity: 'block',
+            page: i,
+            message: `block "${block.type}" references missing imageId "${ref}"`,
+          });
+        }
+      }
+      // An image-overlay opener with no image can't render its template.
+      if (block.type === 'chapter-opener' && block.template === 'image-overlay' && !block.imageId) {
         issues.push({
           severity: 'block',
           page: i,
-          message: `image references missing imageId "${block.imageId}"`,
+          message: `chapter-opener uses 'image-overlay' template but has no imageId`,
         });
       }
     });

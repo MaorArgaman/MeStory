@@ -22,6 +22,7 @@ interface ApiBookResponse {
   chapters?: Array<{ title: string; content: string }>;
   pageImages?: Array<{ _id?: string; url: string; pageIndex: number }>;
   autoDesignPlan?: DesignPlan;
+  coverDesign?: { front?: { imageUrl?: string } };
 }
 
 export default function PrintDesignedBookPage() {
@@ -116,5 +117,33 @@ export default function PrintDesignedBookPage() {
     pageImages: book.pageImages,
   };
 
-  return <DesignedBookView book={renderable} plan={book.autoDesignPlan} />;
+  const coverUrl = book.coverDesign?.front?.imageUrl;
+
+  return (
+    <>
+      {coverUrl && (
+        // Front cover on its own first page so the designed PDF/preview
+        // includes the cover the user chose (matches the manual print page).
+        <div
+          style={{
+            breakAfter: 'page',
+            pageBreakAfter: 'always',
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#fff',
+          }}
+        >
+          <img
+            src={coverUrl}
+            alt="Cover"
+            crossOrigin="anonymous"
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+          />
+        </div>
+      )}
+      <DesignedBookView book={renderable} plan={book.autoDesignPlan} />
+    </>
+  );
 }

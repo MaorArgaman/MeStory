@@ -21,6 +21,7 @@ import {
   ValidationIssue,
 } from './designPlanSchema';
 import { plannerSystemsCatalog, getDesignSystem } from './designSystems';
+import { plannerBuiltSystemsDetail } from './systems';
 
 const MODEL = 'claude-sonnet-4-6';
 const MAX_OUTPUT_TOKENS = 16000;
@@ -85,12 +86,26 @@ You must:
 7. Set "seed" to any integer 0..2147483647. Renderers use it to vary ornament rotation and similar tiny details so two regenerates of the same plan still differ.
 8. Set "tone" to a short tag like "intimate-warm" or "playful-bright" — used for analytics only.
 
-If attemptNumber > 1, you MUST pick a different designSystem than any in previousSystems. The same content gets a fresh visual identity on regenerate.
+RICH DESIGN VOCABULARY — use these to reach a professional, varied result (don't just stack body paragraphs):
+- For FULLY-BUILT systems (detailed below) you MUST set "variant" to the id of the palette variant whose mood best matches the book, and copy that variant's exact palette into "palette". Also set "scaleRatio" to one of the system's allowed ratios.
+- chapter-opener: set "template" to one of the system's opener templates. Use "image-overlay" (and set its "imageId") ONLY when that chapter has a strong lead photo — it makes a dramatic full-page opening. Otherwise use "numeral-ornament" or the system's other templates. VARY the template across chapters so openings don't feel repetitive.
+- image: set "treatment" (e.g. framed, polaroid, postcard, duotone, vignette, rounded) from the system's supported treatments. Choose treatments that suit the mood (polaroid/postcard feel personal; duotone/vignette feel cinematic). Use "placement" to vary: framed-center, side-left/right (text wraps), full-bleed, full-bleed-top.
+- layered: a full/partial-page image with a few short overlay texts on top, behind a scrim (use "gradient-bottom" or "dark" so text stays legible). Perfect for a dramatic spread or feature page (kind="spread" or "image-feature"). NEVER put long body text in a layered overlay — only a heading + maybe one short line.
+- pull-quote: lift a powerful sentence from the chapter onto its own page (kind="pull-quote") or inline for rhythm.
+- paragraph.runInHead: a short bold lead phrase that opens a paragraph (editorial touch). paragraph.dropCap: true on the FIRST body paragraph of a chapter only. paragraph.lead: true for an intro paragraph.
+- divider (ornament/rule/stars), accent-bar, spacer, margin-note: use for rhythm and breathing room. A great book varies its pages.
+
+PACING: think like a designer. Open each chapter with a designed opener page, let the first body page breathe (lead paragraph + drop cap), break long stretches with a pull-quote or a feature image, and use dividers between scenes. Aim for visual rhythm, not uniformity.
+
+If attemptNumber > 1, you MUST pick a different designSystem than any in previousSystems. The same content gets a fresh visual identity on regenerate. Also pick a different variant and opener-template mix so it feels genuinely new.
 
 If priorRevisionIssues are present, you are revising a previous plan. Fix every "block" severity issue. Keep what was working.
 
-Design systems catalog:
+Design systems catalog (all 10):
 ${plannerSystemsCatalog()}
+
+FULLY-BUILT systems — these have palette variants and richer rendering. Prefer them when they fit, and follow their variant/opener/treatment options exactly:
+${plannerBuiltSystemsDetail()}
 
 Return ONLY through the ${SUBMIT_TOOL_NAME} tool. Do not produce any free text.`;
 }
@@ -112,9 +127,16 @@ function buildUserPrompt(input: PlannerInput): string {
     })
     .join('\n');
 
-  const imagesSummary = (book.pageImages || [])
-    .map((img: IPageImage) => `- id="${img._id}" (page hint: ${img.pageIndex}, AI-generated: ${img.isAiGenerated})`)
-    .join('\n') || '(no images available)';
+  // Images are referenced by STABLE ARRAY INDEX ("img-0", "img-1", …), not
+  // by _id — page_images entries are often created without any id field, so
+  // index is the only reliable handle. Renderers resolve the same way.
+  const imagesSummary =
+    (book.pageImages || [])
+      .map((img: IPageImage, idx: number) => {
+        const desc = img.prompt ? `, depicts: ${img.prompt.replace(/\s+/g, ' ').slice(0, 90)}` : '';
+        return `- id="img-${idx}" (${img.isAiGenerated ? 'AI-generated illustration' : 'photo'}${desc})`;
+      })
+      .join('\n') || '(no images available)';
 
   let revisionBlock = '';
   if (priorRevisionIssues && priorRevisionIssues.length > 0 && priorPlan) {
