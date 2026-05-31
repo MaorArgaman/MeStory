@@ -4,27 +4,9 @@
  * Covers 8 pillars: theme, characters, conflict, climax, resolution, setting, keyPoints, narrativeArc
  */
 
-import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { generateWithBreaker } from './geminiClient';
 import { supabaseAdmin } from '../config/supabase';
 import crypto from 'crypto';
-
-// Lazy-initialize Gemini AI client
-let genAIClient: GoogleGenerativeAI | null = null;
-let modelInstance: GenerativeModel | null = null;
-
-function getGeminiModel(): GenerativeModel {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY is not configured');
-  }
-  if (!genAIClient) {
-    genAIClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  }
-  if (!modelInstance) {
-    modelInstance = genAIClient.getGenerativeModel({ model: 'gemini-2.5-flash' });
-  }
-  return modelInstance;
-}
 
 // 8 Interview Topics
 export type ChatInterviewTopic =

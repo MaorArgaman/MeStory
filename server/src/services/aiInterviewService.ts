@@ -4,25 +4,7 @@
  * Uses Gemini AI for adaptive questioning and summary generation
  */
 
-import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { generateWithBreaker } from './geminiClient';
-
-// Lazy-initialize Gemini AI client (only when API key is available)
-let genAIClient: GoogleGenerativeAI | null = null;
-let modelInstance: GenerativeModel | null = null;
-
-function getGeminiModel(): GenerativeModel {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY is not configured');
-  }
-  if (!genAIClient) {
-    genAIClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  }
-  if (!modelInstance) {
-    modelInstance = genAIClient.getGenerativeModel({ model: 'gemini-2.5-flash' });
-  }
-  return modelInstance;
-}
 
 // Interview topics - Memorial focused
 export type InterviewTopic = 'person' | 'memories' | 'impact' | 'legacy';

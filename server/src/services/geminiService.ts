@@ -1,33 +1,6 @@
-import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { SupportedLanguage, getLanguageInstruction, detectLanguage, getLocalizedRatingLabel } from '../utils/languageHelper';
-import { geminiBreaker, CircuitBreakerOpenError } from '../utils/circuitBreaker';
-
-// Lazy-initialize Gemini AI client (only when API key is available)
-let genAIClient: GoogleGenerativeAI | null = null;
-let modelInstance: GenerativeModel | null = null;
-
-function getGeminiModel(): GenerativeModel {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY is not configured');
-  }
-  if (!genAIClient) {
-    genAIClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  }
-  if (!modelInstance) {
-    modelInstance = genAIClient.getGenerativeModel({ model: 'gemini-2.5-flash' });
-  }
-  return modelInstance;
-}
-
-/**
- * Wraps Gemini's generateContent in a circuit breaker and per-call timeout.
- * After 3 consecutive failures the breaker OPENS for 60 seconds and
- * subsequent calls fast-fail with CircuitBreakerOpenError instead of hanging.
- * Returns the same result shape as the raw SDK call so call sites can stay identical.
- */
-function generateWithBreaker(prompt: string) {
-  return geminiBreaker.exec(() => getGeminiModel().generateContent(prompt));
-}
+import { CircuitBreakerOpenError } from '../utils/circuitBreaker';
+import { getGeminiModel, generateWithBreaker } from './geminiClient';
 
 // Re-export so callers/controllers can distinguish "AI down" from other errors
 export { CircuitBreakerOpenError };
