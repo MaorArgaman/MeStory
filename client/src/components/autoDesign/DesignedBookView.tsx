@@ -53,6 +53,10 @@ interface RenderCtx {
   plan: DesignPlan;
   roles: ColorRoles;
   system: SystemVisual;
+  /** Sequential position of each chapter-opener block within the plan, used
+   *  as a robust fallback when the plan omits/has an invalid chapterIndex —
+   *  prevents "פרק NaN". Keyed by block identity. */
+  chapterOpenerOrder: Map<Block, number>;
 }
 
 function BlockRenderer({ block, ctx }: { block: Block; ctx: RenderCtx }) {
@@ -411,13 +415,22 @@ function BlockRenderer({ block, ctx }: { block: Block; ctx: RenderCtx }) {
     }
 
     case 'chapter-opener': {
-      const chapter = book.chapters?.[block.chapterIndex];
-      const title = chapter?.title || `פרק ${block.chapterIndex + 1}`;
+      // Robust chapter index: use the plan's value only when it's a valid
+      // in-range integer; otherwise fall back to the opener's sequential
+      // position. Guarantees a real number so we never render "פרק NaN".
+      const chapterCount = book.chapters?.length ?? 0;
+      const raw = block.chapterIndex;
+      const idx =
+        Number.isInteger(raw) && (raw as number) >= 0 && (chapterCount === 0 || (raw as number) < chapterCount)
+          ? (raw as number)
+          : ctx.chapterOpenerOrder.get(block) ?? 0;
+      const chapter = book.chapters?.[idx];
+      const title = chapter?.title || `פרק ${idx + 1}`;
       const imageUrl = block.imageId ? findImageUrl(book, block.imageId) : null;
       return (
         <>
           {system.ChapterOpener({
-            chapterIndex: block.chapterIndex,
+            chapterIndex: idx,
             title,
             epigraph: block.epigraph,
             imageUrl,
@@ -597,7 +610,20 @@ export default function DesignedBookView({ book, plan, embedded }: DesignedBookV
         : deriveColorRoles(plan.palette),
     [system, plan.variant, plan.palette]
   );
-  const ctx: RenderCtx = { book, plan, roles, system };
+  // Number chapter-openers by their order in the plan, as a fallback for any
+  // block whose chapterIndex is missing/invalid (prevents "פרק NaN").
+  const chapterOpenerOrder = useMemo(() => {
+    const m = new Map<Block, number>();
+    let n = 0;
+    for (const page of plan.pages) {
+      for (const b of page.blocks) {
+        if (b.type === 'chapter-opener') m.set(b, n++);
+      }
+    }
+    return m;
+  }, [plan]);
+
+  const ctx: RenderCtx = { book, plan, roles, system, chapterOpenerOrder };
 
   const pageCss = useMemo(
     () => `
