@@ -30,16 +30,8 @@ import {
   sendSaleNotificationToAuthor,
 } from '../services/emailService';
 import { supabaseAdmin } from '../config/supabase';
-import {
-  generateChapterAudio,
-  GeminiVoiceName,
-} from '../services/geminiTTSService';
 import { translateChapter } from '../services/geminiService';
-import { IChapter, IChapterAudio, IBookTranslations, ITranslatedChapter } from '../models/Book';
-
-// Default voices for pre-generation
-const DEFAULT_MALE_VOICE: GeminiVoiceName = 'Charon';
-const DEFAULT_FEMALE_VOICE: GeminiVoiceName = 'Aoede';
+import { IChapter, IBookTranslations, ITranslatedChapter } from '../models/Book';
 
 /**
  * Permission levels for book access (mirrors CollaboratorRole + owner).
@@ -75,252 +67,6 @@ const canReadBook = (book: any, userId: string): boolean => {
   return getBookAccess(book, userId) !== null;
 };
 
-/**
- * Generate translations and TTS audio for a book
- * CORRECT ORDER:
- * 1. Generate audio for ORIGINAL language (male + female)
- * 2. Generate translation to OTHER language
- * 3. Generate audio for TRANSLATED content (male + female)
- *
- * Runs asynchronously to not block the publish process
- */
-async function generateTranslationsAndAudio(
-  bookId: string,
-  bookTitle: string,
-  chapters: IChapter[],
-  bookLanguage: string
-): Promise<void> {
-  console.log(`[Publish] Starting translation & audio generation for book ${bookId}`);
-  console.log(`[Publish] Book language: ${bookLanguage}, Chapters: ${chapters.length}`);
-
-  const isHebrew = bookLanguage === 'he' || bookLanguage === 'hebrew';
-  const targetLanguage = isHebrew ? 'english' : 'hebrew';
-  const translationKey = isHebrew ? 'english' : 'hebrew';
-
-  // STEP 1: Generate audio for ORIGINAL language
-  console.log(`[Publish] STEP 1: Generating audio for original language (${bookLanguage})...`);
-
-  let updatedChapters: IChapter[] = [];
-
-  for (const chapter of chapters) {
-    const chapterId = chapter._id || `chapter-${chapter.order}`;
-    const audio: IChapterAudio = {};
-    const originalContent = chapter.content || '';
-
-    if (isHebrew) {
-      // Book is in Hebrew - generate Hebrew audio from original content
-      try {
-        console.log(`  - Hebrew male voice for: ${chapter.title}`);
-        const result = await generateChapterAudio(
-          bookId, `${chapterId}-he-male`, originalContent,
-          { voice: DEFAULT_MALE_VOICE, authorGender: 'male', language: 'he' }
-        );
-        audio.maleVoiceHe = {
-          url: result.audioUrl, duration: result.duration, voice: result.voice,
-          language: 'he', generatedAt: new Date().toISOString(),
-        };
-      } catch (err) {
-        console.error(`    Failed: ${err}`);
-      }
-
-      try {
-        console.log(`  - Hebrew female voice for: ${chapter.title}`);
-        const result = await generateChapterAudio(
-          bookId, `${chapterId}-he-female`, originalContent,
-          { voice: DEFAULT_FEMALE_VOICE, authorGender: 'female', language: 'he' }
-        );
-        audio.femaleVoiceHe = {
-          url: result.audioUrl, duration: result.duration, voice: result.voice,
-          language: 'he', generatedAt: new Date().toISOString(),
-        };
-      } catch (err) {
-        console.error(`    Failed: ${err}`);
-      }
-    } else {
-      // Book is in English - generate English audio from original content
-      try {
-        console.log(`  - English male voice for: ${chapter.title}`);
-        const result = await generateChapterAudio(
-          bookId, `${chapterId}-en-male`, originalContent,
-          { voice: DEFAULT_MALE_VOICE, authorGender: 'male', language: 'en' }
-        );
-        audio.maleVoiceEn = {
-          url: result.audioUrl, duration: result.duration, voice: result.voice,
-          language: 'en', generatedAt: new Date().toISOString(),
-        };
-        audio.maleVoice = audio.maleVoiceEn; // Legacy
-      } catch (err) {
-        console.error(`    Failed: ${err}`);
-      }
-
-      try {
-        console.log(`  - English female voice for: ${chapter.title}`);
-        const result = await generateChapterAudio(
-          bookId, `${chapterId}-en-female`, originalContent,
-          { voice: DEFAULT_FEMALE_VOICE, authorGender: 'female', language: 'en' }
-        );
-        audio.femaleVoiceEn = {
-          url: result.audioUrl, duration: result.duration, voice: result.voice,
-          language: 'en', generatedAt: new Date().toISOString(),
-        };
-        audio.femaleVoice = audio.femaleVoiceEn; // Legacy
-      } catch (err) {
-        console.error(`    Failed: ${err}`);
-      }
-    }
-
-    updatedChapters.push({ ...chapter, audio });
-  }
-
-  // Save original audio to database
-  await Book.findByIdAndUpdate(bookId, { chapters: updatedChapters });
-  console.log(`[Publish] Original language audio saved.`);
-
-  // STEP 2: Generate translation
-  console.log(`[Publish] STEP 2: Generating translation to ${targetLanguage}...`);
-
-  const translatedChapters: any[] = [];
-  let translatedTitle = '';
-
-  try {
-    // Translate title
-    const titleTranslation = await translateChapter(bookTitle, bookTitle, targetLanguage);
-    translatedTitle = titleTranslation.translatedTitle;
-    console.log(`  Title: "${bookTitle}" → "${translatedTitle}"`);
-
-    // Translate chapters
-    for (const chapter of chapters) {
-      try {
-        console.log(`  Translating: ${chapter.title}...`);
-        const translation = await translateChapter(
-          chapter.content || '',
-          chapter.title || `Chapter ${chapter.order}`,
-          targetLanguage
-        );
-        translatedChapters.push({
-          _id: chapter._id || `chapter-${chapter.order}`,
-          title: translation.translatedTitle,
-          content: translation.translatedContent,
-          order: chapter.order,
-        });
-        console.log(`    → ${translation.translatedTitle}`);
-      } catch (err) {
-        console.error(`    Failed: ${err}`);
-        translatedChapters.push({
-          _id: chapter._id || `chapter-${chapter.order}`,
-          title: chapter.title,
-          content: chapter.content || '',
-          order: chapter.order,
-        });
-      }
-    }
-
-    // Save translations to database
-    const translations: IBookTranslations = {};
-    translations[translationKey as keyof IBookTranslations] = {
-      title: translatedTitle,
-      chapters: translatedChapters,
-      generatedAt: new Date().toISOString(),
-    };
-    await Book.findByIdAndUpdate(bookId, { translations });
-    console.log(`[Publish] Translation saved.`);
-  } catch (err) {
-    console.error(`[Publish] Translation failed:`, err);
-    return; // Can't continue without translation
-  }
-
-  // STEP 3: Generate audio for TRANSLATED content
-  console.log(`[Publish] STEP 3: Generating audio for translated content (${targetLanguage})...`);
-
-  // Re-fetch book to get latest chapters with original audio
-  const bookWithAudio = await Book.findById(bookId);
-  if (!bookWithAudio) {
-    console.error(`[Publish] Book not found after audio generation`);
-    return;
-  }
-
-  const finalChapters: IChapter[] = [];
-
-  for (let i = 0; i < bookWithAudio.chapters.length; i++) {
-    const chapter = bookWithAudio.chapters[i];
-    const translatedChapter = translatedChapters[i];
-    const translatedContent = translatedChapter?.content || '';
-    const audio: IChapterAudio = chapter.audio || {};
-    const chapterId = chapter._id || `chapter-${chapter.order}`;
-
-    if (isHebrew) {
-      // Book is in Hebrew - generate English audio from TRANSLATED content
-      if (translatedContent) {
-        try {
-          console.log(`  - English male voice (translated) for: ${chapter.title}`);
-          const result = await generateChapterAudio(
-            bookId, `${chapterId}-en-male`, translatedContent,
-            { voice: DEFAULT_MALE_VOICE, authorGender: 'male', language: 'en' }
-          );
-          audio.maleVoiceEn = {
-            url: result.audioUrl, duration: result.duration, voice: result.voice,
-            language: 'en', generatedAt: new Date().toISOString(),
-          };
-          audio.maleVoice = audio.maleVoiceEn; // Legacy
-        } catch (err) {
-          console.error(`    Failed: ${err}`);
-        }
-
-        try {
-          console.log(`  - English female voice (translated) for: ${chapter.title}`);
-          const result = await generateChapterAudio(
-            bookId, `${chapterId}-en-female`, translatedContent,
-            { voice: DEFAULT_FEMALE_VOICE, authorGender: 'female', language: 'en' }
-          );
-          audio.femaleVoiceEn = {
-            url: result.audioUrl, duration: result.duration, voice: result.voice,
-            language: 'en', generatedAt: new Date().toISOString(),
-          };
-          audio.femaleVoice = audio.femaleVoiceEn; // Legacy
-        } catch (err) {
-          console.error(`    Failed: ${err}`);
-        }
-      }
-    } else {
-      // Book is in English - generate Hebrew audio from TRANSLATED content
-      if (translatedContent) {
-        try {
-          console.log(`  - Hebrew male voice (translated) for: ${chapter.title}`);
-          const result = await generateChapterAudio(
-            bookId, `${chapterId}-he-male`, translatedContent,
-            { voice: DEFAULT_MALE_VOICE, authorGender: 'male', language: 'he' }
-          );
-          audio.maleVoiceHe = {
-            url: result.audioUrl, duration: result.duration, voice: result.voice,
-            language: 'he', generatedAt: new Date().toISOString(),
-          };
-        } catch (err) {
-          console.error(`    Failed: ${err}`);
-        }
-
-        try {
-          console.log(`  - Hebrew female voice (translated) for: ${chapter.title}`);
-          const result = await generateChapterAudio(
-            bookId, `${chapterId}-he-female`, translatedContent,
-            { voice: DEFAULT_FEMALE_VOICE, authorGender: 'female', language: 'he' }
-          );
-          audio.femaleVoiceHe = {
-            url: result.audioUrl, duration: result.duration, voice: result.voice,
-            language: 'he', generatedAt: new Date().toISOString(),
-          };
-        } catch (err) {
-          console.error(`    Failed: ${err}`);
-        }
-      }
-    }
-
-    finalChapters.push({ ...chapter, audio });
-  }
-
-  // Save final chapters with all audio
-  await Book.findByIdAndUpdate(bookId, { chapters: finalChapters });
-  console.log(`[Publish] All audio saved. Translation & audio generation complete!`);
-}
 
 /**
  * Generate translations for a book
@@ -724,6 +470,11 @@ export const getBookById = async (req: AuthRequest, res: Response): Promise<void
               pageLayout: book.pageLayout,
               pageImages: book.pageImages || [],
               aiDesignState: book.aiDesignState,
+              // Auto-design (עימוד) plan — the /print/:id/designed preview and
+              // the export routes need this; without it the preview wrongly
+              // reports "no auto-design plan" even after one was generated.
+              autoDesignPlan: book.autoDesignPlan,
+              autoDesignUses: book.autoDesignUses,
               publishingStatus: book.publishingStatus,
               statistics: book.statistics,
               tags: book.tags,
@@ -1292,12 +1043,8 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
       publishingStatus: updatedPublishingStatus,
     }, { new: true });
 
-    // TTS DISABLED - Too expensive ($32+ per book)
-    // Was generating 8 audio versions automatically (2 languages × 2 genders × 2 versions)
-    // To re-enable, uncomment the following:
-    // generateTranslationsAndAudio(id, book.title, book.chapters, book.language || 'en').catch((err) =>
-    //   console.error('Failed to generate translations and audio:', err)
-    // );
+    // TTS (server-side audio narration) was removed: not profitable. Books no
+    // longer auto-generate audio on publish.
 
     // Update user's author profile
     const user = await User.findById(req.user.id);
