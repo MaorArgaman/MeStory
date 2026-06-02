@@ -71,9 +71,15 @@ export const runDavidCron = async (req: Request, res: Response): Promise<void> =
     return;
   }
 
-  // Respond immediately, run in the background (cron has no consumer waiting).
-  res.status(202).json({ success: true, message: 'David started' });
-  runDailyCycle('cron').catch((e) => console.error('[David] cron run error:', e));
+  // Await the cycle: on Vercel, background work after the response is not
+  // guaranteed to finish. The function's maxDuration (300s) covers the run.
+  try {
+    const result = await runDailyCycle('cron');
+    res.status(200).json({ success: true, data: result });
+  } catch (e: any) {
+    console.error('[David] cron run error:', e);
+    res.status(500).json({ success: false, error: e.message || 'Run failed' });
+  }
 };
 
 // ==================== ADMIN ====================

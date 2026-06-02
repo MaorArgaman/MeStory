@@ -115,7 +115,7 @@ export async function geminiGroundedSearch(
         contents: [{ role: 'user', parts: [{ text: query }] }],
         tools: [{ google_search: {} }],
       },
-      { timeout: 40000, validateStatus: () => true },
+      { timeout: 25000, validateStatus: () => true },
     );
     if (res.status >= 400 || !res.data) {
       console.warn('[David] grounded search HTTP', res.status, JSON.stringify(res.data)?.slice(0, 200));

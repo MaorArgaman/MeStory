@@ -62,13 +62,16 @@ const ShareModal: React.FC<ShareModalProps> = ({
   // ESC key handling and scroll lock
   useModal(isOpen, onClose);
 
-  // Frontend route is /read/:bookId, not /reader/:bookId.
-  // Old path produced 404s when shared on WhatsApp/social. Also guard
-  // against undefined bookId - falling back to marketplace prevents
-  // sending /read/undefined links.
+  // Always build the share link against the canonical public domain, NOT
+  // window.location.origin. Otherwise a link shared from a Vercel preview
+  // (*.vercel.app), the native app, or localhost points at a host the
+  // recipient can't open. The reader route /read/:bookId is public, so this
+  // link is reliable to open and to send.
+  // (Guard against undefined bookId so we never send /read/undefined.)
+  const SITE_URL = import.meta.env.VITE_PUBLIC_SITE_URL || 'https://mestory-ai.com';
   const shareUrl = bookId
-    ? `${window.location.origin}/read/${bookId}`
-    : `${window.location.origin}/marketplace`;
+    ? `${SITE_URL}/read/${bookId}`
+    : `${SITE_URL}/marketplace`;
   const shareText = `I read "${bookTitle}" by ${authorName} and highly recommend it! 📚`;
 
   const trackShare = async (platform: string) => {

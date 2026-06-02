@@ -148,10 +148,19 @@ export async function runDailyCycle(trigger: 'cron' | 'manual'): Promise<RunResu
       }
     }
 
-    // 4. Pick an uncovered gap and write an article.
-    if (config.articles_per_run > 0) {
-      const gap = await pickGap(report.ranks);
-      if (gap) {
+    // Steps 4-6 are independent of each other, so run them concurrently to
+    // keep total wall-clock comfortably under the serverless time limit.
+    // (Article generation is the long pole; new-query proposal and the media
+    //  observation overlap with it instead of adding to it.)
+    const [, added, media] = await Promise.all([
+      // 4. Pick an uncovered gap and write an article.
+      (async () => {
+        if (config.articles_per_run <= 0) return;
+        const gap = await pickGap(report.ranks);
+        if (!gap) {
+          report.nextFocus.push('כל השאלות הפעילות כוסו במאמר — הרחבת מאגר השאלות.');
+          return;
+        }
         const existing = await store.getExistingTopics();
         const articleAction = await writeAndPublish(runId, gap, existing.map((e) => e.title), competitors);
         if (articleAction) {
@@ -159,14 +168,22 @@ export async function runDailyCycle(trigger: 'cron' | 'manual'): Promise<RunResu
           if (articleAction.published) report.publishedArticle = articleAction.published;
           if (articleAction.drafted) report.draftedArticle = articleAction.drafted;
         }
-      } else {
-        report.nextFocus.push('כל השאלות הפעילות כוסו במאמר — הרחבת מאגר השאלות.');
-      }
-    }
+      })().catch((e) => console.error('[David] article step failed:', e.message || e)),
 
-    // 5. Grow the tracked-query set with fresh gaps.
-    const added = await proposeNewQueries(competitors.map((c) => c.name));
-    if (added > 0) {
+      // 5. Grow the tracked-query set with fresh gaps.
+      proposeNewQueries(competitors.map((c) => c.name)).catch((e) => {
+        console.error('[David] proposeNewQueries failed:', e.message || e);
+        return 0;
+      }),
+
+      // 6. Media / promotion observation (best-effort, single grounded query).
+      mediaObservation().catch((e) => {
+        console.error('[David] mediaObservation failed:', e.message || e);
+        return null;
+      }),
+    ]);
+
+    if (added && added > 0) {
       report.addedQueries = added;
       await store.logAction({
         run_id: runId,
@@ -177,8 +194,6 @@ export async function runDailyCycle(trigger: 'cron' | 'manual'): Promise<RunResu
       actionsCount++;
     }
 
-    // 6. Media / promotion observation (best-effort, single grounded query).
-    const media = await mediaObservation();
     if (media) {
       report.mediaNotes.push(media);
       await store.logAction({
