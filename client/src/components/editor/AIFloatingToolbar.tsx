@@ -3,12 +3,13 @@
  * Floating AI toolbar that appears on text selection
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Plus, Minus, PlayCircle, Loader2, Check, X } from 'lucide-react';
 import { Editor } from '@tiptap/react';
 import { EnhanceAction } from '../../types/analysis';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useModal } from '../../hooks/useModal';
 
 interface AIFloatingToolbarProps {
   editor: Editor;
@@ -175,6 +176,10 @@ export function AIEnhancePreview({
 }: AIEnhancePreviewProps) {
   const { language } = useLanguage();
   const isHebrew = language === 'he';
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // ESC to close + scroll lock + focus management (no-op while closed).
+  useModal(isOpen, onCancel, dialogRef);
 
   if (!isOpen) return null;
 
@@ -195,12 +200,16 @@ export function AIEnhancePreview({
         onClick={onCancel}
       >
         <motion.div
+          ref={dialogRef}
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
           className="w-full max-w-2xl bg-deep-space/95 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl overflow-hidden"
           dir={isHebrew ? 'rtl' : 'ltr'}
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
         >
           {/* Header */}
           <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
@@ -217,9 +226,10 @@ export function AIEnhancePreview({
             </div>
             <button
               onClick={onCancel}
+              aria-label={isHebrew ? 'סגור' : 'Close'}
               className="p-2 hover:bg-white/10 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-gray-400" />
+              <X className="w-5 h-5 text-gray-400" aria-hidden="true" />
             </button>
           </div>
 

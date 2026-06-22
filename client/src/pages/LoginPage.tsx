@@ -301,7 +301,7 @@ export default function LoginPage() {
           </div>
 
           {/* Footer */}
-          <p className="text-center text-xs text-gray-600 mt-8">
+          <p className="text-center text-xs text-gray-400 mt-8">
             {t('login.footer')}
           </p>
         </motion.div>

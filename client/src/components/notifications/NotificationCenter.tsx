@@ -315,19 +315,21 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     disabled={markingAllRead}
                     className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
                     title={t('notifications.actions.mark_all_read')}
+                    aria-label={t('notifications.actions.mark_all_read')}
                   >
                     {markingAllRead ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
                     ) : (
-                      <CheckCheck className="w-5 h-5" />
+                      <CheckCheck className="w-5 h-5" aria-hidden="true" />
                     )}
                   </button>
                 )}
                 <button
                   onClick={onClose}
+                  aria-label={t('common.close', 'סגור')}
                   className="p-2 rounded-lg hover:bg-white/10 transition-colors"
                 >
-                  <X className="w-5 h-5 text-gray-400" />
+                  <X className="w-5 h-5 text-gray-400" aria-hidden="true" />
                 </button>
               </div>
             </div>

@@ -140,6 +140,13 @@ export default function GuidesPage() {
       .catch(() => { /* non-critical */ });
   }, []);
 
+  // Show only articles in the current UI language so a Hebrew reader doesn't
+  // see English entries and vice-versa. Fall back to all if none match.
+  const localizedArticles = (() => {
+    const matching = dbArticles.filter((a) => a.lang === language);
+    return matching.length > 0 ? matching : dbArticles;
+  })();
+
   const pageTitle = isHebrew
     ? 'מדריכים - MeStory'
     : 'Guides - How to Use MeStory | MeStory';
@@ -256,7 +263,7 @@ export default function GuidesPage() {
           </motion.section>
 
           {/* More articles (DB-backed) */}
-          {dbArticles.length > 0 && (
+          {localizedArticles.length > 0 && (
             <motion.section
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -268,7 +275,7 @@ export default function GuidesPage() {
                 {isHebrew ? 'מאמרים נוספים' : 'More Articles'}
               </h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {dbArticles.map((a) => (
+                {localizedArticles.map((a) => (
                   <Link key={a.slug} to={`/guides/${a.slug}`}>
                     <GlassCard hover className="h-full p-6 group transition-all duration-300 hover:border-memorial-gold/30">
                       <h3 className="text-lg font-display font-bold text-white mb-2 group-hover:text-memorial-gold transition-colors">

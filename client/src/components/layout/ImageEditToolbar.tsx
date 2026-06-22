@@ -135,9 +135,10 @@ export default function ImageEditToolbar({
           ))}
           <button
             onClick={onClose}
+            aria-label={isHebrew ? 'סגור' : 'Close'}
             className="p-2.5 text-gray-400 hover:text-white hover:bg-gray-800/50 mr-auto"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
 

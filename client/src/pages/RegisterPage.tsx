@@ -456,7 +456,7 @@ export default function RegisterPage() {
         </div>
 
           {/* Footer */}
-          <p className="text-center text-xs text-gray-600 mt-6">
+          <p className="text-center text-xs text-gray-400 mt-6">
             {t('register.footer')}
           </p>
         </motion.div>

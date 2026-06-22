@@ -3,7 +3,7 @@
  * Allows users to share books via various platforms
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -61,9 +61,10 @@ const ShareModal: React.FC<ShareModalProps> = ({
   const [sharing, setSharing] = useState(false);
   const { language } = useLanguage();
   const isHebrew = language === 'he';
+  const dialogRef = useRef<HTMLDivElement>(null);
 
-  // ESC key handling and scroll lock
-  useModal(isOpen, onClose);
+  // ESC key handling, scroll lock, and focus management/trap
+  useModal(isOpen, onClose, dialogRef);
 
   // Always build the share link against the canonical public domain, NOT
   // window.location.origin. Otherwise a link shared from a Vercel preview
@@ -157,6 +158,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
         onClick={(e) => e.target === e.currentTarget && onClose()}
       >
         <motion.div
+          ref={dialogRef}
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}

@@ -1583,6 +1583,7 @@ export default function MarketplacePage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
+              aria-label={t('marketplace.sort.label')}
               className="flex-1 sm:flex-none rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm border border-white/10 focus:outline-none focus:ring-2 focus:ring-memorial-gold text-white cursor-pointer"
               style={{ backgroundColor: '#1a1a2e' }}
             >
