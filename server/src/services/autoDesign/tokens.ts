@@ -21,12 +21,17 @@
 // ---------------------------------------------------------------------------
 
 export const SCALE_RATIOS = {
+  'minor-second': 1.067,
+  'major-second': 1.125,
   'minor-third': 1.2,
   'major-third': 1.25,
   'perfect-fourth': 1.333,
   'augmented-fourth': 1.414,
   'perfect-fifth': 1.5,
+  'minor-sixth': 1.6,
   golden: 1.618,
+  'major-sixth': 1.667,
+  'major-seventh': 1.875,
 } as const;
 
 export type ScaleRatioName = keyof typeof SCALE_RATIOS;

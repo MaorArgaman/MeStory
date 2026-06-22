@@ -17,7 +17,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { X, Sparkles, RefreshCw, Download, Loader2 } from 'lucide-react';
+import { X, Sparkles, RefreshCw, Download, Loader2, Shuffle, Check } from 'lucide-react';
 import { api } from '../../services/api';
 
 interface AutoDesignModalProps {
@@ -53,6 +53,11 @@ export default function AutoDesignModal({ bookId, isOpen, onClose }: AutoDesignM
   const [status, setStatus] = useState<StatusResponse | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [iframeKey, setIframeKey] = useState(0); // bump to force reload
+  // Current visual variation seed (null = the saved design). Re-rolling this is
+  // free + instant: it just re-renders the preview with a fresh genome, no
+  // server call, no credit, no usage-cap hit.
+  const [variationSeed, setVariationSeed] = useState<number | null>(null);
+  const [savedVariation, setSavedVariation] = useState(false);
 
   // Load status whenever the modal opens.
   useEffect(() => {
@@ -89,6 +94,8 @@ export default function AutoDesignModal({ bookId, isOpen, onClose }: AutoDesignM
         usesRemaining: data?.usesRemaining ?? 0,
         maxUses: status?.maxUses ?? 3,
       });
+      setVariationSeed(null);
+      setSavedVariation(false);
       setIframeKey((k) => k + 1);
       setStage('ready');
     } catch (err: any) {
@@ -103,6 +110,27 @@ export default function AutoDesignModal({ bookId, isOpen, onClose }: AutoDesignM
         setErrorMsg(err?.response?.data?.error || err?.message || 'שגיאה ביצירת העיצוב');
       }
       setStage('error');
+    }
+  };
+
+  // Roll a fresh visual variation — same content + structure, a brand-new
+  // coherent design. Free and instant: only the preview re-renders with a new
+  // seed (no POST, no credit, no usage-cap hit).
+  const handleVariation = () => {
+    setVariationSeed(Math.floor(Math.random() * 2147483647));
+    setSavedVariation(false);
+    setIframeKey((k) => k + 1);
+  };
+
+  // Persist the currently-previewed variation so exports + the main editor pick
+  // it up. 0 credits, doesn't touch the 3-generate cap.
+  const handleSaveVariation = async () => {
+    if (variationSeed == null) return;
+    try {
+      await api.patch(`/auto-design/${bookId}/seed`, { seed: variationSeed });
+      setSavedVariation(true);
+    } catch (err: any) {
+      setErrorMsg(err?.response?.data?.error || err?.message || 'שמירת הווריאציה נכשלה');
     }
   };
 
@@ -145,7 +173,8 @@ export default function AutoDesignModal({ bookId, isOpen, onClose }: AutoDesignM
 
   if (!isOpen) return null;
 
-  const previewSrc = `/print/${bookId}/designed`;
+  const previewSrc =
+    variationSeed != null ? `/print/${bookId}/designed?seed=${variationSeed}` : `/print/${bookId}/designed`;
   const usesLabel = status
     ? `${status.maxUses - status.usesRemaining}/${status.maxUses} שימושים`
     : '';
@@ -234,12 +263,32 @@ export default function AutoDesignModal({ bookId, isOpen, onClose }: AutoDesignM
                   )}
                 </div>
                 <button
+                  onClick={handleVariation}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold flex items-center justify-center gap-2 mb-2"
+                >
+                  <Shuffle className="w-4 h-4" />
+                  ג'נרט וריאציה חדשה
+                </button>
+                <p className="text-xs text-gray-500 mb-3 leading-relaxed">
+                  אינסוף וריאציות עיצוב — חינם ומיידי. אותו תוכן, מראה חדש לגמרי בכל לחיצה.
+                </p>
+                {variationSeed != null && (
+                  <button
+                    onClick={handleSaveVariation}
+                    disabled={savedVariation}
+                    className="w-full py-2.5 rounded-xl bg-green-600 text-white font-medium flex items-center justify-center gap-2 mb-3 disabled:opacity-60"
+                  >
+                    <Check className="w-4 h-4" />
+                    {savedVariation ? 'הווריאציה נשמרה' : 'שמור וריאציה זו'}
+                  </button>
+                )}
+                <button
                   onClick={handleGenerate}
                   disabled={status.usesRemaining <= 0}
-                  className="w-full py-3 rounded-xl bg-orange-100 text-orange-900 font-medium flex items-center justify-center gap-2 mb-3 disabled:opacity-50"
+                  className="w-full py-2.5 rounded-xl bg-orange-100 text-orange-900 font-medium flex items-center justify-center gap-2 mb-3 disabled:opacity-50"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  עצב מחדש ({status.usesRemaining} נותרו)
+                  תכנון מחדש מלא ({status.usesRemaining} נותרו)
                 </button>
                 <button
                   onClick={handleDownloadPdf}

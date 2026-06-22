@@ -13,17 +13,27 @@
 
 import { useMemo } from 'react';
 import type { CSSProperties } from 'react';
-import type { Block, BookForRender, DesignPlan, Page as PlanPage } from './designPlanTypes';
-import { deriveColorRoles, rgba, type ColorRoles } from './designTokens';
+import type {
+  Block,
+  BookForRender,
+  ChapterOpenerTemplate,
+  DesignPlan,
+  ImageTreatment,
+  Page as PlanPage,
+} from './designPlanTypes';
+import { deriveColorRoles, hashStr, rgba, type ColorRoles } from './designTokens';
 import { imageUrlById } from './collectImages';
 import { getSystemVisual } from './systems';
+import { makeGenomeVisual } from './systems/systemFactory';
+import { composeGenome, type StyleGenome } from './genome';
+import { getArchetype } from './archetypes';
 import type { SystemVisual } from './systems/types';
 
 const PAGE_W_MM = 148;
 const PAGE_H_MM = 210;
 
 const GOOGLE_FONTS_HREF =
-  'https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;600;800&family=Assistant:wght@300;400;600;700&family=Suez+One&family=David+Libre:wght@400;700&family=Alef:wght@400;700&family=Rubik:wght@400;500;700&family=Secular+One&family=Bellefair&family=Miriam+Libre:wght@400;700&display=swap';
+  'https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;600;800&family=Assistant:wght@300;400;600;700&family=Suez+One&family=David+Libre:wght@400;700&family=Alef:wght@400;700&family=Rubik:wght@400;500;700&family=Secular+One&family=Bellefair&family=Miriam+Libre:wght@400;700&family=Varela+Round&family=Noto+Serif+Hebrew:wght@400;600;800&family=Noto+Sans+Hebrew:wght@300;400;600;800&family=Karantina:wght@400;700&family=Amatic+SC:wght@400;700&display=swap';
 
 function ensureFontsLoaded() {
   if (typeof document === 'undefined') return;
@@ -57,6 +67,10 @@ interface RenderCtx {
    *  as a robust fallback when the plan omits/has an invalid chapterIndex —
    *  prevents "פרק NaN". Keyed by block identity. */
   chapterOpenerOrder: Map<Block, number>;
+  /** When set, the design is genome-driven: openers rotate and image
+   *  treatments are drawn from the genome's pools (so a fresh seed restyles
+   *  the whole book coherently). Null = legacy fixed-system rendering. */
+  genome: StyleGenome | null;
 }
 
 function BlockRenderer({ block, ctx }: { block: Block; ctx: RenderCtx }) {
@@ -163,9 +177,17 @@ function BlockRenderer({ block, ctx }: { block: Block; ctx: RenderCtx }) {
         );
       }
 
-      // Flowed image with a system-specific treatment.
+      // Flowed image with a system-specific treatment. In genome mode the
+      // treatment is drawn deterministically from the genome's pool keyed by
+      // the image id, so a fresh seed restyles every photo coherently while
+      // the same image keeps a stable look within one design.
       const widthPct = Math.round((block.widthFraction ?? 0.6) * 100);
-      const tr = system.imageTreatment(block.treatment, roles, plan.seed);
+      let treatment: ImageTreatment | undefined = block.treatment;
+      if (ctx.genome) {
+        const pool = ctx.genome.imageTreatmentPool;
+        treatment = pool[hashStr(block.imageId) % pool.length];
+      }
+      const tr = system.imageTreatment(treatment, roles, plan.seed);
       const isSide = block.placement === 'side-left' || block.placement === 'side-right';
       const figureStyle: CSSProperties = {
         ...tr.figureStyle,
@@ -427,6 +449,23 @@ function BlockRenderer({ block, ctx }: { block: Block; ctx: RenderCtx }) {
       const chapter = book.chapters?.[idx];
       const title = chapter?.title || `פרק ${idx + 1}`;
       const imageUrl = block.imageId ? findImageUrl(book, block.imageId) : null;
+
+      // In genome mode, rotate opener templates across chapters for rhythm.
+      // Preserve a dramatic image-overlay where the plan paired a lead image;
+      // never pick image-overlay for a chapter that has no usable image.
+      let template: ChapterOpenerTemplate | undefined = block.template;
+      if (ctx.genome) {
+        const order = ctx.chapterOpenerOrder.get(block) ?? idx;
+        const rot = ctx.genome.openerRotation;
+        const chosen = rot[order % rot.length];
+        if (block.template === 'image-overlay' && imageUrl) {
+          template = 'image-overlay';
+        } else if (chosen === 'image-overlay') {
+          template = imageUrl ? 'image-overlay' : rot.find((t) => t !== 'image-overlay') || 'numeral-ornament';
+        } else {
+          template = chosen;
+        }
+      }
       return (
         <>
           {system.ChapterOpener({
@@ -434,7 +473,7 @@ function BlockRenderer({ block, ctx }: { block: Block; ctx: RenderCtx }) {
             title,
             epigraph: block.epigraph,
             imageUrl,
-            template: block.template,
+            template,
             roles,
             typography,
             seed: plan.seed,
@@ -523,7 +562,9 @@ function PageRenderer({
 
   const bg = system.pageBackground(roles, page.kind);
   const showFrame =
-    !isEdgeToEdge && (page.kind === 'chapter-opener' || page.kind === 'image-feature');
+    !isEdgeToEdge &&
+    (page.kind === 'chapter-opener' || page.kind === 'image-feature') &&
+    (ctx.genome ? ctx.genome.framePages : true);
 
   return (
     <div
@@ -597,33 +638,66 @@ export interface DesignedBookViewProps {
   /** When true, render just the pages (no outer gray backdrop/padding) —
    *  the parent supplies the surrounding layout (e.g. cover + interior). */
   embedded?: boolean;
+  /** Forces genome mode and overrides plan.seed — used by the "generate
+   *  another variation" flow (a fresh seed = a fresh coherent design, with no
+   *  server round-trip). When null/undefined, genome mode follows
+   *  plan.genomeMode. */
+  seedOverride?: number | null;
 }
 
-export default function DesignedBookView({ book, plan, embedded }: DesignedBookViewProps) {
+export default function DesignedBookView({ book, plan, embedded, seedOverride }: DesignedBookViewProps) {
   ensureFontsLoaded();
 
-  const system = useMemo(() => getSystemVisual(plan.designSystem), [plan.designSystem]);
+  // Genome mode is on when the plan opts in, or when a seed override is given
+  // (the variation re-roll). The genome is composed deterministically from
+  // (designSystem-as-archetype, seed) and owns palette, fonts, ornaments,
+  // texture, openers and image treatments.
+  const genomeActive = plan.genomeMode === true || seedOverride != null;
+  const effectiveSeed = seedOverride != null ? seedOverride : plan.seed;
+  const genome = useMemo(
+    () => (genomeActive ? composeGenome(getArchetype(plan.designSystem), effectiveSeed) : null),
+    [genomeActive, plan.designSystem, effectiveSeed]
+  );
+
+  // The plan the renderer actually consumes. In genome mode the visual fields
+  // (palette/typography/grid) come from the genome; structure (pages/blocks)
+  // always comes from the plan.
+  const renderPlan: DesignPlan = useMemo(() => {
+    if (!genome) return plan;
+    return {
+      ...plan,
+      seed: effectiveSeed,
+      palette: genome.palette,
+      typography: genome.typography,
+      grid: { ...plan.grid, columns: genome.columns, marginsMm: genome.marginsMm },
+    };
+  }, [plan, genome, effectiveSeed]);
+
+  const system = useMemo(
+    () => (genome ? makeGenomeVisual(genome) : getSystemVisual(plan.designSystem)),
+    [genome, plan.designSystem]
+  );
   const roles = useMemo(
     () =>
       system.resolveRoles
-        ? system.resolveRoles(plan.variant, plan.palette)
-        : deriveColorRoles(plan.palette),
-    [system, plan.variant, plan.palette]
+        ? system.resolveRoles(renderPlan.variant, renderPlan.palette)
+        : deriveColorRoles(renderPlan.palette),
+    [system, renderPlan.variant, renderPlan.palette]
   );
   // Number chapter-openers by their order in the plan, as a fallback for any
   // block whose chapterIndex is missing/invalid (prevents "פרק NaN").
   const chapterOpenerOrder = useMemo(() => {
     const m = new Map<Block, number>();
     let n = 0;
-    for (const page of plan.pages) {
+    for (const page of renderPlan.pages) {
       for (const b of page.blocks) {
         if (b.type === 'chapter-opener') m.set(b, n++);
       }
     }
     return m;
-  }, [plan]);
+  }, [renderPlan]);
 
-  const ctx: RenderCtx = { book, plan, roles, system, chapterOpenerOrder };
+  const ctx: RenderCtx = { book, plan: renderPlan, roles, system, chapterOpenerOrder, genome };
 
   const pageCss = useMemo(
     () => `
@@ -636,7 +710,7 @@ export default function DesignedBookView({ book, plan, embedded }: DesignedBookV
     []
   );
 
-  const pages = plan.pages.map((page, i) => (
+  const pages = renderPlan.pages.map((page, i) => (
     <PageRenderer key={i} page={page} pageNumber={i + 1} ctx={ctx} />
   ));
 

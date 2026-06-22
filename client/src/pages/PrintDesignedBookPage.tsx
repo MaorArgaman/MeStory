@@ -240,10 +240,18 @@ export default function PrintDesignedBookPage() {
     pageLayout: book.pageLayout,
   };
 
+  // Optional ?seed= re-rolls the visual genome on the fly (the "generate
+  // another variation" flow) without a server round-trip or a new LLM call.
+  const seedParam = params.get('seed');
+  const seedOverride =
+    seedParam != null && seedParam !== '' && Number.isFinite(Number(seedParam))
+      ? Number(seedParam)
+      : undefined;
+
   return (
     <div style={{ background: '#E8E5DD', minHeight: '100vh', padding: '12mm 0', direction: 'rtl' }}>
       {book.coverDesign?.front && <FrontCover book={book} />}
-      <DesignedBookView book={renderable} plan={book.autoDesignPlan} embedded />
+      <DesignedBookView book={renderable} plan={book.autoDesignPlan} embedded seedOverride={seedOverride} />
       <BackCover book={book} />
     </div>
   );

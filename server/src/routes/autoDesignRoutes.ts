@@ -81,6 +81,11 @@ router.post(
         previousSystems,
       });
 
+      // Opt the plan into genome rendering: the client composes a full style
+      // genome from (designSystem, seed), so the user can roll unlimited free
+      // visual variations. The planner output stays the structural source.
+      (result.plan as any).genomeMode = true;
+
       await Book.findByIdAndUpdate(
         bookId,
         {
@@ -236,6 +241,57 @@ router.get('/:bookId/status', async (req: AuthRequest, res: Response) => {
       maxUses: AUTO_DESIGN_MAX_USES_PER_BOOK,
     },
   });
+});
+
+/**
+ * Persist a chosen visual variation seed. The client lets the user roll
+ * unlimited free design variations (each is just a new genome seed rendered
+ * client-side); this saves the one they like so exports + the editor pick it
+ * up. No credit charge, and it does NOT count against the 3-generate cap —
+ * it changes only the look, not the structure, and runs no LLM.
+ */
+router.patch('/:bookId/seed', async (req: AuthRequest, res: Response) => {
+  const bookId = req.params.bookId;
+  if (!req.user) {
+    res.status(401).json({ success: false, error: 'Authentication required' });
+    return;
+  }
+  const seed = Number((req.body || {}).seed);
+  if (!Number.isInteger(seed) || seed < 0 || seed > 2147483647) {
+    res.status(400).json({ success: false, error: 'Invalid seed', errorCode: 'INVALID_SEED' });
+    return;
+  }
+  const ownerId = await Book.getOwnerId(bookId);
+  if (!ownerId) {
+    res.status(404).json({ success: false, error: 'Book not found' });
+    return;
+  }
+  if (ownerId !== req.user.id) {
+    res.status(403).json({ success: false, error: 'Not your book' });
+    return;
+  }
+  const book = await Book.findByIdForDesign(bookId);
+  if (!book?.autoDesignPlan) {
+    res.status(404).json({
+      success: false,
+      error: 'No auto-design plan on this book. Generate one first.',
+      errorCode: 'NO_AUTO_DESIGN_PLAN',
+    });
+    return;
+  }
+
+  try {
+    // Dot-path merge into the autoDesignPlan JSONB — only seed + genomeMode.
+    await Book.findByIdAndUpdate(
+      bookId,
+      { $set: { 'autoDesignPlan.seed': seed, 'autoDesignPlan.genomeMode': true } },
+      { new: false }
+    );
+    res.json({ success: true, data: { seed } });
+  } catch (err: any) {
+    console.error('[autoDesign] save seed failed:', err?.message);
+    res.status(500).json({ success: false, error: 'Failed to save variation', details: err?.message });
+  }
 });
 
 export default router;

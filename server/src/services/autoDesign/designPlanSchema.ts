@@ -237,6 +237,13 @@ export interface DesignPlan {
   version: 1;
   /** PRNG seed used by renderers for variation (e.g. ornament rotation). */
   seed: number;
+  /** When true, the client renderer composes a full style-genome from
+   *  (designSystem-as-archetype, seed) — palette, fonts, ornaments, texture,
+   *  openers and image treatments are all sampled, giving combinatorial
+   *  variety. A fresh seed = a fresh coherent design (free, client-side).
+   *  Set by the route after a successful generate. Absent/false → legacy
+   *  fixed-system rendering. The planner does NOT emit this. */
+  genomeMode?: boolean;
   /** Which of the 10 systems the planner chose. Renderers may use this to
    *  select ornament glyphs, drop-cap style, etc. */
   designSystem: DesignSystemId;

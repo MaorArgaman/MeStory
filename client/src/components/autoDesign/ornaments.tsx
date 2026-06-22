@@ -18,7 +18,13 @@ export type OrnamentFamily =
   | 'deco' // bold / art-deco fans + chevrons
   | 'woodcut' // fairytale — sun/star burst
   | 'asterism' // literary — three asterisks
-  | 'rule'; // plain hairline
+  | 'rule' // plain hairline
+  | 'artnouveau' // sinuous whiplash curves
+  | 'botanical' // leafy vine sprig
+  | 'celestial' // small star + crescent
+  | 'wave' // calm sine wave
+  | 'bauhaus' // primary-geometry dots + bar
+  | 'brushstroke'; // hand-inked tapered stroke
 
 // --- Section dividers (centered scene/section breaks) -----------------------
 
@@ -88,6 +94,53 @@ export function Divider({ family, width = 200 }: { family: OrnamentFamily; width
           <text x="120" y="17" textAnchor="middle" fontSize="18" fill="currentColor" fontFamily="serif" letterSpacing="6">
             ⁂
           </text>
+        </svg>
+      );
+    case 'artnouveau':
+      return (
+        <svg viewBox="0 0 240 22" width={width} height={(width * h) / 240} aria-hidden="true">
+          <path d="M30 11 q26 -14 46 0 q20 14 44 0 q24 -14 44 0 q22 14 46 0" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.9" />
+          <circle cx="120" cy="11" r="2.4" fill="currentColor" />
+        </svg>
+      );
+    case 'botanical':
+      return (
+        <svg viewBox="0 0 240 22" width={width} height={(width * h) / 240} aria-hidden="true">
+          <line x1="24" y1="11" x2="96" y2="11" stroke="currentColor" strokeWidth="0.6" />
+          <path d="M120 2 C120 8 120 14 120 20" stroke="currentColor" strokeWidth="0.8" fill="none" />
+          <path d="M120 7 q-9 -3 -13 -7 q9 0 13 5Z M120 11 q9 -3 13 -7 q-9 0 -13 5Z M120 15 q-8 -2 -11 -6 q8 0 11 4Z" fill="currentColor" opacity="0.85" />
+          <line x1="144" y1="11" x2="216" y2="11" stroke="currentColor" strokeWidth="0.6" />
+        </svg>
+      );
+    case 'celestial':
+      return (
+        <svg viewBox="0 0 240 22" width={width} height={(width * h) / 240} aria-hidden="true">
+          <line x1="28" y1="11" x2="100" y2="11" stroke="currentColor" strokeWidth="0.6" />
+          <path d="M120 3 l2.2 6.4 6.8 .2 -5.4 4.2 1.9 6.6 -5.5 -3.8 -5.5 3.8 1.9 -6.6 -5.4 -4.2 6.8 -.2Z" fill="currentColor" />
+          <circle cx="104" cy="11" r="1.1" fill="currentColor" />
+          <circle cx="136" cy="11" r="1.1" fill="currentColor" />
+          <line x1="140" y1="11" x2="212" y2="11" stroke="currentColor" strokeWidth="0.6" />
+        </svg>
+      );
+    case 'wave':
+      return (
+        <svg viewBox="0 0 240 22" width={width} height={(width * h) / 240} aria-hidden="true">
+          <path d="M40 11 q10 -7 20 0 q10 7 20 0 q10 -7 20 0 q10 7 20 0 q10 -7 20 0 q10 7 20 0 q10 -7 20 0" fill="none" stroke="currentColor" strokeWidth="1" />
+        </svg>
+      );
+    case 'bauhaus':
+      return (
+        <svg viewBox="0 0 240 22" width={width} height={(width * h) / 240} aria-hidden="true">
+          <line x1="40" y1="11" x2="104" y2="11" stroke="currentColor" strokeWidth="1.4" />
+          <circle cx="116" cy="11" r="4.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
+          <rect x="125" y="6.5" width="9" height="9" fill="currentColor" />
+          <line x1="146" y1="11" x2="200" y2="11" stroke="currentColor" strokeWidth="1.4" />
+        </svg>
+      );
+    case 'brushstroke':
+      return (
+        <svg viewBox="0 0 240 22" width={width} height={(width * h) / 240} aria-hidden="true">
+          <path d="M36 13 C70 7 100 16 120 11 C150 4 180 15 206 9 L208 11 C180 18 150 8 120 14 C100 18 70 9 36 15 Z" fill="currentColor" opacity="0.92" />
         </svg>
       );
     case 'rule':

@@ -36,7 +36,11 @@ export type ImageTreatment =
   | 'rounded'
   | 'duotone'
   | 'vignette'
-  | 'postcard';
+  | 'postcard'
+  | 'sepia'
+  | 'sketch'
+  | 'blueprint'
+  | 'soft-shadow';
 
 export type ChapterOpenerTemplate =
   | 'numeral-ornament'
@@ -139,6 +143,12 @@ export interface DesignPlan {
   typography: Typography;
   grid: Grid;
   pages: Page[];
+  /** When true, the renderer composes a full StyleGenome from
+   *  (designSystem-as-archetype, seed) and lets it drive palette, fonts,
+   *  ornaments, texture, openers and image treatments — giving combinatorial
+   *  variety. A fresh seed = a fresh coherent design (free, client-side).
+   *  Absent/false → legacy fixed-system rendering (backward compatible). */
+  genomeMode?: boolean;
 }
 
 export interface BookImageRef {
