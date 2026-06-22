@@ -52,6 +52,39 @@ interface Overview {
   trend: Array<{ date: string; presenceRate: number | null; trackedQueries: number | null; coveredQueries: number | null }>;
 }
 
+const statusBadge = (status: string): string => {
+  switch (status) {
+    case 'success': return 'bg-green-500/20 text-green-300';
+    case 'partial': return 'bg-yellow-500/20 text-yellow-300';
+    case 'error': return 'bg-red-500/20 text-red-300';
+    case 'running': return 'bg-blue-500/20 text-blue-300';
+    default: return 'bg-gray-500/20 text-gray-300';
+  }
+};
+
+const statusLabel = (status: string): string => {
+  switch (status) {
+    case 'success': return 'הושלם';
+    case 'partial': return 'חלקי';
+    case 'error': return 'נכשל';
+    case 'running': return 'רץ…';
+    default: return status;
+  }
+};
+
+const actionLabel = (type: string): string => {
+  switch (type) {
+    case 'rank_check': return 'בדיקת דירוג';
+    case 'article_published': return 'מאמר פורסם';
+    case 'article_drafted': return 'מאמר (טיוטה)';
+    case 'keyword_added': return 'מילות מפתח';
+    case 'competitor_discovered': return 'מתחרים';
+    case 'media_observation': return 'תצפית מדיה';
+    case 'skipped': return 'דולג';
+    default: return type;
+  }
+};
+
 export default function DavidPanel() {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,8 +103,14 @@ export default function DavidPanel() {
         api.get('/admin/david/articles'),
       ]);
       setOverview(ov.data.data);
-      setRuns(rs.data.data || []);
+      const runList = rs.data.data || [];
+      setRuns(runList);
       setArticles(arts.data.data || []);
+      // Auto-open the most recent run so the activity is visible immediately,
+      // without the admin having to hunt for it.
+      if (runList.length && !selectedRun) {
+        openRun(runList[0].id);
+      }
     } catch (e: any) {
       toast.error(e.response?.data?.error || 'נכשלה טעינת נתוני דוד');
     } finally {
@@ -82,6 +121,18 @@ export default function DavidPanel() {
   useEffect(() => {
     loadAll();
   }, []);
+
+  // While a run is in progress, refresh periodically so its actions stream in.
+  useEffect(() => {
+    const hasRunning = runs.some((r) => r.status === 'running');
+    if (!hasRunning && !running) return;
+    const t = setInterval(() => {
+      loadAll();
+      if (selectedRun) openRun(selectedRun.run.id);
+    }, 8000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runs, running, selectedRun]);
 
   const runNow = async () => {
     setRunning(true);
@@ -308,7 +359,16 @@ export default function DavidPanel() {
       {/* Daily log */}
       <div className="grid lg:grid-cols-2 gap-6">
         <GlassCard className="p-6">
-          <h3 className="text-lg font-display font-bold text-white mb-4">יומן ריצות</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-display font-bold text-white">יומן ריצות</h3>
+            <button
+              onClick={loadAll}
+              aria-label="רענן יומן ריצות"
+              className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-white"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> רענן
+            </button>
+          </div>
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {runs.map((r) => (
               <button
@@ -316,13 +376,25 @@ export default function DavidPanel() {
                 onClick={() => openRun(r.id)}
                 className={`w-full text-right p-3 rounded-lg border transition-all ${selectedRun?.run?.id === r.id ? 'border-memorial-gold/50 bg-memorial-gold/10' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <span className="text-white font-medium">{r.run_date}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${r.status === 'success' ? 'bg-green-500/20 text-green-300' : r.status === 'error' ? 'bg-red-500/20 text-red-300' : 'bg-gray-500/20 text-gray-300'}`}>
-                    {r.status}
-                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-gray-300">
+                      {r.trigger === 'manual' ? 'ידני' : 'אוטומטי'}
+                    </span>
+                    {typeof r.actions_count === 'number' && r.actions_count > 0 && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-gray-300">
+                        {r.actions_count} פעולות
+                      </span>
+                    )}
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${statusBadge(r.status)}`}>
+                      {statusLabel(r.status)}
+                    </span>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-400 mt-1 truncate">{r.summary || '—'}</p>
+                <p className={`text-xs mt-1 truncate ${r.status === 'error' ? 'text-red-300' : 'text-gray-400'}`}>
+                  {r.status === 'error' ? r.error || 'ריצה נכשלה' : r.summary || '—'}
+                </p>
               </button>
             ))}
             {runs.length === 0 && <p className="text-gray-400 text-sm">עדיין אין ריצות. לחץ "הרץ עכשיו".</p>}
@@ -333,16 +405,28 @@ export default function DavidPanel() {
           <h3 className="text-lg font-display font-bold text-white mb-4">
             {selectedRun ? `פעולות בריצה ${selectedRun.run.run_date}` : 'בחר ריצה לצפייה בפעולות'}
           </h3>
+          {selectedRun?.run?.status === 'error' && (
+            <div className="mb-3 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+              <p className="text-sm text-red-300">⚠ הריצה נכשלה</p>
+              {selectedRun.run.error && <p className="text-xs text-red-300/80 mt-1">{selectedRun.run.error}</p>}
+            </div>
+          )}
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {selectedRun?.actions.map((a) => (
               <div key={a.id} className="p-3 rounded-lg bg-white/5 border border-white/10">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-memorial-gold/20 text-memorial-gold">{a.type}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-memorial-gold/20 text-memorial-gold">{actionLabel(a.type)}</span>
                   <span className="text-white text-sm">{a.title}</span>
                 </div>
               </div>
             ))}
-            {selectedRun && selectedRun.actions.length === 0 && <p className="text-gray-400 text-sm">אין פעולות מתועדות לריצה זו.</p>}
+            {selectedRun && selectedRun.actions.length === 0 && (
+              <p className="text-gray-400 text-sm">
+                {selectedRun.run?.status === 'running'
+                  ? 'הריצה בעיצומה — פעולות יופיעו כאן בזמן אמת.'
+                  : 'אין פעולות מתועדות לריצה זו.'}
+              </p>
+            )}
           </div>
         </GlassCard>
       </div>

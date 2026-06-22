@@ -76,6 +76,15 @@ export async function runDailyCycle(trigger: 'cron' | 'manual'): Promise<RunResu
     return { status: 'skipped', summary: 'David is disabled in config.' };
   }
 
+  // Recover any run that a previous serverless invocation left stuck on
+  // "running" (killed mid-cycle) — so the log is honest and today isn't blocked.
+  try {
+    const swept = await store.failStaleRuns();
+    if (swept) console.log(`[David] marked ${swept} stale run(s) as error`);
+  } catch (e: any) {
+    console.error('[David] failStaleRuns error:', e.message || e);
+  }
+
   const runId = await store.startRun(trigger);
   const report: DailyReport = {
     date: new Date().toISOString().split('T')[0],

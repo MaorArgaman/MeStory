@@ -97,6 +97,28 @@ export async function getRunWithActions(runId: string): Promise<{ run: any; acti
   return { run, actions: actions || [] };
 }
 
+/**
+ * Mark runs that are still "running" long past any plausible duration as
+ * failed. A serverless function killed mid-cycle (timeout, OOM) never reaches
+ * finishRun, so its row stays "running" forever — which both hides the failure
+ * from the admin and makes hasRunToday() think today already ran. Sweep them
+ * so the log tells the truth and the next cron isn't blocked.
+ */
+export async function failStaleRuns(olderThanMinutes = 15): Promise<number> {
+  const cutoff = new Date(Date.now() - olderThanMinutes * 60_000).toISOString();
+  const { data } = await supabaseAdmin
+    .from('david_runs')
+    .update({
+      status: 'error',
+      error: 'Run did not finish (function killed mid-cycle — timeout or crash).',
+      finished_at: new Date().toISOString(),
+    })
+    .eq('status', 'running')
+    .lt('started_at', cutoff)
+    .select('id');
+  return data?.length || 0;
+}
+
 /** Was this run already executed today? Prevents double daily runs. */
 export async function hasRunToday(): Promise<boolean> {
   const today = new Date().toISOString().split('T')[0];
