@@ -320,7 +320,7 @@ export default function BookWritingPage() {
 
   // Sanitize chapter titles that were saved as raw i18n keys (legacy data issue).
   // Real i18n keys are lowercase with underscores; user titles typically aren't.
-  const sanitizeBookData = (bookData: Book): Book => {
+  const sanitizeBookData = (bookData: BookData): BookData => {
     const i18nKeyPattern = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_.]*)+$/;
     if (!bookData.chapters) return bookData;
     return {
@@ -780,15 +780,10 @@ export default function BookWritingPage() {
                     const selectedText = state.doc.textBetween(from, to, ' ');
                     return selectedText.trim().length >= 5;
                   }}
-                  tippyOptions={{
-                    maxWidth: 'calc(100vw - 16px)',
+                  options={{
                     placement: 'top',
-                    popperOptions: {
-                      modifiers: [
-                        { name: 'preventOverflow', options: { boundary: 'viewport', padding: 8 } },
-                        { name: 'flip', options: { fallbackPlacements: ['bottom', 'top'] } },
-                      ],
-                    },
+                    flip: true,
+                    shift: { padding: 8 },
                   }}
                 >
                   <AIFloatingToolbar
@@ -803,16 +798,6 @@ export default function BookWritingPage() {
             </div>
           </div>
         </div>
-
-        {/* AI Enhancement Preview */}
-        {previewData.isOpen && previewData.result && (
-          <AIEnhancePreview
-            originalText={previewData.originalText}
-            result={previewData.result}
-            onAccept={handleAcceptEnhancement}
-            onReject={handleRejectEnhancement}
-          />
-        )}
 
         {/* Keyboard shortcut: ESC to exit */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-gray-400">
@@ -1251,15 +1236,10 @@ export default function BookWritingPage() {
                           // Show toolbar only when text is selected (min 5 chars)
                           return selectedText.trim().length >= 5;
                         }}
-                        tippyOptions={{
-                          maxWidth: 'calc(100vw - 16px)',
+                        options={{
                           placement: 'top',
-                          popperOptions: {
-                            modifiers: [
-                              { name: 'preventOverflow', options: { boundary: 'viewport', padding: 8 } },
-                              { name: 'flip', options: { fallbackPlacements: ['bottom', 'top'] } },
-                            ],
-                          },
+                          flip: true,
+                          shift: { padding: 8 },
                         }}
                       >
                         <AIFloatingToolbar
@@ -1560,7 +1540,7 @@ export default function BookWritingPage() {
                     genre={book.genre}
                     bookTitle={book.title}
                     chapterTitle={currentChapter.title}
-                    bookId={book._id || book.id}
+                    bookId={book.id}
                     onInsertText={handleInsertText}
                   />
                 </div>

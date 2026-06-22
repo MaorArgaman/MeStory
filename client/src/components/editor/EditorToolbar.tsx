@@ -258,6 +258,8 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
       onClick={onClick}
       disabled={disabled}
       title={title}
+      aria-label={title}
+      aria-pressed={isActive}
       className={`
         ${size === 'small' ? 'p-1.5' : 'p-2'}
         rounded-lg transition-all duration-200 flex items-center justify-center

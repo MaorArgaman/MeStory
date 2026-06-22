@@ -30,6 +30,7 @@ import toast from 'react-hot-toast';
 import { GlassCard, GlowingButton } from '../components/ui';
 import ChatModal from '../components/messaging/ChatModal';
 import ShareModal from '../components/social/ShareModal';
+import { sanitizeHtml } from '../utils/sanitizeHtml';
 import { MentionDisplay } from '../components/mentions';
 import { Mention } from '../services/userApi';
 
@@ -877,41 +878,46 @@ export default function ReaderPage() {
               <div className="flex items-center justify-center gap-2 sm:gap-4 mb-4">
                 <button
                   onClick={skipBackward}
+                  aria-label={t('reader.skip_back', 'דלג אחורה')}
                   className="p-3 sm:p-2 rounded-full hover:bg-white/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                   disabled={currentSentenceIndex <= 0}
                 >
-                  <SkipBack className="w-5 h-5 text-white" />
+                  <SkipBack className="w-5 h-5 text-white" aria-hidden="true" />
                 </button>
 
                 {isPaused ? (
                   <button
                     onClick={resumeNarration}
+                    aria-label={t('reader.resume', 'המשך הקראה')}
                     className="p-3 rounded-full bg-green-500 hover:bg-green-600 transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center"
                   >
-                    <Play className="w-6 h-6 text-white" />
+                    <Play className="w-6 h-6 text-white" aria-hidden="true" />
                   </button>
                 ) : (
                   <button
                     onClick={pauseNarration}
+                    aria-label={t('reader.pause', 'השהה הקראה')}
                     className="p-3 rounded-full bg-yellow-500 hover:bg-yellow-600 transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center"
                   >
-                    <Pause className="w-6 h-6 text-white" />
+                    <Pause className="w-6 h-6 text-white" aria-hidden="true" />
                   </button>
                 )}
 
                 <button
                   onClick={stopNarration}
+                  aria-label={t('reader.stop', 'עצור הקראה')}
                   className="p-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 >
-                  <Square className="w-5 h-5 text-white" />
+                  <Square className="w-5 h-5 text-white" aria-hidden="true" />
                 </button>
 
                 <button
                   onClick={skipForward}
+                  aria-label={t('reader.skip_forward', 'דלג קדימה')}
                   className="p-3 sm:p-2 rounded-full hover:bg-white/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                   disabled={currentSentenceIndex >= sentences.length - 1}
                 >
-                  <SkipForward className="w-5 h-5 text-white" />
+                  <SkipForward className="w-5 h-5 text-white" aria-hidden="true" />
                 </button>
               </div>
 
@@ -942,6 +948,7 @@ export default function ReaderPage() {
                   <select
                     value={selectedVoice}
                     onChange={(e) => setSelectedVoice(e.target.value)}
+                    aria-label={t('reader.voice', 'בחירת קול')}
                     className="text-xs bg-white/10 border border-white/20 rounded px-2 py-2 sm:py-1 text-white max-w-[150px] min-h-[40px] sm:min-h-0"
                   >
                     {availableVoices.map((voice) => (
@@ -1020,7 +1027,7 @@ export default function ReaderPage() {
                       ? '"Heebo", "David Libre", "Noto Sans Hebrew", sans-serif'
                       : fontFamily === 'merriweather' ? 'Merriweather, serif' : 'Crimson Text, serif',
                   }}
-                  dangerouslySetInnerHTML={{ __html: currentChapter.content }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentChapter.content) }}
                 />
 
                 {/* Chapter End */}

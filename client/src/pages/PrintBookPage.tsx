@@ -18,6 +18,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
+import { sanitizeHtml } from '../utils/sanitizeHtml';
 import {
   FRONT_OVERLAY, BACK_OVERLAY, COVER_SCALE,
   titleStyle, authorStyle, synopsisStyle, backAuthorStyle,
@@ -798,7 +799,7 @@ function PrintPage({
       {/* Page content */}
       <div
         className="page-body"
-        dangerouslySetInnerHTML={{ __html: page.content || '' }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.content) }}
       />
 
       {/* Absolutely-positioned user images (percentage-based, same as editor) */}

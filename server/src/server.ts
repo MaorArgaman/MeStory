@@ -182,8 +182,15 @@ app.use(cors({
       return callback(null, true);
     }
 
-    // Check if origin matches Vercel preview/production domains
-    if (origin.endsWith('.vercel.app') || origin.endsWith('.vercel.sh')) {
+    // Allow this project's own Vercel preview/production domains only.
+    // A bare `*.vercel.app` match combined with credentials:true would let
+    // ANY attacker-controlled vercel.app subdomain make credentialed requests
+    // (e.g. read the auth cookie via /api/auth/token), so we require the
+    // origin to belong to the MeStory project.
+    if (
+      (origin.endsWith('.vercel.app') || origin.endsWith('.vercel.sh')) &&
+      /(^|[.\/-])mestory/i.test(origin)
+    ) {
       return callback(null, true);
     }
 

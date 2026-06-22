@@ -36,7 +36,7 @@ export interface BookTemplate {
   chapterStartStyle?: 'same-page' | 'new-page' | 'new-page-centered' | 'drop-cap';
   dropCapStyle?: 'none' | 'classic' | 'decorative' | 'box' | 'modern';
   dropCapSize?: number; // lines to span
-  headerDecoration?: 'none' | 'line' | 'ornament' | 'gradient-line' | 'dots';
+  headerDecoration?: 'none' | 'line' | 'ornament' | 'gradient-line' | 'dots' | 'banner';
   dividerStyle?: 'none' | 'line' | 'ornament' | 'stars' | 'dots' | 'wave';
   pullQuoteStyle?: 'none' | 'bordered' | 'background' | 'side-accent' | 'centered';
 
@@ -67,7 +67,7 @@ export interface BookTemplate {
     backgroundPatternOpacity?: number;
 
     // Frames and borders
-    pageFrame?: 'none' | 'simple' | 'double' | 'ornate' | 'rounded' | 'dashed' | 'dotted' | 'gradient';
+    pageFrame?: 'none' | 'simple' | 'double' | 'ornate' | 'rounded' | 'dashed' | 'dotted' | 'gradient' | 'royal' | 'elegant' | 'art-deco';
     frameColor?: string;
     frameWidth?: number;
 

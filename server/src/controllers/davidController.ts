@@ -53,9 +53,11 @@ export const getPublicArticle = async (req: Request, res: Response): Promise<voi
 export const runDavidCron = async (req: Request, res: Response): Promise<void> => {
   const secret = process.env.CRON_SECRET;
   if (secret) {
+    // Vercel Cron sends `Authorization: Bearer $CRON_SECRET`. Accept only the
+    // header — not a query-string `?key=`, which would leak the secret into
+    // access logs, proxies and browser history.
     const auth = req.headers.authorization || '';
-    const keyParam = (req.query.key as string) || '';
-    if (auth !== `Bearer ${secret}` && keyParam !== secret) {
+    if (auth !== `Bearer ${secret}`) {
       res.status(401).json({ success: false, error: 'Unauthorized' });
       return;
     }

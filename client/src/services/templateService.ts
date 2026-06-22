@@ -42,10 +42,10 @@ export interface PageLayoutSettings {
   dropCapStyle?: 'none' | 'classic' | 'decorative' | 'box' | 'modern';
   dividerStyle?: 'none' | 'line' | 'ornament' | 'stars' | 'dots' | 'wave';
   pullQuoteStyle?: 'none' | 'bordered' | 'background' | 'side-accent' | 'centered';
-  pageFrame?: 'none' | 'simple' | 'double' | 'ornate' | 'rounded' | 'dashed' | 'dotted' | 'gradient';
+  pageFrame?: 'none' | 'simple' | 'double' | 'ornate' | 'rounded' | 'dashed' | 'dotted' | 'gradient' | 'royal' | 'elegant' | 'art-deco';
   frameColor?: string;
   backgroundPattern?: 'none' | 'dots' | 'stripes' | 'grid' | 'waves' | 'confetti' | 'stars' | 'hearts' | 'geometric';
-  headerDecoration?: 'none' | 'line' | 'ornament' | 'gradient-line' | 'dots';
+  headerDecoration?: 'none' | 'line' | 'ornament' | 'gradient-line' | 'dots' | 'banner';
   sectionDivider?: string;
   cornerDecorations?: 'none' | 'flourish' | 'geometric' | 'floral' | 'stars' | 'hearts' | 'leaves';
   titleUnderline?: 'none' | 'simple' | 'double' | 'wavy' | 'dotted' | 'gradient' | 'ornate';

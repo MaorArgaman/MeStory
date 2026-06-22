@@ -212,10 +212,19 @@ export const changePassword = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    if (newPassword.length < 6) {
+    // Same strength rules as registration/reset — don't let users downgrade
+    // their password strength through the change-password flow.
+    const passwordStrong =
+      newPassword.length >= 8 &&
+      /[a-z]/.test(newPassword) &&
+      /[A-Z]/.test(newPassword) &&
+      /\d/.test(newPassword) &&
+      /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(newPassword);
+    if (!passwordStrong) {
       res.status(400).json({
         success: false,
-        error: 'New password must be at least 6 characters',
+        error:
+          'Password must contain at least 8 characters with uppercase, lowercase, number, and special character',
       });
       return;
     }
@@ -485,7 +494,8 @@ export const getUserProfile = async (req: AuthRequest, res: Response): Promise<v
         user: {
           id: user.id,
           name: user.name,
-          email: user.email,
+          // email intentionally omitted — this is a public, unauthenticated
+          // endpoint; exposing it allows scraping registered users' addresses.
           bio: user.profile?.bio,
           avatar: user.profile?.avatar,
           headerImage: user.profile?.headerImage,

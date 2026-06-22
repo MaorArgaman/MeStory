@@ -88,8 +88,10 @@ function generateDesignFromGenre(genre: string, title: string, authorName: strin
     layout: {
       pageSize: 'A5',
       margins: { top: 32, bottom: 28, inner: 28, outer: 24 },
-      chapterStartStyle: 'new-page-centered',
-      pageNumberPosition: 'bottom-center',
+      chapterStartStyle: 'new-page-centered' as const,
+      pageNumberPosition: 'bottom-center' as const,
+      headerStyle: 'chapter-title' as const,
+      dropCaps: true,
       background: { primaryColor: palette.bg },
     },
     cover: {
@@ -403,7 +405,7 @@ export default function AICompleteDesignWizard({
           chapterStartStyle: 'new-page-centered', pageNumberPosition: 'bottom-center',
           headerStyle: 'chapter-title', dropCaps: true,
         },
-        cover: data.coverDesign || data.cover || {
+        cover: (data.cover || {
           front: {
             imagePrompt: `Professional book cover for "${book.title}"`,
             backgroundColor: '#1a1a2e',
@@ -418,7 +420,7 @@ export default function AICompleteDesignWizard({
             backgroundColor: '#1a1a2e',
           },
           spine: { title: book.title, author: book.author?.name || '', font: 'David Libre', color: '#ffffff', backgroundColor: '#6366f1' },
-        },
+        }) as CoverDesign,
         imagePlacements: [],
         overallStyle: data.overallStyle || 'professional',
         moodDescription: data.moodDescription || data.theme?.primaryTheme || '',
@@ -553,8 +555,8 @@ export default function AICompleteDesignWizard({
         margins: {
           top: margins.top,
           bottom: margins.bottom,
-          left: margins.inner || margins.left || 60,
-          right: margins.outer || margins.right || 40,
+          left: margins.inner || 60,
+          right: margins.outer || 40,
         },
         paragraphIndent: 0,
         paragraphSpacing: 12,
@@ -566,7 +568,7 @@ export default function AICompleteDesignWizard({
         imageFrameStyle: 'rounded',
         textColor: colors.text,
         accentColor: colors.accent,
-        backgroundColor: colors.background || '#fefdfb',
+        backgroundColor: (layout as any).background?.primaryColor || '#fefdfb',
         previewGradient: `linear-gradient(135deg, ${colors.accent}40, ${colors.heading}40)`,
         coverStyle: {
           backgroundColor: design.cover?.spine?.backgroundColor || '#6366f1',

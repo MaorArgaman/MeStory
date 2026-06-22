@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useModal } from '../../hooks/useModal';
+import { useLanguage } from '../../contexts/LanguageContext';
 import toast from 'react-hot-toast';
 
 // Social media icons
@@ -58,6 +59,8 @@ const ShareModal: React.FC<ShareModalProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const { language } = useLanguage();
+  const isHebrew = language === 'he';
 
   // ESC key handling and scroll lock
   useModal(isOpen, onClose);
@@ -72,7 +75,9 @@ const ShareModal: React.FC<ShareModalProps> = ({
   const shareUrl = bookId
     ? `${SITE_URL}/read/${bookId}`
     : `${SITE_URL}/marketplace`;
-  const shareText = `I read "${bookTitle}" by ${authorName} and highly recommend it! 📚`;
+  const shareText = isHebrew
+    ? `קראתי את "${bookTitle}" מאת ${authorName} וממליץ בחום! 📚`
+    : `I read "${bookTitle}" by ${authorName} and highly recommend it! 📚`;
 
   const trackShare = async (platform: string) => {
     try {
@@ -87,10 +92,10 @@ const ShareModal: React.FC<ShareModalProps> = ({
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       await trackShare('copy');
-      toast.success('Link copied!');
+      toast.success(isHebrew ? 'הקישור הועתק!' : 'Link copied!');
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      toast.error('Failed to copy link');
+      toast.error(isHebrew ? 'העתקת הקישור נכשלה' : 'Failed to copy link');
     }
   };
 
@@ -104,11 +109,11 @@ const ShareModal: React.FC<ShareModalProps> = ({
           url: shareUrl,
         });
         await trackShare('native');
-        toast.success('Thanks for sharing!');
+        toast.success(isHebrew ? 'תודה על השיתוף!' : 'Thanks for sharing!');
       } catch (error) {
         // User cancelled or error
         if ((error as Error).name !== 'AbortError') {
-          toast.error('Failed to share');
+          toast.error(isHebrew ? 'השיתוף נכשל' : 'Failed to share');
         }
       } finally {
         setSharing(false);
@@ -158,25 +163,28 @@ const ShareModal: React.FC<ShareModalProps> = ({
           className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl w-full max-w-sm p-4 sm:p-6 shadow-2xl border border-purple-500/20"
           role="dialog"
           aria-modal="true"
+          aria-labelledby="share-modal-title"
+          dir={isHebrew ? 'rtl' : 'ltr'}
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-              <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
-              Share Book
+            <h3 id="share-modal-title" className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+              <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" aria-hidden="true" />
+              {isHebrew ? 'שיתוף הספר' : 'Share Book'}
             </h3>
             <button
               onClick={onClose}
+              aria-label="סגור"
               className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors"
             >
-              <X className="w-5 h-5 text-gray-400" />
+              <X className="w-5 h-5 text-gray-400" aria-hidden="true" />
             </button>
           </div>
 
           {/* Book info */}
           <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-white/5 rounded-xl">
             <h4 className="font-semibold text-white text-sm sm:text-base truncate">{bookTitle}</h4>
-            <p className="text-xs sm:text-sm text-gray-400">by {authorName}</p>
+            <p className="text-xs sm:text-sm text-gray-400">{isHebrew ? `מאת ${authorName}` : `by ${authorName}`}</p>
           </div>
 
           {/* Social buttons */}
@@ -233,6 +241,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
             />
             <button
               onClick={handleCopyLink}
+              aria-label={copied ? (isHebrew ? 'הקישור הועתק' : 'Link copied') : (isHebrew ? 'העתק קישור' : 'Copy link')}
               className={`p-1.5 sm:p-2 rounded-lg transition-all flex-shrink-0 ${
                 copied
                   ? 'bg-green-500/20 text-green-400'
@@ -240,9 +249,9 @@ const ShareModal: React.FC<ShareModalProps> = ({
               }`}
             >
               {copied ? (
-                <Check className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Check className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
               ) : (
-                <Link className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Link className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
               )}
             </button>
           </div>
@@ -258,9 +267,9 @@ const ShareModal: React.FC<ShareModalProps> = ({
                 <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
               ) : (
                 <>
-                  <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="hidden sm:inline">More sharing options...</span>
-                  <span className="sm:hidden">More options</span>
+                  <Share2 className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+                  <span className="hidden sm:inline">{isHebrew ? 'אפשרויות שיתוף נוספות...' : 'More sharing options...'}</span>
+                  <span className="sm:hidden">{isHebrew ? 'עוד אפשרויות' : 'More options'}</span>
                 </>
               )}
             </button>

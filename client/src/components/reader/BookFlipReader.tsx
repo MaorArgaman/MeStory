@@ -8,6 +8,7 @@ import {
   DEFAULT_TITLE_POS, DEFAULT_AUTHOR_POS,
   titleStyle, authorStyle, synopsisStyle, backAuthorStyle,
 } from '../../utils/coverStyles';
+import { sanitizeHtml } from '../../utils/sanitizeHtml';
 
 // react-pageflip manipulates the DOM directly, which can conflict with React's
 // reconciliation. This boundary catches those exceptions silently — the flipbook
@@ -457,7 +458,7 @@ export default function BookFlipReader({
                           textAlign: isRTL ? 'right' : 'left',
                           '--accent-color': pageAccentColor,
                         } as React.CSSProperties}
-                        dangerouslySetInnerHTML={{ __html: page.content || '' }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.content) }}
                       />
                     </div>
 

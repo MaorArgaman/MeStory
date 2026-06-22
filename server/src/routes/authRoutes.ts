@@ -176,8 +176,10 @@ router.get(
         path: '/',
       });
 
-      // Redirect to client with token in URL (cross-domain cookies don't work reliably)
-      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth-success?token=${token}`);
+      // SEC-002 FIX: Do NOT put the JWT in the URL (it leaks into browser
+      // history, Referer headers and server access logs). AuthSuccessPage
+      // exchanges the HTTP-only cookie for the token via GET /api/auth/token.
+      res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth-success`);
     } catch (error) {
       console.error('Google OAuth callback error:', error);
       res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/login?error=oauth_error`);

@@ -15,6 +15,7 @@
 
 import React, { useMemo } from 'react';
 import OrnamentRenderer from './OrnamentLibrary';
+import { sanitizeHtml } from '../../utils/sanitizeHtml';
 
 // ─── Page size definitions (in mm, used for aspect-ratio) ─────────────────────
 export const PAGE_SIZE_DIMENSIONS: Record<string, { width: number; height: number }> = {
@@ -596,7 +597,7 @@ export default function BookPageRenderer({
             textAlign: isRTL ? 'right' : 'left',
             ...(paragraphSpacing ? { '--paragraph-spacing': `${paragraphSpacing}px` } : {}),
           } as React.CSSProperties}
-          dangerouslySetInnerHTML={{ __html: processedContent }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(processedContent) }}
         />
 
         {/* Section divider overlay - shown between content sections */}

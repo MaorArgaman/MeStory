@@ -45,6 +45,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import TemplateGallery from '../components/design/TemplateGallery';
 import { BookTemplate, textColorPresets, availableFonts, saveCustomTemplate } from '../data/bookTemplates';
 import { applyTemplate, loadGoogleFonts, PageLayoutSettings } from '../services/templateService';
+import { sanitizeHtml } from '../utils/sanitizeHtml';
 import {
   loadDesignFonts,
 } from '../services/designApplicationService';
@@ -466,10 +467,10 @@ const defaultSettings = {
   dropCapStyle: 'none' as 'none' | 'classic' | 'decorative' | 'box' | 'modern',
   dividerStyle: 'none' as 'none' | 'line' | 'ornament' | 'stars' | 'dots' | 'wave',
   pullQuoteStyle: 'none' as 'none' | 'bordered' | 'background' | 'side-accent' | 'centered',
-  pageFrame: 'none' as 'none' | 'simple' | 'double' | 'ornate' | 'rounded' | 'dashed' | 'dotted' | 'gradient',
+  pageFrame: 'none' as 'none' | 'simple' | 'double' | 'ornate' | 'rounded' | 'dashed' | 'dotted' | 'gradient' | 'royal' | 'elegant' | 'art-deco',
   frameColor: '#8b6914' as string,
   backgroundPattern: 'none' as 'none' | 'dots' | 'stripes' | 'grid' | 'waves' | 'confetti' | 'stars' | 'hearts' | 'geometric',
-  headerDecoration: 'none' as 'none' | 'line' | 'ornament' | 'gradient-line' | 'dots',
+  headerDecoration: 'none' as 'none' | 'line' | 'ornament' | 'gradient-line' | 'dots' | 'banner',
   sectionDivider: '' as string,
   cornerDecorations: 'none' as 'none' | 'flourish' | 'geometric' | 'floral' | 'stars' | 'hearts' | 'leaves',
   titleUnderline: 'none' as 'none' | 'simple' | 'double' | 'wavy' | 'dotted' | 'gradient' | 'ornate',
@@ -4949,6 +4950,7 @@ function PageRenderer({
       case 'royal': return { boxShadow: `inset 0 0 0 3px ${c}, inset 0 0 0 6px ${c}20, inset 0 0 0 8px ${c}cc, inset 0 0 0 10px ${c}20, inset 0 0 0 14px ${c}10` };
       case 'elegant': return { boxShadow: `inset 0 0 0 1.5px ${c}90, inset 0 0 0 5px ${c}15, inset 0 0 0 6.5px ${c}90` };
       case 'art-deco': return { boxShadow: `inset 0 0 0 4px ${c}, inset 0 0 0 7px transparent, inset 0 0 0 8px ${c}80, inset 0 0 0 12px ${c}18` };
+      case 'gradient': return { border: '3px solid transparent', borderImage: `linear-gradient(135deg, ${c}, ${c}20, ${c}) 1`, borderImageSlice: 1 } as React.CSSProperties;
       default: return {};
     }
   };
@@ -5035,7 +5037,7 @@ function PageRenderer({
                 ...pos,
                 transform,
                 '--accent-color': settings.accentColor || '#8b6914',
-              } as React.CSSProperties}
+              } as unknown as React.CSSProperties}
             />
           ))}
         </>
@@ -5219,7 +5221,7 @@ function PageRenderer({
                 }}
               />
             ))}
-            <div className="flex-1 overflow-hidden" dangerouslySetInnerHTML={{ __html: page.content }} />
+            <div className="flex-1 overflow-hidden" dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.content) }} />
           </div>
           {/* Edit button for chapter pages */}
           {page.type === 'chapter' && (

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
   BookOpen,
@@ -66,6 +67,7 @@ const categories = [
 export default function PublishMetadata() {
   const { bookId } = useParams<{ bookId: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [book, setBook] = useState<BookData | null>(null);
   const [loading, setLoading] = useState(true);

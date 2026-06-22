@@ -121,6 +121,8 @@ export default function DavidPanel() {
 
   const removeCompetitor = (idx: number) => {
     if (!overview) return;
+    const target = overview.config.competitors[idx];
+    if (!window.confirm(`להסיר את "${target?.name}" מרשימת המתחרים?`)) return;
     const competitors = overview.config.competitors.filter((_, i) => i !== idx);
     saveConfig({ competitors });
   };
@@ -248,8 +250,12 @@ export default function DavidPanel() {
             <span key={i} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 text-white text-sm">
               {c.name}
               {c.domain && <span className="text-gray-400 text-xs">{c.domain}</span>}
-              <button onClick={() => removeCompetitor(i)} className="text-red-300 hover:text-red-400">
-                <Trash2 className="w-3.5 h-3.5" />
+              <button
+                onClick={() => removeCompetitor(i)}
+                aria-label={`הסר מתחרה ${c.name}`}
+                className="text-red-300 hover:text-red-400"
+              >
+                <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
               </button>
             </span>
           ))}
@@ -259,12 +265,14 @@ export default function DavidPanel() {
             value={newComp.name}
             onChange={(e) => setNewComp({ ...newComp, name: e.target.value })}
             placeholder="שם מתחרה"
+            aria-label="שם מתחרה"
             className="px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-white text-sm"
           />
           <input
             value={newComp.domain}
             onChange={(e) => setNewComp({ ...newComp, domain: e.target.value })}
             placeholder="דומיין (אופציונלי)"
+            aria-label="דומיין מתחרה (אופציונלי)"
             className="px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-white text-sm"
           />
           <button onClick={addCompetitor} className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-memorial-gold/20 text-memorial-gold hover:bg-memorial-gold/30">
@@ -356,12 +364,25 @@ export default function DavidPanel() {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {a.status === 'published' && (
-                  <a href={`/guides/${a.slug}`} target="_blank" rel="noreferrer" className="text-memorial-gold hover:text-yellow-400">
-                    <ExternalLink className="w-4 h-4" />
+                  <a
+                    href={`/guides/${a.slug}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`פתח את המאמר "${a.title}" בלשונית חדשה`}
+                    className="text-memorial-gold hover:text-yellow-400"
+                  >
+                    <ExternalLink className="w-4 h-4" aria-hidden="true" />
                   </a>
                 )}
                 {a.status === 'published' ? (
-                  <button onClick={() => setArticleStatus(a.id, 'unpublished')} className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-300 hover:bg-red-500/30">
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`להסיר מהאתר את המאמר "${a.title}"? הוא לא יוצג יותר לקוראים.`)) {
+                        setArticleStatus(a.id, 'unpublished');
+                      }
+                    }}
+                    className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                  >
                     הסר
                   </button>
                 ) : (

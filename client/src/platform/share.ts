@@ -20,7 +20,7 @@ export async function shareContent(options: ShareOptions): Promise<boolean> {
       return true;
     }
 
-    if (typeof navigator !== 'undefined' && 'share' in navigator) {
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       await (navigator as Navigator & {
         share: (data: ShareOptions) => Promise<void>;
       }).share({
