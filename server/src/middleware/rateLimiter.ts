@@ -28,6 +28,17 @@ const userKeyGenerator = (req: Request): string => {
 };
 
 /**
+ * Key generator based on the TARGET email in the request body (normalized).
+ * Used to throttle outbound emails per-recipient (anti-spam), independent of
+ * who/what IP is sending. Falls back to IP when no email is present.
+ */
+const emailRecipientKeyGenerator = (req: Request): string => {
+  const email = (req.body?.email || '').toString().trim().toLowerCase();
+  if (email) return `email:${email}`;
+  return req.ip || req.socket.remoteAddress || 'unknown';
+};
+
+/**
  * Section 17.2: Rate limiting (100 req/min)
  * General API rate limiter
  */
@@ -140,6 +151,56 @@ export const inviteLimiter = rateLimit({
     res.status(429).json({
       success: false,
       error: 'Too many invitations sent. Please try again later.',
+      retryAfter: formatRetryTime(retryMs),
+      retryAfterSeconds: Math.ceil(retryMs / 1000),
+    });
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+/**
+ * Per-RECIPIENT password-reset limiter.
+ * Max 3 reset emails to the same address per hour. Unlike authLimiter (per-IP,
+ * skips successful requests), this COUNTS successful sends so an attacker can't
+ * flood a victim's inbox with reset links by varying source IP.
+ * Use IN ADDITION to authLimiter on the forgot-password route.
+ */
+export const passwordResetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3, // 3 reset emails per address per hour
+  keyGenerator: emailRecipientKeyGenerator,
+  skipSuccessfulRequests: false,
+  handler: (req: Request, res: Response) => {
+    const retryAfter = res.getHeader('Retry-After');
+    const retryMs = retryAfter ? Number(retryAfter) * 1000 : 60 * 60 * 1000;
+    res.status(429).json({
+      success: false,
+      error: 'Too many password reset requests for this email. Please try again later.',
+      retryAfter: formatRetryTime(retryMs),
+      retryAfterSeconds: Math.ceil(retryMs / 1000),
+    });
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+/**
+ * Per-RECIPIENT invitation limiter.
+ * Max 5 invitations to the same email address per day, regardless of sender.
+ * Complements inviteLimiter (per-sender) to stop a target inbox being flooded.
+ */
+export const inviteRecipientLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 5, // 5 invites to the same address per day
+  keyGenerator: emailRecipientKeyGenerator,
+  skipSuccessfulRequests: false,
+  handler: (req: Request, res: Response) => {
+    const retryAfter = res.getHeader('Retry-After');
+    const retryMs = retryAfter ? Number(retryAfter) * 1000 : 24 * 60 * 60 * 1000;
+    res.status(429).json({
+      success: false,
+      error: 'This email has received too many invitations recently. Please try again later.',
       retryAfter: formatRetryTime(retryMs),
       retryAfterSeconds: Math.ceil(retryMs / 1000),
     });

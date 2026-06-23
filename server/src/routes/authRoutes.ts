@@ -11,7 +11,7 @@ import {
   resetPassword,
 } from '../controllers/authController';
 import { authenticate } from '../middleware/auth';
-import { authLimiter } from '../middleware/rateLimiter';
+import { authLimiter, passwordResetLimiter } from '../middleware/rateLimiter';
 import { runValidation } from '../middleware/validate';
 import {
   registerValidation,
@@ -93,6 +93,7 @@ router.post(
 router.post(
   '/forgot-password',
   authLimiter,
+  passwordResetLimiter,
   forgotPassword
 );
 

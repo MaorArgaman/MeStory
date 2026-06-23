@@ -237,6 +237,16 @@ async function handleBookPurchaseComplete(
   const authorId = metadata.authorId;
   const authorShare = metadata.authorShare || transaction.amount * AUTHOR_SHARE_PERCENTAGE;
 
+  // Idempotency guard: the synchronous capture path (paypalService.captureBookPayment)
+  // already credits book stats + author earnings and sets revenueProcessed. If the
+  // PayPal webhook then fires for the same capture, re-running this would DOUBLE-PAY
+  // the author and double-count the sale. Mirror the top-up handler's creditsGrantedAt
+  // pattern and skip if revenue was already processed.
+  if (metadata?.revenueProcessed) {
+    console.log(`[Webhook] Book purchase ${transaction.id} revenue already processed, skipping revenue/stats`);
+    return;
+  }
+
   // Update book statistics
   const book = await Book.findById(bookId);
   if (book) {
@@ -319,6 +329,12 @@ async function handleBookPurchaseComplete(
       transaction.currency || 'USD'
     );
   }
+
+  // Mark revenue as processed so a webhook replay (or a late synchronous capture)
+  // cannot credit the author a second time.
+  await Transaction.findByIdAndUpdate(transaction.id, {
+    metadata: { ...transaction.metadata, revenueProcessed: true },
+  });
 
   // Notify buyer about successful payment
   await notifyPaymentReceived(

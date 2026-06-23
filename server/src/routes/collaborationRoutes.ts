@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticate } from '../middleware/auth';
-import { inviteLimiter } from '../middleware/rateLimiter';
+import { inviteLimiter, inviteRecipientLimiter } from '../middleware/rateLimiter';
 import {
   inviteCollaborator,
   getInvitations,
@@ -20,7 +20,7 @@ const router = express.Router();
 // ===== BOOK OWNER ROUTES =====
 
 // Invite a collaborator to a book (rate-limited — BUG-002)
-router.post('/:bookId/invite', authenticate, inviteLimiter, inviteCollaborator);
+router.post('/:bookId/invite', authenticate, inviteLimiter, inviteRecipientLimiter, inviteCollaborator);
 
 // Get all invitations for a book (owner only)
 router.get('/:bookId/invitations', authenticate, getInvitations);
