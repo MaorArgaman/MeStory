@@ -147,6 +147,28 @@ export function pick<T>(rng: () => number, arr: readonly T[]): T {
   return arr[Math.floor(rng() * arr.length) % arr.length];
 }
 
+/** Deterministic Fisher–Yates shuffle. MUST stay byte-identical to the client
+ *  copy (designTokens.ts) — the genome sampler relies on cross-side parity. */
+export function shuffle<T>(rng: () => number, arr: readonly T[]): T[] {
+  const out = arr.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+/** FNV-1a hash of a string → uint32. Used to pick a stable image treatment
+ *  per image id. Keep identical to the client copy. */
+export function hashStr(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
 // ---------------------------------------------------------------------------
 // Color helpers
 // ---------------------------------------------------------------------------

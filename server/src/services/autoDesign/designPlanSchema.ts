@@ -51,7 +51,11 @@ export type ImageTreatment =
   | 'rounded' // rounded corners
   | 'duotone' // recolored into the palette (accent ↔ background)
   | 'vignette' // soft darkened edges
-  | 'postcard'; // framed + caption set as a handwritten-style note
+  | 'postcard' // framed + caption set as a handwritten-style note
+  | 'sepia' // warm monochrome wash
+  | 'sketch' // high-contrast grayscale, pencil-like
+  | 'blueprint' // accent-tinted technical look
+  | 'soft-shadow'; // floating card with a soft drop shadow
 
 export type BlockImage = {
   type: 'image';

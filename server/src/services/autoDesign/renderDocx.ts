@@ -32,6 +32,8 @@ import axios from 'axios';
 import { IBook, IPageImage } from '../../models/Book';
 import { DesignPlan, Block, Page } from './designPlanSchema';
 import { imageUrlById } from './collectImages';
+import { composeGenome } from './genome';
+import { getArchetype } from './archetypes';
 
 const HEBREW_RTL = { bidirectional: true } as const;
 
@@ -52,6 +54,22 @@ export async function renderDesignedBookDocx(
   plan: DesignPlan,
   options: RenderDocxOptions = {}
 ): Promise<Buffer> {
+  // Genome mode: the stored plan still carries the planner's original
+  // palette/typography, but the client preview renders the genome sampled from
+  // (designSystem, seed). Recompose that exact genome here so the Word export
+  // matches the preview's colors, fonts, type scale and margins (the same
+  // determinism the client uses — see genome.ts). Structure (pages/blocks)
+  // always comes from the plan.
+  if ((plan as any).genomeMode) {
+    const g = composeGenome(getArchetype(plan.designSystem), plan.seed);
+    plan = {
+      ...plan,
+      palette: g.palette,
+      typography: g.typography,
+      grid: { ...plan.grid, columns: g.columns, marginsMm: g.marginsMm },
+    };
+  }
+
   // Pre-fetch all referenced images. We do this up front so each image
   // is downloaded once even if the plan references it multiple times,
   // and so the rest of the renderer can be synchronous.
