@@ -99,7 +99,7 @@ export function initializeSocket(token: string): Socket {
     }
   });
 
-  socket.on('reconnect', (attemptNumber: number) => {
+  socket.on('reconnect', (_attemptNumber: number) => {
     reconnectAttempts = 0;
   });
 

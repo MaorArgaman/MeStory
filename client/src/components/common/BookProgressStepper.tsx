@@ -52,6 +52,7 @@ export default function BookProgressStepper({ bookId, progress, currentStep }: B
     }
 
     setAutoCompleting(true);
+    let designFailed = false;
     try {
       toast.loading(
         isHebrew ? 'ה-AI משלים את הספר שלך...' : 'AI is completing your book...',
@@ -64,21 +65,34 @@ export default function BookProgressStepper({ bookId, progress, currentStep }: B
         try {
           await api.post(`/ai/design-complete/${bookId}`, { generateImages: true });
         } catch (e) {
+          designFailed = true;
+          console.error('Auto-design failed:', e);
         }
       }
 
-      // Step 2: Auto-generate synopsis if missing
+      // Step 2: Auto-generate synopsis (non-critical — don't fail the whole flow on it)
       try {
         await api.post('/ai/generate-synopsis', { bookId });
       } catch (e) {
+        console.error('Auto-synopsis failed:', e);
       }
 
-      toast.success(
-        isHebrew ? 'הספר הושלם! עובר לעיצוב...' : 'Book completed! Moving to design...',
-        { id: 'auto-complete' }
-      );
+      // Only claim success for the steps that actually succeeded.
+      if (designFailed) {
+        toast.error(
+          isHebrew
+            ? 'לא הצלחנו לעצב את הכריכה אוטומטית. אפשר לעצב ידנית.'
+            : "Couldn't auto-design the cover. You can design it manually.",
+          { id: 'auto-complete' }
+        );
+      } else {
+        toast.success(
+          isHebrew ? 'הספר הושלם! עובר לעיצוב...' : 'Book completed! Moving to design...',
+          { id: 'auto-complete' }
+        );
+      }
 
-      // Navigate to the next incomplete step
+      // Navigate to the next incomplete step so the user can review/finish it.
       if (!progress.hasDesign) {
         navigate(`/design/${bookId}`);
       } else if (!progress.hasLayout) {

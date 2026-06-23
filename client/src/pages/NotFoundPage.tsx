@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, BookOpen, Search, ArrowRight, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { Home, BookOpen, Search, ArrowRight, ArrowLeft } from 'lucide-react';
 import { GlassCard } from '../components/ui';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useSEO } from '../hooks/useSEO';

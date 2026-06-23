@@ -110,8 +110,6 @@ export default function CreateBookWizard({ onClose, onSuccess }: CreateBookWizar
   const [selectedType, setSelectedType] = useState<string>('my-life-story');
   const [creating, setCreating] = useState(false);
 
-  const isHebrew = t('create_book.wizard_title').includes('סיפור');
-
   const handleCreateBook = async () => {
     if (!title.trim()) {
       toast.error(t('create_book.enter_title'));

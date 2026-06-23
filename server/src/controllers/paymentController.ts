@@ -4,6 +4,7 @@ import { User, UserRole } from '../models/User';
 import { Transaction } from '../models/Transaction';
 import { AuthRequest } from '../types';
 import { notifyPaymentReceived, notifySubscriptionChange } from '../services/notificationService';
+import { notifyAdminPurchase } from '../services/adminNotificationService';
 import {
   sendSubscriptionUpgradeEmail,
   sendPayPalReceiptEmail,
@@ -489,6 +490,15 @@ export const captureOrder = async (req: AuthRequest, res: Response): Promise<voi
         console.error('Failed to send subscription notification:', err)
       );
 
+      // Alert the platform owner about the purchase (fire-and-forget).
+      notifyAdminPurchase({
+        buyerEmail: user.email,
+        amount: transaction.amount,
+        currency: 'USD',
+        description: `שדרוג לחבילת ${planLabel}`,
+        orderId: transaction.orderId || transaction.id,
+      });
+
       // Send emails (async, don't wait)
       const planFeatures = transaction.plan === 'premium'
         ? [
@@ -710,6 +720,15 @@ export const captureOrder = async (req: AuthRequest, res: Response): Promise<voi
       notifySubscriptionChange(userId, planLabel, isUpgrade).catch((err) =>
         console.error('Failed to send subscription notification:', err)
       );
+
+      // Alert the platform owner about the purchase (fire-and-forget).
+      notifyAdminPurchase({
+        buyerEmail: user.email,
+        amount: transaction.amount,
+        currency: 'USD',
+        description: `שדרוג לחבילת ${planLabel}`,
+        orderId: transaction.orderId || transaction.id,
+      });
 
       // Send emails (async, don't wait)
       const planFeatures = transaction.plan === 'premium'

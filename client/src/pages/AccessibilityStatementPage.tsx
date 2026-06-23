@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Accessibility, CheckCircle, AlertTriangle, Mail, Phone, FileText } from 'lucide-react';
+import { Accessibility, CheckCircle, AlertTriangle, Mail, FileText } from 'lucide-react';
 import { GlassCard, OptimizedImage } from '../components/ui';
 import { useLanguage } from '../contexts/LanguageContext';
 import { SEO } from '../components/seo';

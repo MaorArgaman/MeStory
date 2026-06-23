@@ -11,19 +11,16 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  AlignJustify,
   List,
   ListOrdered,
   Quote,
-  Minus,
   Undo,
   Redo,
   Type,
   Palette,
   Highlighter,
-  X,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -117,7 +114,7 @@ export default function EditorToolbar({ editor }: EditorToolbarProps) {
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [colorMenuPosition, setColorMenuPosition] = useState({ top: 0, left: 0 });
   const [highlightMenuPosition, setHighlightMenuPosition] = useState({ top: 0, left: 0 });
-  const [moreMenuPosition, setMoreMenuPosition] = useState({ top: 0, left: 0 });
+  const [, setMoreMenuPosition] = useState({ top: 0, left: 0 });
 
   // Calculate menu position when opening
   useEffect(() => {

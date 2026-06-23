@@ -72,6 +72,10 @@ export default function SettingsPage() {
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error('Failed to load notification preferences:', error);
+      toast.error(
+        language === 'he' ? 'טעינת העדפות ההתראות נכשלה' : 'Failed to load notification preferences',
+        { id: 'load-notification-prefs' }
+      );
     }
   };
 

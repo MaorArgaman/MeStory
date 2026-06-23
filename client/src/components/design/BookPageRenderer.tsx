@@ -279,7 +279,7 @@ function SectionDivider({
   style,
   custom,
   accentColor,
-  isRTL,
+  isRTL: _isRTL,
 }: {
   style: string;
   custom?: string;
@@ -326,7 +326,7 @@ function processContent(
   html: string,
   settings: PageDesignSettings,
   accentColor: string,
-  isRTL: boolean,
+  _isRTL: boolean,
 ): string {
   if (!html) return '';
 

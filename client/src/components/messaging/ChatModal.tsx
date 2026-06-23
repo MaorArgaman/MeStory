@@ -103,6 +103,10 @@ const ChatModal: React.FC<ChatModalProps> = ({
       await loadMessages(conv._id, 1);
     } catch (error) {
       console.error('Failed to initialize conversation:', error);
+      toast.error(
+        language === 'he' ? 'פתיחת השיחה נכשלה' : 'Failed to open conversation',
+        { id: 'init-conversation' }
+      );
     } finally {
       setLoading(false);
     }
@@ -125,6 +129,10 @@ const ChatModal: React.FC<ChatModalProps> = ({
       setHasMore(pagination.page < pagination.pages);
     } catch (error) {
       console.error('Failed to load messages:', error);
+      toast.error(
+        language === 'he' ? 'טעינת ההודעות נכשלה' : 'Failed to load messages',
+        { id: 'load-messages' }
+      );
     }
   };
 
@@ -183,7 +191,11 @@ const ChatModal: React.FC<ChatModalProps> = ({
       console.error('Failed to send message:', error);
       // Mark message as failed
       setFailedMessages((prev) => new Map(prev).set(tempId, messageContent));
-      toast.error('Failed to send message. Tap to retry.');
+      toast.error(
+        language === 'he'
+          ? 'שליחת ההודעה נכשלה. הקש לניסיון חוזר.'
+          : 'Failed to send message. Tap to retry.'
+      );
     } finally {
       setSending(false);
     }

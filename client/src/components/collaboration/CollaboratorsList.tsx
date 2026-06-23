@@ -69,6 +69,10 @@ export default function CollaboratorsList({
       setInvitations(inviteRes.data.data || []);
     } catch (error) {
       console.error('Error fetching collaborators:', error);
+      toast.error(
+        isHebrew ? 'טעינת התורמים נכשלה' : 'Failed to load collaborators',
+        { id: 'load-collaborators' }
+      );
     } finally {
       setLoading(false);
     }

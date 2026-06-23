@@ -56,6 +56,7 @@ import {
   listBooksValidation,
   publicBooksValidation,
 } from '../middleware/validators';
+import { notifyAdmin } from '../services/adminNotificationService';
 
 const router = Router();
 
@@ -425,16 +426,32 @@ router.post('/:id/print-order', authenticate as any, async (req: any, res: any) 
     printOrders.push(printOrder);
     await Book.findByIdAndUpdate(req.params.id, { printOrders } as any);
 
-    // TODO: Send confirmation email
-    // TODO: Call POD API (Peecho/Lulu) to place actual print order
-    // TODO: Generate print-ready PDF with bleed marks
+    // No automated POD (Peecho/Lulu) integration yet — these orders are
+    // fulfilled MANUALLY. Alert the owner so the request doesn't get lost,
+    // and tell the user honestly that we'll contact them (don't imply it
+    // already shipped). Future: call POD API + generate print-ready PDF.
+    notifyAdmin(
+      '🖨️ בקשת הדפסה חדשה (טיפול ידני)',
+      'משתמש ביקש להדפיס ספר פיזי',
+      [
+        { label: 'ספר', value: book.title || '—' },
+        { label: 'כמות', value: String(quantity ?? '—') },
+        { label: 'כריכה', value: String(coverType ?? '—') },
+        { label: 'נייר', value: String(paperQuality ?? '—') },
+        { label: 'גודל', value: String(bookSize ?? '—') },
+        { label: 'יעד', value: shipping ? `${shipping.city ?? ''} ${shipping.country ?? ''}`.trim() || '—' : '—' },
+        { label: 'מחיר', value: price != null ? String(price) : '—' },
+        { label: 'מזהה הזמנה', value: printOrder.id },
+      ],
+      'אין עדיין אינטגרציית POD אוטומטית — יש לטפל בהזמנה ידנית.'
+    );
 
-    console.log(`📦 Print order created: ${quantity}x ${coverType} "${book.title}" → ${shipping.city}`);
+    console.log(`📦 Print order created: ${quantity}x ${coverType} "${book.title}" → ${shipping?.city}`);
 
     res.status(201).json({
       success: true,
       data: { orderId: printOrder.id },
-      message: 'Print order created',
+      message: 'בקשת ההדפסה התקבלה! ניצור איתך קשר בקרוב לתיאום ההדפסה והמשלוח.',
     });
   } catch (error: any) {
     console.error('Failed to create print order:', error);

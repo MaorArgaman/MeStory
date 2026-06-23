@@ -18,6 +18,7 @@ import { checkQuery, discoverCompetitors } from './rankChecker';
 import { generateArticle } from './articleWriter';
 import { reviewArticle } from './guardrails';
 import { sendDailyReport, DailyReport } from './davidEmail';
+import { notifyAdminDavidRun } from '../adminNotificationService';
 import { anthropicStructured, geminiGroundedSearch } from './llmClients';
 import { DavidQuery, Lang, RankResult, QueryCheck } from './types';
 
@@ -229,6 +230,9 @@ export async function runDailyCycle(trigger: 'cron' | 'manual'): Promise<RunResu
     } catch (e: any) {
       console.error('[David] daily email failed:', e.message || e);
     }
+
+    // Short owner-facing alert that David ran (independent of the detailed report).
+    notifyAdminDavidRun({ status, summary, actionsCount, trigger });
 
     return { status, runId, summary };
   } catch (err: any) {

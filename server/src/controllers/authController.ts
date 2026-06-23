@@ -10,6 +10,7 @@ import {
   sendWelcomeEmail,
   sendPasswordResetEmail,
 } from '../services/emailService';
+import { notifyAdminNewUser } from '../services/adminNotificationService';
 import { Coupon } from '../models/Coupon';
 
 // 1 hour reset window. Long enough for users to find the email in
@@ -73,6 +74,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     sendVerificationEmail(user.email, user.name, verificationCode).catch((err) =>
       console.error('Failed to send verification email:', err)
     );
+
+    // Alert the platform owner about the new signup (fire-and-forget).
+    notifyAdminNewUser({ name: user.name, email: user.email, role: user.role });
 
     // Apply coupon code if provided
     let couponApplied = false;

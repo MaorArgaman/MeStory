@@ -438,6 +438,9 @@ export default function DesignStudioPage() {
 
     } catch (error) {
       console.error('Error applying AI design state:', error);
+      toast.error(
+        language === 'he' ? 'החלת עיצוב ה-AI נכשלה' : 'Failed to apply AI design'
+      );
     }
   };
 

@@ -75,6 +75,7 @@ const MentionSelector: React.FC<MentionSelectorProps> = ({
           setShowDropdown(true);
         } catch (error) {
           console.error('Search failed:', error);
+          toast.error(t('mentions.search_failed', 'Search failed'), { id: 'mention-search' });
         } finally {
           setSearching(false);
         }

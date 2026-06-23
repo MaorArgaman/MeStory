@@ -21,6 +21,7 @@ import {
 } from '../../services/messagingApi';
 import ChatModal from './ChatModal';
 import { useLanguage } from '../../contexts/LanguageContext';
+import toast from 'react-hot-toast';
 
 interface ConversationsListProps {
   isOpen: boolean;
@@ -53,6 +54,10 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
       setConversations(convs);
     } catch (error) {
       console.error('Failed to load conversations:', error);
+      toast.error(
+        language === 'he' ? 'טעינת השיחות נכשלה' : 'Failed to load conversations',
+        { id: 'load-conversations' }
+      );
     } finally {
       setLoading(false);
     }
@@ -68,6 +73,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
       setConversations((prev) => prev.filter((c) => c._id !== conversationId));
     } catch (error) {
       console.error('Failed to delete conversation:', error);
+      toast.error(language === 'he' ? 'מחיקת השיחה נכשלה' : 'Failed to delete conversation');
     } finally {
       setDeletingId(null);
     }

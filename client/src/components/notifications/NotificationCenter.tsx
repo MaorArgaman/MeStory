@@ -131,6 +131,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       setHasMore(currentPage < response.pagination.pages);
     } catch (error) {
       console.error('Failed to load notifications:', error);
+      toast.error(t('notifications.messages.load_failed'), { id: 'load-notifications' });
     } finally {
       setLoading(false);
     }
@@ -150,6 +151,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       onUnreadCountChange?.(Math.max(0, unreadCount - 1));
     } catch (error) {
       console.error('Failed to mark as read:', error);
+      toast.error(t('notifications.messages.mark_read_failed'));
     }
   };
 

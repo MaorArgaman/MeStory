@@ -36,7 +36,6 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const BookWritingPage = lazy(() => import('./pages/BookWritingPage'));
 const DesignStudioPage = lazy(() => import('./pages/DesignStudioPage'));
 const BookLayoutPage = lazy(() => import('./pages/BookLayoutPage'));
-const BookDesignPage = lazy(() => import('./pages/BookDesignPage'));
 const PublishingPage = lazy(() => import('./pages/PublishingPage'));
 const PublishMetadata = lazy(() => import('./pages/publish/PublishMetadata'));
 const MarketplacePage = lazy(() => import('./pages/MarketplacePage'));
@@ -257,14 +256,6 @@ function AppContent() {
                 element={
                   <RequireAuth>
                     <PageBoundary><BookLayoutPage /></PageBoundary>
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/book-design/:bookId"
-                element={
-                  <RequireAuth>
-                    <PageBoundary><BookDesignPage /></PageBoundary>
                   </RequireAuth>
                 }
               />

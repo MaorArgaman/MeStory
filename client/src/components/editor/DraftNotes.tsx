@@ -11,6 +11,7 @@ import {
   Edit3,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 interface DraftNote {
   id: string;
@@ -63,6 +64,10 @@ export default function DraftNotes({
         setNotes(JSON.parse(saved));
       } catch (e) {
         console.error('Failed to load draft notes:', e);
+        toast.error(
+          isHebrew ? 'טעינת הפתקים נכשלה' : 'Failed to load notes',
+          { id: 'load-draft-notes' }
+        );
       }
     }
   }, [bookId, chapterIndex, user?.id]);

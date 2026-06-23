@@ -25,6 +25,7 @@ import {
   notifyBookPurchase,
   notifyBookPublished,
 } from '../services/notificationService';
+import { notifyAdminBookPublished } from '../services/adminNotificationService';
 import {
   sendBookPurchaseEmail,
   sendSaleNotificationToAuthor,
@@ -1059,6 +1060,14 @@ export const publishBook = async (req: AuthRequest, res: Response): Promise<void
     notifyBookPublished(req.user!.id, id, book.title).catch((err) =>
       console.error('Failed to send book published notification:', err)
     );
+
+    // Alert the platform owner about the new published book (fire-and-forget).
+    notifyAdminBookPublished({
+      authorName: user?.name,
+      authorEmail: user?.email,
+      bookTitle: book.title,
+      bookId: id,
+    });
 
     res.status(200).json({
       success: true,

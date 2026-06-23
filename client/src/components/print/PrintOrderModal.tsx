@@ -361,16 +361,16 @@ export default function PrintOrderModal({ isOpen, onClose, bookId, bookTitle, pa
                 <Check className="w-10 h-10 text-green-400" />
               </motion.div>
               <h2 className="text-2xl font-bold text-white mb-3">
-                {isHebrew ? 'ההזמנה התקבלה! 🎉' : 'Order Placed! 🎉'}
+                {isHebrew ? 'בקשת ההדפסה התקבלה! 🎉' : 'Print Request Received! 🎉'}
               </h2>
               <p className="text-gray-300 mb-2">
                 {isHebrew
-                  ? `${quantity} עותקים של "${bookTitle}" בדרך אליך.`
-                  : `${quantity} copies of "${bookTitle}" are on their way.`
+                  ? `קיבלנו את הבקשה ל-${quantity} עותקים של "${bookTitle}".`
+                  : `We received your request for ${quantity} copies of "${bookTitle}".`
                 }
               </p>
               <p className="text-gray-500 text-sm mb-6">
-                {isHebrew ? 'נשלח אישור למייל שלך. ההדפסה לוקחת 5-7 ימי עבודה.' : "We'll send confirmation to your email. Printing takes 5-7 business days."}
+                {isHebrew ? 'ניצור איתך קשר בקרוב לתיאום ההדפסה, התשלום והמשלוח.' : "We'll contact you shortly to arrange printing, payment and shipping."}
               </p>
               <button onClick={onClose} className="btn-primary px-8 py-3">
                 {isHebrew ? 'סגור' : 'Close'}

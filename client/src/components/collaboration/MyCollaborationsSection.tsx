@@ -64,6 +64,10 @@ export default function MyCollaborationsSection() {
       setPendingInvitations(inviteRes.data.data || []);
     } catch (error) {
       console.error('Error fetching collaborations:', error);
+      toast.error(
+        isHebrew ? 'טעינת שיתופי הפעולה נכשלה' : 'Failed to load collaborations',
+        { id: 'load-collaborations' }
+      );
     } finally {
       setLoading(false);
     }

@@ -91,8 +91,10 @@
     "messages": {
       "marked_all_read": "כל ההתראות סומנו כנקראו",
       "mark_failed": "נכשל בסימון ההתראות",
+      "mark_read_failed": "נכשל בסימון ההתראה כנקראה",
       "delete_failed": "נכשל במחיקת ההתראה",
-      "archive_failed": "נכשל בהעברה לארכיון"
+      "archive_failed": "נכשל בהעברה לארכיון",
+      "load_failed": "טעינת ההתראות נכשלה"
     },
     "time": {
       "just_now": "עכשיו",
@@ -1519,6 +1521,7 @@
     "mention_removed": "התיוג הוסר",
     "add_failed": "הוספת התיוג נכשלה",
     "remove_failed": "הסרת התיוג נכשלה",
+    "search_failed": "החיפוש נכשל",
     "library": "ספרייה",
     "library_load_error": "טעינת הספרייה נכשלה",
     "no_books": "עדיין אין ספרים מפורסמים",

@@ -112,7 +112,7 @@ export default function BookFlipReader({
   const { t } = useTranslation();
   const flipBookRef = useRef<any>(null);
   const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  const [, setTotalPages] = useState(0);
   const [isBookOpen, setIsBookOpen] = useState(false);
 
   // Prefer the prop (computed from multiple signals in BookLayoutPage).

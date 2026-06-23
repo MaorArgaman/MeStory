@@ -15,7 +15,7 @@ import CreateBookWizard from '../components/dashboard/CreateBookWizard';
 import InterviewWizard from '../components/dashboard/InterviewWizard';
 import VoiceInterviewWizard from '../components/interview/VoiceInterviewWizard';
 import { saveInterviewToBook, InterviewSummary, InterviewResponse } from '../services/voiceService';
-import { compressAudio, needsCompression, formatFileSize } from '../utils/audioCompression';
+import { compressAudio, needsCompression } from '../utils/audioCompression';
 import {
   ContinueReading,
   ContinueWriting,
@@ -138,6 +138,10 @@ export default function DashboardPage() {
     navigate(`/editor/${bookId}`);
   };
 
+  // NOTE: This PDF export handler is fully implemented but is not currently wired
+  // to any UI element (no button/menu calls it). Kept intact and flagged for
+  // follow-up wiring. The `void exportBook` below only silences the
+  // unused-symbol check and has no runtime effect. See agent report.
   const exportBook = async (bookId: string, bookTitle: string, e: React.MouseEvent) => {
     e.stopPropagation();
     // Live progress toast that updates as the job advances
@@ -157,6 +161,7 @@ export default function DashboardPage() {
       toast.error(error?.message || t('dashboard.messages.export_failed'), { id: toastId });
     }
   };
+  void exportBook;
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

@@ -2151,7 +2151,6 @@ export default function BookLayoutPage() {
     }
 
     try {
-      const selectedPage = pages[selectedPageIndex];
       toast.loading(`Uploading image to page ${selectedPageIndex + 1}...`, { id: 'upload-image' });
 
       const formData = new FormData();
