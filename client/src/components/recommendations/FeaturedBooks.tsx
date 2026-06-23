@@ -191,7 +191,7 @@ export default function FeaturedBooks({
 
                   {/* Description */}
                   {item.book.description && (
-                    <p className="text-xs text-white/40 mt-3 line-clamp-2">
+                    <p className="text-xs text-white/60 mt-3 line-clamp-2">
                       {item.book.description}
                     </p>
                   )}

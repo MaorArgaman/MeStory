@@ -77,7 +77,7 @@ export default function Layout({ children }: LayoutProps) {
             {' · '}
             <span>Built with ❤️ in Israel</span>
           </p>
-          <p className="text-gray-600 text-xs">
+          <p className="text-gray-400 text-xs">
             &copy; {new Date().getFullYear()} MeStory. All rights reserved.
           </p>
         </div>

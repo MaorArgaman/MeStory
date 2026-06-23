@@ -207,7 +207,7 @@ export default function TemplateGallery({
 
                             {/* Page number preview */}
                             {template.pageNumberPosition !== 'none' && (
-                              <div className="text-[6px] text-white/40 mt-1 text-center">
+                              <div className="text-[6px] text-white/60 mt-1 text-center">
                                 1
                               </div>
                             )}

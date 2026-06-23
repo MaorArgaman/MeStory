@@ -210,7 +210,7 @@ export default function ContinueWriting({
                     <p className="text-xs text-white/50">{item.book.genre}</p>
 
                     {/* Stats */}
-                    <div className="flex items-center justify-between mt-2 text-xs text-white/40">
+                    <div className="flex items-center justify-between mt-2 text-xs text-white/60">
                       <div className="flex items-center gap-1">
                         <FileText className="w-3 h-3" />
                         <span>{formatWordCount(item.wordCount)} {t('recommendations.words')}</span>

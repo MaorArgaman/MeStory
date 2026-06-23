@@ -862,7 +862,7 @@ export default function AICompleteDesignWizard({
                       ? 'יוצר עיצוב מקצועי מלא עבור הספר שלך'
                       : 'Creating a complete professional design for your book')}
                 </p>
-                <p className="mt-1 text-white/40 text-xs tabular-nums">
+                <p className="mt-1 text-white/60 text-xs tabular-nums">
                   {Math.floor(elapsedSeconds / 60)}:{String(elapsedSeconds % 60).padStart(2, '0')}
                 </p>
 
@@ -1335,11 +1335,11 @@ function DesignSummaryCard({ design, isHebrew }: { design: CompleteDesign; isHeb
             {isHebrew ? variantInfo.nameHe : variantInfo.nameEn}
           </span>
         )}
-        <span className={`px-2 py-0.5 rounded-full ${design.dropCapStyle && design.dropCapStyle !== 'none' ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-white/40'}`}>
+        <span className={`px-2 py-0.5 rounded-full ${design.dropCapStyle && design.dropCapStyle !== 'none' ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-white/60'}`}>
           {isHebrew ? 'אות ראשונה גדולה: ' : 'Drop caps: '}
           {design.dropCapStyle && design.dropCapStyle !== 'none' ? (isHebrew ? 'כן' : 'yes') : (isHebrew ? 'לא' : 'no')}
         </span>
-        <span className={`px-2 py-0.5 rounded-full ${design.dividerStyle && design.dividerStyle !== 'none' ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-white/40'}`}>
+        <span className={`px-2 py-0.5 rounded-full ${design.dividerStyle && design.dividerStyle !== 'none' ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-white/60'}`}>
           {isHebrew ? 'קישוטים: ' : 'Ornaments: '}
           {design.dividerStyle && design.dividerStyle !== 'none' ? (isHebrew ? 'כן' : 'yes') : (isHebrew ? 'לא' : 'no')}
         </span>

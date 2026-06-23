@@ -70,7 +70,7 @@ export default function Footer() {
           <p className="text-xs text-gray-500">
             &copy; {year} MeStory. {isHebrew ? 'כל הזכויות שמורות.' : 'All rights reserved.'}
           </p>
-          <p className="text-xs text-gray-600 flex items-center gap-1">
+          <p className="text-xs text-gray-400 flex items-center gap-1">
             {isHebrew ? 'נבנה עם' : 'Built with'} <Heart className="w-3 h-3 text-red-500" /> {isHebrew ? 'בישראל' : 'in Israel'}
           </p>
         </div>

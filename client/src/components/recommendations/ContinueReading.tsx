@@ -208,7 +208,7 @@ export default function ContinueReading({
                     </p>
 
                     {/* Last Read */}
-                    <div className="flex items-center gap-1 mt-2 text-xs text-white/40">
+                    <div className="flex items-center gap-1 mt-2 text-xs text-white/60">
                       <Clock className="w-3 h-3" />
                       <span>{formatLastRead(item.lastReadAt)}</span>
                     </div>
