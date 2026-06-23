@@ -192,6 +192,7 @@ export async function anthropicStructured<T>(opts: {
   toolName: string;
   schema: Record<string, unknown>;
   maxTokens?: number;
+  timeoutMs?: number;
 }): Promise<T | null> {
   const c = getAnthropic();
   if (!c) return null;
@@ -205,8 +206,9 @@ export async function anthropicStructured<T>(opts: {
         tool_choice: { type: 'tool', name: opts.toolName },
         messages: [{ role: 'user', content: opts.prompt }],
       }),
-      // Article generation needs the most room; give it a longer ceiling.
-      LLM_TIMEOUT_MS * 2,
+      // Long structured generations (a full article) routinely need 70-90s;
+      // the caller can raise this. The default suits short structured calls.
+      opts.timeoutMs ?? LLM_TIMEOUT_MS * 2,
       'anthropicStructured',
     );
     const toolUse = res.content.find((b: any) => b.type === 'tool_use') as any;

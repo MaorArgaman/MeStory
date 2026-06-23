@@ -126,6 +126,10 @@ export async function generateArticle(opts: {
     toolName: 'submit_article',
     schema: ARTICLE_SCHEMA,
     maxTokens: 8000,
+    // A full article generation measured ~70-90s; give it generous headroom so
+    // a normal (just-slow) generation isn't cut off and lost. The whole cycle
+    // still fits inside a 300s function as long as maxDuration is configured.
+    timeoutMs: 180000,
   });
 
   // Reject incomplete generations (e.g. truncated tool output) so the
