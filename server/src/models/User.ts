@@ -533,19 +533,33 @@ export class User {
   // this charges Premium users too (they have a real bounded balance now).
   // Admin still bypasses. Used by the new creditService pipeline.
   static async deductCreditsStrict(userId: string, amount: number): Promise<boolean> {
-    const user = await this.findById(userId);
-    if (!user) return false;
+    // Optimistic concurrency: read the balance, then write ONLY if it hasn't
+    // changed since (compare-and-swap on `credits`). This closes the
+    // read-modify-write race where two concurrent deductions both pass the
+    // balance check and one silently overwrites the other (lost spend).
+    // Retry a few times on contention before giving up.
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const user = await this.findById(userId);
+      if (!user) return false;
 
-    if (user.role === UserRole.ADMIN) return true;
+      if (user.role === UserRole.ADMIN) return true;
 
-    if (user.credits < amount) return false;
+      if (user.credits < amount) return false;
 
-    const { error } = await supabaseAdmin
-      .from('users')
-      .update({ credits: user.credits - amount })
-      .eq('id', userId);
+      const { data, error } = await supabaseAdmin
+        .from('users')
+        .update({ credits: user.credits - amount })
+        .eq('id', userId)
+        .eq('credits', user.credits) // CAS guard: only if balance unchanged
+        .select('id');
 
-    return !error;
+      if (error) return false;
+      if (data && data.length > 0) return true; // our write won
+
+      // 0 rows updated => another deduction raced us; re-read and retry.
+    }
+
+    return false;
   }
 
   // Helper: Add credits

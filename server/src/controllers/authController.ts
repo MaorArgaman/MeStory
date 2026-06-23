@@ -735,8 +735,15 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
     const tokenHash = hashResetToken(token);
     const user = await User.findByPasswordResetTokenHash(tokenHash);
 
+    // Constant-time compare of the stored hash to avoid leaking match progress
+    // via response timing. Equal-length SHA-256 hex strings, so safe to compare.
+    const storedHash = user?.password_reset?.tokenHash || '';
+    const a = Buffer.from(storedHash, 'utf8');
+    const b = Buffer.from(tokenHash, 'utf8');
+    const tokenMatches = a.length === b.length && crypto.timingSafeEqual(a, b);
+
     // Token unknown OR no active reset on this user.
-    if (!user || !user.password_reset || user.password_reset.tokenHash !== tokenHash) {
+    if (!user || !user.password_reset || !tokenMatches) {
       res.status(400).json({
         success: false,
         error: 'Invalid or expired reset link. Please request a new one.',

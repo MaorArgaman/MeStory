@@ -39,7 +39,14 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const currentUserId = JSON.parse(localStorage.getItem('user') || '{}')?.id;
+  const currentUserId = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}')?.id;
+    } catch {
+      // Corrupt cached user — don't crash the conversations list.
+      return undefined;
+    }
+  })();
 
   useEffect(() => {
     if (isOpen) {

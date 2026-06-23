@@ -124,6 +124,9 @@ export default function ReaderPage() {
   // Narration state
   const [isNarrating, setIsNarrating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  // Mirror of isPaused for use inside speech callbacks, which capture a stale
+  // `isPaused` in their closure (pausing mid-utterance wouldn't stop the chain).
+  const isPausedRef = useRef(false);
   const [showNarrationControls, setShowNarrationControls] = useState(false);
   const [narrationSpeed, setNarrationSpeed] = useState(1.0);
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(-1);
@@ -136,6 +139,21 @@ export default function ReaderPage() {
   useEffect(() => {
     loadBook();
   }, [bookId]);
+
+  // Keep the paused-ref in sync so speech callbacks read the live value.
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
+
+  // Stop any ongoing narration when leaving the reader (otherwise speech
+  // keeps playing in the background after navigating away).
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   // Text selection handler
   useEffect(() => {
@@ -295,7 +313,7 @@ export default function ReaderPage() {
     }
 
     utterance.onend = () => {
-      if (!isPaused) {
+      if (!isPausedRef.current) {
         speakSentence(index + 1);
       }
     };

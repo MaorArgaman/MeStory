@@ -64,6 +64,7 @@ export interface Archetype {
 
 function lerpStep(rng: () => number, [lo, hi]: Range, step: number): number {
   if (hi <= lo) return lo;
+  if (!(step > 0)) return lo; // guard step<=0/NaN → avoids Infinity/NaN sizing
   const steps = Math.round((hi - lo) / step);
   const k = Math.floor(rng() * (steps + 1));
   return Math.round((lo + k * step) * 100) / 100;
