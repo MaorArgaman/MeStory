@@ -292,21 +292,35 @@ function BlockRenderer({ block, ctx }: { block: Block; ctx: RenderCtx }) {
     }
 
     case 'margin-note': {
-      // Set in the outer (left, in RTL) margin, small and muted.
+      // Set in the outer (left, in RTL) PAGE margin — hanging outside the
+      // text area, like a printed marginal note. When the margin is too
+      // narrow to carry text, fall back to a small inline aside instead of
+      // colliding with the body column.
+      const endMarginMm = ctx.plan.grid.marginsMm.end;
+      const noteStyle: CSSProperties = {
+        fontFamily: typography.bodyFamily,
+        fontSize: `${typography.scale[1] * 0.9}pt`,
+        color: roles.muted,
+        fontStyle: 'italic',
+        lineHeight: 1.4,
+        borderTop: `0.5pt solid ${roles.hairline}`,
+        paddingTop: '3pt',
+        direction: 'rtl',
+      };
+      if (endMarginMm < 16) {
+        return (
+          <aside style={{ ...noteStyle, margin: '8pt 0 8pt auto', maxWidth: '55%', textAlign: 'left' }}>
+            {block.text}
+          </aside>
+        );
+      }
       return (
         <aside
           style={{
+            ...noteStyle,
             position: 'absolute',
-            left: '4mm',
-            width: `${ctx.plan.grid.marginsMm.end - 6}mm`,
-            fontFamily: typography.bodyFamily,
-            fontSize: `${typography.scale[1] * 0.92}pt`,
-            color: roles.muted,
-            fontStyle: 'italic',
-            lineHeight: 1.4,
-            borderTop: `0.5pt solid ${roles.hairline}`,
-            paddingTop: '3pt',
-            direction: 'rtl',
+            left: `${-(endMarginMm - 4)}mm`,
+            width: `${endMarginMm - 8}mm`,
           }}
         >
           {block.text}
@@ -600,8 +614,12 @@ function PageRenderer({
           right: isEdgeToEdge ? 0 : `${grid.marginsMm.start}mm`,
           left: isEdgeToEdge ? 0 : `${grid.marginsMm.end}mm`,
           direction: 'rtl',
-          columnCount: isEdgeToEdge ? 1 : grid.columns,
-          columnGap: `${grid.gutterMm}mm`,
+          // No multicol context for single-column pages: even column-count:1
+          // establishes one, and content taller than the box then spills into
+          // an RTL overflow column PAST THE PAGE'S LEFT EDGE instead of
+          // overflowing downward.
+          columnCount: !isEdgeToEdge && grid.columns > 1 ? grid.columns : undefined,
+          columnGap: !isEdgeToEdge && grid.columns > 1 ? `${grid.gutterMm}mm` : undefined,
         }}
       >
         {page.blocks.map((block, i) => (
@@ -669,7 +687,12 @@ export default function DesignedBookView({ book, plan, embedded, seedOverride }:
       seed: effectiveSeed,
       palette: genome.palette,
       typography: genome.typography,
-      grid: { ...plan.grid, columns: genome.columns, marginsMm: genome.marginsMm },
+      // columns stays as the PLANNER set it: pages were paginated for that
+      // column count, and forcing 2 columns from the genome overflows them
+      // (Chrome spills an overflow column past the page edge, clipped).
+      // Multi-column becomes a genome axis again once pagination is
+      // column-aware (IMPLEMENTATION_PLAN Phase B).
+      grid: { ...plan.grid, marginsMm: genome.marginsMm },
     };
   }, [plan, genome, effectiveSeed]);
 

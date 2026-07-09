@@ -113,9 +113,18 @@ function buildVisual(
     ChapterOpener(props: OpenerProps): ReactNode {
       const t = props.template || 'numeral-ornament';
       if (t === 'image-overlay' && props.imageUrl) return imageOverlayOpener(props, spec);
-      if (t === 'vertical-title') return verticalTitleOpener(props, spec);
-      if (t === 'rule-stack') return ruleStackOpener(props, spec);
-      return numeralOrnamentOpener(props, spec);
+      // Art-direction level for this chapter: quiet page, accent band,
+      // full color-field, or ornamental frame — seeded per chapter and
+      // weighted by the family's personality. This is what separates a
+      // tidy book from an art-directed one.
+      const drama = pickOpenerDrama(spec, props.seed, props.chapterIndex);
+      const inner =
+        t === 'vertical-title'
+          ? verticalTitleOpener
+          : t === 'rule-stack'
+            ? ruleStackOpener
+            : numeralOrnamentOpener;
+      return openerShell(drama, props, spec, inner);
     },
     imageTreatment(treatment, roles, seed): ImageTreatmentResult {
       return sharedImageTreatment(treatment, roles, seed);
@@ -256,6 +265,138 @@ function numeralBoxStyle(spec: VisualSpec, roles: ColorRoles): CSSProperties {
     return { WebkitTextStroke: `1.2px ${roles.accent}`, color: 'transparent' } as CSSProperties;
   }
   return {};
+}
+
+// ---------------------------------------------------------------------------
+// Opener art direction — per-chapter production level
+// ---------------------------------------------------------------------------
+
+type OpenerDrama = 'quiet' | 'band' | 'color-field' | 'frame';
+
+/** Families whose personality carries loud, saturated treatments. */
+const BOLD_FAMILIES: ReadonlyArray<OrnamentFamily> = [
+  'deco',
+  'bauhaus',
+  'brushstroke',
+  'celestial',
+  'wave',
+];
+
+function pickOpenerDrama(spec: VisualSpec, seed: number, chapterIndex: number): OpenerDrama {
+  const rng = makeRng((seed ^ 0x9e37) + chapterIndex * 101 + 7);
+  const r = rng();
+  if (BOLD_FAMILIES.includes(spec.ornamentFamily)) {
+    if (r < 0.3) return 'color-field';
+    if (r < 0.55) return 'band';
+    if (r < 0.7) return 'frame';
+    return 'quiet';
+  }
+  if (r < 0.1) return 'color-field';
+  if (r < 0.26) return 'band';
+  if (r < 0.52) return 'frame';
+  return 'quiet';
+}
+
+/** Roles for type sitting ON the accent color (inverted page). */
+function invertRoles(roles: ColorRoles): ColorRoles {
+  return {
+    text: roles.background,
+    background: roles.accent,
+    accent: roles.background,
+    muted: rgba(roles.background, 0.78),
+    surface: rgba(roles.background, 0.08),
+    accentTint: rgba(roles.background, 0.12),
+    scrimDark: roles.scrimDark,
+    scrimLight: roles.scrimLight,
+    hairline: rgba(roles.background, 0.42),
+  };
+}
+
+type OpenerInner = (props: OpenerProps, spec: VisualSpec) => ReactNode;
+
+function openerShell(
+  drama: OpenerDrama,
+  props: OpenerProps,
+  spec: VisualSpec,
+  inner: OpenerInner
+): ReactNode {
+  const { roles } = props;
+
+  if (drama === 'color-field') {
+    // Full accent page, everything inverted — the boldest move in the kit.
+    return (
+      <div style={{ position: 'absolute', inset: 0, background: roles.accent, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0 }}>
+          {inner({ ...props, roles: invertRoles(roles) }, spec)}
+        </div>
+      </div>
+    );
+  }
+
+  if (drama === 'band') {
+    // Accent band across the top third with inverted numeral; the title
+    // breathes on paper below it.
+    const inv = invertRoles(roles);
+    const display = props.typography.displayFamily || props.typography.headingFamily;
+    return (
+      <div style={{ position: 'absolute', inset: 0 }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '32%', background: roles.accent }}>
+          <div style={{ position: 'absolute', bottom: '7mm', right: '10mm', left: '10mm', textAlign: 'right' }}>
+            <div style={{ fontFamily: display, fontSize: `${props.typography.scale[1] * 0.9}pt`, color: inv.muted, letterSpacing: '0.34em', marginBottom: '3pt' }}>
+              {hebrewChapterWord(props.chapterIndex)}
+            </div>
+            <div style={{ fontFamily: display, fontSize: `${props.typography.scale[4] * 1.7}pt`, color: inv.text, lineHeight: 0.85, ...numeralBoxStyle(spec, inv) }}>
+              {bigNumeral(spec, props.chapterIndex)}
+            </div>
+          </div>
+        </div>
+        <div style={{ position: 'absolute', top: '32%', left: 0, right: 0, bottom: 0, padding: '12mm 10mm 0', textAlign: 'right' }}>
+          <h2 style={{ fontFamily: props.typography.headingFamily, fontSize: `${props.typography.scale[4]}pt`, color: roles.text, margin: 0, lineHeight: 1.16, fontWeight: 700, letterSpacing: spec.headingTracking }}>
+            {props.title}
+          </h2>
+          <div style={{ width: '16mm', height: '2pt', background: roles.accent, margin: '10pt 0 12pt' }} />
+          {props.epigraph && (
+            <p style={{ fontFamily: props.typography.bodyFamily, fontSize: `${props.typography.scale[1]}pt`, color: roles.muted, fontStyle: 'italic', margin: 0, lineHeight: 1.62, maxWidth: '78%' }}>
+              {props.epigraph}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (drama === 'frame') {
+    // Full ornamental frame: double border with corner diamonds.
+    const corner: CSSProperties = {
+      position: 'absolute',
+      color: rgba(roles.accent, 0.85),
+      fontSize: '8pt',
+      lineHeight: 1,
+    };
+    return (
+      <div style={{ position: 'absolute', inset: 0 }}>
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: '7mm',
+            border: `1pt solid ${rgba(roles.accent, 0.75)}`,
+            boxShadow: `inset 0 0 0 2pt ${roles.background}, inset 0 0 0 2.6pt ${rgba(roles.accent, 0.35)}`,
+            pointerEvents: 'none',
+          }}
+        />
+        <span aria-hidden style={{ ...corner, top: '5.4mm', right: '5.4mm' }}>◆</span>
+        <span aria-hidden style={{ ...corner, top: '5.4mm', left: '5.4mm' }}>◆</span>
+        <span aria-hidden style={{ ...corner, bottom: '5.4mm', right: '5.4mm' }}>◆</span>
+        <span aria-hidden style={{ ...corner, bottom: '5.4mm', left: '5.4mm' }}>◆</span>
+        <div style={{ position: 'absolute', inset: '12mm', overflow: 'hidden' }}>
+          {inner(props, spec)}
+        </div>
+      </div>
+    );
+  }
+
+  return inner(props, spec);
 }
 
 // ---------------------------------------------------------------------------

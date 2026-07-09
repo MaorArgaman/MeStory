@@ -99,7 +99,14 @@ function buildPlan(system: DesignSystemId, seed: number): DesignPlan {
 }
 
 export default function DesignGalleryPage() {
-  const [seed, setSeed] = useState(20260709);
+  // ?seed=N makes a specific roll shareable/linkable (and lets the golden
+  // screenshot harness sweep seeds).
+  const initialSeed = (() => {
+    const p = new URLSearchParams(window.location.search).get('seed');
+    const n = p ? Number(p) : NaN;
+    return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 20260709;
+  })();
+  const [seed, setSeed] = useState(initialSeed);
   const plans = useMemo(
     () => SYSTEMS.map((s) => ({ ...s, plan: buildPlan(s.id, seed) })),
     [seed]
