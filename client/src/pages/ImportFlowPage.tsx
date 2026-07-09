@@ -30,7 +30,7 @@ import AutoDesignModal from '../components/autoDesign/AutoDesignModal';
 
 type Step = 'upload' | 'processing' | 'structure' | 'design';
 
-const ACCEPTED_EXTENSIONS = ['.docx', '.doc', '.txt'];
+const ACCEPTED_EXTENSIONS = ['.docx', '.doc', '.txt', '.pdf'];
 
 export default function ImportFlowPage() {
   const navigate = useNavigate();
@@ -86,7 +86,7 @@ export default function ImportFlowPage() {
   const uploadFile = async (file: File) => {
     const ext = `.${file.name.split('.').pop()?.toLowerCase()}`;
     if (!ACCEPTED_EXTENSIONS.includes(ext)) {
-      toast.error('נא להעלות קובץ DOCX או TXT (תמיכה ב-PDF בקרוב)');
+      toast.error('נא להעלות קובץ DOCX, PDF או TXT');
       return;
     }
     if (file.size > 50 * 1024 * 1024) {
@@ -238,11 +238,11 @@ export default function ImportFlowPage() {
             >
               <FileUp className="w-12 h-12 mx-auto text-orange-500 mb-4" />
               <p className="font-semibold text-gray-800">גררו לכאן קובץ, או לחצו לבחירה</p>
-              <p className="text-sm text-gray-500 mt-1">DOCX או TXT, עד 50MB</p>
+              <p className="text-sm text-gray-500 mt-1">DOCX, PDF או TXT, עד 50MB</p>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".docx,.doc,.txt"
+                accept=".docx,.doc,.txt,.pdf"
                 className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0];

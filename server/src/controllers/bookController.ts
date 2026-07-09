@@ -10,6 +10,7 @@ import path from 'path';
 import mammoth from 'mammoth';
 import { Book } from '../models/Book';
 import { User, UserRole } from '../models/User';
+import { detectStructure } from '../services/autoDesign/importService';
 import { AuthRequest } from '../types';
 import { transcribeAudio } from '../services/whisperService';
 import { generatePricingStrategy } from '../services/pricingStrategyService';
@@ -140,75 +141,6 @@ async function generateBookTranslations(
   } catch (err) {
     console.error(`Failed to generate translations for book ${bookId}:`, err);
   }
-}
-
-/**
- * Split text into chapters based on common patterns
- * Detects: "Chapter X", "פרק X", "חלק X", numbered headings, etc.
- */
-function splitTextIntoChapters(text: string): Array<{ title: string; content: string }> {
-  // Patterns for chapter detection (English and Hebrew)
-  const chapterPatterns = [
-    // English patterns
-    /^(?:chapter|part)\s+(?:\d+|[ivxlcdm]+)(?:\s*[-:.]?\s*(.*))?$/im,
-    /^(?:chapter|part)\s+(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)(?:\s*[-:.]?\s*(.*))?$/im,
-    // Hebrew patterns
-    /^(?:פרק|חלק)\s+(?:\d+|[א-ת]{1,2})(?:\s*[-:.]?\s*(.*))?$/m,
-    // Numbered headings
-    /^(\d+)\.\s+(.+)$/m,
-  ];
-
-  // Combined regex for splitting
-  const splitRegex = /\n\s*(?:(?:chapter|part|פרק|חלק)\s+(?:\d+|[ivxlcdm]+|[א-ת]{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)(?:\s*[-:.]?\s*.{0,100})?)\s*\n/gi;
-
-  // Check if text has chapter markers
-  const hasChapterMarkers = splitRegex.test(text);
-  splitRegex.lastIndex = 0; // Reset regex
-
-  if (!hasChapterMarkers) {
-    // No chapter markers found, return as single chapter
-    return [{
-      title: 'Imported Content',
-      content: text,
-    }];
-  }
-
-  // Split by chapter markers
-  const parts = text.split(splitRegex);
-  const matches = text.match(splitRegex) || [];
-
-  const chapters: Array<{ title: string; content: string }> = [];
-
-  // Handle content before first chapter marker
-  if (parts[0] && parts[0].trim().length > 100) {
-    chapters.push({
-      title: 'Introduction',
-      content: parts[0].trim(),
-    });
-  }
-
-  // Process each chapter
-  for (let i = 0; i < matches.length; i++) {
-    const chapterTitle = matches[i].trim().replace(/\n/g, ' ');
-    const chapterContent = parts[i + 1] ? parts[i + 1].trim() : '';
-
-    if (chapterContent.length > 0) {
-      chapters.push({
-        title: chapterTitle || `Chapter ${i + 1}`,
-        content: chapterContent,
-      });
-    }
-  }
-
-  // If no chapters were created, return as single chapter
-  if (chapters.length === 0) {
-    return [{
-      title: 'Imported Content',
-      content: text,
-    }];
-  }
-
-  return chapters;
 }
 
 /**
@@ -2481,23 +2413,41 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
       return;
     }
 
+    // For DOCX we also keep mammoth's HTML output: Word heading styles
+    // (Heading 1/2) are the highest-quality chapter-boundary signal, and
+    // they only survive in the HTML form. See importService.detectStructure.
+    let docxHtml: string | null = null;
+
     try {
       // Extract text based on file type
       if (fileExtension === '.pdf') {
-        // PDF parsing disabled - DOMMatrix not available in Vercel serverless
-        res.status(400).json({
-          success: false,
-          error: 'PDF upload is temporarily unavailable. Please upload DOCX or TXT files instead.',
-        });
-        return;
+        // unpdf bundles a serverless-compatible pdf.js build (the old
+        // pdf-parse needed DOMMatrix, which Vercel doesn't provide).
+        const { extractText, getDocumentProxy } = await import('unpdf');
+        const pdfBuffer = req.file.buffer || (await fs.readFile(filePath));
+        const pdf = await getDocumentProxy(new Uint8Array(pdfBuffer));
+        const { text } = await extractText(pdf, { mergePages: true });
+        extractedText = text || '';
+        if (extractedText.trim().length < 100) {
+          res.status(400).json({
+            success: false,
+            error:
+              'לא הצלחנו לחלץ טקסט מה-PDF. אם זה קובץ סרוק (תמונות של עמודים), נדרש קובץ טקסט — נא להעלות DOCX או TXT.',
+            errorCode: 'PDF_NO_TEXT',
+          });
+          return;
+        }
       } else if (fileExtension === '.docx' || fileExtension === '.doc') {
         // Extract text from DOCX - mammoth can use buffer directly on Vercel
-        if (isVercel && req.file.buffer) {
-          const result = await mammoth.extractRawText({ buffer: req.file.buffer });
-          extractedText = result.value;
-        } else {
-          const result = await mammoth.extractRawText({ path: filePath });
-          extractedText = result.value;
+        const mammothInput =
+          isVercel && req.file.buffer ? { buffer: req.file.buffer } : { path: filePath };
+        const result = await mammoth.extractRawText(mammothInput as any);
+        extractedText = result.value;
+        try {
+          const htmlResult = await mammoth.convertToHtml(mammothInput as any);
+          docxHtml = htmlResult.value || null;
+        } catch {
+          docxHtml = null; // heading detection is best-effort
         }
       } else if (fileExtension === '.txt') {
         // Read plain text file - can use buffer directly on Vercel
@@ -2509,7 +2459,7 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
       } else {
         res.status(400).json({
           success: false,
-          error: 'Unsupported file type. Please upload DOCX or TXT files.',
+          error: 'Unsupported file type. Please upload DOCX, PDF or TXT files.',
         });
         return;
       }
@@ -2541,8 +2491,14 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
         return;
       }
 
-      // Auto-detect chapters based on common patterns
-      const chapters = splitTextIntoChapters(extractedText.trim());
+      // Detect chapter structure: Word headings → explicit markers → Haiku
+      // (doubt cases only) → single chapter. See importService for the layers.
+      const structure = await detectStructure({
+        text: extractedText.trim(),
+        docxHtml,
+        userId: req.user.id,
+      });
+      const chapters = structure.chapters;
 
       // Detect language (Hebrew or English based on content)
       const hebrewChars = (extractedText.match(/[\u0590-\u05FF]/g) || []).length;
@@ -2596,16 +2552,12 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
         });
       }
 
-      // Detection metadata drives the structure-review screen: when the
-      // splitter fell back to a single "Imported Content" chapter, the client
-      // knows to lead with manual splitting instead of pretending we detected
-      // a structure.
-      const singleFallback =
-        chapters.length === 1 && chapters[0].title === 'Imported Content';
+      // Detection metadata drives the structure-review screen: the client
+      // leads with manual splitting when confidence is low instead of
+      // pretending we detected a structure.
       const detection = {
-        method: singleFallback ? ('single' as const) : ('markers' as const),
-        confidence:
-          singleFallback || chapters.length < 2 ? ('low' as const) : ('high' as const),
+        method: structure.method,
+        confidence: structure.confidence,
         chapterCount: chapters.length,
       };
 

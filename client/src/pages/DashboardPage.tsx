@@ -167,8 +167,8 @@ export default function DashboardPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type (PDF temporarily disabled - use DOCX or TXT)
-    const allowedTypes = ['.docx', '.txt', '.doc'];
+    // Validate file type (PDF supported again via unpdf on the server)
+    const allowedTypes = ['.docx', '.txt', '.doc', '.pdf'];
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
     if (!allowedTypes.includes(fileExtension)) {
       toast.error(t('dashboard.messages.invalid_file_type'));
@@ -787,7 +787,7 @@ export default function DashboardPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".docx,.txt,.doc"
+                  accept=".docx,.txt,.doc,.pdf"
                   onChange={handleFileUpload}
                   className="hidden"
                   disabled={uploading}

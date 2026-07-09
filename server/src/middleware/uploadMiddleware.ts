@@ -72,13 +72,14 @@ const imageStorage = isVercel
     });
 
 // File filter - only accept specific document types
-// NOTE: PDF temporarily disabled due to Vercel serverless limitations
+// PDF re-enabled 2026-07-09: text extraction now uses unpdf, whose bundled
+// pdf.js build runs in Vercel serverless (the old pdf-parse needed DOMMatrix).
 const documentFilter = (
   _req: Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
-  const allowedTypes = ['.docx', '.txt', '.doc'];
+  const allowedTypes = ['.docx', '.txt', '.doc', '.pdf'];
   const ext = path.extname(file.originalname).toLowerCase();
 
   if (allowedTypes.includes(ext)) {
@@ -86,7 +87,7 @@ const documentFilter = (
   } else {
     cb(
       new Error(
-        `Invalid file type. Only ${allowedTypes.join(', ')} files are allowed. PDF upload is temporarily unavailable.`
+        `Invalid file type. Only ${allowedTypes.join(', ')} files are allowed.`
       )
     );
   }

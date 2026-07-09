@@ -22,7 +22,7 @@ export interface ReviewChapter {
 }
 
 export interface DetectionInfo {
-  method: 'markers' | 'single';
+  method: 'headings' | 'markers' | 'ai' | 'single';
   confidence: 'high' | 'low';
   chapterCount: number;
 }

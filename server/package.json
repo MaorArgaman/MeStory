@@ -50,6 +50,7 @@
     "puppeteer-core": "^24.41.0",
     "resend": "^6.12.3",
     "socket.io": "^4.8.3",
+    "unpdf": "^1.6.2",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
