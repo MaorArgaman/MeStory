@@ -21,6 +21,7 @@ import { generateWithBreaker } from '../geminiClient';
 import { IBook } from '../../models/Book';
 import { DesignPlan, validateDesignPlan, ValidationIssue } from './designPlanSchema';
 import { collectBookImages } from './collectImages';
+import { logAiUsage } from '../aiUsageLog';
 
 export interface CriticInput {
   book: IBook;
@@ -72,6 +73,18 @@ async function runLlmCritique(book: IBook, plan: DesignPlan): Promise<Validation
   try {
     const result = await generateWithBreaker(prompt);
     text = result.response.text();
+
+    // Cost visibility (docs/BUSINESS_STRATEGY.md) — fire-and-forget.
+    const meta = (result.response as any).usageMetadata;
+    void logAiUsage({
+      feature: 'auto_design_critic',
+      provider: 'google',
+      model: 'gemini-2.5-flash',
+      userId: book.author || null,
+      bookId: book.id || book._id || null,
+      inputTokens: meta?.promptTokenCount || 0,
+      outputTokens: meta?.candidatesTokenCount || 0,
+    });
   } catch (err: any) {
     // If Gemini is down, don't block the user — degrade gracefully and
     // let the plan through. The deterministic check already passed.

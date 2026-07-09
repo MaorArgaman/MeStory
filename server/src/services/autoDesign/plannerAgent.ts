@@ -23,6 +23,7 @@ import {
 import { plannerSystemsCatalog, getDesignSystem } from './designSystems';
 import { plannerBuiltSystemsDetail } from './systems';
 import { collectBookImages } from './collectImages';
+import { logAiUsage } from '../aiUsageLog';
 
 const MODEL = 'claude-sonnet-4-6';
 // Output cap kept at 12k (down from 16k): a design plan JSON fits comfortably,
@@ -69,7 +70,10 @@ export interface PlannerOutput {
 
 /**
  * Build the system prompt. Static — does not depend on the specific book.
- * Cacheable across requests if we ever add prompt caching.
+ * IMPORTANT: keep it static (no dates, no per-book text) — planDesign puts a
+ * prompt-cache breakpoint on it. Because tools render before system in the
+ * prompt, that single breakpoint caches the (also static) design-plan JSON
+ * schema together with this text; cached reads bill at ~10% of input price.
  */
 function buildSystemPrompt(): string {
   return `You are a senior book designer producing typesetting plans for Hebrew books on the MeStory platform.
@@ -220,7 +224,17 @@ export async function planDesign(input: PlannerInput): Promise<PlannerOutput> {
   const response = await c.messages.create({
     model: MODEL,
     max_tokens: MAX_OUTPUT_TOKENS,
-    system: systemPrompt,
+    // System as a block array so we can set a cache breakpoint. Tools render
+    // before system, so this one marker caches the JSON schema + catalog +
+    // instructions (~all the static tokens). Cast: SDK 0.30.x doesn't type
+    // cache_control on the GA path yet, but the API accepts it.
+    system: [
+      {
+        type: 'text',
+        text: systemPrompt,
+        cache_control: { type: 'ephemeral' },
+      },
+    ] as any,
     tools: [
       {
         name: SUBMIT_TOOL_NAME,
@@ -231,6 +245,28 @@ export async function planDesign(input: PlannerInput): Promise<PlannerOutput> {
     ],
     tool_choice: { type: 'tool', name: SUBMIT_TOOL_NAME },
     messages: [{ role: 'user', content: userPrompt }],
+  });
+
+  // Cache fields are absent from SDK 0.30.x types; present in the API response.
+  const usageRaw = response.usage as any;
+  const cacheReadTokens = usageRaw.cache_read_input_tokens || 0;
+  const cacheWriteTokens = usageRaw.cache_creation_input_tokens || 0;
+
+  // Cost visibility (docs/BUSINESS_STRATEGY.md) — fire-and-forget.
+  void logAiUsage({
+    feature: 'auto_design_planner',
+    provider: 'anthropic',
+    model: MODEL,
+    userId: input.book.author || null,
+    bookId: input.book.id || input.book._id || null,
+    inputTokens: response.usage.input_tokens,
+    outputTokens: response.usage.output_tokens,
+    cacheReadTokens,
+    cacheWriteTokens,
+    metadata: {
+      attemptNumber: input.attemptNumber,
+      isRevision: Boolean(input.priorRevisionIssues?.length),
+    },
   });
 
   // Extract the tool_use block — with tool_choice forced, there is
