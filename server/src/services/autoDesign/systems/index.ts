@@ -16,14 +16,26 @@ import { editorialModern } from './editorialModern';
 import { romanticVintage } from './romanticVintage';
 import { minimalistNordic } from './minimalistNordic';
 import { fairytaleClassic } from './fairytaleClassic';
+import { storybookIllustrated } from './storybookIllustrated';
+import { playfulZine } from './playfulZine';
+import { academicFormal } from './academicFormal';
+import { boldMagazine } from './boldMagazine';
+import { poetryQuiet } from './poetryQuiet';
 import { buildTypeScale, SCALE_RATIOS, ScaleRatioName } from '../tokens';
 
+// All 10 systems are now fully built — the stub fallback in designSystems.ts
+// only remains as a safety net for unknown ids.
 export const SYSTEM_MODULES: Partial<Record<DesignSystemId, SystemModule>> = {
   'memoir-warm': memoirWarm,
   'editorial-modern': editorialModern,
   'romantic-vintage': romanticVintage,
   'minimalist-nordic': minimalistNordic,
   'fairytale-classic': fairytaleClassic,
+  'storybook-illustrated': storybookIllustrated,
+  'playful-zine': playfulZine,
+  'academic-formal': academicFormal,
+  'bold-magazine': boldMagazine,
+  'poetry-quiet': poetryQuiet,
 };
 
 export function getSystemModule(id: DesignSystemId): SystemModule | undefined {

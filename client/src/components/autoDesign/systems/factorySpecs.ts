@@ -64,3 +64,78 @@ export const fairytaleClassicSpec: SystemSpec = {
   framePages: true,
   numeralStyle: 'word',
 };
+
+export const storybookIllustratedSpec: SystemSpec = {
+  id: 'storybook-illustrated',
+  variants: {
+    sunshine: { text: '#4A3220', background: '#FFF9EC', accent: '#F0A82E', muted: '#B39B76' },
+    sky: { text: '#28344A', background: '#F5FAFF', accent: '#4A9BD8', muted: '#93A5BB' },
+    meadow: { text: '#2F4030', background: '#F7FBF2', accent: '#5FA860', muted: '#96AC94' },
+    berry: { text: '#462C38', background: '#FFF7F6', accent: '#D8567B', muted: '#B694A2' },
+  },
+  ornamentFamily: 'celestial',
+  texture: 'wash',
+  dropCap: 'color-block',
+  framePages: true,
+  numeralStyle: 'circled',
+};
+
+export const playfulZineSpec: SystemSpec = {
+  id: 'playful-zine',
+  variants: {
+    pop: { text: '#141414', background: '#FFFFFF', accent: '#E42A88', muted: '#8A8A8A' },
+    citrus: { text: '#232016', background: '#FFFDF2', accent: '#F2701D', muted: '#98917B' },
+    electric: { text: '#101828', background: '#FAFBFF', accent: '#2D50E6', muted: '#8792A8' },
+  },
+  ornamentFamily: 'bauhaus',
+  texture: 'halftone',
+  dropCap: 'color-block',
+  framePages: false,
+  numeralStyle: 'outlined',
+  headingTracking: '0.02em',
+};
+
+export const academicFormalSpec: SystemSpec = {
+  id: 'academic-formal',
+  variants: {
+    oxford: { text: '#15181D', background: '#FFFFFF', accent: '#1F3A5F', muted: '#6E7480' },
+    parchment: { text: '#2B2013', background: '#FAF6EC', accent: '#7A2E2E', muted: '#8F846E' },
+    graphite: { text: '#22262A', background: '#FCFDFD', accent: '#2E6B66', muted: '#7E868C' },
+  },
+  ornamentFamily: 'rule',
+  texture: 'flat',
+  dropCap: 'plain',
+  framePages: false,
+  numeralStyle: 'numeral',
+  headingTracking: '0',
+};
+
+export const boldMagazineSpec: SystemSpec = {
+  id: 'bold-magazine',
+  variants: {
+    noir: { text: '#0A0A0A', background: '#FFFFFF', accent: '#D5232E', muted: '#707070' },
+    tangerine: { text: '#241A12', background: '#FCF8F3', accent: '#E05E10', muted: '#93856F' },
+    cobalt: { text: '#0E1218', background: '#FBFCFE', accent: '#1D4ED8', muted: '#77808F' },
+  },
+  ornamentFamily: 'deco',
+  texture: 'diagonal-wash',
+  dropCap: 'raised',
+  framePages: false,
+  numeralStyle: 'outlined',
+  headingTracking: '0.02em',
+};
+
+export const poetryQuietSpec: SystemSpec = {
+  id: 'poetry-quiet',
+  variants: {
+    mist: { text: '#33373B', background: '#FDFDFC', accent: '#5E6B78', muted: '#A5AAAE' },
+    blush: { text: '#3D3436', background: '#FDFAF9', accent: '#B07682', muted: '#B0A2A5' },
+    sand: { text: '#3A342B', background: '#FCFAF4', accent: '#9A7B4F', muted: '#ABA28F' },
+  },
+  ornamentFamily: 'asterism',
+  texture: 'vellum',
+  dropCap: 'plain',
+  framePages: false,
+  numeralStyle: 'roman',
+  headingTracking: '0.08em',
+};

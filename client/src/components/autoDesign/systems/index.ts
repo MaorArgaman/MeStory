@@ -14,14 +14,26 @@ import {
   romanticVintageSpec,
   minimalistNordicSpec,
   fairytaleClassicSpec,
+  storybookIllustratedSpec,
+  playfulZineSpec,
+  academicFormalSpec,
+  boldMagazineSpec,
+  poetryQuietSpec,
 } from './factorySpecs';
 
+// All 10 systems are now fully built (mirrors server SYSTEM_MODULES);
+// the generic fallback below only guards against unknown ids.
 const BUILT: Partial<Record<DesignSystemId, SystemVisual>> = {
   'memoir-warm': memoirWarmVisual,
   'editorial-modern': makeSystemVisual(editorialModernSpec),
   'romantic-vintage': makeSystemVisual(romanticVintageSpec),
   'minimalist-nordic': makeSystemVisual(minimalistNordicSpec),
   'fairytale-classic': makeSystemVisual(fairytaleClassicSpec),
+  'storybook-illustrated': makeSystemVisual(storybookIllustratedSpec),
+  'playful-zine': makeSystemVisual(playfulZineSpec),
+  'academic-formal': makeSystemVisual(academicFormalSpec),
+  'bold-magazine': makeSystemVisual(boldMagazineSpec),
+  'poetry-quiet': makeSystemVisual(poetryQuietSpec),
 };
 
 const genericCache = new Map<string, SystemVisual>();
