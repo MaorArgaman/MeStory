@@ -96,6 +96,11 @@ export interface PuppeteerPdfOptions {
    * Both pages set body.print-ready, so the wait logic is identical.
    */
   variant?: 'manual' | 'designed';
+  /**
+   * Extra query-string appended to the print URL (no leading '&'), e.g.
+   * 'watermark=1'. Server-side render flags only — the print page reads them.
+   */
+  extraQuery?: string;
   /** Called with a coarse progress percent [0,100] */
   onProgress?: (pct: number, message: string) => void | Promise<void>;
 }
@@ -133,7 +138,9 @@ export async function renderBookToPdf(opts: PuppeteerPdfOptions): Promise<Buffer
     await page.setViewport({ width: 800, height: 1120, deviceScaleFactor: 2 });
 
     const printPath = variant === 'designed' ? `/print/${bookId}/designed` : `/print/${bookId}`;
-    const url = `${clientUrl}${printPath}?token=${encodeURIComponent(authToken)}`;
+    const url =
+      `${clientUrl}${printPath}?token=${encodeURIComponent(authToken)}` +
+      (opts.extraQuery ? `&${opts.extraQuery}` : '');
 
     await onProgress?.(20, 'Loading book...');
     // Use `domcontentloaded` instead of `networkidle0` — the latter waits for

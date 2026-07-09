@@ -248,11 +248,36 @@ export default function PrintDesignedBookPage() {
       ? Number(seedParam)
       : undefined;
 
+  // ?watermark=1 — appended SERVER-SIDE by the PDF export route for free-plan
+  // users (the flag never comes from user input). A position:fixed element
+  // repeats on every printed page in Chromium, which is exactly the per-page
+  // footer we want without touching each page component.
+  const watermark = params.get('watermark') === '1';
+
   return (
     <div style={{ background: '#E8E5DD', minHeight: '100vh', padding: '12mm 0', direction: 'rtl' }}>
       {book.coverDesign?.front && <FrontCover book={book} />}
       <DesignedBookView book={renderable} plan={book.autoDesignPlan} embedded seedOverride={seedOverride} />
       <BackCover book={book} />
+      {watermark && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '2mm',
+            left: 0,
+            right: 0,
+            textAlign: 'center',
+            fontSize: '7pt',
+            fontFamily: 'Heebo, sans-serif',
+            color: 'rgba(0,0,0,0.35)',
+            letterSpacing: '0.06em',
+            zIndex: 1000,
+            pointerEvents: 'none',
+          }}
+        >
+          עוצב ב-MeStory · mestory.co.il
+        </div>
+      )}
     </div>
   );
 }

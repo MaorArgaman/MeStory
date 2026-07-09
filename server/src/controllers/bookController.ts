@@ -9,7 +9,7 @@ import path from 'path';
 // import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
 import { Book } from '../models/Book';
-import { User } from '../models/User';
+import { User, UserRole } from '../models/User';
 import { AuthRequest } from '../types';
 import { transcribeAudio } from '../services/whisperService';
 import { generatePricingStrategy } from '../services/pricingStrategyService';
@@ -2525,6 +2525,21 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
 
       // Calculate word count
       const wordCount = extractedText.trim().split(/\s+/).length;
+
+      // Free-plan length cap (~150 printed pages). Long books cost real
+      // compute (full-text analysis + headless-Chrome rendering), so they
+      // belong to the paid packages. See docs/BUSINESS_STRATEGY.md §3.
+      const FREE_IMPORT_WORD_LIMIT = 60_000;
+      if (req.user.role === UserRole.FREE && wordCount > FREE_IMPORT_WORD_LIMIT) {
+        res.status(400).json({
+          success: false,
+          error: `הקובץ מכיל ${wordCount.toLocaleString()} מילים — מעל המגבלה של ${FREE_IMPORT_WORD_LIMIT.toLocaleString()} מילים בחשבון חינמי. שדרגו חבילה כדי לייבא ספרים ארוכים.`,
+          errorCode: 'FREE_IMPORT_TOO_LONG',
+          wordCount,
+          limit: FREE_IMPORT_WORD_LIMIT,
+        });
+        return;
+      }
 
       // Auto-detect chapters based on common patterns
       const chapters = splitTextIntoChapters(extractedText.trim());

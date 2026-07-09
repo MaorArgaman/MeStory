@@ -13,9 +13,14 @@
 
 import { Router, Response } from 'express';
 import { authenticate } from '../middleware/auth';
-import { requireCredits } from '../middleware/requireCredits';
+import {
+  designEntitlement,
+  getFreeDesignsUsed,
+  FREE_DESIGNS_PER_ACCOUNT,
+} from '../middleware/designEntitlement';
 import { autoDesignCap, AUTO_DESIGN_MAX_USES_PER_BOOK } from '../middleware/autoDesignCap';
 import { Book } from '../models/Book';
+import { UserRole } from '../models/User';
 import { AuthRequest } from '../types';
 import { generateDesign } from '../services/autoDesign/orchestrator';
 import { renderDesignedBookDocx } from '../services/autoDesign/renderDocx';
@@ -52,7 +57,9 @@ const exportLimiter = rateLimit({
 router.post(
   '/:bookId',
   autoDesignCap as any,
-  requireCredits('auto_design_premium') as any,
+  // Freemium gate: first FREE_DESIGNS_PER_ACCOUNT generations per account are
+  // free; afterwards this delegates to requireCredits('auto_design_premium').
+  designEntitlement as any,
   async (req: AuthRequest, res: Response) => {
     const bookId = req.params.bookId;
     const previousUses = (req as any).autoDesignUses ?? 0;
@@ -108,6 +115,11 @@ router.post(
           passedFirstTry: result.passedFirstTry,
           usesRemaining: AUTO_DESIGN_MAX_USES_PER_BOOK - (previousUses + 1),
           designSystem: result.plan.designSystem,
+          // When this generation was covered by the free allowance, tell the
+          // client how many free designs remain AFTER this one.
+          ...((req as any).freeDesign
+            ? { freeDesignsRemaining: Math.max(0, ((req as any).freeDesignsRemaining ?? 1) - 1) }
+            : {}),
         },
       });
     } catch (err: any) {
@@ -199,7 +211,17 @@ router.get('/:bookId/export.pdf', exportLimiter, async (req: AuthRequest, res: R
   try {
     const { renderBookToPdf } = await import('../services/puppeteerExportService');
     const authToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
-    const buffer = await renderBookToPdf({ bookId, authToken, variant: 'designed' });
+    // Free-plan users get a subtle "designed with MeStory" footer on every
+    // page; a clean, print-ready file is part of the paid packages
+    // (docs/BUSINESS_STRATEGY.md §3). Decided server-side only — the client
+    // never controls this flag.
+    const watermark = req.user.role === UserRole.FREE;
+    const buffer = await renderBookToPdf({
+      bookId,
+      authToken,
+      variant: 'designed',
+      extraQuery: watermark ? 'watermark=1' : undefined,
+    });
     const safeName = (book.title || 'book').replace(/[^a-zA-Z0-9֐-׿\s-]/g, '').slice(0, 60);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(safeName)}.pdf"`);
@@ -232,6 +254,7 @@ router.get('/:bookId/status', async (req: AuthRequest, res: Response) => {
   // findByIdLite doesn't include autoDesignPlan, only autoDesignUses.
   // Fetch the design slice if needed.
   const designBook = await Book.findByIdForDesign(bookId);
+  const freeUsed = await getFreeDesignsUsed(req.user.id);
   res.json({
     success: true,
     data: {
@@ -239,6 +262,10 @@ router.get('/:bookId/status', async (req: AuthRequest, res: Response) => {
       designSystem: designBook?.autoDesignPlan?.designSystem || null,
       usesRemaining: AUTO_DESIGN_MAX_USES_PER_BOOK - (book.autoDesignUses ?? 0),
       maxUses: AUTO_DESIGN_MAX_USES_PER_BOOK,
+      // Account-level freemium allowance (null if the counter is unavailable —
+      // the client then falls back to credit-based messaging).
+      freeDesignsRemaining:
+        freeUsed === null ? null : Math.max(0, FREE_DESIGNS_PER_ACCOUNT - freeUsed),
     },
   });
 });
