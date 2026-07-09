@@ -56,7 +56,7 @@ const PORT = process.env.PORT || 5001;
 
 // Deploy marker — bumped whenever the server code changes. Used to verify
 // that a push actually rolled out to Vercel.
-const SERVER_VERSION = 'v2-hardened-env-handling';
+const SERVER_VERSION = 'v3-emergency-lockdown';
 
 // Check if running in Vercel serverless environment
 const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
@@ -75,6 +75,26 @@ app.get('/version', (_req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// ============================================
+// EMERGENCY LOCKDOWN — activated 2026-07-09 at the owner's request.
+// Blocks EVERY request to the server (all API routes, payment endpoints,
+// PayPal webhooks, Vercel cron, David agent) with 503. Nothing except
+// /version above responds. No payment can be initiated, captured, or
+// paid out through the site while this is true.
+// To restore service: set EMERGENCY_LOCKDOWN = false and redeploy.
+// ============================================
+const EMERGENCY_LOCKDOWN = true;
+
+if (EMERGENCY_LOCKDOWN) {
+  app.use((_req: Request, res: Response) => {
+    res.status(503).set('Retry-After', '86400').json({
+      success: false,
+      error: 'The service is temporarily unavailable for maintenance.',
+      maintenance: true,
+    });
+  });
+}
 
 // ============================================
 // Serverless Initialization (must be early)
@@ -452,17 +472,23 @@ const startServer = async () => {
     initializeSocketIO(httpServer, allowedOrigins);
     console.log('✅ Socket.IO initialized');
 
-    // Initialize subscription cron jobs (only for non-serverless environments)
-    initializeSubscriptionJobs();
-    console.log('✅ Subscription jobs initialized');
+    if (EMERGENCY_LOCKDOWN) {
+      // Lockdown: no background jobs — nothing that could renew a
+      // subscription, charge a card, or pay out an author may run.
+      console.log('🛑 EMERGENCY_LOCKDOWN active — background jobs NOT started');
+    } else {
+      // Initialize subscription cron jobs (only for non-serverless environments)
+      initializeSubscriptionJobs();
+      console.log('✅ Subscription jobs initialized');
 
-    // Initialize cleanup jobs
-    initializeCleanupJobs();
-    console.log('✅ Cleanup jobs initialized');
+      // Initialize cleanup jobs
+      initializeCleanupJobs();
+      console.log('✅ Cleanup jobs initialized');
 
-    // Initialize David's daily SEO/GEO/AEO job (dev only; prod uses Vercel Cron)
-    initializeDavidJobs();
-    console.log('✅ David daily agent job initialized');
+      // Initialize David's daily SEO/GEO/AEO job (dev only; prod uses Vercel Cron)
+      initializeDavidJobs();
+      console.log('✅ David daily agent job initialized');
+    }
 
     // Start listening
     httpServer.listen(PORT, () => {
