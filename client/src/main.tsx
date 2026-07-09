@@ -27,8 +27,12 @@ if (import.meta.env.PROD) {
 // page, purchase flow, or payment button is reachable. The server is
 // locked down in parallel (server.ts EMERGENCY_LOCKDOWN).
 // To restore service: set EMERGENCY_LOCKDOWN = false and redeploy.
+//
+// LOCAL DEV EXCEPTION: `vite dev` (import.meta.env.DEV) mounts the app so
+// the owner can develop and test locally. Production builds (Vercel) have
+// DEV=false at compile time — the lockdown there is unaffected.
 // ============================================
-const EMERGENCY_LOCKDOWN = true;
+const EMERGENCY_LOCKDOWN = true && !import.meta.env.DEV;
 
 function MaintenancePage() {
   return (

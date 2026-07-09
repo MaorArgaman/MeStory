@@ -83,8 +83,17 @@ app.get('/version', (_req, res) => {
 // /version above responds. No payment can be initiated, captured, or
 // paid out through the site while this is true.
 // To restore service: set EMERGENCY_LOCKDOWN = false and redeploy.
+//
+// LOCAL DEV EXCEPTION: when running on a developer machine (not Vercel,
+// NODE_ENV != production) the lockdown is off so the owner can test
+// locally. Every production deployment has VERCEL=1 — the public site
+// stays fully locked regardless of this exception.
 // ============================================
-const EMERGENCY_LOCKDOWN = true;
+const IS_PRODUCTION_HOST =
+  process.env.VERCEL === '1' ||
+  process.env.VERCEL === 'true' ||
+  process.env.NODE_ENV === 'production';
+const EMERGENCY_LOCKDOWN = true && IS_PRODUCTION_HOST;
 
 if (EMERGENCY_LOCKDOWN) {
   app.use((_req: Request, res: Response) => {

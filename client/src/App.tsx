@@ -74,6 +74,7 @@ const PrintBookPage = lazy(() => import('./pages/PrintBookPage'));
 const PrintDesignedBookPage = lazy(() => import('./pages/PrintDesignedBookPage'));
 const AutoDesignLandingPage = lazy(() => import('./pages/AutoDesignLandingPage'));
 const ImportFlowPage = lazy(() => import('./pages/ImportFlowPage'));
+const DesignGalleryPage = lazy(() => import('./pages/DesignGalleryPage'));
 const DiagnoseImagesPage = lazy(() => import('./pages/DiagnoseImagesPage'));
 
 // Localized public routes component factory
@@ -212,6 +213,10 @@ function AppContent() {
               <Route path="/print/:bookId" element={<PageBoundary><PrintBookPage /></PageBoundary>} />
               <Route path="/print/:bookId/designed" element={<PageBoundary><PrintDesignedBookPage /></PageBoundary>} />
               <Route path="/auto-design" element={<PageBoundary><AutoDesignLandingPage /></PageBoundary>} />
+              {/* Internal visual-QA gallery: all 10 design systems on fixed
+                  sample content, genome mode, seed-controlled. Synthetic
+                  content only — no data access. */}
+              <Route path="/design-gallery" element={<PageBoundary><DesignGalleryPage /></PageBoundary>} />
 
               {/* Internal image diagnostic page — visit /diagnose-images/:bookId
                   to see every image URL saved on the book and migrate them to
