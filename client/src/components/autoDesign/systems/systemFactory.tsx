@@ -86,9 +86,24 @@ function buildVisual(
       if (style === 'none') return <div style={{ height: '6pt' }} />;
       const family = style === 'rule' ? 'rule' : style === 'stars' ? 'asterism' : spec.ornamentFamily;
       const rng = makeRng(seed + 11);
+      // Classic book divider: hairlines flanking the ornament, so the break
+      // reads as a designed moment rather than a floating glyph.
       return (
-        <div style={{ textAlign: 'center', color: roles.accent, margin: '15pt 0', opacity: 0.9, transform: `rotate(${(rng() - 0.5) * 0.8}deg)` }}>
-          <Divider family={family} width={200} />
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10pt',
+            color: roles.accent,
+            margin: '16pt 8mm',
+            opacity: 0.92,
+            transform: `rotate(${(rng() - 0.5) * 0.6}deg)`,
+          }}
+        >
+          <span style={{ flex: 1, maxWidth: '22mm', height: '0.5pt', background: roles.hairline }} />
+          <Divider family={family} width={120} />
+          <span style={{ flex: 1, maxWidth: '22mm', height: '0.5pt', background: roles.hairline }} />
         </div>
       );
     },
@@ -176,9 +191,22 @@ function romanize(num: number): string {
   return out;
 }
 
+/** Hebrew ordinal words — "פרק ראשון" reads like a typeset book, "פרק 1" like
+ *  a word processor. Falls back to the digit past twenty. */
+const HEBREW_ORDINALS = [
+  'ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שביעי', 'שמיני', 'תשיעי', 'עשירי',
+  'אחד־עשר', 'שנים־עשר', 'שלושה־עשר', 'ארבעה־עשר', 'חמישה־עשר', 'שישה־עשר', 'שבעה־עשר',
+  'שמונה־עשר', 'תשעה־עשר', 'עשרים',
+];
+
+function hebrewChapterWord(idx: number): string {
+  const ord = HEBREW_ORDINALS[idx];
+  return ord ? `פרק ${ord}` : `פרק ${idx + 1}`;
+}
+
 /** Worded/roman/digit label for the numeral-ornament opener. */
 function numeralLabel(spec: VisualSpec, idx: number): string {
-  if (spec.numeralStyle === 'word') return `פרק ${idx + 1}`;
+  if (spec.numeralStyle === 'word') return hebrewChapterWord(idx);
   if (spec.numeralStyle === 'roman') return romanize(idx + 1);
   return `${idx + 1}`;
 }
@@ -215,75 +243,221 @@ function numeralBoxStyle(spec: VisualSpec, roles: ColorRoles): CSSProperties {
 
 function numeralOrnamentOpener(props: OpenerProps, spec: VisualSpec): ReactNode {
   const { chapterIndex, title, epigraph, roles, typography } = props;
+  const display = typography.displayFamily || typography.headingFamily;
+  const isFigure = spec.numeralStyle !== 'word';
   return (
-    <div style={{ marginTop: '26mm', textAlign: 'center', padding: '0 6mm' }}>
+    <div style={{ position: 'relative', marginTop: '20mm', textAlign: 'center', padding: '0 6mm' }}>
+      {/* Ghost numeral backdrop — the studio move that gives the page depth
+          without competing with the title (very low-contrast, oversized). */}
+      {isFigure && (
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            top: '-14mm',
+            left: 0,
+            right: 0,
+            fontFamily: display,
+            fontSize: `${typography.scale[4] * 3.6}pt`,
+            lineHeight: 1,
+            color: rgba(roles.accent, 0.07),
+            fontWeight: 700,
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        >
+          {bigNumeral(spec, chapterIndex)}
+        </div>
+      )}
+      {/* Kicker: small, wide-tracked chapter label above everything. */}
       <div
         style={{
-          display: 'inline-block',
-          fontFamily: typography.displayFamily || typography.headingFamily,
-          fontSize: `${typography.scale[spec.numeralStyle === 'numeral' || spec.numeralStyle === 'circled' || spec.numeralStyle === 'outlined' ? 4 : 3]}pt`,
+          position: 'relative',
+          fontFamily: display,
+          fontSize: `${typography.scale[1]}pt`,
           color: roles.accent,
-          letterSpacing: spec.headingTracking || '0.14em',
-          marginBottom: '4pt',
+          letterSpacing: '0.32em',
+          marginBottom: isFigure ? '2pt' : '6pt',
+        }}
+      >
+        {spec.numeralStyle === 'word' ? '' : 'פרק'}
+      </div>
+      <div
+        style={{
+          position: 'relative',
+          display: 'inline-block',
+          fontFamily: display,
+          fontSize: `${typography.scale[isFigure ? 4 : 3]}pt`,
+          color: roles.accent,
+          letterSpacing: isFigure ? '0.02em' : spec.headingTracking || '0.14em',
+          marginBottom: '6pt',
+          lineHeight: 1,
           ...numeralBoxStyle(spec, roles),
         }}
       >
         {numeralLabel(spec, chapterIndex)}
       </div>
-      <div style={{ color: roles.accent, opacity: 0.9, margin: '4pt 0 8pt' }}>
-        <Divider family={spec.ornamentFamily} width={150} />
+      <div style={{ position: 'relative', color: roles.accent, opacity: 0.92, margin: '8pt 0 10pt', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8pt' }}>
+        <span style={{ width: '14mm', height: '0.5pt', background: roles.hairline }} />
+        <Divider family={spec.ornamentFamily} width={110} />
+        <span style={{ width: '14mm', height: '0.5pt', background: roles.hairline }} />
       </div>
-      <h2 style={{ fontFamily: typography.headingFamily, fontSize: `${typography.scale[4]}pt`, color: roles.text, margin: '6pt 0 14pt', lineHeight: 1.18, fontWeight: 700, letterSpacing: spec.headingTracking }}>
+      <h2
+        style={{
+          position: 'relative',
+          fontFamily: typography.headingFamily,
+          fontSize: `${typography.scale[4]}pt`,
+          color: roles.text,
+          margin: '8pt auto 14pt',
+          lineHeight: 1.22,
+          fontWeight: 700,
+          letterSpacing: spec.headingTracking,
+          maxWidth: '86%',
+        }}
+      >
         {title}
       </h2>
       {epigraph && (
-        <p style={{ fontFamily: typography.bodyFamily, fontSize: `${typography.scale[1]}pt`, color: roles.muted, fontStyle: 'italic', maxWidth: '74%', margin: '0 auto', lineHeight: 1.5 }}>
-          {epigraph}
-        </p>
+        <div style={{ position: 'relative', maxWidth: '68%', margin: '0 auto' }}>
+          <div aria-hidden style={{ fontFamily: display, fontSize: `${typography.scale[3]}pt`, color: rgba(roles.accent, 0.45), lineHeight: 0.6, marginBottom: '2pt' }}>
+            ”
+          </div>
+          <p style={{ fontFamily: typography.bodyFamily, fontSize: `${typography.scale[1]}pt`, color: roles.muted, fontStyle: 'italic', margin: 0, lineHeight: 1.62 }}>
+            {epigraph}
+          </p>
+        </div>
       )}
-      <div style={{ width: '32%', height: '0.6pt', background: roles.accent, margin: '18pt auto 0' }} />
+      <div style={{ position: 'relative', width: '18%', height: '1.4pt', background: rgba(roles.accent, 0.75), margin: '20pt auto 0' }} />
     </div>
   );
 }
 
 function ruleStackOpener(props: OpenerProps, spec: VisualSpec): ReactNode {
   const { chapterIndex, title, epigraph, roles, typography } = props;
+  const display = typography.displayFamily || typography.headingFamily;
   return (
-    <div style={{ marginTop: '30mm', textAlign: 'right', padding: '0 4mm' }}>
-      <div style={{ borderTop: `0.7pt solid ${roles.hairline}`, marginBottom: '2pt' }} />
-      <div style={{ borderTop: `0.7pt solid ${roles.hairline}`, marginBottom: '12pt' }} />
-      <div style={{ display: 'inline-block', fontFamily: typography.displayFamily || typography.headingFamily, fontSize: `${typography.scale[4] * 1.4}pt`, color: roles.accent, lineHeight: 0.9, letterSpacing: spec.headingTracking, ...numeralBoxStyle(spec, roles) }}>
-        {bigNumeral(spec, chapterIndex)}
+    <div style={{ marginTop: '26mm', textAlign: 'right', padding: '0 4mm' }}>
+      {/* Asymmetric editorial header: one heavy bar, one hairline. */}
+      <div style={{ borderTop: `2.6pt solid ${roles.accent}`, width: '38%', marginBottom: '3pt', marginRight: 0, marginLeft: 'auto' }} />
+      <div style={{ borderTop: `0.6pt solid ${roles.hairline}`, marginBottom: '14pt' }} />
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6mm', justifyContent: 'flex-start' }}>
+        <div
+          style={{
+            fontFamily: display,
+            fontSize: `${typography.scale[4] * 1.9}pt`,
+            color: roles.accent,
+            lineHeight: 0.82,
+            letterSpacing: spec.headingTracking,
+            padding: '2pt 6pt',
+            background: rgba(roles.accent, 0.07),
+            ...numeralBoxStyle(spec, roles),
+          }}
+        >
+          {bigNumeral(spec, chapterIndex)}
+        </div>
+        <div style={{ paddingBottom: '3pt', flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: display, fontSize: `${typography.scale[1] * 0.92}pt`, color: roles.muted, letterSpacing: '0.28em', marginBottom: '3pt' }}>
+            {hebrewChapterWord(chapterIndex)}
+          </div>
+          <h2 style={{ fontFamily: typography.headingFamily, fontSize: `${typography.scale[4]}pt`, color: roles.text, margin: 0, fontWeight: 700, lineHeight: 1.14, letterSpacing: spec.headingTracking }}>
+            {title}
+          </h2>
+        </div>
       </div>
-      <h2 style={{ fontFamily: typography.headingFamily, fontSize: `${typography.scale[3]}pt`, color: roles.text, margin: '6pt 0 10pt', fontWeight: 700, letterSpacing: spec.headingTracking }}>
-        {title}
-      </h2>
       {epigraph && (
-        <p style={{ fontFamily: typography.bodyFamily, fontSize: `${typography.scale[1]}pt`, color: roles.muted, fontStyle: 'italic', lineHeight: 1.5, maxWidth: '80%' }}>
+        <p
+          style={{
+            fontFamily: typography.bodyFamily,
+            fontSize: `${typography.scale[1]}pt`,
+            color: roles.muted,
+            fontStyle: 'italic',
+            lineHeight: 1.62,
+            maxWidth: '72%',
+            margin: '14pt 0 0',
+            paddingRight: '5mm',
+            borderRight: `1.6pt solid ${rgba(roles.accent, 0.55)}`,
+          }}
+        >
           {epigraph}
         </p>
       )}
-      <div style={{ borderTop: `0.7pt solid ${roles.hairline}`, marginTop: '14pt' }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8pt', marginTop: '16pt' }}>
+        <span style={{ flex: 1, borderTop: `0.6pt solid ${roles.hairline}` }} />
+        <span style={{ color: roles.accent, opacity: 0.85, lineHeight: 0 }}>
+          <Divider family={spec.ornamentFamily} width={64} />
+        </span>
+      </div>
     </div>
   );
 }
 
 function verticalTitleOpener(props: OpenerProps, spec: VisualSpec): ReactNode {
   const { chapterIndex, title, epigraph, roles, typography } = props;
+  const display = typography.displayFamily || typography.headingFamily;
   return (
-    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 14mm' }}>
-      <div style={{ display: 'inline-block', alignSelf: 'flex-start', fontFamily: typography.displayFamily || typography.headingFamily, fontSize: `${typography.scale[4] * 2.4}pt`, color: rgba(roles.accent, 0.9), lineHeight: 0.8, letterSpacing: spec.headingTracking, ...numeralBoxStyle(spec, roles) }}>
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      {/* Enormous ghost numeral bleeding off the page corner — pure drama. */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          top: '-8mm',
+          left: '-4mm',
+          fontFamily: display,
+          fontSize: `${typography.scale[4] * 4.4}pt`,
+          lineHeight: 0.8,
+          color: rgba(roles.accent, 0.08),
+          fontWeight: 700,
+          pointerEvents: 'none',
+          userSelect: 'none',
+        }}
+      >
         {bigNumeral(spec, chapterIndex)}
       </div>
-      <div style={{ width: '28%', height: '2.5pt', background: roles.accent, margin: '10pt 0 14pt' }} />
-      <h2 style={{ fontFamily: typography.headingFamily, fontSize: `${typography.scale[4]}pt`, color: roles.text, margin: 0, lineHeight: 1.15, fontWeight: 700, maxWidth: '88%' }}>
-        {title}
-      </h2>
-      {epigraph && (
-        <p style={{ fontFamily: typography.bodyFamily, fontSize: `${typography.scale[1]}pt`, color: roles.muted, fontStyle: 'italic', marginTop: '12pt', maxWidth: '78%', lineHeight: 1.5 }}>
-          {epigraph}
-        </p>
-      )}
+      {/* Vertical chapter word running along the outer (left) margin. */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          top: '14mm',
+          left: '7mm',
+          writingMode: 'vertical-rl',
+          fontFamily: display,
+          fontSize: `${typography.scale[1] * 0.9}pt`,
+          letterSpacing: '0.42em',
+          color: rgba(roles.accent, 0.65),
+        }}
+      >
+        {hebrewChapterWord(chapterIndex)}
+      </div>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 14mm 0 20mm' }}>
+        <div
+          style={{
+            display: 'inline-block',
+            alignSelf: 'flex-start',
+            fontFamily: display,
+            fontSize: `${typography.scale[4] * 2.2}pt`,
+            color: roles.accent,
+            lineHeight: 0.82,
+            letterSpacing: spec.headingTracking,
+            ...numeralBoxStyle(spec, roles),
+          }}
+        >
+          {bigNumeral(spec, chapterIndex)}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5pt', margin: '12pt 0 14pt' }}>
+          <span style={{ width: '16mm', height: '2.6pt', background: roles.accent }} />
+          <span style={{ width: '5mm', height: '2.6pt', background: rgba(roles.accent, 0.35) }} />
+        </div>
+        <h2 style={{ fontFamily: typography.headingFamily, fontSize: `${typography.scale[4] * 1.12}pt`, color: roles.text, margin: 0, lineHeight: 1.12, fontWeight: 700, maxWidth: '88%', letterSpacing: spec.headingTracking }}>
+          {title}
+        </h2>
+        {epigraph && (
+          <p style={{ fontFamily: typography.bodyFamily, fontSize: `${typography.scale[1]}pt`, color: roles.muted, fontStyle: 'italic', marginTop: '14pt', maxWidth: '74%', lineHeight: 1.62 }}>
+            {epigraph}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
