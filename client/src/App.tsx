@@ -73,6 +73,7 @@ const ContributePage = lazy(() => import('./pages/ContributePage'));
 const PrintBookPage = lazy(() => import('./pages/PrintBookPage'));
 const PrintDesignedBookPage = lazy(() => import('./pages/PrintDesignedBookPage'));
 const AutoDesignLandingPage = lazy(() => import('./pages/AutoDesignLandingPage'));
+const ImportFlowPage = lazy(() => import('./pages/ImportFlowPage'));
 const DiagnoseImagesPage = lazy(() => import('./pages/DiagnoseImagesPage'));
 
 // Localized public routes component factory
@@ -232,6 +233,15 @@ function AppContent() {
                     <Layout>
                       <PageBoundary><DashboardPage /></PageBoundary>
                     </Layout>
+                  </RequireAuth>
+                }
+              />
+              {/* Import flow — the design-first front door: upload → structure → design */}
+              <Route
+                path="/import"
+                element={
+                  <RequireAuth>
+                    <PageBoundary><ImportFlowPage /></PageBoundary>
                   </RequireAuth>
                 }
               />

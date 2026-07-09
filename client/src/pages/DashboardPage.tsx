@@ -205,7 +205,9 @@ export default function DashboardPage() {
         toast.success(t('dashboard.messages.upload_success'));
         setShowUploadModal(false);
         invalidateBooks();
-        navigate(`/editor/${response.data.data.book.id}`);
+        // Continue the design-first flow: review the detected structure and
+        // design, instead of dropping the user into the text editor.
+        navigate(`/import?bookId=${response.data.data.book.id}`);
       }
     } catch (error: any) {
       console.error('Upload error:', error);

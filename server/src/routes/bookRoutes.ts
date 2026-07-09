@@ -29,6 +29,7 @@ import {
   getBookMentions,
   uploadCoverImage,
   uploadManuscript,
+  updateBookStructure,
   uploadAudio,
   getPricingStrategy,
   exportBookToFormat,
@@ -105,6 +106,13 @@ router.post(
   '/upload-audio',
   uploadAudioMiddleware.single('audio'),
   uploadAudio as any
+);
+
+// PUT /api/books/:id/structure - Replace chapter structure after import review
+router.put(
+  '/:id/structure',
+  runValidation(mongoIdValidation),
+  updateBookStructure as any
 );
 
 // GET /api/books/:id - Get book by ID

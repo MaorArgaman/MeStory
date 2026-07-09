@@ -2581,6 +2581,19 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
         });
       }
 
+      // Detection metadata drives the structure-review screen: when the
+      // splitter fell back to a single "Imported Content" chapter, the client
+      // knows to lead with manual splitting instead of pretending we detected
+      // a structure.
+      const singleFallback =
+        chapters.length === 1 && chapters[0].title === 'Imported Content';
+      const detection = {
+        method: singleFallback ? ('single' as const) : ('markers' as const),
+        confidence:
+          singleFallback || chapters.length < 2 ? ('low' as const) : ('high' as const),
+        chapterCount: chapters.length,
+      };
+
       res.status(201).json({
         success: true,
         message: 'Manuscript uploaded and processed successfully',
@@ -2595,6 +2608,7 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
               wordCount: ch.wordCount,
             })),
           },
+          detection,
         },
       });
     } catch (extractError) {
@@ -2649,6 +2663,116 @@ export const uploadManuscript = async (req: AuthRequest, res: Response): Promise
       success: false,
       error: errorMessage,
     });
+  }
+};
+
+/**
+ * Replace the book's chapter structure after import review.
+ * PUT /api/books/:id/structure
+ *
+ * The structure-review screen lets the user rename / merge / split the
+ * chapters the importer detected. This endpoint swaps the whole chapters
+ * array in one shot, with a content-preservation guard: the combined text
+ * must not shrink below 98% of what the book currently holds, so a UI bug
+ * (or a mis-tap) can never silently discard part of the manuscript.
+ */
+export const updateBookStructure = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, error: 'Authentication required' });
+      return;
+    }
+
+    const { id } = req.params;
+    if (!isValidUUID(id)) {
+      res.status(400).json({ success: false, error: 'Invalid book ID' });
+      return;
+    }
+
+    const book = await Book.findById(id);
+    if (!book) {
+      res.status(404).json({ success: false, error: 'Book not found' });
+      return;
+    }
+    if (book.author !== req.user.id) {
+      res.status(403).json({ success: false, error: 'You do not have permission to edit this book' });
+      return;
+    }
+
+    const incoming = req.body?.chapters;
+    if (!Array.isArray(incoming) || incoming.length === 0) {
+      res.status(400).json({ success: false, error: 'chapters must be a non-empty array' });
+      return;
+    }
+    for (const ch of incoming) {
+      if (typeof ch?.title !== 'string' || !ch.title.trim()) {
+        res.status(400).json({ success: false, error: 'Every chapter needs a non-empty title' });
+        return;
+      }
+      if (typeof ch?.content !== 'string' || !ch.content.trim()) {
+        res.status(400).json({ success: false, error: 'Every chapter needs non-empty content' });
+        return;
+      }
+    }
+
+    // Content-preservation guard: whitespace-insensitive character count.
+    // 98% tolerance absorbs trimming around split/merge points; anything
+    // bigger means text went missing.
+    const squash = (s: string) => (s || '').replace(/\s+/g, '');
+    const currentLen = (book.chapters || []).reduce(
+      (n: number, ch: any) => n + squash(ch.content).length,
+      0
+    );
+    const nextLen = incoming.reduce(
+      (n: number, ch: any) => n + squash(ch.content).length,
+      0
+    );
+    if (currentLen > 0 && nextLen < currentLen * 0.98) {
+      res.status(400).json({
+        success: false,
+        error: 'The edited structure is missing part of the original text',
+        errorCode: 'CONTENT_LOSS',
+        details: { currentChars: currentLen, submittedChars: nextLen },
+      });
+      return;
+    }
+
+    const chapters = incoming.map((ch: any, index: number) => ({
+      title: ch.title.trim(),
+      content: ch.content,
+      order: index,
+      wordCount: ch.content.trim().split(/\s+/).filter(Boolean).length,
+      // Optional semantic role from the review screen ('dedication',
+      // 'foreword', 'epilogue') — stored on the chapter for the design
+      // planner to use; absent for regular chapters.
+      ...(ch.role ? { role: ch.role } : {}),
+    }));
+
+    const wordCount = chapters.reduce((n, ch) => n + ch.wordCount, 0);
+    const statistics = {
+      ...(book.statistics || {}),
+      wordCount,
+      chapterCount: chapters.length,
+      pageCount: Math.ceil(wordCount / 250),
+    };
+
+    await Book.findByIdAndUpdate(id, { chapters, statistics } as any);
+
+    res.status(200).json({
+      success: true,
+      message: 'Book structure updated',
+      data: {
+        chapters: chapters.map((ch) => ({
+          title: ch.title,
+          wordCount: ch.wordCount,
+          ...((ch as any).role ? { role: (ch as any).role } : {}),
+        })),
+        wordCount,
+      },
+    });
+  } catch (error) {
+    console.error('Update book structure error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update book structure' });
   }
 };
 
