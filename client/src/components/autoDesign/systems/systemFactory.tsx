@@ -20,7 +20,7 @@ import { deriveColorRoles, makeRng, rgba, type ColorRoles } from '../designToken
 import type { Palette } from '../designPlanTypes';
 import type { DropCapStyle, NumeralStyle, StyleGenome } from '../genome';
 import { pageTexture, type TextureKind } from '../textures';
-import { Divider, InitialFrame, type OrnamentFamily } from '../ornaments';
+import { Divider, type OrnamentFamily } from '../ornaments';
 import type { ImageTreatmentResult, OpenerProps, SystemVisual } from './types';
 
 /** The visual DNA both builders share. SystemSpec is a superset (adds variants). */
@@ -145,12 +145,33 @@ function dropCapNode(
     marginTop: '2pt',
   };
   if (spec.dropCap === 'framed') {
+    // Plain CSS box (double border + tint) instead of an absolutely-positioned
+    // oversized SVG — the SVG version overflowed its float box and broke the
+    // paragraph's RTL layout (initial rendered detached at the page's left).
+    const box = size * 1.12;
     return (
-      <span style={{ position: 'relative', float: 'right', width: `${size * 1.15}pt`, height: `${size * 1.15}pt`, marginLeft: '6pt', color: roles.accent }}>
-        <InitialFrame family={spec.ornamentFamily} size={Math.round(size * 1.15 * 1.333)} bg={rgba(roles.accent, 0.06)} />
-        <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily, fontSize: `${size * 0.62}pt`, color: roles.accent }}>
-          {letter}
-        </span>
+      <span
+        style={{
+          float: 'right',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: `${box}pt`,
+          height: `${box}pt`,
+          marginLeft: '6pt',
+          marginTop: '2pt',
+          marginBottom: '2pt',
+          fontFamily,
+          fontSize: `${size * 0.58}pt`,
+          lineHeight: 1,
+          color: roles.accent,
+          background: rgba(roles.accent, 0.06),
+          border: `1.2pt solid ${rgba(roles.accent, 0.75)}`,
+          boxShadow: `inset 0 0 0 2.2pt ${roles.background}, inset 0 0 0 2.8pt ${rgba(roles.accent, 0.35)}`,
+          boxSizing: 'border-box',
+        }}
+      >
+        {letter}
       </span>
     );
   }
@@ -319,8 +340,10 @@ function numeralOrnamentOpener(props: OpenerProps, spec: VisualSpec): ReactNode 
       </h2>
       {epigraph && (
         <div style={{ position: 'relative', maxWidth: '68%', margin: '0 auto' }}>
-          <div aria-hidden style={{ fontFamily: display, fontSize: `${typography.scale[3]}pt`, color: rgba(roles.accent, 0.45), lineHeight: 0.6, marginBottom: '2pt' }}>
-            ”
+          {/* Small diamond accent instead of a quote glyph — Hebrew display
+              fonts render ” like a double-yud, which reads as broken text. */}
+          <div aria-hidden style={{ color: rgba(roles.accent, 0.55), fontSize: `${typography.scale[0] * 0.7}pt`, lineHeight: 1, marginBottom: '5pt' }}>
+            ◆
           </div>
           <p style={{ fontFamily: typography.bodyFamily, fontSize: `${typography.scale[1]}pt`, color: roles.muted, fontStyle: 'italic', margin: 0, lineHeight: 1.62 }}>
             {epigraph}
